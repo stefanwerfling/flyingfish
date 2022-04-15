@@ -1,0 +1,9 @@
+/doc/internnotes.txt
+/config.json
+/node_modules
+/sshserver/node_modules
+/sshserver/ssh
+/sample
+/dist
+/sshserver/dist
+/.idea
