@@ -1,0 +1,83 @@
+version: '3.1'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: flyingfish_db
+    environment:
+      MYSQL_ROOT_PASSWORD: 'test'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: 'flyingfish'
+    volumes:
+      - flyingfishDbData:/var/lib/mysql
+    ports:
+      - 127.0.0.1:3306:3306
+    networks:
+      flyingfishNet:
+          ipv4_address: 10.103.0.2
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
+  flyingfish:
+    image: flingfish:v1.0
+    build:
+      context: ./
+    container_name: flyingfish_service
+    volumes:
+      - ./config.json:/opt/app/config.json
+      - ./nginx:/opt/app/nginx:rw
+    ports:
+      - "443:443"
+      - "80:80"
+      - "3000:3000"
+      - "9229:9229"
+    command:
+      - node
+      - "--inspect-brk=0.0.0.0:9229"
+      - "dist/main.js"
+      - "--config=/opt/app/config.json"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
+  sshremote:
+    image: flyingfishssh:v1.0
+    build:
+      context: ./sshserver/
+    container_name: flyingfish_ssh
+    volumes:
+      - ./config.json:/opt/app/config.json
+      - ./sshserver/ssh:/opt/app/ssh:rw
+    ports:
+      - "2222:22"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.4
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
+volumes:
+  flyingfishDbData:
+    driver: local
+
+networks:
+  flyingfishNet:
+    driver: bridge
+    ipam:
+      config:
+        -  subnet: 10.103.0.0/16
