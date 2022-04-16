@@ -40,6 +40,10 @@ I see an advantage in testing projects that require an API connection or for rol
 
 Currently I will first generate simple configuration files for Nginx and feel the database by hand. A frontend will be developed step by step. I'm hoping for suggestions and other ideas. Write to me!
 
+#### Projectname
+
+The name of the project is an allusion to the fish that is "air" in an atypical environment for it. Nevertheless, the fish copes perfectly here. This is how I see the project with the Nginx server and the interacting components. The name also goes well with "Docker" a whale.
+
 ## Project-Parts
 * Main Nginx Manager
 * SSH-Server
