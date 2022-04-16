@@ -1,4 +1,5 @@
 import {Context, ContextNames} from './Context';
+import {Location} from './Location';
 
 /**
  * ServerLogLevel
@@ -30,6 +31,12 @@ export class Server extends Context {
      * @protected
      */
     protected _rootDir: string|null = null;
+
+    /**
+     * locations
+     * @protected
+     */
+    protected _locations: Location[] = [];
 
     /**
      * constructor
@@ -169,6 +176,7 @@ export class Server extends Context {
         let buffer = this._createContent(`${this._name} {\n`, index);
 
         buffer += this._generateStr(index);
+        buffer += Context.contextsToStr(this._locations, index + 1);
 
         return buffer + this._createContent('}\n', index);
     }
