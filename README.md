@@ -29,8 +29,10 @@ I started the project and have a lot to learn myself, to incorporate my own idea
 #### Idea integration
 In addition to the classic problem of providing HTTPS connections with Letsencrypt certificates, URI with a proxy to direct to internal web servers. Was the idea to use "SSH Remote Port forwarding" to forward a local web server via SSH (via the internet or internal network) so that it can be reached via Nginx with a valid HTTPs certificate.
 
-#### Flow diagram idea
 
+I see an advantage in testing projects that require an API connection or for rolling out a user-defined configuration that can be delivered securely using HTTPs.
+
+#### Flow diagram idea
 
 <img src="doc/flow.png" alt="Flow">
 
