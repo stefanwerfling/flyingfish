@@ -36,11 +36,14 @@ I see an advantage in testing projects that require an API connection or for rol
 
 <img src="doc/flow.png" alt="Flow">
 
+#### Process/development
+
+Currently I will first generate simple configuration files for Nginx and feel the database by hand. A frontend will be developed step by step. I'm hoping for suggestions and other ideas. Write to me!
 
 ## Project-Parts
 * Main Nginx Manager
 * SSH-Server
-* 
+
 # Main Nginx Manager
 ### Docker Image
 * Image: Alpine
