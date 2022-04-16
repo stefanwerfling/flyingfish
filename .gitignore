@@ -7,3 +7,4 @@
 /dist
 /sshserver/dist
 /.idea
+/public/node_modules
