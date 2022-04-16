@@ -8,3 +8,4 @@
 /sshserver/dist
 /.idea
 /public/node_modules
+/public/dist
