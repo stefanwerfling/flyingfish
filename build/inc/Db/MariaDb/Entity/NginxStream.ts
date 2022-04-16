@@ -17,10 +17,6 @@ export class NginxStream extends BaseEntity {
 
     @Column()
         // @ts-ignore
-    listen_port: number;
-
-    @Column()
-        // @ts-ignore
     index: number;
 
     @Column({

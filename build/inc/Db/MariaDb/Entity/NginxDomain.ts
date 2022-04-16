@@ -18,4 +18,9 @@ export class NginxDomain extends BaseEntity {
         // @ts-ignore
     domainname: string;
 
+    @Index()
+    @Column()
+        // @ts-ignore
+    listen_id: number;
+
 }

@@ -7,6 +7,7 @@ import * as bodyParser from 'body-parser';
 import session from 'express-session';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup';
 import {NginxDomain as NginxDomainDB} from './inc/Db/MariaDb/Entity/NginxDomain';
+import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream';
 import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
 import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser';
@@ -64,6 +65,7 @@ import {NginxService} from './inc/Service/NginxService';
             database: tconfig.db.mysql.database,
             entities: [
                 UserDB,
+                NginxListenDB,
                 NginxDomainDB,
                 NginxStreamDB,
                 SshPortDB,

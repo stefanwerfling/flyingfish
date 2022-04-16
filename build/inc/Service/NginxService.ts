@@ -1,4 +1,6 @@
 import {NginxDomain as NginxDomainDB} from '../Db/MariaDb/Entity/NginxDomain';
+import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
+import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Map as NginxMap} from '../Nginx/Config/Map';
@@ -40,37 +42,65 @@ export class NginxService {
         // vars --------------------------------------------------------------------------------------------------------
 
         const streamMap: Map<number, Map<string, NginxStreamDB>> = new Map();
+        const httpMap: Map<number, Map<string, NginxHttpDB>> = new Map();
 
         // read db -----------------------------------------------------------------------------------------------------
 
+        const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
         const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
         const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
+        const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
 
-        const domains = await domainRepository.find();
+        const listens = await listenRepository.find();
 
-        for (const adomain of domains) {
-
-            // read streams by db --------------------------------------------------------------------------------------
-
-            const tstreams = await streamRepository.find({
+        for (const alisten of listens) {
+            const domains = await domainRepository.find({
                 where: {
-                    domain_id: adomain.id
+                    listen_id: alisten.id
                 }
             });
 
-            for (const astream of tstreams) {
-                if (!streamMap.has(astream.listen_port)) {
-                    streamMap.set(astream.listen_port, new Map<string, NginxStreamDB>());
+            for (const adomain of domains) {
+
+                // read streams by db ----------------------------------------------------------------------------------
+
+                if (alisten.listen_type === ListenTypes.stream) {
+                    const tstreams = await streamRepository.find({
+                        where: {
+                            domain_id: adomain.id
+                        }
+                    });
+
+                    for (const astream of tstreams) {
+                        if (!streamMap.has(alisten.listen_port)) {
+                            streamMap.set(alisten.listen_port, new Map<string, NginxStreamDB>());
+                        }
+
+                        const mapDomainStreams = streamMap.get(alisten.listen_port);
+                        mapDomainStreams!.set(adomain.domainname, astream);
+
+                        streamMap.set(alisten.listen_port, mapDomainStreams!);
+                    }
+                } else if (alisten.listen_type === ListenTypes.http) {
+                    // read http by db ---------------------------------------------------------------------------------
+                    const https = await httpRepository.find({
+                        where: {
+                            domain_id: adomain.id
+                        }
+                    });
+
+                    for (const http of https) {
+                        if (!httpMap.has(alisten.listen_port)) {
+                            httpMap.set(alisten.listen_port, new Map<string, NginxHttpDB>());
+                        }
+
+                        const mapDomainHttp = httpMap.get(alisten.listen_port);
+                        mapDomainHttp!.set(adomain.domainname, http);
+
+                        httpMap.set(alisten.listen_port, mapDomainHttp!);
+                    }
                 }
-
-                const mapDomainStreams = streamMap.get(astream.listen_port);
-                mapDomainStreams!.set(adomain.domainname, astream);
-
-                streamMap.set(astream.listen_port, mapDomainStreams!);
             }
-
-            // read http by db -----------------------------------------------------------------------------------------
-
         }
 
         // fill config -------------------------------------------------------------------------------------------------
