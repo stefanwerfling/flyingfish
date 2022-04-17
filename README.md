@@ -52,6 +52,15 @@ The name of the project is an allusion to the fish that is "air" in an atypical 
 ### Docker Image
 * Image: Alpine
 
+#### Screenshots
+<table>
+  <tr>
+    <td> 
+      <img src="doc/screenshots/login.png" alt="1" width="360px" >
+    </td>
+  </tr>
+</table>
+
 # SSH-Server
 ### Docker Image
 * Image: Alpine
