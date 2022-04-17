@@ -1,0 +1,22 @@
+{
+  "name": "flyingfish_frontend",
+  "version": "1.0.0",
+  "description": "Flyingfish frontend",
+  "main": "index.js",
+  "scripts": {
+    "npm update && npm outdated": "npm update && npm outdated"
+  },
+  "keywords": [],
+  "author": "Stefan Werfling",
+  "license": "ISC",
+  "dependencies": {
+    "admin-lte": "^3.2.0",
+    "jquery": "^3.5.1",
+    "jquery-ui-dist": "^1.12.1",
+    "moment": "^2.29.1",
+    "requirejs": "^2.3.6"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.5.5"
+  }
+}

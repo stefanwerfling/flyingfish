@@ -1,6 +1,7 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
+import {Login as LoginController} from './app/Main/Login';
 import {Config} from './inc/Config/Config';
 import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
@@ -138,7 +139,7 @@ import {NginxService} from './inc/Service/NginxService';
         ],
         routes: [],
         controllers: [
-
+            LoginController
         ],
         publicDir: public_dir
     });
