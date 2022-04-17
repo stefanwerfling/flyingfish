@@ -1,9 +1,13 @@
 # FlyingFish
 
-<p style="text-align: center">
-<img src="doc/logo.png" alt="Logo" height="128px" width="128px"><br>
+<p align="center">NOTE: This document is under development. Please check regularly for updates!</p>
+
+<h1 align="center">
+
+![FlyingFish](doc/logo.png)
+
 On the "fly fish", a ngnix proxy connection manager and more.
-</p><br>
+</h1>
 
 [![LGTM Grade](https://img.shields.io/lgtm/grade/javascript/github/stefanwerfling/flyingfish?style=for-the-badge)](https://lgtm.com/projects/g/stefanwerfling/flyingfish/)
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/stefanwerfling/flyingfish?style=for-the-badge)](https://lgtm.com/projects/g/stefanwerfling/flyingfish/)
