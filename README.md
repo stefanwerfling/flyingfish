@@ -1,13 +1,12 @@
 # FlyingFish
 
-<p>
-<img src="doc/logo.png" alt="Logo" height="128px" width="128px">
+<p style="text-align: center">
+<img src="doc/logo.png" alt="Logo" height="128px" width="128px"><br>
+On the "fly fish", a ngnix proxy connection manager and more.
 </p><br>
 
 [![LGTM Grade](https://img.shields.io/lgtm/grade/javascript/github/stefanwerfling/flyingfish?style=for-the-badge)](https://lgtm.com/projects/g/stefanwerfling/flyingfish/)
 [![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/stefanwerfling/flyingfish?style=for-the-badge)](https://lgtm.com/projects/g/stefanwerfling/flyingfish/)
-
-On the "fly fish", a ngnix proxy connection manager and more.
 
 ## Motivation
 I only got to know the Nginx server after Apache. And was pleasantly surprised by the configuration. 
