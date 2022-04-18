@@ -28,6 +28,13 @@ export class NginxListen extends BaseEntity {
     listen_port: number;
 
     @Column({
+        type: 'bool',
+        default: false
+    })
+        // @ts-ignore
+    enable_ipv6: boolean;
+
+    @Column({
         type: 'varchar',
         length: 512
     })

@@ -1,5 +1,6 @@
 import {NginxDomain as NginxDomainDB} from '../Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
+import {NginxLink as NginxLinkDB} from '../Db/MariaDb/Entity/NginxLink';
 import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
@@ -47,6 +48,7 @@ export class NginxService {
         // read db -----------------------------------------------------------------------------------------------------
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
+        const linkRepository = MariaDbHelper.getRepository(NginxLinkDB);
         const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
         const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
         const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
@@ -54,56 +56,65 @@ export class NginxService {
         const listens = await listenRepository.find();
 
         for (const alisten of listens) {
-            const domains = await domainRepository.find({
+            const links = await linkRepository.find({
                 where: {
                     listen_id: alisten.id
                 }
             });
 
-            for (const adomain of domains) {
-
-                // read streams by db ----------------------------------------------------------------------------------
-
-                if (alisten.listen_type === ListenTypes.stream) {
-                    const tstreams = await streamRepository.find({
-                        where: {
-                            domain_id: adomain.id
-                        }
-                    });
-
-                    for (const astream of tstreams) {
-                        if (!streamMap.has(alisten.listen_port)) {
-                            streamMap.set(alisten.listen_port, new Map<string, NginxStreamDB>());
-                        }
-
-                        const mapDomainStreams = streamMap.get(alisten.listen_port);
-                        mapDomainStreams!.set(adomain.domainname, astream);
-
-                        streamMap.set(alisten.listen_port, mapDomainStreams!);
+            for (const alink of links) {
+                const adomain = await domainRepository.findOne({
+                    where: {
+                        id: alink.domain_id
                     }
-                } else if (alisten.listen_type === ListenTypes.http) {
-                    // read http by db ---------------------------------------------------------------------------------
-                    const https = await httpRepository.find({
-                        where: {
-                            domain_id: adomain.id
+                });
+
+                if (adomain) {
+                    // read streams by db ------------------------------------------------------------------------------
+
+                    if (alisten.listen_type === ListenTypes.stream) {
+                        const tstreams = await streamRepository.find({
+                            where: {
+                                domain_id: adomain.id
+                            }
+                        });
+
+                        for (const astream of tstreams) {
+                            if (!streamMap.has(alisten.listen_port)) {
+                                streamMap.set(alisten.listen_port, new Map<string, NginxStreamDB>());
+                            }
+
+                            const mapDomainStreams = streamMap.get(alisten.listen_port);
+                            mapDomainStreams!.set(adomain.domainname, astream);
+
+                            streamMap.set(alisten.listen_port, mapDomainStreams!);
                         }
-                    });
+                    } else if (alisten.listen_type === ListenTypes.http) {
+                        // read http by db -----------------------------------------------------------------------------
 
-                    for (const http of https) {
-                        if (!httpMap.has(alisten.listen_port)) {
-                            httpMap.set(alisten.listen_port, new Map<string, NginxHttpDB>());
+                        const https = await httpRepository.find({
+                            where: {
+                                domain_id: adomain.id
+                            }
+                        });
+
+                        for (const http of https) {
+                            if (!httpMap.has(alisten.listen_port)) {
+                                httpMap.set(alisten.listen_port, new Map<string, NginxHttpDB>());
+                            }
+
+                            const mapDomainHttp = httpMap.get(alisten.listen_port);
+                            mapDomainHttp!.set(adomain.domainname, http);
+
+                            httpMap.set(alisten.listen_port, mapDomainHttp!);
                         }
-
-                        const mapDomainHttp = httpMap.get(alisten.listen_port);
-                        mapDomainHttp!.set(adomain.domainname, http);
-
-                        httpMap.set(alisten.listen_port, mapDomainHttp!);
                     }
                 }
             }
         }
 
         // fill config -------------------------------------------------------------------------------------------------
+        const tupstreams: string[] = [];
 
         streamMap.forEach((domainStreams, listenPort) => {
             const varName = `$ffstream${listenPort}`;
@@ -119,10 +130,15 @@ export class NginxService {
 
                 upstreamName += `${tstream.domain_id}`;
 
-                const upStream = new Upstream(upstreamName);
-                upStream.addVariable('server', `${tstream.destination_address}:${tstream.destination_port}`);
+                if (tupstreams.indexOf(upstreamName) === -1) {
+                    tupstreams.push(upstreamName);
 
-                conf?.getStream().addUpstream(upStream);
+                    const upStream = new Upstream(upstreamName);
+                    upStream.addVariable('server', `${tstream.destination_address}:${tstream.destination_port}`);
+
+                    conf?.getStream().addUpstream(upStream);
+                }
+
                 aMap.addVariable(`${domainName}`, upstreamName);
 
                 if (tstream.isdefault) {

@@ -8,7 +8,6 @@ import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 export type DomainData = {
     id: number;
     domainname: string;
-    listen_id: number;
 };
 
 /**
@@ -42,8 +41,7 @@ export class Domain {
                 for (const adomain of domains) {
                     list.push({
                         id: adomain.id,
-                        domainname: adomain.domainname,
-                        listen_id: adomain.listen_id
+                        domainname: adomain.domainname
                     });
                 }
             }

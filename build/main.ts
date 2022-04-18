@@ -11,6 +11,7 @@ import session from 'express-session';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup';
 import {NginxDomain as NginxDomainDB} from './inc/Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp';
+import {NginxLink as NginxLinkDB} from './inc/Db/MariaDb/Entity/NginxLink';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream';
 import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
@@ -70,6 +71,7 @@ import {NginxService} from './inc/Service/NginxService';
             entities: [
                 UserDB,
                 NginxListenDB,
+                NginxLinkDB,
                 NginxDomainDB,
                 NginxStreamDB,
                 NginxHttpDB,
