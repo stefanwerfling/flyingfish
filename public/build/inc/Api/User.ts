@@ -23,7 +23,7 @@ export type UserInfo = {
 export class User {
 
     /**
-     * getCurrentUser
+     * getUserInfo
      */
     public static async getUserInfo(): Promise<UserInfo | null> {
         const result = await NetFetch.getData('/json/user/info');

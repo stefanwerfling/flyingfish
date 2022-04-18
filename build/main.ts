@@ -1,7 +1,9 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
+import {Domain as DomainController} from './app/Main/Domain';
 import {Login as LoginController} from './app/Main/Login';
+import {User as UserController} from './app/Main/User';
 import {Config} from './inc/Config/Config';
 import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
@@ -141,7 +143,9 @@ import {NginxService} from './inc/Service/NginxService';
         ],
         routes: [],
         controllers: [
-            LoginController
+            LoginController,
+            UserController,
+            DomainController
         ],
         publicDir: public_dir
     });
@@ -150,6 +154,7 @@ import {NginxService} from './inc/Service/NginxService';
     mServer.listen();
 
     // -----------------------------------------------------------------------------------------------------------------
+
     if (tconfig.nginx) {
         NginxServer.getInstance({
             config: tconfig.nginx.config,

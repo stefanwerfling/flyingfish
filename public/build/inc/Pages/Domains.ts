@@ -1,7 +1,9 @@
+import {Domain as DomainAPI} from '../Api/Domain';
 import {Card} from '../PageComponents/Content/Card/Card';
 import {ContentCol12} from '../PageComponents/Content/ContentCol12';
 import {ContentRow} from '../PageComponents/Content/ContentRow';
 import {Table} from '../PageComponents/Content/Table/Table';
+import {Td} from '../PageComponents/Content/Table/Td';
 import {Th} from '../PageComponents/Content/Table/Th';
 import {Tr} from '../PageComponents/Content/Table/Tr';
 import {LeftNavbarLink} from '../PageComponents/Navbar/LeftNavbarLink';
@@ -55,13 +57,49 @@ export class Domains extends BasePage {
         // eslint-disable-next-line no-new
         new Th(trhead, 'Id');
 
+        // eslint-disable-next-line no-new
+        new Th(trhead, 'Domain');
+
+        // eslint-disable-next-line no-new
+        new Th(trhead, 'Source');
+
+        // eslint-disable-next-line no-new
+        new Th(trhead, 'Destination');
+
+        // eslint-disable-next-line no-new
+        new Th(trhead, '');
+
         /**
          * onLoadList
          */
         const onLoadList = async(): Promise<void> => {
             card.showLoading();
+            table.getTbody().empty();
 
-            // todo
+            const domains = await DomainAPI.getDomains();
+
+            if (domains) {
+                card.setTitle(`Domains (${domains.list.length})`);
+
+                for (const entry of domains.list) {
+                    const trbody = new Tr(table.getTbody());
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `#${entry.id}`);
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `${entry.domainname}`);
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, '');
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, '');
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, '');
+                }
+            }
 
             card.hideLoading();
         };
