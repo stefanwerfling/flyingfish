@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "admin-lte": "^3.2.0",
+    "bambooo": "github:stefanwerfling/bambooo",
     "ionicons-css": "^5.2.2",
     "jquery": "^3.5.1",
     "jquery-ui-dist": "^1.12.1",

@@ -1,6 +1,14 @@
 import {Get, JsonController, Session} from 'routing-controllers';
 import {NginxDomain as NginxDomainDB} from '../../inc/Db/MariaDb/Entity/NginxDomain';
+import {NginxLink} from '../../inc/Db/MariaDb/Entity/NginxLink';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+
+/**
+ * DomainLink
+ */
+export type DomainLink = {
+    listen_id: number;
+};
 
 /**
  * DomainData
@@ -8,6 +16,7 @@ import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 export type DomainData = {
     id: number;
     domainname: string;
+    links: DomainLink[];
 };
 
 /**
@@ -35,13 +44,32 @@ export class Domain {
 
         if ((session.user !== undefined) && session.user.isLogin) {
             const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
+            const linkRepository = MariaDbHelper.getRepository(NginxLink);
+
             const domains = await domainRepository.find();
 
             if (domains) {
                 for (const adomain of domains) {
+                    const links = await linkRepository.find({
+                        where: {
+                            domain_id: adomain.id
+                        }
+                    });
+
+                    const linkList: DomainLink[] = [];
+
+                    if (links) {
+                        for (const tlink of links) {
+                            linkList.push({
+                                listen_id: tlink.listen_id
+                            });
+                        }
+                    }
+
                     list.push({
                         id: adomain.id,
-                        domainname: adomain.domainname
+                        domainname: adomain.domainname,
+                        links: linkList
                     });
                 }
             }

@@ -1,12 +1,19 @@
 import {NetFetch} from '../Net/NetFetch';
 
 /**
+ * DomainLink
+ */
+export type DomainLink = {
+    listen_id: number;
+};
+
+/**
  * DomainData
  */
 export type DomainData = {
     id: number;
     domainname: string;
-    listen_id: number;
+    links: DomainLink[];
 };
 
 /**

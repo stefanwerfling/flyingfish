@@ -1,4 +1,7 @@
+import {ListenData} from '../../../../build/app/Main/Listen';
 import {Domain as DomainAPI} from '../Api/Domain';
+import {Listen as ListenAPI} from '../Api/Listen';
+import {Badge, BadgeType} from '../PageComponents/Content/Badge/Badge';
 import {Card} from '../PageComponents/Content/Card/Card';
 import {ContentCol12} from '../PageComponents/Content/ContentCol12';
 import {ContentRow} from '../PageComponents/Content/ContentRow';
@@ -36,11 +39,11 @@ export class Domains extends BasePage {
         // Navbar Left -------------------------------------------------------------------------------------------------
 
         // eslint-disable-next-line no-new
-        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add domain', () => {
+        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Domain', () => {
             this._domainDialog.setTitle('Add new domain');
             this._domainDialog.show();
             return false;
-        });
+        }, 'btn btn-block btn-default btn-sm');
     }
 
     /**
@@ -76,6 +79,19 @@ export class Domains extends BasePage {
             card.showLoading();
             table.getTbody().empty();
 
+            // listens -------------------------------------------------------------------------------------------------
+
+            const listenMap: Map<number, ListenData> = new Map<number, ListenData>();
+            const listens = await ListenAPI.getListens();
+
+            if (listens) {
+                for (const alisten of listens.list) {
+                    listenMap.set(alisten.id, alisten);
+                }
+            }
+
+            // domains -------------------------------------------------------------------------------------------------
+
             const domains = await DomainAPI.getDomains();
 
             if (domains) {
@@ -90,8 +106,17 @@ export class Domains extends BasePage {
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${entry.domainname}`);
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, '');
+                    const sourceTd = new Td(trbody, '');
+
+                    for (const alink of entry.links) {
+                        const listen = listenMap.get(alink.listen_id);
+
+                        if (listen) {
+                            // eslint-disable-next-line no-new
+                            new Badge(sourceTd, `${listen.name} (${listen.port})`,
+                                listen.type === 0 ? BadgeType.warning : BadgeType.success);
+                        }
+                    }
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, '');
