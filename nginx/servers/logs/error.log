@@ -1,0 +1,8 @@
+2022/04/11 08:29:20 [emerg] 21#21: unknown log format "standard" in /opt/app/nginx/nginx.conf:14
+2022/04/11 09:55:36 [notice] 23#23: signal process started
+2022/04/11 15:46:31 [notice] 21#21: signal process started
+2022/04/12 12:24:29 [emerg] 15#15: unknown directive "stream" in /opt/app/nginx/nginx.conf:9
+2022/04/12 12:30:56 [emerg] 16#16: dlopen() "/usr/lib/nginx/modules/ngx_stream_module.so" failed (Error loading shared library /usr/lib/nginx/modules/ngx_stream_module.so: No such file or directory) in /opt/app/nginx/nginx.conf:1
+2022/04/18 21:54:03 [emerg] 16#16: duplicate upstream "ffus_sshremote_3" in /opt/app/nginx/nginx.conf:29
+2022/04/18 22:04:59 [emerg] 15#15: duplicate upstream "ffus_sshremote_3" in /opt/app/nginx/nginx.conf:29
+2022/04/18 22:08:15 [emerg] 15#15: duplicate upstream "ffus_sshremote_3" in /opt/app/nginx/nginx.conf:29
