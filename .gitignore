@@ -2,6 +2,7 @@
 /config.json
 /sample
 /.idea
+/nginx
 
 /backend/node_modules
 /backend/dist
