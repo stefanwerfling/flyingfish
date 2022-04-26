@@ -1,5 +1,4 @@
-import {Element} from '../../PageComponents/Element';
-import {ModalDialog, ModalDialogType} from '../../PageComponents/Modal/ModalDialog';
+import {Element, ModalDialog, ModalDialogType} from 'bambooo';
 
 /**
  * DomainEditModal

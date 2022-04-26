@@ -16,11 +16,7 @@
     "strict": true,
     "target": "ES2016"
   },
-  "exclude": [
-    "node_modules",
-    "**/*.d.ts"
-  ],
-  "include": [
-    "**/*"
+  "files": [
+    "build/index.ts"
   ]
 }

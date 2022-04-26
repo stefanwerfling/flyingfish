@@ -1,15 +1,7 @@
 import {ListenData} from '../../../../build/app/Main/Listen';
 import {Domain as DomainAPI} from '../Api/Domain';
 import {Listen as ListenAPI} from '../Api/Listen';
-import {Badge, BadgeType} from '../PageComponents/Content/Badge/Badge';
-import {Card} from '../PageComponents/Content/Card/Card';
-import {ContentCol12} from '../PageComponents/Content/ContentCol12';
-import {ContentRow} from '../PageComponents/Content/ContentRow';
-import {Table} from '../PageComponents/Content/Table/Table';
-import {Td} from '../PageComponents/Content/Table/Td';
-import {Th} from '../PageComponents/Content/Table/Th';
-import {Tr} from '../PageComponents/Content/Table/Tr';
-import {LeftNavbarLink} from '../PageComponents/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, Card, ContentCol12, ContentRow, Table, Td, Th, Tr, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {DomainEditModal} from './Domains/DomainEditModal';
 

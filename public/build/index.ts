@@ -1,9 +1,7 @@
 import {Login as LoginAPI} from './inc/Api/Login';
 import {User as UserAPI} from './inc/Api/User';
 import {Lang} from './inc/Lang';
-import {NavbarLinkButton} from './inc/PageComponents/Navbar/NavbarLinkButton';
-import {NavbarLinkFullsize} from './inc/PageComponents/Navbar/NavbarLinkFullsize';
-import {SidebarMenuItem} from './inc/PageComponents/Sidebar/SidebarMenuItem';
+import {NavbarLinkButton, NavbarLinkFullsize, SidebarMenuItem} from 'bambooo';
 import {BasePage} from './inc/Pages/BasePage';
 import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
