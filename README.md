@@ -15,6 +15,28 @@ On the "fly fish", a ngnix proxy connection manager and more.
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 [![Liberapay](https://img.shields.io/liberapay/patrons/StefanWerf.svg?logo=liberapay&style=for-the-badge)](https://liberapay.com/StefanWerf/donate)
 
+# Index
+1. [Motivation](#motivation)
+   * 1.1 [Important point](#important-point)
+   * 1.2 [Idea integration](#idea-integration)
+   * 1.3 [Flow diagram idea](#flow-diagram-idea)
+   * 1.4 [Process/development](#processdevelopment)
+   * 1.5 [Projectname](#projectname)
+2. [Project-Parts](#project-parts)
+3. [Nginx Manager](#nginx-manager)
+    * 3.1 [Docker Image](#docker-image)
+    * 3.2 [Build process](#build-process)
+      * 3.2.1 [Build Backend](#build-backend)
+      * 3.2.2 [Build Frontend](#build-frontend)
+      * 3.2.3 [Build Docker-Images](#build-docker-images)
+    * 3.3 [Quick Setup](#quick-setup)
+    * 3.4 [Screenshots](#screenshots)
+4. [SSH-Server](#ssh-server)
+    * 4.1 [Docker Image](#docker-image-1)
+    * 4.2 [Connection](#connection)
+5. [Contributors](#contributors)
+6. [License](#license)
+
 ## Motivation
 I only got to know the Nginx server after Apache. And was pleasantly surprised by the configuration. 
 Some time ago I dealt with the topic of splitting several domains with destinations via the VPN via a bundled server.
@@ -50,7 +72,7 @@ Currently I will first generate simple configuration files for Nginx and feel th
 
 The name of the project is an allusion to the fish that is "air" in an atypical environment for it. Nevertheless, the fish copes perfectly here. This is how I see the project with the Nginx server and the interacting components. The name also goes well with "Docker" a whale.
 
-## Project-Parts
+# Project-Parts
 * Nginx Manager
 * SSH-Server
 
@@ -90,9 +112,16 @@ cd build && npm install && gulp copy-data
 cd ./ && docker-compose build
 ```
 
-### Start Docker-Container
-Docker-Compose-File:
-```yaml
+## Quick Setup
+
+1. Install Docker and Docker-Compose
+
+   - [Docker Install documentation](https://docs.docker.com/install/)
+   - [Docker-Compose Install documentation](https://docs.docker.com/compose/install/)
+
+
+2. Create a docker-compose.yml file similar to this:
+```yml
 version: '3.1'
 
 services:
@@ -170,7 +199,7 @@ networks:
       config:
         -  subnet: 10.103.0.0/16
 ```
-Config-File:
+Create a ```config.json``` similar to this:
 ```json
 {
   "db": {
@@ -196,9 +225,18 @@ Config-File:
 }
 ```
 
-#### Frontend Login
-By the first start is the admin user create by the software:
-* Username: ```admin@flyingfish.org```
+3. Bring up your stack by running
+
+```bash
+docker-compose up -d
+```
+
+4. Log in to the Admin UI by the first start is the admin user create by the backend:
+
+    [http://127.0.0.1:3000](http://127.0.0.1:3000)
+   
+Default Admin User:
+* EMail: ```admin@flyingfish.org```
 * Password: ```changeMyPassword```
 
 #### Screenshots
@@ -221,6 +259,11 @@ ssh -R 3000:localhost:3000 ffadmin@192.168.0.115 -p 2222
 //ssh -R myPort:myIP:remotePort sshUser@ipSSHServer -p portSSH
 ```
 
+# Contributors
+
+Special thanks to the following contributors:
+
+TODO
 
 # License
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
