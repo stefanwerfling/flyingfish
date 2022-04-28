@@ -5,12 +5,17 @@
 /nginx
 
 /backend/node_modules
+/backend/package-lock.json
 /backend/dist
 
 /sshserver/node_modules
 /sshserver/ssh
 /sshserver/dist
 
+/build/node_modules
+/build/package-lock.json
+
 /frontend/node_modules
+/frontend/package-lock.json
 /frontend/dist
-/frontend/js
+/frontend/assets
