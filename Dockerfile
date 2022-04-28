@@ -15,7 +15,7 @@ RUN mkdir -p /opt/app
 
 RUN mkdir -p /opt/app/dist
 RUN mkdir -p /opt/app/node_modules
-RUN mkdir -p /opt/app/public
+RUN mkdir -p /opt/app/frontend
 RUN mkdir -p /opt/app/nginx
 RUN mkdir -p /opt/app/nginx/logs
 RUN mkdir -p /opt/app/nginx/servers
@@ -23,12 +23,18 @@ RUN mkdir -p /opt/app/nginx/servers/logs
 
 WORKDIR /opt/app
 
-COPY dist/ ./dist
-COPY node_modules/ ./node_modules
-COPY public/ ./public
+COPY backend/dist ./dist
+COPY backend/node_modules ./node_modules
+
+COPY frontend/assets ./frontend/assets
+COPY frontend/images ./frontend/images
+COPY frontend/dist ./frontend/dist
+COPY frontend/index.html ./frontend/index.html
+COPY frontend/login.html ./frontend/login.html
+
 COPY nginx/ ./nginx
 
-COPY package.json ./package.json
+COPY  backend/package.json ./package.json
 
 RUN npm install
 
