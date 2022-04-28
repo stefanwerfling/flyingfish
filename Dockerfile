@@ -29,6 +29,7 @@ COPY backend/node_modules ./node_modules
 COPY frontend/assets ./frontend/assets
 COPY frontend/images ./frontend/images
 COPY frontend/dist ./frontend/dist
+COPY frontend/src ./frontend/src
 COPY frontend/index.html ./frontend/index.html
 COPY frontend/login.html ./frontend/login.html
 

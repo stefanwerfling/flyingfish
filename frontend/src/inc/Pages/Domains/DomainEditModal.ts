@@ -1,8 +1,9 @@
-import {Element, ModalDialog, ModalDialogType} from 'bambooo';
+import {ModalDialog, ModalDialogType, Element} from '../../Bambooo';
 
 /**
  * DomainEditModal
  */
+
 export class DomainEditModal extends ModalDialog {
 
     /**

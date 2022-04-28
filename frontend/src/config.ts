@@ -17,6 +17,6 @@ const rjs = new RequireJS();
 
 rjs.config({
     paths: {
-        moment: '../node_modules/public/node_modules/moment/min/moment.min'
+        moment: '../assets/plugins/moment/moment.min',
     }
 });

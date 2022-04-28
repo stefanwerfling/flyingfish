@@ -1,6 +1,6 @@
 import {Domain as DomainAPI} from '../Api/Domain';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
-import {Badge, BadgeType, Card, ContentCol12, ContentRow, Table, Td, Th, Tr, LeftNavbarLink} from 'bambooo';
+import {Badge, BadgeType, Card, ContentCol12, ContentRow, LeftNavbarLink, Table, Td, Th, Tr} from '../Bambooo';
 import {BasePage} from './BasePage';
 import {DomainEditModal} from './Domains/DomainEditModal';
 

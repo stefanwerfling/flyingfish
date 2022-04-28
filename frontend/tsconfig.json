@@ -20,7 +20,10 @@
     "node_modules",
     "**/*.d.ts"
   ],
-  "include": [
-    "./src/**/*.ts"
+  "files": [
+    "./src/index.ts",
+    "./src/login.ts",
+    "./src/config.ts",
+    "./src/service-worker.ts"
   ]
 }

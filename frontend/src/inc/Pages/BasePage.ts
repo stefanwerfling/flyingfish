@@ -1,6 +1,5 @@
-import {LeftNavbarPushmenu, Wrapper} from 'bambooo';
+import {LeftNavbarPushmenu, Wrapper} from '../Bambooo';
 
-// eslint-disable-next-line no-use-before-define
 type loadPageFn = (apage: BasePage) => void;
 
 /**
