@@ -1,5 +1,6 @@
 class RequireJS {
 
+    // @ts-ignore
     private _r: any = window.require;
 
     public config(config: any): void {

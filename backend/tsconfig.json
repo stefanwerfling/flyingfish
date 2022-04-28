@@ -21,10 +21,6 @@
     ]
   },
   "include": [
-    "./build/**/*.ts"
-  ],
-  "exclude": [
-    "./build/public/build",
-    "./build/sshserver/build"
+    "./src/**/*.ts"
   ]
 }
