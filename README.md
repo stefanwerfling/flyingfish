@@ -15,6 +15,12 @@ On the "fly fish", a ngnix proxy connection manager and more.
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 [![Liberapay](https://img.shields.io/liberapay/patrons/StefanWerf.svg?logo=liberapay&style=for-the-badge)](https://liberapay.com/StefanWerf/donate)
 
+<br>
+
+![Issues](https://img.shields.io/github/issues/stefanwerfling/flyingfish?style=for-the-badge)
+![Forks](https://img.shields.io/github/forks/stefanwerfling/flyingfish?style=for-the-badge)
+![Stars](	https://img.shields.io/github/stars/stefanwerfling/flyingfish?style=for-the-badge)
+
 # Index
 1. [Motivation](#motivation)
    * 1.1 [Important point](#important-point)
