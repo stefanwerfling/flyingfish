@@ -49,12 +49,155 @@ Currently I will first generate simple configuration files for Nginx and feel th
 The name of the project is an allusion to the fish that is "air" in an atypical environment for it. Nevertheless, the fish copes perfectly here. This is how I see the project with the Nginx server and the interacting components. The name also goes well with "Docker" a whale.
 
 ## Project-Parts
-* Main Nginx Manager
+* Nginx Manager
 * SSH-Server
 
-# Main Nginx Manager
+# Nginx Manager
 ### Docker Image
 * Image: Alpine
+
+### Build process
+The following steps must be carried out to create the Docker image:
+
+Install Typescript:
+```shell
+sudo apt install node-typescript 
+```
+
+Install Gulp:
+```shell
+npm install --global gulp-cli
+```
+
+#### Build Backend
+```shell
+cd backend && npm install && tsc -p tsconfig.json
+```
+
+#### Build Frontend
+```shell
+cd frontend && npm install && tsc -p tsconfig.json
+```
+
+```shell
+cd build && npm install && gulp copy-data
+```
+
+#### Build Docker-Images
+```shell
+cd ./ && docker-compose build
+```
+
+### Start Docker-Container
+Docker-Compose-File:
+```yaml
+version: '3.1'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: flyingfish_db
+    environment:
+      MYSQL_ROOT_PASSWORD: 'test'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: 'flyingfish'
+    volumes:
+      - flyingfishDbData:/var/lib/mysql
+    ports:
+      - 127.0.0.1:3306:3306
+    networks:
+      flyingfishNet:
+          ipv4_address: 10.103.0.2
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
+  flyingfish:
+    image: flingfish:v1.0
+    build:
+      context: ./
+    container_name: flyingfish_service
+    volumes:
+      - ./config.json:/opt/app/config.json
+    ports:
+      - "443:443"
+      - "80:80"
+      - "3000:3000"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
+  sshremote:
+    image: flyingfishssh:v1.0
+    build:
+      context: ./sshserver/
+    container_name: flyingfish_ssh
+    volumes:
+      - ./config.json:/opt/app/config.json
+      - ./sshserver/ssh:/opt/app/ssh:rw
+    ports:
+      - "2222:22"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.4
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
+volumes:
+  flyingfishDbData:
+    driver: local
+
+networks:
+  flyingfishNet:
+    driver: bridge
+    ipam:
+      config:
+        -  subnet: 10.103.0.0/16
+```
+Config-File:
+```json
+{
+  "db": {
+    "mysql": {
+      "host": "10.103.0.2",
+      "port": 3306,
+      "username": "root",
+      "password": "test",
+      "database": "flyingfish"
+    }
+  },
+  "httpserver": {
+    "port": 3000,
+    "publicdir": "frontend"
+  },
+  "nginx": {
+    "config": "/opt/app/nginx/nginx.conf",
+    "prefix": "/opt/app/nginx"
+  },
+  "sshserver": {
+    "ip": "10.103.0.4"
+  }
+}
+```
+
+#### Frontend Login
+By the first start is the admin user create by the software:
+* Username: ```admin@flyingfish.org```
+* Password: ```changeMyPassword```
 
 #### Screenshots
 <table>
