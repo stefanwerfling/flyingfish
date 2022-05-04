@@ -1,7 +1,8 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
-import {Domain as DomainController} from './app/Main/Domain';
+import {Host as HostController} from './app/Main/Host';
+import {Listen as ListenController} from './app/Main/Listen';
 import {Login as LoginController} from './app/Main/Login';
 import {User as UserController} from './app/Main/User';
 import {Config} from './inc/Config/Config';
@@ -9,9 +10,9 @@ import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
 import session from 'express-session';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup';
+import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
 import {NginxDomain as NginxDomainDB} from './inc/Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp';
-import {NginxLink as NginxLinkDB} from './inc/Db/MariaDb/Entity/NginxLink';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream';
 import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
@@ -22,6 +23,7 @@ import {NginxServer} from './inc/Nginx/NginxServer';
 import {Server} from './inc/Server/Server';
 import cookieParser from 'cookie-parser';
 import {NginxService} from './inc/Service/NginxService';
+import {UpnpNatService} from './inc/Service/UpnpNatService';
 
 /**
  * Main
@@ -71,12 +73,12 @@ import {NginxService} from './inc/Service/NginxService';
             entities: [
                 UserDB,
                 NginxListenDB,
-                NginxLinkDB,
                 NginxDomainDB,
                 NginxStreamDB,
                 NginxHttpDB,
                 SshPortDB,
-                SshUserDB
+                SshUserDB,
+                NatPortDB
             ],
             migrations: [
             ],
@@ -147,7 +149,8 @@ import {NginxService} from './inc/Service/NginxService';
         controllers: [
             LoginController,
             UserController,
-            DomainController
+            HostController,
+            ListenController
         ],
         publicDir: public_dir
     });
@@ -165,5 +168,10 @@ import {NginxService} from './inc/Service/NginxService';
     }
 
     await NginxService.getInstance().start();
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    const upnpNat = new UpnpNatService();
+    upnpNat.start();
 
 })();

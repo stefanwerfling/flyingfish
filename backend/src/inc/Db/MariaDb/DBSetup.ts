@@ -1,5 +1,7 @@
 import * as bcrypt from 'bcrypt';
-import {ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen';
+import {NginxDomain as NginxDomainDB} from './Entity/NginxDomain';
+import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen';
+import {NginxStream as NginxStreamDB} from './Entity/NginxStream';
 import {User as UserDB} from './Entity/User';
 import {MariaDbHelper} from './MariaDbHelper';
 
@@ -35,42 +37,76 @@ export class DBSetup {
 
         if (listenCount === 0) {
             // add 443 listener
-            const l443 = new NginxListenDB();
-            l443.name = 'HTTPS/SSL EXTERN';
+            let l443 = new NginxListenDB();
+            l443.name = 'Stream SSL EXTERN';
             l443.listen_port = 443;
             l443.listen_type = ListenTypes.stream;
-            l443.description = 'HTTPS/SSL Listener Extern';
+            l443.listen_category = ListenCategory.default_stream_ssl;
+            l443.description = 'Stream/SSL Listener Extern';
 
-            await MariaDbHelper.getConnection().manager.save(l443);
+            l443 = await MariaDbHelper.getConnection().manager.save(l443);
 
             // add 80 listener
-            const l80 = new NginxListenDB();
-            l80.name = 'HTTP EXTERN';
+            let l80 = new NginxListenDB();
+            l80.name = 'Stream EXTERN';
             l80.listen_port = 80;
             l80.listen_type = ListenTypes.stream;
-            l80.description = 'HTTP Listener Extern';
+            l80.listen_category = ListenCategory.default_stream_nonessl;
+            l80.description = 'Stream Listener Extern';
 
-            await MariaDbHelper.getConnection().manager.save(l80);
+            l80 = await MariaDbHelper.getConnection().manager.save(l80);
 
             // add 10443 listener
-            const l10443 = new NginxListenDB();
+            let l10443 = new NginxListenDB();
             l10443.name = 'HTTPS INTERN';
             l10443.listen_port = 10443;
             l10443.listen_type = ListenTypes.http;
+            l10443.listen_category = ListenCategory.https;
             l10443.description = 'HTTPS Listener Intern';
 
-            await MariaDbHelper.getConnection().manager.save(l10443);
+            l10443 = await MariaDbHelper.getConnection().manager.save(l10443);
 
             // add 10080 listener
-            const l10080 = new NginxListenDB();
+            let l10080 = new NginxListenDB();
             l10080.name = 'HTTP INTERN';
             l10080.listen_port = 10080;
             l10080.listen_type = ListenTypes.http;
+            l10080.listen_category = ListenCategory.http;
             l10080.description = 'HTTP Listener Intern';
 
-            await MariaDbHelper.getConnection().manager.save(l10080);
+            l10080 = await MariaDbHelper.getConnection().manager.save(l10080);
 
             console.log('Default listener create for first init.');
+
+            // create default domain _ ---------------------------------------------------------------------------------
+
+            let defaultDomain = new NginxDomainDB();
+            defaultDomain.domainname = '_';
+
+            defaultDomain = await MariaDbHelper.getConnection().manager.save(defaultDomain);
+
+            // add stream _ --------------------------------------------------------------------------------------------
+            const sTo10443 = new NginxStreamDB();
+            sTo10443.domain_id = defaultDomain.id;
+            sTo10443.listen_id = l443.id;
+            sTo10443.alias_name = 'StreamTo10443';
+            sTo10443.destination_address = '127.0.0.1';
+            sTo10443.destination_port = 10443;
+            sTo10443.isdefault = true;
+            sTo10443.index = 9999;
+
+            await MariaDbHelper.getConnection().manager.save(sTo10443);
+
+            const sTo10080 = new NginxStreamDB();
+            sTo10080.domain_id = defaultDomain.id;
+            sTo10080.listen_id = l80.id;
+            sTo10080.alias_name = 'StreamTo10080';
+            sTo10080.destination_address = '127.0.0.1';
+            sTo10080.destination_port = 10080;
+            sTo10080.isdefault = true;
+            sTo10080.index = 9999;
+
+            await MariaDbHelper.getConnection().manager.save(sTo10080);
         }
     }
 

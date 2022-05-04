@@ -32,6 +32,7 @@ COPY frontend/dist ./frontend/dist
 COPY frontend/src ./frontend/src
 COPY frontend/index.html ./frontend/index.html
 COPY frontend/login.html ./frontend/login.html
+COPY frontend/manifest.json ./frontend/manifest.json
 
 COPY nginx/ ./nginx
 

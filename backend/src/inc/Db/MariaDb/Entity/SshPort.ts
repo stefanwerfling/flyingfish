@@ -1,7 +1,7 @@
 import {Entity, PrimaryGeneratedColumn, Column, BaseEntity, Index} from 'typeorm';
 
 /**
- * User Entity
+ * SSH port Entity
  */
 @Entity({name: 'ssh_port'})
 export class SshPort extends BaseEntity {

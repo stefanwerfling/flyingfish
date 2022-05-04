@@ -1,9 +1,11 @@
 import {Login as LoginAPI} from './inc/Api/Login';
 import {User as UserAPI} from './inc/Api/User';
-import {NavbarLinkButton, NavbarLinkFullsize, SidebarMenuItem} from './inc/Bambooo';
+import {SidebarMenuItem} from './inc/Bambooo/Sidebar/SidebarMenuItem';
+import {NavbarLinkFullsize} from './inc/Bambooo/Navbar/NavbarLinkFullsize';
+import {NavbarLinkButton} from './inc/Bambooo/Navbar/NavbarLinkButton';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
-import {Domains as DomainsPage} from './inc/Pages/Domains';
+import {Hosts as HostsPage} from './inc/Pages/Hosts';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
 import {UtilColor} from './inc/Utils/UtilColor';
 
@@ -67,11 +69,11 @@ import {UtilColor} from './inc/Utils/UtilColor';
         // sidemenu ------------------------------------------------------------------------------------------------
         const sidemenuList = [
             {
-                title: 'Domains',
+                title: 'Hosts',
                 icon: 'fa-solid fa-tags',
-                name: 'domains',
+                name: 'hosts',
                 onClick: (): void => {
-                    loadPage(new DomainsPage());
+                    loadPage(new HostsPage());
                 }
             },
             {
@@ -117,5 +119,5 @@ import {UtilColor} from './inc/Utils/UtilColor';
         globalPage = page;
     };
 
-    await loadPage(new DomainsPage());
+    await loadPage(new HostsPage());
 })();

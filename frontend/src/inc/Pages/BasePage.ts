@@ -1,4 +1,5 @@
-import {LeftNavbarPushmenu, Wrapper} from '../Bambooo';
+import {Wrapper} from '../Bambooo/Wrapper';
+import {LeftNavbarPushmenu} from '../Bambooo/Navbar/LeftNavbarPushmenu';
 
 type loadPageFn = (apage: BasePage) => void;
 

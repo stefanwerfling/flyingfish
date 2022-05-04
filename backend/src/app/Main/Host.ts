@@ -1,67 +1,82 @@
 import {Get, JsonController, Session} from 'routing-controllers';
 import {NginxDomain as NginxDomainDB} from '../../inc/Db/MariaDb/Entity/NginxDomain';
-import {NginxLink} from '../../inc/Db/MariaDb/Entity/NginxLink';
+import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
+import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 
 /**
- * DomainLink
+ * HostListen
  */
-export type DomainLink = {
+export type HostListen = {
     listen_id: number;
 };
 
 /**
- * DomainData
+ * HostData
  */
-export type DomainData = {
+export type HostData = {
     id: number;
     domainname: string;
-    links: DomainLink[];
+    links: HostListen[];
 };
 
 /**
- * DomainsResponse
+ * HostsResponse
  */
-export type DomainsResponse = {
+export type HostsResponse = {
     status: string;
     msg?: string;
-    list: DomainData[];
+    list: HostData[];
 };
 
 /**
- * Domain
+ * Host
  */
 @JsonController()
-export class Domain {
+export class Host {
 
     /**
      * getDomains
      * @param session
      */
-    @Get('/json/domain/list')
-    public async getDomains(@Session() session: any): Promise<DomainsResponse> {
-        const list: DomainData[] = [];
+    @Get('/json/host/list')
+    public async getDomains(@Session() session: any): Promise<HostsResponse> {
+        const list: HostData[] = [];
 
         if ((session.user !== undefined) && session.user.isLogin) {
             const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
-            const linkRepository = MariaDbHelper.getRepository(NginxLink);
-
+            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
+            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
             const domains = await domainRepository.find();
 
             if (domains) {
                 for (const adomain of domains) {
-                    const links = await linkRepository.find({
+                    const linkList: HostListen[] = [];
+
+                    const streams = await streamRepository.find({
                         where: {
                             domain_id: adomain.id
                         }
                     });
 
-                    const linkList: DomainLink[] = [];
-
-                    if (links) {
-                        for (const tlink of links) {
+                    if (streams) {
+                        for (const tstream of streams) {
                             linkList.push({
-                                listen_id: tlink.listen_id
+                                listen_id: tstream.listen_id
+                            });
+                        }
+                    }
+
+                    const https = await httpRepository.find({
+                        where: {
+                            domain_id: adomain.id
+                        }
+                    });
+
+                    if (https) {
+                        for (const thttp of https) {
+                            linkList.push({
+                                listen_id: thttp.listen_id
                             });
                         }
                     }

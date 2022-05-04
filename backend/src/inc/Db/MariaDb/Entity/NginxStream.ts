@@ -15,6 +15,11 @@ export class NginxStream extends BaseEntity {
         // @ts-ignore
     domain_id: number;
 
+    @Index()
+    @Column()
+        // @ts-ignore
+    listen_id: number;
+
     @Column()
         // @ts-ignore
     index: number;

@@ -6,7 +6,7 @@
 
 ![FlyingFish](doc/logo.png)
 
-On the "fly fish", a ngnix proxy connection manager and more.
+On the "Flyingfish", a ngnix proxy connection manager and more.
 </h1>
 
 [![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.0.0-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
@@ -61,16 +61,35 @@ I started the project and have a lot to learn myself, to incorporate my own idea
 7. and more ...
 
 #### Idea integration
-In addition to the classic problem of providing HTTPS connections with Letsencrypt certificates, URI with a proxy to direct to internal web servers. Was the idea to use "SSH Remote Port forwarding" to forward a local web server via SSH (via the internet or internal network) so that it can be reached via Nginx with a valid HTTPs certificate.
+<img src="doc/docker.png" width="32px" height="32">
 
+* Fast installation through Docker.
 
-I see an advantage in testing projects that require an API connection or for rolling out a user-defined configuration that can be delivered securely using HTTPs.
+<img src="doc/nginx.png" width="32px" height="32">
+<img src="doc/https.png" width="32px" height="32">
+<img src="doc/ssh.png" width="32px" height="32">
 
-#### Flow diagram idea
+* In addition to the classic problem of providing HTTPS connections with Letsencrypt certificates, URI with a proxy to direct to internal web servers. Was the idea to use "SSH Remote Port forwarding" to forward a local web server via SSH (via the internet or internal network) so that it can be reached via Nginx with a valid HTTPs certificate.
 
+<img src="doc/api.png" width="32px" height="32">
+
+* I see an advantage in testing projects that require an API connection or for rolling out a user-defined configuration that can be delivered securely using HTTPs.
+
+<img src="doc/nat.png" width="32px" height="32">
+
+* Using Upnp Nat so that the ports are automatically forwarded via the router. It is also possible to carry out a Nat with several routers.
+
+<img src="doc/dns.png" width="32px" height="32">
+
+* DynDns Client for updates by IP changes.
+
+#### Flow diagrams idea
+#### Nginx
 <img src="doc/flow.png" alt="Flow">
 
 [see more](https://app.creately.com/d/HhWb5041Utr/view)
+
+
 
 #### Process/development
 

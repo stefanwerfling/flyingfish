@@ -1,19 +1,27 @@
-import {Domain as DomainAPI} from '../Api/Domain';
+import {Host as HostAPI} from '../Api/Host';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
-import {Badge, BadgeType, Card, ContentCol12, ContentRow, LeftNavbarLink, Table, Td, Th, Tr} from '../Bambooo';
+import {Td} from '../Bambooo/Content/Table/Td';
+import {Th} from '../Bambooo/Content/Table/Th';
+import {Tr} from '../Bambooo/Content/Table/Tr';
+import {Table} from '../Bambooo/Content/Table/Table';
+import {ContentCol12} from '../Bambooo/Content/ContentCol12';
+import {Card} from '../Bambooo/Content/Card/Card';
+import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {BasePage} from './BasePage';
-import {DomainEditModal} from './Domains/DomainEditModal';
+import {HostEditModal} from './Hosts/HostEditModal';
 
 /**
- * Domains Page
+ * Hosts Page
  */
-export class Domains extends BasePage {
+export class Hosts extends BasePage {
 
     /**
-     * domain dialog
+     * host dialog
      * @protected
      */
-    protected _domainDialog: DomainEditModal;
+    protected _hostDialog: HostEditModal;
 
     /**
      * constructor
@@ -21,18 +29,18 @@ export class Domains extends BasePage {
     public constructor() {
         super();
 
-        // domain modal ------------------------------------------------------------------------------------------------
+        // host modal -------------------------------------------------------------------------------------------------
 
-        this._domainDialog = new DomainEditModal(
+        this._hostDialog = new HostEditModal(
             this._wrapper.getContentWrapper().getContent()
         );
 
         // Navbar Left -------------------------------------------------------------------------------------------------
 
         // eslint-disable-next-line no-new
-        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Domain', () => {
-            this._domainDialog.setTitle('Add new domain');
-            this._domainDialog.show();
+        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Host', () => {
+            this._hostDialog.setTitle('Add new domain');
+            this._hostDialog.show();
             return false;
         }, 'btn btn-block btn-default btn-sm');
     }
@@ -44,7 +52,7 @@ export class Domains extends BasePage {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
         const card = new Card(new ContentCol12(row1));
 
-        card.setTitle('Domains');
+        card.setTitle('Hosts');
 
         const table = new Table(card.getElement());
         const trhead = new Tr(table.getThead());
@@ -52,10 +60,10 @@ export class Domains extends BasePage {
         new Th(trhead, 'Id');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Domain');
+        new Th(trhead, 'Source');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Source');
+        new Th(trhead, 'Domain');
 
         // eslint-disable-next-line no-new
         new Th(trhead, 'Destination');
@@ -83,7 +91,7 @@ export class Domains extends BasePage {
 
             // domains -------------------------------------------------------------------------------------------------
 
-            const domains = await DomainAPI.getDomains();
+            const domains = await HostAPI.getHosts();
 
             if (domains) {
                 card.setTitle(`Domains (${domains.list.length})`);
@@ -94,19 +102,35 @@ export class Domains extends BasePage {
                     // eslint-disable-next-line no-new
                     new Td(trbody, `#${entry.id}`);
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${entry.domainname}`);
-
                     const sourceTd = new Td(trbody, '');
+
+                    let listenIndex = 0;
 
                     for (const alink of entry.links) {
                         const listen = listenMap.get(alink.listen_id);
 
                         if (listen) {
+                            if (listenIndex > 0) {
+                                sourceTd.getElement().append(', ');
+                            }
+
                             // eslint-disable-next-line no-new
-                            new Badge(sourceTd, `${listen.name} (${listen.port})`,
+                            new Badge(sourceTd.getElement(), `${listen.name} (${listen.port})`,
                                 listen.type === 0 ? BadgeType.warning : BadgeType.success);
                         }
+
+                        listenIndex++;
+                    }
+
+                    // eslint-disable-next-line no-new
+                    const domainTd = new Td(trbody, '');
+
+                    if (entry.domainname === '_') {
+                        // eslint-disable-next-line no-new
+                        new Badge(domainTd.getElement(), 'default', BadgeType.danger);
+                    } else {
+                        // eslint-disable-next-line no-new
+                        new Badge(domainTd.getElement(), `${entry.domainname}`, BadgeType.secondary);
                     }
 
                     // eslint-disable-next-line no-new

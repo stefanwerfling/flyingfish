@@ -1,6 +1,5 @@
 import {NginxDomain as NginxDomainDB} from '../Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
-import {NginxLink as NginxLinkDB} from '../Db/MariaDb/Entity/NginxLink';
 import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
@@ -48,7 +47,6 @@ export class NginxService {
         // read db -----------------------------------------------------------------------------------------------------
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
-        const linkRepository = MariaDbHelper.getRepository(NginxLinkDB);
         const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
         const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
         const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
@@ -56,58 +54,58 @@ export class NginxService {
         const listens = await listenRepository.find();
 
         for (const alisten of listens) {
-            const links = await linkRepository.find({
-                where: {
-                    listen_id: alisten.id
-                }
-            });
+            // read streams by db --------------------------------------------------------------------------------------
 
-            for (const alink of links) {
-                const adomain = await domainRepository.findOne({
+            if (alisten.listen_type === ListenTypes.stream) {
+                const tstreams = await streamRepository.find({
                     where: {
-                        id: alink.domain_id
+                        listen_id: alisten.id
                     }
                 });
 
-                if (adomain) {
-                    // read streams by db ------------------------------------------------------------------------------
-
-                    if (alisten.listen_type === ListenTypes.stream) {
-                        const tstreams = await streamRepository.find({
-                            where: {
-                                domain_id: adomain.id
-                            }
-                        });
-
-                        for (const astream of tstreams) {
-                            if (!streamMap.has(alisten.listen_port)) {
-                                streamMap.set(alisten.listen_port, new Map<string, NginxStreamDB>());
-                            }
-
-                            const mapDomainStreams = streamMap.get(alisten.listen_port);
-                            mapDomainStreams!.set(adomain.domainname, astream);
-
-                            streamMap.set(alisten.listen_port, mapDomainStreams!);
+                for (const astream of tstreams) {
+                    const adomain = await domainRepository.findOne({
+                        where: {
+                            id: astream.domain_id
                         }
-                    } else if (alisten.listen_type === ListenTypes.http) {
-                        // read http by db -----------------------------------------------------------------------------
+                    });
 
-                        const https = await httpRepository.find({
-                            where: {
-                                domain_id: adomain.id
-                            }
-                        });
-
-                        for (const http of https) {
-                            if (!httpMap.has(alisten.listen_port)) {
-                                httpMap.set(alisten.listen_port, new Map<string, NginxHttpDB>());
-                            }
-
-                            const mapDomainHttp = httpMap.get(alisten.listen_port);
-                            mapDomainHttp!.set(adomain.domainname, http);
-
-                            httpMap.set(alisten.listen_port, mapDomainHttp!);
+                    if (adomain) {
+                        if (!streamMap.has(alisten.listen_port)) {
+                            streamMap.set(alisten.listen_port, new Map<string, NginxStreamDB>());
                         }
+
+                        const mapDomainStreams = streamMap.get(alisten.listen_port);
+                        mapDomainStreams!.set(adomain.domainname, astream);
+
+                        streamMap.set(alisten.listen_port, mapDomainStreams!);
+                    }
+                }
+            } else if (alisten.listen_type === ListenTypes.http) {
+                // read http by db -----------------------------------------------------------------------------
+
+                const https = await httpRepository.find({
+                    where: {
+                        listen_id: alisten.id
+                    }
+                });
+
+                for (const http of https) {
+                    const adomain = await domainRepository.findOne({
+                        where: {
+                            id: http.domain_id
+                        }
+                    });
+
+                    if (adomain) {
+                        if (!httpMap.has(alisten.listen_port)) {
+                            httpMap.set(alisten.listen_port, new Map<string, NginxHttpDB>());
+                        }
+
+                        const mapDomainHttp = httpMap.get(alisten.listen_port);
+                        mapDomainHttp!.set(adomain.domainname, http);
+
+                        httpMap.set(alisten.listen_port, mapDomainHttp!);
                     }
                 }
             }
@@ -139,10 +137,10 @@ export class NginxService {
                     conf?.getStream().addUpstream(upStream);
                 }
 
-                aMap.addVariable(`${domainName}`, upstreamName);
-
                 if (tstream.isdefault) {
                     defaultMapDomain = upstreamName;
+                } else {
+                    aMap.addVariable(`${domainName}`, upstreamName);
                 }
             });
 
@@ -158,6 +156,13 @@ export class NginxService {
             aServer.addVariable('ssl_preread', 'on');
 
             conf?.getStream().addServer(aServer);
+        });
+
+        httpMap.forEach((value, listenPort) => {
+            const aServer = new NginxConfServer();
+            aServer.setListen(listenPort);
+
+            conf?.getHttp().addServer(aServer);
         });
     }
 

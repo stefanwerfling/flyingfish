@@ -9,6 +9,19 @@ export enum ListenTypes {
 }
 
 /**
+ * ListenCategory
+ */
+export enum ListenCategory {
+    default_stream_nonessl,
+    default_stream_ssl,
+    default_http,
+    default_https,
+    stream,
+    http,
+    https
+}
+
+/**
  * Nginx Stream Entity
  */
 @Entity({name: 'nginx_listen'})
@@ -21,6 +34,10 @@ export class NginxListen extends BaseEntity {
     @Column()
         // @ts-ignore
     listen_type: number;
+
+    @Column()
+        // @ts-ignore
+    listen_category: number;
 
     @Index()
     @Column()
@@ -46,5 +63,12 @@ export class NginxListen extends BaseEntity {
     })
         // @ts-ignore
     description: string;
+
+    @Column({
+        type: 'bool',
+        default: false
+    })
+        // @ts-ignore
+    enable_upnp_nat: boolean;
 
 }
