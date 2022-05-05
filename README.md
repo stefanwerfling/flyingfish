@@ -61,7 +61,13 @@ I started the project and have a lot to learn myself, to incorporate my own idea
 7. and more ...
 
 #### Idea integration
+<table style="border: 0px;">
+<tr>
+<td>
 <img src="doc/docker.png" width="32px" height="32">
+</td>
+</tr>
+</table>
 
 * Fast installation through Docker.
 
@@ -81,15 +87,33 @@ I started the project and have a lot to learn myself, to incorporate my own idea
 
 * In addition to the classic problem of providing HTTPS connections with Letsencrypt certificates, URI with a proxy to direct to internal web servers. Was the idea to use "SSH Remote Port forwarding" to forward a local web server via SSH (via the internet or internal network) so that it can be reached via Nginx with a valid HTTPs certificate.
 
+<table style="border: 0px;">
+<tr>
+<td>
 <img src="doc/api.png" width="32px" height="32">
+</td>
+</tr>
+</table>
 
 * I see an advantage in testing projects that require an API connection or for rolling out a user-defined configuration that can be delivered securely using HTTPs.
 
+<table style="border: 0px;">
+<tr>
+<td>
 <img src="doc/nat.png" width="32px" height="32">
+</td>
+</tr>
+</table>
 
 * Using Upnp Nat so that the ports are automatically forwarded via the router. It is also possible to carry out a Nat with several routers.
 
+<table style="border: 0px;">
+<tr>
+<td>
 <img src="doc/dns.png" width="32px" height="32">
+</td>
+</tr>
+</table>
 
 * DynDns Client for updates by IP changes.
 
