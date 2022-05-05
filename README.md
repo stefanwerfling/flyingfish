@@ -217,6 +217,7 @@ services:
       - "443:443"
       - "80:80"
       - "3000:3000"
+      - "1900:1900"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
