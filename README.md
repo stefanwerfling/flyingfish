@@ -65,9 +65,19 @@ I started the project and have a lot to learn myself, to incorporate my own idea
 
 * Fast installation through Docker.
 
+<table style="border: 0px;">
+<tr>
+<td>
 <img src="doc/nginx.png" width="32px" height="32">
+</td>
+<td>
 <img src="doc/https.png" width="32px" height="32">
+</td>
+<td>
 <img src="doc/ssh.png" width="32px" height="32">
+</td>
+</tr>
+</table>
 
 * In addition to the classic problem of providing HTTPS connections with Letsencrypt certificates, URI with a proxy to direct to internal web servers. Was the idea to use "SSH Remote Port forwarding" to forward a local web server via SSH (via the internet or internal network) so that it can be reached via Nginx with a valid HTTPs certificate.
 
