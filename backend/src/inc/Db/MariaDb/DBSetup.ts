@@ -57,24 +57,24 @@ export class DBSetup {
             l80 = await MariaDbHelper.getConnection().manager.save(l80);
 
             // add 10443 listener
-            let l10443 = new NginxListenDB();
+            const l10443 = new NginxListenDB();
             l10443.name = 'HTTPS INTERN';
             l10443.listen_port = 10443;
             l10443.listen_type = ListenTypes.http;
             l10443.listen_category = ListenCategory.https;
             l10443.description = 'HTTPS Listener Intern';
 
-            l10443 = await MariaDbHelper.getConnection().manager.save(l10443);
+            await MariaDbHelper.getConnection().manager.save(l10443);
 
             // add 10080 listener
-            let l10080 = new NginxListenDB();
+            const l10080 = new NginxListenDB();
             l10080.name = 'HTTP INTERN';
             l10080.listen_port = 10080;
             l10080.listen_type = ListenTypes.http;
             l10080.listen_category = ListenCategory.http;
             l10080.description = 'HTTP Listener Intern';
 
-            l10080 = await MariaDbHelper.getConnection().manager.save(l10080);
+            await MariaDbHelper.getConnection().manager.save(l10080);
 
             console.log('Default listener create for first init.');
 

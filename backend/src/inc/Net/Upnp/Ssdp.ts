@@ -179,6 +179,13 @@ export class Ssdp implements ISsdp {
     }
 
     /**
+     * getDirectAddress
+     */
+    public getDirectAddress(): string {
+        return this._directAddress;
+    }
+
+    /**
      * _createSocket
      * @param iface
      * @private

@@ -8,6 +8,10 @@ export type UpnpNatCacheMapping = {
       host: string;
       port: number;
     };
+    private: {
+        host: string;
+        port: number;
+    };
     protocol: string;
     enabled: boolean;
     description: string;
@@ -79,6 +83,8 @@ export class UpnpNatCache {
         }
 
         list.set(deviceId, mappings);
+
+        this._cache.set(this._name, list);
     }
 
     /**

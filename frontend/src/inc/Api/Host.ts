@@ -1,9 +1,22 @@
 import {NetFetch} from '../Net/NetFetch';
 
 /**
- * HostListen
+ * HostStream
  */
-export type HostListen = {
+export type HostStream = {
+    listen_id: number;
+    destination_address: string;
+    destination_port: number;
+    alias_name: string;
+    ssh?: {
+        port: number;
+    };
+};
+
+/**
+ * HostHttp
+ */
+export type HostHttp = {
     listen_id: number;
 };
 
@@ -13,7 +26,8 @@ export type HostListen = {
 export type HostData = {
     id: number;
     domainname: string;
-    links: HostListen[];
+    streams: HostStream[];
+    https: HostHttp[];
 };
 
 /**

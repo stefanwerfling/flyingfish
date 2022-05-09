@@ -56,17 +56,15 @@ export class Hosts extends BasePage {
 
         const table = new Table(card.getElement());
         const trhead = new Tr(table.getThead());
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Id');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Source');
+        new Th(trhead, 'Id');
 
         // eslint-disable-next-line no-new
         new Th(trhead, 'Domain');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Destination');
+        new Th(trhead, 'Source &#8594; Destination');
 
         // eslint-disable-next-line no-new
         new Th(trhead, '');
@@ -102,27 +100,6 @@ export class Hosts extends BasePage {
                     // eslint-disable-next-line no-new
                     new Td(trbody, `#${entry.id}`);
 
-                    const sourceTd = new Td(trbody, '');
-
-                    let listenIndex = 0;
-
-                    for (const alink of entry.links) {
-                        const listen = listenMap.get(alink.listen_id);
-
-                        if (listen) {
-                            if (listenIndex > 0) {
-                                sourceTd.getElement().append(', ');
-                            }
-
-                            // eslint-disable-next-line no-new
-                            new Badge(sourceTd.getElement(), `${listen.name} (${listen.port})`,
-                                listen.type === 0 ? BadgeType.warning : BadgeType.success);
-                        }
-
-                        listenIndex++;
-                    }
-
-                    // eslint-disable-next-line no-new
                     const domainTd = new Td(trbody, '');
 
                     if (entry.domainname === '_') {
@@ -133,8 +110,52 @@ export class Hosts extends BasePage {
                         new Badge(domainTd.getElement(), `${entry.domainname}`, BadgeType.secondary);
                     }
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, '');
+                    const sdTd = new Td(trbody, '');
+
+                    entry.streams.forEach(value => {
+                        const sdDiv = jQuery('<div/>').appendTo(sdTd.getElement());
+
+                        const listen = listenMap.get(value.listen_id);
+
+                        if (listen) {
+
+                            // eslint-disable-next-line no-new
+                            new Badge(sdDiv, `${listen.name} (${listen.port})`,
+                                listen.type === 0 ? BadgeType.warning : BadgeType.success);
+                        }
+
+                        sdDiv.append(' &#8594; ');
+
+                        if (value.ssh) {
+                            // eslint-disable-next-line no-new
+                            new Badge(sdDiv, `ssh (${value.ssh.port})`, BadgeType.primary);
+                        } else {
+                            let badType = BadgeType.warning;
+
+                            if (value.destination_address === '127.0.0.1') {
+                                badType = BadgeType.success;
+                            }
+
+                            // eslint-disable-next-line no-new
+                            new Badge(sdDiv,
+                                `${value.destination_address}:${value.destination_port} (${value.alias_name})`,
+                                badType);
+                        }
+                    });
+
+                    entry.https.forEach(value => {
+                        const sdDiv = jQuery('<div/>').appendTo(sdTd.getElement());
+
+                        const listen = listenMap.get(value.listen_id);
+
+                        if (listen) {
+                            // eslint-disable-next-line no-new
+                            new Badge(sdDiv, `${listen.name} (${listen.port})`,
+                                listen.type === 0 ? BadgeType.warning : BadgeType.success);
+                        }
+
+                        sdDiv.append(' &#8594; ');
+                    });
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, '');

@@ -50,8 +50,6 @@ export class UpnpNatService {
                                     device.gateway.getUuid(),
                                     mappings
                                 );
-
-                                console.log(mappings);
                             } catch (et) {
                                 console.log('Gateway mapping info error');
                             }

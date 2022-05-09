@@ -17,7 +17,7 @@ import {Ssdp} from './Ssdp';
  * Mapping
  */
 export interface Mapping {
-    public: { host: string; port: number; };
+    public: { gateway: string; host: string; port: number; };
     private: { host: string; port: number; };
     protocol: string;
     enabled: boolean;
@@ -260,6 +260,8 @@ export class UpnpNatClient implements IClient {
         let end = false;
         const results = [];
 
+        const publicIp = await this.getPublicIp();
+
         // eslint-disable-next-line no-constant-condition
         while (true) {
             const data = (await gateway
@@ -286,8 +288,9 @@ export class UpnpNatClient implements IClient {
 
             const result: Mapping = {
                 public: {
+                    gateway: this.ssdp.getDirectAddress(),
                     host:
-                        (typeof res.NewRemoteHost === 'string' && res.NewRemoteHost) || '',
+                        (typeof res.NewRemoteHost === 'string' && res.NewRemoteHost) || publicIp,
                     port: parseInt(res.NewExternalPort, 10)
                 },
                 private: {

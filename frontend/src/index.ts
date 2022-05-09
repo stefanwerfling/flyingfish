@@ -6,6 +6,7 @@ import {NavbarLinkButton} from './inc/Bambooo/Navbar/NavbarLinkButton';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
 import {Hosts as HostsPage} from './inc/Pages/Hosts';
+import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
 import {UtilColor} from './inc/Utils/UtilColor';
 
@@ -74,6 +75,14 @@ import {UtilColor} from './inc/Utils/UtilColor';
                 name: 'hosts',
                 onClick: (): void => {
                     loadPage(new HostsPage());
+                }
+            },
+            {
+                title: 'UpnpNat',
+                icon: 'fa-solid fa-map-signs',
+                name: 'upnpnat',
+                onClick: (): void => {
+                    loadPage(new UpnpNatPage());
                 }
             },
             {
