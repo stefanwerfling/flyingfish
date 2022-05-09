@@ -8,6 +8,7 @@
 /nginx/node_modules
 /nginx/nginx.conf
 /nginx/nginx.pid
+/nginx/package-lock.json
 
 /backend/node_modules
 /backend/package-lock.json
