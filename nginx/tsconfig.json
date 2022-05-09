@@ -8,7 +8,7 @@
     "sourceMap": true,
     "removeComments": true,
     "experimentalDecorators": true,
-    "target": "ES6",
+    "target": "ES5",
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",
     "importHelpers": true,

@@ -63,7 +63,7 @@ export class Context {
      * @protected
      */
     protected _createContent(value: string, index: number): string {
-        return '\t'.repeat(index) + value;
+        return `${'\t'.repeat(index) + value}\n`;
     }
 
     /**
@@ -76,12 +76,11 @@ export class Context {
 
         this._variables.forEach((value, key) => {
             if (typeof value === 'string') {
-                buffer += this._createContent(`\t${key} ${value};\n`, index);
+                buffer += this._createContent(`\t${key} ${value};`, index);
             } else if (value instanceof Context) {
                 const nindex = index + 1;
 
-                buffer += '\n';
-                buffer += this._createContent(`\t${value.generate(nindex)}\n`, index);
+                buffer += this._createContent(`\t${value.generate(nindex)}`, index);
             }
         });
 
@@ -99,13 +98,10 @@ export class Context {
         if (contexts.length > 0) {
             buffer += '\n';
 
-            contexts.forEach((value) => {
-                buffer += '\n';
-                buffer += value.generate(index);
+            contexts.forEach((acontext) => {
+                buffer += acontext.generate(index);
                 buffer += '\n';
             });
-
-            buffer += '\n';
         }
 
         return buffer;
@@ -116,11 +112,11 @@ export class Context {
      * @param index
      */
     public generate(index: number = 0): string {
-        let buffer = this._createContent(`${this._name} {\n`, index);
+        let buffer = this._createContent(`${this._name} {`, index);
 
         buffer += this._generateStr(index);
 
-        return buffer + this._createContent('}\n', index);
+        return buffer + this._createContent('}', index);
     }
 
 }

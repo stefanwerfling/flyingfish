@@ -79,6 +79,11 @@ export interface IDevice {
 export class Device implements IDevice {
 
     /**
+     * uuid
+     */
+    readonly _uuid: string;
+
+    /**
      * description
      */
     readonly description: string;
@@ -92,8 +97,9 @@ export class Device implements IDevice {
      * constructor
      * @param url
      */
-    constructor(url: string) {
+    constructor(url: string, uuid: string) {
         this.description = url;
+        this._uuid = uuid;
         this.services = [
             'urn:schemas-upnp-org:service:WANIPConnection:1',
             'urn:schemas-upnp-org:service:WANIPConnection:2',
@@ -101,7 +107,18 @@ export class Device implements IDevice {
         ];
     }
 
+    /**
+     * getUuid
+     */
+    public getUuid(): string {
+        return this._uuid;
+    }
 
+    /**
+     * getXML
+     * @param url
+     * @private
+     */
     private async getXML(url: string): Promise<any> {
         return axios
         .get(url)

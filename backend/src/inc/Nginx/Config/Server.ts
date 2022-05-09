@@ -16,6 +16,14 @@ export enum ServerLogLevel {
 }
 
 /**
+ * ServerErrorPage
+ */
+export type ServerErrorPage = {
+    code: string;
+    uri: string;
+};
+
+/**
  * Server
  */
 export class Server extends Context {
@@ -31,6 +39,12 @@ export class Server extends Context {
      * @protected
      */
     protected _rootDir: string|null = null;
+
+    /**
+     * error pages
+     * @protected
+     */
+    protected _errorPages: ServerErrorPage[] = [];
 
     /**
      * locations
@@ -150,19 +164,33 @@ export class Server extends Context {
     }
 
     /**
+     * addErrorPage
+     * @param errorPage
+     */
+    public addErrorPage(errorPage: ServerErrorPage): void {
+        this._errorPages.push(errorPage);
+    }
+
+    /**
      * _generateStr
      * @param index
      * @protected
      */
     protected _generateStr(index: number = 0): string {
-        let buffer = super._generateStr(index + 1);
+        let buffer = super._generateStr(index);
 
         if (this._serverName !== '') {
-            buffer += this._createContent(`\tserver_name ${this._serverName};\n`, index + 1);
+            buffer += this._createContent(`\tserver_name ${this._serverName};`, index);
         }
 
         if (this._rootDir !== null) {
-            buffer += this._createContent(`\troot ${this._rootDir};\n`, index + 1);
+            buffer += this._createContent(`\troot ${this._rootDir};`, index);
+        }
+
+        if (this._errorPages.length > 0) {
+            this._errorPages.forEach((value) => {
+                buffer += this._createContent(`\terror_page ${value.code} ${value.uri};`, index);
+            });
         }
 
         return buffer;
@@ -173,12 +201,12 @@ export class Server extends Context {
      * @param index
      */
     public generate(index: number = 0): string {
-        let buffer = this._createContent(`${this._name} {\n`, index);
+        let buffer = this._createContent(`${this._name} {`, index);
 
         buffer += this._generateStr(index);
         buffer += Context.contextsToStr(this._locations, index + 1);
 
-        return buffer + this._createContent('}\n', index);
+        return buffer + this._createContent('}', index);
     }
 
 }

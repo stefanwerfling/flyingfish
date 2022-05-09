@@ -34,11 +34,11 @@ export class Map extends Context {
      * @param index
      */
     public generate(index: number = 0): string {
-        let buffer = this._createContent(`${this._name} ${this._sourceVar} ${this._destinationVar} {\n`, index);
+        let buffer = this._createContent(`${this._name} ${this._sourceVar} ${this._destinationVar} {`, index);
 
         buffer += this._generateStr(index);
 
-        return buffer + this._createContent('}\n', index);
+        return buffer + this._createContent('}', index);
     }
 
 }

@@ -1,4 +1,5 @@
 import {Job, scheduleJob} from 'node-schedule';
+import {UpnpNatCache} from '../Cache/UpnpNatCache';
 import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort';
 import {promise as PingPromise} from 'ping';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
@@ -30,6 +31,8 @@ export class UpnpNatService {
                     }
                 });
 
+                UpnpNatCache.getInstance().reset();
+
                 if (nats) {
                     for (const anat of nats) {
                         const res = await PingPromise.probe(anat.gateway_address);
@@ -40,6 +43,16 @@ export class UpnpNatService {
                             });
 
                             try {
+                                const device = await client.getGateway();
+                                const mappings = await client.getMappings();
+
+                                UpnpNatCache.getInstance().addGatewayMappings(
+                                    device.gateway.getUuid(),
+                                    mappings
+                                );
+
+                                console.log(mappings);
+
                                 const map = await client.createMapping({
                                     description: anat.description,
                                     clientAddress: anat.client_address,

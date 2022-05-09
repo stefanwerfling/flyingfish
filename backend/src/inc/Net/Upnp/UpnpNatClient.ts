@@ -301,6 +301,7 @@ export class UpnpNatClient implements IClient {
                 // temporary, so typescript will compile
                 local: false
             };
+
             result.local = result.private.host === address;
 
             if (options.local && !result.local) {
@@ -366,8 +367,19 @@ export class UpnpNatClient implements IClient {
                 p.emit('end');
                 clearTimeout(timeout);
 
+                const usnParts = info.usn.split('::');
+                let uuid = '';
+
+                if (usnParts.length > 1) {
+                    const uuidParts = usnParts[0].split(':');
+
+                    if (uuidParts.length > 1) {
+                        uuid = uuidParts[1];
+                    }
+                }
+
                 // Create gateway
-                s({gateway: new Device(info.location),
+                s({gateway: new Device(info.location, uuid),
                     address});
             });
         });

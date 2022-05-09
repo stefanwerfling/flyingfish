@@ -116,6 +116,8 @@ I started the project and have a lot to learn myself, to incorporate my own idea
 </table>
 
 * DynDns Client for updates by IP changes.
+* DynLocation Client, a small program that uses an API key that gives FlyingFish the information where the server is in the network (with DHCP IP) and thus adjusts the location of Nginx, much like DynDNS.
+  Helpful for developers.
 
 #### Flow diagrams idea
 #### Nginx
@@ -136,6 +138,7 @@ The name of the project is an allusion to the fish that is "air" in an atypical 
 # Project-Parts
 * Nginx Manager
 * SSH-Server
+* DynLocation (TODO)
 
 # Nginx Manager
 ### Docker Image

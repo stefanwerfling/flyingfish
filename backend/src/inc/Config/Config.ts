@@ -48,7 +48,10 @@ export class Config {
         let config = null;
 
         try {
-            const rawdata = readFileSync(configFile, 'utf-8');
+            const rawdata = readFileSync(configFile, {
+                // @ts-ignore
+                encoding: 'utf-8'
+            });
 
             console.log(`Load json-file: ${configFile}`);
 

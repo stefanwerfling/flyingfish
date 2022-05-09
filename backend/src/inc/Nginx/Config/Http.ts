@@ -38,13 +38,13 @@ export class Http extends Context {
      * @param index
      */
     public generate(index: number = 0): string {
-        let buffer = this._createContent(`${this._name} {\n`, index);
+        let buffer = this._createContent(`${this._name} {`, index);
 
         buffer += this._generateStr();
         buffer += Context.contextsToStr(this._preServers, index + 1);
         buffer += Context.contextsToStr(this._servers, index + 1);
 
-        return buffer + this._createContent('}\n', index);
+        return buffer + this._createContent('}', index);
     }
 
 }

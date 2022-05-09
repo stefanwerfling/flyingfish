@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import {Host as HostController} from './app/Main/Host';
 import {Listen as ListenController} from './app/Main/Listen';
 import {Login as LoginController} from './app/Main/Login';
+import {UpnpNat as UpnpNatController} from './app/Main/UpnpNat';
 import {User as UserController} from './app/Main/User';
 import {Config} from './inc/Config/Config';
 import {v4 as uuid} from 'uuid';
@@ -150,7 +151,8 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             LoginController,
             UserController,
             HostController,
-            ListenController
+            ListenController,
+            UpnpNatController
         ],
         publicDir: public_dir
     });

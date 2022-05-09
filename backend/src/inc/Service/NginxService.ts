@@ -39,6 +39,8 @@ export class NginxService {
         conf?.resetStream();
         conf?.resetHttp();
 
+        // conf?.getStream().addVariable('js_import', '');
+
         // vars --------------------------------------------------------------------------------------------------------
 
         const streamMap: Map<number, Map<string, NginxStreamDB>> = new Map();
@@ -152,18 +154,34 @@ export class NginxService {
 
             const aServer = new NginxConfServer();
             aServer.setListen(listenPort);
+            // aServer.addVariable('js_access', 'njs.accessAddress;');
             aServer.addVariable('proxy_pass', varName);
             aServer.addVariable('ssl_preread', 'on');
 
             conf?.getStream().addServer(aServer);
         });
 
-        httpMap.forEach((value, listenPort) => {
+        httpMap.forEach((domainHttps, listenPort) => {
+            domainHttps.forEach((ahttp, domainName) => {
+                const aServer = new NginxConfServer();
+                aServer.setListen(listenPort);
+                aServer.setServerName(domainName);
+
+
+                conf?.getHttp().addServer(aServer);
+            });
+
+            // add default server --------------------------------------------------------------------------------------
             const aServer = new NginxConfServer();
-            aServer.setListen(listenPort);
+            aServer.setListen(listenPort, null, true);
+            aServer.addErrorPage({
+                code: '500 502 503 504',
+                uri: '/bad_gateway.html'
+            });
 
             conf?.getHttp().addServer(aServer);
         });
+
     }
 
     /**
