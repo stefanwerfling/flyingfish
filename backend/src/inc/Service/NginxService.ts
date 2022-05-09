@@ -39,7 +39,7 @@ export class NginxService {
         conf?.resetStream();
         conf?.resetHttp();
 
-        // conf?.getStream().addVariable('js_import', '');
+        conf?.getStream().addVariable('js_import', '/opt/app/nginx/dist/njs.js');
 
         // vars --------------------------------------------------------------------------------------------------------
 
@@ -154,7 +154,7 @@ export class NginxService {
 
             const aServer = new NginxConfServer();
             aServer.setListen(listenPort);
-            // aServer.addVariable('js_access', 'njs.accessAddress;');
+            aServer.addVariable('js_access', 'njs.accessAddressStream');
             aServer.addVariable('proxy_pass', varName);
             aServer.addVariable('ssl_preread', 'on');
 

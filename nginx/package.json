@@ -1,7 +1,8 @@
 {
   "name": "flyingfishnjs",
   "version": "1.0.0",
-  "dependencies": {
-    "njs-types": "^0.7.3"
+  "devDependencies": {
+    "njs-types": "^0.7.3",
+    "typescript": "^4.6.4"
   }
 }

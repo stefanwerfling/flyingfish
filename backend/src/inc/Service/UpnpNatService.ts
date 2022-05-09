@@ -52,7 +52,11 @@ export class UpnpNatService {
                                 );
 
                                 console.log(mappings);
+                            } catch (et) {
+                                console.log('Gateway mapping info error');
+                            }
 
+                            try {
                                 const map = await client.createMapping({
                                     description: anat.description,
                                     clientAddress: anat.client_address,
