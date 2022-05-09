@@ -5,6 +5,7 @@
 /nginx/logs
 /nginx/servers
 /nginx/sample
+/nginx/node_modules
 /nginx/nginx.conf
 /nginx/nginx.pid
 
