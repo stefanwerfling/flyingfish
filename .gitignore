@@ -1,8 +1,12 @@
 /doc/internnotes.txt
 /config.json
-/sample
 /.idea
-/nginx
+
+/nginx/logs
+/nginx/servers
+/nginx/sample
+/nginx/nginx.conf
+/nginx/nginx.pid
 
 /backend/node_modules
 /backend/package-lock.json
