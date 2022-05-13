@@ -7,6 +7,7 @@ import {Map as NginxMap} from '../Nginx/Config/Map';
 import {Server as NginxConfServer} from '../Nginx/Config/Server';
 import {Upstream} from '../Nginx/Config/Upstream';
 import {NginxServer} from '../Nginx/NginxServer';
+import {Location} from '../Nginx/Config/Location';
 
 /**
  * NginxService
@@ -154,6 +155,7 @@ export class NginxService {
 
             const aServer = new NginxConfServer();
             aServer.setListen(listenPort);
+            aServer.addVariable('set $ff_address_access_url', 'http://127.0.0.1:3000/njs/address_access');
             aServer.addVariable('js_access', 'njs.accessAddressStream');
             aServer.addVariable('proxy_pass', varName);
             aServer.addVariable('ssl_preread', 'on');
@@ -176,8 +178,18 @@ export class NginxService {
             aServer.setListen(listenPort, null, true);
             aServer.addErrorPage({
                 code: '500 502 503 504',
-                uri: '/bad_gateway.html'
+                uri: '/50x.html'
             });
+
+            aServer.addErrorPage({
+                code: '404',
+                uri: '/404.html'
+            });
+
+            const loc404 = new Location('/404.html');
+            loc404.addVariable('root', '/opt/app/nginx/pages');
+            loc404.addVariable('internal', '');
+            aServer.addLocation(loc404);
 
             conf?.getHttp().addServer(aServer);
         });

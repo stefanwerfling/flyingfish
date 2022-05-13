@@ -1,4 +1,5 @@
 import {UpnpNat as UpnpNatAPI} from '../Api/UpnpNat';
+import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
 import {Table} from '../Bambooo/Content/Table/Table';
@@ -24,21 +25,51 @@ export class UpnpNat extends BasePage {
      */
     public async loadContent(): Promise<void> {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
-        const card = new Card(new ContentCol12(row1));
 
-        card.setTitle('Upnp Nat');
+        const list = await UpnpNatAPI.getList();
 
-        const list = UpnpNatAPI.getList();
+        list?.forEach((device) => {
+            const card = new Card(new ContentCol12(row1));
 
-        const table = new Table(card.getElement());
-        const trhead = new Tr(table.getThead());
+            card.setTitle('Upnp Nat Device');
 
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Gateway');
+            const table = new Table(card.getElement());
+            const trhead = new Tr(table.getThead());
 
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Public Port');
-        console.log(list);
+            // eslint-disable-next-line no-new
+            new Th(trhead, 'Gateway');
+
+            // eslint-disable-next-line no-new
+            new Th(trhead, 'Public');
+
+            // eslint-disable-next-line no-new
+            new Th(trhead, 'Private');
+
+            // eslint-disable-next-line no-new
+            new Th(trhead, 'TTL');
+
+            // eslint-disable-next-line no-new
+            new Th(trhead, 'Description');
+
+            device.mappings.forEach((map) => {
+                const trbody = new Tr(table.getTbody());
+
+                // eslint-disable-next-line no-new
+                new Td(trbody, `${map.public.gateway}`);
+
+                // eslint-disable-next-line no-new
+                new Td(trbody, `${map.public.host}:${map.public.port}`);
+
+                // eslint-disable-next-line no-new
+                new Td(trbody, `${map.private.host}:${map.private.port}`);
+
+                // eslint-disable-next-line no-new
+                new Td(trbody, `${map.ttl}`);
+
+                // eslint-disable-next-line no-new
+                new Td(trbody, `${map.description}`);
+            });
+        });
     }
 
 }

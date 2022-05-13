@@ -6,6 +6,7 @@ import {Listen as ListenController} from './app/Main/Listen';
 import {Login as LoginController} from './app/Main/Login';
 import {UpnpNat as UpnpNatController} from './app/Main/UpnpNat';
 import {User as UserController} from './app/Main/User';
+import {AddressAccess as AddressAccessController} from './app/Njs/AddressAccess';
 import {Config} from './inc/Config/Config';
 import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
@@ -152,7 +153,8 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             UserController,
             HostController,
             ListenController,
-            UpnpNatController
+            UpnpNatController,
+            AddressAccessController
         ],
         publicDir: public_dir
     });

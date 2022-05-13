@@ -80,6 +80,15 @@ export class NginxConfig {
     }
 
     /**
+     * addVariable
+     * @param name
+     * @param value
+     */
+    public addVariable(name: string, value: string): void {
+        this._variables.set(name, value);
+    }
+
+    /**
      * getHttp
      */
     public getHttp(): Http {

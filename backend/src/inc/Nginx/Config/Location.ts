@@ -40,9 +40,9 @@ export class Location extends Context {
             optionalModifier = `${this._optionalModifier} `;
         }
 
-        let buffer = this._createContent(`${this._name} ${optionalModifier}${this._locationMatch}{`, index);
+        let buffer = this._createContent(`${this._name} ${optionalModifier}${this._locationMatch} {`, index);
 
-        buffer += this._generateStr();
+        buffer += this._generateStr(index);
 
         return buffer + this._createContent('}', index);
     }

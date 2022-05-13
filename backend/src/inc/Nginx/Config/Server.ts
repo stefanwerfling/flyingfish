@@ -172,6 +172,14 @@ export class Server extends Context {
     }
 
     /**
+     * addLocation
+     * @param location
+     */
+    public addLocation(location: Location): void {
+        this._locations.push(location);
+    }
+
+    /**
      * _generateStr
      * @param index
      * @protected

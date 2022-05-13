@@ -15,14 +15,24 @@ async function accessAddressHttp(s: NginxHTTPRequest) {
         address = s.remoteAddress;
     }
 
-    if (address.match('^192.*')) {
-        s.warn("accessAddressHttp(" + address + ") -> Deny");
-        s.deny();
-        return;
+    if (v.ff_address_access_url) {
+        const resulte = await addressCheck(
+            v.ff_address_access_url,
+            s,
+            'http'
+        );
+
+        if (resulte) {
+            s.warn("accessAddressHttp(" + address + ") -> Allow");
+            s.allow();
+            return;
+        }
+    } else {
+        s.warn("accessAddressHttp() -> url address access not found!");
     }
 
-    s.warn("accessAddressHttp(" + address + ") -> Allow");
-    s.allow();
+    s.warn("accessAddressHttp(" + address + ") -> Deny");
+    s.deny();
 };
 
 /**
@@ -37,14 +47,59 @@ async function accessAddressStream(s: NginxStreamRequest) {
         address = s.remoteAddress;
     }
 
-    if (address.match('^192.*')) {
-        s.warn("accessAddressStream(" + address + ") -> Deny");
-        s.deny();
-        return;
+    if (v.ff_address_access_url) {
+        const resulte = await addressCheck(
+            v.ff_address_access_url,
+            s,
+            'stream'
+        );
+
+        if (resulte) {
+            s.warn("accessAddressStream(" + address + ") -> Allow");
+            s.allow();
+            return;
+        }
+    } else {
+        s.warn("accessAddressStream() -> url address access not found!");
     }
 
-    s.warn("accessAddressStream(" + address + ") -> Allow");
-    s.allow();
+    s.warn("accessAddressStream(" + address + ") -> Deny");
+    s.deny();
 }
 
+/**
+ * addressCheck
+ * @param url
+ * @param s
+ * @param type
+ */
+async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest, type: string): Promise<boolean> {
+    // @ts-ignore
+    try {
+        const v = s.variables;
+        s.warn(`addressCheck(fetch) -> ${url}`);
+
+        const resulte = await ngx.fetch(url, {
+            body: '', headers: {
+                'realip_remote_addr': v.realip_remote_addr,
+                'remote_addr': s.remoteAddress,
+                'type': type
+            }
+        });
+
+        s.warn(`addressCheck(fetch->status) -> ${resulte.status}`);
+
+        if (resulte.status == 200) {
+            return true;
+        }
+    } catch (e: any) {
+        s.warn(`addressCheck(error) -> ${e.message}`);
+    }
+
+    return false;
+}
+
+/**
+ * result
+ */
 export default {accessAddressHttp, accessAddressStream};
