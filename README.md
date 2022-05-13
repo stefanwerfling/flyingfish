@@ -120,12 +120,11 @@ I started the project and have a lot to learn myself, to incorporate my own idea
   Helpful for developers.
 
 #### Flow diagrams idea
-#### Nginx
-<img src="doc/flow.png" alt="Flow">
+#### Nginx & Express
+<img src="doc/ffng.png" alt="NG Flow">
 
-[see more](https://app.creately.com/d/HhWb5041Utr/view)
-
-
+#### Upnp Client Nat
+<img src="doc/ffupnpnat.png" alt="Upnp Flow">
 
 #### Process/development
 
