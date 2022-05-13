@@ -121,10 +121,10 @@ I started the project and have a lot to learn myself, to incorporate my own idea
 
 #### Flow diagrams idea
 #### Nginx & Express
-<img src="doc/ffng.png" alt="NG Flow">
+<img src="doc/ffng.png" alt="NG Flow" width="100%">
 
 #### Upnp Client Nat
-<img src="doc/ffupnpnat.png" alt="Upnp Flow">
+<img src="doc/ffupnpnat.png" alt="Upnp Flow" width="100%">
 
 #### Process/development
 
