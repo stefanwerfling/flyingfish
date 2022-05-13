@@ -1,4 +1,5 @@
 import {Context, ContextNames} from './Context';
+import {Listen} from './Listen';
 import {Location} from './Location';
 
 /**
@@ -27,6 +28,12 @@ export type ServerErrorPage = {
  * Server
  */
 export class Server extends Context {
+
+    /**
+     * listens
+     * @protected
+     */
+    protected _listens: Listen[] = [];
 
     /**
      * server name
@@ -68,8 +75,6 @@ export class Server extends Context {
      * @protected
      */
     protected _setDefaults(): void {
-        // set default
-        this._variables.set('listen', '80');
     }
 
     /**
@@ -96,25 +101,11 @@ export class Server extends Context {
     }
 
     /**
-     * setListen
-     * @param port
-     * @param ip
-     * @param isDefault
+     * addListen
+     * @param listen
      */
-    public setListen(
-        port: string|number,
-        ip: string|null = null,
-        isDefault: boolean = false
-    ): void {
-        let buffer = `${port}`;
-
-        if (ip !== null) {
-            buffer = `${ip}:${port}`;
-        }
-
-        buffer += isDefault ? ' default_server' : '';
-
-        this._variables.set('listen', buffer);
+    public addListen(listen: Listen): void {
+        this._listens.push(listen);
     }
 
     /**
@@ -185,19 +176,25 @@ export class Server extends Context {
      * @protected
      */
     protected _generateStr(index: number = 0): string {
-        let buffer = super._generateStr(index);
+        let buffer = '';
+
+        this._listens.forEach((listen) => {
+            buffer += this._createContent(listen.generate(), index + 1);
+        });
+
+        buffer += super._generateStr(index);
 
         if (this._serverName !== '') {
-            buffer += this._createContent(`\tserver_name ${this._serverName};`, index);
+            buffer += this._createContent(`server_name ${this._serverName};`, index + 1);
         }
 
         if (this._rootDir !== null) {
-            buffer += this._createContent(`\troot ${this._rootDir};`, index);
+            buffer += this._createContent(`root ${this._rootDir};`, index + 1);
         }
 
         if (this._errorPages.length > 0) {
             this._errorPages.forEach((value) => {
-                buffer += this._createContent(`\terror_page ${value.code} ${value.uri};`, index);
+                buffer += this._createContent(`error_page ${value.code} ${value.uri};`, index + 1);
             });
         }
 

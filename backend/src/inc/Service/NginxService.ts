@@ -8,6 +8,7 @@ import {Server as NginxConfServer} from '../Nginx/Config/Server';
 import {Upstream} from '../Nginx/Config/Upstream';
 import {NginxServer} from '../Nginx/NginxServer';
 import {Location} from '../Nginx/Config/Location';
+import {Listen} from '../Nginx/Config/Listen';
 
 /**
  * NginxService
@@ -154,7 +155,7 @@ export class NginxService {
             conf?.getStream().addMap(aMap);
 
             const aServer = new NginxConfServer();
-            aServer.setListen(listenPort);
+            aServer.addListen(new Listen(listenPort));
             aServer.addVariable('set $ff_address_access_url', 'http://127.0.0.1:3000/njs/address_access');
             aServer.addVariable('js_access', 'njs.accessAddressStream');
             aServer.addVariable('proxy_pass', varName);
@@ -166,7 +167,7 @@ export class NginxService {
         httpMap.forEach((domainHttps, listenPort) => {
             domainHttps.forEach((ahttp, domainName) => {
                 const aServer = new NginxConfServer();
-                aServer.setListen(listenPort);
+                aServer.addListen(new Listen(listenPort));
                 aServer.setServerName(domainName);
 
 
@@ -175,7 +176,7 @@ export class NginxService {
 
             // add default server --------------------------------------------------------------------------------------
             const aServer = new NginxConfServer();
-            aServer.setListen(listenPort, null, true);
+            aServer.addListen(new Listen(listenPort, '', false, false, true));
             aServer.addErrorPage({
                 code: '500 502 503 504',
                 uri: '/50x.html'
