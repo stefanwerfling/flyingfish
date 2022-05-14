@@ -16,6 +16,7 @@ import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
 import {NginxDomain as NginxDomainDB} from './inc/Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen';
+import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream';
 import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
 import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser';
@@ -78,6 +79,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 NginxDomainDB,
                 NginxStreamDB,
                 NginxHttpDB,
+                NginxLocationDB,
                 SshPortDB,
                 SshUserDB,
                 NatPortDB

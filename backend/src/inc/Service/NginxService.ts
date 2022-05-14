@@ -1,6 +1,7 @@
 import {NginxDomain as NginxDomainDB} from '../Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
 import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
+import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Map as NginxMap} from '../Nginx/Config/Map';
@@ -9,6 +10,12 @@ import {Upstream} from '../Nginx/Config/Upstream';
 import {NginxServer} from '../Nginx/NginxServer';
 import {Location} from '../Nginx/Config/Location';
 import {Listen} from '../Nginx/Config/Listen';
+
+type HttpCollect = {
+    listen: NginxListenDB;
+    http: NginxHttpDB;
+    locations: NginxLocationDB[];
+};
 
 /**
  * NginxService
@@ -46,7 +53,7 @@ export class NginxService {
         // vars --------------------------------------------------------------------------------------------------------
 
         const streamMap: Map<number, Map<string, NginxStreamDB>> = new Map();
-        const httpMap: Map<number, Map<string, NginxHttpDB>> = new Map();
+        const httpMap: Map<number, Map<string, HttpCollect>> = new Map();
 
         // read db -----------------------------------------------------------------------------------------------------
 
@@ -54,6 +61,7 @@ export class NginxService {
         const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
         const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
         const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+        const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
 
         const listens = await listenRepository.find();
 
@@ -103,11 +111,27 @@ export class NginxService {
 
                     if (adomain) {
                         if (!httpMap.has(alisten.listen_port)) {
-                            httpMap.set(alisten.listen_port, new Map<string, NginxHttpDB>());
+                            httpMap.set(alisten.listen_port, new Map<string, HttpCollect>());
                         }
 
                         const mapDomainHttp = httpMap.get(alisten.listen_port);
-                        mapDomainHttp!.set(adomain.domainname, http);
+                        const httpCollection: HttpCollect = {
+                            listen: alisten,
+                            http,
+                            locations: []
+                        };
+
+                        const locations = await locationRepository.find({
+                            where: {
+                                http_id: http.id
+                            }
+                        });
+
+                        if (locations) {
+                            httpCollection.locations = locations;
+                        }
+
+                        mapDomainHttp!.set(adomain.domainname, httpCollection);
 
                         httpMap.set(alisten.listen_port, mapDomainHttp!);
                     }
@@ -165,11 +189,31 @@ export class NginxService {
         });
 
         httpMap.forEach((domainHttps, listenPort) => {
-            domainHttps.forEach((ahttp, domainName) => {
+            domainHttps.forEach((httpCollect, domainName) => {
                 const aServer = new NginxConfServer();
                 aServer.addListen(new Listen(listenPort));
                 aServer.setServerName(domainName);
 
+                for (const entry of httpCollect.locations) {
+                    const location = new Location(entry.match, entry.modifier);
+
+                    if (entry.redirect !== '') {
+                        let redirectCode = 301;
+
+                        if (entry.redirect_code > 0) {
+                            redirectCode = entry.redirect_code;
+                        }
+
+                        location.addVariable(`return ${redirectCode}`, entry.redirect);
+                    }
+
+                    if (entry.proxy_pass) {
+                        location.addVariable('proxy_pass', entry.proxy_pass);
+                        location.addVariable('proxy_set_header', 'Host $host');
+                    }
+
+                    aServer.addLocation(location);
+                }
 
                 conf?.getHttp().addServer(aServer);
             });

@@ -120,7 +120,10 @@ I started the project and have a lot to learn myself, to incorporate my own idea
   Helpful for developers.
 
 #### Flow diagrams idea
-#### Nginx & Express
+#### Nginx & Express Action
+<img src="doc/ffaction.png" alt="NG Action" width="100%">
+
+#### Nginx & Express Streams
 <img src="doc/ffng.png" alt="NG Flow" width="100%">
 
 #### Upnp Client Nat
