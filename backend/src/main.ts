@@ -1,9 +1,11 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
+import {Certificate as CertificateController} from './app/Main/Certificate';
 import {Host as HostController} from './app/Main/Host';
 import {Listen as ListenController} from './app/Main/Listen';
 import {Login as LoginController} from './app/Main/Login';
+import {Nginx as NginxController} from './app/Main/Nginx';
 import {UpnpNat as UpnpNatController} from './app/Main/UpnpNat';
 import {User as UserController} from './app/Main/User';
 import {AddressAccess as AddressAccessController} from './app/Njs/AddressAccess';
@@ -156,6 +158,9 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             HostController,
             ListenController,
             UpnpNatController,
+            CertificateController,
+            NginxController,
+
             AddressAccessController
         ],
         publicDir: public_dir

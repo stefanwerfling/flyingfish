@@ -29,6 +29,7 @@ RUN mkdir -p /opt/app/nginx
 RUN mkdir -p /opt/app/nginx/logs
 RUN mkdir -p /opt/app/nginx/servers
 RUN mkdir -p /opt/app/nginx/servers/logs
+RUN mkdir -p /opt/app/nginx/html
 
 WORKDIR /opt/app
 

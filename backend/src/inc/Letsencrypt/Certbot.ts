@@ -1,3 +1,6 @@
+import {spawn} from 'child_process';
+import fs from 'fs';
+
 /**
  * Certbot
  */
@@ -19,7 +22,52 @@ export class Certbot {
      * domain
      * @param domain
      */
-    public create(domain: string): void {
+    public async create(domain: string, email: string, keysize: number = 4096): Promise<boolean> {
+        const process = spawn(this._command,
+            [
+                'certonly',
+                '--rsa-key-size',
+                `${keysize}`,
+                '--webroot',
+                '--agree-tos',
+                '--no-eff-email',
+                '--email',
+                email,
+                '-w',
+                '/opt/app/nginx/html/',
+                '-d',
+                domain
+            ]);
 
+        process.stdout!.on('data', (buf) => {
+            console.log(buf.toString());
+        });
+
+        process.stderr!.on('data', (buf) => {
+            console.log(buf.toString());
+        });
+
+        await new Promise((resolve) => {
+            process.on('close', resolve);
+        });
+
+        return false;
     }
+
+    /**
+     * existCertificate
+     * @param domainName
+     */
+    public static existCertificate(domainName: string): string|null {
+        const domainDir = `/etc/letsencrypt/live/${domainName}`;
+
+        if (fs.existsSync(domainDir)) {
+            if (fs.existsSync(`${domainDir}/privkey.pem`)) {
+                return domainDir;
+            }
+        }
+
+        return null;
+    }
+
 }

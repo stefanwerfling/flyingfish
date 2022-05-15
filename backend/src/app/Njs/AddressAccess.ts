@@ -23,8 +23,11 @@ export class AddressAccess {
         console.log(`realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
 
         if (realip_remote_addr) {
-            // Todo
-            if (realip_remote_addr === '192.168.0.119') {
+            // allow privat network
+            if (realip_remote_addr.match('^192.168.*')) {
+                response.status(200);
+                return true;
+            } else {
                 response.status(200);
                 return true;
             }

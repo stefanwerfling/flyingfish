@@ -29,6 +29,7 @@ services:
     volumes:
       - ./config.json:/opt/app/config.json
       - ./nginx:/opt/app/nginx:rw
+      - ./letsencrypt:/etc/letsencrypt:rw
     ports:
       - "443:443"
       - "80:80"
