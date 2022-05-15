@@ -22,7 +22,7 @@ services:
         max-file: "50"
 
   flyingfish:
-    image: flingfish:v1.0
+    image: flyingfish:v1.0
     build:
       context: ./
     container_name: flyingfish_service

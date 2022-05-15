@@ -6,9 +6,9 @@ import {Certbot} from '../../inc/Letsencrypt/Certbot';
 import {NginxService} from '../../inc/Service/NginxService';
 
 /**
- * CertificateCreatResponse
+ * CertificateCreateResponse
  */
-export type CertificateCreatResponse = {
+export type CertificateCreateResponse = {
     httpid: number;
 };
 
@@ -26,7 +26,7 @@ export class Certificate {
     @Post('/json/certificate/create')
     public async create(
         @Session() session: any,
-        @Body() request: CertificateCreatResponse
+        @Body() request: CertificateCreateResponse
     ): Promise<boolean> {
         if ((session.user !== undefined) && session.user.isLogin) {
             const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
