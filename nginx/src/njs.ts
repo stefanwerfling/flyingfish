@@ -79,11 +79,18 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
         const v = s.variables;
         s.warn(`addressCheck(fetch) -> ${url}`);
 
+        let listen_id = 0;
+
+        if (v.ff_listen_id) {
+            listen_id = v.ff_listen_id;
+        }
+
         const resulte = await ngx.fetch(url, {
             body: '', headers: {
                 'realip_remote_addr': v.realip_remote_addr,
                 'remote_addr': s.remoteAddress,
-                'type': type
+                'type': type,
+                'listen_id': listen_id
             }
         });
 
@@ -100,6 +107,23 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
 }
 
 /**
+ * authorize
+ * @param s
+ */
+async function authorize(s: NginxHTTPRequest) {
+    const v = s.variables;
+
+    if (!v.ff_authheader) {
+        s.error("No Authheader");
+        s.headersOut['WWW-Authenticate'] = 'Basic realm="your_server.com"';
+        s.return(401);
+        return;
+    }
+
+    s.return(200);
+}
+
+/**
  * result
  */
-export default {accessAddressHttp, accessAddressStream};
+export default {accessAddressHttp, accessAddressStream, authorize};

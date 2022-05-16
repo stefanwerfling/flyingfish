@@ -71,4 +71,11 @@ export class NginxListen extends BaseEntity {
         // @ts-ignore
     enable_upnp_nat: boolean;
 
+    @Column({
+        type: 'bool',
+        default: false
+    })
+        // @ts-ignore
+    enable_address_check: boolean;
+
 }

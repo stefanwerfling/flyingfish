@@ -9,11 +9,13 @@ import {Nginx as NginxController} from './app/Main/Nginx';
 import {UpnpNat as UpnpNatController} from './app/Main/UpnpNat';
 import {User as UserController} from './app/Main/User';
 import {AddressAccess as AddressAccessController} from './app/Njs/AddressAccess';
+import {AuthBasic as AuthBasicController} from './app/Njs/AuthBasic';
 import {Config} from './inc/Config/Config';
 import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
 import session from 'express-session';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup';
+import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist';
 import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
 import {NginxDomain as NginxDomainDB} from './inc/Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp';
@@ -82,6 +84,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 NginxStreamDB,
                 NginxHttpDB,
                 NginxLocationDB,
+                IpBlacklistDB,
                 SshPortDB,
                 SshUserDB,
                 NatPortDB
@@ -161,7 +164,8 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             CertificateController,
             NginxController,
 
-            AddressAccessController
+            AddressAccessController,
+            AuthBasicController
         ],
         publicDir: public_dir
     });

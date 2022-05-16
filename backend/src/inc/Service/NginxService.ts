@@ -69,6 +69,7 @@ export class NginxService {
         conf?.resetHttp();
 
         conf?.getStream().addVariable('js_import', '/opt/app/nginx/dist/njs.js');
+        conf?.getHttp().addVariable('js_import', '/opt/app/nginx/dist/njs.js');
 
         // vars --------------------------------------------------------------------------------------------------------
 
@@ -211,6 +212,7 @@ export class NginxService {
             }
 
             aServer.addVariable('set $ff_address_access_url', 'http://127.0.0.1:3000/njs/address_access');
+            aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
             aServer.addVariable('js_access', 'njs.accessAddressStream');
             aServer.addVariable('proxy_pass', varName);
             aServer.addVariable('ssl_preread', 'on');
@@ -297,6 +299,27 @@ export class NginxService {
                         }
 
                         location.addVariable(`return ${redirectCode}`, entry.redirect);
+                    }
+
+                    if (entry.auth_enable) {
+                        let releam = domainName;
+
+                        if (entry.auth_relam !== '') {
+                            releam = entry.auth_relam;
+                        }
+
+                        // location.addVariable('auth_basic', `"${releam}"`);
+                        location.addVariable('auth_request', `/auth${entry.id}`);
+
+                        const authLocation = new Location(`/auth${entry.id}`);
+                        authLocation.addVariable('set $ff_auth_basic_url', 'http://127.0.0.1:3000/njs/auth_basic');
+                        authLocation.addVariable('set $ff_location_id', `${entry.id}`);
+                        authLocation.addVariable('set $ff_authheader', '$http_authorization');
+                        authLocation.addVariable('set $ff_authusername', '$remote_user');
+                        authLocation.addVariable('internal', '');
+                        authLocation.addVariable('js_header_filter', 'njs.authorize');
+
+                        aServer.addLocation(authLocation);
                     }
 
                     if (entry.proxy_pass) {

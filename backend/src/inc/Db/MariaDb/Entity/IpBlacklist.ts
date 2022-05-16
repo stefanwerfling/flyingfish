@@ -15,9 +15,4 @@ export class IpBlacklist extends BaseEntity {
         // @ts-ignore
     ip: string;
 
-    @Index()
-    @Column()
-        // @ts-ignore
-    status: number;
-
 }

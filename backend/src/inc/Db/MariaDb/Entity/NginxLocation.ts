@@ -38,4 +38,12 @@ export class NginxLocation extends BaseEntity {
         // @ts-ignore
     proxy_pass: string;
 
+    @Column()
+        // @ts-ignore
+    auth_enable: boolean;
+
+    @Column()
+        // @ts-ignore
+    auth_relam: string;
+
 }
