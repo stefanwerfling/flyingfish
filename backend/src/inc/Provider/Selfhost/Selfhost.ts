@@ -1,7 +1,9 @@
+import got from 'got';
 import {IDynDnsProvider} from '../IDynDnsProvider';
 
 /**
  * Selfhost
+ * @see https://selfhost.de/cgi-bin/selfhost?p=document&name=api
  */
 export class Selfhost implements IDynDnsProvider {
 
@@ -26,6 +28,22 @@ export class Selfhost implements IDynDnsProvider {
      * @param ip
      */
     public async update(username: string, password: string, ip: string = ''): Promise<boolean> {
+        let myip = '';
+
+        if (ip !== '') {
+            myip = `&myip=${ip}`;
+        }
+
+        const response = await got({
+            url: `https://carol.selfhost.de/update?username=${username}&password=${password}${myip}`
+        });
+
+        console.log(`Selfhost update status code: ${response.statusCode}`);
+
+        if (response.statusCode === 200) {
+            return true;
+        }
+
         return false;
     }
 

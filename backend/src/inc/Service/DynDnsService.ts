@@ -32,23 +32,33 @@ export class DynDnsService {
     protected _scheduler: Job|null = null;
 
     /**
+     * _updateDns
+     * @protected
+     */
+    protected async _updateDns(): Promise<void> {
+        const dyndnclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
+
+        const clients = await dyndnclientRepository.find();
+
+        for (const client of clients) {
+            const provider = DynDnsProviders.getProvider(client.provider);
+
+            if (await provider?.update(client.username, client.password, '')) {
+                console.log(`Domain ip update by provider(${provider?.getName()})`);
+            } else {
+                console.log(`Domain ip update faild by provider(${provider?.getName()})`);
+            }
+        }
+    }
+
+    /**
      * start
      */
     public async start(): Promise<void> {
-        const dyndnclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
+        this._updateDns();
 
         this._scheduler = scheduleJob('1 */1 * * *', async() => {
-            const clients = await dyndnclientRepository.find();
-
-            for (const client of clients) {
-                const provider = DynDnsProviders.getProvider(client.provider);
-
-                if (await provider?.update(client.username, client.password, '')) {
-                    console.log(`Domain ip update by provider(${provider?.getName()})`);
-                } else {
-                    console.log(`Domain ip update faild by provider(${provider?.getName()})`);
-                }
-            }
+            this._updateDns();
         });
     }
 
