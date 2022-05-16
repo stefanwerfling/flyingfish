@@ -15,6 +15,7 @@ import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
 import session from 'express-session';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup';
+import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient';
 import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist';
 import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
 import {NginxDomain as NginxDomainDB} from './inc/Db/MariaDb/Entity/NginxDomain';
@@ -29,6 +30,7 @@ import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper';
 import {NginxServer} from './inc/Nginx/NginxServer';
 import {Server} from './inc/Server/Server';
 import cookieParser from 'cookie-parser';
+import {DynDnsService} from './inc/Service/DynDnsService';
 import {NginxService} from './inc/Service/NginxService';
 import {UpnpNatService} from './inc/Service/UpnpNatService';
 
@@ -85,6 +87,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 NginxHttpDB,
                 NginxLocationDB,
                 IpBlacklistDB,
+                DynDnsClientDB,
                 SshPortDB,
                 SshUserDB,
                 NatPortDB
@@ -188,5 +191,10 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
 
     const upnpNat = new UpnpNatService();
     upnpNat.start();
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    const dyndns = new DynDnsService();
+    dyndns.start();
 
 })();
