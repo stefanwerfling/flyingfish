@@ -30,6 +30,9 @@ interface ConfigOptions {
     sshserver?: {
         ip: string;
     };
+    openssl?: {
+        dhparamfile: string;
+    };
 
     rootconfigpath?: string;
     rootconfigname?: string;
@@ -41,10 +44,36 @@ interface ConfigOptions {
 export class Config {
 
     /**
+     * DEFAULTS
+     */
+    public static readonly DEFAULT_CONFIG_FILE = 'config.json';
+
+    /**
+     * global config
+     * @private
+     */
+    private static _config: ConfigOptions|null = null;
+
+    /**
+     * set
+     * @param config
+     */
+    public static set(config: ConfigOptions): void {
+        this._config = config;
+    }
+
+    /**
+     * get
+     */
+    public static get(): ConfigOptions|null {
+        return this._config;
+    }
+
+    /**
      * load
      * @param configFile
      */
-    static async load(configFile: string): Promise<ConfigOptions | null> {
+    public static async load(configFile: string): Promise<ConfigOptions | null> {
         let config = null;
 
         try {
@@ -55,10 +84,14 @@ export class Config {
 
             console.log(`Load json-file: ${configFile}`);
 
-            config = JSON.parse(rawdata);
+            config = JSON.parse(rawdata) as ConfigOptions;
 
             config.rootconfigpath = path.dirname(configFile);
             config.rootconfigname = path.basename(configFile);
+            config.openssl = {
+                dhparamfile: '/opt/app/nginx/dhparam.pem'
+            };
+
         } catch (err) {
             console.error(err);
         }

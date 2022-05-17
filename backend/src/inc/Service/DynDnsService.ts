@@ -32,10 +32,10 @@ export class DynDnsService {
     protected _scheduler: Job|null = null;
 
     /**
-     * _updateDns
+     * updateDns
      * @protected
      */
-    protected async _updateDns(): Promise<void> {
+    public async updateDns(): Promise<void> {
         const dyndnclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
 
         const clients = await dyndnclientRepository.find();
@@ -55,10 +55,10 @@ export class DynDnsService {
      * start
      */
     public async start(): Promise<void> {
-        this._updateDns();
+        this.updateDns();
 
         this._scheduler = scheduleJob('1 */1 * * *', async() => {
-            this._updateDns();
+            this.updateDns();
         });
     }
 

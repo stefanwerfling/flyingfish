@@ -31,6 +31,7 @@ import {NginxServer} from './inc/Nginx/NginxServer';
 import {Server} from './inc/Server/Server';
 import cookieParser from 'cookie-parser';
 import {DynDnsService} from './inc/Service/DynDnsService';
+import {HowIsMyPublicIpService} from './inc/Service/HowIsMyPublicIpService';
 import {NginxService} from './inc/Service/NginxService';
 import {UpnpNatService} from './inc/Service/UpnpNatService';
 
@@ -39,7 +40,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
  */
 (async(): Promise<void> => {
     const argv = minimist(process.argv.slice(2));
-    let configfile = path.join(__dirname, '/config.json');
+    let configfile = path.join(__dirname, `/${Config.DEFAULT_CONFIG_FILE}`);
 
     if (argv.config) {
         configfile = argv.config;
@@ -62,6 +63,9 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
         console.log(`Configloader is return empty config, please check your configfile: ${configfile}`);
         return;
     }
+
+    // set global
+    Config.set(tconfig);
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -196,5 +200,10 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
 
     const dyndns = new DynDnsService();
     dyndns.start();
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    const himpip = new HowIsMyPublicIpService();
+    himpip.start();
 
 })();

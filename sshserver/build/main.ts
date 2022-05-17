@@ -13,7 +13,7 @@ import {SshServer} from './inc/ssh/SshServer';
 (async(): Promise<void> => {
 
     const argv = minimist(process.argv.slice(2));
-    let configfile = path.join(__dirname, '/config.json');
+    let configfile = path.join(__dirname, `/config.json`);
 
     if (argv.config) {
         configfile = argv.config;

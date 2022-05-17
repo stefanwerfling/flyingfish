@@ -1,6 +1,7 @@
 FROM node:16-alpine
 RUN apk update
 RUN apk add openssl curl ca-certificates
+RUN apk add --upgrade paris-traceroute
 RUN printf "%s%s%s%s\n" \
         "@nginx " \
         "http://nginx.org/packages/alpine/v" \

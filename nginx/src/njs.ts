@@ -114,7 +114,7 @@ async function authorize(s: NginxHTTPRequest) {
     const v = s.variables;
 
     if (!v.ff_authheader) {
-        s.error("No Authheader");
+        // s.error("No Authheader");
         s.headersOut['WWW-Authenticate'] = 'Basic realm="your_server.com"';
         s.return(401);
         return;

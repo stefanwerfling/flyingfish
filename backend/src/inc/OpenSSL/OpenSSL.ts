@@ -1,5 +1,6 @@
 import {spawn} from 'child_process';
 import fs from 'fs';
+import {Config} from '../Config/Config';
 
 /**
  * OpenSSL
@@ -11,7 +12,7 @@ export class OpenSSL {
      * @param size
      */
     public static async createDhparam(size: number): Promise<string | null> {
-        const dhparamfile = '/opt/app/nginx/dhparam.pem';
+        const dhparamfile = OpenSSL.getDhparamFile();
         const process = spawn('openssl',
             [
                 'dhparam',
@@ -43,7 +44,7 @@ export class OpenSSL {
      * getDhparamFile
      */
     public static getDhparamFile(): string {
-        return '/opt/app/nginx/dhparam.pem';
+        return Config.get()!.openssl!.dhparamfile;
     }
 
     /**
