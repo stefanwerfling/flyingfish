@@ -3,7 +3,7 @@ import {UpnpNatCache} from '../Cache/UpnpNatCache';
 import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort';
 import {promise as PingPromise} from 'ping';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {UpnpNatClient} from '../Net/Upnp/UpnpNatClient';
+import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient';
 
 /**
  * UpnpNatService
@@ -44,24 +44,36 @@ export class UpnpNatService {
 
                             try {
                                 const device = await client.getGateway();
-                                const mappings = await client.getMappings();
+                                const gatewayid = device.gateway.getUuid();
 
-                                UpnpNatCache.getInstance().addGatewayMappings(
-                                    device.gateway.getUuid(),
-                                    mappings
-                                );
+                                if (gatewayid === anat.gateway_id) {
+                                    const mappings = await client.getMappings();
+
+                                    UpnpNatCache.getInstance().addGatewayMappings(
+                                        gatewayid,
+                                        mappings
+                                    );
+                                } else {
+                                    console.log(`Different or new gateway? Ids differ (${gatewayid}<-->${anat.gateway_id}), skip to next. Check the settings.`);
+                                    continue;
+                                }
                             } catch (et) {
                                 console.log('Gateway mapping info error');
                             }
 
                             try {
-                                const map = await client.createMapping({
+                                const options: NewPortMappingOpts = {
                                     description: anat.description,
-                                    clientAddress: anat.client_address,
                                     public: anat.public_port,
                                     private: anat.private_port,
                                     ttl: anat.ttl
-                                });
+                                };
+
+                                if (anat.client_address !== '') {
+                                    options.clientAddress = anat.client_address;
+                                }
+
+                                const map = await client.createMapping(options);
 
                                 if (map) {
                                     console.log(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);

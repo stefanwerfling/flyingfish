@@ -1,4 +1,5 @@
 import {Job, scheduleJob} from 'node-schedule';
+import {Config} from '../Config/Config';
 import {HowIsMyPublicIpProviders} from '../Provider/HowIsMyPublicIpProviders';
 import {DynDnsService} from './DynDnsService';
 
@@ -37,11 +38,18 @@ export class HowIsMyPublicIpService {
     protected _currentIp: string|null = null;
 
     /**
+     * getCurrentIp
+     */
+    public getCurrentIp(): string|null {
+        return this._currentIp;
+    }
+
+    /**
      * start
      */
     public async start(): Promise<void> {
         this._scheduler = scheduleJob('*/1 * * * *', async() => {
-            const provider = HowIsMyPublicIpProviders.getProvider('ipify');
+            const provider = HowIsMyPublicIpProviders.getProvider(Config.get()?.himpip?.provider!);
 
             if (provider) {
                 if (this._currentIp === null) {
@@ -55,7 +63,12 @@ export class HowIsMyPublicIpService {
                         console.log(`Public ip change old(${this._currentIp}) new(${ip})`);
 
                         this._currentIp = ip;
-                        DynDnsService.getInstance().updateDns();
+
+                        if (Config.get()?.dyndnsclient) {
+                            if (Config.get()?.dyndnsclient?.enable) {
+                                DynDnsService.getInstance().updateDns();
+                            }
+                        }
                     }
                 }
             }

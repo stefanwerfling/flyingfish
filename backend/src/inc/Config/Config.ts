@@ -33,6 +33,19 @@ interface ConfigOptions {
     openssl?: {
         dhparamfile: string;
     };
+    docker?: {
+        inside: boolean;
+        gateway?: string;
+    };
+    upnpnat?: {
+        enable: boolean;
+    };
+    dyndnsclient?: {
+        enable: boolean;
+    };
+    himpip?: {
+        provider: string;
+    };
 
     rootconfigpath?: string;
     rootconfigname?: string;
@@ -86,12 +99,35 @@ export class Config {
 
             config = JSON.parse(rawdata) as ConfigOptions;
 
+            // default paths
             config.rootconfigpath = path.dirname(configFile);
             config.rootconfigname = path.basename(configFile);
+
+            // default dhparam
             config.openssl = {
                 dhparamfile: '/opt/app/nginx/dhparam.pem'
             };
 
+            // upnpnat enable
+            if (!config.upnpnat) {
+                config.upnpnat = {
+                    enable: true
+                };
+            }
+
+            // dyndnsclient enable
+            if (!config.dyndnsclient) {
+                config.dyndnsclient = {
+                    enable: true
+                };
+            }
+
+            // himpip provider
+            if (!config.himpip) {
+                config.himpip = {
+                    provider: 'ipify'
+                };
+            }
         } catch (err) {
             console.error(err);
         }

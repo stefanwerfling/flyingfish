@@ -21,6 +21,10 @@ export class NatPort extends BaseEntity {
 
     @Column()
         // @ts-ignore
+    gateway_id: string;
+
+    @Column()
+        // @ts-ignore
     gateway_address: string;
 
     @Column()

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import {NginxDomain as NginxDomainDB} from '../Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
 import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
@@ -308,17 +309,23 @@ export class NginxService {
                             releam = entry.auth_relam;
                         }
 
-                        // location.addVariable('auth_basic', `"${releam}"`);
+                        const dummyHtpasswd = '/opt/app/nginx/htpasswd';
+
+                        if (!fs.existsSync(dummyHtpasswd)) {
+                            fs.writeFileSync(dummyHtpasswd, '');
+                        }
+
+                        location.addVariable('satisfy', 'any');
+                        location.addVariable('auth_basic', `"${releam}"`);
+                        location.addVariable('auth_basic_user_file', dummyHtpasswd);
                         location.addVariable('auth_request', `/auth${entry.id}`);
 
                         const authLocation = new Location(`/auth${entry.id}`);
+                        authLocation.addVariable('internal', '');
                         authLocation.addVariable('set $ff_auth_basic_url', 'http://127.0.0.1:3000/njs/auth_basic');
                         authLocation.addVariable('set $ff_location_id', `${entry.id}`);
                         authLocation.addVariable('set $ff_authheader', '$http_authorization');
-                        authLocation.addVariable('set $ff_authusername', '$remote_user');
-                        authLocation.addVariable('internal', '');
-                        authLocation.addVariable('js_header_filter', 'njs.authorize');
-
+                        authLocation.addVariable('js_content', 'njs.authorize');
                         aServer.addLocation(authLocation);
                     }
 

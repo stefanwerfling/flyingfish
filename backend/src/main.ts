@@ -27,6 +27,7 @@ import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
 import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser';
 import {User as UserDB} from './inc/Db/MariaDb/Entity/User';
 import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper';
+import {Traceroute} from './inc/Net/Traceroute/Traceroute';
 import {NginxServer} from './inc/Nginx/NginxServer';
 import {Server} from './inc/Server/Server';
 import cookieParser from 'cookie-parser';
@@ -193,17 +194,25 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    const upnpNat = new UpnpNatService();
-    upnpNat.start();
+    if (tconfig.upnpnat) {
+        if (tconfig.upnpnat.enable) {
+            const upnpNat = new UpnpNatService();
+            upnpNat.start();
+        }
+    }
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    const dyndns = new DynDnsService();
-    dyndns.start();
+    if (tconfig.dyndnsclient) {
+        if (tconfig.dyndnsclient.enable) {
+            const dyndns = new DynDnsService();
+            dyndns.start();
+        }
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
 
     const himpip = new HowIsMyPublicIpService();
     himpip.start();
-
 })();

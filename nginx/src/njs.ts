@@ -1,8 +1,3 @@
-// @ts-ignore
-import {NginxHTTPRequest} from 'njs-types/ngx_http_js_module';
-// @ts-ignore
-import {NginxStreamRequest} from 'njs-types/ngx_stream_js_module';
-
 /**
  * accessAddressHttp
  * @param s
@@ -24,7 +19,7 @@ async function accessAddressHttp(s: NginxHTTPRequest) {
 
         if (resulte) {
             s.warn("accessAddressHttp(" + address + ") -> Allow");
-            s.allow();
+            s.return(200);
             return;
         }
     } else {
@@ -32,8 +27,8 @@ async function accessAddressHttp(s: NginxHTTPRequest) {
     }
 
     s.warn("accessAddressHttp(" + address + ") -> Deny");
-    s.deny();
-};
+    s.return(403);
+}
 
 /**
  * accessAddressStream
@@ -79,7 +74,7 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
         const v = s.variables;
         s.warn(`addressCheck(fetch) -> ${url}`);
 
-        let listen_id = 0;
+        let listen_id = '0';
 
         if (v.ff_listen_id) {
             listen_id = v.ff_listen_id;
@@ -114,13 +109,33 @@ async function authorize(s: NginxHTTPRequest) {
     const v = s.variables;
 
     if (!v.ff_authheader) {
-        // s.error("No Authheader");
-        s.headersOut['WWW-Authenticate'] = 'Basic realm="your_server.com"';
+        s.warn('authorize -> no authheader, send 401');
         s.return(401);
-        return;
-    }
+    } else if (v.ff_auth_basic_url) {
+        let location_id = '0';
 
-    s.return(200);
+        if (v.ff_location_id) {
+            location_id = v.ff_location_id;
+        }
+
+        const resulte = await ngx.fetch(v.ff_auth_basic_url, {
+            body: '', headers: {
+                'authheader': v.ff_authheader,
+                'location_id': location_id
+            }
+        });
+
+        s.warn(`authorize(fetch->status) -> ${resulte.status}`);
+
+        if (resulte.status == 200) {
+            s.return(200);
+        } else {
+            s.return(403);
+        }
+    } else {
+        s.warn('authorize -> Auth Url not found!');
+        s.return(500);
+    }
 }
 
 /**
