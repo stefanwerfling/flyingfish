@@ -46,8 +46,4 @@ export class NginxLocation extends BaseEntity {
         // @ts-ignore
     auth_relam: string;
 
-    @Column()
-        // @ts-ignore
-    auth_credential: string;
-
 }

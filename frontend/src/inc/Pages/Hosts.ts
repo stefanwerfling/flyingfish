@@ -1,5 +1,6 @@
 import {Host as HostAPI} from '../Api/Host';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
+import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
@@ -43,6 +44,33 @@ export class Hosts extends BasePage {
             this._hostDialog.show();
             return false;
         }, 'btn btn-block btn-default btn-sm');
+
+        this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
+
+        // eslint-disable-next-line no-new
+        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Reload Config', async() => {
+            // @ts-ignore
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+
+            if (await NginxAPI.reload()) {
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Nginx server reload config success.'
+                });
+            } else {
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Nginx server reload config faild.'
+                });
+            }
+
+            return false;
+        }, 'btn btn-block btn-default btn-sm');
     }
 
     /**
@@ -82,8 +110,17 @@ export class Hosts extends BasePage {
             const listens = await ListenAPI.getListens();
 
             if (listens) {
+                this._hostDialog.getSelectListen().clearValues();
+
                 for (const alisten of listens.list) {
                     listenMap.set(alisten.id, alisten);
+
+                    const type = alisten.type === 0 ? 'Stream' : 'HTTP';
+
+                    this._hostDialog.getSelectListen().addValue({
+                        key: `${alisten.id}`,
+                        value: `${alisten.name} - ${alisten.port} (${type})`
+                    });
                 }
             }
 

@@ -1,20 +1,22 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
-import {Certificate as CertificateController} from './app/Main/Certificate';
-import {Host as HostController} from './app/Main/Host';
-import {Listen as ListenController} from './app/Main/Listen';
-import {Login as LoginController} from './app/Main/Login';
-import {Nginx as NginxController} from './app/Main/Nginx';
-import {UpnpNat as UpnpNatController} from './app/Main/UpnpNat';
-import {User as UserController} from './app/Main/User';
-import {AddressAccess as AddressAccessController} from './app/Njs/AddressAccess';
-import {AuthBasic as AuthBasicController} from './app/Njs/AuthBasic';
+import {Certificate as CertificateController} from './Routes/Main/Certificate';
+import {Host as HostController} from './Routes/Main/Host';
+import {Listen as ListenController} from './Routes/Main/Listen';
+import {Login as LoginController} from './Routes/Main/Login';
+import {Nginx as NginxController} from './Routes/Main/Nginx';
+import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat';
+import {User as UserController} from './Routes/Main/User';
+import {AddressAccess as AddressAccessController} from './Routes/Njs/AddressAccess';
+import {AuthBasic as AuthBasicController} from './Routes/Njs/AuthBasic';
 import {Config} from './inc/Config/Config';
 import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
 import session from 'express-session';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup';
+import {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential';
+import {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser';
 import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient';
 import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist';
 import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
@@ -27,7 +29,6 @@ import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
 import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser';
 import {User as UserDB} from './inc/Db/MariaDb/Entity/User';
 import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper';
-import {Traceroute} from './inc/Net/Traceroute/Traceroute';
 import {NginxServer} from './inc/Nginx/NginxServer';
 import {Server} from './inc/Server/Server';
 import cookieParser from 'cookie-parser';
@@ -95,7 +96,9 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 DynDnsClientDB,
                 SshPortDB,
                 SshUserDB,
-                NatPortDB
+                NatPortDB,
+                CredentialDB,
+                CredentialUserDB
             ],
             migrations: [
             ],

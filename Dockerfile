@@ -14,6 +14,9 @@ RUN mv /tmp/nginx_signing.rsa.pub /etc/apk/keys/
 RUN apk add nginx@nginx
 RUN apk add nginx-mod-stream@nginx
 RUN apk add nginx-module-njs@nginx
+#RUN apk add nginx-mod-http-headers-more@nginx
+#RUN apk add nginx-mod-mail@nginx
+#RUN apk add nginx-mod-http-vts@nginx
 RUN apk add python3 python3-dev py3-pip build-base libressl-dev musl-dev libffi-dev rust cargo
 RUN pip3 install pip --upgrade
 RUN pip3 install certbot-nginx
