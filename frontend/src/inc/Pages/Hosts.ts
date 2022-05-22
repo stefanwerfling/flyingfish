@@ -110,17 +110,10 @@ export class Hosts extends BasePage {
             const listens = await ListenAPI.getListens();
 
             if (listens) {
-                this._hostDialog.getSelectListen().clearValues();
+                this._hostDialog.setListens(listens.list);
 
                 for (const alisten of listens.list) {
                     listenMap.set(alisten.id, alisten);
-
-                    const type = alisten.type === 0 ? 'Stream' : 'HTTP';
-
-                    this._hostDialog.getSelectListen().addValue({
-                        key: `${alisten.id}`,
-                        value: `${alisten.name} - ${alisten.port} (${type})`
-                    });
                 }
             }
 
