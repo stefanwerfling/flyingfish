@@ -333,6 +333,7 @@ My Todo list:
 * [ ] ip blacklist cache, for more speed up? (reduce nginx <--> express request time)
 * [ ] add nginx auth with digest
 * [ ] nginx monitoring (traffic, connections and more)?
+* [ ] add credential ldap client
 
 # Contributors
 
