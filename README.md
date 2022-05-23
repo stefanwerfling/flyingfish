@@ -334,6 +334,7 @@ My Todo list:
 * [ ] add nginx auth with digest
 * [ ] nginx monitoring (traffic, connections and more)?
 * [ ] add credential ldap client
+* [ ] ip blacklist downloader & importer https://github.com/firehol/blocklist-ipsets
 
 # Contributors
 

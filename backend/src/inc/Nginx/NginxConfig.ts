@@ -50,6 +50,7 @@ export class NginxConfig {
         // this._modules.push('/usr/lib/nginx/modules/ngx_stream_module.so');
         this._modules.push('/usr/lib/nginx/modules/ngx_stream_js_module.so');
         this._modules.push('/usr/lib/nginx/modules/ngx_http_js_module.so');
+        // this._modules.push('/usr/lib/nginx/modules/ngx_http_accounting_module.so');
 
         /*
          * this._modules.push('/usr/lib/nginx/modules/ngx_http_vhost_traffic_status_module.so');
