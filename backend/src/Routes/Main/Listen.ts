@@ -54,6 +54,12 @@ export class Listen {
                     });
                 }
             }
+        } else {
+            return {
+                status: 'error',
+                msg: 'Please login first!',
+                list
+            };
         }
 
         return {

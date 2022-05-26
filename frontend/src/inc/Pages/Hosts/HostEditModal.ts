@@ -46,6 +46,12 @@ export class HostEditModal extends ModalDialog {
     protected _inputIndex: InputBottemBorderOnly2;
 
     /**
+     * Alias name
+     * @protected
+     */
+    protected _inputAliasName: InputBottemBorderOnly2;
+
+    /**
      * Destination type
      * @protected
      */
@@ -91,13 +97,25 @@ export class HostEditModal extends ModalDialog {
      * group ssh password
      * @protected
      */
-    protected _groupSsshPaasword: FormGroup;
+    protected _groupSshPaasword: FormGroup;
 
     /**
      * ssh password
      * @protected
      */
     protected _inputSshPassword: InputBottemBorderOnly2;
+
+    /**
+     * group ssh listen
+     * @protected
+     */
+    protected _groupSshListen: FormGroup;
+
+    /**
+     * ssh listen
+     * @protected
+     */
+    protected _selectSshListen: SelectBottemBorderOnly2;
 
     /**
      * constructor
@@ -157,6 +175,10 @@ export class HostEditModal extends ModalDialog {
         this._inputIndex = new InputBottemBorderOnly2(groupIndex.getElement(), undefined, InputType.number);
         this._inputIndex.setPlaceholder('auto sorting');
 
+        const groupAlias = new FormGroup(bodyCard, 'Alias-Name (Intern)');
+        this._inputAliasName = new InputBottemBorderOnly2(groupAlias.getElement());
+        this._inputAliasName.setPlaceholder('auto name');
+
         const groupDesType = new FormGroup(bodyCard, 'Destination-Type');
         this._selectDestinationType = new SelectBottemBorderOnly2(groupDesType.getElement());
         this._selectDestinationType.setChangeFn((value) => {
@@ -215,15 +237,17 @@ export class HostEditModal extends ModalDialog {
 
         this._selectSshType.setChangeFn(value => {
             this._groupSshUsername.getElement().hide();
-            this._groupSsshPaasword.getElement().hide();
+            this._groupSshPaasword.getElement().hide();
+            this._groupSshListen.getElement().hide();
 
             switch (value) {
                 case '1':
                     this._groupSshUsername.getElement().show();
-                    this._groupSsshPaasword.getElement().show();
+                    this._groupSshPaasword.getElement().show();
                     break;
 
                 case '2':
+                    this._groupSshListen.getElement().show();
                     break;
             }
         });
@@ -232,9 +256,15 @@ export class HostEditModal extends ModalDialog {
         this._inputSshUsername = new InputBottemBorderOnly2(this._groupSshUsername.getElement());
         this._groupSshUsername.getElement().hide();
 
-        this._groupSsshPaasword = new FormGroup(bodyCardSsh, 'Password');
-        this._inputSshPassword = new InputBottemBorderOnly2(this._groupSsshPaasword.getElement(), undefined, InputType.password);
-        this._groupSsshPaasword.getElement().hide();
+        this._groupSshPaasword = new FormGroup(bodyCardSsh, 'Password');
+        this._inputSshPassword = new InputBottemBorderOnly2(this._groupSshPaasword.getElement(), undefined, InputType.password);
+        this._groupSshPaasword.getElement().hide();
+
+        this._groupSshListen = new FormGroup(bodyCardSsh, 'Listen');
+        this._selectSshListen = new SelectBottemBorderOnly2(this._groupSshListen.getElement());
+        this._groupSshListen.getElement().hide();
+
+
     }
 
     /**
