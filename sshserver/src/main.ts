@@ -70,7 +70,7 @@ import {SshServer} from './inc/ssh/SshServer';
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    const server = SshServer.getInstance();
+    const server = await SshServer.getInstance();
     server.listen();
 
 })();

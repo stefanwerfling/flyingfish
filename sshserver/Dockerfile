@@ -1,5 +1,8 @@
 FROM node:16-alpine
 
+RUN apk update
+RUN apk add --no-cache openssh-keygen
+
 RUN mkdir -p /opt/app
 
 RUN mkdir -p /opt/app/dist

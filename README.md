@@ -28,6 +28,11 @@ On the "Flyingfish", a ngnix proxy connection manager and more.
    * 1.3 [Flow diagram idea](#flow-diagram-idea)
    * 1.4 [Process/development](#processdevelopment)
    * 1.5 [Projectname](#projectname)
+   * 1.6 [Extentions](#extentions)
+     * 1.6.1 Flyingfish-Shield (TODO)
+     * 1.6.2 Flyingfish-Onion-Hat (TODO)
+     * 1.6.3 Flyingfish-VPN-River (TODO)
+     * 1.6.4 Flyingfish-Horde (TODO)
 2. [Project-Parts](#project-parts)
 3. [Nginx Manager](#nginx-manager)
     * 3.1 [Docker Image](#docker-image)
@@ -40,9 +45,10 @@ On the "Flyingfish", a ngnix proxy connection manager and more.
 4. [SSH-Server](#ssh-server)
     * 4.1 [Docker Image](#docker-image-1)
     * 4.2 [Connection](#connection)
-5. [Todo](#todo)
-6. [Contributors](#contributors)
-7. [License](#license)
+5. [How Debug](#how-debug)
+6. [Todo](#todo)
+7. [Contributors](#contributors)
+8. [License](#license)
 
 ## Motivation
 I only got to know the Nginx server after Apache. And was pleasantly surprised by the configuration. 
@@ -325,6 +331,48 @@ Create over ssh a remote port forwarding:
 ```shell
 ssh -R 3000:localhost:3000 ffadmin@192.168.0.115 -p 2222
 //ssh -R myPort:myIP:remotePort sshUser@ipSSHServer -p portSSH
+```
+
+# How Debug
+Edit the docker-compose file and add the Port for the NodeJs Debuger ```9229```, 
+then override the NodeJS ```command``` start with ```--inspect-brk```. 
+
+The docker container will wait for Debug connection. 
+* Remove it again for the production environment!
+
+example:
+
+```yaml
+flyingfish:
+    image: flyingfish:v1.0
+    build:
+      context: ./
+    container_name: flyingfish_service
+    volumes:
+      - ./config.json:/opt/app/config.json
+      - ./nginx:/opt/app/nginx:rw
+      - ./letsencrypt:/etc/letsencrypt:rw
+    ports:
+      - "443:443"
+      - "80:80"
+      - "3000:3000"
+      - "1900:1900"
+      - "9229:9229"
+    command:
+      - node
+      - "--inspect-brk=0.0.0.0:9229"
+      - "dist/main.js"
+      - "--config=/opt/app/config.json"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
 ```
 
 # Todo
