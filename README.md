@@ -29,7 +29,7 @@ On the "Flyingfish", a ngnix proxy connection manager and more.
    * 1.4 [Process/development](#processdevelopment)
    * 1.5 [Projectname](#projectname)
    * 1.6 [Extentions](#extentions)
-     * 1.6.1 Flyingfish-Shield (TODO)
+     * 1.6.1 [Flyingfish-Shield](#flyingfish-shield)
      * 1.6.2 Flyingfish-Onion-Hat (TODO)
      * 1.6.3 Flyingfish-VPN-River (TODO)
      * 1.6.4 Flyingfish-Horde (TODO)
@@ -144,9 +144,19 @@ Currently I will first generate simple configuration files for Nginx and feel th
 
 The name of the project is an allusion to the fish that is "air" in an atypical environment for it. Nevertheless, the fish copes perfectly here. This is how I see the project with the Nginx server and the interacting components. The name also goes well with "Docker" a whale.
 
+#### Extentions
+As mentioned above "7. and more" I will include many extensions in the project, these can be used, but do not have to. I think that brings added value to the project in the form of more use cases.
+
+##### Flyingfish-Shield
+The shield is supposed to provide protection for the Nginx, or the application behind the Nginx. As shown above, the NJS module is implemented in Nginx. The IPs are checked via the Nginx stream. During my development with the module and the Upnp Nat, I noticed in the logs that constant IPs around the world were querying my unknown (and briefly living) server.
+My research has shown that the IPs are already known and that IPs are from Internet scanners from all nations to uncover the network.
+
+My idea for this is to take information from databases and projects that are already known and to block these IPs. In addition, I thought of adding a "knock" function. The "knock" triggers a ritual and then the IP is safely let through again. Maybe you can also join forces with other projects. I'll expand on this idea further later.
+
 # Project-Parts
 * Nginx Manager
 * SSH-Server
+* Onion/Tor-Service
 * DynLocation (TODO)
 
 # Nginx Manager
