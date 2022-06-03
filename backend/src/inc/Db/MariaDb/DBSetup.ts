@@ -3,6 +3,7 @@ import {Logger} from '../../Logger/Logger';
 import {NginxDomain as NginxDomainDB} from './Entity/NginxDomain';
 import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from './Entity/NginxStream';
+import {NginxUpstream as NginxUpstreamDB} from './Entity/NginxUpstream';
 import {User as UserDB} from './Entity/User';
 import {MariaDbHelper} from './MariaDbHelper';
 
@@ -87,27 +88,37 @@ export class DBSetup {
             defaultDomain = await MariaDbHelper.getConnection().manager.save(defaultDomain);
 
             // add stream _ --------------------------------------------------------------------------------------------
-            const sTo10443 = new NginxStreamDB();
+            let sTo10443 = new NginxStreamDB();
             sTo10443.domain_id = defaultDomain.id;
             sTo10443.listen_id = l443.id;
             sTo10443.alias_name = 'StreamTo10443';
-            sTo10443.destination_address = '127.0.0.1';
-            sTo10443.destination_port = 10443;
             sTo10443.isdefault = true;
             sTo10443.index = 9999;
 
-            await MariaDbHelper.getConnection().manager.save(sTo10443);
+            sTo10443 = await MariaDbHelper.getConnection().manager.save(sTo10443);
 
-            const sTo10080 = new NginxStreamDB();
+            const sTo10443Up = new NginxUpstreamDB();
+            sTo10443Up.stream_id = sTo10443.id;
+            sTo10443Up.destination_address = '127.0.0.1';
+            sTo10443Up.destination_port = 10443;
+
+            await MariaDbHelper.getConnection().manager.save(sTo10443Up);
+
+            let sTo10080 = new NginxStreamDB();
             sTo10080.domain_id = defaultDomain.id;
             sTo10080.listen_id = l80.id;
             sTo10080.alias_name = 'StreamTo10080';
-            sTo10080.destination_address = '127.0.0.1';
-            sTo10080.destination_port = 10080;
             sTo10080.isdefault = true;
             sTo10080.index = 9999;
 
-            await MariaDbHelper.getConnection().manager.save(sTo10080);
+            sTo10080 = await MariaDbHelper.getConnection().manager.save(sTo10080);
+
+            const sTo10080Up = new NginxUpstreamDB();
+            sTo10080Up.stream_id = sTo10080.id;
+            sTo10080Up.destination_address = '127.0.0.1';
+            sTo10080Up.destination_port = 10080;
+
+            await MariaDbHelper.getConnection().manager.save(sTo10080Up);
         }
     }
 

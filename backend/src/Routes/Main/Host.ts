@@ -80,8 +80,9 @@ export class Host {
                         for (const tstream of streams) {
                             const streamEntry: HostStream = {
                                 listen_id: tstream.listen_id,
-                                destination_address: tstream.destination_address,
-                                destination_port: tstream.destination_port,
+                                // TODO
+                                destination_address: '',
+                                destination_port: 0,
                                 alias_name: tstream.alias_name
                             };
 

@@ -4,12 +4,13 @@ import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
 import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
+import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Certbot} from '../Letsencrypt/Certbot';
 import {Logger} from '../Logger/Logger';
 import {Map as NginxMap} from '../Nginx/Config/Map';
 import {Server as NginxConfServer} from '../Nginx/Config/Server';
-import {Upstream} from '../Nginx/Config/Upstream';
+import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream';
 import {NginxServer} from '../Nginx/NginxServer';
 import {Location} from '../Nginx/Config/Location';
 import {Listen} from '../Nginx/Config/Listen';
@@ -32,11 +33,19 @@ type HttpCollect = {
 };
 
 /**
+ * StreamSubCollect
+ */
+type StreamSubCollect = {
+    stream: NginxStreamDB;
+    upstreams: NginxUpstreamDB[];
+};
+
+/**
  * StreamCollect
  */
 type StreamCollect = {
     listen: NginxListenDB;
-    domains: Map<string, NginxStreamDB>;
+    domains: Map<string, StreamSubCollect>;
 };
 
 /**
@@ -83,6 +92,7 @@ export class NginxService {
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
         const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
         const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
+        const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
         const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
         const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
 
@@ -109,12 +119,27 @@ export class NginxService {
                         if (!streamMap.has(alisten.listen_port)) {
                             streamMap.set(alisten.listen_port, {
                                 listen: alisten,
-                                domains: new Map<string, NginxStreamDB>()
+                                domains: new Map<string, StreamSubCollect>()
                             });
                         }
 
                         const mapDomainStreams = streamMap.get(alisten.listen_port);
-                        mapDomainStreams!.domains.set(adomain.domainname, astream);
+                        const streamCollection: StreamSubCollect = {
+                            stream: astream,
+                            upstreams: []
+                        };
+
+                        const upstreams = await upstreamRepository.find({
+                            where: {
+                                stream_id: astream.id
+                            }
+                        });
+
+                        if (upstreams) {
+                            streamCollection.upstreams = upstreams;
+                        }
+
+                        mapDomainStreams!.domains.set(adomain.domainname, streamCollection);
 
                         streamMap.set(alisten.listen_port, mapDomainStreams!);
                     }
@@ -175,7 +200,8 @@ export class NginxService {
             const aMap = new NginxMap('$ssl_preread_server_name', varName);
             let defaultMapDomain: string|null = null;
 
-            streamCollect.domains.forEach((tstream, domainName) => {
+            streamCollect.domains.forEach((collectStream, domainName) => {
+                const tstream = collectStream.stream;
                 let upstreamName = 'ffus_';
 
                 if (tstream.alias_name !== '') {
@@ -188,7 +214,28 @@ export class NginxService {
                     tupstreams.push(upstreamName);
 
                     const upStream = new Upstream(upstreamName);
-                    upStream.addVariable('server', `${tstream.destination_address}:${tstream.destination_port}`);
+                    upStream.setAlgorithm(tstream.load_balancing_algorithm as UpstreamLoadBalancingAlgorithm);
+
+                    if (collectStream.upstreams.length > 0) {
+                        for (const tupstream of collectStream.upstreams) {
+                            upStream.addServer({
+                                address: tupstream.destination_address,
+                                port: tupstream.destination_port,
+                                weight: tupstream.weight,
+                                max_fails: tupstream.max_fails,
+                                fail_timeout: tupstream.fail_timeout
+                            });
+                        }
+                    } else {
+                        // fill default
+                        upStream.addServer({
+                            address: '127.0.0.1',
+                            port: 10080,
+                            weight: 0,
+                            max_fails: 0,
+                            fail_timeout: 0
+                        });
+                    }
 
                     conf?.getStream().addUpstream(upStream);
                 }

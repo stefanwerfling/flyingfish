@@ -1,6 +1,7 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
+import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream';
 import {Logger} from './inc/Logger/Logger';
 import {Certificate as CertificateController} from './Routes/Main/Certificate';
 import {Host as HostController} from './Routes/Main/Host';
@@ -94,6 +95,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 NginxListenDB,
                 NginxDomainDB,
                 NginxStreamDB,
+                NginxUpstreamDB,
                 NginxHttpDB,
                 NginxLocationDB,
                 IpBlacklistDB,
