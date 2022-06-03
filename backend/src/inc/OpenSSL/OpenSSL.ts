@@ -1,6 +1,7 @@
 import {spawn} from 'child_process';
 import fs from 'fs';
 import {Config} from '../Config/Config';
+import {Logger} from '../Logger/Logger';
 
 /**
  * OpenSSL
@@ -22,11 +23,11 @@ export class OpenSSL {
             ]);
 
         process.stdout!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().info(buf.toString());
         });
 
         process.stderr!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().error(buf.toString());
         });
 
         await new Promise((resolve) => {

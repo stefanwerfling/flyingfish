@@ -1,6 +1,7 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
+import {Logger} from './inc/Logger/Logger';
 import {Certificate as CertificateController} from './Routes/Main/Certificate';
 import {Host as HostController} from './Routes/Main/Host';
 import {Listen as ListenController} from './Routes/Main/Listen';
@@ -69,6 +70,9 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
     // set global
     Config.set(tconfig);
 
+    // init logger
+    Logger.getLogger();
+
     // -----------------------------------------------------------------------------------------------------------------
 
     try {
@@ -109,7 +113,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
         // db setup first init
         await DBSetup.firstInit();
     } catch (error) {
-        console.log('Error while connecting to the database', error);
+        Logger.getLogger().error('Error while connecting to the database', error);
         return;
     }
 

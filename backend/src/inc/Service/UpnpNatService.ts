@@ -3,6 +3,7 @@ import {UpnpNatCache} from '../Cache/UpnpNatCache';
 import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort';
 import {promise as PingPromise} from 'ping';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {Logger} from '../Logger/Logger';
 import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient';
 
 /**
@@ -54,11 +55,11 @@ export class UpnpNatService {
                                         mappings
                                     );
                                 } else {
-                                    console.log(`Different or new gateway? Ids differ (${gatewayid}<-->${anat.gateway_id}), skip to next. Check the settings.`);
+                                    Logger.getLogger().info(`Different or new gateway? Ids/MAC differ (${gatewayid}<-->${anat.gateway_id}), skip to next. Check the settings.`);
                                     continue;
                                 }
                             } catch (et) {
-                                console.log('Gateway mapping info error');
+                                Logger.getLogger().info('Gateway mapping info error/empty');
                             }
 
                             try {
@@ -76,19 +77,19 @@ export class UpnpNatService {
                                 const map = await client.createMapping(options);
 
                                 if (map) {
-                                    console.log(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
+                                    Logger.getLogger().info(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
                                 }
                             } catch (ex) {
-                                console.log(`Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
+                                Logger.getLogger().info(`Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
                             }
 
                         } else {
-                            console.log(`Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
+                            Logger.getLogger().info(`Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
                         }
                     }
                 }
             } catch (e) {
-                console.log(e);
+                Logger.getLogger().error(e);
             }
         });
     }

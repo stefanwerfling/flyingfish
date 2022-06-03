@@ -1,6 +1,7 @@
 import {Response} from 'express';
 import {Get, HeaderParam, JsonController, Res} from 'routing-controllers';
 import {Credential} from '../../inc/Credential/Credential';
+import {Logger} from '../../inc/Logger/Logger';
 import {BasicAuthParser} from '../../inc/Server/BasicAuthParser';
 
 /**
@@ -21,8 +22,8 @@ export class AuthBasic {
         @HeaderParam('location_id') location_id: string,
         @HeaderParam('authheader') authHeader: string
     ): Promise<boolean> {
-        console.log(`check -> location_id: ${location_id}`);
-        console.log(`check -> authheader: ${authHeader}`);
+        Logger.getLogger().info(`check -> location_id: ${location_id}`);
+        Logger.getLogger().info(`check -> authheader: ${authHeader}`);
 
         const auth = BasicAuthParser.parse(authHeader);
 
@@ -38,19 +39,19 @@ export class AuthBasic {
                     break;
 
                 case 'Digest':
-                    console.error('Wrong Auth, digest not support in basic auth!');
+                    Logger.getLogger().error('Wrong Auth, digest not support in basic auth!');
                     break;
             }
 
 
-            // console.log(`check -> scheme: ${auth.scheme}, username: ${auth.username}, password: ${auth.password}`);
+            Logger.getLogger().info(`check -> scheme: ${auth.scheme}, username: ${auth.username}, password: *****`);
 
             if (resulte) {
                 response.status(200);
                 return true;
             }
         } else {
-            console.log('check -> auth parse faild');
+            Logger.getLogger().error('check -> auth parse faild');
         }
 
         response.status(500);

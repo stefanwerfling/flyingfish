@@ -1,5 +1,6 @@
 import {ChildProcess, exec, spawn} from 'child_process';
 import * as fs from 'fs';
+import {Logger} from '../Logger/Logger';
 import {NginxConfig} from './NginxConfig';
 
 /**
@@ -135,11 +136,11 @@ export class NginxServer {
         this._process = spawn(this._command, args);
 
         this._process.stdout!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().info(buf.toString());
         });
 
         this._process.stderr!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().error(buf.toString());
         });
     }
 
@@ -177,11 +178,11 @@ export class NginxServer {
         this._process = spawn(this._command, args);
 
         this._process.stdout!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().info(buf.toString());
         });
 
         this._process.stderr!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().error(buf.toString());
         });
     }
 

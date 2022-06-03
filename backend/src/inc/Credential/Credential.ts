@@ -1,6 +1,7 @@
 import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {Logger} from '../Logger/Logger';
 import {CredentialProvider} from './CredentialProvider';
 import {ICredentialAuthBasic} from './ICredential';
 
@@ -64,7 +65,7 @@ export class Credential {
                 }
             }
         } else {
-            console.log(`Location not found: ${locationId}`);
+            Logger.getLogger().error(`Location not found: ${locationId}`);
         }
 
         return false;

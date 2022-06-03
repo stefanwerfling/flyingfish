@@ -1,5 +1,6 @@
 import {Job, scheduleJob} from 'node-schedule';
 import {Config} from '../Config/Config';
+import {Logger} from '../Logger/Logger';
 import {HowIsMyPublicIpProviders} from '../Provider/HowIsMyPublicIpProviders';
 import {DynDnsService} from './DynDnsService';
 
@@ -55,12 +56,12 @@ export class HowIsMyPublicIpService {
                 if (this._currentIp === null) {
                     this._currentIp = await provider.get();
 
-                    console.log(`Set my current public ip(${this._currentIp})`);
+                    Logger.getLogger().info(`Set my current public ip(${this._currentIp})`);
                 } else {
                     const ip = await provider.get();
 
                     if (this._currentIp !== ip) {
-                        console.log(`Public ip change old(${this._currentIp}) new(${ip})`);
+                        Logger.getLogger().info(`Public ip change old(${this._currentIp}) new(${ip})`);
 
                         this._currentIp = ip;
 

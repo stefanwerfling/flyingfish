@@ -1,6 +1,7 @@
 import {Job, scheduleJob} from 'node-schedule';
 import {DynDnsClient as DynDnsClientDB} from '../Db/MariaDb/Entity/DynDnsClient';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {Logger} from '../Logger/Logger';
 import {DynDnsProviders} from '../Provider/DynDnsProviders';
 
 /**
@@ -36,6 +37,7 @@ export class DynDnsService {
      * @protected
      */
     public async updateDns(): Promise<void> {
+        Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
         const dyndnclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
 
         const clients = await dyndnclientRepository.find();
@@ -44,9 +46,9 @@ export class DynDnsService {
             const provider = DynDnsProviders.getProvider(client.provider);
 
             if (await provider?.update(client.username, client.password, '')) {
-                console.log(`Domain ip update by provider(${provider?.getName()})`);
+                Logger.getLogger().info(`DynDnsService::updateDns: Domain ip update by provider(${provider?.getName()})`);
             } else {
-                console.log(`Domain ip update faild by provider(${provider?.getName()})`);
+                Logger.getLogger().warn(`DynDnsService::updateDns: Domain ip update faild by provider(${provider?.getName()})`);
             }
         }
     }

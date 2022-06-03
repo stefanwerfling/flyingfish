@@ -33,6 +33,7 @@ RUN mkdir -p /opt/app/nginx/logs
 RUN mkdir -p /opt/app/nginx/servers
 RUN mkdir -p /opt/app/nginx/servers/logs
 RUN mkdir -p /opt/app/nginx/html
+RUN mkdir -p /var/log/flyingfish/
 
 WORKDIR /opt/app
 

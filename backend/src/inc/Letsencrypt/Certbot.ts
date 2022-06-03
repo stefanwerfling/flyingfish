@@ -1,5 +1,6 @@
 import {spawn} from 'child_process';
 import fs from 'fs';
+import {Logger} from '../Logger/Logger';
 
 /**
  * Certbot
@@ -40,11 +41,11 @@ export class Certbot {
             ]);
 
         process.stdout!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().info(buf.toString());
         });
 
         process.stderr!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().error(buf.toString());
         });
 
         await new Promise((resolve) => {

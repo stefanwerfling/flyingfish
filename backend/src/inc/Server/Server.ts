@@ -2,6 +2,7 @@ import {Application} from 'express';
 // eslint-disable-next-line no-duplicate-imports
 import express from 'express';
 import {useExpressServer} from 'routing-controllers';
+import {Logger} from '../Logger/Logger';
 
 /**
  * Server
@@ -94,7 +95,7 @@ export class Server {
      */
     public listen(): void {
         this._server.listen(this._port, () => {
-            console.log(`Flingfish listening on the http://localhost:${this._port}`);
+            Logger.getLogger().info(`Flingfish listening on the http://localhost:${this._port}`);
         });
     }
 

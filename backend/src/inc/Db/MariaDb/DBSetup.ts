@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcrypt';
+import {Logger} from '../../Logger/Logger';
 import {NginxDomain as NginxDomainDB} from './Entity/NginxDomain';
 import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from './Entity/NginxStream';
@@ -29,7 +30,7 @@ export class DBSetup {
             // save user to db
             await MariaDbHelper.getConnection().manager.save(nUser);
 
-            console.log('Admin user create for first init.');
+            Logger.getLogger().info('Admin user create for first init.');
         }
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
@@ -76,7 +77,7 @@ export class DBSetup {
 
             await MariaDbHelper.getConnection().manager.save(l10080);
 
-            console.log('Default listener create for first init.');
+            Logger.getLogger().info('Default listener create for first init.');
 
             // create default domain _ ---------------------------------------------------------------------------------
 

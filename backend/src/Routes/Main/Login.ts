@@ -2,6 +2,7 @@ import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
 import {User as UserDB} from '../../inc/Db/MariaDb/Entity/User';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 import * as bcrypt from 'bcrypt';
+import {Logger} from '../../inc/Logger/Logger';
 import {SessionUserData} from '../../inc/Server/Session';
 
 /**
@@ -78,7 +79,7 @@ export class Login {
                 session.user.userid = user.id;
                 session.user.isLogin = true;
 
-                console.log(`Login success by session: ${session.id}`);
+                Logger.getLogger().info(`Login success by session: ${session.id}`);
 
                 return {
                     success: true,
@@ -86,7 +87,7 @@ export class Login {
                 };
             }
 
-            console.log(`Login faild: wrong password by email: ${login.email}`);
+            Logger.getLogger().warn(`Login faild: wrong password by email: ${login.email}`);
 
             return {
                 success: false,

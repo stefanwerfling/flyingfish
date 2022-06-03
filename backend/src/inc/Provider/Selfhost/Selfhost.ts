@@ -1,4 +1,5 @@
 import got from 'got';
+import {Logger} from '../../Logger/Logger';
 import {IDynDnsProvider} from '../IDynDnsProvider';
 
 /**
@@ -38,7 +39,7 @@ export class Selfhost implements IDynDnsProvider {
             url: `https://carol.selfhost.de/update?username=${username}&password=${password}${myip}`
         });
 
-        console.log(`Selfhost update status code: ${response.statusCode}`);
+        Logger.getLogger().info(`Selfhost update status code: ${response.statusCode}`);
 
         if (response.statusCode === 200) {
             return true;

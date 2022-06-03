@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {Logger} from '../Logger/Logger';
 import {CredentialSchemes} from './Credential';
 import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential';
 import {CredentialUser as CredentialUserDB} from '../Db/MariaDb/Entity/CredentialUser';
@@ -45,17 +46,17 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
         });
 
         if (user) {
-            console.log(`CredentialDatabase->authBasic user found: ${username}`);
+            Logger.getLogger().info(`CredentialDatabase->authBasic user found: ${username}`);
 
             const bresult = await bcrypt.compare(password, user.password);
 
-            console.log(`CredentialDatabase->authBasic password-result: ${bresult}`);
+            Logger.getLogger().info(`CredentialDatabase->authBasic password-result: ${bresult}`);
 
             if (bresult) {
                 return true;
             }
         } else {
-            console.log(`CredentialDatabase->authBasic user not found: ${username}`);
+            Logger.getLogger().warn(`CredentialDatabase->authBasic user not found: ${username}`);
         }
 
         return false;

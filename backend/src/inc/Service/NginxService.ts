@@ -6,6 +6,7 @@ import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocati
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Certbot} from '../Letsencrypt/Certbot';
+import {Logger} from '../Logger/Logger';
 import {Map as NginxMap} from '../Nginx/Config/Map';
 import {Server as NginxConfServer} from '../Nginx/Config/Server';
 import {Upstream} from '../Nginx/Config/Upstream';
@@ -375,14 +376,14 @@ export class NginxService {
      */
     public async start(): Promise<void> {
         if (OpenSSL.existDhparam()) {
-            console.log('Dhparam found.');
+            Logger.getLogger().info('Dhparam found.');
         } else {
-            console.log('Create Dhparam ...');
+            Logger.getLogger().info('Create Dhparam ...');
 
             if (await OpenSSL.createDhparam(4096) === null) {
-                console.log('Can not create Dhparam!');
+                Logger.getLogger().warn('Can not create Dhparam!');
             } else {
-                console.log('Dhparam finish.');
+                Logger.getLogger().info('Dhparam finish.');
             }
         }
 
@@ -390,7 +391,7 @@ export class NginxService {
         NginxServer.getInstance().start();
 
         if (NginxServer.getInstance().isRun()) {
-            console.log('Nginx server is start');
+            Logger.getLogger().info('Nginx server is start');
         }
     }
 
@@ -411,7 +412,7 @@ export class NginxService {
         NginxServer.getInstance().reload();
 
         if (NginxServer.getInstance().isRun()) {
-            console.log('Nginx server is reload');
+            Logger.getLogger().info('Nginx server is reload');
         }
     }
 

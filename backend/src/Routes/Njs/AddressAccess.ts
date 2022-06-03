@@ -3,6 +3,7 @@ import {Get, HeaderParam, JsonController, Res} from 'routing-controllers';
 import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist';
 import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {Logger} from '../../inc/Logger/Logger';
 
 /**
  * AddressAccess
@@ -24,7 +25,7 @@ export class AddressAccess {
         @HeaderParam('remote_addr') remote_addr: string,
         @HeaderParam('type') type: string
     ): Promise<boolean> {
-        console.log(`realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
+        Logger.getLogger().info(`realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
         const ipBlacklistRepository = MariaDbHelper.getRepository(IpBlacklistDB);
@@ -37,7 +38,7 @@ export class AddressAccess {
 
         if (listen) {
             if (listen.enable_address_check) {
-                console.log('Listen address check is enable ...');
+                Logger.getLogger().info('Listen address check is enable ...');
 
                 if (realip_remote_addr) {
                     const address = await ipBlacklistRepository.findOne({
@@ -47,12 +48,12 @@ export class AddressAccess {
                     });
 
                     if (!address) {
-                        console.log(`Address(${realip_remote_addr}) not found in blacklist.`);
+                        Logger.getLogger().info(`Address(${realip_remote_addr}) not found in blacklist.`);
                         response.status(200);
                         return true;
                     }
 
-                    console.log(`Address(${realip_remote_addr}) found in blacklist!`);
+                    Logger.getLogger().info(`Address(${realip_remote_addr}) found in blacklist!`);
                 }
 
             } else {
@@ -60,7 +61,7 @@ export class AddressAccess {
                 return true;
             }
         } else {
-            console.log(`Listen(${listen_id}) nout found!`);
+            Logger.getLogger().warn(`Listen(${listen_id}) nout found!`);
         }
 
         response.status(401);

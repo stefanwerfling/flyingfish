@@ -46,6 +46,15 @@ interface ConfigOptions {
     himpip?: {
         provider: string;
     };
+    logging?: {
+        dirname?: string;
+        filename?: string;
+        zippedArchive?: boolean;
+        maxSize?: string;
+        maxFiles?: string;
+        enableConsole?: boolean;
+        level?: string;
+    };
 
     rootconfigpath?: string;
     rootconfigname?: string;

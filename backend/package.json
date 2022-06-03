@@ -56,8 +56,10 @@
     "node-schedule": "^2.1.0",
     "node-xlsx": "^0.21.0",
     "ping": "^0.4.2",
-    "routing-controllers": "^0.9.0",
+    "routing-controllers": "^0.8.1",
     "tough-cookie": "^2.3.4",
-    "typeorm": "^0.2.32"
+    "typeorm": "^0.2.32",
+    "winston": "^3.7.2",
+    "winston-daily-rotate-file": "^4.7.1"
   }
 }
