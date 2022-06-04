@@ -156,20 +156,36 @@ export class Hosts extends BasePage {
 
                         sdDiv.append(' &#8594; ');
 
-                        if (value.ssh) {
+
+                        if (value.ssh.port_in) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdDiv, `ssh (${value.ssh.port})`, BadgeType.primary);
+                            new Badge(sdDiv, `ssh (--> ${value.ssh.port_in})`, BadgeType.primary);
+                        } else if(value.ssh.port_out) {
+                            // eslint-disable-next-line no-new
+                            new Badge(sdDiv, `ssh (<-- ${value.ssh.port_out})`, BadgeType.primary);
                         } else {
-                            let badType = BadgeType.warning;
+                            if (value.upstreams.length === 0) {
+                                sdDiv.append('None');
+                            } else {
+                                const firstUpstream = value.upstreams[0];
 
-                            if (value.destination_address === '127.0.0.1') {
-                                badType = BadgeType.success;
+                                let badType = BadgeType.warning;
+
+                                if (firstUpstream.address === '127.0.0.1') {
+                                    badType = BadgeType.success;
+                                }
+
+                                let andMore = '';
+
+                                if (value.upstreams.length>1) {
+                                    andMore = ', ...'
+                                }
+
+                                // eslint-disable-next-line no-new
+                                new Badge(sdDiv,
+                                    `${firstUpstream.address}:${firstUpstream.port}${andMore} (${value.alias_name})`,
+                                    badType);
                             }
-
-                            // eslint-disable-next-line no-new
-                            new Badge(sdDiv,
-                                `${value.destination_address}:${value.destination_port} (${value.alias_name})`,
-                                badType);
                         }
                     });
 
@@ -185,6 +201,8 @@ export class Hosts extends BasePage {
                         }
 
                         sdDiv.append(' &#8594; ');
+
+
                     });
 
                     // eslint-disable-next-line no-new

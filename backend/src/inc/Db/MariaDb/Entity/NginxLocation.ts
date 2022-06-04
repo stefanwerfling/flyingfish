@@ -46,4 +46,14 @@ export class NginxLocation extends BaseEntity {
         // @ts-ignore
     auth_relam: string;
 
+    @Column({
+        default: 0
+    })
+        // @ts-ignore
+    sshport_out_id: number;
+
+    @Column()
+        // @ts-ignore
+    sshport_schema: string;
+
 }

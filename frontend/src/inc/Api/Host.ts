@@ -1,16 +1,34 @@
 import {NetFetch} from '../Net/NetFetch';
 
 /**
+ * UpStream
+ */
+export type UpStream = {
+    id: number;
+    address: string;
+    port: number;
+};
+
+/**
  * HostStream
  */
 export type HostStream = {
     listen_id: number;
-    destination_address: string;
-    destination_port: number;
+    upstreams: UpStream[];
     alias_name: string;
-    ssh?: {
-        port: number;
+    ssh: {
+        port_in?: number;
+        port_out?: number;
     };
+};
+
+/**
+ * Location
+ */
+export type Location = {
+    id: number;
+    match: string;
+    proxy_pass: string;
 };
 
 /**
@@ -18,6 +36,10 @@ export type HostStream = {
  */
 export type HostHttp = {
     listen_id: number;
+    locations: Location[];
+    ssh: {
+        port_out?: number;
+    };
 };
 
 /**

@@ -50,6 +50,12 @@ export class NginxStream extends BaseEntity {
         default: 0
     })
         // @ts-ignore
-    sshport_id: number;
+    sshport_in_id: number;
+
+    @Column({
+        default: 0
+    })
+        // @ts-ignore
+    sshport_out_id: number;
 
 }

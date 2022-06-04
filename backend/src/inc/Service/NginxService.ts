@@ -1,10 +1,12 @@
 import fs from 'fs';
+import {Config} from '../Config/Config';
 import {NginxDomain as NginxDomainDB} from '../Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
 import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream';
+import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Certbot} from '../Letsencrypt/Certbot';
 import {Logger} from '../Logger/Logger';
@@ -17,11 +19,19 @@ import {Listen} from '../Nginx/Config/Listen';
 import {OpenSSL} from '../OpenSSL/OpenSSL';
 
 /**
+ * HttpLocationCollect
+ */
+type HttpLocationCollect = {
+    location: NginxLocationDB;
+    sshport_out?: SshPortDB;
+};
+
+/**
  * HttpSubCollect
  */
 type HttpSubCollect = {
     http: NginxHttpDB;
-    locations: NginxLocationDB[];
+    locations: HttpLocationCollect[];
 };
 
 /**
@@ -38,6 +48,8 @@ type HttpCollect = {
 type StreamSubCollect = {
     stream: NginxStreamDB;
     upstreams: NginxUpstreamDB[];
+    sshport_in?: SshPortDB;
+    sshport_out?: SshPortDB;
 };
 
 /**
@@ -95,6 +107,7 @@ export class NginxService {
         const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
         const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
         const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
+        const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
 
         const listens = await listenRepository.find();
 
@@ -139,6 +152,30 @@ export class NginxService {
                             streamCollection.upstreams = upstreams;
                         }
 
+                        if (astream.sshport_in_id > 0) {
+                            const sshport = await sshportRepository.findOne({
+                                where: {
+                                    id: astream.sshport_in_id
+                                }
+                            });
+
+                            if (sshport) {
+                                streamCollection.sshport_in = sshport;
+                            }
+                        }
+
+                        if (astream.sshport_out_id > 0) {
+                            const sshport = await sshportRepository.findOne({
+                                where: {
+                                    id: astream.sshport_out_id
+                                }
+                            });
+
+                            if (sshport) {
+                                streamCollection.sshport_out = sshport;
+                            }
+                        }
+
                         mapDomainStreams!.domains.set(adomain.domainname, streamCollection);
 
                         streamMap.set(alisten.listen_port, mapDomainStreams!);
@@ -181,7 +218,29 @@ export class NginxService {
                         });
 
                         if (locations) {
-                            httpCollection.locations = locations;
+                            const locationCollects: HttpLocationCollect[] = [];
+
+                            for (const alocation of locations) {
+                                const locationCollect: HttpLocationCollect = {
+                                    location: alocation
+                                };
+
+                                if (alocation.sshport_out_id > 0) {
+                                    const sshport = await sshportRepository.findOne({
+                                        where: {
+                                            id: alocation.sshport_out_id
+                                        }
+                                    });
+
+                                    if (sshport) {
+                                        locationCollect.sshport_out = sshport;
+                                    }
+                                }
+
+                                locationCollects.push(locationCollect);
+                            }
+
+                            httpCollection.locations = locationCollects;
                         }
 
                         mapDomainHttp!.domains.set(adomain.domainname, httpCollection);
@@ -216,7 +275,25 @@ export class NginxService {
                     const upStream = new Upstream(upstreamName);
                     upStream.setAlgorithm(tstream.load_balancing_algorithm as UpstreamLoadBalancingAlgorithm);
 
-                    if (collectStream.upstreams.length > 0) {
+                    if (collectStream.sshport_in) {
+                        // fill default ssh server
+                        upStream.addServer({
+                            address: Config.get()?.sshserver?.ip!,
+                            port: 22,
+                            weight: 0,
+                            max_fails: 0,
+                            fail_timeout: 0
+                        });
+                    } else if (collectStream.sshport_out) {
+                        // fill default ssh server
+                        upStream.addServer({
+                            address: Config.get()?.sshserver?.ip!,
+                            port: collectStream.sshport_out.port,
+                            weight: 0,
+                            max_fails: 0,
+                            fail_timeout: 0
+                        });
+                    } else if (collectStream.upstreams.length > 0) {
                         for (const tupstream of collectStream.upstreams) {
                             upStream.addServer({
                                 address: tupstream.destination_address,
@@ -337,7 +414,9 @@ export class NginxService {
 
                 aServer.setServerName(domainName);
 
-                for (const entry of httpSubCollect.locations) {
+                for (const locationCollect of httpSubCollect.locations) {
+                    const entry = locationCollect.location;
+
                     const location = new Location(entry.match, entry.modifier);
 
                     if (entry.redirect !== '') {
@@ -377,7 +456,10 @@ export class NginxService {
                         aServer.addLocation(authLocation);
                     }
 
-                    if (entry.proxy_pass) {
+                    if (locationCollect.sshport_out) {
+                        location.addVariable('proxy_pass', `${entry.sshport_schema}://${Config.get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`);
+                        location.addVariable('proxy_set_header', 'Host $host');
+                    } else if (entry.proxy_pass) {
                         location.addVariable('proxy_pass', entry.proxy_pass);
                         location.addVariable('proxy_set_header', 'Host $host');
                     }

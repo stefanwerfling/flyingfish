@@ -1,20 +1,44 @@
 import {Get, JsonController, Session} from 'routing-controllers';
 import {NginxDomain as NginxDomainDB} from '../../inc/Db/MariaDb/Entity/NginxDomain';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
+import {NginxLocation as NginxLocationDB} from '../../inc/Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
+import {NginxUpstream as NginxUpstreamDB} from '../../inc/Db/MariaDb/Entity/NginxUpstream';
 import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+
+/**
+ * UpStream
+ */
+export type UpStream = {
+    id: number;
+    address: string;
+    port: number;
+};
 
 /**
  * HostStream
  */
 export type HostStream = {
     listen_id: number;
-    destination_address: string;
-    destination_port: number;
+    upstreams: UpStream[];
     alias_name: string;
-    ssh?: {
-        port: number;
+    ssh: {
+        port_in?: number;
+        port_out?: number;
+    };
+};
+
+/**
+ * Location
+ */
+export type Location = {
+    id: number;
+    match: string;
+    proxy_pass: string;
+    ssh: {
+        port_out?: number;
+        schema?: string;
     };
 };
 
@@ -23,6 +47,7 @@ export type HostStream = {
  */
 export type HostHttp = {
     listen_id: number;
+    locations: Location[];
 };
 
 /**
@@ -61,7 +86,9 @@ export class Host {
         if ((session.user !== undefined) && session.user.isLogin) {
             const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
             const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
+            const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
             const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
             const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
             const domains = await domainRepository.find();
 
@@ -80,23 +107,46 @@ export class Host {
                         for (const tstream of streams) {
                             const streamEntry: HostStream = {
                                 listen_id: tstream.listen_id,
-                                // TODO
-                                destination_address: '',
-                                destination_port: 0,
-                                alias_name: tstream.alias_name
+                                alias_name: tstream.alias_name,
+                                upstreams: [],
+                                ssh: {}
                             };
 
-                            if (tstream.sshport_id > 0) {
+                            const upstreams = await upstreamRepository.find({
+                                where: {
+                                    stream_id: tstream.id
+                                }
+                            });
+
+                            for (const aupstream of upstreams) {
+                                streamEntry.upstreams.push({
+                                    id: aupstream.id,
+                                    address: aupstream.destination_address,
+                                    port: aupstream.destination_port
+                                });
+                            }
+
+                            if (tstream.sshport_in_id > 0) {
                                 const sshport = await sshportRepository.findOne({
                                     where: {
-                                        id: tstream.sshport_id
+                                        id: tstream.sshport_in_id
                                     }
                                 });
 
                                 if (sshport) {
-                                    streamEntry.ssh = {
-                                        port: sshport.port
-                                    };
+                                    streamEntry.ssh.port_in = sshport.port;
+                                }
+                            }
+
+                            if (tstream.sshport_out_id > 0) {
+                                const sshport = await sshportRepository.findOne({
+                                    where: {
+                                        id: tstream.sshport_out_id
+                                    }
+                                });
+
+                                if (sshport) {
+                                    streamEntry.ssh.port_out = sshport.port;
                                 }
                             }
 
@@ -112,9 +162,42 @@ export class Host {
 
                     if (https) {
                         for (const thttp of https) {
-                            httpList.push({
-                                listen_id: thttp.listen_id
+                            const httpEntry: HostHttp = {
+                                listen_id: thttp.listen_id,
+                                locations: []
+                            };
+
+                            const locations = await locationRepository.find({
+                                where: {
+                                    http_id: thttp.id
+                                }
                             });
+
+                            for (const alocation of locations) {
+                                const location: Location = {
+                                    id: alocation.id,
+                                    match: alocation.match,
+                                    proxy_pass: alocation.proxy_pass,
+                                    ssh: {}
+                                };
+
+                                if (alocation.sshport_out_id > 0) {
+                                    const sshport = await sshportRepository.findOne({
+                                        where: {
+                                            id: alocation.sshport_out_id
+                                        }
+                                    });
+
+                                    if (sshport) {
+                                        location.ssh.port_out = sshport.port;
+                                        location.ssh.schema = alocation.sshport_schema;
+                                    }
+                                }
+
+                                httpEntry.locations.push(location);
+                            }
+
+                            httpList.push(httpEntry);
                         }
                     }
 
