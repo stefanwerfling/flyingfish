@@ -29,6 +29,11 @@ export type Location = {
     id: number;
     match: string;
     proxy_pass: string;
+    ssh: {
+        id?: number;
+        port_out?: number;
+        schema?: string;
+    };
 };
 
 /**
@@ -37,9 +42,6 @@ export type Location = {
 export type HostHttp = {
     listen_id: number;
     locations: Location[];
-    ssh: {
-        port_out?: number;
-    };
 };
 
 /**

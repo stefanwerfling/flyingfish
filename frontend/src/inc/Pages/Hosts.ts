@@ -1,15 +1,15 @@
 import {Host as HostAPI} from '../Api/Host';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
+import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
+import {Card} from '../Bambooo/Content/Card/Card';
+import {ContentCol12} from '../Bambooo/Content/ContentCol12';
+import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {ContentCol12} from '../Bambooo/Content/ContentCol12';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {BasePage} from './BasePage';
 import {HostEditModal} from './Hosts/HostEditModal';
 
@@ -197,12 +197,25 @@ export class Hosts extends BasePage {
                         if (listen) {
                             // eslint-disable-next-line no-new
                             new Badge(sdDiv, `${listen.name} (${listen.port})`,
-                                listen.type === 0 ? BadgeType.warning : BadgeType.success);
+                                listen.type === 0 ? BadgeType.warning : BadgeType.success
+                            );
                         }
 
                         sdDiv.append(' &#8594; ');
 
+                        if (value.locations.length > 0) {
+                            const aLocation = value.locations[0];
 
+                            if (aLocation.ssh.port_out) {
+                                // eslint-disable-next-line no-new
+                                new Badge(sdDiv, `ssh (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                            } else {
+                                // eslint-disable-next-line no-new
+                                new Badge(sdDiv, aLocation.proxy_pass, BadgeType.info);
+                            }
+                        } else {
+                            sdDiv.append('None');
+                        }
                     });
 
                     // eslint-disable-next-line no-new

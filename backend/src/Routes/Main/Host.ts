@@ -37,6 +37,7 @@ export type Location = {
     match: string;
     proxy_pass: string;
     ssh: {
+        id?: number;
         port_out?: number;
         schema?: string;
     };
@@ -189,6 +190,7 @@ export class Host {
                                     });
 
                                     if (sshport) {
+                                        location.ssh.id = sshport.id;
                                         location.ssh.port_out = sshport.port;
                                         location.ssh.schema = alocation.sshport_schema;
                                     }
