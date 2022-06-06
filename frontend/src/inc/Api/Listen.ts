@@ -1,6 +1,27 @@
 import {NetFetch} from '../Net/NetFetch';
 
 /**
+ * ListenTypes
+ */
+export enum ListenTypes {
+    stream,
+    http
+}
+
+/**
+ * ListenCategory
+ */
+export enum ListenCategory {
+    default_stream_nonessl,
+    default_stream_ssl,
+    default_http,
+    default_https,
+    stream,
+    http,
+    https
+}
+
+/**
  * ListenData
  */
 export type ListenData = {

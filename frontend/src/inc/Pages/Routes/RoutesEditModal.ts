@@ -19,7 +19,7 @@ enum HostEditModalDesType {
 /**
  * HostEditModal
  */
-export class HostEditModal extends ModalDialog {
+export class RoutesEditModal extends ModalDialog {
 
     /**
      * Domainname or IP
@@ -122,7 +122,7 @@ export class HostEditModal extends ModalDialog {
      * @param elementObject
      */
     public constructor(elementObject: Element) {
-        super(elementObject, 'domainmodaldialog', ModalDialogType.large);
+        super(elementObject, 'routemodaldialog', ModalDialogType.large);
 
         const navTab = new NavTab(this._body, 'domainnavtab');
         const tabDetails = navTab.addTab('Details', 'details');

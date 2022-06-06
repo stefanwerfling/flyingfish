@@ -1,0 +1,7 @@
+
+/**
+ * Main
+ */
+(async(): Promise<void> => {
+
+})();

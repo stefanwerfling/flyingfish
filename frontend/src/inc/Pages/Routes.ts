@@ -5,24 +5,26 @@ import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {Button} from '../Bambooo/Content/Form/Button';
+import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
-import {HostEditModal} from './Hosts/HostEditModal';
+import {RoutesEditModal} from './Routes/RoutesEditModal';
 
 /**
  * Hosts Page
  */
-export class Hosts extends BasePage {
+export class Routes extends BasePage {
 
     /**
      * host dialog
      * @protected
      */
-    protected _hostDialog: HostEditModal;
+    protected _routeDialog: RoutesEditModal;
 
     /**
      * constructor
@@ -30,9 +32,9 @@ export class Hosts extends BasePage {
     public constructor() {
         super();
 
-        // host modal -------------------------------------------------------------------------------------------------
+        // route modal -------------------------------------------------------------------------------------------------
 
-        this._hostDialog = new HostEditModal(
+        this._routeDialog = new RoutesEditModal(
             this._wrapper.getContentWrapper().getContent()
         );
 
@@ -40,8 +42,8 @@ export class Hosts extends BasePage {
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Host', () => {
-            this._hostDialog.setTitle('Add new domain');
-            this._hostDialog.show();
+            this._routeDialog.setTitle('Add new domain');
+            this._routeDialog.show();
             return false;
         }, 'btn btn-block btn-default btn-sm');
 
@@ -110,7 +112,7 @@ export class Hosts extends BasePage {
             const listens = await ListenAPI.getListens();
 
             if (listens) {
-                this._hostDialog.setListens(listens.list);
+                this._routeDialog.setListens(listens.list);
 
                 for (const alisten of listens.list) {
                     listenMap.set(alisten.id, alisten);
@@ -159,10 +161,10 @@ export class Hosts extends BasePage {
 
                         if (value.ssh.port_in) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdDiv, `ssh (--> ${value.ssh.port_in})`, BadgeType.primary);
+                            new Badge(sdDiv, `SSH INTERNT IN (--> ${value.ssh.port_in})`, BadgeType.primary);
                         } else if(value.ssh.port_out) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdDiv, `ssh (<-- ${value.ssh.port_out})`, BadgeType.primary);
+                            new Badge(sdDiv, `SSH INTERNT OUT (<-- ${value.ssh.port_out})`, BadgeType.primary);
                         } else {
                             if (value.upstreams.length === 0) {
                                 sdDiv.append('None');
@@ -208,7 +210,7 @@ export class Hosts extends BasePage {
 
                             if (aLocation.ssh.port_out) {
                                 // eslint-disable-next-line no-new
-                                new Badge(sdDiv, `ssh (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                                new Badge(sdDiv, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
                             } else {
                                 // eslint-disable-next-line no-new
                                 new Badge(sdDiv, aLocation.proxy_pass, BadgeType.info);
@@ -218,8 +220,16 @@ export class Hosts extends BasePage {
                         }
                     });
 
+                    const tdAction = new Td(trbody, '');
+
+                    const editBtn = new Button(tdAction.getElement());
                     // eslint-disable-next-line no-new
-                    new Td(trbody, '');
+                    new Icon(editBtn.getElement(), IconFa.edit);
+
+                    editBtn.setOnClickFn((): void => {
+                        this._routeDialog.setTitle('Edit Host');
+                        this._routeDialog.show();
+                    });
                 }
             }
 

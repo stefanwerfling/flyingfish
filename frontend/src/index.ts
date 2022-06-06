@@ -5,7 +5,8 @@ import {NavbarLinkFullsize} from './inc/Bambooo/Navbar/NavbarLinkFullsize';
 import {NavbarLinkButton} from './inc/Bambooo/Navbar/NavbarLinkButton';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
-import {Hosts as HostsPage} from './inc/Pages/Hosts';
+import {Listens as ListensPage} from './inc/Pages/Listens';
+import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
 import {UtilColor} from './inc/Utils/UtilColor';
@@ -70,11 +71,19 @@ import {UtilColor} from './inc/Utils/UtilColor';
         // sidemenu ------------------------------------------------------------------------------------------------
         const sidemenuList = [
             {
-                title: 'Hosts',
-                icon: 'fa-solid fa-tags',
-                name: 'hosts',
+                title: 'Listens',
+                icon: 'fa-solid fa-door-open',
+                name: 'listens',
                 onClick: (): void => {
-                    loadPage(new HostsPage());
+                    loadPage(new ListensPage());
+                }
+            },
+            {
+                title: 'Routes',
+                icon: 'fa-solid fa-route',
+                name: 'routes',
+                onClick: (): void => {
+                    loadPage(new RoutesPage());
                 }
             },
             {
@@ -128,5 +137,5 @@ import {UtilColor} from './inc/Utils/UtilColor';
         globalPage = page;
     };
 
-    await loadPage(new HostsPage());
+    await loadPage(new RoutesPage());
 })();
