@@ -180,7 +180,7 @@ export class Routes extends BasePage {
                                 let andMore = '';
 
                                 if (value.upstreams.length>1) {
-                                    andMore = ', ...'
+                                    andMore = ', ...';
                                 }
 
                                 // eslint-disable-next-line no-new

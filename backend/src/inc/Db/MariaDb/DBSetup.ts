@@ -45,6 +45,7 @@ export class DBSetup {
             l443.listen_type = ListenTypes.stream;
             l443.listen_category = ListenCategory.default_stream_ssl;
             l443.description = 'Stream/SSL Listener Extern';
+            l443.fixlisten = true;
 
             l443 = await MariaDbHelper.getConnection().manager.save(l443);
 
@@ -55,6 +56,7 @@ export class DBSetup {
             l80.listen_type = ListenTypes.stream;
             l80.listen_category = ListenCategory.default_stream_nonessl;
             l80.description = 'Stream Listener Extern';
+            l80.fixlisten = true;
 
             l80 = await MariaDbHelper.getConnection().manager.save(l80);
 
@@ -65,6 +67,7 @@ export class DBSetup {
             l10443.listen_type = ListenTypes.http;
             l10443.listen_category = ListenCategory.https;
             l10443.description = 'HTTPS Listener Intern';
+            l10443.fixlisten = true;
 
             await MariaDbHelper.getConnection().manager.save(l10443);
 
@@ -75,6 +78,7 @@ export class DBSetup {
             l10080.listen_type = ListenTypes.http;
             l10080.listen_category = ListenCategory.http;
             l10080.description = 'HTTP Listener Intern';
+            l10080.fixlisten = true;
 
             await MariaDbHelper.getConnection().manager.save(l10080);
 

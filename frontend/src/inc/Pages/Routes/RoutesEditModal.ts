@@ -336,7 +336,6 @@ export class RoutesEditModal extends ModalDialog {
 
             case 1:
                 // http
-
                 this._selectDestinationType.addValue({
                     key: HostEditModalDesType.location,
                     value: 'Location/Proxy (Http/Https)',

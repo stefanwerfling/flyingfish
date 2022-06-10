@@ -5,6 +5,7 @@ import {NavbarLinkFullsize} from './inc/Bambooo/Navbar/NavbarLinkFullsize';
 import {NavbarLinkButton} from './inc/Bambooo/Navbar/NavbarLinkButton';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
+import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {Listens as ListensPage} from './inc/Pages/Listens';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
@@ -76,6 +77,14 @@ import {UtilColor} from './inc/Utils/UtilColor';
                 name: 'listens',
                 onClick: (): void => {
                     loadPage(new ListensPage());
+                }
+            },
+            {
+                title: 'Domains',
+                icon: 'fa-solid fa-tags',
+                name: 'domains',
+                onClick: (): void => {
+                    loadPage(new DomainsPage());
                 }
             },
             {

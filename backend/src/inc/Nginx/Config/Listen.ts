@@ -1,4 +1,13 @@
 /**
+ * ListenProtocol
+ */
+export enum ListenProtocol {
+    none = '',
+    tcp = 'tcp',
+    udp = 'udp'
+}
+
+/**
  * Listen
  */
 export class Listen {
@@ -28,6 +37,12 @@ export class Listen {
     protected _http2: boolean;
 
     /**
+     * protocol
+     * @protected
+     */
+    protected _protocol: ListenProtocol = ListenProtocol.none;
+
+    /**
      * default server
      * @protected
      */
@@ -40,11 +55,19 @@ export class Listen {
      * @param ssl
      * @param http2
      */
-    public constructor(port: number, ip: string = '', ssl: boolean = false, http2: boolean = false, default_server: boolean = false) {
+    public constructor(
+        port: number,
+        ip: string = '',
+        ssl: boolean = false,
+        http2: boolean = false,
+        protocol: ListenProtocol = ListenProtocol.none,
+        default_server: boolean = false
+    ) {
         this._port = port;
         this._ip = ip;
         this._ssl = ssl;
         this._http2 = http2;
+        this._protocol = protocol;
         this._default_server = default_server;
     }
 
@@ -66,6 +89,10 @@ export class Listen {
 
         if (this._http2) {
             value += ' http2';
+        }
+
+        if (this._protocol !== ListenProtocol.none) {
+            value += ` ${this._protocol}`;
         }
 
         if (this._default_server) {

@@ -18,6 +18,12 @@ type ListensEditModalButtonClickFn = () => void;
 export class ListensEditModal extends ModalDialog {
 
     /**
+     * id of entry
+     * @protected
+     */
+    protected _id: number|null = null;
+
+    /**
      * input name
      * @protected
      */
@@ -46,6 +52,12 @@ export class ListensEditModal extends ModalDialog {
      * @protected
      */
     protected _switchIp6: Switch;
+
+    /**
+     * switch address check
+     * @protected
+     */
+    protected _switchAddressCheck: Switch;
 
     /**
      * click save fn
@@ -78,7 +90,7 @@ export class ListensEditModal extends ModalDialog {
 
         this._selectType.addValue({
             key: `${ListenTypes.http}`,
-            value: 'HTTP/HTTPS',
+            value: 'Http/Https',
             style: 'background:#28a745;'
         });
 
@@ -94,6 +106,9 @@ export class ListensEditModal extends ModalDialog {
         const groupIP6 = new FormGroup(rowOptions.createCol(6), 'IP6');
         this._switchIp6 = new Switch(groupIP6.getElement(), 'ip6');
 
+        const groupAC = new FormGroup(rowOptions.createCol(6), 'Address Check');
+        this._switchAddressCheck = new Switch(groupAC.getElement(), 'address_check');
+
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
 
@@ -102,6 +117,21 @@ export class ListensEditModal extends ModalDialog {
                 this._onSaveClick();
             }
         });
+    }
+
+    /**
+     * getId
+     */
+    public getId(): number|null {
+        return this._id;
+    }
+
+    /**
+     * setId
+     * @param id
+     */
+    public setId(id: number|null): void {
+        this._id = id;
     }
 
     /**
@@ -150,10 +180,61 @@ export class ListensEditModal extends ModalDialog {
     }
 
     /**
+     * getDescription
+     */
+    public getDescription(): string {
+        return this._inputDescription.getValue();
+    }
+
+    /**
+     * setDescription
+     * @param description
+     */
+    public setDescription(description: string): void {
+        this._inputDescription.setValue(description);
+    }
+
+    /**
+     * getIp6
+     */
+    public getIp6(): boolean {
+        return this._switchIp6.isEnable();
+    }
+
+    /**
+     * setIp6
+     * @param enable
+     */
+    public setIp6(enable: boolean): void {
+        this._switchIp6.setEnable(enable);
+    }
+
+    /**
+     * getAddressCheck
+     */
+    public getAddressCheck(): boolean {
+        return this._switchAddressCheck.isEnable();
+    }
+
+    /**
+     * setAddressCheck
+     * @param enable
+     */
+    public setAddressCheck(enable: boolean): void {
+        this._switchAddressCheck.setEnable(enable);
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
-
+        this.setId(null);
+        this.setName('');
+        this.setType(`${ListenTypes.stream}`);
+        this.setPort('');
+        this.setDescription('');
+        this.setIp6(false);
+        this.setAddressCheck(false);
     }
 
     /**

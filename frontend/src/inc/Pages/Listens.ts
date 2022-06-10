@@ -1,8 +1,11 @@
-import {Listen as ListenAPI, ListenTypes} from '../Api/Listen';
+import {Listen as ListenAPI, ListenData, ListenTypes} from '../Api/Listen';
+import {Nginx as NginxAPI} from '../Api/Nginx';
+import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {Button} from '../Bambooo/Content/Form/Button';
 import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
@@ -14,6 +17,11 @@ import {BasePage} from './BasePage';
 import {ListensEditModal} from './Listens/ListensEditModal';
 
 /**
+ * onLoadListens
+ */
+type onLoadListens = () => void;
+
+/**
  * Listens
  */
 export class Listens extends BasePage {
@@ -23,6 +31,18 @@ export class Listens extends BasePage {
      * @protected
      */
     protected _listenDialog: ListensEditModal;
+
+    /**
+     * toast
+     * @protected
+     */
+    protected _toast: any;
+
+    /**
+     * on load table
+     * @protected
+     */
+    protected _onLoadTable: onLoadListens|null = null;
 
     /**
      * constructor
@@ -38,12 +58,75 @@ export class Listens extends BasePage {
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Listens', () => {
+            this._listenDialog.resetValues();
             this._listenDialog.setTitle('Listen Add');
             this._listenDialog.show();
             return false;
         }, 'btn btn-block btn-default btn-sm');
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        // @ts-ignore
+        this._toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._listenDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._listenDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const listen: ListenData = {
+                    id: tid,
+                    name: this._listenDialog.getName(),
+                    type: parseInt(this._listenDialog.getType(), 10),
+                    port: parseInt(this._listenDialog.getPort(), 10),
+                    description: this._listenDialog.getDescription(),
+                    enable_ipv6: this._listenDialog.getIp6(),
+                    check_address: this._listenDialog.getAddressCheck()
+                };
+
+                if (await ListenAPI.saveListen(listen)) {
+                    this._listenDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'Listen save success.'
+                    });
+
+                    if (await NginxAPI.reload()) {
+                        this._toast.fire({
+                            icon: 'success',
+                            title: 'Nginx server reload config success.'
+                        });
+                    } else {
+                        this._toast.fire({
+                            icon: 'error',
+                            title: 'Nginx server reload config faild, please check your last settings!'
+                        });
+                    }
+                }
+            } catch ({message}) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: message
+                });
+            }
+        });
     }
 
     /**
@@ -82,7 +165,7 @@ export class Listens extends BasePage {
         /**
          * onLoadList
          */
-        const onLoadList = async(): Promise<void> => {
+        this._onLoadTable = async(): Promise<void> => {
             card.showLoading();
             table.getTbody().empty();
 
@@ -107,7 +190,7 @@ export class Listens extends BasePage {
                         // eslint-disable-next-line no-new
                         new Badge(typeDiv, 'Stream', BadgeType.warning);
                     } else {
-                        new Badge(typeDiv, 'HTTP/HTTPS', BadgeType.success);
+                        new Badge(typeDiv, 'Http/Https', BadgeType.success);
                     }
 
                     // eslint-disable-next-line no-new
@@ -126,6 +209,14 @@ export class Listens extends BasePage {
                         options += 'IP6';
                     }
 
+                    if (entry.check_address) {
+                        if (options !== '') {
+                            options += ', ';
+                        }
+
+                        options += 'Address Check';
+                    }
+
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${options}`);
 
@@ -136,12 +227,67 @@ export class Listens extends BasePage {
                     new Icon(editBtn.getElement(), IconFa.edit);
 
                     editBtn.setOnClickFn((): void => {
+                        this._listenDialog.resetValues();
+                        this._listenDialog.setId(entry.id);
                         this._listenDialog.setTitle('Listen Edit');
                         this._listenDialog.setName(entry.name);
                         this._listenDialog.setType(`${entry.type}`);
                         this._listenDialog.setPort(`${entry.port}`);
+                        this._listenDialog.setDescription(entry.description);
+                        this._listenDialog.setIp6(entry.enable_ipv6);
+                        this._listenDialog.setAddressCheck(entry.check_address);
                         this._listenDialog.show();
                     });
+
+                    if (!entry.fix) {
+                        const trashBtn = new Button(tdAction.getElement());
+                        // eslint-disable-next-line no-new
+                        new Icon(trashBtn.getElement(), IconFa.trash);
+
+                        trashBtn.setOnClickFn((): void => {
+                            DialogConfirm.confirm(
+                                'dcDelete',
+                                ModalDialogType.small,
+                                'Delete Listen',
+                                `Delete this Listen "${entry.name}" Port: ${entry.port}?`,
+                                async(_, dialog) => {
+                                    try {
+                                        if (await ListenAPI.deleteListen(entry)) {
+                                            this._toast.fire({
+                                                icon: 'success',
+                                                title: 'Listen delete success.'
+                                            });
+
+                                            if (await NginxAPI.reload()) {
+                                                this._toast.fire({
+                                                    icon: 'success',
+                                                    title: 'Nginx server reload config success.'
+                                                });
+                                            } else {
+                                                this._toast.fire({
+                                                    icon: 'error',
+                                                    title: 'Nginx server reload config faild, please check your last settings!'
+                                                });
+                                            }
+                                        }
+                                    } catch ({message}) {
+                                        this._toast.fire({
+                                            icon: 'error',
+                                            title: message
+                                        });
+                                    }
+
+                                    dialog.hide();
+
+                                    if (this._onLoadTable) {
+                                        this._onLoadTable();
+                                    }
+                                },
+                                undefined,
+                                'Delete'
+                            );
+                        });
+                    }
                 }
             }
 
@@ -150,7 +296,7 @@ export class Listens extends BasePage {
 
 
         // load table
-        await onLoadList();
+        await this._onLoadTable();
     }
 
 }

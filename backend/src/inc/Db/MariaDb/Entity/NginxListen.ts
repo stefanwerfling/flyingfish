@@ -35,7 +35,9 @@ export class NginxListen extends BaseEntity {
         // @ts-ignore
     listen_type: number;
 
-    @Column()
+    @Column({
+        default: ListenCategory.default_stream_nonessl
+    })
         // @ts-ignore
     listen_category: number;
 
@@ -77,5 +79,12 @@ export class NginxListen extends BaseEntity {
     })
         // @ts-ignore
     enable_address_check: boolean;
+
+    @Column({
+        type: 'bool',
+        default: false
+    })
+        // @ts-ignore
+    fixlisten: boolean;
 
 }

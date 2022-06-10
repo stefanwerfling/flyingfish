@@ -67,8 +67,7 @@ export class Logger {
                 datePattern: 'YYYY-MM-DD-HH',
                 zippedArchive,
                 maxSize,
-                maxFiles,
-                level
+                maxFiles
             });
 
             transport.on('rotate',
@@ -83,12 +82,12 @@ export class Logger {
 
             if (enableConsole) {
                 transports.push(new winston.transports.Console({
-                    level,
                     handleExceptions: true
                 }));
             }
 
             Logger._logger = winston.createLogger({
+                level,
                 transports
             });
 

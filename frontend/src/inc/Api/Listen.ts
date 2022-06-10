@@ -29,8 +29,10 @@ export type ListenData = {
     type: number;
     port: number;
     enable_ipv6: boolean;
+    check_address: boolean;
     name: string;
     description: string;
+    fix?: boolean;
 };
 
 /**
@@ -62,4 +64,39 @@ export class Listen {
         return null;
     }
 
+    /**
+     * saveListen
+     * @param listen
+     */
+    public static async saveListen(listen: ListenData): Promise<boolean> {
+        const result = await NetFetch.postData('/json/listen/save', listen);
+
+        if (result) {
+            if (result.status === 'ok') {
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * deleteListen
+     * @param listen
+     */
+    public static async deleteListen(listen: ListenData): Promise<boolean> {
+        const result = await NetFetch.postData('/json/listen/delete', listen);
+
+        if (result) {
+            if (result.status === 'ok') {
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+
+        return false;
+    }
 }

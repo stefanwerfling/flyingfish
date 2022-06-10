@@ -136,11 +136,19 @@ export class NginxServer {
         this._process = spawn(this._command, args);
 
         this._process.stdout!.on('data', (buf) => {
-            Logger.getLogger().info(buf.toString());
+            const logs = buf.toString().split('\n');
+
+            for (const entry of logs) {
+                Logger.getLogger().info(entry);
+            }
         });
 
         this._process.stderr!.on('data', (buf) => {
-            Logger.getLogger().error(buf.toString());
+            const logs = buf.toString().split('\n');
+
+            for (const entry of logs) {
+                Logger.getLogger().error(entry);
+            }
         });
     }
 
@@ -178,11 +186,19 @@ export class NginxServer {
         this._process = spawn(this._command, args);
 
         this._process.stdout!.on('data', (buf) => {
-            Logger.getLogger().info(buf.toString());
+            const logs = buf.toString().split('\n');
+
+            for (const entry of logs) {
+                Logger.getLogger().info(entry);
+            }
         });
 
         this._process.stderr!.on('data', (buf) => {
-            Logger.getLogger().error(buf.toString());
+            const logs = buf.toString().split('\n');
+
+            for (const entry of logs) {
+                Logger.getLogger().error(entry);
+            }
         });
     }
 
