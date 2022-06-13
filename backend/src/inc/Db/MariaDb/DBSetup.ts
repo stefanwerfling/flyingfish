@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {Logger} from '../../Logger/Logger';
-import {NginxDomain as NginxDomainDB} from './Entity/NginxDomain';
+import {Domain as DomainDB} from './Entity/Domain';
 import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen';
 import {NginxStream as NginxStreamDB} from './Entity/NginxStream';
 import {NginxUpstream as NginxUpstreamDB} from './Entity/NginxUpstream';
@@ -86,7 +86,7 @@ export class DBSetup {
 
             // create default domain _ ---------------------------------------------------------------------------------
 
-            let defaultDomain = new NginxDomainDB();
+            let defaultDomain = new DomainDB();
             defaultDomain.domainname = '_';
 
             defaultDomain = await MariaDbHelper.getConnection().manager.save(defaultDomain);

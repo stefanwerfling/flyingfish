@@ -1,4 +1,5 @@
 import got from 'got';
+import {Logger} from '../../Logger/Logger';
 import {IHowIsMyPublicIp} from '../IHowIsMyPublicIp';
 
 /**
@@ -31,15 +32,19 @@ export class Ipify implements IHowIsMyPublicIp {
      * get
      */
     public async get(): Promise<string | null> {
-        const response = await got({
-            url: 'https://api.ipify.org?format=json',
-            responseType: 'json'
-        });
+        try {
+            const response = await got({
+                url: 'https://api.ipify.org?format=json',
+                responseType: 'json'
+            });
 
-        if (response.body) {
-            const data = response.body as IpifyResponse;
+            if (response.body) {
+                const data = response.body as IpifyResponse;
 
-            return data.ip;
+                return data.ip;
+            }
+        } catch (e) {
+            Logger.getLogger().error(e);
         }
 
         return null;

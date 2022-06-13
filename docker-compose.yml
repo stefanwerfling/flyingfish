@@ -33,6 +33,8 @@ services:
     ports:
       - "443:443"
       - "80:80"
+      - "5333:53/udp"
+      - "5333:53/tcp"
       - "3000:3000"
       - "1900:1900"
       - "9229:9229"
@@ -72,6 +74,27 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+
+#  onionhat:
+#    image: flyingfishonionhat:v1.0
+#    build:
+#      context: ./onionhat/
+#    container_name: flyingfish_onionhat
+#    volumes:
+#      - ./config.json:/opt/app/config.json
+#    ports:
+#      - "9050:9050"
+#    networks:
+#      flyingfishNet:
+#        ipv4_address: 10.103.0.5
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "500k"
+#        max-file: "50"
+#    depends_on:
+#      - mariadb
+#      - flyingfish
 
 volumes:
   flyingfishDbData:

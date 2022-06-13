@@ -1,6 +1,6 @@
 import fs from 'fs';
 import {Config} from '../Config/Config';
-import {NginxDomain as NginxDomainDB} from '../Db/MariaDb/Entity/NginxDomain';
+import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
 import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
@@ -10,12 +10,12 @@ import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Certbot} from '../Letsencrypt/Certbot';
 import {Logger} from '../Logger/Logger';
+import {Listen, ListenProtocol} from '../Nginx/Config/Listen';
+import {Location} from '../Nginx/Config/Location';
 import {Map as NginxMap} from '../Nginx/Config/Map';
 import {Server as NginxConfServer} from '../Nginx/Config/Server';
 import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream';
 import {NginxServer} from '../Nginx/NginxServer';
-import {Location} from '../Nginx/Config/Location';
-import {Listen} from '../Nginx/Config/Listen';
 import {OpenSSL} from '../OpenSSL/OpenSSL';
 
 /**
@@ -102,7 +102,7 @@ export class NginxService {
         // read db -----------------------------------------------------------------------------------------------------
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
-        const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
+        const domainRepository = MariaDbHelper.getRepository(DomainDB);
         const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
         const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
         const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
@@ -250,6 +250,19 @@ export class NginxService {
                 }
             }
         }
+
+        // add dns server ----------------------------------------------------------------------------------------------
+
+        const dnsServer = new NginxConfServer();
+        dnsServer.addListen(new Listen(53, '', false, false, ListenProtocol.udp));
+        dnsServer.addListen(new Listen(53));
+
+        dnsServer.addVariable('set $ff_address_access_url', 'http://127.0.0.1:3000/njs/address_access');
+        dnsServer.addVariable('set $ff_listen_id', '0');
+        dnsServer.addVariable('js_access', 'njs.accessAddressStream');
+        dnsServer.addVariable('proxy_pass', '127.0.0.1:5333');
+
+        conf?.getStream().addServer(dnsServer);
 
         // fill config -------------------------------------------------------------------------------------------------
         const tupstreams: string[] = [];
@@ -474,7 +487,7 @@ export class NginxService {
 
             if (useAsDefault) {
                 const dServer = new NginxConfServer();
-                dServer.addListen(new Listen(listenPort, '', false, false, true));
+                dServer.addListen(new Listen(listenPort, '', false, false, ListenProtocol.none, true));
                 dServer.addErrorPage({
                     code: '500 502 503 504',
                     uri: '/50x.html'

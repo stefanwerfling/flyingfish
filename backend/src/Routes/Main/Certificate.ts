@@ -1,5 +1,5 @@
 import {Body, JsonController, Post, Session} from 'routing-controllers';
-import {NginxDomain as NginxDomainDB} from '../../inc/Db/MariaDb/Entity/NginxDomain';
+import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 import {Certbot} from '../../inc/Letsencrypt/Certbot';
@@ -29,7 +29,7 @@ export class Certificate {
         @Body() request: CertificateCreateResponse
     ): Promise<boolean> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
+            const domainRepository = MariaDbHelper.getRepository(DomainDB);
             const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
 
             const http = await httpRepository.findOne({

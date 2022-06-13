@@ -29,39 +29,57 @@ export class AddressAccess {
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
         const ipBlacklistRepository = MariaDbHelper.getRepository(IpBlacklistDB);
+        const locationId = Number(listen_id);
 
-        const listen = await listenRepository.findOne({
-            where: {
-                id: Number(listen_id)
-            }
-        });
-
-        if (listen) {
-            if (listen.enable_address_check) {
-                Logger.getLogger().info('Listen address check is enable ...');
-
-                if (realip_remote_addr) {
-                    const address = await ipBlacklistRepository.findOne({
-                        where: {
-                            ip: realip_remote_addr
-                        }
-                    });
-
-                    if (!address) {
-                        Logger.getLogger().info(`Address(${realip_remote_addr}) not found in blacklist.`);
-                        response.status(200);
-                        return true;
+        if (locationId === 0) {
+            if (realip_remote_addr) {
+                const address = await ipBlacklistRepository.findOne({
+                    where: {
+                        ip: realip_remote_addr
                     }
+                });
 
-                    Logger.getLogger().info(`Address(${realip_remote_addr}) found in blacklist!`);
+                if (!address) {
+                    Logger.getLogger().info(`Address(${realip_remote_addr}) not found in blacklist.`);
+                    response.status(200);
+                    return true;
                 }
 
-            } else {
-                response.status(200);
-                return true;
+                Logger.getLogger().info(`Address(${realip_remote_addr}) found in blacklist!`);
             }
         } else {
-            Logger.getLogger().warn(`Listen(${listen_id}) nout found!`);
+            const listen = await listenRepository.findOne({
+                where: {
+                    id: locationId
+                }
+            });
+
+            if (listen) {
+                if (listen.enable_address_check) {
+                    Logger.getLogger().info('Listen address check is enable ...');
+
+                    if (realip_remote_addr) {
+                        const address = await ipBlacklistRepository.findOne({
+                            where: {
+                                ip: realip_remote_addr
+                            }
+                        });
+
+                        if (!address) {
+                            Logger.getLogger().info(`Address(${realip_remote_addr}) not found in blacklist.`);
+                            response.status(200);
+                            return true;
+                        }
+
+                        Logger.getLogger().info(`Address(${realip_remote_addr}) found in blacklist!`);
+                    }
+                } else {
+                    response.status(200);
+                    return true;
+                }
+            } else {
+                Logger.getLogger().warn(`Listen(${listen_id}) nout found!`);
+            }
         }
 
         response.status(401);

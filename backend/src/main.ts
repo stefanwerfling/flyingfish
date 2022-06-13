@@ -1,7 +1,9 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
+import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord';
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream';
+import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {Certificate as CertificateController} from './Routes/Main/Certificate';
 import {Host as HostController} from './Routes/Main/Host';
@@ -22,7 +24,7 @@ import {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/Creden
 import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient';
 import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist';
 import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
-import {NginxDomain as NginxDomainDB} from './inc/Db/MariaDb/Entity/NginxDomain';
+import {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen';
 import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation';
@@ -93,7 +95,8 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             entities: [
                 UserDB,
                 NginxListenDB,
-                NginxDomainDB,
+                DomainDB,
+                DomainRecordDB,
                 NginxStreamDB,
                 NginxUpstreamDB,
                 NginxHttpDB,
@@ -200,6 +203,10 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
     }
 
     await NginxService.getInstance().start();
+
+    // -----------------------------------------------------------------------------------------------------------------
+    const dnsServer = new Dns2Server();
+    dnsServer.listen();
 
     // -----------------------------------------------------------------------------------------------------------------
 

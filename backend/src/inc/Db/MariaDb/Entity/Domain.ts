@@ -1,10 +1,10 @@
 import {Entity, PrimaryGeneratedColumn, Column, BaseEntity, Index} from 'typeorm';
 
 /**
- * Nginx Domain Entity
+ * Domain Entity
  */
-@Entity({name: 'nginx_domain'})
-export class NginxDomain extends BaseEntity {
+@Entity({name: 'domain'})
+export class Domain extends BaseEntity {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore
@@ -17,5 +17,11 @@ export class NginxDomain extends BaseEntity {
     })
         // @ts-ignore
     domainname: string;
+
+    @Column({
+        default: false
+    })
+        // @ts-ignore
+    fixdomain: boolean;
 
 }

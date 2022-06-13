@@ -1,7 +1,10 @@
 import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
 
-@Entity({name: 'dyndns_client'})
-export class DynDnsClient extends BaseEntity {
+/**
+ * Domain record Entity
+ */
+@Entity({name: 'domain_record'})
+export class DomainRecord extends BaseEntity {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore
@@ -12,22 +15,22 @@ export class DynDnsClient extends BaseEntity {
         // @ts-ignore
     domain_id: number;
 
+    @Index()
     @Column()
         // @ts-ignore
-    provider: string;
+    dtype: number;
+
+    @Index()
+    @Column()
+        // @ts-ignore
+    dclass: number;
 
     @Column()
         // @ts-ignore
-    username: string;
+    ttl: number;
 
     @Column()
         // @ts-ignore
-    password: string;
-
-    @Column({
-        default: false
-    })
-        // @ts-ignore
-    update_domain: boolean;
+    dvalue: string;
 
 }

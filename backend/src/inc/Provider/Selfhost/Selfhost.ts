@@ -29,20 +29,24 @@ export class Selfhost implements IDynDnsProvider {
      * @param ip
      */
     public async update(username: string, password: string, ip: string = ''): Promise<boolean> {
-        let myip = '';
+        try {
+            let myip = '';
 
-        if (ip !== '') {
-            myip = `&myip=${ip}`;
-        }
+            if (ip !== '') {
+                myip = `&myip=${ip}`;
+            }
 
-        const response = await got({
-            url: `https://carol.selfhost.de/update?username=${username}&password=${password}${myip}`
-        });
+            const response = await got({
+                url: `https://carol.selfhost.de/update?username=${username}&password=${password}${myip}`
+            });
 
-        Logger.getLogger().info(`Selfhost update status code: ${response.statusCode}`);
+            Logger.getLogger().info(`Selfhost update status code: ${response.statusCode}`);
 
-        if (response.statusCode === 200) {
-            return true;
+            if (response.statusCode === 200) {
+                return true;
+            }
+        } catch (e) {
+            Logger.getLogger().error(e);
         }
 
         return false;

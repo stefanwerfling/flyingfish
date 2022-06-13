@@ -1,5 +1,5 @@
 import {Get, JsonController, Session} from 'routing-controllers';
-import {NginxDomain as NginxDomainDB} from '../../inc/Db/MariaDb/Entity/NginxDomain';
+import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {NginxLocation as NginxLocationDB} from '../../inc/Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
@@ -85,7 +85,7 @@ export class Host {
         const list: HostData[] = [];
 
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = MariaDbHelper.getRepository(NginxDomainDB);
+            const domainRepository = MariaDbHelper.getRepository(DomainDB);
             const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
             const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
             const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
