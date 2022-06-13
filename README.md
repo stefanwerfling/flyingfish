@@ -238,6 +238,8 @@ services:
     ports:
       - "443:443"
       - "80:80"
+      - "5333:53/udp"
+      - "5333:53/tcp"
       - "3000:3000"
       - "1900:1900"
     networks:
@@ -323,13 +325,29 @@ Default Admin User:
 * EMail: ```admin@flyingfish.org```
 * Password: ```changeMyPassword```
 
+5. Test your DNS-Flyingfish Server
+```shell
+dig @127.0.0.1 -p5333 <mydomain>
+```
+
 #### Screenshots
 <table>
-  <tr>
-    <td> 
-      <img src="doc/screenshots/login.png" alt="1" width="360px" >
-    </td>
-  </tr>
+    <tr>
+        <td> 
+            <img src="doc/screenshots/login.png" alt="1" width="360px" >
+        </td>
+        <td>
+            <img src="doc/screenshots/listens.png" alt="1" width="360px" >
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <img src="doc/screenshots/listens_edit.png" alt="1" width="360px" >
+        </td>
+        <td>
+            &nbsp;
+        </td>
+    </tr>
 </table>
 
 # SSH-Server
