@@ -24,4 +24,10 @@ export class Domain extends BaseEntity {
         // @ts-ignore
     fixdomain: boolean;
 
+    @Column({
+        default: false
+    })
+        // @ts-ignore
+    recordless: boolean;
+
 }

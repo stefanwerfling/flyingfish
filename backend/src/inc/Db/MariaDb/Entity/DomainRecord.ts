@@ -33,4 +33,9 @@ export class DomainRecord extends BaseEntity {
         // @ts-ignore
     dvalue: string;
 
+    @Index()
+    @Column()
+        // @ts-ignore
+    update_by_dnsclient: boolean;
+
 }

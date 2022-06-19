@@ -28,6 +28,7 @@ export type ListenData = {
     id: number;
     type: number;
     port: number;
+    protocol: number;
     enable_ipv6: boolean;
     check_address: boolean;
     name: string;

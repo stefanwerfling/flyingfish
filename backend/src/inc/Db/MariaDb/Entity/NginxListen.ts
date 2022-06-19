@@ -22,6 +22,15 @@ export enum ListenCategory {
 }
 
 /**
+ * ListenProtocol
+ */
+export enum ListenProtocol {
+    tcp,
+    udp,
+    tcp_udp
+}
+
+/**
  * Nginx Stream Entity
  */
 @Entity({name: 'nginx_listen'})
@@ -45,6 +54,13 @@ export class NginxListen extends BaseEntity {
     @Column()
         // @ts-ignore
     listen_port: number;
+
+    @Index()
+    @Column({
+        default: ListenProtocol.tcp
+    })
+        // @ts-ignore
+    listen_protocol: number;
 
     @Column({
         type: 'bool',
@@ -73,6 +89,9 @@ export class NginxListen extends BaseEntity {
         // @ts-ignore
     enable_upnp_nat: boolean;
 
+    /**
+     * declarate (true/false) all incoming connection send to address check
+     */
     @Column({
         type: 'bool',
         default: false
@@ -80,11 +99,24 @@ export class NginxListen extends BaseEntity {
         // @ts-ignore
     enable_address_check: boolean;
 
+    /**
+     * declarate (true/false) a user can delete this listen
+     */
     @Column({
         type: 'bool',
         default: false
     })
         // @ts-ignore
     fixlisten: boolean;
+
+    /**
+     * declarate (true/false) a user can add a route (ui) to this listen or not
+     */
+    @Column({
+        type: 'bool',
+        default: false
+    })
+        // @ts-ignore
+    routeless: boolean;
 
 }

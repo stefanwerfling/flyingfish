@@ -1,9 +1,39 @@
 import DNS = require('dns2');
+import {DnsAnswer, DnsQuestion} from 'dns2';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Logger} from '../Logger/Logger';
 const {Packet} = DNS;
+
+/**
+ * DnsAnswerTxt
+ */
+interface DnsAnswerTxt extends DnsAnswer {
+    data?: string;
+}
+
+/**
+ * DnsAnswerMX
+ */
+interface DnsAnswerMX extends DnsAnswer {
+    exchange?: string;
+}
+
+/**
+ * DnsAnswerNs
+ */
+interface DnsAnswerNs extends DnsAnswer {
+    ns?: string;
+}
+
+/**
+ * DnsQuestionExt
+ */
+interface DnsQuestionExt extends DnsQuestion {
+    class?: number;
+    type?: number;
+}
 
 /**
  * Dns2Server
@@ -30,7 +60,7 @@ export class Dns2Server {
             ) => {
                 const response = Packet.createResponseFromRequest(request);
                 const [question] = request.questions;
-                const {name} = question;
+                const questionExt = question as DnsQuestionExt;
 
                 Logger.getLogger().info(`Dns2Server::request: ${request.header.id}`, request.questions[0]);
                 Logger.getLogger().info(`Dns2Server::request: Remote-Info ${rinfo.address}:${rinfo.port}`);
@@ -39,24 +69,46 @@ export class Dns2Server {
 
                 const domain = await domainRepository.findOne({
                     where: {
-                        domainname: name
+                        domainname: questionExt.name
                     }
                 });
 
                 if (domain) {
                     const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+                    let records: DomainRecordDB[] = [];
 
-                    const records = await domainRecordRepository.find({
-                        where: {
-                            domain_id: domain.id
-                        }
-                    });
+                    if ((questionExt.class !== null) && (questionExt.type !== null)) {
+                        records = await domainRecordRepository.find({
+                            where: {
+                                domain_id: domain.id,
+                                dclass: questionExt.class,
+                                dtype: questionExt.type
+                            }
+                        });
+                    } else {
+                        records = await domainRecordRepository.find({
+                            where: {
+                                domain_id: domain.id
+                            }
+                        });
+                    }
 
                     for (const record of records) {
                         switch (record.dtype) {
-                            case Packet.TYPE.A:
+                            case Packet.TYPE.TXT:
                                 response.answers.push({
-                                    name,
+                                    name: questionExt.name,
+                                    type: record.dtype,
+                                    class: record.dclass,
+                                    ttl: record.ttl,
+                                    data: record.dvalue
+                                } as DnsAnswerTxt);
+                                break;
+
+                            case Packet.TYPE.A:
+                            case Packet.TYPE.AAAA:
+                                response.answers.push({
+                                    name: questionExt.name,
                                     type: record.dtype,
                                     class: record.dclass,
                                     ttl: record.ttl,
@@ -64,9 +116,29 @@ export class Dns2Server {
                                 });
                                 break;
 
+                            case Packet.TYPE.NS:
+                                response.answers.push({
+                                    name: questionExt.name,
+                                    type: record.dtype,
+                                    class: record.dclass,
+                                    ttl: record.ttl,
+                                    ns: record.dvalue
+                                } as DnsAnswerNs);
+                                break;
+
+                            case Packet.TYPE.MX:
+                                response.answers.push({
+                                    name: questionExt.name,
+                                    type: record.dtype,
+                                    class: record.dclass,
+                                    ttl: record.ttl,
+                                    exchange: record.dvalue
+                                } as DnsAnswerMX);
+                                break;
+
                             case Packet.TYPE.CNAME:
                                 response.answers.push({
-                                    name,
+                                    name: questionExt.name,
                                     type: record.dtype,
                                     class: record.dclass,
                                     ttl: record.ttl,

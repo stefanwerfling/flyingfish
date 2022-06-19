@@ -11,6 +11,7 @@ export type ListenData = {
     id: number;
     type: number;
     port: number;
+    protocol: number;
     enable_ipv6: boolean;
     check_address: boolean;
     name: string;
@@ -74,6 +75,7 @@ export class Listen {
                         id: listen.id,
                         type: listen.listen_type,
                         port: listen.listen_port,
+                        protocol: listen.listen_protocol,
                         enable_ipv6: listen.enable_ipv6,
                         check_address: listen.enable_address_check,
                         name: listen.name,
@@ -157,6 +159,7 @@ export class Listen {
             aListen.name = request.name;
             aListen.listen_type = request.type;
             aListen.listen_port = request.port;
+            aListen.listen_protocol = request.protocol;
             aListen.description = request.description;
             aListen.enable_ipv6 = request.enable_ipv6;
             aListen.enable_address_check = request.check_address;

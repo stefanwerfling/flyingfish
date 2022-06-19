@@ -2,7 +2,7 @@ import fs from 'fs';
 import {Config} from '../Config/Config';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
-import {ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
+import {ListenTypes, ListenProtocol as ListenProtocolDB, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream';
@@ -251,19 +251,6 @@ export class NginxService {
             }
         }
 
-        // add dns server ----------------------------------------------------------------------------------------------
-
-        const dnsServer = new NginxConfServer();
-        dnsServer.addListen(new Listen(53, '', false, false, ListenProtocol.udp));
-        dnsServer.addListen(new Listen(53));
-
-        dnsServer.addVariable('set $ff_address_access_url', 'http://127.0.0.1:3000/njs/address_access');
-        dnsServer.addVariable('set $ff_listen_id', '0');
-        dnsServer.addVariable('js_access', 'njs.accessAddressStream');
-        dnsServer.addVariable('proxy_pass', '127.0.0.1:5333');
-
-        conf?.getStream().addServer(dnsServer);
-
         // fill config -------------------------------------------------------------------------------------------------
         const tupstreams: string[] = [];
 
@@ -344,10 +331,27 @@ export class NginxService {
             conf?.getStream().addMap(aMap);
 
             const aServer = new NginxConfServer();
-            aServer.addListen(new Listen(listenPort));
+
+            if ((streamCollect.listen.listen_protocol === ListenProtocolDB.tcp) ||
+                (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+                aServer.addListen(new Listen(listenPort));
+            }
+
+            if ((streamCollect.listen.listen_protocol === ListenProtocolDB.udp) ||
+                (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+                aServer.addListen(new Listen(listenPort, '', false, false, ListenProtocol.udp));
+            }
 
             if (streamCollect.listen.enable_ipv6) {
-                aServer.addListen(new Listen(listenPort, '[::]'));
+                if ((streamCollect.listen.listen_protocol === ListenProtocolDB.tcp) ||
+                    (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+                    aServer.addListen(new Listen(listenPort, '[::]'));
+                }
+
+                if ((streamCollect.listen.listen_protocol === ListenProtocolDB.udp) ||
+                    (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+                    aServer.addListen(new Listen(listenPort, '[::]', false, false, ListenProtocol.udp));
+                }
             }
 
             aServer.addVariable('set $ff_address_access_url', 'http://127.0.0.1:3000/njs/address_access');

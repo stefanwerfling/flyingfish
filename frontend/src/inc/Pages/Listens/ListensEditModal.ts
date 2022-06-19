@@ -36,6 +36,12 @@ export class ListensEditModal extends ModalDialog {
     protected _selectType: SelectBottemBorderOnly2;
 
     /**
+     * select protocol
+     * @protected
+     */
+    protected _selectProtocol: SelectBottemBorderOnly2;
+
+    /**
      * input port
      * @protected
      */
@@ -80,7 +86,7 @@ export class ListensEditModal extends ModalDialog {
 
         const rowTP = new FormRow(bodyCard);
 
-        const groupType = new FormGroup(rowTP.createCol(6), 'Type');
+        const groupType = new FormGroup(rowTP.createCol(4), 'Type');
         this._selectType = new SelectBottemBorderOnly2(groupType.getElement());
         this._selectType.addValue({
             key: `${ListenTypes.stream}`,
@@ -94,7 +100,24 @@ export class ListensEditModal extends ModalDialog {
             style: 'background:#28a745;'
         });
 
-        const groupPort = new FormGroup(rowTP.createCol(6), 'Port');
+        const groupProtocol = new FormGroup(rowTP.createCol(4), 'Protocol');
+        this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol.getElement());
+        this._selectProtocol.addValue({
+            key: `0`,
+            value: 'TCP'
+        });
+
+        this._selectProtocol.addValue({
+            key: `1`,
+            value: 'UDP'
+        });
+
+        this._selectProtocol.addValue({
+            key: `2`,
+            value: 'TCP & UDP'
+        });
+
+        const groupPort = new FormGroup(rowTP.createCol(4), 'Port');
         this._inputPort = new InputBottemBorderOnly2(groupPort.getElement(), InputType.number);
         this._inputPort.setPlaceholder('80');
 
@@ -180,6 +203,21 @@ export class ListensEditModal extends ModalDialog {
     }
 
     /**
+     * getProtocol
+     */
+    public getProtocol(): string {
+        return this._selectProtocol.getSelectedValue();
+    }
+
+    /**
+     * setProtocol
+     * @param protocol
+     */
+    public setProtocol(protocol: string): void {
+        this._selectProtocol.setSelectedValue(protocol);
+    }
+
+    /**
      * getDescription
      */
     public getDescription(): string {
@@ -232,6 +270,7 @@ export class ListensEditModal extends ModalDialog {
         this.setName('');
         this.setType(`${ListenTypes.stream}`);
         this.setPort('');
+        this.setProtocol('0');
         this.setDescription('');
         this.setIp6(false);
         this.setAddressCheck(false);

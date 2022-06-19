@@ -6,6 +6,7 @@ import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUps
 import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {Certificate as CertificateController} from './Routes/Main/Certificate';
+import {Domain as DomainController} from './Routes/Main/Domain';
 import {Host as HostController} from './Routes/Main/Host';
 import {Listen as ListenController} from './Routes/Main/Listen';
 import {Login as LoginController} from './Routes/Main/Login';
@@ -178,6 +179,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
         controllers: [
             LoginController,
             UserController,
+            DomainController,
             HostController,
             ListenController,
             UpnpNatController,

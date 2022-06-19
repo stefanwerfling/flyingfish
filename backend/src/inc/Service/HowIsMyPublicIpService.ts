@@ -41,8 +41,50 @@ export class HowIsMyPublicIpService {
     /**
      * getCurrentIp
      */
-    public getCurrentIp(): string|null {
+    public async getCurrentIp(): Promise<string | null> {
+        if (this._currentIp === null) {
+            await this.determined();
+        }
+
         return this._currentIp;
+    }
+
+    /**
+     * determined
+     */
+    public async determined(): Promise<void> {
+        const providername = Config.get()?.himpip?.provider!;
+        const provider = HowIsMyPublicIpProviders.getProvider(providername);
+
+        if (provider) {
+            if (this._currentIp === null) {
+                this._currentIp = await provider.get();
+
+                Logger.getLogger().info(`HowIsMyPublicIpService::determined: Set my current public ip(${this._currentIp})`);
+            } else {
+                const ip = await provider.get();
+
+                if (this._currentIp === ip) {
+                    Logger.getLogger().silly(`HowIsMyPublicIpService::determined: Public ip has not change: ${ip}`);
+                } else {
+                    Logger.getLogger().info(`HowIsMyPublicIpService::determined: Public ip change old(${this._currentIp}) new(${ip})`);
+
+                    this._currentIp = ip;
+
+                    if (Config.get()?.dyndnsclient) {
+                        if (Config.get()?.dyndnsclient?.enable) {
+                            await DynDnsService.getInstance().updateDns();
+                        } else {
+                            Logger.getLogger().silly('HowIsMyPublicIpService::determined: DynDnsClient is disabled by config!');
+                        }
+                    } else {
+                        Logger.getLogger().warn('HowIsMyPublicIpService::determined: DynDnsClient config not found!');
+                    }
+                }
+            }
+        } else {
+            Logger.getLogger().warn(`HowIsMyPublicIpService::determined: none provider found by config: ${providername}`);
+        }
     }
 
     /**
@@ -50,29 +92,7 @@ export class HowIsMyPublicIpService {
      */
     public async start(): Promise<void> {
         this._scheduler = scheduleJob('*/1 * * * *', async() => {
-            const provider = HowIsMyPublicIpProviders.getProvider(Config.get()?.himpip?.provider!);
-
-            if (provider) {
-                if (this._currentIp === null) {
-                    this._currentIp = await provider.get();
-
-                    Logger.getLogger().info(`Set my current public ip(${this._currentIp})`);
-                } else {
-                    const ip = await provider.get();
-
-                    if (this._currentIp !== ip) {
-                        Logger.getLogger().info(`Public ip change old(${this._currentIp}) new(${ip})`);
-
-                        this._currentIp = ip;
-
-                        if (Config.get()?.dyndnsclient) {
-                            if (Config.get()?.dyndnsclient?.enable) {
-                                DynDnsService.getInstance().updateDns();
-                            }
-                        }
-                    }
-                }
-            }
+            await this.determined();
         });
     }
 
