@@ -7,7 +7,7 @@ import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {Certificate as CertificateController} from './Routes/Main/Certificate';
 import {Domain as DomainController} from './Routes/Main/Domain';
-import {Host as HostController} from './Routes/Main/Host';
+import {Route as RouteController} from './Routes/Main/Route';
 import {Listen as ListenController} from './Routes/Main/Listen';
 import {Login as LoginController} from './Routes/Main/Login';
 import {Nginx as NginxController} from './Routes/Main/Nginx';
@@ -180,7 +180,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             LoginController,
             UserController,
             DomainController,
-            HostController,
+            RouteController,
             ListenController,
             UpnpNatController,
             CertificateController,

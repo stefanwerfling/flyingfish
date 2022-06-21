@@ -10,12 +10,13 @@ export type UpStream = {
 };
 
 /**
- * HostStream
+ * RouteStream
  */
-export type HostStream = {
+export type RouteStream = {
     listen_id: number;
     upstreams: UpStream[];
     alias_name: string;
+    isdefault: boolean;
     ssh: {
         port_in?: number;
         port_out?: number;
@@ -37,9 +38,9 @@ export type Location = {
 };
 
 /**
- * HostHttp
+ * RouteHttp
  */
-export type HostHttp = {
+export type RouteHttp = {
     listen_id: number;
     locations: Location[];
 };
@@ -47,36 +48,40 @@ export type HostHttp = {
 /**
  * HostData
  */
-export type HostData = {
+export type RouteData = {
     id: number;
     domainname: string;
-    streams: HostStream[];
-    https: HostHttp[];
+    domainfix: boolean;
+    streams: RouteStream[];
+    https: RouteHttp[];
 };
 
 /**
- * HostsResponse
+ * RoutesResponse
  */
-export type HostsResponse = {
+export type RoutesResponse = {
     status: string;
     msg?: string;
-    list: HostData[];
+    list: RouteData[];
+    defaults?: {
+        dnsserverport: number;
+    };
 };
 
 /**
- * Host
+ * Route
  */
-export class Host {
+export class Route {
 
     /**
      * getHosts
      */
-    public static async getHosts(): Promise<HostsResponse| null> {
-        const result = await NetFetch.getData('/json/host/list');
+    public static async getRoutes(): Promise<RoutesResponse| null> {
+        const result = await NetFetch.getData('/json/route/list');
 
         if (result) {
             if (result.status === 'ok') {
-                return result as HostsResponse;
+                return result as RoutesResponse;
             }
         }
 

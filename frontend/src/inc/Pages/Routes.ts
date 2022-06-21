@@ -1,12 +1,12 @@
-import {Host as HostAPI} from '../Api/Host';
+import {Route as RouteAPI} from '../Api/Route';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {Button} from '../Bambooo/Content/Form/Button';
-import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
+import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
+import {IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
@@ -41,15 +41,6 @@ export class Routes extends BasePage {
         // Navbar Left -------------------------------------------------------------------------------------------------
 
         // eslint-disable-next-line no-new
-        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Host', () => {
-            this._routeDialog.setTitle('Add new domain');
-            this._routeDialog.show();
-            return false;
-        }, 'btn btn-block btn-default btn-sm');
-
-        this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
-
-        // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Reload Config', async() => {
             // @ts-ignore
             const Toast = Swal.mixin({
@@ -79,32 +70,11 @@ export class Routes extends BasePage {
      * loadContent
      */
     public async loadContent(): Promise<void> {
-        const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
-        const card = new Card(new ContentCol12(row1));
-
-        card.setTitle('Hosts');
-
-        const table = new Table(card.getElement());
-        const trhead = new Tr(table.getThead());
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Id');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Domain');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Source &#8594; Destination');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, '');
 
         /**
          * onLoadList
          */
         const onLoadList = async(): Promise<void> => {
-            card.showLoading();
-            table.getTbody().empty();
 
             // listens -------------------------------------------------------------------------------------------------
 
@@ -119,55 +89,94 @@ export class Routes extends BasePage {
                 }
             }
 
-            // domains -------------------------------------------------------------------------------------------------
+            // routes --------------------------------------------------------------------------------------------------
 
-            const domains = await HostAPI.getHosts();
+            const routes = await RouteAPI.getRoutes();
 
-            if (domains) {
-                card.setTitle(`Domains (${domains.list.length})`);
+            if (routes) {
+                const dnsserverport = routes.defaults?.dnsserverport || 5333;
 
-                for (const entry of domains.list) {
-                    const trbody = new Tr(table.getTbody());
+                for (const entry of routes.list) {
+                    const row = new ContentRow(this._wrapper.getContentWrapper().getContent());
+                    const card = new Card(new ContentCol12(row));
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `#${entry.id}`);
+                    jQuery('<span>Routes for Domain:&nbsp;</span>').appendTo(card.getTitleElement());
 
-                    const domainTd = new Td(trbody, '');
+                    card.showLoading();
 
-                    if (entry.domainname === '_') {
+                    if (entry.domainfix) {
                         // eslint-disable-next-line no-new
-                        new Badge(domainTd.getElement(), 'default', BadgeType.danger);
+                        new Badge(card.getTitleElement(), 'default', BadgeType.danger);
                     } else {
                         // eslint-disable-next-line no-new
-                        new Badge(domainTd.getElement(), `${entry.domainname}`, BadgeType.secondary);
+                        new Badge(card.getTitleElement(), `${entry.domainname}`, BadgeType.secondary);
                     }
 
-                    const sdTd = new Td(trbody, '');
+                    if (!entry.domainfix) {
+                        const btnMenu = new ButtonMenu(card.getToolsElement(), IconFa.bars, true);
+
+                        btnMenu.addMenuItem(
+                            'Add Stream Route',
+                            (): void => {
+
+                            },
+                            IconFa.add);
+
+                        btnMenu.addMenuItem(
+                            'Add Http/Https Route',
+                            (): void => {
+
+                            },
+                            IconFa.add);
+                    }
+
+
+
+                    // table -------------------------------------------------------------------------------------------
+
+                    const table = new Table(card.getElement());
+                    const trhead = new Tr(table.getThead());
+
+                    // eslint-disable-next-line no-new
+                    new Th(trhead, 'Source', '150px');
+
+                    // eslint-disable-next-line no-new
+                    new Th(trhead, ' &#8594; ', '20px');
+
+                    // eslint-disable-next-line no-new
+                    new Th(trhead, 'Destination', '150px');
+
+                    // eslint-disable-next-line no-new
+                    new Th(trhead, '');
+
+                    // -------------------------------------------------------------------------------------------------
 
                     entry.streams.forEach(value => {
-                        const sdDiv = jQuery('<div/>').appendTo(sdTd.getElement());
+                        const trbody = new Tr(table.getTbody());
+                        const sdTd = new Td(trbody, '');
 
                         const listen = listenMap.get(value.listen_id);
 
                         if (listen) {
-
                             // eslint-disable-next-line no-new
-                            new Badge(sdDiv, `${listen.name} (${listen.port})`,
+                            new Badge(sdTd.getElement(), `${listen.name} (${listen.port})`,
                                 listen.type === 0 ? BadgeType.warning : BadgeType.success);
                         }
 
-                        sdDiv.append(' &#8594; ');
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, ' &#8594; ');
 
+                        const sdTdD = new Td(trbody, '');
 
                         if (value.ssh.port_in) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdDiv, `SSH INTERNT IN (--> ${value.ssh.port_in})`, BadgeType.primary);
+                            new Badge(sdTdD.getElement(), `SSH INTERNT IN (--> ${value.ssh.port_in})`, BadgeType.primary);
                         } else if(value.ssh.port_out) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdDiv, `SSH INTERNT OUT (<-- ${value.ssh.port_out})`, BadgeType.primary);
+                            new Badge(sdTdD.getElement(), `SSH INTERNT OUT (<-- ${value.ssh.port_out})`, BadgeType.primary);
                         } else {
                             if (value.upstreams.length === 0) {
-                                sdDiv.append('None');
+                                sdTdD.addValue('None');
                             } else {
                                 const firstUpstream = value.upstreams[0];
 
@@ -177,6 +186,10 @@ export class Routes extends BasePage {
                                     badType = BadgeType.success;
                                 }
 
+                                if (firstUpstream.port === dnsserverport) {
+                                    badType = BadgeType.color_cream_purpel;
+                                }
+
                                 let andMore = '';
 
                                 if (value.upstreams.length>1) {
@@ -184,56 +197,90 @@ export class Routes extends BasePage {
                                 }
 
                                 // eslint-disable-next-line no-new
-                                new Badge(sdDiv,
+                                new Badge(sdTdD.getElement(),
                                     `${firstUpstream.address}:${firstUpstream.port}${andMore} (${value.alias_name})`,
                                     badType);
                             }
                         }
+
+                        const tdAction = new Td(trbody, '');
+                        const btnMenu = new ButtonMenu(tdAction.getElement(), IconFa.bars, true);
+
+                        btnMenu.addMenuItem(
+                            'Edit',
+                            (): void => {
+
+                            },
+                            IconFa.edit);
+
+                        if (!value.isdefault) {
+                            btnMenu.addDivider();
+
+                            btnMenu.addMenuItem(
+                                'Delete',
+                                (): void => {
+
+                                },
+                                IconFa.trash
+                            );
+                        }
                     });
 
                     entry.https.forEach(value => {
-                        const sdDiv = jQuery('<div/>').appendTo(sdTd.getElement());
+                        const trbody = new Tr(table.getTbody());
+                        const sdTd = new Td(trbody, '');
 
                         const listen = listenMap.get(value.listen_id);
 
                         if (listen) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdDiv, `${listen.name} (${listen.port})`,
+                            new Badge(sdTd.getElement(), `${listen.name} (${listen.port})`,
                                 listen.type === 0 ? BadgeType.warning : BadgeType.success
                             );
                         }
 
-                        sdDiv.append(' &#8594; ');
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, ' &#8594; ');
+
+                        const sdTdD = new Td(trbody, '');
 
                         if (value.locations.length > 0) {
                             const aLocation = value.locations[0];
 
                             if (aLocation.ssh.port_out) {
                                 // eslint-disable-next-line no-new
-                                new Badge(sdDiv, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                                new Badge(sdTdD.getElement(), `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
                             } else {
                                 // eslint-disable-next-line no-new
-                                new Badge(sdDiv, aLocation.proxy_pass, BadgeType.info);
+                                new Badge(sdTdD.getElement(), aLocation.proxy_pass, BadgeType.info);
                             }
                         } else {
-                            sdDiv.append('None');
+                            sdTdD.addValue('None');
                         }
+
+                        const tdAction = new Td(trbody, '');
+                        const btnMenu = new ButtonMenu(tdAction.getElement(), IconFa.bars, true);
+
+                        btnMenu.addMenuItem(
+                            'Edit',
+                            (): void => {
+
+                            },
+                            IconFa.edit);
+
+                        btnMenu.addDivider();
+
+                        btnMenu.addMenuItem(
+                            'Delete',
+                            (): void => {
+
+                            },
+                            IconFa.trash);
                     });
 
-                    const tdAction = new Td(trbody, '');
-
-                    const editBtn = new Button(tdAction.getElement());
-                    // eslint-disable-next-line no-new
-                    new Icon(editBtn.getElement(), IconFa.edit);
-
-                    editBtn.setOnClickFn((): void => {
-                        this._routeDialog.setTitle('Edit Host');
-                        this._routeDialog.show();
-                    });
+                    card.hideLoading();
                 }
             }
-
-            card.hideLoading();
         };
 
 

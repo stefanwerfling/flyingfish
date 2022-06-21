@@ -44,9 +44,33 @@ export type DomainSaveResponse = {
 };
 
 /**
+ * DomainDeleteResponse
+ */
+export type DomainDeleteResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
+ * DomainRecordSave
+ */
+export type DomainRecordSave = {
+    domain_id: number;
+    record: DomainRecord;
+};
+
+/**
  * DomainRecordSaveResponse
  */
 export type DomainRecordSaveResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
+ * DomainRecordDeleteResponse
+ */
+export type DomainRecordDeleteResponse = {
     status: string;
     error?: string;
 };
@@ -171,6 +195,63 @@ export class Domain {
     }
 
     /**
+     * deleteDomain
+     * @param session
+     * @param request
+     */
+    @Post('/json/domain/delete')
+    public async deleteDomain(
+        @Session() session: any,
+        @Body() request: DomainData
+    ): Promise<DomainDeleteResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const domainRepository = MariaDbHelper.getRepository(DomainDB);
+            const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+
+            const domain = await domainRepository.findOne({
+                where: {
+                    id: request.id
+                }
+            });
+
+            if (domain) {
+                if (domain.fixdomain) {
+                    return {
+                        status: 'error',
+                        error: `domain is fix and cant not delete by id: ${request.id}`
+                    };
+                }
+
+                // todo check domain used
+
+                await domainRecordRepository.delete({
+                    domain_id: request.id
+                });
+
+                const result = await domainRepository.delete({
+                    id: request.id
+                });
+
+                if (result) {
+                    return {
+                        status: 'ok'
+                    };
+                }
+            } else {
+                return {
+                    status: 'error',
+                    error: `domain not found by id: ${request.id}`
+                };
+            }
+        }
+
+        return {
+            status: 'error',
+            error: 'user not login!'
+        };
+    }
+
+    /**
      * saveDomainRecord
      * @param session
      * @param request
@@ -178,9 +259,84 @@ export class Domain {
     @Post('/json/domain/record/save')
     public async saveDomainRecord(
         @Session() session: any,
-        @Body() request: DomainRecord
+        @Body() request: DomainRecordSave
     ): Promise<DomainRecordSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
+            const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+
+            let aRecord: DomainRecordDB|null = null;
+
+            if (request.record.id !== 0) {
+                const tRecord = await domainRecordRepository.findOne({
+                    where: {
+                        id: request.record.id
+                    }
+                });
+
+                if (tRecord) {
+                    aRecord = tRecord;
+                }
+            }
+
+            if (aRecord === null) {
+                aRecord = new DomainRecordDB();
+                aRecord.domain_id = request.domain_id;
+            }
+
+            aRecord.dtype = request.record.type;
+            aRecord.dclass = request.record.class;
+            aRecord.ttl = request.record.ttl;
+            aRecord.dvalue = request.record.value;
+            aRecord.update_by_dnsclient = request.record.update_by_dnsclient;
+
+            await MariaDbHelper.getConnection().manager.save(aRecord);
+
+            return {
+                status: 'ok'
+            };
+        }
+
+        return {
+            status: 'error',
+            error: 'user not login!'
+        };
+    }
+
+    /**
+     * deleteDomainRecord
+     * @param session
+     * @param request
+     */
+    @Post('/json/domain/record/delete')
+    public async deleteDomainRecord(
+        @Session() session: any,
+        @Body() request: DomainRecord
+    ): Promise<DomainRecordDeleteResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+
+            const arecord = await domainRecordRepository.findOne({
+                where: {
+                    id: request.id
+                }
+            });
+
+            if (arecord) {
+                const result = await domainRecordRepository.delete({
+                    id: request.id
+                });
+
+                if (result) {
+                    return {
+                        status: 'ok'
+                    };
+                }
+            }
+
+            return {
+                status: 'error',
+                error: `domain record not found by id: ${request.id}`
+            };
 
         }
 

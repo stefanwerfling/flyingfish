@@ -43,6 +43,9 @@ interface ConfigOptions {
     dyndnsclient?: {
         enable: boolean;
     };
+    dnsserver?: {
+        port?: number;
+    };
     himpip?: {
         provider: string;
     };
@@ -116,6 +119,12 @@ export class Config {
             config.openssl = {
                 dhparamfile: '/opt/app/nginx/dhparam.pem'
             };
+
+            if (!config.dnsserver) {
+                config.dnsserver = {
+                    port: 5333
+                };
+            }
 
             // upnpnat enable
             if (!config.upnpnat) {

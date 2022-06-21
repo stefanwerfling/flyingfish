@@ -2,7 +2,11 @@
  * AbuseipdbReport
  */
 import got from 'got';
+import {Logger} from '../../Logger/Logger';
 
+/**
+ * AbuseipdbReport
+ */
 export type AbuseipdbReport = {
     reportedAt: string;
     comment: string;
@@ -64,21 +68,25 @@ export class Abuseipdb {
      * @param ipAddress
      */
     public async check(ipAddress: string): Promise<AbuseipdbCheck|null> {
-        const response = await got({
-            url: `https://api.abuseipdb.com/api/v2/check?ipAddress=${ipAddress}`,
-            responseType: 'json',
-            headers: {
-                Key: this._apiKey,
-                Accept: 'application/json'
-            }
-        });
+        try {
+            const response = await got({
+                url: `https://api.abuseipdb.com/api/v2/check?ipAddress=${ipAddress}`,
+                responseType: 'json',
+                headers: {
+                    Key: this._apiKey,
+                    Accept: 'application/json'
+                }
+            });
 
-        if (response.body) {
-            const result = response.body as AbuseipdbCheckResult;
+            if (response.body) {
+                const result = response.body as AbuseipdbCheckResult;
 
-            if (result.data) {
-                return result.data;
+                if (result.data) {
+                    return result.data;
+                }
             }
+        } catch (e) {
+            Logger.getLogger().error(e);
         }
 
         return null;

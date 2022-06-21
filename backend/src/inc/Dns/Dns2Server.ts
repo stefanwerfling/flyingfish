@@ -1,5 +1,6 @@
 import DNS = require('dns2');
 import {DnsAnswer, DnsQuestion} from 'dns2';
+import {Config} from '../Config/Config';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
@@ -158,9 +159,19 @@ export class Dns2Server {
      * start server listen
      */
     public listen(): void {
+        let port = 5333;
+
+        const dnsserver = Config.get()?.dnsserver;
+
+        if (dnsserver) {
+            if (dnsserver.port) {
+                port = dnsserver.port;
+            }
+        }
+
         this._server.listen({
-            udp: 5333,
-            tcp: 5333
+            udp: port,
+            tcp: port
         });
     }
 

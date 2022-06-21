@@ -1,15 +1,18 @@
 import {Domain as DomainAPI, DomainData} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
+import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {Button} from '../Bambooo/Content/Form/Button';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
+import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
+import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
+import {IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
 import {DomainEditModal} from './Domains/DomainEditModal';
@@ -136,14 +139,45 @@ export class Domains extends BasePage {
         });
 
         this._domainRecordDialog.setOnSave(async(): Promise<void> => {
-            let tid = this._domainDialog.getId();
+            let tid = this._domainRecordDialog.getId();
 
             if (tid === null) {
                 tid = 0;
             }
 
-            try {
+            const domainId = this._domainRecordDialog.getDomainId();
 
+            if (domainId === null) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: `Domain id is empty!`
+                });
+                return;
+            }
+
+            try {
+                if (await DomainAPI.saveDomainRecord({
+                    domain_id: domainId,
+                    record: {
+                        id: tid,
+                        type: parseInt(this._domainRecordDialog.getType(), 10),
+                        class: parseInt(this._domainRecordDialog.getClass(), 10),
+                        ttl: parseInt(this._domainRecordDialog.getTTL(), 10),
+                        value: this._domainRecordDialog.getValue(),
+                        update_by_dnsclient: this._domainRecordDialog.getUpdateByDynDnsClient()
+                    }
+                })) {
+                    this._domainRecordDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'Domain record save success.'
+                    });
+                }
             } catch ({message}) {
                 this._toast.fire({
                     icon: 'error',
@@ -157,98 +191,118 @@ export class Domains extends BasePage {
      * loadContent
      */
     public async loadContent(): Promise<void> {
-        const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
-        const card = new Card(new ContentCol12(row1));
-
-        card.setTitle('Domains');
-
-        const table = new Table(card.getElement());
-        const trhead = new Tr(table.getThead());
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Id');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Domainname/Zone');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, '');
 
         /**
          * onLoadList
          */
         this._onLoadTable = async(): Promise<void> => {
-            card.showLoading();
-            table.getTbody().empty();
-
             const domains = await DomainAPI.getDomains();
 
+            this._wrapper.getContentWrapper().getContent().empty();
+
             if (domains && domains.list) {
-                card.setTitle(`Domains (${domains.list.length})`);
-
                 for (const domain of domains.list) {
-                    const trbody = new Tr(table.getTbody());
+                    if (domain.name === '_') {
+                        continue;
+                    }
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `#${domain.id}`);
+                    const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
+                    const card = new Card(new ContentCol12(row1));
 
-                    // eslint-disable-next-line no-new
-                    const domainTd = new Td(trbody, '');
+                    jQuery('<span>Domainname/Zone:&nbsp;</span>').appendTo(card.getTitleElement());
 
                     if (domain.fix) {
                         // eslint-disable-next-line no-new
-                        new Badge(domainTd.getElement(), `${domain.name}`, BadgeType.danger);
+                        new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.danger);
                     } else {
                         // eslint-disable-next-line no-new
-                        new Badge(domainTd.getElement(), `${domain.name}`, BadgeType.secondary);
+                        new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.secondary);
                     }
 
-                    const tdAction = new Td(trbody, '');
+                    const btnMenu = new ButtonMenu(card.getToolsElement(), IconFa.bars, true);
 
                     if (!domain.fix) {
-                        const editBtn = new Button(tdAction.getElement());
-                        // eslint-disable-next-line no-new
-                        new Icon(editBtn.getElement(), IconFa.edit);
-
-                        editBtn.setOnClickFn((): void => {
-                            this._domainDialog.setTitle('Domain Edit');
-                            this._domainDialog.resetValues();
-                            this._domainDialog.setId(domain.id);
-                            this._domainDialog.setName(domain.name);
-                            this._domainDialog.show();
-                        });
+                        btnMenu.addMenuItem(
+                            'Edit',
+                            (): void => {
+                                this._domainDialog.setTitle('Domain Edit');
+                                this._domainDialog.resetValues();
+                                this._domainDialog.setId(domain.id);
+                                this._domainDialog.setName(domain.name);
+                                this._domainDialog.show();
+                            },
+                            IconFa.edit);
                     }
 
                     if (!domain.recordless) {
-                        const addBtn = new Button(tdAction.getElement());
-                        // eslint-disable-next-line no-new
-                        new Icon(addBtn.getElement(), IconFa.add);
-
-                        addBtn.setOnClickFn((): void => {
-                            this._domainRecordDialog.resetValues();
-                            this._domainRecordDialog.setTitle('Domain Record Add');
-                            this._domainRecordDialog.setDomainId(domain.id);
-                            this._domainRecordDialog.setDomainName(domain.name);
-                            this._domainRecordDialog.show();
-                        });
+                        btnMenu.addMenuItem(
+                            'Add Record',
+                            (): void => {
+                                this._domainRecordDialog.resetValues();
+                                this._domainRecordDialog.setTitle('Domain Record Add');
+                                this._domainRecordDialog.setDomainId(domain.id);
+                                this._domainRecordDialog.setDomainName(domain.name);
+                                this._domainRecordDialog.show();
+                            },
+                            IconFa.add);
                     }
 
                     if (!domain.fix) {
-                        const delBtn = new Button(tdAction.getElement());
-                        // eslint-disable-next-line no-new
-                        new Icon(delBtn.getElement(), IconFa.trash);
+                        btnMenu.addDivider();
+                        btnMenu.addMenuItem(
+                            'Delete',
+                            (): void => {
+                                DialogConfirm.confirm(
+                                    'dcDeleteDomain',
+                                    ModalDialogType.large,
+                                    'Delete Domain',
+                                    `Are you sure to delete the domain? All data on the domain will also be deleted!`,
+                                    async(_, dialog) => {
+                                        try {
+                                            if (await DomainAPI.deleteDomain(domain)) {
+                                                this._toast.fire({
+                                                    icon: 'success',
+                                                    title: 'Domain delete success.'
+                                                });
+
+                                                if (await NginxAPI.reload()) {
+                                                    this._toast.fire({
+                                                        icon: 'success',
+                                                        title: 'Nginx server reload config success.'
+                                                    });
+                                                } else {
+                                                    this._toast.fire({
+                                                        icon: 'error',
+                                                        title: 'Nginx server reload config faild, please check your last settings!'
+                                                    });
+                                                }
+                                            }
+                                        } catch ({message}) {
+                                            this._toast.fire({
+                                                icon: 'error',
+                                                title: message
+                                            });
+                                        }
+
+                                        dialog.hide();
+
+                                        if (this._onLoadTable) {
+                                            this._onLoadTable();
+                                        }
+                                    },
+                                    undefined,
+                                    'Delete',
+                                    ButtonClass.danger
+                                );
+                            },
+                            IconFa.trash);
                     }
 
                     if (domain.records.length > 0 ) {
-                        const lrtrbody = new Tr(table.getTbody());
-
-                        // eslint-disable-next-line no-new
-                        new Td(lrtrbody, '');
-
-                        const lineTd = new Td(lrtrbody, '', 2);
+                        card.showLoading();
 
                         // record table
-                        const rtable = new Table(lineTd.getElement());
+                        const rtable = new Table(card.getElement());
                         const rtrhead = new Tr(rtable.getThead());
 
                         // eslint-disable-next-line no-new
@@ -256,6 +310,9 @@ export class Domains extends BasePage {
 
                         // eslint-disable-next-line no-new
                         new Th(rtrhead, 'Class');
+
+                        // eslint-disable-next-line no-new
+                        new Th(rtrhead, 'TTL');
 
                         // eslint-disable-next-line no-new
                         new Th(rtrhead, 'Value');
@@ -332,33 +389,77 @@ export class Domains extends BasePage {
                             new Td(rtrbody, `${className}`);
 
                             // eslint-disable-next-line no-new
+                            new Td(rtrbody, `${record.ttl}`);
+
+                            // eslint-disable-next-line no-new
                             new Td(rtrbody, `${record.value}`);
 
                             const tdRAction = new Td(rtrbody, '');
+                            const btnRMenu = new ButtonMenu(tdRAction.getElement(), IconFa.bars, true);
 
-                            const editRBtn = new Button(tdRAction.getElement());
-                            // eslint-disable-next-line no-new
-                            new Icon(editRBtn.getElement(), IconFa.edit);
+                            btnRMenu.addMenuItem(
+                                'Edit',
+                                (): void => {
+                                    this._domainRecordDialog.resetValues();
+                                    this._domainRecordDialog.setTitle('Domain Record Edit');
+                                    this._domainRecordDialog.setId(record.id);
+                                    this._domainRecordDialog.setDomainId(domain.id);
+                                    this._domainRecordDialog.setDomainName(domain.name);
+                                    this._domainRecordDialog.setType(`${record.type}`);
+                                    this._domainRecordDialog.setClass(`${record.class}`);
+                                    this._domainRecordDialog.setTTL(`${record.ttl}`);
+                                    this._domainRecordDialog.setValue(record.value);
+                                    this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
+                                    this._domainRecordDialog.show();
+                                },
+                                IconFa.edit);
 
-                            editRBtn.setOnClickFn((): void => {
-                                this._domainRecordDialog.resetValues();
-                                this._domainRecordDialog.setTitle('Domain Record Edit');
-                                this._domainRecordDialog.setId(record.id);
-                                this._domainRecordDialog.setDomainId(domain.id);
-                                this._domainRecordDialog.setDomainName(domain.name);
-                                this._domainRecordDialog.setType(`${record.type}`);
-                                this._domainRecordDialog.setClass(`${record.class}`);
-                                this._domainRecordDialog.setTTL(`${record.ttl}`);
-                                this._domainRecordDialog.setValue(record.value);
-                                this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
-                                this._domainRecordDialog.show();
-                            })
+                            btnRMenu.addDivider();
+
+                            btnRMenu.addMenuItem(
+                                'Delete',
+                                (): void => {
+                                    DialogConfirm.confirm(
+                                        'dcDeleteRecord',
+                                        ModalDialogType.large,
+                                        'Delete Record',
+                                        `Are you sure you want to delete the record?`,
+                                        async(_, dialog) => {
+                                            try {
+                                                if (await DomainAPI.deleteDomainRecord(record)) {
+                                                    this._toast.fire({
+                                                        icon: 'success',
+                                                        title: 'Domain record delete success.'
+                                                    });
+                                                }
+                                            } catch ({message}) {
+                                                this._toast.fire({
+                                                    icon: 'error',
+                                                    title: message
+                                                });
+                                            }
+
+                                            dialog.hide();
+
+                                            if (this._onLoadTable) {
+                                                this._onLoadTable();
+                                            }
+                                        },
+                                        undefined,
+                                        'Delete',
+                                        ButtonClass.danger
+                                    );
+                                },
+                                IconFa.trash);
                         }
+
+                        card.hideLoading();
+                    } else {
+                        card.getElement().addClass('text-center');
+                        jQuery('<div>None Records set.</div>').appendTo(card.getElement());
                     }
                 }
             }
-
-            card.hideLoading();
         };
 
         // load table

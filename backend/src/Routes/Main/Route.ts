@@ -1,4 +1,5 @@
 import {Get, JsonController, Session} from 'routing-controllers';
+import {Config} from '../../inc/Config/Config';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {NginxLocation as NginxLocationDB} from '../../inc/Db/MariaDb/Entity/NginxLocation';
@@ -17,12 +18,13 @@ export type UpStream = {
 };
 
 /**
- * HostStream
+ * RouteStream
  */
-export type HostStream = {
+export type RouteStream = {
     listen_id: number;
     upstreams: UpStream[];
     alias_name: string;
+    isdefault: boolean;
     ssh: {
         port_in?: number;
         port_out?: number;
@@ -44,9 +46,9 @@ export type Location = {
 };
 
 /**
- * HostHttp
+ * RouteHttp
  */
-export type HostHttp = {
+export type RouteHttp = {
     listen_id: number;
     locations: Location[];
 };
@@ -54,35 +56,39 @@ export type HostHttp = {
 /**
  * HostData
  */
-export type HostData = {
+export type RouteData = {
     id: number;
     domainname: string;
-    streams: HostStream[];
-    https: HostHttp[];
+    domainfix: boolean;
+    streams: RouteStream[];
+    https: RouteHttp[];
 };
 
 /**
- * HostsResponse
+ * RoutesResponse
  */
-export type HostsResponse = {
+export type RoutesResponse = {
     status: string;
     msg?: string;
-    list: HostData[];
+    list: RouteData[];
+    defaults?: {
+        dnsserverport: number;
+    };
 };
 
 /**
- * Host
+ * Route
  */
 @JsonController()
-export class Host {
+export class Route {
 
     /**
-     * getDomains
+     * getRoutes
      * @param session
      */
-    @Get('/json/host/list')
-    public async getDomains(@Session() session: any): Promise<HostsResponse> {
-        const list: HostData[] = [];
+    @Get('/json/route/list')
+    public async getRoutes(@Session() session: any): Promise<RoutesResponse> {
+        const list: RouteData[] = [];
 
         if ((session.user !== undefined) && session.user.isLogin) {
             const domainRepository = MariaDbHelper.getRepository(DomainDB);
@@ -95,8 +101,8 @@ export class Host {
 
             if (domains) {
                 for (const adomain of domains) {
-                    const streamList: HostStream[] = [];
-                    const httpList: HostHttp[] = [];
+                    const streamList: RouteStream[] = [];
+                    const httpList: RouteHttp[] = [];
 
                     const streams = await streamRepository.find({
                         where: {
@@ -106,9 +112,10 @@ export class Host {
 
                     if (streams) {
                         for (const tstream of streams) {
-                            const streamEntry: HostStream = {
+                            const streamEntry: RouteStream = {
                                 listen_id: tstream.listen_id,
                                 alias_name: tstream.alias_name,
+                                isdefault: tstream.isdefault,
                                 upstreams: [],
                                 ssh: {}
                             };
@@ -163,7 +170,7 @@ export class Host {
 
                     if (https) {
                         for (const thttp of https) {
-                            const httpEntry: HostHttp = {
+                            const httpEntry: RouteHttp = {
                                 listen_id: thttp.listen_id,
                                 locations: []
                             };
@@ -206,6 +213,7 @@ export class Host {
                     list.push({
                         id: adomain.id,
                         domainname: adomain.domainname,
+                        domainfix: adomain.fixdomain,
                         streams: streamList,
                         https: httpList
                     });
@@ -219,9 +227,14 @@ export class Host {
             };
         }
 
+        const dnsserverport = Config.get()?.dnsserver?.port || 5333;
+
         return {
             status: 'ok',
-            list
+            list,
+            defaults: {
+                dnsserverport
+            }
         };
     }
 
