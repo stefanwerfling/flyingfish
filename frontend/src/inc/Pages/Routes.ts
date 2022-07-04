@@ -1,4 +1,4 @@
-import {Route as RouteAPI} from '../Api/Route';
+import {Route as RouteAPI, RouteStreamSave} from '../Api/Route';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
@@ -13,7 +13,7 @@ import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
-import {RoutesEditModal} from './Routes/RoutesEditModal';
+import {RouteStreamEditModal, RouteStreamEditModalDesType} from './Routes/RouteStreamEditModal';
 
 /**
  * Hosts Page
@@ -21,10 +21,16 @@ import {RoutesEditModal} from './Routes/RoutesEditModal';
 export class Routes extends BasePage {
 
     /**
-     * host dialog
+     * toast
      * @protected
      */
-    protected _routeDialog: RoutesEditModal;
+    protected _toast: any;
+
+    /**
+     * route stream dialog
+     * @protected
+     */
+    protected _routeStreamDialog: RouteStreamEditModal;
 
     /**
      * constructor
@@ -34,7 +40,7 @@ export class Routes extends BasePage {
 
         // route modal -------------------------------------------------------------------------------------------------
 
-        this._routeDialog = new RoutesEditModal(
+        this._routeStreamDialog = new RouteStreamEditModal(
             this._wrapper.getContentWrapper().getContent()
         );
 
@@ -64,6 +70,69 @@ export class Routes extends BasePage {
 
             return false;
         }, 'btn btn-block btn-default btn-sm');
+
+        // @ts-ignore
+        this._toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._routeStreamDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._routeStreamDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const stream: RouteStreamSave = {
+                    domainid: this._routeStreamDialog.getDomainId(),
+                    stream: {
+                        id: tid,
+                        isdefault: false,
+                        alias_name: this._routeStreamDialog.getAliasName(),
+                        index: this._routeStreamDialog.getIndex(),
+                        listen_id: this._routeStreamDialog.getListen(),
+                        destination_listen_id: this._routeStreamDialog.getDestinationListen(),
+                        ssh: {
+                            port_in: 0,
+                            port_out: 0
+                        },
+                        upstreams: []
+                    }
+                };
+
+                if (await RouteAPI.saveRouteStream(stream)) {
+                    this._routeStreamDialog.hide();
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'Stream save success.'
+                    });
+
+                    if (await NginxAPI.reload()) {
+                        this._toast.fire({
+                            icon: 'success',
+                            title: 'Nginx server reload config success.'
+                        });
+                    } else {
+                        this._toast.fire({
+                            icon: 'error',
+                            title: 'Nginx server reload config faild, please check your last settings!'
+                        });
+                    }
+                }
+            } catch ({message}) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: message
+                });
+            }
+        });
     }
 
     /**
@@ -82,7 +151,7 @@ export class Routes extends BasePage {
             const listens = await ListenAPI.getListens();
 
             if (listens) {
-                this._routeDialog.setListens(listens.list);
+                this._routeStreamDialog.setListens(listens.list);
 
                 for (const alisten of listens.list) {
                     listenMap.set(alisten.id, alisten);
@@ -118,7 +187,11 @@ export class Routes extends BasePage {
                         btnMenu.addMenuItem(
                             'Add Stream Route',
                             (): void => {
-
+                                this._routeStreamDialog.resetValues();
+                                this._routeStreamDialog.setTitle('Add Stream Route')
+                                this._routeStreamDialog.show();
+                                this._routeStreamDialog.setDomainName(entry.domainname);
+                                this._routeStreamDialog.setDomainId(entry.id);
                             },
                             IconFa.add);
 
@@ -209,7 +282,28 @@ export class Routes extends BasePage {
                         btnMenu.addMenuItem(
                             'Edit',
                             (): void => {
+                                this._routeStreamDialog.resetValues();
+                                this._routeStreamDialog.setTitle('Edit Stream Route');
+                                this._routeStreamDialog.show();
+                                this._routeStreamDialog.setId(value.id);
+                                this._routeStreamDialog.setDomainName(entry.domainname);
+                                this._routeStreamDialog.setDomainId(entry.id);
+                                this._routeStreamDialog.setListen(`${value.listen_id}`);
+                                this._routeStreamDialog.setAliasName(value.alias_name);
 
+                                if (value.index > 0) {
+                                    this._routeStreamDialog.setIndex(value.index);
+                                }
+
+                                if (value.ssh.port_in || value.ssh.port_out) {
+                                    this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.ssh);
+                                } else if ( value.destination_listen_id > 0) {
+                                    this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.listen);
+                                    this._routeStreamDialog.setDestinationListen(value.destination_listen_id);
+                                } else {
+                                    this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.upstream);
+                                    this._routeStreamDialog.setUpstreamList(value.upstreams);
+                                }
                             },
                             IconFa.edit);
 

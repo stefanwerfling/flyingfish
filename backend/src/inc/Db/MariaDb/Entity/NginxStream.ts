@@ -21,6 +21,13 @@ export class NginxStream extends BaseEntity {
         // @ts-ignore
     listen_id: number;
 
+    @Index()
+    @Column({
+        default: 0
+    })
+        // @ts-ignore
+    destination_listen_id: number;
+
     @Column()
         // @ts-ignore
     index: number;

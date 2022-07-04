@@ -47,16 +47,8 @@ export class NginxConfig {
 
         // set defaults ------------------------------------------------------------------------------------------------
 
-        // this._modules.push('/usr/lib/nginx/modules/ngx_stream_module.so');
         this._modules.push('/usr/lib/nginx/modules/ngx_stream_js_module.so');
         this._modules.push('/usr/lib/nginx/modules/ngx_http_js_module.so');
-        // this._modules.push('/usr/lib/nginx/modules/ngx_http_accounting_module.so');
-
-        /*
-         * this._modules.push('/usr/lib/nginx/modules/ngx_http_vhost_traffic_status_module.so');
-         * this._modules.push('/usr/lib/nginx/modules/ngx_http_headers_more_filter_module.so');
-         * this._modules.push('/usr/lib/nginx/modules/ngx_mail_module.so');
-         */
 
         // this._variables.set('user', 'app');
         this._variables.set('worker_processes', 'auto');

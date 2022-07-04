@@ -1,4 +1,4 @@
-import {Get, JsonController, Session} from 'routing-controllers';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
 import {Config} from '../../inc/Config/Config';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
@@ -21,14 +21,25 @@ export type UpStream = {
  * RouteStream
  */
 export type RouteStream = {
+    id: number;
     listen_id: number;
+    destination_listen_id: number;
     upstreams: UpStream[];
     alias_name: string;
+    index: number;
     isdefault: boolean;
     ssh: {
         port_in?: number;
         port_out?: number;
     };
+};
+
+/**
+ * RouteStreamSave
+ */
+export type RouteStreamSave = {
+    domainid: number;
+    stream: RouteStream;
 };
 
 /**
@@ -49,6 +60,7 @@ export type Location = {
  * RouteHttp
  */
 export type RouteHttp = {
+    id: number;
     listen_id: number;
     locations: Location[];
 };
@@ -74,6 +86,14 @@ export type RoutesResponse = {
     defaults?: {
         dnsserverport: number;
     };
+};
+
+/**
+ * RouteStreamSaveResponse
+ */
+export type RouteStreamSaveResponse = {
+    status: string;
+    error?: string;
 };
 
 /**
@@ -113,8 +133,11 @@ export class Route {
                     if (streams) {
                         for (const tstream of streams) {
                             const streamEntry: RouteStream = {
+                                id: tstream.id,
                                 listen_id: tstream.listen_id,
+                                destination_listen_id: tstream.destination_listen_id,
                                 alias_name: tstream.alias_name,
+                                index: tstream.index,
                                 isdefault: tstream.isdefault,
                                 upstreams: [],
                                 ssh: {}
@@ -171,6 +194,7 @@ export class Route {
                     if (https) {
                         for (const thttp of https) {
                             const httpEntry: RouteHttp = {
+                                id: thttp.id,
                                 listen_id: thttp.listen_id,
                                 locations: []
                             };
@@ -235,6 +259,126 @@ export class Route {
             defaults: {
                 dnsserverport
             }
+        };
+    }
+
+    /**
+     * saveStreamRoute
+     * @param session
+     * @param request
+     */
+    @Post('/json/route/stream/save')
+    public async saveStreamRoute(
+        @Session() session: any,
+        @Body() request: RouteStreamSave
+    ): Promise<RouteStreamSaveResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
+            const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
+
+            let aStream: NginxStreamDB|null = null;
+
+            if (request.stream.id !== 0) {
+                const tStream = await streamRepository.findOne({
+                    where: {
+                        id: request.stream.id
+                    }
+                });
+
+                if (tStream) {
+                    aStream = tStream;
+                } else {
+                    return {
+                        status: 'error',
+                        error: `entry not found by id: ${request.stream.id}`
+                    };
+                }
+            }
+
+            if (aStream === null) {
+                aStream = new NginxStreamDB();
+            }
+
+            aStream.domain_id = request.domainid;
+            aStream.listen_id = request.stream.listen_id;
+            aStream.alias_name = request.stream.alias_name;
+            aStream.index = request.stream.index;
+            aStream.destination_listen_id = request.stream.destination_listen_id;
+            aStream.sshport_in_id = 0;
+            aStream.sshport_out_id = 0;
+
+            if (request.stream.ssh) {
+                if (request.stream.ssh.port_in && (request.stream.ssh.port_in > 0)) {
+                    aStream.sshport_in_id = request.stream.ssh.port_in;
+                } else if (request.stream.ssh.port_out && (request.stream.ssh.port_out > 0)) {
+                    aStream.sshport_out_id = request.stream.ssh.port_out;
+                }
+            }
+
+            aStream = await MariaDbHelper.getConnection().manager.save(aStream);
+
+            if (aStream.destination_listen_id > 0) {
+                // clear old upstreams
+                await upstreamRepository.delete({
+                    stream_id: aStream.id
+                });
+            } else if (request.stream.upstreams.length > 0) {
+                // remove delete upstreams -----------------------------------------------------------------------------
+                const tupstreams = await upstreamRepository.find({
+                    where: {
+                        stream_id: aStream.id
+                    }
+                });
+
+                if (tupstreams) {
+                    const checkUpstreamExistence = (upstreamId: number): boolean => request.stream.upstreams.some(({id}) => id === upstreamId);
+
+                    for (const oldUpstream of tupstreams) {
+                        if (!checkUpstreamExistence(oldUpstream.id)) {
+                            await upstreamRepository.delete({
+                                id: oldUpstream.id
+                            });
+                        }
+                    }
+                }
+
+                // update or add new upstreams -------------------------------------------------------------------------
+
+                for (const aUpstream of request.stream.upstreams) {
+                    let aNewUpstream: NginxUpstreamDB|null = null;
+
+                    if (aUpstream.id > 0) {
+                        const tUpstream = await upstreamRepository.findOne({
+                            where: {
+                                id: aUpstream.id
+                            }
+                        });
+
+                        if (tUpstream) {
+                            aNewUpstream = tUpstream;
+                        }
+                    }
+
+                    if (aNewUpstream === null) {
+                        aNewUpstream = new NginxUpstreamDB();
+                        aNewUpstream.stream_id = aStream.id;
+                    }
+
+                    aNewUpstream.destination_address = aUpstream.address;
+                    aNewUpstream.destination_port = aUpstream.port;
+
+                    await MariaDbHelper.getConnection().manager.save(aNewUpstream);
+                }
+            }
+
+            return {
+                status: 'ok'
+            };
+        }
+
+        return {
+            status: 'error',
+            error: 'user not login!'
         };
     }
 

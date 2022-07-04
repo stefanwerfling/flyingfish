@@ -13,9 +13,12 @@ export type UpStream = {
  * RouteStream
  */
 export type RouteStream = {
+    id: number;
     listen_id: number;
+    destination_listen_id: number;
     upstreams: UpStream[];
     alias_name: string;
+    index: number;
     isdefault: boolean;
     ssh: {
         port_in?: number;
@@ -41,6 +44,7 @@ export type Location = {
  * RouteHttp
  */
 export type RouteHttp = {
+    id: number;
     listen_id: number;
     locations: Location[];
 };
@@ -69,6 +73,22 @@ export type RoutesResponse = {
 };
 
 /**
+ * RouteStreamSave
+ */
+export type RouteStreamSave = {
+    domainid: number;
+    stream: RouteStream;
+};
+
+/**
+ * RouteStreamSaveResponse
+ */
+export type RouteStreamSaveResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
  * Route
  */
 export class Route {
@@ -86,6 +106,24 @@ export class Route {
         }
 
         return null;
+    }
+
+    /**
+     * saveRouteStream
+     * @param stream
+     */
+    public static async saveRouteStream(stream: RouteStreamSave): Promise<boolean> {
+        const result = await NetFetch.postData('/json/route/stream/save', stream);
+
+        if (result) {
+            if (result.status === 'ok') {
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+
+        return false;
     }
 
 }

@@ -50,6 +50,7 @@ type StreamSubCollect = {
     upstreams: NginxUpstreamDB[];
     sshport_in?: SshPortDB;
     sshport_out?: SshPortDB;
+    destination_listen?: NginxListenDB;
 };
 
 /**
@@ -176,6 +177,18 @@ export class NginxService {
                             }
                         }
 
+                        if (astream.destination_listen_id > 0) {
+                            const tlisten = await listenRepository.findOne({
+                                where: {
+                                    id: astream.destination_listen_id
+                                }
+                            });
+
+                            if (tlisten) {
+                                streamCollection.destination_listen = tlisten;
+                            }
+                        }
+
                         mapDomainStreams!.domains.set(adomain.domainname, streamCollection);
 
                         streamMap.set(alisten.listen_port, mapDomainStreams!);
@@ -275,7 +288,16 @@ export class NginxService {
                     const upStream = new Upstream(upstreamName);
                     upStream.setAlgorithm(tstream.load_balancing_algorithm as UpstreamLoadBalancingAlgorithm);
 
-                    if (collectStream.sshport_in) {
+                    if (collectStream.destination_listen) {
+                        // fill default listen destination
+                        upStream.addServer({
+                            address: '127.0.0.1',
+                            port: collectStream.destination_listen.listen_port,
+                            weight: 0,
+                            max_fails: 0,
+                            fail_timeout: 0
+                        });
+                    } else if (collectStream.sshport_in) {
                         // fill default ssh server
                         upStream.addServer({
                             address: Config.get()?.sshserver?.ip!,
@@ -505,6 +527,13 @@ export class NginxService {
                 const locWellKnown = new Location('/.well-known');
                 locWellKnown.addVariable('alias', '/opt/app/nginx/html/.well-known');
                 dServer.addLocation(locWellKnown);
+
+                // TODO move to own listen server
+                const locStatus = new Location('/flyingfish_status');
+                locStatus.addVariable('stub_status', 'on');
+                locStatus.addVariable('allow', '127.0.0.1');
+                locStatus.addVariable('deny', 'all');
+                dServer.addLocation(locStatus);
 
                 const loc404 = new Location('/404.html');
                 loc404.addVariable('root', '/opt/app/nginx/pages');
