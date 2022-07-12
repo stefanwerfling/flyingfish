@@ -28,7 +28,9 @@ export class NginxStream extends BaseEntity {
         // @ts-ignore
     destination_listen_id: number;
 
-    @Column()
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     index: number;
 
@@ -42,7 +44,8 @@ export class NginxStream extends BaseEntity {
 
     @Column({
         type: 'varchar',
-        length: 512
+        length: 512,
+        default: ''
     })
         // @ts-ignore
     alias_name: string;

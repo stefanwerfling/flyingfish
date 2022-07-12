@@ -21,6 +21,15 @@ export enum RouteStreamEditModalDesType {
 }
 
 /**
+ * RouteStreamEditModalSshType
+ */
+export enum RouteStreamEditModalSshType {
+    none= '0',
+    in = '1',
+    out = '2'
+}
+
+/**
  * UpstreamCard
  */
 class UpstreamCard {
@@ -94,6 +103,13 @@ class UpstreamCard {
     }
 
     /**
+     * getAddress
+     */
+    public getAddress(): string {
+        return this._inputAddress.getValue();
+    }
+
+    /**
      * setPort
      * @param port
      */
@@ -102,10 +118,26 @@ class UpstreamCard {
     }
 
     /**
+     * getPort
+     */
+    public getPort(): string {
+        return this._inputPort.getValue();
+    }
+
+    /**
      * remove
      */
     public remove(): void {
         this._box.getElement().remove();
+    }
+
+    /**
+     * getUpstream
+     */
+    public getUpstream(): UpStream {
+        this._upstream.port = parseInt(this.getPort(), 10);
+        this._upstream.address = this.getAddress();
+        return this._upstream;
     }
 }
 
@@ -196,6 +228,30 @@ export class RouteStreamEditModal extends ModalDialog {
      * @protected
      */
     protected _selectSshType: SelectBottemBorderOnly2;
+
+    /**
+     * ssh port id
+     * @protected
+     */
+    protected _sshport_id = 0;
+
+    /**
+     * group ssh port
+     * @protected
+     */
+    protected _groupSshPort: FormGroup;
+
+    /**
+     * input ssh port
+     * @protected
+     */
+    protected _inputSshPort: InputBottemBorderOnly2;
+
+    /**
+     * ssh user id
+     * @protected
+     */
+    protected _sshuser_id: number = 0;
 
     /**
      * group ssh username
@@ -290,22 +346,22 @@ export class RouteStreamEditModal extends ModalDialog {
         const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);
 
         const groupDomainName = new FormGroup(bodyCard, 'Domain Name/IP');
-        this._inputDomainName = new InputBottemBorderOnly2(groupDomainName.getElement());
+        this._inputDomainName = new InputBottemBorderOnly2(groupDomainName);
         this._inputDomainName.setReadOnly(true);
 
         const groupListen = new FormGroup(bodyCard, 'Listen');
-        this._selectListen = new SelectBottemBorderOnly2(groupListen.getElement());
+        this._selectListen = new SelectBottemBorderOnly2(groupListen);
 
         const groupIndex = new FormGroup(bodyCard, 'Index');
-        this._inputIndex = new InputBottemBorderOnly2(groupIndex.getElement(), undefined, InputType.number);
+        this._inputIndex = new InputBottemBorderOnly2(groupIndex, undefined, InputType.number);
         this._inputIndex.setPlaceholder('auto sorting');
 
         const groupAlias = new FormGroup(bodyCard, 'Alias-Name (Intern)');
-        this._inputAliasName = new InputBottemBorderOnly2(groupAlias.getElement());
+        this._inputAliasName = new InputBottemBorderOnly2(groupAlias);
         this._inputAliasName.setPlaceholder('auto name');
 
         const groupDesType = new FormGroup(bodyCard, 'Destination-Type');
-        this._selectDestinationType = new SelectBottemBorderOnly2(groupDesType.getElement());
+        this._selectDestinationType = new SelectBottemBorderOnly2(groupDesType);
 
         this._selectDestinationType.addValue({
             key: '0',
@@ -359,42 +415,50 @@ export class RouteStreamEditModal extends ModalDialog {
         const bodyCardSsh = jQuery('<div class="card-body"/>').appendTo(tabSsh.body);
 
         const groupSshType = new FormGroup(bodyCardSsh, 'SSH Type');
-        this._selectSshType = new SelectBottemBorderOnly2(groupSshType.getElement());
+        this._selectSshType = new SelectBottemBorderOnly2(groupSshType);
 
         this._selectSshType.addValue({
-            key: '0',
+            key: RouteStreamEditModalSshType.none,
             value: 'Please select your SSH Type'
         });
 
         this._selectSshType.addValue({
-            key: '1',
+            key: RouteStreamEditModalSshType.in,
             value: 'SSH Server'
         });
 
         this._selectSshType.addValue({
-            key: '2',
+            key: RouteStreamEditModalSshType.out,
             value: 'SSH Port Listen'
         });
 
+        this._groupSshPort = new FormGroup(bodyCardSsh, 'Listen Port');
+        this._inputSshPort = new InputBottemBorderOnly2(this._groupSshPort, undefined, InputType.number);
+        this._inputSshPort.setPlaceholder('Empty for random port');
+        this._groupSshPort.getElement().hide();
+
         this._groupSshUsername = new FormGroup(bodyCardSsh, 'Username');
-        this._inputSshUsername = new InputBottemBorderOnly2(this._groupSshUsername.getElement());
+        this._inputSshUsername = new InputBottemBorderOnly2(this._groupSshUsername);
         this._groupSshUsername.getElement().hide();
 
         this._groupSshPaasword = new FormGroup(bodyCardSsh, 'Password');
-        this._inputSshPassword = new InputBottemBorderOnly2(this._groupSshPaasword.getElement(), undefined, InputType.password);
+        this._inputSshPassword = new InputBottemBorderOnly2(this._groupSshPaasword, undefined, InputType.password);
+        this._inputSshPassword.setPlaceholder('');
         this._groupSshPaasword.getElement().hide();
 
         this._groupSshListen = new FormGroup(bodyCardSsh, 'Listen');
-        this._selectSshListen = new SelectBottemBorderOnly2(this._groupSshListen.getElement());
+        this._selectSshListen = new SelectBottemBorderOnly2(this._groupSshListen);
         this._groupSshListen.getElement().hide();
 
         this._selectSshType.setChangeFn(value => {
+            this._groupSshPort.getElement().hide();
             this._groupSshUsername.getElement().hide();
             this._groupSshPaasword.getElement().hide();
             this._groupSshListen.getElement().hide();
 
             switch (value) {
                 case '1':
+                    this._groupSshPort.getElement().show();
                     this._groupSshUsername.getElement().show();
                     this._groupSshPaasword.getElement().show();
                     break;
@@ -525,6 +589,13 @@ export class RouteStreamEditModal extends ModalDialog {
     }
 
     /**
+     * getDestinatonType
+     */
+    public getDestinatonType(): string {
+        return this._selectDestinationType.getSelectedValue();
+    }
+
+    /**
      * setUpstreamList
      * @param upstreams
      */
@@ -532,6 +603,19 @@ export class RouteStreamEditModal extends ModalDialog {
         for (const aupstream of upstreams) {
             this._upstreamCards.push(new UpstreamCard(this._upstreamCard, aupstream));
         }
+    }
+
+    /**
+     * getUpstreamList
+     */
+    public getUpstreamList(): UpStream[] {
+        const upstreams: UpStream[] = [];
+
+        for (const upstreamcard of this._upstreamCards) {
+            upstreams.push(upstreamcard.getUpstream());
+        }
+
+        return upstreams;
     }
 
     /**
@@ -580,6 +664,104 @@ export class RouteStreamEditModal extends ModalDialog {
     }
 
     /**
+     * setSshType
+     * @param type
+     */
+    public setSshType(type: RouteStreamEditModalSshType): void {
+        this._selectSshType.setSelectedValue(type);
+    }
+
+    /**
+     * getSshType
+     */
+    public getSshType(): string {
+        return this._selectSshType.getSelectedValue();
+    }
+
+    /**
+     * setSshPortId
+     * @param id
+     */
+    public setSshPortId(id: number): void {
+        this._sshport_id = id;
+    }
+
+    /**
+     * getSshPortId
+     */
+    public getSshPortId(): number {
+        return this._sshport_id;
+    }
+
+    /**
+     * setSshPort
+     * @param port
+     */
+    public setSshPort(port: number): void {
+        this._inputSshPort.setValue(`${port}`);
+    }
+
+    /**
+     * getSshPort
+     */
+    public getSshPort(): number {
+        return parseInt(this._inputSshPort.getValue(), 10) || 0;
+    }
+
+    /**
+     * setSshUserId
+     * @param id
+     */
+    public setSshUserId(id: number): void {
+        this._inputSshPassword.setPlaceholder('Leave password blank if you don\'t want to change the password.');
+        this._sshuser_id = id;
+    }
+
+    /**
+     * getSshUserId
+     */
+    public getSshUserId(): number {
+        return this._sshuser_id;
+    }
+
+    /**
+     * setSshUsername
+     * @param username
+     */
+    public setSshUsername(username: string): void {
+        this._inputSshUsername.setValue(username);
+    }
+
+    /**
+     * getSshUsername
+     */
+    public getSshUsername(): string {
+        return this._inputSshUsername.getValue();
+    }
+
+    /**
+     * setSshPassword
+     * @param password
+     */
+    public setSshPassword(password: string): void {
+        this._inputSshPassword.setValue(password);
+    }
+
+    /**
+     * getSshPassword
+     */
+    public getSshPassword(): string {
+        return this._inputSshPassword.getValue();
+    }
+
+    /**
+     * getSshListen
+     */
+    public getSshListen(): string {
+        return this._selectSshListen.getSelectedValue();
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -589,7 +771,10 @@ export class RouteStreamEditModal extends ModalDialog {
         this.setAliasName('');
         this.setListen('0');
         this.setDestinationType(RouteStreamEditModalDesType.listen);
+        this.setSshType(RouteStreamEditModalSshType.none);
+        this._inputSshPort.setValue('');
         this._navTab.setTabSelect(0);
+        this._inputSshPassword.setPlaceholder('');
 
         this._upstreamCards.forEach((element, index) => {
             element.remove();

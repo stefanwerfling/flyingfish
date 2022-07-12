@@ -15,7 +15,9 @@ export class NginxUpstream extends BaseEntity {
         // @ts-ignore
     stream_id: number;
 
-    @Column()
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     index: number;
 

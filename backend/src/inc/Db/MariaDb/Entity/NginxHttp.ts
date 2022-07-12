@@ -20,23 +20,33 @@ export class NginxHttp extends BaseEntity {
         // @ts-ignore
     listen_id: number;
 
-    @Column()
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     index: number;
 
-    @Column()
+    @Column({
+        default: false
+    })
         // @ts-ignore
     ssl_enable: boolean;
 
-    @Column()
+    @Column({
+        default: false
+    })
         // @ts-ignore
     http2_enable: boolean;
 
-    @Column()
+    @Column({
+        default: ''
+    })
         // @ts-ignore
     certbot_email: string;
 
-    @Column()
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     certbot_lastupdate: number;
 

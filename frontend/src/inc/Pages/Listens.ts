@@ -234,7 +234,7 @@ export class Listens extends BasePage {
                         this._listenDialog.setName(entry.name);
                         this._listenDialog.setType(`${entry.type}`);
                         this._listenDialog.setPort(`${entry.port}`);
-                        this._listenDialog.setProtocol(`${entry.protocol}`)
+                        this._listenDialog.setProtocol(`${entry.protocol}`);
                         this._listenDialog.setDescription(entry.description);
                         this._listenDialog.setIp6(entry.enable_ipv6);
                         this._listenDialog.setAddressCheck(entry.check_address);

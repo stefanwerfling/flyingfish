@@ -128,7 +128,7 @@ export class DomainRecordEditModal extends ModalDialog {
         this._selectClass.addValue({
             key: '1',
             value: 'IN'
-        })
+        });
 
         const groupTTL = new FormGroup(rowTP.createCol(4), 'Time to Live');
         this._inputTTL = new InputBottemBorderOnly2(groupTTL.getElement(), undefined, InputType.number);

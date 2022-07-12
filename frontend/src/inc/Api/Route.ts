@@ -21,8 +21,17 @@ export type RouteStream = {
     index: number;
     isdefault: boolean;
     ssh: {
-        port_in?: number;
-        port_out?: number;
+        in?: {
+            id: number;
+            port: number;
+            user_id: number;
+            username: string;
+            password: string;
+        };
+        out?: {
+            id: number;
+            port: number;
+        };
     };
 };
 
@@ -61,6 +70,14 @@ export type RouteData = {
 };
 
 /**
+ * RouteSshPort
+ */
+export type RouteSshPort = {
+    id: number;
+    port: number;
+};
+
+/**
  * RoutesResponse
  */
 export type RoutesResponse = {
@@ -69,6 +86,7 @@ export type RoutesResponse = {
     list: RouteData[];
     defaults?: {
         dnsserverport: number;
+        sshports: RouteSshPort[];
     };
 };
 
