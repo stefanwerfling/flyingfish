@@ -1,17 +1,17 @@
 import {Listen as ListenAPI, ListenData, ListenTypes} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {Button} from '../Bambooo/Content/Form/Button';
+import {Button, ButtonType} from '../Bambooo/Content/Form/Button';
 import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
 import {ListensEditModal} from './Listens/ListensEditModal';
@@ -139,7 +139,7 @@ export class Listens extends BasePage {
 
         card.setTitle('Listens');
 
-        const table = new Table(card.getElement());
+        const table = new Table(card);
         const trhead = new Tr(table.getThead());
 
         // eslint-disable-next-line no-new
@@ -223,7 +223,8 @@ export class Listens extends BasePage {
 
                     const tdAction = new Td(trbody, '');
 
-                    const editBtn = new Button(tdAction.getElement());
+                    const editBtn = new Button(tdAction, ButtonType.borderless);
+
                     // eslint-disable-next-line no-new
                     new Icon(editBtn.getElement(), IconFa.edit);
 
@@ -242,7 +243,8 @@ export class Listens extends BasePage {
                     });
 
                     if (!entry.fix) {
-                        const trashBtn = new Button(tdAction.getElement());
+                        const trashBtn = new Button(tdAction, ButtonType.borderless);
+
                         // eslint-disable-next-line no-new
                         new Icon(trashBtn.getElement(), IconFa.trash);
 

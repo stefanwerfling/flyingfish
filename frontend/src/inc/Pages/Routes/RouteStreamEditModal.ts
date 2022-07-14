@@ -1,10 +1,8 @@
 import {ListenData} from '../../Api/Listen';
 import {UpStream} from '../../Api/Route';
-import {InfoBox} from '../../Bambooo/Content/Box/InfoBox';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType} from '../../Bambooo/Content/Card/Card';
+import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {FormRow} from '../../Bambooo/Content/Form/FormRow';
 import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
 import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
@@ -35,10 +33,10 @@ export enum RouteStreamEditModalSshType {
 class UpstreamCard {
 
     /**
-     * info box
+     * info card
      * @protected
      */
-    protected _box: InfoBox;
+    protected _card: Card;
 
     /**
      * upstream
@@ -66,19 +64,17 @@ class UpstreamCard {
     public constructor(card: Card, upstream: UpStream) {
         this._upstream = upstream;
 
-        this._box = new InfoBox(card.getElement());
-        const rowDestination = new FormRow(this._box.getElement());
+        this._card = new Card(card.getElement(), CardBodyType.none, CardType.warning);
+        this._card.setTitle(`#${upstream.id}`);
 
-        const groupAddress = new FormGroup(rowDestination.createCol(6), 'Address');
-        this._inputAddress = new InputBottemBorderOnly2(groupAddress.getElement());
+        const groupAddress = new FormGroup(this._card, 'Address');
+        this._inputAddress = new InputBottemBorderOnly2(groupAddress);
 
-        const groupPort = new FormGroup(rowDestination.createCol(6), 'Port');
-        this._inputPort = new InputBottemBorderOnly2(groupPort.getElement(), undefined, InputType.number);
-
-        const btnCol = rowDestination.createCol(1);
+        const groupPort = new FormGroup(this._card, 'Port');
+        this._inputPort = new InputBottemBorderOnly2(groupPort, undefined, InputType.number);
 
         const removeUpstreamBtn = new ButtonDefault(
-            btnCol,
+            this._card.getToolsElement(),
             '',
             'fa-trash',
             ButtonClass.tool,
@@ -128,7 +124,7 @@ class UpstreamCard {
      * remove
      */
     public remove(): void {
-        this._box.getElement().remove();
+        this._card.getMainElement().remove();
     }
 
     /**
@@ -308,10 +304,10 @@ export class RouteStreamEditModal extends ModalDialog {
     public constructor(elementObject: Element) {
         super(elementObject, 'routestreammodaldialog', ModalDialogType.large);
 
-        this._navTab = new NavTab(this._body, 'domainnavtab');
-        const tabDetails = this._navTab.addTab('Details', 'details');
+        this._navTab = new NavTab(this._body, 'routestreamnavtab');
+        const tabDetails = this._navTab.addTab('Details', 'routestreamdetails');
 
-        const tabUpstream = this._navTab.addTab('Upstream', 'upstream');
+        const tabUpstream = this._navTab.addTab('Upstream', 'routestreamupstream');
         tabUpstream.tab.show();
 
         this._upstreamCard = new Card(tabUpstream.body, CardBodyType.none);
@@ -333,13 +329,13 @@ export class RouteStreamEditModal extends ModalDialog {
             }))
         });
 
-        const tabSsh = this._navTab.addTab('SSH', 'ssh');
+        const tabSsh = this._navTab.addTab('SSH', 'routestreamssh');
         tabSsh.tab.hide();
 
-        const tabListen = this._navTab.addTab('Listen', 'listen');
+        const tabListen = this._navTab.addTab('Listen', 'routestreamlisten');
         tabListen.tab.hide();
 
-        const tabAdvanced = this._navTab.addTab('Advanced', 'advanced');
+        const tabAdvanced = this._navTab.addTab('Advanced', 'routestreamadvanced');
         tabAdvanced.tab.show();
 
         // tab details -------------------------------------------------------------------------------------------------
@@ -387,7 +383,9 @@ export class RouteStreamEditModal extends ModalDialog {
         });
 
         this._selectDestinationType.setChangeFn((value) => {
+            tabUpstream.tab.hide();
             tabSsh.tab.hide();
+            tabListen.tab.hide();
 
             switch (value) {
                 case RouteStreamEditModalDesType.upstream:

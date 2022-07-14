@@ -6,6 +6,7 @@ import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
+import {ButtonType} from '../Bambooo/Content/Form/Button';
 import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
 import {IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
@@ -219,7 +220,12 @@ export class Domains extends BasePage {
                         new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.secondary);
                     }
 
-                    const btnMenu = new ButtonMenu(card.getToolsElement(), IconFa.bars, true);
+                    const btnMenu = new ButtonMenu(
+                        card.getToolsElement(),
+                        IconFa.bars,
+                        true,
+                        ButtonType.borderless
+                    );
 
                     if (!domain.fix) {
                         btnMenu.addMenuItem(
@@ -395,7 +401,12 @@ export class Domains extends BasePage {
                             new Td(rtrbody, `${record.value}`);
 
                             const tdRAction = new Td(rtrbody, '');
-                            const btnRMenu = new ButtonMenu(tdRAction.getElement(), IconFa.bars, true);
+                            const btnRMenu = new ButtonMenu(
+                                tdRAction.getElement(),
+                                IconFa.bars,
+                                true,
+                                ButtonType.borderless
+                            );
 
                             btnRMenu.addMenuItem(
                                 'Edit',

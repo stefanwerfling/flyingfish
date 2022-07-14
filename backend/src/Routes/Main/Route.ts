@@ -117,6 +117,21 @@ export type RouteStreamSaveResponse = {
 };
 
 /**
+ * RouteStreamDelete
+ */
+export type RouteStreamDelete = {
+    id: number;
+};
+
+/**
+ * RouteStreamDeleteResponse
+ */
+export type RouteStreamDeleteResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
  * Route
  */
 @JsonController()
@@ -597,6 +612,112 @@ export class Route {
 
             return {
                 status: 'ok'
+            };
+        }
+
+        return {
+            status: 'error',
+            error: 'user not login!'
+        };
+    }
+
+    /**
+     * deleteStreamRoute
+     * @param session
+     * @param request
+     */
+    @Post('/json/route/stream/delete')
+    public async deleteStreamRoute(
+        @Session() session: any,
+        @Body() request: RouteStreamDelete
+    ): Promise<RouteStreamDeleteResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            if (request.id === 0) {
+                return {
+                    status: 'error',
+                    error: 'id is null!'
+                };
+            }
+
+            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
+            const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
+            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
+            const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
+            const sshuserRepository = MariaDbHelper.getRepository(SshUserDB);
+
+            const stream = await streamRepository.findOne({id: request.id});
+
+            if (stream) {
+                if (stream.sshport_in_id > 0) {
+                    // check is sshport_in in used ---------------------------------------------------------------------
+
+                    const outUsedCountStream = await streamRepository.count({
+                        where: {
+                            sshport_out_id: stream.sshport_in_id
+                        }
+                    });
+
+                    const outUsedCountLoc = await locationRepository.count({
+                        where: {
+                            sshport_out_id: stream.sshport_in_id
+                        }
+                    });
+
+                    if ((outUsedCountStream > 0) && (outUsedCountLoc > 0)) {
+                        return {
+                            status: 'error',
+                            error: 'SSH Server is currently in use, please remove Ssh port outgoning link!'
+                        };
+                    }
+
+                    // remove ssh user and ssh port --------------------------------------------------------------------
+
+                    const sshport = await sshportRepository.findOne({
+                        where: {
+                            id: stream.sshport_in_id
+                        }
+                    });
+
+                    if (sshport) {
+                        if (sshport.ssh_user_id > 0) {
+                            await sshuserRepository.delete({
+                                id: sshport.ssh_user_id
+                            });
+                        }
+
+                        await sshportRepository.delete({
+                            id: sshport.id
+                        });
+                    }
+                }
+
+                // delete upstreams ------------------------------------------------------------------------------------
+
+                await upstreamRepository.delete({
+                    stream_id: stream.id
+                });
+
+                // delete stream ---------------------------------------------------------------------------------------
+
+                const resulte = await streamRepository.delete({
+                    id: stream.id
+                });
+
+                if (resulte) {
+                    return {
+                        status: 'ok'
+                    };
+                }
+
+                return {
+                    status: 'error',
+                    error: `stream route can not delete by id: ${request.id}`
+                };
+            }
+
+            return {
+                status: 'error',
+                error: `stream route by id not found: ${request.id}`
             };
         }
 

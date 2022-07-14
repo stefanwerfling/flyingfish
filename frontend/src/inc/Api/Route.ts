@@ -107,6 +107,21 @@ export type RouteStreamSaveResponse = {
 };
 
 /**
+ * RouteStreamDelete
+ */
+export type RouteStreamDelete = {
+    id: number;
+};
+
+/**
+ * RouteStreamDeleteResponse
+ */
+export type RouteStreamDeleteResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
  * Route
  */
 export class Route {
@@ -144,4 +159,21 @@ export class Route {
         return false;
     }
 
+    /**
+     * deleteRouteStream
+     * @param data
+     */
+    public static async deleteRouteStream(data: RouteStreamDelete): Promise<boolean> {
+        const result = await NetFetch.postData('/json/route/stream/delete', data);
+
+        if (result) {
+            if (result.status === 'ok') {
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+
+        return false;
+    }
 }

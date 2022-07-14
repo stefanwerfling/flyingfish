@@ -5,19 +5,28 @@ import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
+import {ButtonType} from '../Bambooo/Content/Form/Button';
 import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
 import {IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
+import {RouteHttpEditModal} from './Routes/RouteHttpEditModal';
 import {
     RouteStreamEditModal,
     RouteStreamEditModalDesType,
     RouteStreamEditModalSshType
 } from './Routes/RouteStreamEditModal';
+
+/**
+ * onLoadRoutes
+ */
+type onLoadRoutes = () => void;
 
 /**
  * Hosts Page
@@ -37,6 +46,18 @@ export class Routes extends BasePage {
     protected _routeStreamDialog: RouteStreamEditModal;
 
     /**
+     * route http dialog
+     * @protected
+     */
+    protected _routeHttpDialog: RouteHttpEditModal;
+
+    /**
+     * on load table
+     * @protected
+     */
+    protected _onLoadTable: onLoadRoutes|null = null;
+
+    /**
      * constructor
      */
     public constructor() {
@@ -45,7 +66,11 @@ export class Routes extends BasePage {
         // route modal -------------------------------------------------------------------------------------------------
 
         this._routeStreamDialog = new RouteStreamEditModal(
-            this._wrapper.getContentWrapper().getContent()
+            this._wrapper.getContentWrapper().getElement()
+        );
+
+        this._routeHttpDialog = new RouteHttpEditModal(
+            this._wrapper.getContentWrapper().getElement()
         );
 
         // Navbar Left -------------------------------------------------------------------------------------------------
@@ -142,6 +167,10 @@ export class Routes extends BasePage {
                 if (await RouteAPI.saveRouteStream(stream)) {
                     this._routeStreamDialog.hide();
 
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
                     this._toast.fire({
                         icon: 'success',
                         title: 'Stream save success.'
@@ -172,11 +201,13 @@ export class Routes extends BasePage {
      * loadContent
      */
     public async loadContent(): Promise<void> {
+        const content = this._wrapper.getContentWrapper().getContent();
 
         /**
          * onLoadList
          */
-        const onLoadList = async(): Promise<void> => {
+        this._onLoadTable = async(): Promise<void> => {
+            content.empty();
 
             // listens -------------------------------------------------------------------------------------------------
 
@@ -185,6 +216,7 @@ export class Routes extends BasePage {
 
             if (listens) {
                 this._routeStreamDialog.setListens(listens.list);
+                this._routeHttpDialog.setListens(listens.list);
 
                 for (const alisten of listens.list) {
                     listenMap.set(alisten.id, alisten);
@@ -199,7 +231,7 @@ export class Routes extends BasePage {
                 const dnsserverport = routes.defaults?.dnsserverport || 5333;
 
                 for (const entry of routes.list) {
-                    const row = new ContentRow(this._wrapper.getContentWrapper().getContent());
+                    const row = new ContentRow(content);
                     const card = new Card(new ContentCol12(row));
 
                     jQuery('<span>Routes for Domain:&nbsp;</span>').appendTo(card.getTitleElement());
@@ -215,13 +247,13 @@ export class Routes extends BasePage {
                     }
 
                     if (!entry.domainfix) {
-                        const btnMenu = new ButtonMenu(card.getToolsElement(), IconFa.bars, true);
+                        const btnMenu = new ButtonMenu(card.getToolsElement(), IconFa.bars, true, ButtonType.borderless);
 
                         btnMenu.addMenuItem(
                             'Add Stream Route',
                             (): void => {
                                 this._routeStreamDialog.resetValues();
-                                this._routeStreamDialog.setTitle('Add Stream Route')
+                                this._routeStreamDialog.setTitle('Add Stream Route');
                                 this._routeStreamDialog.show();
                                 this._routeStreamDialog.setDomainName(entry.domainname);
                                 this._routeStreamDialog.setDomainId(entry.id);
@@ -231,7 +263,8 @@ export class Routes extends BasePage {
                         btnMenu.addMenuItem(
                             'Add Http/Https Route',
                             (): void => {
-
+                                this._routeHttpDialog.setTitle('Add Http/Https Route');
+                                this._routeHttpDialog.show();
                             },
                             IconFa.add);
                     }
@@ -240,7 +273,7 @@ export class Routes extends BasePage {
 
                     // table -------------------------------------------------------------------------------------------
 
-                    const table = new Table(card.getElement());
+                    const table = new Table(card);
                     const trhead = new Tr(table.getThead());
 
                     // eslint-disable-next-line no-new
@@ -265,7 +298,7 @@ export class Routes extends BasePage {
 
                         if (listen) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdTd.getElement(), `${listen.name} (${listen.port})`,
+                            new Badge(sdTd, `${listen.name} (${listen.port})`,
                                 listen.type === 0 ? BadgeType.warning : BadgeType.success);
                         }
 
@@ -279,21 +312,21 @@ export class Routes extends BasePage {
 
                             if (dlisten) {
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTdD.getElement(),
+                                new Badge(sdTdD,
                                     `${dlisten.name} (${dlisten.port})`, BadgeType.success
                                 );
                             } else {
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTdD.getElement(),
+                                new Badge(sdTdD,
                                     `destination listen not found! `, BadgeType.danger
                                 );
                             }
                         } else if (value.ssh.in) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdTdD.getElement(), `SSH INTERNT IN (--> ${value.ssh.in.port})`, BadgeType.primary);
+                            new Badge(sdTdD, `SSH INTERNT IN (--> ${value.ssh.in.port})`, BadgeType.primary);
                         } else if(value.ssh.out) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdTdD.getElement(), `SSH INTERNT OUT (<-- ${value.ssh.out.port})`, BadgeType.primary);
+                            new Badge(sdTdD, `SSH INTERNT OUT (<-- ${value.ssh.out.port})`, BadgeType.primary);
                         } else {
                             if (value.upstreams.length === 0) {
                                 sdTdD.addValue('None');
@@ -317,14 +350,14 @@ export class Routes extends BasePage {
                                 }
 
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTdD.getElement(),
+                                new Badge(sdTdD,
                                     `${firstUpstream.address}:${firstUpstream.port}${andMore} (${value.alias_name})`,
                                     badType);
                             }
                         }
 
                         const tdAction = new Td(trbody, '');
-                        const btnMenu = new ButtonMenu(tdAction.getElement(), IconFa.bars, true);
+                        const btnMenu = new ButtonMenu(tdAction, IconFa.bars, true, ButtonType.borderless);
 
                         btnMenu.addMenuItem(
                             'Edit',
@@ -376,7 +409,49 @@ export class Routes extends BasePage {
                             btnMenu.addMenuItem(
                                 'Delete',
                                 (): void => {
+                                    DialogConfirm.confirm(
+                                        'streamDelete',
+                                        ModalDialogType.small,
+                                        'Delete Stream Route',
+                                        `Delete this Stream Route "${entry.domainname}" Alias: ${value.alias_name}?`,
+                                        async(_, dialog) => {
+                                            try {
+                                                if (await RouteAPI.deleteRouteStream({
+                                                    id: value.id
+                                                })) {
+                                                    this._toast.fire({
+                                                        icon: 'success',
+                                                        title: 'Stream Route delete success.'
+                                                    });
 
+                                                    if (await NginxAPI.reload()) {
+                                                        this._toast.fire({
+                                                            icon: 'success',
+                                                            title: 'Nginx server reload config success.'
+                                                        });
+                                                    } else {
+                                                        this._toast.fire({
+                                                            icon: 'error',
+                                                            title: 'Nginx server reload config faild, please check your last settings!'
+                                                        });
+                                                    }
+                                                }
+                                            } catch ({message}) {
+                                                this._toast.fire({
+                                                    icon: 'error',
+                                                    title: message
+                                                });
+                                            }
+
+                                            dialog.hide();
+
+                                            if (this._onLoadTable) {
+                                                this._onLoadTable();
+                                            }
+                                        },
+                                        undefined,
+                                        'Delete'
+                                    );
                                 },
                                 IconFa.trash
                             );
@@ -391,7 +466,7 @@ export class Routes extends BasePage {
 
                         if (listen) {
                             // eslint-disable-next-line no-new
-                            new Badge(sdTd.getElement(), `${listen.name} (${listen.port})`,
+                            new Badge(sdTd, `${listen.name} (${listen.port})`,
                                 listen.type === 0 ? BadgeType.warning : BadgeType.success
                             );
                         }
@@ -406,21 +481,28 @@ export class Routes extends BasePage {
 
                             if (aLocation.ssh.port_out) {
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTdD.getElement(), `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                                new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
                             } else {
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTdD.getElement(), aLocation.proxy_pass, BadgeType.info);
+                                new Badge(sdTdD, aLocation.proxy_pass, BadgeType.info);
                             }
                         } else {
                             sdTdD.addValue('None');
                         }
 
                         const tdAction = new Td(trbody, '');
-                        const btnMenu = new ButtonMenu(tdAction.getElement(), IconFa.bars, true);
+                        const btnMenu = new ButtonMenu(tdAction, IconFa.bars, true, ButtonType.borderless);
 
                         btnMenu.addMenuItem(
                             'Edit',
                             (): void => {
+                                this._routeHttpDialog.setTitle('Edit Http/Https Route');
+                                this._routeHttpDialog.show();
+                                this._routeHttpDialog.setId(value.id);
+                                this._routeHttpDialog.setDomainName(entry.domainname);
+                                this._routeHttpDialog.setDomainId(entry.id);
+                                this._routeHttpDialog.setListen(`${value.listen_id}`);
+
 
                             },
                             IconFa.edit);
@@ -442,7 +524,7 @@ export class Routes extends BasePage {
 
 
         // load table
-        await onLoadList();
+        await this._onLoadTable();
     }
 
 }
