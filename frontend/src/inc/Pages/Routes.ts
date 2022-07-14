@@ -496,14 +496,14 @@ export class Routes extends BasePage {
                         btnMenu.addMenuItem(
                             'Edit',
                             (): void => {
+                                this._routeHttpDialog.resetValues();
                                 this._routeHttpDialog.setTitle('Edit Http/Https Route');
                                 this._routeHttpDialog.show();
                                 this._routeHttpDialog.setId(value.id);
                                 this._routeHttpDialog.setDomainName(entry.domainname);
                                 this._routeHttpDialog.setDomainId(entry.id);
                                 this._routeHttpDialog.setListen(`${value.listen_id}`);
-
-
+                                this._routeHttpDialog.setLocations(value.locations);
                             },
                             IconFa.edit);
 
