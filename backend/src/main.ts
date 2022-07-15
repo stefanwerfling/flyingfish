@@ -9,6 +9,7 @@ import {Certificate as CertificateController} from './Routes/Main/Certificate';
 import {Domain as DomainController} from './Routes/Main/Domain';
 import {Route as RouteController} from './Routes/Main/Route';
 import {Listen as ListenController} from './Routes/Main/Listen';
+import {Ssh as SshController} from './Routes/Main/Ssh';
 import {Login as LoginController} from './Routes/Main/Login';
 import {Nginx as NginxController} from './Routes/Main/Nginx';
 import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat';
@@ -182,6 +183,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             DomainController,
             RouteController,
             ListenController,
+            SshController,
             UpnpNatController,
             CertificateController,
             NginxController,

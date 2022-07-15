@@ -1,5 +1,6 @@
 import {ListenData} from '../../Api/Listen';
 import {UpStream} from '../../Api/Route';
+import {SshPortEntry} from '../../Api/Ssh';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
 import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
@@ -753,6 +754,27 @@ export class RouteStreamEditModal extends ModalDialog {
     }
 
     /**
+     * setSshListens
+     * @param listens
+     */
+    public setSshListens(listens: SshPortEntry[]): void {
+        for (const entry of listens) {
+            this._selectSshListen.addValue({
+                key: `${entry.id}`,
+                value: `SSH INTERNT OUT (<-- ${entry.port})`
+            })
+        }
+    }
+
+    /**
+     * setSshListen
+     * @param listenid
+     */
+    public setSshListen(listenid: number): void {
+        this._selectSshListen.setSelectedValue(`${listenid}`);
+    }
+
+    /**
      * getSshListen
      */
     public getSshListen(): string {
@@ -773,6 +795,7 @@ export class RouteStreamEditModal extends ModalDialog {
         this._inputSshPort.setValue('');
         this._navTab.setTabSelect(0);
         this._inputSshPassword.setPlaceholder('');
+        this._selectSshListen.clearValues();
 
         this._upstreamCards.forEach((element, index) => {
             element.remove();

@@ -1,6 +1,7 @@
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Route as RouteAPI, RouteStreamSave} from '../Api/Route';
+import {Ssh as SshAPI} from '../Api/Ssh';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
@@ -361,7 +362,7 @@ export class Routes extends BasePage {
 
                         btnMenu.addMenuItem(
                             'Edit',
-                            (): void => {
+                            async(): Promise<void> => {
                                 this._routeStreamDialog.resetValues();
                                 this._routeStreamDialog.setTitle('Edit Stream Route');
                                 this._routeStreamDialog.show();
@@ -373,6 +374,12 @@ export class Routes extends BasePage {
 
                                 if (value.index > 0) {
                                     this._routeStreamDialog.setIndex(value.index);
+                                }
+
+                                const sshListens = await SshAPI.getList();
+
+                                if (sshListens) {
+                                    this._routeStreamDialog.setSshListens(sshListens.list);
                                 }
 
                                 if (value.ssh.in || value.ssh.out) {
@@ -390,10 +397,11 @@ export class Routes extends BasePage {
                                         this._routeStreamDialog.setSshUsername(value.ssh.in.username);
                                     } else if (value.ssh.out) {
                                         this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.out);
+                                        this._routeStreamDialog.setSshListen(value.ssh.out.id);
                                     } else {
                                         this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.none);
                                     }
-                                } else if ( value.destination_listen_id > 0) {
+                                } else if (value.destination_listen_id > 0) {
                                     this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.listen);
                                     this._routeStreamDialog.setDestinationListen(value.destination_listen_id);
                                 } else {

@@ -22,6 +22,7 @@ export enum RouteHttpEditModalDesType {
  * RouteHttpEditLocationModalDesType
  */
 export enum RouteHttpEditLocationModalDesType {
+    none = '0',
     proxypass = '1',
     redirect = '2',
     ssh = '3'
@@ -136,14 +137,14 @@ export class LocationCard {
 
         const groupRedPath = new FormGroup(rowRed.createCol(8), 'Redirect-Path');
         this._inputRedirectCode = new InputBottemBorderOnly2(groupRedPath, undefined);
-        this._inputRedirectCode.setValue('https://<domain>/path');
+        this._inputRedirectCode.setPlaceholder('https://<domain>/path');
 
         // ssh ---------------------------------------------------------------------------------------------------------
 
         const rowSsh = new FormRow(this._card);
         rowSsh.hide();
 
-        const groupSshSchema = new FormGroup(rowRed.createCol(4), 'Schema');
+        const groupSshSchema = new FormGroup(rowSsh.createCol(4), 'Schema');
         this._selectSshSchema = new SelectBottemBorderOnly2(groupSshSchema);
 
         this._selectSshSchema.addValue({
@@ -156,7 +157,7 @@ export class LocationCard {
             value: 'Https'
         });
 
-        const groupSshListen = new FormGroup(rowRed.createCol(8), 'Ssh Listen');
+        const groupSshListen = new FormGroup(rowSsh.createCol(8), 'Ssh Listen');
         this._selectSshListen = new SelectBottemBorderOnly2(groupSshListen);
 
         // -------------------------------------------------------------------------------------------------------------
@@ -202,10 +203,12 @@ export class LocationCard {
         if (location.proxy_pass != '') {
             this.setDestinationType(RouteHttpEditLocationModalDesType.proxypass);
             this.setProxyPass(location.proxy_pass);
-        } else if (location.ssh) {
+        } else if (location.ssh && location.ssh.port_out) {
             this.setDestinationType(RouteHttpEditLocationModalDesType.ssh);
             this.setSshSchema(`${location.ssh.schema}`);
             this.setSshListen(`${location.ssh.port_out}`);
+        } else {
+            this.setDestinationType(RouteHttpEditLocationModalDesType.none);
         }
     }
 
@@ -356,8 +359,8 @@ export class RouteHttpEditModal extends ModalDialog {
             this._locationCards.push(new LocationCard(this._locationCard, {
                 id: 0,
                 ssh: {},
-                match: '/',
-                proxy_pass: 'http://192.168.178.1/'
+                match: '',
+                proxy_pass: ''
             }));
         });
 

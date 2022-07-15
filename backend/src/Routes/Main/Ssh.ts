@@ -1,4 +1,3 @@
-import exp from 'constants';
 import {Get, JsonController, Session} from 'routing-controllers';
 import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
@@ -9,7 +8,6 @@ import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 export type SshPortEntry = {
     id: number;
     port: number;
-    name: string;
 };
 
 /**
@@ -38,7 +36,10 @@ export class Ssh {
 
             if (sshports) {
                 for (const asshport of sshports) {
-
+                    list.push({
+                        id: asshport.id,
+                        port: asshport.port
+                    });
                 }
             }
         } else {
