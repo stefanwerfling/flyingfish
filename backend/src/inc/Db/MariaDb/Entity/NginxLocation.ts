@@ -15,34 +15,48 @@ export class NginxLocation extends BaseEntity {
         // @ts-ignore
     http_id: number;
 
-    @Column()
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     redirect_code: number;
 
     /**
      * redirect to url
      */
-    @Column()
+    @Column({
+        default: ''
+    })
         // @ts-ignore
     redirect: string;
 
-    @Column()
+    @Column({
+        default: '/'
+    })
         // @ts-ignore
     match: string;
 
-    @Column()
+    @Column({
+        default: ''
+    })
         // @ts-ignore
     modifier: string;
 
-    @Column()
+    @Column({
+        default: ''
+    })
         // @ts-ignore
     proxy_pass: string;
 
-    @Column()
+    @Column({
+        default: false
+    })
         // @ts-ignore
     auth_enable: boolean;
 
-    @Column()
+    @Column({
+        default: ''
+    })
         // @ts-ignore
     auth_relam: string;
 
@@ -52,7 +66,9 @@ export class NginxLocation extends BaseEntity {
         // @ts-ignore
     sshport_out_id: number;
 
-    @Column()
+    @Column({
+        default: ''
+    })
         // @ts-ignore
     sshport_schema: string;
 

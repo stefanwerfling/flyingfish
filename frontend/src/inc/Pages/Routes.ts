@@ -1,6 +1,6 @@
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {Route as RouteAPI, RouteStreamSave} from '../Api/Route';
+import {Route as RouteAPI, RouteHttpSave, RouteStreamSave} from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
@@ -196,6 +196,58 @@ export class Routes extends BasePage {
                 });
             }
         });
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._routeHttpDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._routeHttpDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const http: RouteHttpSave = {
+                    domainid: this._routeHttpDialog.getDomainId(),
+                    http: {
+                        id: tid,
+                        index: this._routeHttpDialog.getIndex(),
+                        listen_id: this._routeHttpDialog.getListen(),
+                        locations: this._routeHttpDialog.getLocations()
+                    }
+                };
+
+                if (await RouteAPI.saveRouteHttp(http)) {
+                    this._routeHttpDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'Http save success.'
+                    });
+
+                    if (await NginxAPI.reload()) {
+                        this._toast.fire({
+                            icon: 'success',
+                            title: 'Nginx server reload config success.'
+                        });
+                    } else {
+                        this._toast.fire({
+                            icon: 'error',
+                            title: 'Nginx server reload config faild, please check your last settings!'
+                        });
+                    }
+                }
+            } catch ({message}) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: message
+                });
+            }
+        });
     }
 
     /**
@@ -252,25 +304,37 @@ export class Routes extends BasePage {
 
                         btnMenu.addMenuItem(
                             'Add Stream Route',
-                            (): void => {
+                            async(): Promise<void> => {
                                 this._routeStreamDialog.resetValues();
                                 this._routeStreamDialog.setTitle('Add Stream Route');
                                 this._routeStreamDialog.show();
                                 this._routeStreamDialog.setDomainName(entry.domainname);
                                 this._routeStreamDialog.setDomainId(entry.id);
+
+                                const sshListens = await SshAPI.getList();
+
+                                if (sshListens) {
+                                    this._routeStreamDialog.setSshListens(sshListens.list);
+                                }
                             },
                             IconFa.add);
 
                         btnMenu.addMenuItem(
                             'Add Http/Https Route',
-                            (): void => {
+                            async(): Promise<void> => {
                                 this._routeHttpDialog.setTitle('Add Http/Https Route');
                                 this._routeHttpDialog.show();
+                                this._routeHttpDialog.setDomainName(entry.domainname);
+                                this._routeHttpDialog.setDomainId(entry.id);
+
+                                const sshListens = await SshAPI.getList();
+
+                                if (sshListens) {
+                                    this._routeHttpDialog.setSshListens(sshListens.list);
+                                }
                             },
                             IconFa.add);
                     }
-
-
 
                     // table -------------------------------------------------------------------------------------------
 
@@ -346,7 +410,7 @@ export class Routes extends BasePage {
 
                                 let andMore = '';
 
-                                if (value.upstreams.length>1) {
+                                if (value.upstreams.length > 1) {
                                     andMore = ', ...';
                                 }
 
@@ -487,12 +551,20 @@ export class Routes extends BasePage {
                         if (value.locations.length > 0) {
                             const aLocation = value.locations[0];
 
-                            if (aLocation.ssh.port_out) {
+                            if (aLocation.ssh && aLocation.ssh.port_out) {
                                 // eslint-disable-next-line no-new
                                 new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                            } else if(aLocation.redirect && (aLocation.redirect.redirect !== '')) {
+                                new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
                             } else {
+                                let andMore = '';
+
+                                if (value.locations.length > 1) {
+                                    andMore = ', ...';
+                                }
+
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTdD, aLocation.proxy_pass, BadgeType.info);
+                                new Badge(sdTdD, `${aLocation.proxy_pass}${andMore}`, BadgeType.info);
                             }
                         } else {
                             sdTdD.addValue('None');
@@ -503,14 +575,22 @@ export class Routes extends BasePage {
 
                         btnMenu.addMenuItem(
                             'Edit',
-                            (): void => {
+                            async(): Promise<void> => {
                                 this._routeHttpDialog.resetValues();
                                 this._routeHttpDialog.setTitle('Edit Http/Https Route');
                                 this._routeHttpDialog.show();
                                 this._routeHttpDialog.setId(value.id);
                                 this._routeHttpDialog.setDomainName(entry.domainname);
                                 this._routeHttpDialog.setDomainId(entry.id);
+                                this._routeHttpDialog.setIndex(value.index);
                                 this._routeHttpDialog.setListen(`${value.listen_id}`);
+
+                                const sshListens = await SshAPI.getList();
+
+                                if (sshListens) {
+                                    this._routeHttpDialog.setSshListens(sshListens.list);
+                                }
+
                                 this._routeHttpDialog.setLocations(value.locations);
                             },
                             IconFa.edit);

@@ -1,5 +1,6 @@
 import {ListenData} from '../../Api/Listen';
 import {Location} from '../../Api/Route';
+import {SshPortEntry} from '../../Api/Ssh';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
 import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
@@ -27,6 +28,11 @@ export enum RouteHttpEditLocationModalDesType {
     redirect = '2',
     ssh = '3'
 }
+
+/**
+ * RouteHttpEditModalButtonClickFn
+ */
+type RouteHttpEditModalButtonClickFn = () => void;
 
 /**
  * LocationCard
@@ -68,6 +74,12 @@ export class LocationCard {
      * @protected
      */
     protected _inputRedirectCode: InputBottemBorderOnly2;
+
+    /**
+     * input redirect path
+     * @protected
+     */
+    protected _inputRedirectPath: InputBottemBorderOnly2;
 
     /**
      * select ssh schema
@@ -123,7 +135,7 @@ export class LocationCard {
 
         const groupProxyPass = new FormGroup(this._card, 'Proxy Pass');
         this._inputProxyPass = new InputBottemBorderOnly2(groupProxyPass);
-        this._inputProxyPass.setPlaceholder('http://192.168.178.1/');
+        this._inputProxyPass.setPlaceholder('http://<ip>/');
         groupProxyPass.hide();
 
         // redirect ----------------------------------------------------------------------------------------------------
@@ -136,8 +148,8 @@ export class LocationCard {
         this._inputRedirectCode.setValue('301');
 
         const groupRedPath = new FormGroup(rowRed.createCol(8), 'Redirect-Path');
-        this._inputRedirectCode = new InputBottemBorderOnly2(groupRedPath, undefined);
-        this._inputRedirectCode.setPlaceholder('https://<domain>/path');
+        this._inputRedirectPath = new InputBottemBorderOnly2(groupRedPath, undefined);
+        this._inputRedirectPath.setPlaceholder('https://<domain>/path');
 
         // ssh ---------------------------------------------------------------------------------------------------------
 
@@ -149,12 +161,12 @@ export class LocationCard {
 
         this._selectSshSchema.addValue({
             key: 'http',
-            value: 'Http'
+            value: 'HTTP'
         });
 
         this._selectSshSchema.addValue({
             key: 'https',
-            value: 'Https'
+            value: 'HTTPS'
         });
 
         const groupSshListen = new FormGroup(rowSsh.createCol(8), 'Ssh Listen');
@@ -207,6 +219,10 @@ export class LocationCard {
             this.setDestinationType(RouteHttpEditLocationModalDesType.ssh);
             this.setSshSchema(`${location.ssh.schema}`);
             this.setSshListen(`${location.ssh.port_out}`);
+        } else if (location.redirect && (location.redirect.redirect !== '')) {
+            this.setDestinationType(RouteHttpEditLocationModalDesType.redirect);
+            this.setRedirectCode(location.redirect.code);
+            this.setRedirectPath(location.redirect.redirect);
         } else {
             this.setDestinationType(RouteHttpEditLocationModalDesType.none);
         }
@@ -221,11 +237,25 @@ export class LocationCard {
     }
 
     /**
+     * getMatch
+     */
+    public getMatch(): string {
+        return this._inputMatch.getValue();
+    }
+
+    /**
      * setDestinationType
      * @param type
      */
     public setDestinationType(type: RouteHttpEditLocationModalDesType): void {
         this._selectDestinationType.setSelectedValue(`${type}`);
+    }
+
+    /**
+     * getDestinationType
+     */
+    public getDestinationType(): string {
+        return this._selectDestinationType.getSelectedValue();
     }
 
     /**
@@ -237,6 +267,43 @@ export class LocationCard {
     }
 
     /**
+     * getProxyPass
+     */
+    public getProxyPass(): string {
+        return this._inputProxyPass.getValue();
+    }
+
+    /**
+     * setRedirectCode
+     * @param code
+     */
+    public setRedirectCode(code: number): void {
+        this._inputRedirectCode.setValue(`${code}`);
+    }
+
+    /**
+     * getRedirectCode
+     */
+    public getRedirectCode(): number {
+        return parseInt(this._inputRedirectCode.getValue(), 10) || 0;
+    }
+
+    /**
+     * setRedirectPath
+     * @param redirect
+     */
+    public setRedirectPath(redirect: string): void {
+        this._inputRedirectPath.setValue(redirect);
+    }
+
+    /**
+     * getRedirectPath
+     */
+    public getRedirectPath(): string {
+        return this._inputRedirectPath.getValue();
+    }
+
+    /**
      * setSshSchema
      * @param schema
      */
@@ -245,11 +312,71 @@ export class LocationCard {
     }
 
     /**
+     * getSshSchema
+     */
+    public getSshSchema(): string {
+        return this._selectSshSchema.getSelectedValue();
+    }
+
+    /**
+     * setSshListens
+     * @param listens
+     */
+    public setSshListens(listens: SshPortEntry[]): void {
+        for (const entry of listens) {
+            this._selectSshListen.addValue({
+                key: `${entry.id}`,
+                value: `SSH INTERNT OUT (<-- ${entry.port})`
+            })
+        }
+    }
+
+    /**
      * setSshListen
      * @param listen
      */
     public setSshListen(listen: string): void {
         this._selectSshListen.setSelectedValue(listen);
+    }
+
+    /**
+     * getSshListen
+     */
+    public getSshListen(): number {
+        return parseInt(this._selectSshListen.getSelectedValue(), 10) || 0;
+    }
+
+    /**
+     * getLocation
+     */
+    public getLocation(): Location {
+        const tlocation: Location = {
+            id: this._location.id,
+            match: this.getMatch(),
+            proxy_pass: ''
+        };
+
+        switch (this.getDestinationType()) {
+            case RouteHttpEditLocationModalDesType.proxypass:
+                tlocation.proxy_pass = this.getProxyPass();
+                break;
+
+            case RouteHttpEditLocationModalDesType.redirect:
+                tlocation.redirect = {
+                    code: this.getRedirectCode(),
+                    redirect: this.getRedirectPath()
+                };
+                break;
+
+            case RouteHttpEditLocationModalDesType.ssh:
+                tlocation.ssh = {
+                    schema: this.getSshSchema(),
+                    id: this.getSshListen()
+                };
+                break;
+        }
+
+        return tlocation;
     }
 
     /**
@@ -326,11 +453,16 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _inputIndex: InputBottemBorderOnly2;
 
     /**
-     * Alias name
+     * ssh listens
      * @protected
      */
-    protected _inputAliasName: InputBottemBorderOnly2;
+    protected _sshListens: SshPortEntry[] = [];
 
+    /**
+     * click save fn
+     * @protected
+     */
+    protected _onSaveClick: RouteHttpEditModalButtonClickFn|null = null;
 
     /**
      * constructor
@@ -356,12 +488,16 @@ export class RouteHttpEditModal extends ModalDialog {
         );
 
         addLocationBtn.setOnClickFn(() => {
-            this._locationCards.push(new LocationCard(this._locationCard, {
+            const location = new LocationCard(this._locationCard, {
                 id: 0,
                 ssh: {},
                 match: '',
                 proxy_pass: ''
-            }));
+            });
+
+            location.setSshListens(this._sshListens);
+
+            this._locationCards.push(location);
         });
 
         const tabAdvanced = this._navTab.addTab('Advanced', 'routehttpadvanced');
@@ -381,9 +517,16 @@ export class RouteHttpEditModal extends ModalDialog {
         this._inputIndex = new InputBottemBorderOnly2(groupIndex, undefined, InputType.number);
         this._inputIndex.setPlaceholder('auto sorting');
 
-        const groupAlias = new FormGroup(bodyCard, 'Alias-Name (Intern)');
-        this._inputAliasName = new InputBottemBorderOnly2(groupAlias);
-        this._inputAliasName.setPlaceholder('auto name');
+        // buttons -----------------------------------------------------------------------------------------------------
+
+        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
+        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
+
+        btnSave.on('click', (): void => {
+            if (this._onSaveClick !== null) {
+                this._onSaveClick();
+            }
+        });
     }
 
     /**
@@ -472,13 +615,54 @@ export class RouteHttpEditModal extends ModalDialog {
     }
 
     /**
+     * setIndex
+     * @param index
+     */
+    public setIndex(index: number): void {
+        this._inputIndex.setValue(`${index}`);
+    }
+
+    /**
+     * getIndex
+     */
+    public getIndex(): number {
+        return parseInt(this._inputIndex.getValue(), 10) || 0;
+    }
+
+    /**
      * setLocations
      * @param locations
      */
     public setLocations(locations: Location[]): void {
         for (const tlocation of locations) {
-            this._locationCards.push(new LocationCard(this._locationCard, tlocation));
+            const location = new LocationCard(this._locationCard, tlocation);
+            location.setSshListens(this._sshListens);
+
+            this._locationCards.push(location);
         }
+    }
+
+    /**
+     * getLocations
+     */
+    public getLocations(): Location[] {
+        const list: Location[] = [];
+
+        for (const tlocation of this._locationCards) {
+            if (tlocation) {
+                list.push(tlocation.getLocation());
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * setSshListens
+     * @param listens
+     */
+    public setSshListens(listens: SshPortEntry[]): void {
+        this._sshListens = listens;
     }
 
     /**
@@ -494,5 +678,13 @@ export class RouteHttpEditModal extends ModalDialog {
             element.remove();
             delete this._locationCards[index];
         });
+    }
+
+    /**
+     * setOnSave
+     * @param onSave
+     */
+    public setOnSave(onSave: RouteHttpEditModalButtonClickFn): void {
+        this._onSaveClick = onSave;
     }
 }

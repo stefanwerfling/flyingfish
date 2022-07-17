@@ -60,10 +60,14 @@ export type Location = {
     id: number;
     match: string;
     proxy_pass: string;
-    ssh: {
+    ssh?: {
         id?: number;
         port_out?: number;
         schema?: string;
+    };
+    redirect?: {
+        code: number;
+        redirect: string;
     };
 };
 
@@ -73,7 +77,16 @@ export type Location = {
 export type RouteHttp = {
     id: number;
     listen_id: number;
+    index: number;
     locations: Location[];
+};
+
+/**
+ * RouteHttpSave
+ */
+export type RouteHttpSave = {
+    domainid: number;
+    http: RouteHttp;
 };
 
 /**
@@ -112,6 +125,14 @@ export type RoutesResponse = {
  * RouteStreamSaveResponse
  */
 export type RouteStreamSaveResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
+ * RouteHttpSaveResponse
+ */
+export type RouteHttpSaveResponse = {
     status: string;
     error?: string;
 };
@@ -256,6 +277,7 @@ export class Route {
                             const httpEntry: RouteHttp = {
                                 id: thttp.id,
                                 listen_id: thttp.listen_id,
+                                index: thttp.index,
                                 locations: []
                             };
 
@@ -269,8 +291,7 @@ export class Route {
                                 const location: Location = {
                                     id: alocation.id,
                                     match: alocation.match,
-                                    proxy_pass: alocation.proxy_pass,
-                                    ssh: {}
+                                    proxy_pass: alocation.proxy_pass
                                 };
 
                                 if (alocation.sshport_out_id > 0) {
@@ -281,10 +302,18 @@ export class Route {
                                     });
 
                                     if (sshport) {
+                                        location.ssh = {};
                                         location.ssh.id = sshport.id;
                                         location.ssh.port_out = sshport.port;
                                         location.ssh.schema = alocation.sshport_schema;
                                     }
+                                }
+
+                                if (alocation.redirect !== '') {
+                                    location.redirect = {
+                                        code: alocation.redirect_code,
+                                        redirect: alocation.redirect
+                                    };
                                 }
 
                                 httpEntry.locations.push(location);
@@ -718,6 +747,118 @@ export class Route {
             return {
                 status: 'error',
                 error: `stream route by id not found: ${request.id}`
+            };
+        }
+
+        return {
+            status: 'error',
+            error: 'user not login!'
+        };
+    }
+
+    /**
+     * saveHttpRoute
+     * @param session
+     * @param request
+     */
+    @Post('/json/route/http/save')
+    public async saveHttpRoute(
+        @Session() session: any,
+        @Body() request: RouteHttpSave
+    ): Promise<RouteHttpSaveResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
+
+            let aHttp: NginxHttpDB|null = null;
+
+            if (request.http.id > 0) {
+                const tHttp = await httpRepository.findOne({
+                    where: {
+                        id: request.http.id
+                    }
+                });
+
+                if (tHttp) {
+                    aHttp = tHttp;
+                }
+            }
+
+            if (aHttp === null) {
+                aHttp = new NginxHttpDB();
+            }
+
+            aHttp.domain_id = request.domainid;
+            aHttp.index = request.http.index;
+            aHttp.listen_id = request.http.listen_id;
+
+            aHttp = await MariaDbHelper.getConnection().manager.save(aHttp);
+
+            // remove location -----------------------------------------------------------------------------------------
+
+            const oldLocations = await locationRepository.find({
+                where: {
+                    http_id: aHttp.id
+                }
+            });
+
+            if (oldLocations) {
+                const checkLocationExistence = (locationId: number): boolean => request.http.locations.some(({id}) => id === locationId);
+
+                for (const oldLocation of oldLocations) {
+                    if (!checkLocationExistence(oldLocation.id)) {
+                        await locationRepository.delete({
+                            id: oldLocation.id
+                        });
+                    }
+                }
+            }
+
+            // update or add new locations -----------------------------------------------------------------------------
+
+            for (const aLocation of request.http.locations) {
+                let aNewLocation: NginxLocationDB | null = null;
+
+                const tLocation = await locationRepository.findOne({
+                    where: {
+                        id: aLocation.id
+                    }
+                });
+
+                if (tLocation) {
+                    aNewLocation = tLocation;
+                }
+
+                if (aNewLocation === null) {
+                    aNewLocation = new NginxLocationDB();
+                    aNewLocation.http_id = aHttp.id;
+                }
+
+                aNewLocation.match = aLocation.match;
+
+                // fill default reset
+                aNewLocation.proxy_pass = '';
+                aNewLocation.modifier = '';
+                aNewLocation.redirect_code = 0;
+                aNewLocation.redirect = '';
+                aNewLocation.sshport_out_id = 0;
+                aNewLocation.sshport_schema = '';
+
+                if (aLocation.proxy_pass !== '') {
+                    aNewLocation.proxy_pass = aLocation.proxy_pass;
+                } else if (aLocation.redirect) {
+                    aNewLocation.redirect_code = aLocation.redirect.code;
+                    aNewLocation.redirect = aLocation.redirect.redirect;
+                } else if (aLocation.ssh) {
+                    aNewLocation.sshport_schema = aLocation.ssh.schema || '';
+                    aNewLocation.sshport_out_id = aLocation.ssh.id!;
+                }
+
+                await MariaDbHelper.getConnection().manager.save(aNewLocation);
+            }
+
+            return {
+                status: 'ok'
             };
         }
 

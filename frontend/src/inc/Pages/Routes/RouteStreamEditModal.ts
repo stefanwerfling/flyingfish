@@ -611,7 +611,9 @@ export class RouteStreamEditModal extends ModalDialog {
         const upstreams: UpStream[] = [];
 
         for (const upstreamcard of this._upstreamCards) {
-            upstreams.push(upstreamcard.getUpstream());
+            if (upstreamcard) {
+                upstreams.push(upstreamcard.getUpstream());
+            }
         }
 
         return upstreams;

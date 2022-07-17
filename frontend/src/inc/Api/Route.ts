@@ -42,10 +42,14 @@ export type Location = {
     id: number;
     match: string;
     proxy_pass: string;
-    ssh: {
+    ssh?: {
         id?: number;
         port_out?: number;
         schema?: string;
+    };
+    redirect?: {
+        code: number;
+        redirect: string;
     };
 };
 
@@ -55,6 +59,7 @@ export type Location = {
 export type RouteHttp = {
     id: number;
     listen_id: number;
+    index: number;
     locations: Location[];
 };
 
@@ -99,14 +104,6 @@ export type RouteStreamSave = {
 };
 
 /**
- * RouteStreamSaveResponse
- */
-export type RouteStreamSaveResponse = {
-    status: string;
-    error?: string;
-};
-
-/**
  * RouteStreamDelete
  */
 export type RouteStreamDelete = {
@@ -114,12 +111,13 @@ export type RouteStreamDelete = {
 };
 
 /**
- * RouteStreamDeleteResponse
+ * RouteHttpSave
  */
-export type RouteStreamDeleteResponse = {
-    status: string;
-    error?: string;
+export type RouteHttpSave = {
+    domainid: number;
+    http: RouteHttp;
 };
+
 
 /**
  * Route
@@ -165,6 +163,24 @@ export class Route {
      */
     public static async deleteRouteStream(data: RouteStreamDelete): Promise<boolean> {
         const result = await NetFetch.postData('/json/route/stream/delete', data);
+
+        if (result) {
+            if (result.status === 'ok') {
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * saveRouteHttp
+     * @param stream
+     */
+    public static async saveRouteHttp(stream: RouteHttpSave): Promise<boolean> {
+        const result = await NetFetch.postData('/json/route/http/save', stream);
 
         if (result) {
             if (result.status === 'ok') {
