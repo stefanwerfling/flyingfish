@@ -431,6 +431,13 @@ export class Route {
                 });
 
                 if (tStream) {
+                    if (tStream.isdefault) {
+                        return {
+                            status: 'error',
+                            error: `stream can not edit, this is a default route by id: ${request.stream.id}`
+                        };
+                    }
+
                     aStream = tStream;
                 } else {
                     return {
@@ -692,6 +699,13 @@ export class Route {
             const stream = await streamRepository.findOne({id: request.id});
 
             if (stream) {
+                if (stream.isdefault) {
+                    return {
+                        status: 'error',
+                        error: 'Stream route can not delete, this is a default route!'
+                    };
+                }
+
                 if (stream.sshport_in_id > 0) {
                     // check is sshport_in in used ---------------------------------------------------------------------
 

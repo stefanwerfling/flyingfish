@@ -422,60 +422,66 @@ export class Routes extends BasePage {
                         }
 
                         const tdAction = new Td(trbody, '');
-                        const btnMenu = new ButtonMenu(tdAction, IconFa.bars, true, ButtonType.borderless);
-
-                        btnMenu.addMenuItem(
-                            'Edit',
-                            async(): Promise<void> => {
-                                this._routeStreamDialog.resetValues();
-                                this._routeStreamDialog.setTitle('Edit Stream Route');
-                                this._routeStreamDialog.show();
-                                this._routeStreamDialog.setId(value.id);
-                                this._routeStreamDialog.setDomainName(entry.domainname);
-                                this._routeStreamDialog.setDomainId(entry.id);
-                                this._routeStreamDialog.setListen(`${value.listen_id}`);
-                                this._routeStreamDialog.setAliasName(value.alias_name);
-
-                                if (value.index > 0) {
-                                    this._routeStreamDialog.setIndex(value.index);
-                                }
-
-                                const sshListens = await SshAPI.getList();
-
-                                if (sshListens) {
-                                    this._routeStreamDialog.setSshListens(sshListens.list);
-                                }
-
-                                if (value.ssh.in || value.ssh.out) {
-                                    this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.ssh);
-
-                                    if (value.ssh.in) {
-                                        this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.in);
-                                        this._routeStreamDialog.setSshPortId(value.ssh.in.id);
-
-                                        if (value.ssh.in.port > 0) {
-                                            this._routeStreamDialog.setSshPort(value.ssh.in.port);
-                                        }
-
-                                        this._routeStreamDialog.setSshUserId(value.ssh.in.user_id);
-                                        this._routeStreamDialog.setSshUsername(value.ssh.in.username);
-                                    } else if (value.ssh.out) {
-                                        this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.out);
-                                        this._routeStreamDialog.setSshListen(value.ssh.out.id);
-                                    } else {
-                                        this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.none);
-                                    }
-                                } else if (value.destination_listen_id > 0) {
-                                    this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.listen);
-                                    this._routeStreamDialog.setDestinationListen(value.destination_listen_id);
-                                } else {
-                                    this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.upstream);
-                                    this._routeStreamDialog.setUpstreamList(value.upstreams);
-                                }
-                            },
-                            IconFa.edit);
 
                         if (!value.isdefault) {
+                            const btnMenu = new ButtonMenu(
+                                tdAction,
+                                IconFa.bars,
+                                true,
+                                ButtonType.borderless
+                            );
+
+                            btnMenu.addMenuItem(
+                                'Edit',
+                                async(): Promise<void> => {
+                                    this._routeStreamDialog.resetValues();
+                                    this._routeStreamDialog.setTitle('Edit Stream Route');
+                                    this._routeStreamDialog.show();
+                                    this._routeStreamDialog.setId(value.id);
+                                    this._routeStreamDialog.setDomainName(entry.domainname);
+                                    this._routeStreamDialog.setDomainId(entry.id);
+                                    this._routeStreamDialog.setListen(`${value.listen_id}`);
+                                    this._routeStreamDialog.setAliasName(value.alias_name);
+
+                                    if (value.index > 0) {
+                                        this._routeStreamDialog.setIndex(value.index);
+                                    }
+
+                                    const sshListens = await SshAPI.getList();
+
+                                    if (sshListens) {
+                                        this._routeStreamDialog.setSshListens(sshListens.list);
+                                    }
+
+                                    if (value.ssh.in || value.ssh.out) {
+                                        this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.ssh);
+
+                                        if (value.ssh.in) {
+                                            this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.in);
+                                            this._routeStreamDialog.setSshPortId(value.ssh.in.id);
+
+                                            if (value.ssh.in.port > 0) {
+                                                this._routeStreamDialog.setSshPort(value.ssh.in.port);
+                                            }
+
+                                            this._routeStreamDialog.setSshUserId(value.ssh.in.user_id);
+                                            this._routeStreamDialog.setSshUsername(value.ssh.in.username);
+                                        } else if (value.ssh.out) {
+                                            this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.out);
+                                            this._routeStreamDialog.setSshListen(value.ssh.out.id);
+                                        } else {
+                                            this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.none);
+                                        }
+                                    } else if (value.destination_listen_id > 0) {
+                                        this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.listen);
+                                        this._routeStreamDialog.setDestinationListen(value.destination_listen_id);
+                                    } else {
+                                        this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.upstream);
+                                        this._routeStreamDialog.setUpstreamList(value.upstreams);
+                                    }
+                                },
+                                IconFa.edit);
+
                             btnMenu.addDivider();
 
                             btnMenu.addMenuItem(
