@@ -5,7 +5,7 @@ import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainReco
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream';
 import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
-import {Certificate as CertificateController} from './Routes/Main/Certificate';
+import {Ssl as SslController} from './Routes/Main/Ssl';
 import {Domain as DomainController} from './Routes/Main/Domain';
 import {Route as RouteController} from './Routes/Main/Route';
 import {Listen as ListenController} from './Routes/Main/Listen';
@@ -185,7 +185,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             ListenController,
             SshController,
             UpnpNatController,
-            CertificateController,
+            SslController,
             NginxController,
 
             AddressAccessController,

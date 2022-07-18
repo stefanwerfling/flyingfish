@@ -1,4 +1,4 @@
-import {IDynDnsProvider} from './IDynDnsProvider';
+import {IDynDns} from './IDynDns';
 import {Selfhost} from './Selfhost/Selfhost';
 
 /**
@@ -10,7 +10,7 @@ export class DynDnsProviders {
      * getProvider
      * @param name
      */
-    public static getProvider(name: string): IDynDnsProvider|null {
+    public static getProvider(name: string): IDynDns|null {
         switch (name) {
             case Selfhost.getName():
                 return new Selfhost();

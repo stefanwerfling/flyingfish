@@ -2,6 +2,7 @@ import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Route as RouteAPI, RouteHttpSave, RouteStreamSave} from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
+import {Ssl as SslAPI} from '../Api/Ssl';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
@@ -213,6 +214,11 @@ export class Routes extends BasePage {
                         id: tid,
                         index: this._routeHttpDialog.getIndex(),
                         listen_id: this._routeHttpDialog.getListen(),
+                        ssl: {
+                            enable: this._routeHttpDialog.getSslEnable(),
+                            provider: this._routeHttpDialog.getSslProvider(),
+                            email: this._routeHttpDialog.getSslEmail()
+                        },
                         locations: this._routeHttpDialog.getLocations()
                     }
                 };
@@ -322,6 +328,7 @@ export class Routes extends BasePage {
                         btnMenu.addMenuItem(
                             'Add Http/Https Route',
                             async(): Promise<void> => {
+                                this._routeHttpDialog.resetValues();
                                 this._routeHttpDialog.setTitle('Add Http/Https Route');
                                 this._routeHttpDialog.show();
                                 this._routeHttpDialog.setDomainName(entry.domainname);
@@ -331,6 +338,12 @@ export class Routes extends BasePage {
 
                                 if (sshListens) {
                                     this._routeHttpDialog.setSshListens(sshListens.list);
+                                }
+
+                                const sslProviders = await SslAPI.getProviders();
+
+                                if (sslProviders) {
+                                    this._routeHttpDialog.setSslProviders(sslProviders.list);
                                 }
                             },
                             IconFa.add);
@@ -590,6 +603,7 @@ export class Routes extends BasePage {
                                 this._routeHttpDialog.setDomainId(entry.id);
                                 this._routeHttpDialog.setIndex(value.index);
                                 this._routeHttpDialog.setListen(`${value.listen_id}`);
+                                this._routeHttpDialog.setSslEnable(value.ssl.enable);
 
                                 const sshListens = await SshAPI.getList();
 
@@ -597,6 +611,14 @@ export class Routes extends BasePage {
                                     this._routeHttpDialog.setSshListens(sshListens.list);
                                 }
 
+                                const sslProviders = await SslAPI.getProviders();
+
+                                if (sslProviders) {
+                                    this._routeHttpDialog.setSslProviders(sslProviders.list);
+                                }
+
+                                this._routeHttpDialog.setSslProvider(value.ssl.provider);
+                                this._routeHttpDialog.setSslEmail(value.ssl.email);
                                 this._routeHttpDialog.setLocations(value.locations);
                             },
                             IconFa.edit);

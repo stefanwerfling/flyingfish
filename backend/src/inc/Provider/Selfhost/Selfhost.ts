@@ -1,12 +1,12 @@
 import got from 'got';
 import {Logger} from '../../Logger/Logger';
-import {IDynDnsProvider} from '../IDynDnsProvider';
+import {IDynDns} from '../IDynDns';
 
 /**
  * Selfhost
  * @see https://selfhost.de/cgi-bin/selfhost?p=document&name=api
  */
-export class Selfhost implements IDynDnsProvider {
+export class Selfhost implements IDynDns {
 
     /**
      * getName

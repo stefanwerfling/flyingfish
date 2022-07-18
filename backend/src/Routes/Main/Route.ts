@@ -78,6 +78,11 @@ export type RouteHttp = {
     id: number;
     listen_id: number;
     index: number;
+    ssl: {
+        enable: boolean;
+        provider: string;
+        email: string;
+    };
     locations: Location[];
 };
 
@@ -293,6 +298,11 @@ export class Route {
                                 id: thttp.id,
                                 listen_id: thttp.listen_id,
                                 index: thttp.index,
+                                ssl: {
+                                    enable: thttp.ssl_enable,
+                                    provider: thttp.cert_provider,
+                                    email: thttp.cert_email
+                                },
                                 locations: []
                             };
 
@@ -820,6 +830,9 @@ export class Route {
             aHttp.domain_id = request.domainid;
             aHttp.index = request.http.index;
             aHttp.listen_id = request.http.listen_id;
+            aHttp.ssl_enable = request.http.ssl.enable;
+            aHttp.cert_provider = request.http.ssl.provider;
+            aHttp.cert_email = request.http.ssl.email;
 
             aHttp = await MariaDbHelper.getConnection().manager.save(aHttp);
 

@@ -1,11 +1,12 @@
 import {spawn} from 'child_process';
 import fs from 'fs';
-import {Logger} from '../Logger/Logger';
+import {Logger} from '../../Logger/Logger';
+import {ISsl} from '../ISsl';
 
 /**
  * Certbot
  */
-export class Certbot {
+export class Certbot implements ISsl {
 
     /**
      * command
@@ -20,8 +21,38 @@ export class Certbot {
     protected _config: string = '/etc/letsencrypt.ini';
 
     /**
-     * domain
+     * getName
+     */
+    public static getName(): string {
+        return 'letsencrypt';
+    }
+
+    /**
+     * getTitle
+     */
+    public static getTitle(): string {
+        return 'LetsEncrypt';
+    }
+
+    /**
+     * getName
+     */
+    public getName(): string {
+        return Certbot.getName();
+    }
+
+    /**
+     * getTitle
+     */
+    public getTitle(): string {
+        return Certbot.getTitle();
+    }
+
+    /**
+     * create
      * @param domain
+     * @param email
+     * @param keysize
      */
     public async create(domain: string, email: string, keysize: number = 4096): Promise<boolean> {
         const process = spawn(this._command,

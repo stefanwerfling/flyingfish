@@ -1,32 +1,60 @@
-import {Body, JsonController, Post, Session} from 'routing-controllers';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {Certbot} from '../../inc/Letsencrypt/Certbot';
+import {Certbot} from '../../inc/Provider/Letsencrypt/Certbot';
+import {SslProvider, SslProviders} from '../../inc/Provider/SslProviders';
 import {NginxService} from '../../inc/Service/NginxService';
 
 /**
- * CertificateCreateResponse
+ * SslCreateResponse
  */
-export type CertificateCreateResponse = {
+export type SslCreateResponse = {
     httpid: number;
+};
+
+/**
+ * SslProvidersResponse
+ */
+export type SslProvidersResponse = {
+    status: string;
+    msg?: string;
+    list: SslProvider[];
 };
 
 /**
  * Certificate
  */
 @JsonController()
-export class Certificate {
+export class Ssl {
 
     /**
-     * TODO
+     * getProviders
+     * @param session
+     */
+    @Get('/json/ssl/provider/list')
+    public async getProviders(@Session() session: any): Promise<SslProvidersResponse> {
+        let list: SslProvider[] = [];
+
+        if ((session.user !== undefined) && session.user.isLogin) {
+            list = SslProviders.getProviders();
+        }
+
+        return {
+            status: 'ok',
+            list
+        };
+    }
+
+    /**
+     * createCert
      * @param session
      * @param request
      */
-    @Post('/json/certificate/create')
-    public async create(
+    @Post('/json/ssl/createcert')
+    public async createCert(
         @Session() session: any,
-        @Body() request: CertificateCreateResponse
+        @Body() request: SslCreateResponse
     ): Promise<boolean> {
         if ((session.user !== undefined) && session.user.isLogin) {
             const domainRepository = MariaDbHelper.getRepository(DomainDB);
@@ -47,12 +75,12 @@ export class Certificate {
                     });
 
                     if (domain) {
-                        if (http.certbot_email === '') {
+                        if (http.cert_email === '') {
                             return false;
                         }
 
                         const certbot = new Certbot();
-                        await certbot.create(domain.domainname, http.certbot_email);
+                        await certbot.create(domain.domainname, http.cert_email);
 
                         await NginxService.getInstance().reload();
 

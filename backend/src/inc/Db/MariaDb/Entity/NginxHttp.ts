@@ -42,12 +42,18 @@ export class NginxHttp extends BaseEntity {
         default: ''
     })
         // @ts-ignore
-    certbot_email: string;
+    cert_provider: string;
+
+    @Column({
+        default: ''
+    })
+        // @ts-ignore
+    cert_email: string;
 
     @Column({
         default: 0
     })
         // @ts-ignore
-    certbot_lastupdate: number;
+    cert_lastupdate: number;
 
 }

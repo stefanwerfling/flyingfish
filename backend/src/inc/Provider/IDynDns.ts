@@ -1,7 +1,7 @@
 /**
  * IDynDnsProvider
  */
-export interface IDynDnsProvider {
+export interface IDynDns {
 
     /**
      * getName

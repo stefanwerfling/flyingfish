@@ -1,12 +1,14 @@
 import {ListenData} from '../../Api/Listen';
 import {Location} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
+import {SslProvider} from '../../Api/Ssl';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
 import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
 import {FormRow} from '../../Bambooo/Content/Form/FormRow';
 import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
 import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
+import {Switch} from '../../Bambooo/Content/Form/Switch';
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
@@ -451,6 +453,24 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _sshListens: SshPortEntry[] = [];
 
     /**
+     * ssl enable
+     * @protected
+     */
+    protected _switchSslEnable: Switch;
+
+    /**
+     * ssl provider
+     * @protected
+     */
+    protected _selectSslProvider: SelectBottemBorderOnly2;
+
+    /**
+     * ssl email
+     * @protected
+     */
+    protected _inputSslEmail: InputBottemBorderOnly2;
+
+    /**
      * click save fn
      * @protected
      */
@@ -464,9 +484,12 @@ export class RouteHttpEditModal extends ModalDialog {
         super(elementObject, 'routehttpmodaldialog', ModalDialogType.large);
 
         this._navTab = new NavTab(this._body, 'routehttpnavtab');
-        const tabDetails = this._navTab.addTab('Details', 'routehttpdetails');
 
+        const tabDetails = this._navTab.addTab('Details', 'routehttpdetails');
+        const tabSsl = this._navTab.addTab('SSL', 'routehttpssl');
         const tabLocation = this._navTab.addTab('Location', 'routehttplocation');
+
+        // tab location ------------------------------------------------------------------------------------------------
 
         this._locationCard = new Card(tabLocation.body, CardBodyType.none);
         this._locationCard.setTitle('Location list');
@@ -508,6 +531,32 @@ export class RouteHttpEditModal extends ModalDialog {
         const groupIndex = new FormGroup(bodyCard, 'Index');
         this._inputIndex = new InputBottemBorderOnly2(groupIndex, undefined, InputType.number);
         this._inputIndex.setPlaceholder('auto sorting');
+
+        // tab ssl -----------------------------------------------------------------------------------------------------
+
+        const bodyCardSsl = jQuery('<div class="card-body"/>').appendTo(tabSsl.body);
+
+        const groupSslEnable = new FormGroup(bodyCardSsl, 'SSL Enable');
+        this._switchSslEnable = new Switch(groupSslEnable.getElement(), 'ssl_enable');
+
+        const groupSslProvider = new FormGroup(bodyCardSsl, 'SSL Provider');
+        this._selectSslProvider = new SelectBottemBorderOnly2(groupSslProvider);
+        groupSslProvider.hide();
+
+        const groupSslEmail = new FormGroup(bodyCardSsl, 'SSL EMail');
+        this._inputSslEmail = new InputBottemBorderOnly2(groupSslEmail);
+        this._inputSslEmail.setPlaceholder('admin@flyingfish.org');
+        groupSslEmail.hide();
+
+        this._switchSslEnable.setChangeFn((value) => {
+            groupSslProvider.hide();
+            groupSslEmail.hide();
+
+            if (value) {
+                groupSslProvider.show();
+                groupSslEmail.show();
+            }
+        });
 
         // buttons -----------------------------------------------------------------------------------------------------
 
@@ -662,6 +711,66 @@ export class RouteHttpEditModal extends ModalDialog {
     }
 
     /**
+     * setSslEnable
+     * @param enable
+     */
+    public setSslEnable(enable: boolean): void {
+        this._switchSslEnable.setEnable(enable);
+    }
+
+    /**
+     * getSslEnable
+     */
+    public getSslEnable(): boolean {
+        return this._switchSslEnable.isEnable();
+    }
+
+    /**
+     * setSslProviders
+     * @param providers
+     */
+    public setSslProviders(providers: SslProvider[]): void {
+        this._selectSslProvider.clearValues();
+
+        for (const provider of providers) {
+            this._selectSslProvider.addValue({
+                key: provider.name,
+                value: provider.title
+            })
+        }
+    }
+
+    /**
+     * setSslProvider
+     * @param provider
+     */
+    public setSslProvider(provider: string): void {
+        this._selectSslProvider.setSelectedValue(provider);
+    }
+
+    /**
+     * getSslProvider
+     */
+    public getSslProvider(): string {
+        return this._selectSslProvider.getSelectedValue();
+    }
+
+    /**
+     * setSslEmail
+     * @param email
+     */
+    public setSslEmail(email: string): void {
+        this._inputSslEmail.setValue(email);
+    }
+
+    /**
+     * getSslEmail
+     */
+    public getSslEmail(): string {
+        return this._inputSslEmail.getValue();
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -669,6 +778,7 @@ export class RouteHttpEditModal extends ModalDialog {
         this.setDomainName('');
         this._inputIndex.setValue('');
         this.setListen('0');
+        this.setSslEnable(false);
 
         this._locationCards.forEach((element, index) => {
             element.remove();

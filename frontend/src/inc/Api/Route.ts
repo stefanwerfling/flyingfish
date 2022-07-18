@@ -60,6 +60,11 @@ export type RouteHttp = {
     id: number;
     listen_id: number;
     index: number;
+    ssl: {
+        enable: boolean;
+        provider: string;
+        email: string;
+    };
     locations: Location[];
 };
 

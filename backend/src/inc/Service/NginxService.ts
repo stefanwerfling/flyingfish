@@ -8,7 +8,7 @@ import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream';
 import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {Certbot} from '../Letsencrypt/Certbot';
+import {Certbot} from '../Provider/Letsencrypt/Certbot';
 import {Logger} from '../Logger/Logger';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen';
 import {Location} from '../Nginx/Config/Location';
