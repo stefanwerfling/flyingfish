@@ -1,6 +1,8 @@
 import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {DomainRecord as DomainRecordDB} from '../../inc/Db/MariaDb/Entity/DomainRecord';
+import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
+import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 
 /**
@@ -207,6 +209,8 @@ export class Domain {
         if ((session.user !== undefined) && session.user.isLogin) {
             const domainRepository = MariaDbHelper.getRepository(DomainDB);
             const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
+            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
 
             const domain = await domainRepository.findOne({
                 where: {
@@ -218,11 +222,28 @@ export class Domain {
                 if (domain.fixdomain) {
                     return {
                         status: 'error',
-                        error: `domain is fix and cant not delete by id: ${request.id}`
+                        error: `domain is fix and can not delete by id: ${request.id}`
                     };
                 }
 
-                // todo check domain used
+                const countStreams = await streamRepository.count({
+                    where: {
+                        domain_id: domain.id
+                    }
+                });
+
+                const countHttps = await httpRepository.count({
+                    where: {
+                        domain_id: domain.id
+                    }
+                });
+
+                if ((countStreams > 0) || (countHttps > 0)) {
+                    return {
+                        status: 'error',
+                        error: `domain in use, can not delete by id: ${request.id}`
+                    };
+                }
 
                 await domainRecordRepository.delete({
                     domain_id: request.id

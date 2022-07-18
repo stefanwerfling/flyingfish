@@ -393,6 +393,8 @@ export class NginxService {
 
                 const aServer = new NginxConfServer();
 
+                // ssl use ---------------------------------------------------------------------------------------------
+
                 if (ssl_enable) {
                     const sslCert = Certbot.existCertificate(domainName);
 
@@ -429,11 +431,14 @@ export class NginxService {
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
                         aServer.addVariable('add_header X-Robots-Tag', 'none');
                     } else {
+                        Logger.getLogger().warn(`Certificat for Domain '${domainName}' not found and ignore settings.`);
                         return;
                     }
                 } else {
                     useAsDefault = true;
                 }
+
+                // listen ----------------------------------------------------------------------------------------------
 
                 aServer.addListen(new Listen(
                     listenPort,
@@ -453,10 +458,17 @@ export class NginxService {
 
                 aServer.setServerName(domainName);
 
+                // locations -------------------------------------------------------------------------------------------
+
                 for (const locationCollect of httpSubCollect.locations) {
                     const entry = locationCollect.location;
+                    let match = entry.match;
 
-                    const location = new Location(entry.match, entry.modifier);
+                    if (match === '') {
+                        match = '/';
+                    }
+
+                    const location = new Location(match, entry.modifier);
 
                     if (entry.redirect !== '') {
                         let redirectCode = 301;
@@ -466,7 +478,12 @@ export class NginxService {
                         }
 
                         location.addVariable(`return ${redirectCode}`, entry.redirect);
+                        aServer.addLocation(location);
+
+                        continue;
                     }
+
+                    // auth use ----------------------------------------------------------------------------------------
 
                     if (entry.auth_enable) {
                         let releam = domainName;
@@ -495,12 +512,26 @@ export class NginxService {
                         aServer.addLocation(authLocation);
                     }
 
+                    // proxy header ------------------------------------------------------------------------------------
+
+                    location.addVariable('proxy_set_header Host', '$host');
+                    location.addVariable('proxy_set_header X-Forwarded-Scheme', '$scheme');
+                    location.addVariable('proxy_set_header X-Forwarded-Proto', '$scheme');
+                    location.addVariable('proxy_set_header X-Forwarded-For', '$remote_addr');
+                    location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
+
                     if (locationCollect.sshport_out) {
                         location.addVariable('proxy_pass', `${entry.sshport_schema}://${Config.get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`);
-                        location.addVariable('proxy_set_header', 'Host $host');
                     } else if (entry.proxy_pass) {
                         location.addVariable('proxy_pass', entry.proxy_pass);
-                        location.addVariable('proxy_set_header', 'Host $host');
+                    }
+
+                    // websocket use -----------------------------------------------------------------------------------
+
+                    if (locationCollect.location.websocket_enable) {
+                        location.addVariable('proxy_set_header Upgrade', '$http_upgrade');
+                        location.addVariable('proxy_set_header Connection', '$http_connection');
+                        location.addVariable('proxy_http_version', '1.1');
                     }
 
                     aServer.addLocation(location);

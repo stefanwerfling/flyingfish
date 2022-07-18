@@ -153,6 +153,21 @@ export type RouteStreamDeleteResponse = {
 };
 
 /**
+ * RouteHttpDelete
+ */
+export type RouteHttpDelete = {
+    id: number;
+};
+
+/**
+ * RouteHttpDeleteResponse
+ */
+export type RouteHttpDeleteResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
  * Route
  */
 @JsonController()
@@ -728,11 +743,11 @@ export class Route {
 
                 // delete stream ---------------------------------------------------------------------------------------
 
-                const resulte = await streamRepository.delete({
+                const result = await streamRepository.delete({
                     id: stream.id
                 });
 
-                if (resulte) {
+                if (result) {
                     return {
                         status: 'ok'
                     };
@@ -746,7 +761,7 @@ export class Route {
 
             return {
                 status: 'error',
-                error: `stream route by id not found: ${request.id}`
+                error: `stream route not found by id: ${request.id}`
             };
         }
 
@@ -859,6 +874,66 @@ export class Route {
 
             return {
                 status: 'ok'
+            };
+        }
+
+        return {
+            status: 'error',
+            error: 'user not login!'
+        };
+    }
+
+    /**
+     * deleteHttpRoute
+     * @param session
+     * @param request
+     */
+    @Post('/json/route/http/delete')
+    public async deleteHttpRoute(
+        @Session() session: any,
+        @Body() request: RouteHttpDelete
+    ): Promise<RouteHttpDeleteResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            if (request.id === 0) {
+                return {
+                    status: 'error',
+                    error: 'id is null!'
+                };
+            }
+
+            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
+
+            const http = await httpRepository.findOne({
+                where: {
+                    id: request.id
+                }
+            });
+
+            if (http) {
+                await locationRepository.delete({
+                    http_id: http.id
+                });
+
+                const result = await httpRepository.delete({
+                    id: http.id
+                });
+
+                if (result) {
+                    return {
+                        status: 'ok'
+                    };
+                }
+
+                return {
+                    status: 'error',
+                    error: `http route can not delete by id: ${request.id}`
+                };
+            }
+
+            return {
+                status: 'error',
+                error: `http route not found by id: ${request.id}`
             };
         }
 

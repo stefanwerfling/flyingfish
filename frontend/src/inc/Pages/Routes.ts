@@ -483,7 +483,7 @@ export class Routes extends BasePage {
                                 (): void => {
                                     DialogConfirm.confirm(
                                         'streamDelete',
-                                        ModalDialogType.small,
+                                        ModalDialogType.large,
                                         'Delete Stream Route',
                                         `Delete this Stream Route "${entry.domainname}" Alias: ${value.alias_name}?`,
                                         async(_, dialog) => {
@@ -600,7 +600,49 @@ export class Routes extends BasePage {
                         btnMenu.addMenuItem(
                             'Delete',
                             (): void => {
+                                DialogConfirm.confirm(
+                                    'httpDelete',
+                                    ModalDialogType.large,
+                                    'Delete Http Route',
+                                    `Delete this Http Route "${entry.domainname}"?`,
+                                    async(_, dialog) => {
+                                        try {
+                                            if (await RouteAPI.deleteRouteHttp({
+                                                id: value.id
+                                            })) {
+                                                this._toast.fire({
+                                                    icon: 'success',
+                                                    title: 'Stream Http delete success.'
+                                                });
 
+                                                if (await NginxAPI.reload()) {
+                                                    this._toast.fire({
+                                                        icon: 'success',
+                                                        title: 'Nginx server reload config success.'
+                                                    });
+                                                } else {
+                                                    this._toast.fire({
+                                                        icon: 'error',
+                                                        title: 'Nginx server reload config faild, please check your last settings!'
+                                                    });
+                                                }
+                                            }
+                                        } catch ({message}) {
+                                            this._toast.fire({
+                                                icon: 'error',
+                                                title: message
+                                            });
+                                        }
+
+                                        dialog.hide();
+
+                                        if (this._onLoadTable) {
+                                            this._onLoadTable();
+                                        }
+                                    },
+                                    undefined,
+                                    'Delete'
+                                );
                             },
                             IconFa.trash);
                     });

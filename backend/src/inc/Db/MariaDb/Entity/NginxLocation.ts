@@ -72,4 +72,10 @@ export class NginxLocation extends BaseEntity {
         // @ts-ignore
     sshport_schema: string;
 
+    @Column({
+        default: false
+    })
+        // @ts-ignore
+    websocket_enable: boolean;
+
 }

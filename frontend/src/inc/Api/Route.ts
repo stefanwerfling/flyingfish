@@ -118,6 +118,20 @@ export type RouteHttpSave = {
     http: RouteHttp;
 };
 
+/**
+ * RouteStreamDeleteResponse
+ */
+export type RouteStreamDeleteResponse = {
+    status: string;
+    error?: string;
+};
+
+/**
+ * RouteHttpDelete
+ */
+export type RouteHttpDelete = {
+    id: number;
+};
 
 /**
  * Route
@@ -181,6 +195,24 @@ export class Route {
      */
     public static async saveRouteHttp(stream: RouteHttpSave): Promise<boolean> {
         const result = await NetFetch.postData('/json/route/http/save', stream);
+
+        if (result) {
+            if (result.status === 'ok') {
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * deleteRouteHttp
+     * @param data
+     */
+    public static async deleteRouteHttp(data: RouteHttpDelete): Promise<boolean> {
+        const result = await NetFetch.postData('/json/route/http/delete', data);
 
         if (result) {
             if (result.status === 'ok') {
