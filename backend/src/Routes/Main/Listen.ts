@@ -15,6 +15,7 @@ export type ListenData = {
     enable_ipv6: boolean;
     check_address: boolean;
     name: string;
+    routeless: boolean;
     description: string;
     fix?: boolean;
 };
@@ -79,6 +80,7 @@ export class Listen {
                         enable_ipv6: listen.enable_ipv6,
                         check_address: listen.enable_address_check,
                         name: listen.name,
+                        routeless: listen.routeless,
                         description: listen.description,
                         fix: listen.fixlisten
                     });

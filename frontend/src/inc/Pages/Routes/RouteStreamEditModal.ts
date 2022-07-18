@@ -547,6 +547,10 @@ export class RouteStreamEditModal extends ModalDialog {
         });
 
         for (const alisten of this._listens) {
+            if (alisten.routeless) {
+                continue;
+            }
+
             const type = alisten.type === 0 ? 'Stream' : 'HTTP';
 
             const option = {

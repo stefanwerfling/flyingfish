@@ -12,14 +12,6 @@ import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
 
 /**
- * RouteHttpEditModalDesType
- */
-export enum RouteHttpEditModalDesType {
-    location = '1',
-    ssh = '2'
-}
-
-/**
  * RouteHttpEditLocationModalDesType
  */
 export enum RouteHttpEditLocationModalDesType {
@@ -585,6 +577,10 @@ export class RouteHttpEditModal extends ModalDialog {
         });
 
         for (const alisten of this._listens) {
+            if (alisten.routeless) {
+                continue;
+            }
+
             const type = alisten.type === 0 ? 'Stream' : 'HTTP';
 
             const option = {

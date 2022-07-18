@@ -32,6 +32,7 @@ export type ListenData = {
     enable_ipv6: boolean;
     check_address: boolean;
     name: string;
+    routeless: boolean;
     description: string;
     fix?: boolean;
 };
