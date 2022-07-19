@@ -7,6 +7,7 @@ import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {Ssl as SslController} from './Routes/Main/Ssl';
 import {Domain as DomainController} from './Routes/Main/Domain';
+import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient';
 import {Route as RouteController} from './Routes/Main/Route';
 import {Listen as ListenController} from './Routes/Main/Listen';
 import {Ssh as SshController} from './Routes/Main/Ssh';
@@ -24,6 +25,7 @@ import {DBSetup} from './inc/Db/MariaDb/DBSetup';
 import {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential';
 import {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser';
 import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient';
+import {DynDnsClientDomain as DynDnsClientDomainDB} from './inc/Db/MariaDb/Entity/DynDnsClientDomain';
 import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist';
 import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
 import {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain';
@@ -105,6 +107,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 NginxLocationDB,
                 IpBlacklistDB,
                 DynDnsClientDB,
+                DynDnsClientDomainDB,
                 SshPortDB,
                 SshUserDB,
                 NatPortDB,
@@ -181,6 +184,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             LoginController,
             UserController,
             DomainController,
+            DynDnsClientController,
             RouteController,
             ListenController,
             SshController,

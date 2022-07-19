@@ -14,14 +14,23 @@ import {BasePage} from './BasePage';
 export class UpnpNat extends BasePage {
 
     /**
+     * name
+     * @protected
+     */
+    protected _name: string = 'upnpnat';
+
+    /**
      * constructor
      */
     public constructor() {
         super();
+
+        this.setTitle('Upnp Nat');
     }
 
     /**
      * loadContent
+     * https://npm.io/package/@network-utils/arp-lookup
      */
     public async loadContent(): Promise<void> {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());

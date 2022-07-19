@@ -15,6 +15,7 @@ export type DomainRecord = {
     ttl: number;
     value: string;
     update_by_dnsclient: boolean;
+    last_update: number;
 };
 
 /**
@@ -112,7 +113,8 @@ export class Domain {
                         class: record.dclass,
                         ttl: record.ttl,
                         value: record.dvalue,
-                        update_by_dnsclient: record.update_by_dnsclient
+                        update_by_dnsclient: record.update_by_dnsclient,
+                        last_update: record.last_update
                     });
                 }
 

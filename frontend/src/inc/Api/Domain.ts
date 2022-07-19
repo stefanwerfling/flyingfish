@@ -10,6 +10,7 @@ export type DomainRecord = {
     ttl: number;
     value: string;
     update_by_dnsclient: boolean;
+    last_update: number;
 };
 
 /**

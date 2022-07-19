@@ -17,14 +17,15 @@ import {BasePage} from './BasePage';
 import {ListensEditModal} from './Listens/ListensEditModal';
 
 /**
- * onLoadListens
- */
-type onLoadListens = () => void;
-
-/**
  * Listens
  */
 export class Listens extends BasePage {
+
+    /**
+     * name
+     * @protected
+     */
+    protected _name: string = 'listens';
 
     /**
      * listen dialog
@@ -39,16 +40,12 @@ export class Listens extends BasePage {
     protected _toast: any;
 
     /**
-     * on load table
-     * @protected
-     */
-    protected _onLoadTable: onLoadListens|null = null;
-
-    /**
      * constructor
      */
     public constructor() {
         super();
+
+        this.setTitle('Listens');
 
         // route modal -------------------------------------------------------------------------------------------------
 
@@ -65,16 +62,6 @@ export class Listens extends BasePage {
         }, 'btn btn-block btn-default btn-sm');
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
-
-        // -------------------------------------------------------------------------------------------------------------
-
-        // @ts-ignore
-        this._toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
 
         // -------------------------------------------------------------------------------------------------------------
 

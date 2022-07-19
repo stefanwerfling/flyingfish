@@ -16,10 +16,24 @@ export class Selfhost implements IDynDns {
     }
 
     /**
+     * getTitle
+     */
+    public static getTitle(): string {
+        return 'SelfHost';
+    }
+
+    /**
      * getName
      */
     public getName(): string {
         return Selfhost.getName();
+    }
+
+    /**
+     * getTitle
+     */
+    public getTitle(): string {
+        return Selfhost.getTitle();
     }
 
     /**

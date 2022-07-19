@@ -26,14 +26,15 @@ import {
 } from './Routes/RouteStreamEditModal';
 
 /**
- * onLoadRoutes
- */
-type onLoadRoutes = () => void;
-
-/**
  * Hosts Page
  */
 export class Routes extends BasePage {
+
+    /**
+     * name
+     * @protected
+     */
+    protected _name: string = 'routes';
 
     /**
      * toast
@@ -54,16 +55,12 @@ export class Routes extends BasePage {
     protected _routeHttpDialog: RouteHttpEditModal;
 
     /**
-     * on load table
-     * @protected
-     */
-    protected _onLoadTable: onLoadRoutes|null = null;
-
-    /**
      * constructor
      */
     public constructor() {
         super();
+
+        this.setTitle('Routes');
 
         // route modal -------------------------------------------------------------------------------------------------
 
@@ -77,23 +74,17 @@ export class Routes extends BasePage {
 
         // Navbar Left -------------------------------------------------------------------------------------------------
 
+        const toast = this._toast;
+
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Reload Config', async() => {
-            // @ts-ignore
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000
-            });
-
             if (await NginxAPI.reload()) {
-                Toast.fire({
+                toast.fire({
                     icon: 'success',
                     title: 'Nginx server reload config success.'
                 });
             } else {
-                Toast.fire({
+                toast.fire({
                     icon: 'error',
                     title: 'Nginx server reload config faild.'
                 });
@@ -101,14 +92,6 @@ export class Routes extends BasePage {
 
             return false;
         }, 'btn btn-block btn-default btn-sm');
-
-        // @ts-ignore
-        this._toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
 
         // -------------------------------------------------------------------------------------------------------------
 

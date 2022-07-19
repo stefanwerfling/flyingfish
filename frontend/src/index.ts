@@ -3,9 +3,11 @@ import {User as UserAPI} from './inc/Api/User';
 import {SidebarMenuItem} from './inc/Bambooo/Sidebar/SidebarMenuItem';
 import {NavbarLinkFullsize} from './inc/Bambooo/Navbar/NavbarLinkFullsize';
 import {NavbarLinkButton} from './inc/Bambooo/Navbar/NavbarLinkButton';
+import {SidebarMenuTree} from './inc/Bambooo/Sidebar/SidebarMenuTree';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
 import {Domains as DomainsPage} from './inc/Pages/Domains';
+import {DynDnsClients} from './inc/Pages/DynDnsClients';
 import {Listens as ListensPage} from './inc/Pages/Listens';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
@@ -77,7 +79,17 @@ import {UtilColor} from './inc/Utils/UtilColor';
                 name: 'listens',
                 onClick: (): void => {
                     loadPage(new ListensPage());
-                }
+                },
+                items: [
+                    {
+                        title: 'UpnpNat',
+                        icon: 'fa-solid fa-map-signs',
+                        name: 'upnpnat',
+                        onClick: (): void => {
+                            loadPage(new UpnpNatPage());
+                        }
+                    }
+                ]
             },
             {
                 title: 'Domains',
@@ -85,7 +97,17 @@ import {UtilColor} from './inc/Utils/UtilColor';
                 name: 'domains',
                 onClick: (): void => {
                     loadPage(new DomainsPage());
-                }
+                },
+                items: [
+                    {
+                        title: 'DynDns Clients',
+                        name: 'dyndnsclients',
+                        icon: 'fa-solid fa-satellite-dish',
+                        onClick: (): void => {
+                            loadPage(new DynDnsClients())
+                        }
+                    }
+                ]
             },
             {
                 title: 'Routes',
@@ -93,14 +115,6 @@ import {UtilColor} from './inc/Utils/UtilColor';
                 name: 'routes',
                 onClick: (): void => {
                     loadPage(new RoutesPage());
-                }
-            },
-            {
-                title: 'UpnpNat',
-                icon: 'fa-solid fa-map-signs',
-                name: 'upnpnat',
-                onClick: (): void => {
-                    loadPage(new UpnpNatPage());
                 }
             },
             {
@@ -122,11 +136,33 @@ import {UtilColor} from './inc/Utils/UtilColor';
             menuItem.setTitle(item.title);
             menuItem.setIconClass(item.icon);
 
-            if (page.getName() === item.name) {
-                menuItem.setActiv(true);
+            menuItem.setClick(item.onClick);
+
+            let isSubActiv = false;
+
+            if (item.items) {
+                const menuTree = new SidebarMenuTree(menuItem);
+
+                for( const sitem of item.items) {
+                    const pmenuItem = new SidebarMenuItem(menuTree);
+                    pmenuItem.setTitle(sitem.title);
+                    pmenuItem.setName(sitem.name);
+                    pmenuItem.setClick(sitem.onClick);
+
+                    if (sitem.icon) {
+                        pmenuItem.setIconClass(sitem.icon);
+                    }
+
+                    if (page.getName() === sitem.name) {
+                        pmenuItem.setActiv(true);
+                        isSubActiv = true;
+                    }
+                }
             }
 
-            menuItem.setClick(item.onClick);
+            if ( (page.getName() === item.name) || isSubActiv) {
+                menuItem.setActiv(true);
+            }
         }
 
         // ---------------------------------------------------------------------------------------------------------

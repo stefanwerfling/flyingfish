@@ -87,7 +87,7 @@ export class ListensEditModal extends ModalDialog {
         const rowTP = new FormRow(bodyCard);
 
         const groupType = new FormGroup(rowTP.createCol(4), 'Type');
-        this._selectType = new SelectBottemBorderOnly2(groupType.getElement());
+        this._selectType = new SelectBottemBorderOnly2(groupType);
         this._selectType.addValue({
             key: `${ListenTypes.stream}`,
             value: 'Stream',
@@ -118,11 +118,11 @@ export class ListensEditModal extends ModalDialog {
         });
 
         const groupPort = new FormGroup(rowTP.createCol(4), 'Port');
-        this._inputPort = new InputBottemBorderOnly2(groupPort.getElement(), InputType.number);
+        this._inputPort = new InputBottemBorderOnly2(groupPort, InputType.number);
         this._inputPort.setPlaceholder('80');
 
         const groupDescription = new FormGroup(bodyCard, 'Description');
-        this._inputDescription = new InputBottemBorderOnly2(groupDescription.getElement());
+        this._inputDescription = new InputBottemBorderOnly2(groupDescription);
         this._inputDescription.setPlaceholder('A description ...');
 
         const rowOptions = new FormRow(bodyCard);

@@ -2,6 +2,14 @@ import {IDynDns} from './IDynDns';
 import {Selfhost} from './Selfhost/Selfhost';
 
 /**
+ * DynDnsProvider
+ */
+export type DynDnsProvider = {
+    name: string;
+    title: string;
+};
+
+/**
  * DynDnsProviders
  */
 export class DynDnsProviders {
@@ -17,6 +25,20 @@ export class DynDnsProviders {
         }
 
         return null;
+    }
+
+    /**
+     * getProviders
+     */
+    public static getProviders(): DynDnsProvider[] {
+        const list: DynDnsProvider[] = [];
+
+        list.push({
+            name: Selfhost.getName(),
+            title: Selfhost.getTitle()
+        });
+
+        return list;
     }
 
 }

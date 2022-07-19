@@ -38,4 +38,10 @@ export class DomainRecord extends BaseEntity {
         // @ts-ignore
     update_by_dnsclient: boolean;
 
+    @Column({
+        default: 0
+    })
+        // @ts-ignore
+    last_update: number;
+
 }

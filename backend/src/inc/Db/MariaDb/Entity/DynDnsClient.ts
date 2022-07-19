@@ -1,16 +1,14 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {BaseEntity, Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
 
+/**
+ * DynDnsClient
+ */
 @Entity({name: 'dyndns_client'})
 export class DynDnsClient extends BaseEntity {
 
     @PrimaryGeneratedColumn()
         // @ts-ignore
     id: number;
-
-    @Index()
-    @Column()
-        // @ts-ignore
-    domain_id: number;
 
     @Column()
         // @ts-ignore
@@ -29,5 +27,11 @@ export class DynDnsClient extends BaseEntity {
     })
         // @ts-ignore
     update_domain: boolean;
+
+    @Column({
+        default: 0
+    })
+        // @ts-ignore
+    last_update: number;
 
 }

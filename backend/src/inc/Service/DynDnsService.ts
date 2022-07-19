@@ -2,9 +2,11 @@ import {Packet} from 'dns2';
 import {Job, scheduleJob} from 'node-schedule';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord';
 import {DynDnsClient as DynDnsClientDB} from '../Db/MariaDb/Entity/DynDnsClient';
+import {DynDnsClientDomain as DynDnsClientDomainDB} from '../Db/MariaDb/Entity/DynDnsClientDomain';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {Logger} from '../Logger/Logger';
 import {DynDnsProviders} from '../Provider/DynDnsProviders';
+import {DateHelper} from '../Utils/DateHelper';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService';
 
 /**
@@ -41,10 +43,11 @@ export class DynDnsService {
      */
     public async updateDns(): Promise<void> {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
-        const dyndnclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
+        const dyndnsclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
+        const dyndnsclientDomainRepository = MariaDbHelper.getRepository(DynDnsClientDomainDB);
         const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
 
-        const clients = await dyndnclientRepository.find();
+        const clients = await dyndnsclientRepository.find();
 
         for (const client of clients) {
             const provider = DynDnsProviders.getProvider(client.provider);
@@ -52,39 +55,61 @@ export class DynDnsService {
             if (await provider?.update(client.username, client.password, '')) {
                 Logger.getLogger().info(`DynDnsService::updateDns: Domain ip update by provider(${provider?.getName()})`);
 
-                if (client.update_domain) {
-                    Logger.getLogger().info(`DynDnsService::updateDns: Update domain ip for domain-id: ${client.domain_id}`);
+                // update last update time
+                await dyndnsclientRepository
+                .createQueryBuilder()
+                .update()
+                .set({
+                    last_update: DateHelper.getCurrentDbTime()
+                })
+                .where('id = :id', {id: client.id})
+                .execute();
 
-                    const records = await domainRecordRepository.find({
+                if (client.update_domain) {
+                    const dyndnsdomains = await dyndnsclientDomainRepository.find({
                         where: {
-                            domain_id: client.domain_id,
-                            update_by_dnsclient: true
+                            dyndnsclient_id: client.id
                         }
                     });
 
-                    if (records) {
-                        const myIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
+                    if (dyndnsdomains) {
+                        for (const dyndnsdomain of dyndnsdomains) {
+                            Logger.getLogger().info(`DynDnsService::updateDns: Update domain ip for domain-id: ${dyndnsdomain.domain_id}`);
 
-                        if (myIp) {
-                            for (const record of records) {
-                                switch (record.dtype) {
-                                    case Packet.TYPE.TXT:
-                                    case Packet.TYPE.CNAME:
-                                        continue;
-
-                                    default:
-                                        record.dvalue = myIp;
+                            const records = await domainRecordRepository.find({
+                                where: {
+                                    domain_id: dyndnsdomain.domain_id,
+                                    update_by_dnsclient: true
                                 }
+                            });
 
-                                await MariaDbHelper.getConnection().manager.save(record);
+                            if (records) {
+                                const myIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
 
-                                Logger.getLogger().info(`DynDnsService::updateDns: domain record updated by domain-id: ${client.domain_id} with ip: ${myIp}`);
+                                if (myIp) {
+                                    for (const record of records) {
+                                        switch (record.dtype) {
+                                            case Packet.TYPE.TXT:
+                                            case Packet.TYPE.CNAME:
+                                                continue;
+
+                                            default:
+                                                record.dvalue = myIp;
+                                        }
+
+                                        record.last_update = DateHelper.getCurrentDbTime();
+
+                                        await MariaDbHelper.getConnection().manager.save(record);
+
+                                        Logger.getLogger().info(`DynDnsService::updateDns: domain record updated by domain-id: ${dyndnsdomain.domain_id} with ip: ${myIp}`);
+                                    }
+                                } else {
+                                    Logger.getLogger().warn(`DynDnsService::updateDns: own ip not determined by domain-id: ${dyndnsdomain.domain_id}`);
+                                }
+                            } else {
+                                Logger.getLogger().warn(`DynDnsService::updateDns: domain record not found by domain-id: ${dyndnsdomain.domain_id}`);
                             }
-                        } else {
-                            Logger.getLogger().warn(`DynDnsService::updateDns: own ip not determined by domain-id: ${client.domain_id}`);
                         }
-                    } else {
-                        Logger.getLogger().warn(`DynDnsService::updateDns: domain record not found by domain-id: ${client.domain_id}`);
                     }
                 }
             } else {

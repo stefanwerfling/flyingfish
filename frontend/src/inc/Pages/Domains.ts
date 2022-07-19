@@ -1,3 +1,4 @@
+import moment from 'moment';
 import {Domain as DomainAPI, DomainData} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
@@ -20,20 +21,15 @@ import {DomainEditModal} from './Domains/DomainEditModal';
 import {DomainRecordEditModal} from './Domains/DomainRecordEditModal';
 
 /**
- * onLoadListens
- */
-type onLoadDomains = () => void;
-
-/**
  * Domains
  */
 export class Domains extends BasePage {
 
     /**
-     * on load table
+     * name
      * @protected
      */
-    protected _onLoadTable: onLoadDomains|null = null;
+    protected _name: string = 'domains';
 
     /**
      * domain dialog
@@ -59,6 +55,8 @@ export class Domains extends BasePage {
     public constructor() {
         super();
 
+        this.setTitle('Domains');
+
         this._domainDialog = new DomainEditModal(
             this._wrapper.getContentWrapper().getContent()
         );
@@ -76,16 +74,6 @@ export class Domains extends BasePage {
         }, 'btn btn-block btn-default btn-sm');
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
-
-        // -------------------------------------------------------------------------------------------------------------
-
-        // @ts-ignore
-        this._toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
 
         // -------------------------------------------------------------------------------------------------------------
 
@@ -165,7 +153,8 @@ export class Domains extends BasePage {
                         class: parseInt(this._domainRecordDialog.getClass(), 10),
                         ttl: parseInt(this._domainRecordDialog.getTTL(), 10),
                         value: this._domainRecordDialog.getValue(),
-                        update_by_dnsclient: this._domainRecordDialog.getUpdateByDynDnsClient()
+                        update_by_dnsclient: this._domainRecordDialog.getUpdateByDynDnsClient(),
+                        last_update: 0
                     }
                 })) {
                     this._domainRecordDialog.hide();
@@ -324,6 +313,9 @@ export class Domains extends BasePage {
                         new Th(rtrhead, 'Value');
 
                         // eslint-disable-next-line no-new
+                        new Th(rtrhead, 'Last Update');
+
+                        // eslint-disable-next-line no-new
                         new Th(rtrhead, '');
 
                         for (const record of domain.records) {
@@ -399,6 +391,11 @@ export class Domains extends BasePage {
 
                             // eslint-disable-next-line no-new
                             new Td(rtrbody, `${record.value}`);
+
+                            const date = moment(record.last_update * 1000);
+
+                            // eslint-disable-next-line no-new
+                            new Td(rtrbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
 
                             const tdRAction = new Td(rtrbody, '');
                             const btnRMenu = new ButtonMenu(

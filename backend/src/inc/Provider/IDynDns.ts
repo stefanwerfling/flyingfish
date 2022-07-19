@@ -9,6 +9,11 @@ export interface IDynDns {
     getName(): string;
 
     /**
+     * getTitle
+     */
+    getTitle(): string;
+
+    /**
      * update
      * @param username
      * @param password
