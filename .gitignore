@@ -10,6 +10,9 @@
 /nginx/nginx.pid
 /nginx/package-lock.json
 /nginx/dist
+/nginx/dhparam.pem
+
+/letsencrypt
 
 /backend/node_modules
 /backend/package-lock.json
