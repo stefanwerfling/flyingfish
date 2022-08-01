@@ -523,15 +523,8 @@ export class Route {
 
                     if (request.stream.ssh.in.port === 0) {
                         let portBegin = 1000;
-                        let searchPort = true;
 
-                        while (searchPort) {
-                            if (!await this._isSshPortUsed(portBegin, request.stream.ssh.in.id)) {
-                                sshport.port = portBegin;
-                                searchPort = false;
-                                break;
-                            }
-
+                        while (await this._isSshPortUsed(portBegin, request.stream.ssh.in.id)) {
                             portBegin++;
                         }
                     } else {

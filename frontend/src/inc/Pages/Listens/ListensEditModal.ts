@@ -81,7 +81,7 @@ export class ListensEditModal extends ModalDialog {
         const bodyCard = jQuery('<div class="card-body"/>').appendTo(this._body);
 
         const groupName = new FormGroup(bodyCard, 'Name');
-        this._inputName = new InputBottemBorderOnly2(groupName.getElement());
+        this._inputName = new InputBottemBorderOnly2(groupName);
         this._inputName.setPlaceholder('Listenname');
 
         const rowTP = new FormRow(bodyCard);
@@ -101,7 +101,7 @@ export class ListensEditModal extends ModalDialog {
         });
 
         const groupProtocol = new FormGroup(rowTP.createCol(4), 'Protocol');
-        this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol.getElement());
+        this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol);
         this._selectProtocol.addValue({
             key: `0`,
             value: 'TCP'
@@ -127,10 +127,10 @@ export class ListensEditModal extends ModalDialog {
 
         const rowOptions = new FormRow(bodyCard);
         const groupIP6 = new FormGroup(rowOptions.createCol(6), 'IP6');
-        this._switchIp6 = new Switch(groupIP6.getElement(), 'ip6');
+        this._switchIp6 = new Switch(groupIP6, 'ip6');
 
         const groupAC = new FormGroup(rowOptions.createCol(6), 'Address Check');
-        this._switchAddressCheck = new Switch(groupAC.getElement(), 'address_check');
+        this._switchAddressCheck = new Switch(groupAC, 'address_check');
 
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);

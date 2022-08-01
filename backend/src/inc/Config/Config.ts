@@ -1,5 +1,5 @@
 import {readFileSync} from 'fs';
-import path from 'path';
+import * as Path from 'path';
 
 /**
  * ConfigOptions
@@ -22,16 +22,15 @@ interface ConfigOptions {
             cookie_path?: string;
             cookie_max_age?: number;
         };
+        sslpath?: string;
     };
     nginx?: {
         config: string;
         prefix: string;
+        dhparamfile?: string;
     };
     sshserver?: {
         ip: string;
-    };
-    openssl?: {
-        dhparamfile: string;
     };
     docker?: {
         inside: boolean;
@@ -59,6 +58,7 @@ interface ConfigOptions {
         level?: string;
     };
 
+    flyingfish_libpath?: string;
     rootconfigpath?: string;
     rootconfigname?: string;
 }
@@ -72,6 +72,7 @@ export class Config {
      * DEFAULTS
      */
     public static readonly DEFAULT_CONFIG_FILE = 'config.json';
+    public static readonly DEFAULT_FF_DIR = '/var/lib/flyingfish';
 
     /**
      * global config
@@ -111,14 +112,34 @@ export class Config {
 
             config = JSON.parse(rawdata) as ConfigOptions;
 
+            let ffPath = Config.DEFAULT_FF_DIR;
+
+            if (config.flyingfish_libpath) {
+                ffPath = config.flyingfish_libpath;
+            } else {
+                config.flyingfish_libpath = ffPath;
+            }
+
             // default paths
-            config.rootconfigpath = path.dirname(configFile);
-            config.rootconfigname = path.basename(configFile);
+            config.rootconfigpath = Path.dirname(configFile);
+            config.rootconfigname = Path.basename(configFile);
+
+            // default httpserver
+            if (!config.httpserver) {
+                config.httpserver = {
+                    port: 3000,
+                    publicdir: ''
+                };
+            }
+
+            if (!config.httpserver.sslpath) {
+                config.httpserver.sslpath = Path.join(ffPath, 'ssl/');
+            }
 
             // default dhparam
-            config.openssl = {
-                dhparamfile: '/opt/app/nginx/dhparam.pem'
-            };
+            if (config.nginx) {
+                config.nginx.dhparamfile = Path.join(ffPath, 'nginx/dhparam.pem');
+            }
 
             if (!config.dnsserver) {
                 config.dnsserver = {

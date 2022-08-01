@@ -718,7 +718,12 @@ export class RouteStreamEditModal extends ModalDialog {
      * @param id
      */
     public setSshUserId(id: number): void {
-        this._inputSshPassword.setPlaceholder('Leave password blank if you don\'t want to change the password.');
+        if (id > 0) {
+            this._inputSshPassword.setPlaceholder('Leave password blank if you don\'t want to change the password.');
+        } else {
+            this._inputSshPassword.setPlaceholder('');
+        }
+
         this._sshuser_id = id;
     }
 

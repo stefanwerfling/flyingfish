@@ -26,7 +26,7 @@ export enum RouteHttpEditLocationModalDesType {
 /**
  * RouteHttpEditModalButtonClickFn
  */
-type RouteHttpEditModalButtonClickFn = () => void;
+export type RouteHttpEditModalButtonClickFn = () => void;
 
 /**
  * LocationCard

@@ -8,6 +8,7 @@ RUN printf "%s%s%s%s\n" \
         `egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release` \
         "/main" \
         | tee -a /etc/apk/repositories
+
 RUN curl -o /tmp/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub
 RUN mv /tmp/nginx_signing.rsa.pub /etc/apk/keys/
 
@@ -21,9 +22,6 @@ RUN pip3 install certbot-nginx
 RUN mkdir /etc/letsencrypt
 
 RUN mkdir -p /opt/app
-
-#RUN adduser -S app
-
 RUN mkdir -p /opt/app/dist
 RUN mkdir -p /opt/app/node_modules
 RUN mkdir -p /opt/app/frontend
@@ -33,6 +31,7 @@ RUN mkdir -p /opt/app/nginx/servers
 RUN mkdir -p /opt/app/nginx/servers/logs
 RUN mkdir -p /opt/app/nginx/html
 RUN mkdir -p /var/log/flyingfish/
+RUN mkdir -p /var/lib/flyingfish
 
 WORKDIR /opt/app
 
@@ -49,14 +48,9 @@ COPY frontend/manifest.json ./frontend/manifest.json
 
 COPY nginx/ ./nginx
 
-COPY  backend/package.json ./package.json
+COPY backend/package.json ./package.json
 
 RUN npm install
-
-#RUN chown -R app /opt/app
-#RUN chown -R app /var/lib/nginx
-
-#USER app
 
 EXPOSE 80
 EXPOSE 443

@@ -131,6 +131,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
 
     let aport = 3000;
     let public_dir = '';
+    let ssl_path = '';
     let session_secret = uuid();
     let session_cookie_path = '/';
     let session_cookie_max_age = 6000000;
@@ -157,6 +158,10 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 session_cookie_max_age = tconfig.httpserver.session.cookie_max_age;
             }
         }
+
+        if (tconfig.httpserver.sslpath) {
+            ssl_path = tconfig.httpserver.sslpath;
+        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -169,12 +174,13 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             cookieParser(),
             session({
                 secret: session_secret,
+                proxy: true,
                 resave: true,
                 saveUninitialized: true,
                 store: new session.MemoryStore(),
                 cookie: {
                     path: session_cookie_path,
-                    secure: false,
+                    secure: ssl_path !== '',
                     maxAge: session_cookie_max_age
                 }
             })
@@ -195,11 +201,12 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             AddressAccessController,
             AuthBasicController
         ],
-        publicDir: public_dir
+        publicDir: public_dir,
+        sslPath: ssl_path
     });
 
     // listen, start express server
-    mServer.listen();
+    await mServer.listen();
 
     // -----------------------------------------------------------------------------------------------------------------
 

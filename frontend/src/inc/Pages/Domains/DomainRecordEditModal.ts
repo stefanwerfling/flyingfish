@@ -139,7 +139,7 @@ export class DomainRecordEditModal extends ModalDialog {
 
         const rowOpt = new FormRow(bodyCard);
         const groupDnyDnsClient = new FormGroup(rowOpt.createCol(6), 'Update by DynDns Client');
-        this._switchUByDynDnsClient = new Switch(groupDnyDnsClient.getElement(), 'ubydnsclient');
+        this._switchUByDynDnsClient = new Switch(groupDnyDnsClient, 'ubydnsclient');
 
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);

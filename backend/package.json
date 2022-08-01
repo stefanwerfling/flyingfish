@@ -52,6 +52,7 @@
     "express-session": "^1.17.2",
     "fast-xml-parser": "^4.0.7",
     "got": "^11.8.3",
+    "helmet": "^5.1.0",
     "minimist": "^1.2.5",
     "mysql": "^2.18.1",
     "node-cache": "^5.1.2",

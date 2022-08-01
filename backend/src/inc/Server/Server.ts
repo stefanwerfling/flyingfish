@@ -1,8 +1,11 @@
-import {Application} from 'express';
-// eslint-disable-next-line no-duplicate-imports
-import express from 'express';
+import express, {Application} from 'express';
+import fs from 'fs';
+import helmet from 'helmet';
+import * as https from 'https';
+import Path from 'path';
 import {useExpressServer} from 'routing-controllers';
 import {Logger} from '../Logger/Logger';
+import {FlyingFishSsl} from '../Utils/FlyingFishSsl';
 
 /**
  * Server
@@ -13,7 +16,13 @@ export class Server {
      * server object
      * @private
      */
-    private _server: Application;
+    private readonly _server: Application;
+
+    /**
+     * _sslPath
+     * @private
+     */
+    private _sslPath?: string;
 
     /**
      * server default port
@@ -31,12 +40,39 @@ export class Server {
         routes?: any;
         controllers?: any;
         publicDir?: string | null;
+        sslPath?: string;
     }) {
         if (appInit.port) {
             this._port = appInit.port;
         }
 
         this._server = express();
+        this._server.use(helmet());
+        this._server.use(helmet.contentSecurityPolicy({
+            directives: {
+                defaultSrc: ['\'self\''],
+                connectSrc: ['\'self\''],
+                frameSrc: ['\'self\''],
+                childSrc: ['\'self\''],
+                scriptSrc: [
+                    '\'self\'',
+                    '*',
+                    '\'unsafe-inline\''
+                ],
+                styleSrc: [
+                    '\'self\'',
+                    '*',
+                    '\'unsafe-inline\''
+                ],
+                fontSrc: [
+                    '\'self\'',
+                    '*',
+                    '\'unsafe-inline\''
+                ],
+                imgSrc: ['\'self\'', 'https: data:'],
+                baseUri: ['\'self\'']
+            }
+        }));
 
         if (appInit.middleWares) {
             this._middlewares(appInit.middleWares);
@@ -54,6 +90,10 @@ export class Server {
 
         if (appInit.publicDir) {
             this._assets(appInit.publicDir);
+        }
+
+        if (appInit.sslPath) {
+            this._sslPath = appInit.sslPath;
         }
     }
 
@@ -93,10 +133,33 @@ export class Server {
     /**
      * start server listen
      */
-    public listen(): void {
-        this._server.listen(this._port, () => {
-            Logger.getLogger().info(`Flingfish listening on the http://localhost:${this._port}`);
-        });
+    public async listen(): Promise<void> {
+        const app = this._server;
+
+        if (this._sslPath) {
+            fs.mkdirSync(this._sslPath, {recursive: true});
+
+            const keyFile = Path.join(this._sslPath, FlyingFishSsl.FILE_KEYPEM);
+            const crtFile = Path.join(this._sslPath, FlyingFishSsl.FILE_CRT);
+
+            if (!fs.existsSync(keyFile)) {
+                await FlyingFishSsl.createExpressCerts(this._sslPath);
+            }
+
+            const privateKey = fs.readFileSync(keyFile);
+            const crt = fs.readFileSync(crtFile);
+
+            https.createServer({
+                key: privateKey,
+                cert: crt
+            }, app).listen(this._port, () => {
+                Logger.getLogger().info(`Flingfish listening on the https://localhost:${this._port}`);
+            });
+        } else {
+            app.listen(this._port, () => {
+                Logger.getLogger().info(`Flingfish listening on the http://localhost:${this._port}`);
+            });
+        }
     }
 
 }

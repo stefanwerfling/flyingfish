@@ -30,6 +30,7 @@ services:
       - ./config.json:/opt/app/config.json
       - ./nginx:/opt/app/nginx:rw
       - ./letsencrypt:/etc/letsencrypt:rw
+      - flyingfish:/var/lib/flyingfish:rw
     ports:
       - "443:443"
       - "80:80"
@@ -98,6 +99,8 @@ services:
 
 volumes:
   flyingfishDbData:
+    driver: local
+  flyingfish:
     driver: local
 
 networks:

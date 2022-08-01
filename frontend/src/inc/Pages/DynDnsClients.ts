@@ -1,6 +1,6 @@
 import moment from 'moment';
 import {Domain} from '../Api/Domain';
-import {DynDnsClient, DynDnsClient as DynDnsClientAPI} from '../Api/DynDnsClient';
+import {DynDnsClient as DynDnsClientAPI, DynDnsClientData} from '../Api/DynDnsClient';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
@@ -52,10 +52,10 @@ export class DynDnsClients extends BasePage {
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Client', async() => {
             this._dynDnsClientDialog.resetValues();
-            this._dynDnsClientDialog.setTitle('Client Add');
+            this._dynDnsClientDialog.setTitle('DynDns Client Add');
             this._dynDnsClientDialog.show();
 
-            const providers = await DynDnsClient.getProviderList();
+            const providers = await DynDnsClientAPI.getProviderList();
 
             if (providers) {
                 this._dynDnsClientDialog.setProviders(providers.list);
@@ -73,6 +73,47 @@ export class DynDnsClients extends BasePage {
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
 
         // -------------------------------------------------------------------------------------------------------------
+
+        this._dynDnsClientDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._dynDnsClientDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const client: DynDnsClientData = {
+                    id: tid,
+                    provider: {
+                        name: this._dynDnsClientDialog.getProvider(),
+                        title: ''
+                    },
+                    domains: this._dynDnsClientDialog.getDomainSelected(),
+                    username: this._dynDnsClientDialog.getUsername(),
+                    password: this._dynDnsClientDialog.getPassword(),
+                    update_domain: this._dynDnsClientDialog.getUpdateDomains(),
+                    last_update: 0
+                };
+
+                if (await DynDnsClientAPI.saveClient(client)) {
+                    this._dynDnsClientDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'DynDns client save success.'
+                    });
+                }
+            } catch ({message}) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: message
+                });
+            }
+        });
     }
 
     /**
@@ -153,14 +194,26 @@ export class DynDnsClients extends BasePage {
                         'Edit',
                         async(): Promise<void> => {
                             this._dynDnsClientDialog.resetValues();
-                            this._dynDnsClientDialog.setTitle('Client Edit');
+                            this._dynDnsClientDialog.setTitle('DynDns Client Edit');
                             this._dynDnsClientDialog.show();
 
-                            const providers = await DynDnsClient.getProviderList();
+                            const providers = await DynDnsClientAPI.getProviderList();
 
                             if (providers) {
                                 this._dynDnsClientDialog.setProviders(providers.list);
                             }
+
+                            const domains = await Domain.getDomains();
+
+                            if (domains) {
+                                this._dynDnsClientDialog.setDomains(domains.list);
+                            }
+
+                            this._dynDnsClientDialog.setId(entry.id);
+                            this._dynDnsClientDialog.setProvider(entry.provider.name);
+                            this._dynDnsClientDialog.setDomainSelected(entry.domains);
+                            this._dynDnsClientDialog.setUsername(entry.username);
+                            this._dynDnsClientDialog.setUpdateDomains(entry.update_domain);
                         },
                         IconFa.edit);
 

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import * as Path from 'path';
 import {Config} from '../Config/Config';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
@@ -413,7 +414,13 @@ export class NginxService {
                             'ECDHE-ECDSA-AES128-SHA256:' +
                             'ECDHE-RSA-AES128-SHA256\'');
                         aServer.addVariable('ssl_ecdh_curve', 'secp384r1');
-                        aServer.addVariable('ssl_dhparam', OpenSSL.getDhparamFile());
+
+                        const dhparam = Config.get()?.nginx?.dhparamfile;
+
+                        if (dhparam) {
+                            aServer.addVariable('ssl_dhparam', dhparam);
+                        }
+
                         aServer.addVariable('server_tokens', 'off');
                         aServer.addVariable('ssl_session_timeout', '1d');
                         aServer.addVariable('ssl_session_cache', 'shared:SSL:50m');
@@ -581,15 +588,21 @@ export class NginxService {
      * start
      */
     public async start(): Promise<void> {
-        if (OpenSSL.existDhparam()) {
-            Logger.getLogger().info('Dhparam found.');
-        } else {
-            Logger.getLogger().info('Create Dhparam ...');
+        const dhparam = Config.get()?.nginx?.dhparamfile;
 
-            if (await OpenSSL.createDhparam(4096) === null) {
-                Logger.getLogger().warn('Can not create Dhparam!');
+        if (dhparam) {
+            if (fs.existsSync(dhparam)) {
+                Logger.getLogger().info('Dhparam found.');
             } else {
-                Logger.getLogger().info('Dhparam finish.');
+                Logger.getLogger().info('Create Dhparam ...');
+
+                fs.mkdirSync(Path.dirname(dhparam), {recursive: true});
+
+                if (await OpenSSL.createDhparam(dhparam, 4096) === null) {
+                    Logger.getLogger().warn('Can not create Dhparam!');
+                } else {
+                    Logger.getLogger().info('Dhparam finish.');
+                }
             }
         }
 

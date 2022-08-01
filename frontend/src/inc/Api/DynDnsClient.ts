@@ -25,6 +25,7 @@ export type DynDnsClientData = {
     provider: DynDnsClientProvider;
     username: string;
     password?: string;
+    update_domain: boolean;
     last_update: number;
 };
 
@@ -89,4 +90,23 @@ export class DynDnsClient {
 
         return null;
     }
+
+    /**
+     * saveClient
+     * @param client
+     */
+    public static async saveClient(client: DynDnsClientData): Promise<boolean> {
+        const result = await NetFetch.postData('/json/dyndnsclient/save', client);
+
+        if (result) {
+            if (result.status === 'ok') {
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        }
+
+        return false;
+    }
+
 }
