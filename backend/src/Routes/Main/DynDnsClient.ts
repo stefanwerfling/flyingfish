@@ -31,6 +31,8 @@ export type DynDnsClientData = {
     username: string;
     password?: string;
     update_domain: boolean;
+    last_status: number;
+    last_status_msg: string;
     last_update: number;
 };
 
@@ -122,6 +124,8 @@ export class DynDnsClient {
                         },
                         update_domain: client.update_domain,
                         username: client.username,
+                        last_status: client.last_status,
+                        last_status_msg: provider?.getStatusMsg(client.last_status)!,
                         last_update: client.last_update
                     });
                 }

@@ -92,6 +92,8 @@ export class DynDnsClients extends BasePage {
                     username: this._dynDnsClientDialog.getUsername(),
                     password: this._dynDnsClientDialog.getPassword(),
                     update_domain: this._dynDnsClientDialog.getUpdateDomains(),
+                    last_status: 0,
+                    last_status_msg: '',
                     last_update: 0
                 };
 
@@ -142,6 +144,9 @@ export class DynDnsClients extends BasePage {
         new Th(trhead, 'Username');
 
         // eslint-disable-next-line no-new
+        new Th(trhead, 'Last-Status');
+
+        // eslint-disable-next-line no-new
         new Th(trhead, 'Last-Update');
 
         // eslint-disable-next-line no-new
@@ -176,6 +181,9 @@ export class DynDnsClients extends BasePage {
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${entry.username}`);
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `(${entry.last_status}) ${entry.last_status_msg}`);
 
                     const date = moment(entry.last_update * 1000);
 

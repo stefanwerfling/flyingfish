@@ -32,6 +32,12 @@ export class DynDnsClient extends BaseEntity {
         default: 0
     })
         // @ts-ignore
+    last_status: number;
+
+    @Column({
+        default: 0
+    })
+        // @ts-ignore
     last_update: number;
 
 }

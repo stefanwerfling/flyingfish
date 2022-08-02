@@ -26,6 +26,8 @@ export type DynDnsClientData = {
     username: string;
     password?: string;
     update_domain: boolean;
+    last_status: number;
+    last_status_msg: string;
     last_update: number;
 };
 

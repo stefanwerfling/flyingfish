@@ -52,18 +52,26 @@ export class DynDnsService {
         for (const client of clients) {
             const provider = DynDnsProviders.getProvider(client.provider);
 
-            if (await provider?.update(client.username, client.password, '')) {
-                Logger.getLogger().info(`DynDnsService::updateDns: Domain ip update by provider(${provider?.getName()})`);
+            if (!provider) {
+                Logger.getLogger().error(`DynDnsService::updateDns: provider not found by name: ${client.provider}`);
+                continue;
+            }
 
-                // update last update time
-                await dyndnsclientRepository
-                .createQueryBuilder()
-                .update()
-                .set({
-                    last_update: DateHelper.getCurrentDbTime()
-                })
-                .where('id = :id', {id: client.id})
-                .execute();
+            const providerResult = await provider.update(client.username, client.password, '');
+
+            // update last update time
+            await dyndnsclientRepository
+            .createQueryBuilder()
+            .update()
+            .set({
+                last_status: providerResult.status,
+                last_update: DateHelper.getCurrentDbTime()
+            })
+            .where('id = :id', {id: client.id})
+            .execute();
+
+            if (providerResult.result) {
+                Logger.getLogger().info(`DynDnsService::updateDns: Domain ip update by provider(${provider?.getName()})`);
 
                 if (client.update_domain) {
                     const dyndnsdomains = await dyndnsclientDomainRepository.find({
