@@ -6,7 +6,7 @@
 
 ![FlyingFish](doc/logo.png)
 
-On the "Flyingfish", a ngnix proxy connection manager and more.
+On the "Flyingfish", a nginx proxy connection manager and more.
 </h1>
 
 [![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.0.0-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
