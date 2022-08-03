@@ -1,4 +1,7 @@
 import {NetFetch} from '../Net/NetFetch';
+import {UnauthorizedError} from './Error/UnauthorizedError';
+import {StatusCodes} from './Status/StatusCodes';
+import {DefaultReturn} from './Types/DefaultReturn';
 
 /**
  * DynDnsClientDomain
@@ -34,9 +37,7 @@ export type DynDnsClientData = {
 /**
  * DynDnsClientListResponse
  */
-export type DynDnsClientListResponse = {
-    status: string;
-    msg?: string;
+export type DynDnsClientListResponse = DefaultReturn & {
     list: DynDnsClientData[];
 };
 
@@ -52,9 +53,7 @@ export type DynDnsProvider = {
 /**
  * DynDnsClientProviderListResponse
  */
-export type DynDnsClientProviderListResponse = {
-    status: string;
-    msg?: string;
+export type DynDnsClientProviderListResponse = DefaultReturn & {
     list: DynDnsProvider[];
 };
 
@@ -69,9 +68,13 @@ export class DynDnsClient {
     public static async getClients(): Promise<DynDnsClientListResponse| null> {
         const result = await NetFetch.getData('/json/dyndnsclient/list');
 
-        if (result) {
-            if (result.status === 'ok') {
-                return result as DynDnsClientListResponse;
+        if (result && result.statusCode) {
+            switch(result.statusCode) {
+                case StatusCodes.OK:
+                    return result as DynDnsClientListResponse;
+
+                case StatusCodes.UNAUTHORIZED:
+                    throw new UnauthorizedError();
             }
         }
 
@@ -84,9 +87,13 @@ export class DynDnsClient {
     public static async getProviderList(): Promise<DynDnsClientProviderListResponse| null> {
         const result = await NetFetch.getData('/json/dyndnsclient/provider/list');
 
-        if (result) {
-            if (result.status === 'ok') {
-                return result as DynDnsClientProviderListResponse;
+        if (result && result.statusCode) {
+            switch(result.statusCode) {
+                case StatusCodes.OK:
+                    return result as DynDnsClientProviderListResponse;
+
+                case StatusCodes.UNAUTHORIZED:
+                    throw new UnauthorizedError();
             }
         }
 
@@ -100,11 +107,13 @@ export class DynDnsClient {
     public static async saveClient(client: DynDnsClientData): Promise<boolean> {
         const result = await NetFetch.postData('/json/dyndnsclient/save', client);
 
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
+        if (result && result.statusCode) {
+            switch(result.statusCode) {
+                case StatusCodes.OK:
+                    return true;
+
+                case StatusCodes.UNAUTHORIZED:
+                    throw new UnauthorizedError();
             }
         }
 

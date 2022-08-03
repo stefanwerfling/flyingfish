@@ -4,6 +4,8 @@ import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../inc/Db/MariaDb/E
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 import {DynDnsProvider, DynDnsProviders} from '../../inc/Provider/DynDnsProviders';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
+import {StatusCodes} from '../../inc/Routes/StatusCodes';
 
 /**
  * DynDnsClientDomain
@@ -39,27 +41,15 @@ export type DynDnsClientData = {
 /**
  * DynDnsClientListResponse
  */
-export type DynDnsClientListResponse = {
-    status: string;
-    msg?: string;
+export type DynDnsClientListResponse = DefaultReturn & {
     list: DynDnsClientData[];
 };
 
 /**
  * DynDnsClientProviderListResponse
  */
-export type DynDnsClientProviderListResponse = {
-    status: string;
-    msg?: string;
+export type DynDnsClientProviderListResponse = DefaultReturn & {
     list: DynDnsProvider[];
-};
-
-/**
- * DynDnsClientSaveResponse
- */
-export type DynDnsClientSaveResponse = {
-    status: string;
-    msg?: string;
 };
 
 /**
@@ -132,14 +122,13 @@ export class DynDnsClient {
             }
 
             return {
-                status: 'ok',
+                statusCode: StatusCodes.OK,
                 list
             };
         }
 
         return {
-            status: 'error',
-            msg: 'Please login!',
+            statusCode: StatusCodes.UNAUTHORIZED,
             list: []
         };
     }
@@ -152,14 +141,13 @@ export class DynDnsClient {
     public async getProviders(@Session() session: any): Promise<DynDnsClientProviderListResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
             return {
-                status: 'ok',
+                statusCode: StatusCodes.OK,
                 list: DynDnsProviders.getProviders()
             };
         }
 
         return {
-            status: 'error',
-            msg: 'Please login!',
+            statusCode: StatusCodes.UNAUTHORIZED,
             list: []
         };
     }
@@ -170,7 +158,7 @@ export class DynDnsClient {
      * @param request
      */
     @Post('/json/dyndnsclient/save')
-    public async saveClient(@Session() session: any, @Body() request: DynDnsClientData): Promise<DynDnsClientSaveResponse> {
+    public async saveClient(@Session() session: any, @Body() request: DynDnsClientData): Promise<DefaultReturn> {
         if ((session.user !== undefined) && session.user.isLogin) {
             const dyndnsclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
             const dyndnsclientDomainRepository = MariaDbHelper.getRepository(DynDnsClientDomainDB);
@@ -255,13 +243,21 @@ export class DynDnsClient {
             }
 
             return {
-                status: 'ok'
+                statusCode: StatusCodes.OK
             };
         }
 
         return {
-            status: 'error',
-            msg: 'Please login!'
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
+    }
+
+    public async deleteClient(
+        @Session() session: any,
+        @Body() request: DynDnsClientData
+    ): Promise<DefaultReturn> {
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
         };
     }
 

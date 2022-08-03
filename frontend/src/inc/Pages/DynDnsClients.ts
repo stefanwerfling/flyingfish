@@ -1,6 +1,7 @@
 import moment from 'moment';
 import {Domain} from '../Api/Domain';
 import {DynDnsClient as DynDnsClientAPI, DynDnsClientData} from '../Api/DynDnsClient';
+import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
@@ -13,6 +14,7 @@ import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
 import {DynDnsClientEditModal} from './DynDnsClient/DynDnsClientEditModal';
 
@@ -55,16 +57,21 @@ export class DynDnsClients extends BasePage {
             this._dynDnsClientDialog.setTitle('DynDns Client Add');
             this._dynDnsClientDialog.show();
 
-            const providers = await DynDnsClientAPI.getProviderList();
+            try {
+                const providers = await DynDnsClientAPI.getProviderList();
+                const domains = await Domain.getDomains();
 
-            if (providers) {
-                this._dynDnsClientDialog.setProviders(providers.list);
-            }
+                if (providers) {
+                    this._dynDnsClientDialog.setProviders(providers.list);
+                }
 
-            const domains = await Domain.getDomains();
-
-            if (domains) {
-                this._dynDnsClientDialog.setDomains(domains.list);
+                if (domains) {
+                    this._dynDnsClientDialog.setDomains(domains.list);
+                }
+            } catch (e) {
+                if (e instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
+                }
             }
 
             return false;
@@ -109,10 +116,14 @@ export class DynDnsClients extends BasePage {
                         title: 'DynDns client save success.'
                     });
                 }
-            } catch ({message}) {
+            } catch (error) {
+                if (error instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
+                }
+
                 this._toast.fire({
                     icon: 'error',
-                    title: message
+                    title: error
                 });
             }
         });
@@ -159,80 +170,91 @@ export class DynDnsClients extends BasePage {
             card.showLoading();
             table.getTbody().empty();
 
-            const clients = await DynDnsClientAPI.getClients();
+            try {
+                const clients = await DynDnsClientAPI.getClients();
 
-            if (clients) {
-                card.setTitle(`DynDns Clients (${clients.list.length})`);
+                if (clients) {
+                    card.setTitle(`DynDns Clients (${clients.list.length})`);
 
-                for (const entry of clients.list) {
-                    const trbody = new Tr(table.getTbody());
+                    for (const entry of clients.list) {
+                        const trbody = new Tr(table.getTbody());
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `#${entry.id}`);
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `#${entry.id}`);
 
-                    const domainsTd = new Td(trbody, '');
+                        const domainsTd = new Td(trbody, '');
 
-                    for (const domain of entry.domains) {
-                        new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
+                        for (const domain of entry.domains) {
+                            new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
+                        }
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `${entry.provider.title}`);
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `${entry.username}`);
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `(${entry.last_status}) ${entry.last_status_msg}`);
+
+                        const date = moment(entry.last_update * 1000);
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
+
+                        const tdRAction = new Td(trbody, '');
+                        const btnRMenu = new ButtonMenu(
+                            tdRAction.getElement(),
+                            IconFa.bars,
+                            true,
+                            ButtonType.borderless
+                        );
+
+                        btnRMenu.addMenuItem(
+                            'Edit',
+                            async(): Promise<void> => {
+                                this._dynDnsClientDialog.resetValues();
+                                this._dynDnsClientDialog.setTitle('DynDns Client Edit');
+                                this._dynDnsClientDialog.show();
+
+                                try {
+                                    const providers = await DynDnsClientAPI.getProviderList();
+                                    const domains = await Domain.getDomains();
+
+                                    if (providers) {
+                                        this._dynDnsClientDialog.setProviders(providers.list);
+                                    }
+
+                                    if (domains) {
+                                        this._dynDnsClientDialog.setDomains(domains.list);
+                                    }
+                                } catch (e) {
+                                    if (e instanceof UnauthorizedError) {
+                                        UtilRedirect.toLogin();
+                                    }
+                                }
+
+                                this._dynDnsClientDialog.setId(entry.id);
+                                this._dynDnsClientDialog.setProvider(entry.provider.name);
+                                this._dynDnsClientDialog.setDomainSelected(entry.domains);
+                                this._dynDnsClientDialog.setUsername(entry.username);
+                                this._dynDnsClientDialog.setUpdateDomains(entry.update_domain);
+                            },
+                            IconFa.edit);
+
+                        btnRMenu.addDivider();
+
+                        btnRMenu.addMenuItem(
+                            'Delete',
+                            (): void => {
+
+                            },
+                            IconFa.trash);
                     }
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${entry.provider.title}`);
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${entry.username}`);
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `(${entry.last_status}) ${entry.last_status_msg}`);
-
-                    const date = moment(entry.last_update * 1000);
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
-
-                    const tdRAction = new Td(trbody, '');
-                    const btnRMenu = new ButtonMenu(
-                        tdRAction.getElement(),
-                        IconFa.bars,
-                        true,
-                        ButtonType.borderless
-                    );
-
-                    btnRMenu.addMenuItem(
-                        'Edit',
-                        async(): Promise<void> => {
-                            this._dynDnsClientDialog.resetValues();
-                            this._dynDnsClientDialog.setTitle('DynDns Client Edit');
-                            this._dynDnsClientDialog.show();
-
-                            const providers = await DynDnsClientAPI.getProviderList();
-
-                            if (providers) {
-                                this._dynDnsClientDialog.setProviders(providers.list);
-                            }
-
-                            const domains = await Domain.getDomains();
-
-                            if (domains) {
-                                this._dynDnsClientDialog.setDomains(domains.list);
-                            }
-
-                            this._dynDnsClientDialog.setId(entry.id);
-                            this._dynDnsClientDialog.setProvider(entry.provider.name);
-                            this._dynDnsClientDialog.setDomainSelected(entry.domains);
-                            this._dynDnsClientDialog.setUsername(entry.username);
-                            this._dynDnsClientDialog.setUpdateDomains(entry.update_domain);
-                        },
-                        IconFa.edit);
-
-                    btnRMenu.addDivider();
-
-                    btnRMenu.addMenuItem(
-                        'Delete',
-                        (): void => {
-
-                        },
-                        IconFa.trash);
+                }
+            } catch (error) {
+                if (error instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
                 }
             }
 

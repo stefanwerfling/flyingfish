@@ -133,7 +133,7 @@ export class DynDnsService {
         await this.updateDns();
 
         this._scheduler = scheduleJob('1 */1 * * *', async() => {
-            this.updateDns();
+            await this.updateDns();
         });
     }
 

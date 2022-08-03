@@ -320,7 +320,7 @@ docker-compose up -d
 
 4. Log in to the Admin UI by the first start is the admin user create by the backend:
 
-    [http://127.0.0.1:3000](http://127.0.0.1:3000)
+    [https://127.0.0.1:3000](https://127.0.0.1:3000)
    
 Default Admin User:
 * EMail: ```admin@flyingfish.org```
