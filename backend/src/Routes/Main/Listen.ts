@@ -227,11 +227,11 @@ export class Listen {
                     };
                 }
 
-                const resulte = await listenRepository.delete({
+                const result = await listenRepository.delete({
                     id: tListen.id
                 });
 
-                if (resulte) {
+                if (result) {
                     return {
                         status: 'ok'
                     };

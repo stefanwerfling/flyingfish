@@ -252,10 +252,53 @@ export class DynDnsClient {
         };
     }
 
+    /**
+     * deleteClient
+     * @param session
+     * @param request
+     */
+    @Post('/json/dyndnsclient/delete')
     public async deleteClient(
         @Session() session: any,
         @Body() request: DynDnsClientData
     ): Promise<DefaultReturn> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const dyndnsclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
+            const dyndnsclientDomainRepository = MariaDbHelper.getRepository(DynDnsClientDomainDB);
+
+            const tclient = await dyndnsclientRepository.findOne({
+                where: {
+                    id: request.id
+                }
+            });
+
+            if (tclient) {
+                await dyndnsclientDomainRepository.delete({
+                    dyndnsclient_id: tclient.id
+                });
+
+                const result = await dyndnsclientRepository.delete({
+                    id: tclient.id
+                });
+
+                if (result) {
+                    return {
+                        statusCode: StatusCodes.OK
+                    };
+                }
+
+                return {
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: 'Client can not delete!'
+                };
+            }
+
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'Client not found!'
+            };
+        }
+
         return {
             statusCode: StatusCodes.UNAUTHORIZED
         };

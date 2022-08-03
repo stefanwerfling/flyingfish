@@ -49,7 +49,7 @@ export class FlyingFishSsl {
             if (await OpenSSL.genRsa(key, 2048)) {
                 const crt = Path.join(sslLibPath, FlyingFishSsl.FILE_CRT);
                 const csr = Path.join(sslLibPath, FlyingFishSsl.FILE_CSR);
-                const ca = Path.join(sslLibPath, FlyingFishSsl.FILE_CA);
+                // const ca = Path.join(sslLibPath, FlyingFishSsl.FILE_CA);
 
                 if (await OpenSSL.createCrt(key, crt, cnf)) {
                     Logger.getLogger().info('Crt create');

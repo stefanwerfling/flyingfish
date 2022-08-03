@@ -101,7 +101,7 @@ export class DynDnsClientEditModal extends ModalDialog {
             } else {
                 groupDomains.hide();
             }
-        })
+        });
 
         // buttons -----------------------------------------------------------------------------------------------------
 
