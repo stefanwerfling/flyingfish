@@ -50,7 +50,7 @@ COPY nginx/ ./nginx
 
 COPY backend/package.json ./package.json
 
-RUN npm install
+RUN npm install --force
 
 EXPOSE 80
 EXPOSE 443

@@ -12,7 +12,8 @@ export enum ContextNames {
     map = 'map',
     geo = 'geo',
     match = 'match',
-    stream = 'stream'
+    stream = 'stream',
+    if = 'if'
 }
 
 /**

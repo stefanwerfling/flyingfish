@@ -60,6 +60,12 @@ export class Server extends Context {
     protected _locations: Location[] = [];
 
     /**
+     * context list
+     * @protected
+     */
+    protected _contextList: Context[] = [];
+
+    /**
      * constructor
      * @param name
      */
@@ -171,6 +177,14 @@ export class Server extends Context {
     }
 
     /**
+     * addContext
+     * @param context
+     */
+    public addContext(context: Context): void {
+        this._contextList.push(context);
+    }
+
+    /**
      * _generateStr
      * @param index
      * @protected
@@ -191,6 +205,11 @@ export class Server extends Context {
         if (this._rootDir !== null) {
             buffer += this._createContent(`root ${this._rootDir};`, index + 1);
         }
+
+        this._contextList.forEach((context) => {
+            buffer += '\n';
+            buffer += context.generate(index + 1);
+        });
 
         if (this._errorPages.length > 0) {
             this._errorPages.forEach((value) => {

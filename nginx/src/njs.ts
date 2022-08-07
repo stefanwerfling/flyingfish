@@ -81,12 +81,14 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
         }
 
         const resulte = await ngx.fetch(url, {
-            body: '', headers: {
+            body: '',
+            headers: {
                 'realip_remote_addr': v.realip_remote_addr,
                 'remote_addr': s.remoteAddress,
                 'type': type,
                 'listen_id': listen_id
-            }
+            },
+            verify: false
         });
 
         s.warn(`addressCheck(fetch->status) -> ${resulte.status}`);
@@ -119,10 +121,12 @@ async function authorize(s: NginxHTTPRequest) {
         }
 
         const resulte = await ngx.fetch(v.ff_auth_basic_url, {
-            body: '', headers: {
+            body: '',
+            headers: {
                 'authheader': v.ff_authheader,
                 'location_id': location_id
-            }
+            },
+            verify: false
         });
 
         s.warn(`authorize(fetch->status) -> ${resulte.status}`);

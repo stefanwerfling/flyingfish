@@ -13,6 +13,7 @@ import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
 import {UtilColor} from './inc/Utils/UtilColor';
+import {UtilRedirect} from './inc/Utils/UtilRedirect';
 
 /**
  * Main function for ready document
@@ -36,7 +37,7 @@ import {UtilColor} from './inc/Utils/UtilColor';
         // is login ----------------------------------------------------------------------------------------------------
 
         if (!await LoginAPI.isLogin()) {
-            window.location.replace('/login.html');
+            UtilRedirect.toLogin();
         }
 
         const currentuser = await UserAPI.getUserInfo();
@@ -66,7 +67,7 @@ import {UtilColor} from './inc/Utils/UtilColor';
             'fa-sign-out-alt', async() => {
                 if (confirm('Logout?')) {
                     await LoginAPI.logout();
-                    window.location.replace('/login.html');
+                    UtilRedirect.toLogin();
                 }
             }
         );

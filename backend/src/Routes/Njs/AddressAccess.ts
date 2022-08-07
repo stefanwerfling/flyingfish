@@ -25,7 +25,7 @@ export class AddressAccess {
         @HeaderParam('remote_addr') remote_addr: string,
         @HeaderParam('type') type: string
     ): Promise<boolean> {
-        Logger.getLogger().info(`realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
+        Logger.getLogger().info(`AddressAccess::access: realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
         const ipBlacklistRepository = MariaDbHelper.getRepository(IpBlacklistDB);
@@ -40,12 +40,12 @@ export class AddressAccess {
                 });
 
                 if (!address) {
-                    Logger.getLogger().info(`Address(${realip_remote_addr}) not found in blacklist.`);
+                    Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) not found in blacklist.`);
                     response.status(200);
                     return true;
                 }
 
-                Logger.getLogger().info(`Address(${realip_remote_addr}) found in blacklist!`);
+                Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) found in blacklist!`);
             }
         } else {
             const listen = await listenRepository.findOne({
@@ -56,7 +56,7 @@ export class AddressAccess {
 
             if (listen) {
                 if (listen.enable_address_check) {
-                    Logger.getLogger().info('Listen address check is enable ...');
+                    Logger.getLogger().silly('AddressAccess::access: Listen address check is enable ...');
 
                     if (realip_remote_addr) {
                         const address = await ipBlacklistRepository.findOne({
@@ -66,19 +66,19 @@ export class AddressAccess {
                         });
 
                         if (!address) {
-                            Logger.getLogger().info(`Address(${realip_remote_addr}) not found in blacklist.`);
+                            Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) not found in blacklist.`);
                             response.status(200);
                             return true;
                         }
 
-                        Logger.getLogger().info(`Address(${realip_remote_addr}) found in blacklist!`);
+                        Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) found in blacklist!`);
                     }
                 } else {
                     response.status(200);
                     return true;
                 }
             } else {
-                Logger.getLogger().warn(`Listen(${listen_id}) nout found!`);
+                Logger.getLogger().warn(`AddressAccess::access: Listen(${listen_id}) not found!`);
             }
         }
 

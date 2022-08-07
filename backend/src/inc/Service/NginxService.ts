@@ -3,12 +3,18 @@ import * as Path from 'path';
 import {Config} from '../Config/Config';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
-import {ListenTypes, ListenProtocol as ListenProtocolDB, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
+import {
+    ListenTypes,
+    ListenProtocol as ListenProtocolDB,
+    NginxListen as NginxListenDB,
+    ListenCategory
+} from '../Db/MariaDb/Entity/NginxListen';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
 import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream';
 import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {If} from '../Nginx/Config/If';
 import {Certbot} from '../Provider/Letsencrypt/Certbot';
 import {Logger} from '../Logger/Logger';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen';
@@ -66,6 +72,11 @@ type StreamCollect = {
  * NginxService
  */
 export class NginxService {
+
+    public static readonly INTERN_SERVER_ADDRESS_ACCESS = 'https://127.0.0.1:3000/njs/address_access';
+    public static readonly INTERN_SERVER_AUTH_BASIC = 'https://127.0.0.1:3000/njs/auth_basic';
+
+    public static readonly DEFAULT_DOMAIN_NAME = '_';
 
     /**
      * ngnix service instance
@@ -266,6 +277,7 @@ export class NginxService {
         }
 
         // fill config -------------------------------------------------------------------------------------------------
+
         const tupstreams: string[] = [];
 
         streamMap.forEach((streamCollect, listenPort) => {
@@ -377,7 +389,7 @@ export class NginxService {
                 }
             }
 
-            aServer.addVariable('set $ff_address_access_url', 'http://127.0.0.1:3000/njs/address_access');
+            aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
             aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
             aServer.addVariable('js_access', 'njs.accessAddressStream');
             aServer.addVariable('proxy_pass', varName);
@@ -387,8 +399,6 @@ export class NginxService {
         });
 
         httpMap.forEach((domainHttps, listenPort) => {
-            let useAsDefault = false;
-
             domainHttps.domains.forEach((httpSubCollect, domainName) => {
                 const ssl_enable = httpSubCollect.http.ssl_enable;
 
@@ -437,151 +447,167 @@ export class NginxService {
                         aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
                         aServer.addVariable('add_header X-Robots-Tag', 'none');
+
+                        const domainIf = new If('$host != $server_name');
+                        domainIf.addVariable('return', '444');
+
+                        aServer.addContext(domainIf);
                     } else {
                         Logger.getLogger().warn(`Certificat for Domain '${domainName}' not found and ignore settings.`);
                         return;
                     }
-                } else {
-                    useAsDefault = true;
                 }
 
                 // listen ----------------------------------------------------------------------------------------------
 
-                aServer.addListen(new Listen(
-                    listenPort,
-                    '',
-                    ssl_enable,
-                    httpSubCollect.http.http2_enable
-                ));
-
-                if (domainHttps.listen.enable_ipv6) {
+                if (domainName !== NginxService.DEFAULT_DOMAIN_NAME) {
                     aServer.addListen(new Listen(
                         listenPort,
-                        '[::]',
+                        '',
                         ssl_enable,
                         httpSubCollect.http.http2_enable
                     ));
-                }
 
-                aServer.setServerName(domainName);
-
-                // locations -------------------------------------------------------------------------------------------
-
-                for (const locationCollect of httpSubCollect.locations) {
-                    const entry = locationCollect.location;
-                    let match = entry.match;
-
-                    if (match === '') {
-                        match = '/';
+                    if (domainHttps.listen.enable_ipv6) {
+                        aServer.addListen(new Listen(
+                            listenPort,
+                            '[::]',
+                            ssl_enable,
+                            httpSubCollect.http.http2_enable
+                        ));
                     }
 
-                    const location = new Location(match, entry.modifier);
+                    aServer.setServerName(domainName);
 
-                    if (entry.redirect !== '') {
-                        let redirectCode = 301;
+                    // locations -------------------------------------------------------------------------------------------
 
-                        if (entry.redirect_code > 0) {
-                            redirectCode = entry.redirect_code;
+                    for (const locationCollect of httpSubCollect.locations) {
+                        const entry = locationCollect.location;
+                        let match = entry.match;
+
+                        if (match === '') {
+                            match = '/';
                         }
 
-                        location.addVariable(`return ${redirectCode}`, entry.redirect);
+                        const location = new Location(match, entry.modifier);
+
+                        if (entry.redirect !== '') {
+                            let redirectCode = 301;
+
+                            if (entry.redirect_code > 0) {
+                                redirectCode = entry.redirect_code;
+                            }
+
+                            location.addVariable(`return ${redirectCode}`, entry.redirect);
+                            aServer.addLocation(location);
+
+                            continue;
+                        }
+
+                        // auth use ----------------------------------------------------------------------------------------
+
+                        if (entry.auth_enable) {
+                            let releam = domainName;
+
+                            if (entry.auth_relam !== '') {
+                                releam = entry.auth_relam;
+                            }
+
+                            const dummyHtpasswd = '/opt/app/nginx/htpasswd';
+
+                            if (!fs.existsSync(dummyHtpasswd)) {
+                                fs.writeFileSync(dummyHtpasswd, '');
+                            }
+
+                            location.addVariable('satisfy', 'any');
+                            location.addVariable('auth_basic', `"${releam}"`);
+                            location.addVariable('auth_basic_user_file', dummyHtpasswd);
+                            location.addVariable('auth_request', `/auth${entry.id}`);
+
+                            const authLocation = new Location(`/auth${entry.id}`);
+                            authLocation.addVariable('internal', '');
+                            authLocation.addVariable('set $ff_auth_basic_url', NginxService.INTERN_SERVER_AUTH_BASIC);
+                            authLocation.addVariable('set $ff_location_id', `${entry.id}`);
+                            authLocation.addVariable('set $ff_authheader', '$http_authorization');
+                            authLocation.addVariable('js_content', 'njs.authorize');
+                            aServer.addLocation(authLocation);
+                        }
+
+                        // proxy header ------------------------------------------------------------------------------------
+
+                        location.addVariable('proxy_set_header Host', '$host');
+                        location.addVariable('proxy_set_header X-Forwarded-Scheme', '$scheme');
+                        location.addVariable('proxy_set_header X-Forwarded-Proto', '$scheme');
+                        location.addVariable('proxy_set_header X-Forwarded-For', '$remote_addr');
+                        location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
+
+                        if (locationCollect.sshport_out) {
+                            location.addVariable(
+                                'proxy_pass',
+                                `${entry.sshport_schema}://${Config.get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
+                            );
+                        } else if (entry.proxy_pass) {
+                            location.addVariable('proxy_pass', entry.proxy_pass);
+                        }
+
+                        // websocket use -----------------------------------------------------------------------------------
+
+                        if (locationCollect.location.websocket_enable) {
+                            location.addVariable('proxy_set_header Upgrade', '$http_upgrade');
+                            location.addVariable('proxy_set_header Connection', '$http_connection');
+                            location.addVariable('proxy_http_version', '1.1');
+                        }
+
                         aServer.addLocation(location);
-
-                        continue;
                     }
 
-                    // auth use ----------------------------------------------------------------------------------------
-
-                    if (entry.auth_enable) {
-                        let releam = domainName;
-
-                        if (entry.auth_relam !== '') {
-                            releam = entry.auth_relam;
-                        }
-
-                        const dummyHtpasswd = '/opt/app/nginx/htpasswd';
-
-                        if (!fs.existsSync(dummyHtpasswd)) {
-                            fs.writeFileSync(dummyHtpasswd, '');
-                        }
-
-                        location.addVariable('satisfy', 'any');
-                        location.addVariable('auth_basic', `"${releam}"`);
-                        location.addVariable('auth_basic_user_file', dummyHtpasswd);
-                        location.addVariable('auth_request', `/auth${entry.id}`);
-
-                        const authLocation = new Location(`/auth${entry.id}`);
-                        authLocation.addVariable('internal', '');
-                        authLocation.addVariable('set $ff_auth_basic_url', 'http://127.0.0.1:3000/njs/auth_basic');
-                        authLocation.addVariable('set $ff_location_id', `${entry.id}`);
-                        authLocation.addVariable('set $ff_authheader', '$http_authorization');
-                        authLocation.addVariable('js_content', 'njs.authorize');
-                        aServer.addLocation(authLocation);
-                    }
-
-                    // proxy header ------------------------------------------------------------------------------------
-
-                    location.addVariable('proxy_set_header Host', '$host');
-                    location.addVariable('proxy_set_header X-Forwarded-Scheme', '$scheme');
-                    location.addVariable('proxy_set_header X-Forwarded-Proto', '$scheme');
-                    location.addVariable('proxy_set_header X-Forwarded-For', '$remote_addr');
-                    location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
-
-                    if (locationCollect.sshport_out) {
-                        location.addVariable('proxy_pass', `${entry.sshport_schema}://${Config.get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`);
-                    } else if (entry.proxy_pass) {
-                        location.addVariable('proxy_pass', entry.proxy_pass);
-                    }
-
-                    // websocket use -----------------------------------------------------------------------------------
-
-                    if (locationCollect.location.websocket_enable) {
-                        location.addVariable('proxy_set_header Upgrade', '$http_upgrade');
-                        location.addVariable('proxy_set_header Connection', '$http_connection');
-                        location.addVariable('proxy_http_version', '1.1');
-                    }
-
-                    aServer.addLocation(location);
+                    conf?.getHttp().addServer(aServer);
                 }
-
-                conf?.getHttp().addServer(aServer);
             });
+        });
 
-            // add default server --------------------------------------------------------------------------------------
 
-            if (useAsDefault) {
-                const dServer = new NginxConfServer();
-                dServer.addListen(new Listen(listenPort, '', false, false, ListenProtocol.none, true));
-                dServer.addErrorPage({
-                    code: '500 502 503 504',
-                    uri: '/50x.html'
-                });
+        // set default server ------------------------------------------------------------------------------------------
 
-                dServer.addErrorPage({
-                    code: '404',
-                    uri: '/404.html'
-                });
-
-                const locWellKnown = new Location('/.well-known');
-                locWellKnown.addVariable('alias', '/opt/app/nginx/html/.well-known');
-                dServer.addLocation(locWellKnown);
-
-                // TODO move to own listen server
-                const locStatus = new Location('/flyingfish_status');
-                locStatus.addVariable('stub_status', 'on');
-                locStatus.addVariable('allow', '127.0.0.1');
-                locStatus.addVariable('deny', 'all');
-                dServer.addLocation(locStatus);
-
-                const loc404 = new Location('/404.html');
-                loc404.addVariable('root', '/opt/app/nginx/pages');
-                loc404.addVariable('internal', '');
-                dServer.addLocation(loc404);
-
-                conf?.getHttp().addServer(dServer);
+        const defaultListen = await listenRepository.findOne({
+            where: {
+                listen_type: ListenTypes.http,
+                listen_category: ListenCategory.default_http
             }
         });
 
+        if (defaultListen) {
+            const dServer = new NginxConfServer();
+            dServer.addListen(new Listen(defaultListen.listen_port, '', false, false, ListenProtocol.none, true));
+            dServer.addErrorPage({
+                code: '500 502 503 504',
+                uri: '/50x.html'
+            });
+
+            dServer.addErrorPage({
+                code: '404',
+                uri: '/404.html'
+            });
+
+            const locWellKnown = new Location('/.well-known');
+            locWellKnown.addVariable('alias', '/opt/app/nginx/html/.well-known');
+            dServer.addLocation(locWellKnown);
+
+            // TODO move to own listen server
+            const locStatus = new Location('/flyingfish_status');
+            locStatus.addVariable('stub_status', 'on');
+            locStatus.addVariable('access_log', 'off');
+            locStatus.addVariable('allow', '127.0.0.1');
+            locStatus.addVariable('deny', 'all');
+            dServer.addLocation(locStatus);
+
+            const loc404 = new Location('/404.html');
+            loc404.addVariable('root', '/opt/app/nginx/pages');
+            loc404.addVariable('internal', '');
+            dServer.addLocation(loc404);
+
+            conf?.getHttp().addServer(dServer);
+        }
     }
 
     /**

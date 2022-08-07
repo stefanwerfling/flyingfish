@@ -81,7 +81,7 @@ export class DBSetup {
         l10443.name = 'HTTPS INTERN';
         l10443.listen_port = 10443;
         l10443.listen_type = ListenTypes.http;
-        l10443.listen_category = ListenCategory.https;
+        l10443.listen_category = ListenCategory.default_https;
         l10443.description = 'HTTPS Listener Intern';
         l10443.fixlisten = true;
 
@@ -92,7 +92,7 @@ export class DBSetup {
         l10080.name = 'HTTP INTERN';
         l10080.listen_port = 10080;
         l10080.listen_type = ListenTypes.http;
-        l10080.listen_category = ListenCategory.http;
+        l10080.listen_category = ListenCategory.default_http;
         l10080.description = 'HTTP Listener Intern';
         l10080.fixlisten = true;
 
