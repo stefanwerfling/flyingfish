@@ -18,7 +18,8 @@ export enum ListenCategory {
     default_https,
     stream,
     http,
-    https
+    https,
+    status
 }
 
 /**

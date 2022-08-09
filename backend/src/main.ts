@@ -5,6 +5,7 @@ import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainReco
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream';
 import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
+import {NginxStatusService} from './inc/Service/NginxStatusService';
 import {Ssl as SslController} from './Routes/Main/Ssl';
 import {Domain as DomainController} from './Routes/Main/Domain';
 import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient';
@@ -236,14 +237,13 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
 
     if (tconfig.dyndnsclient) {
         if (tconfig.dyndnsclient.enable) {
-            const dyndns = new DynDnsService();
-            dyndns.start();
+            await DynDnsService.getInstance().start();
         }
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    const himpip = new HowIsMyPublicIpService();
-    himpip.start();
+    await NginxStatusService.getInstance().start();
+    await HowIsMyPublicIpService.getInstance().start();
 })();

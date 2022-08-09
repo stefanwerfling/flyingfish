@@ -17,8 +17,15 @@ import {Ssdp} from './Ssdp';
  * Mapping
  */
 export interface Mapping {
-    public: { gateway: string; host: string; port: number; };
-    private: { host: string; port: number; };
+    public: {
+        gateway: string;
+        host: string;
+        port: number;
+    };
+    private: {
+        host: string;
+        port: number;
+    };
     protocol: string;
     enabled: boolean;
     description: string;

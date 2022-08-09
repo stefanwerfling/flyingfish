@@ -148,6 +148,32 @@ export class Dns2Server {
                                 break;
                         }
                     }
+                } else {
+                    const resolver = new DNS();
+
+                    let result: DNS.DnsResponse|null = null;
+
+                    switch (questionExt.type) {
+                        case Packet.TYPE.A:
+                            result = await resolver.resolveA(questionExt.name);
+                            break;
+
+                        case Packet.TYPE.AAAA:
+                            result = await resolver.resolveAAAA(questionExt.name);
+                            break;
+
+                        case Packet.TYPE.MX:
+                            result = await resolver.resolveMX(questionExt.name);
+                            break;
+
+                        case Packet.TYPE.CNAME:
+                            result = await resolver.resolveCNAME(questionExt.name);
+                            break;
+                    }
+
+                    if (result) {
+
+                    }
                 }
 
                 send(response);

@@ -98,6 +98,18 @@ export class DBSetup {
 
         await MariaDbHelper.getConnection().manager.save(l10080);
 
+        // add 10081 listener status
+        const l10081 = new NginxListenDB();
+        l10081.name = 'STATUS INTERN';
+        l10081.listen_port = 10081;
+        l10081.listen_type = ListenTypes.http;
+        l10081.listen_category = ListenCategory.status;
+        l10081.description = 'Status Listener Intern';
+        l10081.routeless = true;
+        l10081.fixlisten = true;
+
+        await MariaDbHelper.getConnection().manager.save(l10081);
+
         Logger.getLogger().info('Default listener create for first init.');
 
         // create default domain _ ---------------------------------------------------------------------------------

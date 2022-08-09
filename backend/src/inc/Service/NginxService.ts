@@ -76,6 +76,8 @@ export class NginxService {
     public static readonly INTERN_SERVER_ADDRESS_ACCESS = 'https://127.0.0.1:3000/njs/address_access';
     public static readonly INTERN_SERVER_AUTH_BASIC = 'https://127.0.0.1:3000/njs/auth_basic';
 
+    public static readonly LOCATION_STATUS = '/flyingfish_status';
+
     public static readonly DEFAULT_DOMAIN_NAME = '_';
 
     /**
@@ -441,13 +443,14 @@ export class NginxService {
                         aServer.addVariable('ssl_trusted_certificate', `${sslCert}/chain.pem`);
                         aServer.addVariable('ssl_certificate', `${sslCert}/fullchain.pem`);
                         aServer.addVariable('ssl_certificate_key', `${sslCert}/privkey.pem`);
-                        aServer.addVariable('resolver', '8.8.8.8 8.8.4.4 valid=300s');
+                        aServer.addVariable('resolver', '127.0.0.1 valid=300s');
                         aServer.addVariable('resolver_timeout', '5s');
                         aServer.addVariable('add_header X-Frame-Options', 'DENY');
                         aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
                         aServer.addVariable('add_header X-Robots-Tag', 'none');
 
+                        // check is host and server name right
                         const domainIf = new If('$host != $server_name');
                         domainIf.addVariable('return', '444');
 
@@ -566,6 +569,35 @@ export class NginxService {
             });
         });
 
+        // set status server -------------------------------------------------------------------------------------------
+
+        const statusListen = await listenRepository.findOne({
+            where: {
+                listen_type: ListenTypes.http,
+                listen_category: ListenCategory.status
+            }
+        });
+
+        if (statusListen) {
+            const sServer = new NginxConfServer();
+            sServer.addListen(new Listen(
+                statusListen.listen_port,
+                '127.0.0.1',
+                false,
+                false,
+                ListenProtocol.none,
+                true
+            ));
+
+            const locStatus = new Location(NginxService.LOCATION_STATUS);
+            locStatus.addVariable('stub_status', 'on');
+            locStatus.addVariable('access_log', 'off');
+            locStatus.addVariable('allow', '127.0.0.1');
+            locStatus.addVariable('deny', 'all');
+            sServer.addLocation(locStatus);
+
+            conf?.getHttp().addServer(sServer);
+        }
 
         // set default server ------------------------------------------------------------------------------------------
 
@@ -578,7 +610,15 @@ export class NginxService {
 
         if (defaultListen) {
             const dServer = new NginxConfServer();
-            dServer.addListen(new Listen(defaultListen.listen_port, '', false, false, ListenProtocol.none, true));
+            dServer.addListen(new Listen(
+                defaultListen.listen_port,
+                '',
+                false,
+                false,
+                ListenProtocol.none,
+                true
+            ));
+
             dServer.addErrorPage({
                 code: '500 502 503 504',
                 uri: '/50x.html'
@@ -592,14 +632,6 @@ export class NginxService {
             const locWellKnown = new Location('/.well-known');
             locWellKnown.addVariable('alias', '/opt/app/nginx/html/.well-known');
             dServer.addLocation(locWellKnown);
-
-            // TODO move to own listen server
-            const locStatus = new Location('/flyingfish_status');
-            locStatus.addVariable('stub_status', 'on');
-            locStatus.addVariable('access_log', 'off');
-            locStatus.addVariable('allow', '127.0.0.1');
-            locStatus.addVariable('deny', 'all');
-            dServer.addLocation(locStatus);
 
             const loc404 = new Location('/404.html');
             loc404.addVariable('root', '/opt/app/nginx/pages');
