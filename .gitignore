@@ -29,3 +29,7 @@
 /frontend/package-lock.json
 /frontend/dist
 /frontend/assets
+
+/himhip/node_modules
+/himhip/package-lock.json
+/himhip/dist
