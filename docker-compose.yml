@@ -5,6 +5,8 @@ services:
     image: mariadb:latest
     container_name: flyingfish_db
     environment:
+      MARIADB_AUTO_UPGRADE: '1'
+      MARIADB_INITDB_SKIP_TZINFO: '1'
       MYSQL_ROOT_PASSWORD: 'test'
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: 'flyingfish'
@@ -15,6 +17,28 @@ services:
     networks:
       flyingfishNet:
           ipv4_address: 10.103.0.2
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
+  influxdb:
+    image: influxdb:latest
+    container_name: flyingfish_influxdb
+    volumes:
+      - flyingfishInfluxdbData:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_USERNAME=flyingfish
+      - DOCKER_INFLUXDB_INIT_PASSWORD=test
+      - DOCKER_INFLUXDB_INIT_ORG=flyingfish
+      - DOCKER_INFLUXDB_INIT_BUCKET=flyingfish
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=flyingfish-20220805
+    ports:
+      - 127.0.0.1:8086:8086
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.5
     logging:
       driver: "json-file"
       options:
@@ -54,6 +78,27 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+
+  himhip:
+    image: flyingfish_himip:v1.0
+    build:
+      context: ./himhip
+    container_name: flyingfish_himhip
+    command:
+      - node
+      - "dist/main.js"
+      - "--reciverurl=https://10.103.0.3:3000/himhip/update"
+      - "--secure=Dghrk565fn349n5"
+    network_mode: host
+    cap_add:
+      - ALL
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - flyingfish
 
   sshremote:
     image: flyingfishssh:v1.0
@@ -100,6 +145,8 @@ services:
 volumes:
   flyingfishDbData:
     driver: local
+  flyingfishInfluxdbData:
+      driver: local
   flyingfish:
     driver: local
 

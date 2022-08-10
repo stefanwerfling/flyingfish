@@ -45,8 +45,14 @@ interface ConfigOptions {
     dnsserver?: {
         port?: number;
     };
+    // how is my provider ip
     himpip?: {
         provider: string;
+    };
+    // how is my host ip
+    himhip?: {
+        use: boolean;
+        secure: string;
     };
     logging?: {
         dirname?: string;

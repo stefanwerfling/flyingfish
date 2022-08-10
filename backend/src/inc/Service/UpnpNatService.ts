@@ -3,6 +3,7 @@ import {UpnpNatCache} from '../Cache/UpnpNatCache';
 import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort';
 import {promise as PingPromise} from 'ping';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {HimHIP} from '../HimHIP/HimHIP';
 import {Logger} from '../Logger/Logger';
 import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient';
 
@@ -25,6 +26,8 @@ export class UpnpNatService {
 
         this._scheduler = scheduleJob('*/1 * * * *', async() => {
             try {
+                const himhip = HimHIP.getData();
+                console.log(himhip);
                 // all nats without parent
                 const nats = await natportRepository.find({
                     where: {
@@ -36,11 +39,17 @@ export class UpnpNatService {
 
                 if (nats) {
                     for (const anat of nats) {
-                        const res = await PingPromise.probe(anat.gateway_address);
+                        let gateway_address = anat.gateway_address;
+
+                        if (himhip) {
+                            gateway_address = himhip.gateway;
+                        }
+
+                        const res = await PingPromise.probe(gateway_address);
 
                         if (res.alive) {
                             const client = new UpnpNatClient({
-                                gatewayAddress: anat.gateway_address
+                                gatewayAddress: gateway_address
                             });
 
                             try {

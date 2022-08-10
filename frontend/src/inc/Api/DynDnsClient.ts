@@ -120,4 +120,23 @@ export class DynDnsClient {
         return false;
     }
 
+    /**
+     * deleteClient
+     * @param listen
+     */
+    public static async deleteClient(client: DynDnsClientData): Promise<boolean> {
+        const result = await NetFetch.postData('/json/dyndnsclient/delete', client);
+
+        if (result && result.statusCode) {
+            switch(result.statusCode) {
+                case StatusCodes.OK:
+                    return true;
+
+                case StatusCodes.UNAUTHORIZED:
+                    throw new UnauthorizedError();
+            }
+        }
+
+        return false;
+    }
 }

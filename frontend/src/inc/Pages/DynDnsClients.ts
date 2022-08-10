@@ -3,9 +3,11 @@ import {Domain} from '../Api/Domain';
 import {DynDnsClient as DynDnsClientAPI, DynDnsClientData} from '../Api/DynDnsClient';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
+import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol12} from '../Bambooo/Content/ContentCol12';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
 import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
 import {IconFa} from '../Bambooo/Content/Icon/Icon';
@@ -13,6 +15,7 @@ import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
@@ -247,7 +250,36 @@ export class DynDnsClients extends BasePage {
                         btnRMenu.addMenuItem(
                             'Delete',
                             (): void => {
+                                DialogConfirm.confirm(
+                                    'dnydnsDeleteClient',
+                                    ModalDialogType.large,
+                                    'Delete Client',
+                                    `Are you sure you want to delete the client?`,
+                                    async(_, dialog) => {
+                                        try {
+                                            if (await DynDnsClientAPI.deleteClient(entry)) {
+                                                this._toast.fire({
+                                                    icon: 'success',
+                                                    title: 'DynDns Client delete success.'
+                                                });
+                                            }
+                                        } catch ({message}) {
+                                            this._toast.fire({
+                                                icon: 'error',
+                                                title: message
+                                            });
+                                        }
 
+                                        dialog.hide();
+
+                                        if (this._onLoadTable) {
+                                            this._onLoadTable();
+                                        }
+                                    },
+                                    undefined,
+                                    'Delete',
+                                    ButtonClass.danger
+                                );
                             },
                             IconFa.trash);
                     }

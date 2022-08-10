@@ -6,6 +6,7 @@ import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUps
 import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {NginxStatusService} from './inc/Service/NginxStatusService';
+import {Update as HimHipUpdateController} from './Routes/HimHip/Update';
 import {Ssl as SslController} from './Routes/Main/Ssl';
 import {Domain as DomainController} from './Routes/Main/Domain';
 import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient';
@@ -16,8 +17,8 @@ import {Login as LoginController} from './Routes/Main/Login';
 import {Nginx as NginxController} from './Routes/Main/Nginx';
 import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat';
 import {User as UserController} from './Routes/Main/User';
-import {AddressAccess as AddressAccessController} from './Routes/Njs/AddressAccess';
-import {AuthBasic as AuthBasicController} from './Routes/Njs/AuthBasic';
+import {AddressAccess as NjsAddressAccessController} from './Routes/Njs/AddressAccess';
+import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic';
 import {Config} from './inc/Config/Config';
 import {v4 as uuid} from 'uuid';
 import * as bodyParser from 'body-parser';
@@ -199,8 +200,10 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             SslController,
             NginxController,
 
-            AddressAccessController,
-            AuthBasicController
+            NjsAddressAccessController,
+            NjsAuthBasicController,
+
+            HimHipUpdateController
         ],
         publicDir: public_dir,
         sslPath: ssl_path
