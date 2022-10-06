@@ -19,11 +19,12 @@ On the "Flyingfish", a nginx proxy connection manager and more.
 
 ![Issues](https://img.shields.io/github/issues/stefanwerfling/flyingfish?style=for-the-badge)
 ![Forks](https://img.shields.io/github/forks/stefanwerfling/flyingfish?style=for-the-badge)
-![Stars](	https://img.shields.io/github/stars/stefanwerfling/flyingfish?style=for-the-badge)
+![Stars](https://img.shields.io/github/stars/stefanwerfling/flyingfish?style=for-the-badge)
 
 <br>
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6347/badge)](https://bestpractices.coreinfrastructure.org/projects/6347)
+[![Coverage Status](https://coveralls.io/repos/github/stefanwerfling/flyingfish/badge.svg?branch=main)](https://coveralls.io/github/stefanwerfling/flyingfish?branch=main)
 
 # Index
 1. [Motivation](#motivation)
