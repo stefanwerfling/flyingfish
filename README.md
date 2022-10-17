@@ -218,9 +218,11 @@ services:
     image: mariadb:latest
     container_name: flyingfish_db
     environment:
-      MYSQL_ROOT_PASSWORD: 'test'
+      MARIADB_AUTO_UPGRADE: '1'
+      MARIADB_INITDB_SKIP_TZINFO: '1'
+      MYSQL_ROOT_PASSWORD: '<test>'
       MYSQL_ROOT_HOST: '%'
-      MYSQL_DATABASE: 'flyingfish'
+      MYSQL_DATABASE: '<flyingfish>'
     volumes:
       - flyingfishDbData:/var/lib/mysql
     ports:
@@ -234,6 +236,28 @@ services:
         max-size: "500k"
         max-file: "50"
 
+  influxdb:
+    image: influxdb:latest
+    container_name: flyingfish_influxdb
+    volumes:
+      - flyingfishInfluxdbData:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_USERNAME=<flyingfish>
+      - DOCKER_INFLUXDB_INIT_PASSWORD=<test>
+      - DOCKER_INFLUXDB_INIT_ORG=<flyingfish>
+      - DOCKER_INFLUXDB_INIT_BUCKET=<flyingfish>
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=<flyingfish>
+    ports:
+      - 127.0.0.1:8086:8086
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
   flyingfish:
     image: flingfish:v1.0
     build:
@@ -241,6 +265,7 @@ services:
     container_name: flyingfish_service
     volumes:
       - ./config.json:/opt/app/config.json
+      - flyingfish:/var/lib/flyingfish:rw
     ports:
       - "443:443"
       - "80:80"
@@ -258,6 +283,27 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+
+  himhip:
+    image: flyingfish_himip:v1.0
+    build:
+      context: ./himhip
+    container_name: flyingfish_himhip
+    command:
+      - node
+      - "dist/main.js"
+      - "--reciverurl=https://10.103.0.3:3000/himhip/update"
+      - "--secure=<mysecure>"
+    network_mode: host
+    cap_add:
+      - ALL
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - flyingfish
 
   sshremote:
     image: flyingfishssh:v1.0
@@ -283,7 +329,11 @@ services:
 volumes:
   flyingfishDbData:
     driver: local
-
+  flyingfishInfluxdbData:
+    driver: local
+  flyingfish:
+    driver: local
+    
 networks:
   flyingfishNet:
     driver: bridge
@@ -301,6 +351,14 @@ Create a ```config.json``` similar to this:
       "username": "root",
       "password": "test",
       "database": "flyingfish"
+    },
+    "influx": {
+      "url": "http://10.103.0.5:8086",
+      "token": "",
+      "org": "<flyingfish>",
+      "bucket": "<flyingfish>",
+      "username": "<flyingfish>",
+      "password": "<test>"
     }
   },
   "httpserver": {
@@ -313,6 +371,17 @@ Create a ```config.json``` similar to this:
   },
   "sshserver": {
     "ip": "10.103.0.4"
+  },
+  "docker": {
+    "inside": true,
+    "gateway": "10.103.0.1"
+  },
+  "logging": {
+    "level": "silly"
+  },
+  "himhip": {
+    "use": true,
+    "secure": "<mysecure>"
   }
 }
 ```
@@ -386,9 +455,12 @@ flyingfish:
       - ./config.json:/opt/app/config.json
       - ./nginx:/opt/app/nginx:rw
       - ./letsencrypt:/etc/letsencrypt:rw
+      - flyingfish:/var/lib/flyingfish:rw
     ports:
       - "443:443"
       - "80:80"
+      - "5333:53/udp"
+      - "5333:53/tcp"
       - "3000:3000"
       - "1900:1900"
       - "9229:9229"
