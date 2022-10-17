@@ -5,7 +5,7 @@ import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol12} from '../Bambooo/Content/ContentCol12';
+import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
@@ -112,8 +112,7 @@ export class Routes extends BasePage {
                         index: this._routeStreamDialog.getIndex(),
                         listen_id: this._routeStreamDialog.getListen(),
                         destination_listen_id: 0,
-                        ssh: {
-                        },
+                        ssh: {},
                         upstreams: []
                     }
                 };
@@ -274,7 +273,7 @@ export class Routes extends BasePage {
 
                 for (const entry of routes.list) {
                     const row = new ContentRow(content);
-                    const card = new Card(new ContentCol12(row));
+                    const card = new Card(new ContentCol(row, ContentColSize.col12));
 
                     jQuery('<span>Routes for Domain:&nbsp;</span>').appendTo(card.getTitleElement());
 
@@ -662,7 +661,6 @@ export class Routes extends BasePage {
                 }
             }
         };
-
 
         // load table
         await this._onLoadTable();

@@ -1,5 +1,10 @@
-import {Get, JsonController, Session} from 'routing-controllers';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
 import {UpnpNatCache, UpnpNatCacheMapping} from '../../inc/Cache/UpnpNatCache';
+import {NatPort as NatPortDB} from '../../inc/Db/MariaDb/Entity/NatPort';
+import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {HimHIP} from '../../inc/HimHIP/HimHIP';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
+import {StatusCodes} from '../../inc/Routes/StatusCodes';
 
 /**
  * UpnpNatDevice
@@ -10,13 +15,75 @@ export type UpnpNatDevice = {
 };
 
 /**
- * UpnpNatResponse
+ * UpnpNatOpenPortResponse
  */
-export type UpnpNatResponse = {
-    status: string;
-    error?: string;
+export type UpnpNatOpenPortResponse = DefaultReturn & {
     data: UpnpNatDevice[];
 };
+
+/**
+ * UpnpNatPort
+ */
+export type UpnpNatPort = {
+    id: number;
+    postion: number;
+    public_port: number;
+    gateway_identifier_id: number;
+    gateway_address: string;
+    private_port: number;
+    client_address: string;
+    use_himhip_host_address: boolean;
+    ttl: number;
+    protocol: string;
+    last_ttl_update: number;
+    listen_id: number;
+    description: string;
+};
+
+/**
+ * UpnpNatResponse
+ */
+export type UpnpNatResponse = DefaultReturn & {
+    data: UpnpNatPort[];
+};
+
+/**
+ * UpnpNatGatwayInfo
+ */
+export type UpnpNatGatwayInfo = {
+    gatway_address: string;
+    gatwaymac_address: string;
+    client_address: string;
+};
+
+/**
+ * UpnpNatCurrentGatwayInfoResponse
+ */
+export type UpnpNatCurrentGatwayInfoResponse = DefaultReturn & {
+    data?: UpnpNatGatwayInfo;
+};
+
+/**
+ * UpnpNatSaveRequest
+ */
+export type UpnpNatSaveRequest = UpnpNatPort;
+
+/**
+ * UpnpNatSaveResponse
+ */
+export type UpnpNatSaveResponse = DefaultReturn;
+
+/**
+ * UpnpNatDeleteRequest
+ */
+export type UpnpNatDeleteRequest = {
+    id: number;
+};
+
+/**
+ * UpnpNatDeleteResponse
+ */
+export type UpnpNatDeleteResponse = DefaultReturn;
 
 /**
  * UpnpNat
@@ -28,11 +95,10 @@ export class UpnpNat {
      * getUserInfo
      * @param session
      */
-    @Get('/json/upnpnat/list')
-    public async getList(@Session() session: any): Promise<UpnpNatResponse> {
-        const data: UpnpNatDevice[] = [];
-
+    @Get('/json/upnpnat/openportlist')
+    public async getOpenPortList(@Session() session: any): Promise<UpnpNatOpenPortResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
+            const data: UpnpNatDevice[] = [];
             const lists = UpnpNatCache.getInstance().getLists();
 
             if (lists) {
@@ -43,16 +109,171 @@ export class UpnpNat {
                     });
                 });
             }
-        } else {
+
             return {
-                status: 'error',
-                data: []
+                statusCode: StatusCodes.OK,
+                data
             };
         }
 
         return {
-            status: 'ok',
-            data
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            data: []
+        };
+    }
+
+    /**
+     * getList
+     * @param session
+     */
+    @Get('/json/upnpnat/list')
+    public async getList(@Session() session: any): Promise<UpnpNatResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
+
+            const list: UpnpNatPort[] = [];
+            const entrys = await natportRepository.find();
+
+            for (const entry of entrys) {
+                list.push({
+                    id: entry.id,
+                    postion: entry.postion,
+                    public_port: entry.public_port,
+                    gateway_identifier_id: entry.gateway_identifier_id,
+                    gateway_address: entry.gateway_address,
+                    private_port: entry.private_port,
+                    client_address: entry.client_address,
+                    use_himhip_host_address: entry.use_himhip_host_address,
+                    ttl: entry.ttl,
+                    protocol: entry.protocol,
+                    last_ttl_update: entry.last_ttl_update,
+                    listen_id: entry.listen_id,
+                    description: entry.description
+                });
+            }
+
+            return {
+                statusCode: StatusCodes.OK,
+                data: list
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            data: []
+        };
+    }
+
+    /**
+     * getCurrentGatewayInfo
+     * @param session
+     */
+    @Get('/json/upnpnat/current_gateway_info')
+    public async getCurrentGatewayInfo(@Session() session: any): Promise<UpnpNatCurrentGatwayInfoResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const himhip = HimHIP.getData();
+
+            if (himhip !== null) {
+                return {
+                    statusCode: StatusCodes.OK,
+                    data: {
+                        gatway_address: himhip.gateway,
+                        gatwaymac_address: himhip.gatewaymac,
+                        client_address: himhip.hostip
+                    }
+                };
+            }
+        }
+
+        return {
+            statusCode: StatusCodes.INTERNAL_ERROR
+        };
+    }
+
+    /**
+     * save
+     * @param session
+     * @param request
+     */
+    @Post('/json/upnpnat/save')
+    public async save(@Session() session: any, @Body() request: UpnpNatSaveRequest): Promise<UpnpNatSaveResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
+
+            let aNatPort: NatPortDB|null = null;
+
+            if (request.id !== 0) {
+                const tNatPort = await natportRepository.findOne({
+                    where: {
+                        id: request.id
+                    }
+                });
+
+                if (tNatPort) {
+                    aNatPort = tNatPort;
+                }
+            }
+
+            if (aNatPort === null) {
+                aNatPort = new NatPortDB();
+            }
+
+            aNatPort.public_port = request.public_port;
+            aNatPort.gateway_identifier_id = request.gateway_identifier_id;
+            aNatPort.gateway_address = request.gateway_address;
+            aNatPort.private_port = request.private_port;
+            aNatPort.client_address = request.client_address;
+            aNatPort.use_himhip_host_address = request.use_himhip_host_address;
+            aNatPort.ttl = request.ttl;
+            aNatPort.protocol = request.protocol;
+            aNatPort.listen_id = request.listen_id;
+            aNatPort.description = request.description;
+
+            const result = await MariaDbHelper.getConnection().manager.save(aNatPort);
+
+            if (result) {
+                return {
+                    statusCode: StatusCodes.OK
+                };
+            }
+
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
+    }
+
+    /**
+     * delete
+     * @param session
+     * @param request
+     */
+    @Post('/json/upnpnat/delete')
+    public async delete(@Session() session: any, @Body() request: UpnpNatDeleteRequest): Promise<UpnpNatDeleteResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
+
+            const result = await natportRepository.delete({
+                id: request.id
+            });
+
+            if (result) {
+                return {
+                    statusCode: StatusCodes.OK
+                };
+            }
+
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
         };
     }
 

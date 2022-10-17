@@ -1,10 +1,10 @@
 import moment from 'moment';
 import {Domain as DomainAPI, DomainData} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
+import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
 import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol12} from '../Bambooo/Content/ContentCol12';
+import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
@@ -197,7 +197,7 @@ export class Domains extends BasePage {
                     }
 
                     const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
-                    const card = new Card(new ContentCol12(row1));
+                    const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
                     jQuery('<span>Domainname/Zone:&nbsp;</span>').appendTo(card.getTitleElement());
 

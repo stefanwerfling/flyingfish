@@ -11,6 +11,7 @@ import {DynDnsClients} from './inc/Pages/DynDnsClients';
 import {Listens as ListensPage} from './inc/Pages/Listens';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
+import {Gateway as GatewayPage} from './inc/Pages/Gateway';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
 import {UtilColor} from './inc/Utils/UtilColor';
 import {UtilRedirect} from './inc/Utils/UtilRedirect';
@@ -82,6 +83,14 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                     loadPage(new ListensPage());
                 },
                 items: [
+                    {
+                        title: 'Gateway Identifier',
+                        icon: 'fa-solid fa-globe',
+                        name: 'gateway',
+                        onClick: (): void => {
+                            loadPage(new GatewayPage());
+                        }
+                    },
                     {
                         title: 'UpnpNat',
                         icon: 'fa-solid fa-map-signs',
@@ -165,6 +174,8 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 menuItem.setActiv(true);
             }
         }
+
+        menu.initTreeview();
 
         // ---------------------------------------------------------------------------------------------------------
 

@@ -1,7 +1,9 @@
 import {Job, scheduleJob} from 'node-schedule';
 import {UpnpNatCache} from '../Cache/UpnpNatCache';
+import {GatewayIdentifier as GatewayIdentifierDB} from '../Db/MariaDb/Entity/GatewayIdentifier';
 import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort';
 import {promise as PingPromise} from 'ping';
+import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
 import {HimHIP} from '../HimHIP/HimHIP';
 import {Logger} from '../Logger/Logger';
@@ -23,78 +25,93 @@ export class UpnpNatService {
      */
     public async update(): Promise<void> {
         try {
-            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
-
-            const himhip = HimHIP.getData();
-            console.log(himhip);
-            // all nats without parent
-            const nats = await natportRepository.find({
-                where: {
-                    nat_port_id: 0
-                }
-            });
-
             UpnpNatCache.getInstance().reset();
 
-            if (nats) {
-                for (const anat of nats) {
-                    let gateway_address = anat.gateway_address;
+            const giRepository = MariaDbHelper.getRepository(GatewayIdentifierDB);
+            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
+            const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
+            const himhip = HimHIP.getData();
 
-                    if (himhip) {
-                        gateway_address = himhip.gateway;
+            if (himhip) {
+                const gatewayId = await giRepository.findOne({
+                    where: {
+                        mac_address: himhip.gatewaymac
                     }
+                });
 
-                    const res = await PingPromise.probe(gateway_address);
+                if (gatewayId) {
+                    const nats = await natportRepository.find({
+                        where: {
+                            gateway_identifier_id: gatewayId.id
+                        }
+                    });
 
-                    if (res.alive) {
-                        const client = new UpnpNatClient({
-                            gatewayAddress: gateway_address
-                        });
+                    if (nats) {
+                        for (const anat of nats) {
+                            const res = await PingPromise.probe(anat.gateway_address);
 
-                        try {
-                            const device = await client.getGateway();
-                            const gatewayid = device.gateway.getUuid();
+                            if (res.alive) {
+                                const client = new UpnpNatClient({
+                                    gatewayAddress: anat.gateway_address
+                                });
 
-                            if (gatewayid === anat.gateway_id) {
-                                const mappings = await client.getMappings();
+                                try {
+                                    const mappings = await client.getMappings();
 
-                                UpnpNatCache.getInstance().addGatewayMappings(
-                                    gatewayid,
-                                    mappings
-                                );
+                                    UpnpNatCache.getInstance().addGatewayMappings(
+                                        `${gatewayId.mac_address}-${anat.gateway_address}`,
+                                        mappings
+                                    );
+                                } catch (et) {
+                                    Logger.getLogger().info('Gateway mapping info error/empty');
+                                }
+
+                                try {
+                                    const options: NewPortMappingOpts = {
+                                        description: anat.description,
+                                        clientAddress: anat.client_address,
+                                        public: anat.public_port,
+                                        private: anat.private_port,
+                                        ttl: anat.ttl,
+                                        protocol: anat.protocol
+                                    };
+
+                                    if (anat.use_himhip_host_address) {
+                                        options.clientAddress = himhip.hostip;
+                                    }
+
+                                    if (anat.listen_id > 0) {
+                                        const alisten = await listenRepository.findOne({
+                                            where: {
+                                                id: anat.listen_id
+                                            }
+                                        });
+
+                                        if (alisten) {
+                                            options.private = alisten.listen_port;
+                                        }
+                                    }
+
+                                    const map = await client.createMapping(options);
+
+                                    if (map) {
+                                        Logger.getLogger().info(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
+                                    }
+                                } catch (ex) {
+                                    Logger.getLogger().info(`Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
+                                }
                             } else {
-                                Logger.getLogger().info(`Different or new gateway? Ids/MAC differ (${gatewayid}<-->${anat.gateway_id}), skip to next. Check the settings.`);
-                                continue;
+                                Logger.getLogger().info(`Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
                             }
-                        } catch (et) {
-                            Logger.getLogger().info('Gateway mapping info error/empty');
                         }
-
-                        try {
-                            const options: NewPortMappingOpts = {
-                                description: anat.description,
-                                public: anat.public_port,
-                                private: anat.private_port,
-                                ttl: anat.ttl
-                            };
-
-                            if (anat.client_address !== '') {
-                                options.clientAddress = anat.client_address;
-                            }
-
-                            const map = await client.createMapping(options);
-
-                            if (map) {
-                                Logger.getLogger().info(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
-                            }
-                        } catch (ex) {
-                            Logger.getLogger().info(`Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
-                        }
-
                     } else {
-                        Logger.getLogger().info(`Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
+                        Logger.getLogger().info(`Upnp-Nat list is empty by Gateway Identifier: ${gatewayId.id}`);
                     }
+                } else {
+                    Logger.getLogger().info(`Gateway identifier not found by mac: ${himhip.gatewaymac}`);
                 }
+            } else {
+                Logger.getLogger().info('HimHip service is not ready, skip upnpnat service ...');
             }
         } catch (e) {
             Logger.getLogger().error(e);

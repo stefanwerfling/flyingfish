@@ -2,11 +2,13 @@ import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
 import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord';
+import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier';
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream';
 import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {NginxStatusService} from './inc/Service/NginxStatusService';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update';
+import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier';
 import {Ssl as SslController} from './Routes/Main/Ssl';
 import {Domain as DomainController} from './Routes/Main/Domain';
 import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient';
@@ -114,7 +116,8 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 SshUserDB,
                 NatPortDB,
                 CredentialDB,
-                CredentialUserDB
+                CredentialUserDB,
+                GatewayIdentifierDB
             ],
             migrations: [
             ],
@@ -196,6 +199,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
             RouteController,
             ListenController,
             SshController,
+            GatewayIdentifierController,
             UpnpNatController,
             SslController,
             NginxController,

@@ -1,12 +1,21 @@
-import {UpnpNat as UpnpNatAPI} from '../Api/UpnpNat';
+import {GatewayIdentifier as GatewayIdentifierAPI, GatewayIdentifierEntry} from '../Api/GatewayIdentifier';
+import {Listen as ListenAPI, ListenData} from '../Api/Listen';
+import {UpnpNat as UpnpNatAPI, UpnpNatSaveRequest} from '../Api/UpnpNat';
+import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
+import {Card} from '../Bambooo/Content/Card/Card';
+import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
+import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
+import {ButtonType} from '../Bambooo/Content/Form/Button';
+import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
+import {IconFa} from '../Bambooo/Content/Icon/Icon';
+import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {ContentCol12} from '../Bambooo/Content/ContentCol12';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
+import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
+import {UpnpNatEditModal} from './UpnpNat/UpnpNatEditModal';
 
 /**
  * UpnpNat Page
@@ -20,39 +29,138 @@ export class UpnpNat extends BasePage {
     protected _name: string = 'upnpnat';
 
     /**
+     * upnp nat dialog
+     * @protected
+     */
+    protected _upnpnatDialog: UpnpNatEditModal;
+
+    /**
      * constructor
      */
     public constructor() {
         super();
 
         this.setTitle('Upnp Nat');
+
+        this._upnpnatDialog = new UpnpNatEditModal(
+            this._wrapper.getContentWrapper().getContent()
+        );
+
+        // eslint-disable-next-line no-new
+        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Upnp-Nat', () => {
+            this._upnpnatDialog.resetValues();
+            this._upnpnatDialog.setTitle('Upnp-Nat Add');
+            this._upnpnatDialog.show();
+            return false;
+        }, 'btn btn-block btn-default btn-sm');
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._upnpnatDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._upnpnatDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const upnpnat: UpnpNatSaveRequest = {
+                    id: tid,
+                    postion: 0,
+                    public_port: this._upnpnatDialog.getPublicPort(),
+                    gateway_identifier_id: this._upnpnatDialog.getGatewayIdentifier(),
+                    gateway_address: this._upnpnatDialog.getGatewayAddress(),
+                    private_port: this._upnpnatDialog.getPrivatPort(),
+                    client_address: this._upnpnatDialog.getClientAddress(),
+                    use_himhip_host_address: this._upnpnatDialog.getUseHostAddress(),
+                    ttl: this._upnpnatDialog.getTTL(),
+                    protocol: this._upnpnatDialog.getProtocol(),
+                    last_ttl_update: 0,
+                    listen_id: this._upnpnatDialog.getListen(),
+                    description: this._upnpnatDialog.getDescription()
+                };
+
+                if (await UpnpNatAPI.save(upnpnat)) {
+                    this._upnpnatDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'UpnpNat save success.'
+                    });
+                }
+            } catch ({message}) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: message
+                });
+            }
+        });
     }
 
     /**
      * loadContent
-     * https://npm.io/package/@network-utils/arp-lookup
      */
     public async loadContent(): Promise<void> {
-        const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
+        const content = this._wrapper.getContentWrapper().getContent();
+        const card = new Card(new ContentCol(content, ContentColSize.col12));
 
-        const list = await UpnpNatAPI.getList();
+        /**
+         * onLoadList
+         */
+        this._onLoadTable = async(): Promise<void> => {
+            card.emptyBody();
 
-        list?.forEach((device) => {
-            const card = new Card(new ContentCol12(row1));
+            // gateway identifiers -------------------------------------------------------------------------------------
 
-            card.setTitle('Upnp Nat Device');
+            const gatewayIdentifierMap: Map<number, GatewayIdentifierEntry> = new Map<number, GatewayIdentifierEntry>();
+            const gatewayIdentifiers = await GatewayIdentifierAPI.getList();
+
+            if (gatewayIdentifiers) {
+                this._upnpnatDialog.setGatewayIdentifiers(gatewayIdentifiers);
+
+                for (const gi of gatewayIdentifiers) {
+                    gatewayIdentifierMap.set(gi.id, gi);
+                }
+            }
+
+            // listens -------------------------------------------------------------------------------------------------
+
+            const listenMap: Map<number, ListenData> = new Map<number, ListenData>();
+            const listens = await ListenAPI.getListens();
+
+            if (listens) {
+                this._upnpnatDialog.setListens(listens.list);
+
+                for (const alisten of listens.list) {
+                    listenMap.set(alisten.id, alisten);
+                }
+            }
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            card.setTitle('Upnp-Nat');
 
             const table = new Table(card.getElement());
             const trhead = new Tr(table.getThead());
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'Gateway');
+            new Th(trhead, 'Gateway Identifier');
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'Public');
+            new Th(trhead, 'Extern');
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'Private');
+            new Th(trhead, '');
+
+            // eslint-disable-next-line no-new
+            new Th(trhead, 'Intern');
+
+            // eslint-disable-next-line no-new
+            new Th(trhead, 'Listen');
 
             // eslint-disable-next-line no-new
             new Th(trhead, 'TTL');
@@ -60,25 +168,130 @@ export class UpnpNat extends BasePage {
             // eslint-disable-next-line no-new
             new Th(trhead, 'Description');
 
-            device.mappings.forEach((map) => {
-                const trbody = new Tr(table.getTbody());
+            // eslint-disable-next-line no-new
+            new Th(trhead, '');
 
-                // eslint-disable-next-line no-new
-                new Td(trbody, `${map.public.gateway}`);
+            const list = await UpnpNatAPI.getList();
 
-                // eslint-disable-next-line no-new
-                new Td(trbody, `${map.public.host}:${map.public.port}`);
+            if (list) {
+                list.forEach((upnpnat) => {
+                    const trbody = new Tr(table.getTbody());
+                    const sgTd = new Td(trbody, '');
 
-                // eslint-disable-next-line no-new
-                new Td(trbody, `${map.private.host}:${map.private.port}`);
+                    const gatewayIdentifier = gatewayIdentifierMap.get(upnpnat.gateway_identifier_id);
 
-                // eslint-disable-next-line no-new
-                new Td(trbody, `${map.ttl}`);
+                    if (gatewayIdentifier) {
+                        new Badge(
+                            sgTd,
+                            `${gatewayIdentifier.networkname}`,
+                            BadgeType.primary,
+                            `${gatewayIdentifier.color}`
+                        );
+                    } else {
+                        new Badge(
+                            sgTd,
+                            'Default FlyingFish',
+                            BadgeType.secondary,
+                        );
+                    }
 
-                // eslint-disable-next-line no-new
-                new Td(trbody, `${map.description}`);
-            });
-        });
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `${upnpnat.gateway_address}:${upnpnat.public_port}`);
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, ' &#8594; ');
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `${upnpnat.client_address}:${upnpnat.private_port}`);
+
+                    const sdTd = new Td(trbody, '');
+
+                    const listen = listenMap.get(upnpnat.listen_id);
+
+                    if (listen) {
+                        // eslint-disable-next-line no-new
+                        new Badge(sdTd, `${listen.name} (${listen.port})`,
+                            listen.type === 0 ? BadgeType.warning : BadgeType.success);
+                    }
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `${upnpnat.ttl}`);
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `${upnpnat.description}`);
+
+                    const tdAction = new Td(trbody, '');
+
+                    const btnMenu = new ButtonMenu(
+                        tdAction,
+                        IconFa.bars,
+                        true,
+                        ButtonType.borderless
+                    );
+
+                    btnMenu.addMenuItem(
+                        'Edit',
+                        async(): Promise<void> => {
+                            this._upnpnatDialog.resetValues();
+                            this._upnpnatDialog.setTitle('Upnp-Nat Edit');
+                            this._upnpnatDialog.show();
+                            this._upnpnatDialog.setId(upnpnat.id);
+                            this._upnpnatDialog.setGatewayIdentifier(upnpnat.gateway_identifier_id);
+                            this._upnpnatDialog.setGatewayAddress(upnpnat.gateway_address);
+                            this._upnpnatDialog.setPublicPort(upnpnat.public_port);
+                            this._upnpnatDialog.setClientAddress(upnpnat.client_address);
+                            this._upnpnatDialog.setUseHostAddress(upnpnat.use_himhip_host_address);
+                            this._upnpnatDialog.setPrivatPort(upnpnat.private_port);
+                            this._upnpnatDialog.setListen(`${upnpnat.listen_id}`);
+                            this._upnpnatDialog.setTTL(upnpnat.ttl);
+                            this._upnpnatDialog.setProtocol(upnpnat.protocol);
+                            this._upnpnatDialog.setDescription(upnpnat.description);
+                        },
+                        IconFa.edit);
+
+                    btnMenu.addDivider();
+
+                    btnMenu.addMenuItem(
+                        'Delete',
+                        (): void => {
+                            DialogConfirm.confirm(
+                                'upnpDelete',
+                                ModalDialogType.large,
+                                'Delete Upnp-Nat',
+                                `Delete this Upnp-Nat "${upnpnat.gateway_address}:${upnpnat.public_port}"?`,
+                                async(_, dialog) => {
+                                    try {
+                                        if (await UpnpNatAPI.delete(upnpnat.id)) {
+                                            this._toast.fire({
+                                                icon: 'success',
+                                                title: 'Upnp-Nat delete success.'
+                                            });
+                                        }
+                                    } catch ({message}) {
+                                        this._toast.fire({
+                                            icon: 'error',
+                                            title: message
+                                        });
+                                    }
+
+                                    dialog.hide();
+
+                                    if (this._onLoadTable) {
+                                        this._onLoadTable();
+                                    }
+                                },
+                                undefined,
+                                'Delete'
+                            );
+                        },
+                        IconFa.trash
+                    );
+                });
+            }
+        };
+
+        // load table
+        await this._onLoadTable();
     }
 
 }

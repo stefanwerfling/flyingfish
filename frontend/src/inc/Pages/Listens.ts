@@ -2,7 +2,7 @@ import {Listen as ListenAPI, ListenData, ListenTypes} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol12} from '../Bambooo/Content/ContentCol12';
+import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {Button, ButtonType} from '../Bambooo/Content/Form/Button';
@@ -123,7 +123,7 @@ export class Listens extends BasePage {
      */
     public async loadContent(): Promise<void> {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
-        const card = new Card(new ContentCol12(row1));
+        const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
         card.setTitle('Listens');
 

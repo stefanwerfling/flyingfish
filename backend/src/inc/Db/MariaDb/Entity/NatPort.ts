@@ -11,47 +11,79 @@ export class NatPort extends BaseEntity {
     id: number;
 
     @Index()
-    @Column()
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     postion: number;
 
+    /**
+     * public port
+     */
     @Column()
         // @ts-ignore
     public_port: number;
 
+    /**
+     * gateway identifier id
+     */
+    @Index()
     @Column()
         // @ts-ignore
-    gateway_id: string;
+    gateway_identifier_id: number;
 
+    /**
+     * ip address
+     */
     @Column()
         // @ts-ignore
     gateway_address: string;
 
+    /**
+     * privat port
+     */
     @Column()
         // @ts-ignore
     private_port: number;
 
+    /**
+     * client address
+     */
     @Column()
         // @ts-ignore
     client_address: string;
+
+    /**
+     * use himhip host address
+     */
+    @Column({
+        default: false
+    })
+        // @ts-ignore
+    use_himhip_host_address: boolean;
 
     @Column()
         // @ts-ignore
     ttl: number;
 
-    @Column()
+    @Column({
+        default: ''
+    })
+        // @ts-ignore
+    protocol: string;
+
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     last_ttl_update: number;
 
     @Index()
-    @Column()
+    @Column({
+        default: 0
+    })
         // @ts-ignore
     listen_id: number;
-
-    @Index()
-    @Column()
-        // @ts-ignore
-    nat_port_id: number;
 
     @Column()
         // @ts-ignore

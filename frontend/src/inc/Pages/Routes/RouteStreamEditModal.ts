@@ -1,4 +1,4 @@
-import {ListenData} from '../../Api/Listen';
+import {ListenData, ListenTypes} from '../../Api/Listen';
 import {UpStream} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
@@ -551,12 +551,12 @@ export class RouteStreamEditModal extends ModalDialog {
                 continue;
             }
 
-            const type = alisten.type === 0 ? 'Stream' : 'HTTP';
+            const type = alisten.type === ListenTypes.stream ? 'Stream' : 'HTTP';
 
             const option = {
                 key: `${alisten.id}`,
                 value: `${alisten.name} - ${alisten.port} (${type})`,
-                style: alisten.type === 0 ? 'background:#ffc107;' : 'background:#28a745;'
+                style: alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;'
             };
 
             if (alisten.type !== this._type) {

@@ -5,7 +5,7 @@ import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
 import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol12} from '../Bambooo/Content/ContentCol12';
+import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
@@ -138,7 +138,7 @@ export class DynDnsClients extends BasePage {
     public async loadContent(): Promise<void> {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
 
-        const card = new Card(new ContentCol12(row1));
+        const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
         card.setTitle('Listens');
 
