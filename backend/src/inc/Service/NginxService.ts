@@ -394,8 +394,8 @@ export class NginxService {
             aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
             aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
             aServer.addVariable('js_access', 'njs.accessAddressStream');
-            aServer.addVariable('proxy_pass', varName);
             aServer.addVariable('ssl_preread', 'on');
+            aServer.addVariable('proxy_pass', varName);
 
             conf?.getStream().addServer(aServer);
         });

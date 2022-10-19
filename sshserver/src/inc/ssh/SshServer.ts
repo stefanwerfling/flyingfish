@@ -183,6 +183,7 @@ export class SshServer {
 
                 if (fserver) {
                     fserver.close();
+                    console.log('Close forward out server');
                 }
             });
         });

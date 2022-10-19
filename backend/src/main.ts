@@ -7,6 +7,7 @@ import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUps
 import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {NginxStatusService} from './inc/Service/NginxStatusService';
+import {SslCertService} from './inc/Service/SslCertService';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update';
 import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier';
 import {Ssl as SslController} from './Routes/Main/Ssl';
@@ -253,4 +254,5 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
 
     await NginxStatusService.getInstance().start();
     await HowIsMyPublicIpService.getInstance().start();
+    await SslCertService.getInstance().start();
 })();

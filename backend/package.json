@@ -59,6 +59,7 @@
     "node-schedule": "^2.1.0",
     "node-xlsx": "^0.21.0",
     "ping": "^0.4.2",
+    "pkijs": "^3.0.8",
     "routing-controllers": "^0.8.1",
     "tough-cookie": "^2.3.4",
     "typeorm": "^0.2.32",
