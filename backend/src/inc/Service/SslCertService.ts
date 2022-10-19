@@ -1,5 +1,6 @@
 import {Job, scheduleJob} from 'node-schedule';
 import Path from 'path';
+import {MoreThan} from 'typeorm';
 import {Certificate} from '../Cert/Certificate';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
@@ -12,6 +13,8 @@ import {NginxService} from './NginxService';
  * SslCertService
  */
 export class SslCertService {
+
+    public static readonly CERT_CREATE_TRY = 3;
 
     /**
      * Ssl cert service instance
@@ -31,16 +34,47 @@ export class SslCertService {
     }
 
     /**
-     * scheduler job
+     * scheduler update job
      * @protected
      */
-    protected _scheduler: Job|null = null;
+    protected _schedulerUpdate: Job|null = null;
+
+    /**
+     * scheduler reset job
+     * @protected
+     */
+    protected _schedulerReset: Job|null = null;
 
     /**
      * in process
      * @protected
      */
     protected _inProcess: boolean = false;
+
+    /**
+     * resetTry
+     */
+    public async resetTry(): Promise<void> {
+        const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+        const https = await httpRepository.find({
+            where: {
+                cert_createtry: MoreThan(SslCertService.CERT_CREATE_TRY)
+            }
+        });
+
+        if (https) {
+            for (const http of https) {
+                await httpRepository
+                .createQueryBuilder()
+                .update()
+                .set({
+                    cert_createtry: 0
+                })
+                .where('id = :id', {id: http.id})
+                .execute();
+            }
+        }
+    }
 
     /**
      * update
@@ -68,6 +102,11 @@ export class SslCertService {
                     });
 
                     if (domain) {
+                        if (http.cert_createtry >= SslCertService.CERT_CREATE_TRY) {
+                            Logger.getLogger().info(`SslCertService::update: to max try for domain: ${domain.domainname}`);
+                            continue;
+                        }
+
                         if (http.cert_email === '') {
                             Logger.getLogger().info(`SslCertService::update: missing email address for domain: ${domain.domainname}`);
                         } else {
@@ -85,15 +124,22 @@ export class SslCertService {
                                 const cert = new Certificate(Path.join(sslCert, 'cert.pem'));
 
                                 if (cert.isValidate()) {
-                                    if (await certbot.renew(domain.domainname)) {
-                                        Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
-
-                                        reloadNginx = true;
-                                    } else {
-                                        Logger.getLogger().error(`SslCertService::update: certificate is faild to renew for domain: ${domain.domainname}`);
-                                    }
-                                } else {
                                     Logger.getLogger().info(`SslCertService::update: certificate is up to date for domain: ${domain.domainname}`);
+                                } else if (await certbot.renew(domain.domainname)) {
+                                    Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
+
+                                    reloadNginx = true;
+                                } else {
+                                    Logger.getLogger().error(`SslCertService::update: certificate is faild to renew for domain: ${domain.domainname}`);
+
+                                    await httpRepository
+                                    .createQueryBuilder()
+                                    .update()
+                                    .set({
+                                        cert_createtry: http.cert_createtry + 1
+                                    })
+                                    .where('id = :id', {id: http.id})
+                                    .execute();
                                 }
                             }
                         }
@@ -117,12 +163,16 @@ export class SslCertService {
      * start
      */
     public async start(): Promise<void> {
-        this._scheduler = scheduleJob('*/1 * * * *', async() => {
+        this._schedulerUpdate = scheduleJob('*/1 * * * *', async() => {
             if (this._inProcess) {
                 return;
             }
 
             await this.update();
+        });
+
+        this._schedulerReset = scheduleJob('*/15 * * * *', async() => {
+            await this.resetTry();
         });
     }
 
@@ -130,8 +180,12 @@ export class SslCertService {
      * stop
      */
     public async stop(): Promise<void> {
-        if (this._scheduler !== null) {
-            this._scheduler.cancel();
+        if (this._schedulerUpdate !== null) {
+            this._schedulerUpdate.cancel();
+        }
+
+        if (this._schedulerReset !== null) {
+            this._schedulerReset.cancel();
         }
     }
 

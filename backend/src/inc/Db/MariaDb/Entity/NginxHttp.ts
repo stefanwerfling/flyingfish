@@ -56,4 +56,10 @@ export class NginxHttp extends BaseEntity {
         // @ts-ignore
     cert_lastupdate: number;
 
+    @Column({
+        default: 0
+    })
+        // @ts-ignore
+    cert_createtry: number;
+
 }

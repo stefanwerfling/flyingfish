@@ -4,13 +4,22 @@ import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 import {Certbot} from '../../inc/Provider/Letsencrypt/Certbot';
 import {SslProvider, SslProviders} from '../../inc/Provider/SslProviders';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
+import {StatusCodes} from '../../inc/Routes/StatusCodes';
 import {NginxService} from '../../inc/Service/NginxService';
 
 /**
- * SslCreateResponse
+ * SslDetailsRequest
  */
-export type SslCreateResponse = {
+export type SslDetailsRequest = {
     httpid: number;
+};
+
+/**
+ * SslDetailsResponse
+ */
+export type SslDetailsResponse = DefaultReturn & {
+
 };
 
 /**
@@ -46,51 +55,15 @@ export class Ssl {
         };
     }
 
-    /**
-     * createCert
-     * @param session
-     * @param request
-     */
-    @Post('/json/ssl/createcert')
-    public async createCert(
-        @Session() session: any,
-        @Body() request: SslCreateResponse
-    ): Promise<boolean> {
+    @Post('/json/ssl/details')
+    public async getCertDetails(@Session() session: any, @Body() request: SslDetailsRequest): Promise<SslDetailsResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = MariaDbHelper.getRepository(DomainDB);
-            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
 
-            const http = await httpRepository.findOne({
-                where: {
-                    id: request.httpid
-                }
-            });
-
-            if (http) {
-                if (http.ssl_enable) {
-                    const domain = await domainRepository.findOne({
-                        where: {
-                            id: http.domain_id
-                        }
-                    });
-
-                    if (domain) {
-                        if (http.cert_email === '') {
-                            return false;
-                        }
-
-                        const certbot = new Certbot();
-                        await certbot.create(domain.domainname, http.cert_email);
-
-                        await NginxService.getInstance().reload();
-
-                        return true;
-                    }
-                }
-            }
         }
 
-        return false;
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
     }
 
 }
