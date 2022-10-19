@@ -43,7 +43,7 @@ export class HimHIP {
                         }
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error(`HimHip::update: error can not send information to server: '${reciverUrl}'.`);
                 }
             } else {
                 console.error('HimHip::update: arp mac request is empty!');

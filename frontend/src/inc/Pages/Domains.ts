@@ -181,14 +181,15 @@ export class Domains extends BasePage {
      * loadContent
      */
     public async loadContent(): Promise<void> {
+        const content = this._wrapper.getContentWrapper().getContent();
 
         /**
          * onLoadList
          */
         this._onLoadTable = async(): Promise<void> => {
-            const domains = await DomainAPI.getDomains();
+            content.empty();
 
-            this._wrapper.getContentWrapper().getContent().empty();
+            const domains = await DomainAPI.getDomains();
 
             if (domains && domains.list) {
                 for (const domain of domains.list) {
@@ -196,7 +197,7 @@ export class Domains extends BasePage {
                         continue;
                     }
 
-                    const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
+                    const row1 = new ContentRow(content);
                     const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
                     jQuery('<span>Domainname/Zone:&nbsp;</span>').appendTo(card.getTitleElement());
