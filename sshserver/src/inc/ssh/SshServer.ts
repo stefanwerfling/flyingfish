@@ -37,7 +37,7 @@ export class SshServer {
             if (!fs.existsSync(hostKeyRsaFile)) {
                 console.log(`Keyfile not found, create new: ${hostKeyRsaFile}`);
 
-                if (!(await SshKeygen.create(hostKeyRsaFile))) {
+                if (!await SshKeygen.create(hostKeyRsaFile)) {
                     console.log('Keyfile can not create!');
 
                     throw new Error(`Keyfile can not create! ${hostKeyRsaFile}`);
@@ -121,6 +121,8 @@ export class SshServer {
         }).on('ready', () => {
             console.log('Client authenticated!');
 
+            let fserver: net.Server|null = null;
+
             client.on('session', (accept) => {
                 const session = accept();
 
@@ -134,7 +136,7 @@ export class SshServer {
                         accept();
                     }
 
-                    net.createServer((socket) => {
+                    fserver = net.createServer((socket) => {
                         socket.setEncoding('utf8');
 
                         client.forwardOut(
@@ -173,6 +175,14 @@ export class SshServer {
 
                 } else if (reject) {
                     reject();
+                }
+            }).on('close', (hadError) => {
+                if (hadError) {
+                    console.log('Client close with error!');
+                }
+
+                if (fserver) {
+                    fserver.close();
                 }
             });
         });
