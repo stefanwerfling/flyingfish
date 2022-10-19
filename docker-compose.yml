@@ -53,7 +53,7 @@ services:
     volumes:
       - ./config.json:/opt/app/config.json
       - ./nginx:/opt/app/nginx:rw
-      - ./letsencrypt:/etc/letsencrypt:rw
+      - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw
     ports:
       - "443:443"
@@ -148,6 +148,8 @@ volumes:
   flyingfishInfluxdbData:
       driver: local
   flyingfish:
+    driver: local
+  flyingfishLetsencrypt:
     driver: local
 
 networks:

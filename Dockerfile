@@ -17,13 +17,12 @@ RUN apk add nginx-mod-stream@nginx
 RUN apk add nginx-module-njs@nginx
 
 RUN apk add python3 python3-dev py3-pip build-base libressl-dev musl-dev libffi-dev rust cargo
+RUN apk add git
 RUN pip3 install pip --upgrade
 RUN pip3 install certbot-nginx
 RUN mkdir /etc/letsencrypt
 
 RUN mkdir -p /opt/app
-RUN mkdir -p /opt/app/dist
-RUN mkdir -p /opt/app/node_modules
 RUN mkdir -p /opt/app/frontend
 RUN mkdir -p /opt/app/nginx
 RUN mkdir -p /opt/app/nginx/logs
@@ -37,6 +36,7 @@ WORKDIR /opt/app
 
 COPY backend/dist ./dist
 COPY backend/node_modules ./node_modules
+COPY backend/package.json ./package.json
 
 COPY frontend/assets ./frontend/assets
 COPY frontend/images ./frontend/images
@@ -47,12 +47,17 @@ COPY frontend/node_modules/bambooo/src ./frontend/src/inc/Bambooo
 COPY frontend/index.html ./frontend/index.html
 COPY frontend/login.html ./frontend/login.html
 COPY frontend/manifest.json ./frontend/manifest.json
+COPY frontend/package.json ./frontend/package.json
 
-COPY nginx/ ./nginx
+COPY nginx/dist ./nginx/dist
+COPY nginx/node_modules ./nginx/node_modules
+COPY nginx/pages ./nginx/pages
+COPY nginx/htpasswd ./nginx/htpasswd
+COPY nginx/package.json ./nginx/package.json
 
-COPY backend/package.json ./package.json
-
-RUN npm install --force
+RUN npm install --force --prefix ./
+RUN npm install --force --prefix ./frontend
+RUN npm install --force --prefix ./nginx
 
 EXPOSE 80
 EXPOSE 443

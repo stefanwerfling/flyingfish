@@ -37,9 +37,17 @@ export class SslCertService {
     protected _scheduler: Job|null = null;
 
     /**
+     * in process
+     * @protected
+     */
+    protected _inProcess: boolean = false;
+
+    /**
      * update
      */
     public async update(): Promise<void> {
+        this._inProcess = true;
+
         const domainRepository = MariaDbHelper.getRepository(DomainDB);
         const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
 
@@ -101,6 +109,8 @@ export class SslCertService {
         if (reloadNginx) {
             await NginxService.getInstance().reload();
         }
+
+        this._inProcess = false;
     }
 
     /**
@@ -108,6 +118,10 @@ export class SslCertService {
      */
     public async start(): Promise<void> {
         this._scheduler = scheduleJob('*/1 * * * *', async() => {
+            if (this._inProcess) {
+                return;
+            }
+
             await this.update();
         });
     }
