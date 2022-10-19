@@ -66,16 +66,16 @@ export class UpnpNatService {
                                     Logger.getLogger().info('Gateway mapping info error/empty');
                                 }
 
-                                try {
-                                    const options: NewPortMappingOpts = {
-                                        description: anat.description,
-                                        clientAddress: anat.client_address,
-                                        public: anat.public_port,
-                                        private: anat.private_port,
-                                        ttl: anat.ttl,
-                                        protocol: anat.protocol
-                                    };
+                                const options: NewPortMappingOpts = {
+                                    description: anat.description,
+                                    clientAddress: anat.client_address,
+                                    public: anat.public_port,
+                                    private: anat.private_port,
+                                    ttl: anat.ttl,
+                                    protocol: anat.protocol
+                                };
 
+                                try {
                                     if (anat.use_himhip_host_address) {
                                         options.clientAddress = himhip.hostip;
                                     }
@@ -95,10 +95,10 @@ export class UpnpNatService {
                                     const map = await client.createMapping(options);
 
                                     if (map) {
-                                        Logger.getLogger().info(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
+                                        Logger.getLogger().info(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
                                     }
                                 } catch (ex) {
-                                    Logger.getLogger().info(`Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${anat.client_address}:${anat.private_port}`);
+                                    Logger.getLogger().info(`Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
                                 }
                             } else {
                                 Logger.getLogger().info(`Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);

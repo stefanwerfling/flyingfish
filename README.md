@@ -306,7 +306,7 @@ services:
       - flyingfish
 
   sshremote:
-    image: flyingfishssh:v1.0
+    image: flyingfish_ssh:v1.0
     build:
       context: ./sshserver/
     container_name: flyingfish_ssh
