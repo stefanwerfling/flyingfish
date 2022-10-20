@@ -50,6 +50,20 @@ export class Stream extends Context {
     }
 
     /**
+     * hashUpstream
+     * @param upstreamName
+     */
+    public hashUpstream(upstreamName: string): boolean {
+        for (const aupstream of this._upstreams) {
+            if (aupstream.getStreamName() === upstreamName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * addMap
      * @param amap
      */

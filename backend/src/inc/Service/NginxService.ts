@@ -286,6 +286,7 @@ export class NginxService {
             const varName = `$ffstream${listenPort}`;
             const aMap = new NginxMap('$ssl_preread_server_name', varName);
             let defaultMapDomain: string|null = null;
+            let procMap: NginxMap|null = null;
 
             streamCollect.domains.forEach((collectStream, domainName) => {
                 const tstream = collectStream.stream;
@@ -313,6 +314,13 @@ export class NginxService {
                             fail_timeout: 0
                         });
                     } else if (collectStream.sshport_in) {
+                        procMap = new NginxMap('$ssl_preread_protocol', `$ffstreamProc${listenPort}`);
+                        procMap.addVariable('"TLSv1.2"', varName);
+                        procMap.addVariable('"TLSv1.3"', varName);
+                        procMap.addVariable('"TLSv1.1"', varName);
+                        procMap.addVariable('"TLSv1.0"', varName);
+                        procMap.addVariable('default', upstreamName);
+
                         // fill default ssh server
                         upStream.addServer({
                             address: Config.get()?.sshserver?.ip!,
@@ -395,7 +403,15 @@ export class NginxService {
             aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
             aServer.addVariable('js_access', 'njs.accessAddressStream');
             aServer.addVariable('ssl_preread', 'on');
-            aServer.addVariable('proxy_pass', varName);
+
+            if (procMap !== null && procMap as NginxMap) {
+                const tprocMap: NginxMap = procMap;
+
+                conf?.getStream().addMap(tprocMap);
+                aServer.addVariable('proxy_pass', tprocMap.getDestinationVar());
+            } else {
+                aServer.addVariable('proxy_pass', varName);
+            }
 
             conf?.getStream().addServer(aServer);
         });

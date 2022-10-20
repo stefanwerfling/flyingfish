@@ -30,6 +30,20 @@ export class Map extends Context {
     }
 
     /**
+     * getSourceVar
+     */
+    public getSourceVar(): string {
+        return this._sourceVar;
+    }
+
+    /**
+     * getDestinationVar
+     */
+    public getDestinationVar(): string {
+        return this._destinationVar;
+    }
+
+    /**
      * generate
      * @param index
      */

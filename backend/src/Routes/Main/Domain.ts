@@ -4,6 +4,7 @@ import {DomainRecord as DomainRecordDB} from '../../inc/Db/MariaDb/Entity/Domain
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {HowIsMyPublicIpService} from '../../inc/Service/HowIsMyPublicIpService';
 
 /**
  * DomainRecord
@@ -311,6 +312,15 @@ export class Domain {
             aRecord.ttl = request.record.ttl;
             aRecord.dvalue = request.record.value;
             aRecord.update_by_dnsclient = request.record.update_by_dnsclient;
+
+            // when update by dnsclient, then set value for ip by public ip
+            if (aRecord.dvalue === '' && aRecord.update_by_dnsclient) {
+                const publicIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
+
+                if (publicIp) {
+                    aRecord.dvalue = publicIp;
+                }
+            }
 
             await MariaDbHelper.getConnection().manager.save(aRecord);
 

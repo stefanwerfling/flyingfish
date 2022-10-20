@@ -54,6 +54,13 @@ export class Upstream extends Context {
     }
 
     /**
+     * getStreamName
+     */
+    public getStreamName(): string {
+        return this._streamName;
+    }
+
+    /**
      * add server
      * @param server
      */
