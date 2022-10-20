@@ -314,6 +314,9 @@ export class NginxService {
                             fail_timeout: 0
                         });
                     } else if (collectStream.sshport_in) {
+                        upstreamName = 'ffus_internsshserver';
+                        upStream.setStreamName(upstreamName);
+
                         procMap = new NginxMap('$ssl_preread_protocol', `$ffstreamProc${listenPort}`);
                         procMap.addVariable('"TLSv1.2"', varName);
                         procMap.addVariable('"TLSv1.3"', varName);
@@ -359,7 +362,9 @@ export class NginxService {
                         });
                     }
 
-                    conf?.getStream().addUpstream(upStream);
+                    if (!conf?.getStream().hashUpstream(upStream.getStreamName())) {
+                        conf?.getStream().addUpstream(upStream);
+                    }
                 }
 
                 if (tstream.isdefault) {
