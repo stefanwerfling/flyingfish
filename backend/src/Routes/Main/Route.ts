@@ -823,9 +823,9 @@ export class Route {
             aHttp.domain_id = request.domainid;
             aHttp.index = request.http.index;
             aHttp.listen_id = request.http.listen_id;
-            aHttp.ssl_enable = request.http.ssl.enable;
-            aHttp.cert_provider = request.http.ssl.provider;
-            aHttp.cert_email = request.http.ssl.email;
+            aHttp.ssl_enable = request.http.ssl.enable || false;
+            aHttp.cert_provider = request.http.ssl.provider || '';
+            aHttp.cert_email = request.http.ssl.email || '';
 
             aHttp = await MariaDbHelper.getConnection().manager.save(aHttp);
 
@@ -883,10 +883,10 @@ export class Route {
                     aNewLocation.proxy_pass = aLocation.proxy_pass;
                 } else if (aLocation.redirect) {
                     aNewLocation.redirect_code = aLocation.redirect.code;
-                    aNewLocation.redirect = aLocation.redirect.redirect;
+                    aNewLocation.redirect = aLocation.redirect.redirect || '';
                 } else if (aLocation.ssh) {
                     aNewLocation.sshport_schema = aLocation.ssh.schema || '';
-                    aNewLocation.sshport_out_id = aLocation.ssh.id!;
+                    aNewLocation.sshport_out_id = aLocation.ssh.id || 0;
                 }
 
                 await MariaDbHelper.getConnection().manager.save(aNewLocation);

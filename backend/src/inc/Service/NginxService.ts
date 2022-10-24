@@ -707,10 +707,15 @@ export class NginxService {
      */
     public async reload(): Promise<void> {
         await this._loadConfig();
+
+        if (await NginxServer.getInstance().testConfig()) {
+            Logger.getLogger().error('NginxService::reload: Nginx server config has a error!');
+        }
+
         NginxServer.getInstance().reload();
 
         if (NginxServer.getInstance().isRun()) {
-            Logger.getLogger().info('Nginx server is reload');
+            Logger.getLogger().info('NginxService::reload: Nginx server is reload');
         }
     }
 

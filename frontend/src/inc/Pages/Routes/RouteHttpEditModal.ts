@@ -1,17 +1,21 @@
 import {ListenData} from '../../Api/Listen';
 import {Location} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
-import {SslProvider} from '../../Api/Ssl';
+import {Ssl as SslAPI, SslProvider} from '../../Api/Ssl';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
+import {Card, CardBodyType, CardLine, CardType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
 import {FormRow} from '../../Bambooo/Content/Form/FormRow';
 import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
 import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
 import {Switch} from '../../Bambooo/Content/Form/Switch';
+import {Icon, IconFa} from '../../Bambooo/Content/Icon/Icon';
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
+import {PText, PTextType} from '../../Bambooo/Content/Text/PText';
+import {StrongText} from '../../Bambooo/Content/Text/StrongText';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {UtilNumber} from '../../Utils/UtilNumber';
 
 /**
  * RouteHttpEditLocationModalDesType
@@ -43,7 +47,7 @@ export class LocationCard {
      * location
      * @protected
      */
-    protected _location: Location;
+    protected _location: Location|null = null;
 
     /**
      * input match
@@ -90,13 +94,9 @@ export class LocationCard {
     /**
      * constructor
      * @param card
-     * @param location
      */
-    public constructor(card: Card, location: Location) {
-        this._location = location;
-
+    public constructor(card: Card) {
         this._card = new Card(card.getElement(), CardBodyType.none, CardType.success);
-        this._card.setTitle(`#${location.id}`);
 
         const groupMatch = new FormGroup(this._card, 'Match');
         this._inputMatch = new InputBottemBorderOnly2(groupMatch);
@@ -202,24 +202,6 @@ export class LocationCard {
             // todo mark as delete
             this.remove();
         });
-
-        // set values --------------------------------------------------------------------------------------------------
-        this.setMatch(location.match);
-
-        if (location.proxy_pass != '') {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.proxypass);
-            this.setProxyPass(location.proxy_pass);
-        } else if (location.ssh && location.ssh.port_out) {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.ssh);
-            this.setSshSchema(`${location.ssh.schema}`);
-            this.setSshListen(`${location.ssh.port_out}`);
-        } else if (location.redirect && (location.redirect.redirect !== '')) {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.redirect);
-            this.setRedirectCode(location.redirect.code);
-            this.setRedirectPath(location.redirect.redirect);
-        } else {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.none);
-        }
     }
 
     /**
@@ -317,6 +299,12 @@ export class LocationCard {
      * @param listens
      */
     public setSshListens(listens: SshPortEntry[]): void {
+        this._selectSshListen.clearValues();
+        this._selectSshListen.addValue({
+            key: '0',
+            value: 'Please select your ssh listen!'
+        });
+
         for (const entry of listens) {
             this._selectSshListen.addValue({
                 key: `${entry.id}`,
@@ -337,7 +325,35 @@ export class LocationCard {
      * getSshListen
      */
     public getSshListen(): number {
-        return parseInt(this._selectSshListen.getSelectedValue(), 10) || 0;
+        const value = this._selectSshListen.getSelectedValue();
+        return UtilNumber.getNumber(value);
+    }
+
+    /**
+     * setLocation
+     * @param location
+     */
+    public setLocation(location: Location): void {
+        this._location = location;
+
+        this._card.setTitle(`#${location.id}`);
+
+        this.setMatch(location.match);
+
+        if (location.proxy_pass != '') {
+            this.setDestinationType(RouteHttpEditLocationModalDesType.proxypass);
+            this.setProxyPass(location.proxy_pass);
+        } else if (location.ssh && location.ssh.port_out) {
+            this.setDestinationType(RouteHttpEditLocationModalDesType.ssh);
+            this.setSshSchema(`${location.ssh.schema}`);
+            this.setSshListen(`${location.ssh.id}`);
+        } else if (location.redirect && (location.redirect.redirect !== '')) {
+            this.setDestinationType(RouteHttpEditLocationModalDesType.redirect);
+            this.setRedirectCode(location.redirect.code);
+            this.setRedirectPath(location.redirect.redirect);
+        } else {
+            this.setDestinationType(RouteHttpEditLocationModalDesType.none);
+        }
     }
 
     /**
@@ -345,7 +361,7 @@ export class LocationCard {
      */
     public getLocation(): Location {
         const tlocation: Location = {
-            id: this._location.id,
+            id: this._location!.id,
             match: this.getMatch(),
             proxy_pass: ''
         };
@@ -465,6 +481,12 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _selectSslProvider: SelectBottemBorderOnly2;
 
     /**
+     * ssl cert details
+     * @protected
+     */
+    protected _sslCertDetails: Card;
+
+    /**
      * ssl email
      * @protected
      */
@@ -503,14 +525,14 @@ export class RouteHttpEditModal extends ModalDialog {
         );
 
         addLocationBtn.setOnClickFn(() => {
-            const location = new LocationCard(this._locationCard, {
+            const location = new LocationCard(this._locationCard);
+            location.setSshListens(this._sshListens);
+            location.setLocation({
                 id: 0,
                 ssh: {},
                 match: '',
                 proxy_pass: ''
             });
-
-            location.setSshListens(this._sshListens);
 
             this._locationCards.push(location);
         });
@@ -548,13 +570,52 @@ export class RouteHttpEditModal extends ModalDialog {
         this._inputSslEmail.setPlaceholder('admin@flyingfish.org');
         groupSslEmail.hide();
 
-        this._switchSslEnable.setChangeFn((value) => {
+        this._sslCertDetails = new Card(bodyCardSsl, CardBodyType.none, CardType.primary, CardLine.none);
+        new Icon(this._sslCertDetails.getTitleElement(), IconFa.certificate);
+        this._sslCertDetails.getTitleElement().append('&nbsp;Certificate Details');
+        this._sslCertDetails.hide();
+
+        this._switchSslEnable.setChangeFn(async(value) => {
             groupSslProvider.hide();
             groupSslEmail.hide();
+            this._sslCertDetails.hide();
 
             if (value) {
                 groupSslProvider.show();
                 groupSslEmail.show();
+
+                if (this._id) {
+                    this._sslCertDetails.show();
+                    this._sslCertDetails.emptyBody();
+
+                    const certDetails = await SslAPI.getCertDetails(this._id);
+
+                    if (certDetails) {
+                        // serial number
+                        const strongSerial = new StrongText(this._sslCertDetails);
+                        new Icon(strongSerial, IconFa.info);
+                        strongSerial.getElement().append('&nbsp;Serial');
+
+                        const pSerial = new PText(this._sslCertDetails, PTextType.muted);
+                        pSerial.getElement().append(certDetails.serialNumber);
+
+                        this._sslCertDetails.getElement().append('<hr>');
+
+                        // issued to
+
+                        // issued by
+
+                        // valid from
+                        const strongDate = new StrongText(this._sslCertDetails);
+                        new Icon(strongDate, IconFa.info);
+                        strongDate.getElement().append('&nbsp;Validate');
+
+                        const pvalidate = new PText(this._sslCertDetails, PTextType.muted);
+                        pvalidate.getElement().append(`<b>from</b> ${certDetails.dateNotBefore} <b>to</b> ${certDetails.dateNotAfter}`);
+
+                        this._sslCertDetails.getElement().append('<hr>');
+                    }
+                }
             }
         });
 
@@ -680,8 +741,9 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setLocations(locations: Location[]): void {
         for (const tlocation of locations) {
-            const location = new LocationCard(this._locationCard, tlocation);
+            const location = new LocationCard(this._locationCard);
             location.setSshListens(this._sshListens);
+            location.setLocation(tlocation);
 
             this._locationCards.push(location);
         }

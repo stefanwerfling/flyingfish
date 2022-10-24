@@ -1,4 +1,4 @@
-import {Connection, ConnectionOptions, createConnection, EntityTarget, Repository} from 'typeorm';
+import {Connection, ConnectionOptions, createConnection, EntityTarget, ObjectLiteral, Repository} from 'typeorm';
 
 /**
  * MariaDbHelper
@@ -30,7 +30,7 @@ export class MariaDbHelper {
      * getRepository
      * @param target
      */
-    public static getRepository<Entity>(target: EntityTarget<Entity>): Repository<Entity> {
+    public static getRepository<Entity extends ObjectLiteral>(target: EntityTarget<Entity>): Repository<Entity> {
         const connection = MariaDbHelper.getConnection();
 
         if (!connection) {

@@ -36,6 +36,31 @@ export class Certificate {
     }
 
     /**
+     * getSerialNumber
+     */
+    public getSerialNumber(): bigint {
+        return this._certificate.serialNumber.toBigInt();
+    }
+
+    /**
+     * getDateNotBefore
+     */
+    public getDateNotBefore(): Date {
+        return this._certificate.notBefore.value;
+    }
+
+    /**
+     * getDateNotAfter
+     */
+    public getDateNotAfter(): Date {
+        return this._certificate.notAfter.value;
+    }
+
+    public getIssue(): string {
+        return '';
+    }
+
+    /**
      * pemToDer
      * @param pemString
      */

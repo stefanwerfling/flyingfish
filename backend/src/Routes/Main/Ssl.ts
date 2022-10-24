@@ -1,4 +1,6 @@
+import Path from 'path';
 import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
+import {Certificate} from '../../inc/Cert/Certificate';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
@@ -6,7 +8,6 @@ import {Certbot} from '../../inc/Provider/Letsencrypt/Certbot';
 import {SslProvider, SslProviders} from '../../inc/Provider/SslProviders';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
 import {StatusCodes} from '../../inc/Routes/StatusCodes';
-import {NginxService} from '../../inc/Service/NginxService';
 
 /**
  * SslDetailsRequest
@@ -16,10 +17,19 @@ export type SslDetailsRequest = {
 };
 
 /**
+ * SslDetails
+ */
+export type SslDetails = {
+    serialNumber: string;
+    dateNotBefore: string;
+    dateNotAfter: string;
+};
+
+/**
  * SslDetailsResponse
  */
 export type SslDetailsResponse = DefaultReturn & {
-
+    details?: SslDetails;
 };
 
 /**
@@ -55,10 +65,64 @@ export class Ssl {
         };
     }
 
-    @Post('/json/ssl/details')
+    /**
+     * getCertDetails
+     * @param session
+     * @param request
+     */
+    @Post('/json/ssl/cert/details')
     public async getCertDetails(@Session() session: any, @Body() request: SslDetailsRequest): Promise<SslDetailsResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
+            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+            const domainRepository = MariaDbHelper.getRepository(DomainDB);
 
+            const http = await httpRepository.findOne({
+                where: {
+                    id: request.httpid
+                }
+            });
+
+            if (http) {
+                if (!http.ssl_enable) {
+                    return {
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: 'SSL is disabled!'
+                    };
+                }
+
+                const domain = await domainRepository.findOne({
+                    where: {
+                        id: http.domain_id
+                    }
+                });
+
+                if (domain) {
+                    const sslCert = Certbot.existCertificate(domain.domainname);
+
+                    if (sslCert) {
+                        const cert = new Certificate(Path.join(sslCert, 'cert.pem'));
+
+                        return {
+                            statusCode: StatusCodes.OK,
+                            details: {
+                                serialNumber: cert.getSerialNumber().toString(),
+                                dateNotBefore: cert.getDateNotBefore().toLocaleString(),
+                                dateNotAfter: cert.getDateNotAfter().toLocaleString()
+                            }
+                        };
+                    }
+                }
+
+                return {
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: 'Domain not found!'
+                };
+            }
+
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'Http id not found!'
+            };
         }
 
         return {

@@ -133,13 +133,18 @@ export class NginxServer {
         }
 
         const args = this._getArguments();
+
+        Logger.getLogger().silly(`NginxServer::start: start nginx with: ${this._command} ${args.join(' ')}`);
+
         this._process = spawn(this._command, args);
 
         this._process.stdout!.on('data', (buf) => {
             const logs = buf.toString().split('\n');
 
             for (const entry of logs) {
-                Logger.getLogger().info(entry);
+                if (entry.trim() !== '') {
+                    Logger.getLogger().info(`NginxServer::stdout: ${entry}`);
+                }
             }
         });
 
@@ -147,7 +152,9 @@ export class NginxServer {
             const logs = buf.toString().split('\n');
 
             for (const entry of logs) {
-                Logger.getLogger().error(entry);
+                if (entry.trim() !== '') {
+                    Logger.getLogger().error(`NginxServer::stderr: ${entry}`);
+                }
             }
         });
     }
@@ -208,11 +215,7 @@ export class NginxServer {
     public async testConfig(): Promise<boolean> {
         const out = exec(`${this._command} -t`);
 
-        if (out.exitCode === 0) {
-            return true;
-        }
-
-        return false;
+        return out.exitCode === 0;
     }
 
 }

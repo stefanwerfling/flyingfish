@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:19-alpine
 RUN apk update
 
 RUN mkdir -p /opt/app

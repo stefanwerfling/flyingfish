@@ -11,13 +11,13 @@ async function accessAddressHttp(s: NginxHTTPRequest) {
     }
 
     if (v.ff_address_access_url) {
-        const resulte = await addressCheck(
+        const reply = await addressCheck(
             v.ff_address_access_url,
             s,
             'http'
         );
 
-        if (resulte) {
+        if (reply) {
             s.warn("accessAddressHttp(" + address + ") -> Allow");
             s.return(200);
             return;
@@ -43,13 +43,13 @@ async function accessAddressStream(s: NginxStreamRequest) {
     }
 
     if (v.ff_address_access_url) {
-        const resulte = await addressCheck(
+        const reply = await addressCheck(
             v.ff_address_access_url,
             s,
             'stream'
         );
 
-        if (resulte) {
+        if (reply) {
             s.warn("accessAddressStream(" + address + ") -> Allow");
             s.allow();
             return;
@@ -72,17 +72,18 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
     // @ts-ignore
     try {
         const v = s.variables;
-        s.warn(`addressCheck(fetch) -> ${url}`);
-
         let listen_id = '0';
 
         if (v.ff_listen_id) {
             listen_id = v.ff_listen_id;
         }
 
-        const resulte = await ngx.fetch(url, {
-            body: '',
+        s.warn(`addressCheck(fetch) -> listenId: ${listen_id}, type: ${type} -> ${url}`);
+
+        const reply = await ngx.fetch(url, {
+            method: 'GET',
             headers: {
+                'Accept-Encoding' : '',
                 'realip_remote_addr': v.realip_remote_addr,
                 'remote_addr': s.remoteAddress,
                 'type': type,
@@ -91,10 +92,22 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
             verify: false
         });
 
-        s.warn(`addressCheck(fetch->status) -> ${resulte.status}`);
+        if (reply) {
+            s.warn(`addressCheck(fetch->status) -> ${reply.status}`);
 
-        if (resulte.status == 200) {
-            return true;
+            if (reply.status === undefined) {
+                s.error(`addressCheck(fetch->status undefined) ok?: ${reply.ok}!`);
+
+                if (reply.ok) {
+                    return true;
+                }
+            } else {
+                if (reply.status == 200) {
+                    return true;
+                }
+            }
+        } else {
+            s.error(`addressCheck(fetch->reply) is empty!`);
         }
     } catch (e: any) {
         s.warn(`addressCheck(error) -> ${e.message}`);
