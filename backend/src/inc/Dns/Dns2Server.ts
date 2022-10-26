@@ -71,7 +71,8 @@ export class Dns2Server {
 
                     const domain = await domainRepository.findOne({
                         where: {
-                            domainname: questionExt.name
+                            domainname: questionExt.name,
+                            disable: false
                         }
                     });
 

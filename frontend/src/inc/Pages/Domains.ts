@@ -88,6 +88,7 @@ export class Domains extends BasePage {
                 const domain: DomainData = {
                     id: tid,
                     name: this._domainDialog.getName(),
+                    disable: this._domainDialog.getDisable(),
 
                     // ignored fields
                     fix: false,
@@ -210,6 +211,10 @@ export class Domains extends BasePage {
                         new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.secondary);
                     }
 
+                    if (domain.disable) {
+                        card.getTitleElement().append(' (disable)');
+                    }
+
                     const btnMenu = new ButtonMenu(
                         card.getToolsElement(),
                         IconFa.bars,
@@ -225,6 +230,7 @@ export class Domains extends BasePage {
                                 this._domainDialog.resetValues();
                                 this._domainDialog.setId(domain.id);
                                 this._domainDialog.setName(domain.name);
+                                this._domainDialog.setDisable(domain.disable);
                                 this._domainDialog.show();
                             },
                             IconFa.edit);

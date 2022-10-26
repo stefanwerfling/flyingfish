@@ -102,6 +102,11 @@ export class SslCertService {
                     });
 
                     if (domain) {
+                        if (domain.disable) {
+                            Logger.getLogger().silly(`SslCertService::update: domain disable for http: ${http.id}`);
+                            continue;
+                        }
+
                         if (http.cert_createtry >= SslCertService.CERT_CREATE_TRY) {
                             Logger.getLogger().info(`SslCertService::update: to max try for domain: ${domain.domainname}`);
                             continue;

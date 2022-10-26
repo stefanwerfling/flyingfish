@@ -30,4 +30,15 @@ export class Domain extends BaseEntity {
         // @ts-ignore
     recordless: boolean;
 
+    /**
+     * disable the listen
+     */
+    @Index()
+    @Column({
+        type: 'bool',
+        default: false
+    })
+        // @ts-ignore
+    disable: boolean;
+
 }

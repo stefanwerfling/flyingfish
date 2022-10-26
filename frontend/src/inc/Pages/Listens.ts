@@ -82,7 +82,8 @@ export class Listens extends BasePage {
                     description: this._listenDialog.getDescription(),
                     routeless: false,
                     enable_ipv6: this._listenDialog.getIp6(),
-                    check_address: this._listenDialog.getAddressCheck()
+                    check_address: this._listenDialog.getAddressCheck(),
+                    disable: this._listenDialog.getDisable()
                 };
 
                 if (await ListenAPI.saveListen(listen)) {
@@ -149,6 +150,9 @@ export class Listens extends BasePage {
         new Th(trhead, 'Options');
 
         // eslint-disable-next-line no-new
+        new Th(trhead, 'Disable');
+
+        // eslint-disable-next-line no-new
         new Th(trhead, '');
 
         /**
@@ -209,6 +213,9 @@ export class Listens extends BasePage {
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${options}`);
 
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, `${entry.disable ? 'yes' : 'no'}`);
+
                     const tdAction = new Td(trbody, '');
 
                     const editBtn = new Button(tdAction, ButtonType.borderless);
@@ -227,6 +234,7 @@ export class Listens extends BasePage {
                         this._listenDialog.setDescription(entry.description);
                         this._listenDialog.setIp6(entry.enable_ipv6);
                         this._listenDialog.setAddressCheck(entry.check_address);
+                        this._listenDialog.setDisable(entry.disable);
                         this._listenDialog.show();
                     });
 

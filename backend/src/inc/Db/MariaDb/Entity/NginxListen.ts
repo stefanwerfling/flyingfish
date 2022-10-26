@@ -120,4 +120,15 @@ export class NginxListen extends BaseEntity {
         // @ts-ignore
     routeless: boolean;
 
+    /**
+     * disable the listen
+     */
+    @Index()
+    @Column({
+        type: 'bool',
+        default: false
+    })
+        // @ts-ignore
+    disable: boolean;
+
 }

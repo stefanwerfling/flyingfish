@@ -35,6 +35,7 @@ export type ListenData = {
     routeless: boolean;
     description: string;
     fix?: boolean;
+    disable: boolean;
 };
 
 /**

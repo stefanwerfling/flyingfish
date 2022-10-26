@@ -66,6 +66,12 @@ export class ListensEditModal extends ModalDialog {
     protected _switchAddressCheck: Switch;
 
     /**
+     * switch disable
+     * @protected
+     */
+    protected _switchDisable: Switch;
+
+    /**
      * click save fn
      * @protected
      */
@@ -131,6 +137,9 @@ export class ListensEditModal extends ModalDialog {
 
         const groupAC = new FormGroup(rowOptions.createCol(6), 'Address Check');
         this._switchAddressCheck = new Switch(groupAC, 'address_check');
+
+        const groupDisable = new FormGroup(bodyCard, 'Disable this Listen');
+        this._switchDisable = new Switch(groupDisable, 'disablelisten');
 
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
@@ -263,6 +272,21 @@ export class ListensEditModal extends ModalDialog {
     }
 
     /**
+     * setDisable
+     * @param disable
+     */
+    public setDisable(disable: boolean): void {
+        this._switchDisable.setEnable(disable);
+    }
+
+    /**
+     * getDisable
+     */
+    public getDisable(): boolean {
+        return this._switchDisable.isEnable();
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -274,6 +298,7 @@ export class ListensEditModal extends ModalDialog {
         this.setDescription('');
         this.setIp6(false);
         this.setAddressCheck(false);
+        this.setDisable(false);
     }
 
     /**

@@ -63,7 +63,7 @@ export class UpnpNatService {
                                         mappings
                                     );
                                 } catch (et) {
-                                    Logger.getLogger().info('Gateway mapping info error/empty');
+                                    Logger.getLogger().info('UpnpNatService::update: Gateway mapping info error/empty');
                                 }
 
                                 const options: NewPortMappingOpts = {
@@ -89,29 +89,34 @@ export class UpnpNatService {
 
                                         if (alisten) {
                                             options.private = alisten.listen_port;
+
+                                            if (alisten.disable) {
+                                                Logger.getLogger().info('UpnpNatService::update: Listen is disable, skip to next ...');
+                                                continue;
+                                            }
                                         }
                                     }
 
                                     const map = await client.createMapping(options);
 
                                     if (map) {
-                                        Logger.getLogger().info(`Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
+                                        Logger.getLogger().info(`UpnpNatService::update: Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
                                     }
                                 } catch (ex) {
-                                    Logger.getLogger().info(`Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
+                                    Logger.getLogger().info(`UpnpNatService::update: Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
                                 }
                             } else {
-                                Logger.getLogger().info(`Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
+                                Logger.getLogger().info(`UpnpNatService::update: Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
                             }
                         }
                     } else {
-                        Logger.getLogger().info(`Upnp-Nat list is empty by Gateway Identifier: ${gatewayId.id}`);
+                        Logger.getLogger().info(`UpnpNatService::update: Upnp-Nat list is empty by Gateway Identifier: ${gatewayId.id}`);
                     }
                 } else {
-                    Logger.getLogger().info(`Gateway identifier not found by mac: ${himhip.gatewaymac}`);
+                    Logger.getLogger().info(`UpnpNatService::update: Gateway identifier not found by mac: ${himhip.gatewaymac}`);
                 }
             } else {
-                Logger.getLogger().info('HimHip service is not ready, skip upnpnat service ...');
+                Logger.getLogger().info('UpnpNatService::update: HimHip service is not ready, skip upnpnat service ...');
             }
         } catch (e) {
             Logger.getLogger().error(e);

@@ -22,6 +22,7 @@ export type DomainData = {
     fix: boolean;
     recordless: boolean;
     records: DomainRecord[];
+    disable: boolean;
 };
 
 /**

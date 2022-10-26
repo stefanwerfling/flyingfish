@@ -3,6 +3,7 @@ import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxLis
 import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {Logger} from '../../inc/Logger/Logger';
 
 /**
  * ListenData
@@ -18,6 +19,7 @@ export type ListenData = {
     routeless: boolean;
     description: string;
     fix?: boolean;
+    disable: boolean;
 };
 
 /**
@@ -82,7 +84,8 @@ export class Listen {
                         name: listen.name,
                         routeless: listen.routeless,
                         description: listen.description,
-                        fix: listen.fixlisten
+                        fix: listen.fixlisten,
+                        disable: listen.disable
                     });
                 }
             }
@@ -124,6 +127,7 @@ export class Listen {
 
                 if (tListen) {
                     aListen = tListen;
+                    Logger.getLogger().silly(`Listen::saveListen: Found listen by id: ${aListen.id}`);
                 } else {
                     return {
                         status: 'error',
@@ -134,16 +138,18 @@ export class Listen {
 
             if (aListen === null) {
                 aListen = new NginxListenDB();
-            }
 
-            if (this._lookedPorts.indexOf(request.port) !== -1) {
-                return {
-                    status: 'error',
-                    error: `port is already used for system: ${request.port}`
-                };
+                if (this._lookedPorts.indexOf(request.port) !== -1) {
+                    return {
+                        status: 'error',
+                        error: `port is already used for system: ${request.port}`
+                    };
+                }
             }
 
             if (aListen.listen_port !== request.port) {
+                Logger.getLogger().silly(`Listen::saveListen: Port diff by: DB Port: ${aListen.listen_port} and request: ${request.port}`);
+
                 const count = await listenRepository.count({
                     where: {
                         listen_port: request.port
@@ -165,6 +171,7 @@ export class Listen {
             aListen.description = request.description;
             aListen.enable_ipv6 = request.enable_ipv6;
             aListen.enable_address_check = request.check_address;
+            aListen.disable = request.disable;
 
             await MariaDbHelper.getConnection().manager.save(aListen);
 

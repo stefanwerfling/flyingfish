@@ -28,6 +28,7 @@ export type DomainData = {
     fix: boolean;
     recordless: boolean;
     records: DomainRecord[];
+    disable: boolean;
 };
 
 /**
@@ -124,6 +125,7 @@ export class Domain {
                     name: domain.domainname,
                     fix: domain.fixdomain,
                     recordless: domain.recordless,
+                    disable: domain.disable,
                     records: recordList
                 });
             }
@@ -185,6 +187,7 @@ export class Domain {
             }
 
             aDomain.domainname = request.name;
+            aDomain.disable = request.disable;
 
             await MariaDbHelper.getConnection().manager.save(aDomain);
 

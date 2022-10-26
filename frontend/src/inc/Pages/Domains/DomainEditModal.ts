@@ -1,5 +1,6 @@
 import {InputBottemBorderOnly2} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
+import {Switch} from '../../Bambooo/Content/Form/Switch';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
 
@@ -26,6 +27,12 @@ export class DomainEditModal extends ModalDialog {
     protected _inputName: InputBottemBorderOnly2;
 
     /**
+     * switch disable
+     * @protected
+     */
+    protected _switchDisable: Switch;
+
+    /**
      * click save fn
      * @protected
      */
@@ -43,6 +50,9 @@ export class DomainEditModal extends ModalDialog {
         const groupName = new FormGroup(bodyCard, 'Domainname');
         this._inputName = new InputBottemBorderOnly2(groupName.getElement());
         this._inputName.setPlaceholder('mydomain.com');
+
+        const groupDisable = new FormGroup(bodyCard, 'Disable this Domain');
+        this._switchDisable = new Switch(groupDisable, 'domaindisable');
 
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
@@ -85,11 +95,27 @@ export class DomainEditModal extends ModalDialog {
     }
 
     /**
+     * setDisable
+     * @param disable
+     */
+    public setDisable(disable: boolean): void {
+        this._switchDisable.setEnable(disable);
+    }
+
+    /**
+     * getDisable
+     */
+    public getDisable(): boolean {
+        return this._switchDisable.isEnable();
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
         this.setId(null);
         this.setName('');
+        this.setDisable(false);
     }
 
     /**
