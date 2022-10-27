@@ -574,6 +574,9 @@ export class NginxService {
 
                         if (locationCollect.sshport_out) {
                             //location.addVariable('proxy_ssl_server_name', 'on');
+                            //location.addVariable('proxy_ssl_protocols', 'SSLv2 SSLv3 TLSv1.2 TLSv1.3');
+                            location.addVariable('proxy_http_version', '1.1');
+                            location.addVariable('proxy_ignore_client_abort', 'on');
 
                             location.addVariable(
                                 'proxy_pass',

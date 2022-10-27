@@ -137,14 +137,24 @@ export class SshServer {
                     }
 
                     fserver = net.createServer((socket) => {
-                        //socket.setEncoding('utf8');
+                        // socket.setEncoding('utf8');
+                        socket.on('error', (err) => {
+                            if (shellChannel) {
+                                shellChannel.write(`Client::error: ${err.message}`);
+                            }
+
+                            console.log(`Server::error: ${err.message}`);
+                        });
 
                         client.forwardOut(
                             info.bindAddr,
                             info.bindPort,
                             socket.remoteAddress!,
                             socket.remotePort!,
-                            (err, upstream) => {
+                            (
+                                err,
+                                upstream
+                            ) => {
                                 if (err) {
                                     socket.end();
 
@@ -158,6 +168,13 @@ export class SshServer {
                                 }
 
                                 upstream.pipe(socket).pipe(upstream);
+                                upstream.on('error', (errUp: any) => {
+                                    if (shellChannel) {
+                                        shellChannel.write('Server::error: upstream');
+                                    }
+
+                                    console.error(errUp);
+                                });
                             }
                         );
                     }).listen(sshPort!.port, () => {
@@ -173,7 +190,6 @@ export class SshServer {
 
                         console.log(`Server::error: ${err.message}`);
                     });
-
                 } else if (reject) {
                     reject();
                 }
