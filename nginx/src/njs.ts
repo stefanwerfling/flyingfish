@@ -79,7 +79,8 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
         }
 
         s.warn(`addressCheck(fetch) -> listenId: ${listen_id}, type: ${type} -> ${url}`);
-
+        s.error(`Version: ${njs.version}`);
+        
         const reply = await ngx.fetch(url, {
             method: 'GET',
             headers: {
@@ -96,7 +97,9 @@ async function addressCheck(url: string, s: NginxStreamRequest|NginxHTTPRequest,
             s.warn(`addressCheck(fetch->status) -> ${reply.status}`);
 
             if (reply.status === undefined) {
+                s.error(`Version: ${njs.version}`);
                 s.error(`addressCheck(fetch->status undefined) ok?: ${reply.ok}!`);
+                s.error(njs.dump(reply));
 
                 if (reply.ok) {
                     return true;
@@ -153,6 +156,10 @@ async function authorize(s: NginxHTTPRequest) {
         s.warn('authorize -> Auth Url not found!');
         s.return(500);
     }
+}
+
+async function info() {
+
 }
 
 /**

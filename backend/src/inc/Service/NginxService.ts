@@ -106,8 +106,8 @@ export class NginxService {
         conf?.resetStream();
         conf?.resetHttp();
 
-        conf?.getStream().addVariable('js_import', '/opt/app/nginx/dist/njs.js');
-        conf?.getHttp().addVariable('js_import', '/opt/app/nginx/dist/njs.js');
+        conf?.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/njs.js');
+        conf?.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/njs.js');
 
         // vars --------------------------------------------------------------------------------------------------------
 
@@ -124,7 +124,11 @@ export class NginxService {
         const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
         const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
 
-        const listens = await listenRepository.find();
+        const listens = await listenRepository.find({
+            where: {
+                disable: false
+            }
+        });
 
         for (const alisten of listens) {
             // read streams by db --------------------------------------------------------------------------------------
@@ -404,9 +408,12 @@ export class NginxService {
                 }
             }
 
-            aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
-            aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
-            aServer.addVariable('js_access', 'njs.accessAddressStream');
+            if (streamCollect.listen.enable_address_check) {
+                aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
+                aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
+                aServer.addVariable('js_access', 'mainstream.accessAddressStream');
+            }
+
             aServer.addVariable('ssl_preread', 'on');
 
             if (procMap !== null && procMap as NginxMap) {
@@ -464,8 +471,8 @@ export class NginxService {
                         aServer.addVariable('ssl_trusted_certificate', `${sslCert}/chain.pem`);
                         aServer.addVariable('ssl_certificate', `${sslCert}/fullchain.pem`);
                         aServer.addVariable('ssl_certificate_key', `${sslCert}/privkey.pem`);
-                        aServer.addVariable('resolver', '127.0.0.1 valid=300s');
-                        aServer.addVariable('resolver_timeout', '5s');
+                        //aServer.addVariable('resolver', '127.0.0.1 valid=300s');
+                        //aServer.addVariable('resolver_timeout', '5s');
                         aServer.addVariable('add_header X-Frame-Options', 'DENY');
                         aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
@@ -553,7 +560,7 @@ export class NginxService {
                             authLocation.addVariable('set $ff_auth_basic_url', NginxService.INTERN_SERVER_AUTH_BASIC);
                             authLocation.addVariable('set $ff_location_id', `${entry.id}`);
                             authLocation.addVariable('set $ff_authheader', '$http_authorization');
-                            authLocation.addVariable('js_content', 'njs.authorize');
+                            authLocation.addVariable('js_content', 'mainhttp.authorize');
                             aServer.addLocation(authLocation);
                         }
 
@@ -566,6 +573,8 @@ export class NginxService {
                         location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
 
                         if (locationCollect.sshport_out) {
+                            //location.addVariable('proxy_ssl_server_name', 'on');
+
                             location.addVariable(
                                 'proxy_pass',
                                 `${entry.sshport_schema}://${Config.get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
@@ -671,16 +680,16 @@ export class NginxService {
 
         if (dhparam) {
             if (fs.existsSync(dhparam)) {
-                Logger.getLogger().info('Dhparam found.');
+                Logger.getLogger().info('NginxService::start: Dhparam found.');
             } else {
-                Logger.getLogger().info('Create Dhparam ...');
+                Logger.getLogger().info('NginxService::start: Create Dhparam ...');
 
                 fs.mkdirSync(Path.dirname(dhparam), {recursive: true});
 
                 if (await OpenSSL.createDhparam(dhparam, 4096) === null) {
-                    Logger.getLogger().warn('Can not create Dhparam!');
+                    Logger.getLogger().warn('NginxService::start: Can not create Dhparam!');
                 } else {
-                    Logger.getLogger().info('Dhparam finish.');
+                    Logger.getLogger().info('NginxService::start: Dhparam finish.');
                 }
             }
         }
@@ -689,7 +698,7 @@ export class NginxService {
         NginxServer.getInstance().start();
 
         if (NginxServer.getInstance().isRun()) {
-            Logger.getLogger().info('Nginx server is start');
+            Logger.getLogger().info('NginxService::start: Nginx server is start');
         }
     }
 

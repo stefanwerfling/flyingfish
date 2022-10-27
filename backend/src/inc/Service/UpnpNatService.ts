@@ -91,7 +91,7 @@ export class UpnpNatService {
                                             options.private = alisten.listen_port;
 
                                             if (alisten.disable) {
-                                                Logger.getLogger().info('UpnpNatService::update: Listen is disable, skip to next ...');
+                                                Logger.getLogger().info(`UpnpNatService::update: Listen (${alisten.listen_port}, ${alisten.description}) is disable, skip to next ...`);
                                                 continue;
                                             }
                                         }
