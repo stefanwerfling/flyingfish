@@ -137,7 +137,7 @@ export class SshServer {
                     }
 
                     fserver = net.createServer((socket) => {
-                        socket.setEncoding('utf8');
+                        //socket.setEncoding('utf8');
 
                         client.forwardOut(
                             info.bindAddr,
@@ -158,11 +158,6 @@ export class SshServer {
                                 }
 
                                 upstream.pipe(socket).pipe(upstream);
-                                upstream.once('data', (chunk: any) => {
-                                    if (chunk) {
-                                        console.log(`recive data by userid: ${sshPort?.ssh_user_id}`);
-                                    }
-                                });
                             }
                         );
                     }).listen(sshPort!.port, () => {
@@ -171,6 +166,12 @@ export class SshServer {
                         }
 
                         console.log(`Listening remote forward on port ${sshPort!.port}->${info.bindPort} by userid: ${sshPort?.ssh_user_id}`);
+                    }).on('error', (err) => {
+                        if (shellChannel) {
+                            shellChannel.write(`Server::error: ${err.message}`);
+                        }
+
+                        console.log(`Server::error: ${err.message}`);
                     });
 
                 } else if (reject) {
