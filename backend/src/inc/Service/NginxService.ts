@@ -79,6 +79,7 @@ export class NginxService {
     public static readonly LOCATION_STATUS = '/flyingfish_status';
 
     public static readonly DEFAULT_DOMAIN_NAME = '_';
+    public static readonly DEFAULT_LOCAL_IP = '127.0.0.1';
 
     /**
      * ngnix service instance
@@ -106,8 +107,8 @@ export class NginxService {
         conf?.resetStream();
         conf?.resetHttp();
 
-        conf?.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/njs.js');
-        conf?.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/njs.js');
+        conf?.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/mainstream.js');
+        conf?.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/mainhttp.js');
 
         // vars --------------------------------------------------------------------------------------------------------
 
@@ -311,7 +312,7 @@ export class NginxService {
                     if (collectStream.destination_listen) {
                         // fill default listen destination
                         upStream.addServer({
-                            address: '127.0.0.1',
+                            address: NginxService.DEFAULT_LOCAL_IP,
                             port: collectStream.destination_listen.listen_port,
                             weight: 0,
                             max_fails: 0,
@@ -358,7 +359,7 @@ export class NginxService {
                     } else {
                         // fill default
                         upStream.addServer({
-                            address: '127.0.0.1',
+                            address: NginxService.DEFAULT_LOCAL_IP,
                             port: 10080,
                             weight: 0,
                             max_fails: 0,
@@ -560,7 +561,7 @@ export class NginxService {
                             authLocation.addVariable('set $ff_auth_basic_url', NginxService.INTERN_SERVER_AUTH_BASIC);
                             authLocation.addVariable('set $ff_location_id', `${entry.id}`);
                             authLocation.addVariable('set $ff_authheader', '$http_authorization');
-                            authLocation.addVariable('js_content', 'mainhttp.authorize');
+                            authLocation.addVariable('js_content', 'mainhttp.authorizeHttp');
                             aServer.addLocation(authLocation);
                         }
 
@@ -615,7 +616,7 @@ export class NginxService {
             const sServer = new NginxConfServer();
             sServer.addListen(new Listen(
                 statusListen.listen_port,
-                '127.0.0.1',
+                NginxService.DEFAULT_LOCAL_IP,
                 false,
                 false,
                 ListenProtocol.none,
@@ -625,7 +626,7 @@ export class NginxService {
             const locStatus = new Location(NginxService.LOCATION_STATUS);
             locStatus.addVariable('stub_status', 'on');
             locStatus.addVariable('access_log', 'off');
-            locStatus.addVariable('allow', '127.0.0.1');
+            locStatus.addVariable('allow', NginxService.DEFAULT_LOCAL_IP);
             locStatus.addVariable('deny', 'all');
             sServer.addLocation(locStatus);
 

@@ -9,6 +9,7 @@ import {BasePage} from './inc/Pages/BasePage';
 import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {DynDnsClients} from './inc/Pages/DynDnsClients';
 import {Listens as ListensPage} from './inc/Pages/Listens';
+import {DnsResolver} from './inc/Pages/DnsResolver';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway';
@@ -110,9 +111,25 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 },
                 items: [
                     {
+                        title: 'Dns-Resolver',
+                        name: 'dnsresolver',
+                        icon: 'fa-solid fa-tag',
+                        onClick: (): void => {
+                            loadPage(new DnsResolver())
+                        }
+                    },
+                    {
                         title: 'DynDns Clients',
                         name: 'dyndnsclients',
                         icon: 'fa-solid fa-satellite-dish',
+                        onClick: (): void => {
+                            loadPage(new DynDnsClients())
+                        }
+                    },
+                    {
+                        title: 'DynDns Server',
+                        name: 'dyndnsserver',
+                        icon: 'fa-solid fa-server',
                         onClick: (): void => {
                             loadPage(new DynDnsClients())
                         }
@@ -154,7 +171,7 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 const menuTree = new SidebarMenuTree(menuItem);
 
                 for( const sitem of item.items) {
-                    const pmenuItem = new SidebarMenuItem(menuTree);
+                    const pmenuItem = new SidebarMenuItem(menuTree, true);
                     pmenuItem.setTitle(sitem.title);
                     pmenuItem.setName(sitem.name);
                     pmenuItem.setClick(sitem.onClick);
