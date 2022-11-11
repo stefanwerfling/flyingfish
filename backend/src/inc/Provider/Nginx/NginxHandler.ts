@@ -22,6 +22,7 @@ export class NginxHandler {
                 return NginxStatus.parse(response.body);
             }
         } catch (e) {
+            Logger.getLogger().error('NginxHandler::getStatus:');
             Logger.getLogger().error(e);
         }
 

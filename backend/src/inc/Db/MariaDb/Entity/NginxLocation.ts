@@ -78,4 +78,40 @@ export class NginxLocation extends BaseEntity {
         // @ts-ignore
     websocket_enable: boolean;
 
+    @Column({
+        default: true
+    })
+        // @ts-ignore
+    host_enable: boolean;
+
+    @Column({
+        default: ''
+    })
+        // @ts-ignore
+    host_name: string;
+
+    @Column({
+        default: true
+    })
+        // @ts-ignore
+    xforwarded_scheme_enable: boolean;
+
+    @Column({
+        default: true
+    })
+        // @ts-ignore
+    xforwarded_proto_enable: boolean;
+
+    @Column({
+        default: true
+    })
+        // @ts-ignore
+    xforwarded_for_enable: boolean;
+
+    @Column({
+        default: true
+    })
+        // @ts-ignore
+    xrealip_enable: boolean;
+
 }

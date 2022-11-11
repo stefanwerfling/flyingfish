@@ -5,6 +5,7 @@ import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
 import {Card} from '../Bambooo/Content/Card/Card';
+import {Circle, CircleColor} from '../Bambooo/Content/Circle/Circle';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
@@ -189,6 +190,7 @@ export class DynDnsClients extends BasePage {
 
                         for (const domain of entry.domains) {
                             new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
+                            domainsTd.getElement().append('&nbsp;');
                         }
 
                         // eslint-disable-next-line no-new
@@ -198,7 +200,17 @@ export class DynDnsClients extends BasePage {
                         new Td(trbody, `${entry.username}`);
 
                         // eslint-disable-next-line no-new
-                        new Td(trbody, `(${entry.last_status}) ${entry.last_status_msg}`);
+                        const tdLStatus = new Td(trbody, '');
+
+                        if (entry.last_status >= 200 && entry.last_status <= 300) {
+                            // eslint-disable-next-line no-new
+                            new Circle(tdLStatus, CircleColor.green);
+                        } else {
+                            // eslint-disable-next-line no-new
+                            new Circle(tdLStatus, CircleColor.red);
+                        }
+
+                        tdLStatus.getElement().append(`(${entry.last_status}) ${entry.last_status_msg}`);
 
                         const date = moment(entry.last_update * 1000);
 

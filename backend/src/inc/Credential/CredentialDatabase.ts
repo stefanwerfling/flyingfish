@@ -76,5 +76,4 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
         return CredentialDatabase.getName();
     }
 
-
 }

@@ -79,7 +79,8 @@ export class NginxService {
     public static readonly LOCATION_STATUS = '/flyingfish_status';
 
     public static readonly DEFAULT_DOMAIN_NAME = '_';
-    public static readonly DEFAULT_LOCAL_IP = '127.0.0.1';
+    public static readonly DEFAULT_IP_LOCAL = '127.0.0.1';
+    public static readonly DEFAULT_IP_PUBLIC = '0.0.0.0';
 
     /**
      * ngnix service instance
@@ -108,6 +109,7 @@ export class NginxService {
         conf?.resetHttp();
 
         conf?.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/mainstream.js');
+        conf?.getStream().addVariable('resolver', '8.8.8.8 valid=1s');
         conf?.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/mainhttp.js');
 
         // vars --------------------------------------------------------------------------------------------------------
@@ -312,7 +314,7 @@ export class NginxService {
                     if (collectStream.destination_listen) {
                         // fill default listen destination
                         upStream.addServer({
-                            address: NginxService.DEFAULT_LOCAL_IP,
+                            address: NginxService.DEFAULT_IP_LOCAL,
                             port: collectStream.destination_listen.listen_port,
                             weight: 0,
                             max_fails: 0,
@@ -359,7 +361,7 @@ export class NginxService {
                     } else {
                         // fill default
                         upStream.addServer({
-                            address: NginxService.DEFAULT_LOCAL_IP,
+                            address: NginxService.DEFAULT_IP_LOCAL,
                             port: 10080,
                             weight: 0,
                             max_fails: 0,
@@ -435,6 +437,10 @@ export class NginxService {
 
                 const aServer = new NginxConfServer();
 
+                // secure variables ------------------------------------------------------------------------------------
+
+                aServer.addVariable('server_tokens', 'off');
+
                 // ssl use ---------------------------------------------------------------------------------------------
 
                 if (ssl_enable) {
@@ -462,7 +468,6 @@ export class NginxService {
                             aServer.addVariable('ssl_dhparam', dhparam);
                         }
 
-                        aServer.addVariable('server_tokens', 'off');
                         aServer.addVariable('ssl_session_timeout', '1d');
                         aServer.addVariable('ssl_session_cache', 'shared:SSL:50m');
                         aServer.addVariable('ssl_session_tickets', 'off');
@@ -472,8 +477,11 @@ export class NginxService {
                         aServer.addVariable('ssl_trusted_certificate', `${sslCert}/chain.pem`);
                         aServer.addVariable('ssl_certificate', `${sslCert}/fullchain.pem`);
                         aServer.addVariable('ssl_certificate_key', `${sslCert}/privkey.pem`);
-                        //aServer.addVariable('resolver', '127.0.0.1 valid=300s');
-                        //aServer.addVariable('resolver_timeout', '5s');
+
+                        // aServer.addVariable('resolver', '127.0.0.1 valid=300s');
+
+                        // aServer.addVariable('resolver_timeout', '5s');
+
                         aServer.addVariable('add_header X-Frame-Options', 'DENY');
                         aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
@@ -567,15 +575,38 @@ export class NginxService {
 
                         // proxy header ------------------------------------------------------------------------------------
 
-                        location.addVariable('proxy_set_header Host', '$host');
-                        location.addVariable('proxy_set_header X-Forwarded-Scheme', '$scheme');
-                        location.addVariable('proxy_set_header X-Forwarded-Proto', '$scheme');
-                        location.addVariable('proxy_set_header X-Forwarded-For', '$remote_addr');
-                        location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
+                        if (locationCollect.location.host_enable) {
+                            let host = locationCollect.location.host_name.trim();
+
+
+                            if (host === '') {
+                                host = '$host';
+                            }
+
+                            location.addVariable('proxy_set_header Host', host);
+                        }
+
+                        if (locationCollect.location.xforwarded_scheme_enable) {
+                            location.addVariable('proxy_set_header X-Forwarded-Scheme', '$scheme');
+                        }
+
+                        if (locationCollect.location.xforwarded_proto_enable) {
+                            location.addVariable('proxy_set_header X-Forwarded-Proto', '$scheme');
+                        }
+
+                        if (locationCollect.location.xforwarded_for_enable) {
+                            location.addVariable('proxy_set_header X-Forwarded-For', '$remote_addr');
+                        }
+
+                        if (locationCollect.location.xrealip_enable) {
+                            location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
+                        }
 
                         if (locationCollect.sshport_out) {
-                            //location.addVariable('proxy_ssl_server_name', 'on');
-                            //location.addVariable('proxy_ssl_protocols', 'SSLv2 SSLv3 TLSv1.2 TLSv1.3');
+                            // location.addVariable('proxy_ssl_server_name', 'on');
+
+                            // location.addVariable('proxy_ssl_protocols', 'SSLv2 SSLv3 TLSv1.2 TLSv1.3');
+
                             location.addVariable('proxy_http_version', '1.1');
                             location.addVariable('proxy_ignore_client_abort', 'on');
 
@@ -616,7 +647,7 @@ export class NginxService {
             const sServer = new NginxConfServer();
             sServer.addListen(new Listen(
                 statusListen.listen_port,
-                NginxService.DEFAULT_LOCAL_IP,
+                NginxService.DEFAULT_IP_LOCAL,
                 false,
                 false,
                 ListenProtocol.none,
@@ -626,7 +657,7 @@ export class NginxService {
             const locStatus = new Location(NginxService.LOCATION_STATUS);
             locStatus.addVariable('stub_status', 'on');
             locStatus.addVariable('access_log', 'off');
-            locStatus.addVariable('allow', NginxService.DEFAULT_LOCAL_IP);
+            locStatus.addVariable('allow', NginxService.DEFAULT_IP_LOCAL);
             locStatus.addVariable('deny', 'all');
             sServer.addLocation(locStatus);
 

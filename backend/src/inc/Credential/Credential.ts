@@ -42,6 +42,8 @@ export class Credential {
         });
 
         if (location) {
+            Logger.getLogger().silly(`Credential::authBasic: location found by id: ${locationId}`);
+
             const credentials = await credentialRepository.find({
                 where: {
                     location_id: location.id
@@ -51,21 +53,27 @@ export class Credential {
                 }
             });
 
+            Logger.getLogger().silly(`Credential::authBasic: Found credentials: ${credentials.length}`);
+
             for (const credential of credentials) {
                 const credentialObj = CredentialProvider.getCredential(credential.provider, credential);
 
                 if (credentialObj) {
+                    Logger.getLogger().silly(`Credential::authBasic: Use credential object: ${credentialObj}`);
+
                     const credentialAuthBasic = credentialObj as ICredentialAuthBasic;
 
-                    const resulte = await credentialAuthBasic.authBasic(auth.username, auth.password);
+                    const result = await credentialAuthBasic.authBasic(auth.username, auth.password);
 
-                    if (resulte) {
+                    Logger.getLogger().silly(`Credential::authBasic: credential object result: ${result}`);
+
+                    if (result) {
                         return true;
                     }
                 }
             }
         } else {
-            Logger.getLogger().error(`Location not found: ${locationId}`);
+            Logger.getLogger().error(`Credential::authBasic: Location not found: ${locationId}`);
         }
 
         return false;

@@ -83,6 +83,7 @@ export class NginxServer {
             // set defaults
             this._config.setPid(`${options.prefix}/nginx.pid`);
             this._config.setErrorLog(`${options.prefix}/logs/error.log`);
+            this._config.addVariable('daemon', 'off');
 
             this._config.create();
 

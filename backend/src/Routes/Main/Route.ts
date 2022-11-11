@@ -69,6 +69,14 @@ export type Location = {
         code: number;
         redirect: string;
     };
+    auth_enable: boolean;
+    websocket_enable: boolean;
+    host_enable: boolean;
+    host_name: string;
+    xforwarded_scheme_enable: boolean;
+    xforwarded_proto_enable: boolean;
+    xforwarded_for_enable: boolean;
+    xrealip_enable: boolean;
 };
 
 /**
@@ -316,7 +324,15 @@ export class Route {
                                 const location: Location = {
                                     id: alocation.id,
                                     match: alocation.match,
-                                    proxy_pass: alocation.proxy_pass
+                                    proxy_pass: alocation.proxy_pass,
+                                    auth_enable: alocation.auth_enable,
+                                    websocket_enable: alocation.websocket_enable,
+                                    host_enable: alocation.host_enable,
+                                    host_name: alocation.host_name,
+                                    xforwarded_scheme_enable: alocation.xforwarded_scheme_enable,
+                                    xforwarded_proto_enable: alocation.xforwarded_proto_enable,
+                                    xforwarded_for_enable: alocation.xforwarded_for_enable,
+                                    xrealip_enable: alocation.xrealip_enable
                                 };
 
                                 if (alocation.sshport_out_id > 0) {
@@ -878,6 +894,14 @@ export class Route {
                 aNewLocation.redirect = '';
                 aNewLocation.sshport_out_id = 0;
                 aNewLocation.sshport_schema = '';
+                aNewLocation.auth_enable = aLocation.auth_enable;
+                aNewLocation.websocket_enable = aLocation.websocket_enable;
+                aNewLocation.host_enable = aLocation.host_enable;
+                aNewLocation.host_name = aLocation.host_name;
+                aNewLocation.xforwarded_scheme_enable = aLocation.xforwarded_scheme_enable;
+                aNewLocation.xforwarded_proto_enable = aLocation.xforwarded_proto_enable;
+                aNewLocation.xforwarded_for_enable = aLocation.xforwarded_for_enable;
+                aNewLocation.xrealip_enable = aLocation.xrealip_enable;
 
                 if (aLocation.proxy_pass !== '') {
                     aNewLocation.proxy_pass = aLocation.proxy_pass;

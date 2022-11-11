@@ -51,6 +51,14 @@ export type Location = {
         code: number;
         redirect: string;
     };
+    auth_enable: boolean;
+    websocket_enable: boolean;
+    host_enable: boolean;
+    host_name: string;
+    xforwarded_scheme_enable: boolean;
+    xforwarded_proto_enable: boolean;
+    xforwarded_for_enable: boolean;
+    xrealip_enable: boolean;
 };
 
 /**

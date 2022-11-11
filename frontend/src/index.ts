@@ -11,6 +11,7 @@ import {DynDnsClients} from './inc/Pages/DynDnsClients';
 import {Listens as ListensPage} from './inc/Pages/Listens';
 import {DnsResolver} from './inc/Pages/DnsResolver';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
+import {Settings as SettingsPage} from './inc/Pages/Settings';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
@@ -145,11 +146,11 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 }
             },
             {
-                title: 'Admin',
+                title: 'Settings',
                 icon: 'fa-cogs',
-                name: 'admin',
+                name: 'settings',
                 onClick: (): void => {
-                    // loadPage(new Admin());
+                    loadPage(new SettingsPage());
                 }
             }
         ];

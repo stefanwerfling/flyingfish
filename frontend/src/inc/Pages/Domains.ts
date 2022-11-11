@@ -2,7 +2,7 @@ import moment from 'moment';
 import {Domain as DomainAPI, DomainData} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
+import {ButtonClass, ButtonDefault} from '../Bambooo/Content/Button/ButtonDefault';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
@@ -14,6 +14,7 @@ import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {ContentDisable} from '../Bambooo/Content/ContentDisable';
 import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
@@ -211,8 +212,19 @@ export class Domains extends BasePage {
                         new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.secondary);
                     }
 
+                    const funcEdit = (): void => {
+                        this._domainDialog.setTitle('Domain Edit');
+                        this._domainDialog.resetValues();
+                        this._domainDialog.setId(domain.id);
+                        this._domainDialog.setName(domain.name);
+                        this._domainDialog.setDisable(domain.disable);
+                        this._domainDialog.show();
+                    };
+
                     if (domain.disable) {
-                        card.getTitleElement().append(' (disable)');
+                        const cdisable = new ContentDisable(card.getMainElement());
+                        const button = new ButtonDefault(cdisable, 'Edit');
+                        button.setOnClickFn(funcEdit);
                     }
 
                     const btnMenu = new ButtonMenu(
@@ -225,14 +237,7 @@ export class Domains extends BasePage {
                     if (!domain.fix) {
                         btnMenu.addMenuItem(
                             'Edit',
-                            (): void => {
-                                this._domainDialog.setTitle('Domain Edit');
-                                this._domainDialog.resetValues();
-                                this._domainDialog.setId(domain.id);
-                                this._domainDialog.setName(domain.name);
-                                this._domainDialog.setDisable(domain.disable);
-                                this._domainDialog.show();
-                            },
+                            funcEdit,
                             IconFa.edit);
                     }
 

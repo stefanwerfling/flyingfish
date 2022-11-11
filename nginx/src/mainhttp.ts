@@ -24,7 +24,6 @@ async function authorizeHttp(s: NginxHTTPRequest) {
             verify: false
         });
 
-        s.error(njs.dump(resulte));
         s.warn(`authorize(fetch->status) -> ${resulte.status}`);
 
         if (resulte.status == 200) {
