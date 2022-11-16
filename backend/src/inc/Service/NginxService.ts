@@ -14,6 +14,7 @@ import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream';
 import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
 import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {Context} from '../Nginx/Config/Context';
 import {If} from '../Nginx/Config/If';
 import {Certbot} from '../Provider/Letsencrypt/Certbot';
 import {Logger} from '../Logger/Logger';
@@ -24,6 +25,7 @@ import {Server as NginxConfServer} from '../Nginx/Config/Server';
 import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream';
 import {NginxServer} from '../Nginx/NginxServer';
 import {OpenSSL} from '../OpenSSL/OpenSSL';
+import {Settings} from '../Settings/Settings';
 
 /**
  * HttpLocationCollect
@@ -105,12 +107,72 @@ export class NginxService {
      */
     private async _loadConfig(): Promise<void> {
         const conf = NginxServer.getInstance().getConf();
+
+        if (process.env.FLYINGFISH_NGINX_MODULE_MODE_DYN) {
+            switch (process.env.FLYINGFISH_NGINX_MODULE_MODE_DYN) {
+                case '0':
+                    break;
+
+                default:
+                    conf?.addModule('/usr/lib/nginx/modules/ngx_stream_js_module.so');
+                    conf?.addModule('/usr/lib/nginx/modules/ngx_http_js_module.so');
+            }
+        }
+
         conf?.resetStream();
         conf?.resetHttp();
 
+        // add nginx global variables ----------------------------------------------------------------------------------
+
+        conf?.addVariable('daemon', 'off');
+        conf?.addVariable('user', 'root');
+        conf?.addVariable('worker_processes', 'auto');
+        conf?.addVariable('pcre_jit', 'on');
+
+        // set nginx events --------------------------------------------------------------------------------------------
+
+        const events = new Context('events');
+
+        events.addVariable('worker_connections', await Settings.getSetting(
+            Settings.NGINX_WORKER_CONNECTIONS,
+            Settings.NGINX_WORKER_CONNECTIONS_DEFAULT
+        ));
+
+        conf?.addVariable(events.getName(), events);
+
+        // nginx stream variables --------------------------------------------------------------------------------------
+
         conf?.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/mainstream.js');
-        conf?.getStream().addVariable('resolver', '8.8.8.8 valid=1s');
+
+        const nginxResolver = await Settings.getSetting(
+            Settings.NGINX_RESOLVER,
+            Settings.NGINX_RESOLVER_DEFAULT
+        );
+
+        conf?.getStream().addVariable('resolver', `${nginxResolver} valid=1s`);
+
+        // nginx http variables ----------------------------------------------------------------------------------------
+
         conf?.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/mainhttp.js');
+        conf?.getHttp().addVariable('default_type', 'application/octet-stream');
+        conf?.getHttp().addVariable('sendfile', 'on');
+        conf?.getHttp().addVariable('server_tokens', 'off');
+        conf?.getHttp().addVariable('tcp_nopush', 'on');
+        conf?.getHttp().addVariable('tcp_nodelay', 'on');
+        conf?.getHttp().addVariable('client_body_temp_path', '/opt/app/nginx/body 1 2');
+        conf?.getHttp().addVariable('keepalive_timeout', '90s');
+        conf?.getHttp().addVariable('proxy_connect_timeout', '90s');
+        conf?.getHttp().addVariable('proxy_send_timeout', '90s');
+        conf?.getHttp().addVariable('proxy_read_timeout', '90s');
+        conf?.getHttp().addVariable('ssl_prefer_server_ciphers', 'on');
+        conf?.getHttp().addVariable('gzip', 'on');
+        /*conf?.getHttp().addVariable('proxy_ignore_client_abort', 'off');
+        conf?.getHttp().addVariable('client_max_body_size', '2000m');
+        conf?.getHttp().addVariable('server_names_hash_bucket_size', '1024');
+        conf?.getHttp().addVariable('proxy_http_version', '1.1');
+        conf?.getHttp().addVariable('proxy_set_header Accept-Encoding', '""');
+        conf?.getHttp().addVariable('proxy_cache', 'off');*/
+
 
         // vars --------------------------------------------------------------------------------------------------------
 
@@ -414,6 +476,7 @@ export class NginxService {
             if (streamCollect.listen.enable_address_check) {
                 aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
                 aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
+                aServer.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
                 aServer.addVariable('js_access', 'mainstream.accessAddressStream');
             }
 
@@ -568,6 +631,7 @@ export class NginxService {
                             authLocation.addVariable('internal', '');
                             authLocation.addVariable('set $ff_auth_basic_url', NginxService.INTERN_SERVER_AUTH_BASIC);
                             authLocation.addVariable('set $ff_location_id', `${entry.id}`);
+                            authLocation.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
                             authLocation.addVariable('set $ff_authheader', '$http_authorization');
                             authLocation.addVariable('js_content', 'mainhttp.authorizeHttp');
                             aServer.addLocation(authLocation);

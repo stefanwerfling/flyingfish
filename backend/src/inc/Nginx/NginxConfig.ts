@@ -47,10 +47,6 @@ export class NginxConfig {
 
         // set defaults ------------------------------------------------------------------------------------------------
 
-        this._modules.push('/usr/lib/nginx/modules/ngx_stream_js_module.so');
-        this._modules.push('/usr/lib/nginx/modules/ngx_http_js_module.so');
-
-        // this._variables.set('user', 'app');
         this._variables.set('worker_processes', 'auto');
         this._variables.set('pid', '');
         this._variables.set('error_log', '');
@@ -79,11 +75,19 @@ export class NginxConfig {
     }
 
     /**
+     * addModule
+     * @param module
+     */
+    public addModule(module: string): void {
+        this._modules.push(module);
+    }
+
+    /**
      * addVariable
      * @param name
      * @param value
      */
-    public addVariable(name: string, value: string): void {
+    public addVariable(name: string, value: string|Context): void {
         this._variables.set(name, value);
     }
 

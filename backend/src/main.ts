@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord';
 import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier';
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream';
+import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings';
 import {Dns2Server} from './inc/Dns/Dns2Server';
 import {Logger} from './inc/Logger/Logger';
 import {NginxStatusService} from './inc/Service/NginxStatusService';
@@ -91,15 +92,10 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
         // MariaDb -----------------------------------------------------------------------------------------------------
         await MariaDbHelper.init({
             type: 'mysql',
-            // 'localhost',
             host: tconfig.db.mysql.host,
-            // 3306,
             port: tconfig.db.mysql.port,
-            // 'root',
             username: tconfig.db.mysql.username,
-            // 'test',
             password: tconfig.db.mysql.password,
-            // 'ccc',
             database: tconfig.db.mysql.database,
             entities: [
                 UserDB,
@@ -118,7 +114,8 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 NatPortDB,
                 CredentialDB,
                 CredentialUserDB,
-                GatewayIdentifierDB
+                GatewayIdentifierDB,
+                SettingsDB
             ],
             migrations: [
             ],

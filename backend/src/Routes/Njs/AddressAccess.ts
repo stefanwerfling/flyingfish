@@ -4,13 +4,6 @@ import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlackl
 import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen';
 import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
 import {Logger} from '../../inc/Logger/Logger';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
-import {StatusCodes} from '../../inc/Routes/StatusCodes';
-
-/**
- * AddressAccessResponse
- */
-export type AddressAccessResponse = DefaultReturn;
 
 /**
  * AddressAccess
@@ -31,7 +24,7 @@ export class AddressAccess {
         @HeaderParam('realip_remote_addr') realip_remote_addr: string,
         @HeaderParam('remote_addr') remote_addr: string,
         @HeaderParam('type') type: string
-    ): Promise<AddressAccessResponse> {
+    ): Promise<boolean> {
         Logger.getLogger().info(`AddressAccess::access: realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
 
         const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
@@ -50,9 +43,7 @@ export class AddressAccess {
                     Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) not found in blacklist.`);
                     response.status(200);
 
-                    return {
-                        statusCode: StatusCodes.OK
-                    };
+                    return true;
                 }
 
                 Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) found in blacklist!`);
@@ -79,9 +70,7 @@ export class AddressAccess {
                             Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) not found in blacklist.`);
                             response.status(200);
 
-                            return {
-                                statusCode: StatusCodes.OK
-                            };
+                            return true;
                         }
 
                         Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) found in blacklist!`);
@@ -89,9 +78,7 @@ export class AddressAccess {
                 } else {
                     response.status(200);
 
-                    return {
-                        statusCode: StatusCodes.OK
-                    };
+                    return true;
                 }
             } else {
                 Logger.getLogger().warn(`AddressAccess::access: Listen(${listen_id}) not found!`);
@@ -100,9 +87,7 @@ export class AddressAccess {
 
         response.status(401);
 
-        return {
-            statusCode: StatusCodes.UNAUTHORIZED
-        };
+        return false;
     }
 
 }

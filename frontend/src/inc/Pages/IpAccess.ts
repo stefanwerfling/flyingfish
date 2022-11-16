@@ -4,15 +4,15 @@ import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {BasePage} from './BasePage';
 
 /**
- * Settings
+ * IpAccess
  */
-export class Settings extends BasePage {
+export class IpAccess extends BasePage {
 
     /**
      * name
      * @protected
      */
-    protected _name: string = 'settings';
+    protected _name: string = 'ipaccess';
 
     /**
      * constructor
@@ -20,7 +20,7 @@ export class Settings extends BasePage {
     public constructor() {
         super();
 
-        this.setTitle('Settings');
+        this.setTitle('IP Access');
     }
 
     /**
@@ -29,21 +29,18 @@ export class Settings extends BasePage {
     public async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
 
+        const row = new ContentRow(content);
+        const cardIpAccess = new Card(new ContentCol(row, ContentColSize.col12));
+        cardIpAccess.setTitle('IpAccess');
+
         /**
          * onLoadList
          */
         this._onLoadTable = async(): Promise<void> => {
-            content.empty();
 
-            const row = new ContentRow(content);
-            const cardNginx = new Card(new ContentCol(row, ContentColSize.col12));
-            cardNginx.setTitle('Nginx Server Global Settings');
-
-            
-        };
+        }
 
         // load table
         await this._onLoadTable();
     }
-
 }

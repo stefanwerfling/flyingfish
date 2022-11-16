@@ -8,6 +8,7 @@ import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
 import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {DynDnsClients} from './inc/Pages/DynDnsClients';
+import {IpAccess} from './inc/Pages/IpAccess';
 import {Listens as ListensPage} from './inc/Pages/Listens';
 import {DnsResolver} from './inc/Pages/DnsResolver';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
@@ -85,6 +86,14 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                     loadPage(new ListensPage());
                 },
                 items: [
+                    {
+                        title: 'IP Access',
+                        icon: 'fa-solid fa-lock',
+                        name: 'ipaccess',
+                        onClick: (): void => {
+                            loadPage(new IpAccess());
+                        }
+                    },
                     {
                         title: 'Gateway Identifier',
                         icon: 'fa-solid fa-globe',
