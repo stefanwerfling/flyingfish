@@ -1,13 +1,13 @@
-import {Packet} from 'dns2';
+import DNS from 'dns2';
 import {Job, scheduleJob} from 'node-schedule';
-import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord';
-import {DynDnsClient as DynDnsClientDB} from '../Db/MariaDb/Entity/DynDnsClient';
-import {DynDnsClientDomain as DynDnsClientDomainDB} from '../Db/MariaDb/Entity/DynDnsClientDomain';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {Logger} from '../Logger/Logger';
-import {DynDnsProviders} from '../Provider/DynDnsProviders';
-import {DateHelper} from '../Utils/DateHelper';
-import {HowIsMyPublicIpService} from './HowIsMyPublicIpService';
+import {DBHelper} from '../Db/DBHelper.js';
+import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
+import {DynDnsClient as DynDnsClientDB} from '../Db/MariaDb/Entity/DynDnsClient.js';
+import {DynDnsClientDomain as DynDnsClientDomainDB} from '../Db/MariaDb/Entity/DynDnsClientDomain.js';
+import {Logger} from '../Logger/Logger.js';
+import {DynDnsProviders} from '../Provider/DynDnsProviders.js';
+import {DateHelper} from '../Utils/DateHelper.js';
+import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 
 /**
  * DynDnsService
@@ -43,13 +43,14 @@ export class DynDnsService {
      */
     public async updateDns(): Promise<void> {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
-        const dyndnsclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
-        const dyndnsclientDomainRepository = MariaDbHelper.getRepository(DynDnsClientDomainDB);
-        const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+
+        const dyndnsclientRepository = DBHelper.getRepository(DynDnsClientDB);
+        const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
+        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
         const clients = await dyndnsclientRepository.find();
 
-        for (const client of clients) {
+        for await (const client of clients) {
             const provider = DynDnsProviders.getProvider(client.provider);
 
             if (!provider) {
@@ -81,7 +82,7 @@ export class DynDnsService {
                     });
 
                     if (dyndnsdomains) {
-                        for (const dyndnsdomain of dyndnsdomains) {
+                        for await (const dyndnsdomain of dyndnsdomains) {
                             Logger.getLogger().info(`DynDnsService::updateDns: Update domain ip for domain-id: ${dyndnsdomain.domain_id}`);
 
                             const records = await domainRecordRepository.find({
@@ -95,10 +96,10 @@ export class DynDnsService {
                                 const myIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
 
                                 if (myIp) {
-                                    for (const record of records) {
+                                    for await (const record of records) {
                                         switch (record.dtype) {
-                                            case Packet.TYPE.TXT:
-                                            case Packet.TYPE.CNAME:
+                                            case DNS.Packet.TYPE.TXT:
+                                            case DNS.Packet.TYPE.CNAME:
                                                 continue;
 
                                             default:
@@ -107,7 +108,7 @@ export class DynDnsService {
 
                                         record.last_update = DateHelper.getCurrentDbTime();
 
-                                        await MariaDbHelper.getConnection().manager.save(record);
+                                        await DBHelper.getDataSource().manager.save(record);
 
                                         Logger.getLogger().info(`DynDnsService::updateDns: domain record updated by domain-id: ${dyndnsdomain.domain_id} with ip: ${myIp}`);
                                     }

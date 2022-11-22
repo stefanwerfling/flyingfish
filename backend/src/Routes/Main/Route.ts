@@ -1,14 +1,14 @@
 import * as bcrypt from 'bcrypt';
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {Config} from '../../inc/Config/Config';
-import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
-import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
-import {NginxLocation as NginxLocationDB} from '../../inc/Db/MariaDb/Entity/NginxLocation';
-import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
-import {NginxUpstream as NginxUpstreamDB} from '../../inc/Db/MariaDb/Entity/NginxUpstream';
-import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort';
-import {SshUser as SshUserDB} from '../../inc/Db/MariaDb/Entity/SshUser';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Config} from '../../inc/Config/Config.js';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
+import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
+import {NginxLocation as NginxLocationDB} from '../../inc/Db/MariaDb/Entity/NginxLocation.js';
+import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream.js';
+import {NginxUpstream as NginxUpstreamDB} from '../../inc/Db/MariaDb/Entity/NginxUpstream.js';
+import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
+import {SshUser as SshUserDB} from '../../inc/Db/MariaDb/Entity/SshUser.js';
 
 /**
  * UpStream
@@ -196,17 +196,17 @@ export class Route {
         const sshportList: RouteSshPort[] = [];
 
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = MariaDbHelper.getRepository(DomainDB);
-            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
-            const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
-            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
-            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
-            const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
-            const sshuserRepository = MariaDbHelper.getRepository(SshUserDB);
+            const domainRepository = DBHelper.getRepository(DomainDB);
+            const streamRepository = DBHelper.getRepository(NginxStreamDB);
+            const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+            const httpRepository = DBHelper.getRepository(NginxHttpDB);
+            const locationRepository = DBHelper.getRepository(NginxLocationDB);
+            const sshportRepository = DBHelper.getRepository(SshPortDB);
+            const sshuserRepository = DBHelper.getRepository(SshUserDB);
             const domains = await domainRepository.find();
 
             if (domains) {
-                for (const adomain of domains) {
+                for await (const adomain of domains) {
                     const streamList: RouteStream[] = [];
                     const httpList: RouteHttp[] = [];
 
@@ -217,7 +217,7 @@ export class Route {
                     });
 
                     if (streams) {
-                        for (const tstream of streams) {
+                        for await (const tstream of streams) {
                             const streamEntry: RouteStream = {
                                 id: tstream.id,
                                 listen_id: tstream.listen_id,
@@ -301,7 +301,7 @@ export class Route {
                     });
 
                     if (https) {
-                        for (const thttp of https) {
+                        for await (const thttp of https) {
                             const httpEntry: RouteHttp = {
                                 id: thttp.id,
                                 listen_id: thttp.listen_id,
@@ -320,7 +320,7 @@ export class Route {
                                 }
                             });
 
-                            for (const alocation of locations) {
+                            for await (const alocation of locations) {
                                 const location: Location = {
                                     id: alocation.id,
                                     match: alocation.match,
@@ -398,9 +398,9 @@ export class Route {
 
         return {
             status: 'ok',
-            list,
+            list: list,
             defaults: {
-                dnsserverport,
+                dnsserverport: dnsserverport,
                 sshports: sshportList
             }
         };
@@ -413,7 +413,7 @@ export class Route {
      * @protected
      */
     protected async _isSshPortUsed(tport: number, sshportid: number): Promise<boolean> {
-        const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
+        const sshportRepository = DBHelper.getRepository(SshPortDB);
 
         const sshport = await sshportRepository.findOne({
             where: {
@@ -441,11 +441,11 @@ export class Route {
         @Body() request: RouteStreamSave
     ): Promise<RouteStreamSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
-            const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
-            const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
-            const sshuserRepository = MariaDbHelper.getRepository(SshUserDB);
-            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
+            const streamRepository = DBHelper.getRepository(NginxStreamDB);
+            const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+            const sshportRepository = DBHelper.getRepository(SshPortDB);
+            const sshuserRepository = DBHelper.getRepository(SshUserDB);
+            const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
             let aStream: NginxStreamDB|null = null;
 
@@ -519,7 +519,7 @@ export class Route {
 
                     sshuser.disable = false;
 
-                    sshuser = await MariaDbHelper.getConnection().manager.save(sshuser);
+                    sshuser = await DBHelper.getDataSource().manager.save(sshuser);
 
                     if (request.stream.ssh.in.id > 0) {
                         const tsshport = await sshportRepository.findOne({
@@ -556,7 +556,7 @@ export class Route {
 
                     sshport.ssh_user_id = sshuser.id;
 
-                    sshport = await MariaDbHelper.getConnection().manager.save(sshport);
+                    sshport = await DBHelper.getDataSource().manager.save(sshport);
 
                     aStream.sshport_in_id = sshport.id;
 
@@ -620,7 +620,7 @@ export class Route {
                 }
             }
 
-            aStream = await MariaDbHelper.getConnection().manager.save(aStream);
+            aStream = await DBHelper.getDataSource().manager.save(aStream);
 
             if (aStream.destination_listen_id > 0) {
                 // clear old upstreams
@@ -638,7 +638,7 @@ export class Route {
                 if (tupstreams) {
                     const checkUpstreamExistence = (upstreamId: number): boolean => request.stream.upstreams.some(({id}) => id === upstreamId);
 
-                    for (const oldUpstream of tupstreams) {
+                    for await (const oldUpstream of tupstreams) {
                         if (!checkUpstreamExistence(oldUpstream.id)) {
                             await upstreamRepository.delete({
                                 id: oldUpstream.id
@@ -650,7 +650,7 @@ export class Route {
                 // update or add new upstreams -------------------------------------------------------------------------
                 let index = 0;
 
-                for (const aUpstream of request.stream.upstreams) {
+                for await (const aUpstream of request.stream.upstreams) {
                     let aNewUpstream: NginxUpstreamDB|null = null;
 
                     if (aUpstream.id > 0) {
@@ -674,7 +674,7 @@ export class Route {
                     aNewUpstream.destination_port = aUpstream.port;
                     aNewUpstream.index = index;
 
-                    await MariaDbHelper.getConnection().manager.save(aNewUpstream);
+                    await DBHelper.getDataSource().manager.save(aNewUpstream);
 
                     index++;
                 }
@@ -709,13 +709,17 @@ export class Route {
                 };
             }
 
-            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
-            const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
-            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
-            const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
-            const sshuserRepository = MariaDbHelper.getRepository(SshUserDB);
+            const streamRepository = DBHelper.getRepository(NginxStreamDB);
+            const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+            const locationRepository = DBHelper.getRepository(NginxLocationDB);
+            const sshportRepository = DBHelper.getRepository(SshPortDB);
+            const sshuserRepository = DBHelper.getRepository(SshUserDB);
 
-            const stream = await streamRepository.findOne({id: request.id});
+            const stream = await streamRepository.findOne({
+                where: {
+                    id: request.id
+                }
+            });
 
             if (stream) {
                 if (stream.isdefault) {
@@ -815,8 +819,8 @@ export class Route {
         @Body() request: RouteHttpSave
     ): Promise<RouteHttpSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
-            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
+            const httpRepository = DBHelper.getRepository(NginxHttpDB);
+            const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
             let aHttp: NginxHttpDB|null = null;
 
@@ -843,7 +847,7 @@ export class Route {
             aHttp.cert_provider = request.http.ssl.provider || '';
             aHttp.cert_email = request.http.ssl.email || '';
 
-            aHttp = await MariaDbHelper.getConnection().manager.save(aHttp);
+            aHttp = await DBHelper.getDataSource().manager.save(aHttp);
 
             // remove location -----------------------------------------------------------------------------------------
 
@@ -856,7 +860,7 @@ export class Route {
             if (oldLocations) {
                 const checkLocationExistence = (locationId: number): boolean => request.http.locations.some(({id}) => id === locationId);
 
-                for (const oldLocation of oldLocations) {
+                for await (const oldLocation of oldLocations) {
                     if (!checkLocationExistence(oldLocation.id)) {
                         await locationRepository.delete({
                             id: oldLocation.id
@@ -867,7 +871,7 @@ export class Route {
 
             // update or add new locations -----------------------------------------------------------------------------
 
-            for (const aLocation of request.http.locations) {
+            for await (const aLocation of request.http.locations) {
                 let aNewLocation: NginxLocationDB | null = null;
 
                 const tLocation = await locationRepository.findOne({
@@ -913,7 +917,7 @@ export class Route {
                     aNewLocation.sshport_out_id = aLocation.ssh.id || 0;
                 }
 
-                await MariaDbHelper.getConnection().manager.save(aNewLocation);
+                await DBHelper.getDataSource().manager.save(aNewLocation);
             }
 
             return {
@@ -945,8 +949,8 @@ export class Route {
                 };
             }
 
-            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
-            const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
+            const httpRepository = DBHelper.getRepository(NginxHttpDB);
+            const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
             const http = await httpRepository.findOne({
                 where: {

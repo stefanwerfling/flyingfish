@@ -1,10 +1,10 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
-import {DomainRecord as DomainRecordDB} from '../../inc/Db/MariaDb/Entity/DomainRecord';
-import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
-import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {HowIsMyPublicIpService} from '../../inc/Service/HowIsMyPublicIpService';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
+import {DomainRecord as DomainRecordDB} from '../../inc/Db/MariaDb/Entity/DomainRecord.js';
+import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
+import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream.js';
+import {HowIsMyPublicIpService} from '../../inc/Service/HowIsMyPublicIpService.js';
 
 /**
  * DomainRecord
@@ -93,13 +93,13 @@ export class Domain {
     @Get('/json/domain/list')
     public async getDomains(@Session() session: any): Promise<DomainResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = MariaDbHelper.getRepository(DomainDB);
-            const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+            const domainRepository = DBHelper.getRepository(DomainDB);
+            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
             const domainList: DomainData[] = [];
             const domains = await domainRepository.find();
 
-            for (const domain of domains) {
+            for await (const domain of domains) {
                 const recordList: DomainRecord[] = [];
 
                 const records = await domainRecordRepository.find({
@@ -154,7 +154,7 @@ export class Domain {
         @Body() request: DomainData
     ): Promise<DomainSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = MariaDbHelper.getRepository(DomainDB);
+            const domainRepository = DBHelper.getRepository(DomainDB);
 
             let aDomain: DomainDB|null = null;
 
@@ -189,7 +189,7 @@ export class Domain {
             aDomain.domainname = request.name;
             aDomain.disable = request.disable;
 
-            await MariaDbHelper.getConnection().manager.save(aDomain);
+            await DBHelper.getDataSource().manager.save(aDomain);
 
             return {
                 status: 'ok'
@@ -213,10 +213,10 @@ export class Domain {
         @Body() request: DomainData
     ): Promise<DomainDeleteResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = MariaDbHelper.getRepository(DomainDB);
-            const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
-            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
-            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+            const domainRepository = DBHelper.getRepository(DomainDB);
+            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
+            const streamRepository = DBHelper.getRepository(NginxStreamDB);
+            const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
             const domain = await domainRepository.findOne({
                 where: {
@@ -289,7 +289,7 @@ export class Domain {
         @Body() request: DomainRecordSave
     ): Promise<DomainRecordSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
             let aRecord: DomainRecordDB|null = null;
 
@@ -325,7 +325,7 @@ export class Domain {
                 }
             }
 
-            await MariaDbHelper.getConnection().manager.save(aRecord);
+            await DBHelper.getDataSource().manager.save(aRecord);
 
             return {
                 status: 'ok'
@@ -349,7 +349,7 @@ export class Domain {
         @Body() request: DomainRecord
     ): Promise<DomainRecordDeleteResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
             const arecord = await domainRecordRepository.findOne({
                 where: {

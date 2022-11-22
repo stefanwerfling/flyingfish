@@ -7,27 +7,22 @@ import {BaseEntity, Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
 export class GatewayIdentifier extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Column()
-        // @ts-ignore
-    networkname: string;
+    public networkname!: string;
 
     @Column()
-        // @ts-ignore
-    mac_address: string;
+    public mac_address!: string;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    address: string;
+    public address!: string;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    color: string;
+    public color!: string;
 
 }

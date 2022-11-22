@@ -1,7 +1,7 @@
 {
   "name": "flyingfish_himhip",
   "version": "1.0.0",
-  "description": "How is my Host IP, is a port of FlyingFish",
+  "description": "How is my Host IP, is a part of FlyingFish",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

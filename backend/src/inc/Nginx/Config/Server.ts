@@ -1,6 +1,6 @@
-import {Context, ContextNames} from './Context';
-import {Listen} from './Listen';
-import {Location} from './Location';
+import {Context, ContextNames} from './Context.js';
+import {Listen} from './Listen.js';
+import {Location} from './Location.js';
 
 /**
  * ServerLogLevel
@@ -45,7 +45,7 @@ export class Server extends Context {
      * root dir
      * @protected
      */
-    protected _rootDir: string|null = null;
+    protected _rootDir: string | null = null;
 
     /**
      * error pages
@@ -81,6 +81,7 @@ export class Server extends Context {
      * @protected
      */
     protected _setDefaults(): void {
+        return undefined;
     }
 
     /**
@@ -102,7 +103,7 @@ export class Server extends Context {
     /**
      * getRootDir
      */
-    public getRootDir(): string|null {
+    public getRootDir(): string | null {
         return this._rootDir;
     }
 
@@ -127,7 +128,10 @@ export class Server extends Context {
      * @param logfile
      * @param level
      */
-    public setAccessLog(logfile: string, level: ServerLogLevel|string = ServerLogLevel.none): void {
+    public setAccessLog(
+        logfile: string,
+        level: ServerLogLevel | string = ServerLogLevel.none
+    ): void {
         let buffer = `${logfile}`;
 
         if (level !== '') {
@@ -142,7 +146,10 @@ export class Server extends Context {
      * @param logfile
      * @param level
      */
-    public setErrorLog(logfile: string, level: ServerLogLevel|string = ServerLogLevel.none): void {
+    public setErrorLog(
+        logfile: string,
+        level: ServerLogLevel | string = ServerLogLevel.none
+    ): void {
         let buffer = `${logfile}`;
 
         if (level !== '') {
@@ -156,7 +163,7 @@ export class Server extends Context {
      * setReturn
      * @param code
      */
-    public setReturn(code: number|string): void {
+    public setReturn(code: number | string): void {
         this._variables.set('return', `${code}`);
     }
 

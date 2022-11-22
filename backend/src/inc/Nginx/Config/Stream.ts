@@ -1,7 +1,7 @@
-import {Context, ContextNames} from './Context';
-import {Map as NginxMap} from './Map';
-import {Server} from './Server';
-import {Upstream} from './Upstream';
+import {Context, ContextNames} from './Context.js';
+import {Map as NginxMap} from './Map.js';
+import {Server} from './Server.js';
+import {Upstream} from './Upstream.js';
 
 /**
  * Stream

@@ -1,5 +1,6 @@
 {
   "env": {
+    "amd": true,
     "es6": true,
     "node": true
   },
@@ -21,7 +22,8 @@
     "@typescript-eslint/ban-types": "error",
     "@typescript-eslint/consistent-type-assertions": "error",
     "@typescript-eslint/explicit-function-return-type": "error",
-    "@typescript-eslint/explicit-member-accessibility": "off",
+    "@typescript-eslint/explicit-member-accessibility": "error",
+    "@typescript-eslint/init-declarations": "off",
     "@typescript-eslint/interface-name-prefix": "off",
     "@typescript-eslint/member-delimiter-style": [
       "error",
@@ -38,6 +40,13 @@
     ],
     "@typescript-eslint/no-empty-function": "error",
     "@typescript-eslint/no-empty-interface": "error",
+    "@typescript-eslint/no-extra-parens": [
+      "error",
+      "all",
+      {
+        "nestedBinaryExpressions": false
+      }
+    ],
     "@typescript-eslint/no-misused-new": "error",
     "@typescript-eslint/no-namespace": "error",
     "@typescript-eslint/no-parameter-properties": "off",
@@ -45,12 +54,12 @@
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
-        "vars": "all",
         "args": "after-used",
-        "ignoreRestSiblings": false
+        "ignoreRestSiblings": false,
+        "vars": "all"
       }
     ],
-    "@typescript-eslint/no-use-before-declare": "off",
+    "@typescript-eslint/no-use-before-define": "error",
     "@typescript-eslint/no-useless-constructor": "error",
     "@typescript-eslint/no-var-requires": "error",
     "@typescript-eslint/prefer-for-of": "error",
@@ -65,7 +74,6 @@
     // eslint plugin rules
     "prefer-arrow/prefer-arrow-functions": "error",
     // eslint rules
-    "accessor-pairs": "off",
     "arrow-body-style": "off",
     "array-bracket-newline": [
       "error",
@@ -111,32 +119,35 @@
     "multiline-ternary": "off",
     "new-cap": "off",
     "newline-per-chained-call": "off",
-    "no-await-in-loop": "off",
-    "no-console": "off",
+    "no-alert": "off",
     "no-continue": "off",
+    "no-console": "off",
     "no-dupe-class-members": "off",
     "no-empty-function": "off",
-    "no-extra-parens": [
-      "error",
-      "all",
-      {
-        "nestedBinaryExpressions": false
-      }
-    ],
+    "no-extra-parens": "off",
     "no-implicit-coercion": "error",
     "no-invalid-this": "off",
     "no-magic-numbers": "off",
     "no-mixed-operators": "error",
-    "no-multiple-empty-lines": "error",
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 1,
+        "maxBOF": 0,
+        "maxEOF": 0
+      }
+    ],
     "no-param-reassign": "error",
     "no-plusplus": "off",
     "no-process-exit": "off",
+    "no-redeclare": "off",
     "no-shadow": "off",
     "no-sync": "off",
     "no-ternary": "off",
     "no-undefined": "off",
     "no-underscore-dangle": "off",
     "no-unused-vars": "off",
+    "no-use-before-define": "off",
     "no-useless-constructor": "off",
     "no-warning-comments": "warn",
     "object-curly-newline": [
@@ -144,6 +155,10 @@
       {
         "consistent": true
       }
+    ],
+    "object-shorthand": [
+      "error",
+      "never"
     ],
     "one-var": [
       "error",
@@ -170,8 +185,8 @@
       "error",
       "single"
     ],
-    "sort-imports": "off",
     "require-await": "off",
+    "sort-imports": "off",
     "sort-keys": "off",
     "space-before-function-paren": [
       "error",

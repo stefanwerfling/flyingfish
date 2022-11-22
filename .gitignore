@@ -1,4 +1,5 @@
-/doc/internnotes.txt
+/doc/work/internnotes.txt
+/doc/work
 /config.json
 /.idea
 
@@ -12,6 +13,7 @@
 /nginx/dist
 /nginx/dhparam.pem
 
+/nginxtest
 /letsencrypt
 
 /backend/node_modules
@@ -33,3 +35,7 @@
 /himhip/node_modules
 /himhip/package-lock.json
 /himhip/dist
+
+/onionhat/node_modules
+/onionhat/package-lock.json
+/onionhat/dist

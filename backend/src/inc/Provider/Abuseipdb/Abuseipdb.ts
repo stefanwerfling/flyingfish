@@ -2,7 +2,7 @@
  * AbuseipdbReport
  */
 import got from 'got';
-import {Logger} from '../../Logger/Logger';
+import {Logger} from '../../Logger/Logger.js';
 
 /**
  * AbuseipdbReport

@@ -1,7 +1,7 @@
 import * as Path from 'path';
-import {Logger} from '../Logger/Logger';
-import {OpenSSL} from '../OpenSSL/OpenSSL';
-import {OpenSslCnf} from '../OpenSSL/OpenSslCnf';
+import {Logger} from '../Logger/Logger.js';
+import {OpenSSL} from '../OpenSSL/OpenSSL.js';
+import {OpenSslCnf} from '../OpenSSL/OpenSslCnf.js';
 
 /**
  * FlyingFishSsl

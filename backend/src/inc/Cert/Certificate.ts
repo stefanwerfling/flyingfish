@@ -64,7 +64,7 @@ export class Certificate {
      * pemToDer
      * @param pemString
      */
-    static pemToDer(pemString: string): ArrayBuffer {
+    public static pemToDer(pemString: string): ArrayBuffer {
         // eslint-disable-next-line require-unicode-regexp
         const derBase64 = pemString.replace(/(-----(BEGIN|END) [\w ]+-----|\n)/g, '').replace(/[\r\n]/g, '');
         return pvtsutils.Convert.FromBase64(derBase64);
@@ -74,7 +74,7 @@ export class Certificate {
      * pemToAsn1
      * @param pemString
      */
-    static pemToAsn1(pemString: string): any {
+    public static pemToAsn1(pemString: string): any {
         const der = Certificate.pemToDer(pemString);
         const asn1 = asn1js.fromBER(der);
 

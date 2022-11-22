@@ -1,4 +1,4 @@
-import {CredentialSchemes} from './Credential';
+import {CredentialSchemes} from './Credential.js';
 
 /**
  * ICredential

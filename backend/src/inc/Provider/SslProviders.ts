@@ -1,5 +1,5 @@
-import {ISsl} from './ISsl';
-import {Certbot} from './Letsencrypt/Certbot';
+import {ISsl} from './ISsl.js';
+import {Certbot} from './Letsencrypt/Certbot.js';
 
 /**
  * SslProvider

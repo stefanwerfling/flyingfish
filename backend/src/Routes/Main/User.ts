@@ -1,6 +1,6 @@
-import {Get, JsonController, Session} from 'routing-controllers';
-import {User as UserDB} from '../../inc/Db/MariaDb/Entity/User';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {Get, JsonController, Session} from 'routing-controllers-extended';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {User as UserDB} from '../../inc/Db/MariaDb/Entity/User.js';
 
 /**
  * UserData
@@ -38,7 +38,7 @@ export class User {
     @Get('/json/user/info')
     public async getUserInfo(@Session() session: any): Promise<UserInfoResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const userRepository = MariaDbHelper.getConnection().getRepository(UserDB);
+            const userRepository = DBHelper.getDataSource().getRepository(UserDB);
 
             const user = await userRepository.findOne({
                 where: {

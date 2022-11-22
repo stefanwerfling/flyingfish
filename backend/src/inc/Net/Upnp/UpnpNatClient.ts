@@ -1,6 +1,6 @@
-import {Device} from './Device';
-import {RawResponse} from './RawResponse';
-import {Ssdp} from './Ssdp';
+import {Device} from './Device.js';
+import {RawResponse} from './RawResponse.js';
+import {Ssdp} from './Ssdp.js';
 
 /**
  * This Upnp Nat Client is a fork/copy of the project https://github.com/runonflux/nat-upnp
@@ -28,7 +28,7 @@ export interface Mapping {
     };
     protocol: string;
     enabled: boolean;
-    description: string;
+    description?: string;
     ttl: number;
     local: boolean;
 }
@@ -45,8 +45,8 @@ export interface StandardOptAddress {
  * StandardOpts
  */
 export interface StandardOpts {
-    public?: number | StandardOptAddress;
-    private?: number | StandardOptAddress;
+    public?: number | StandardOptAddress | string;
+    private?: number | StandardOptAddress | string;
     protocol?: string;
 }
 
@@ -154,10 +154,15 @@ const normalizeOptions = (options: StandardOpts): any => {
             };
         }
 
-        if (typeof addr === 'string' && !isNaN(addr)) {
-            return {
-                port: Number(addr)
-            };
+        // TODO debug
+        if (typeof addr === 'string') {
+            const aPort = parseInt(addr, 10) || 0;
+
+            if (aPort > 0) {
+                return {
+                    port: aPort
+                };
+            }
         }
 
         if (typeof addr === 'object') {
@@ -181,18 +186,18 @@ export class UpnpNatClient implements IClient {
     /**
      * timeout
      */
-    readonly timeout: number;
+    public readonly timeout: number;
 
     /**
      * ssdp
      */
-    readonly ssdp = new Ssdp();
+    public readonly ssdp = new Ssdp();
 
     /**
      * constructor
      * @param options
      */
-    constructor(options: UpnpNatClientOptions = {}) {
+    public constructor(options: UpnpNatClientOptions = {}) {
         this.timeout = options.timeout || 1800;
 
         if (options.gatewayAddress) {
@@ -207,7 +212,10 @@ export class UpnpNatClient implements IClient {
     public async createMapping(
         options: NewPortMappingOpts
     ): Promise<RawResponse> {
-        return this.getGateway().then(({gateway, address}) => {
+        return this.getGateway().then(({
+            gateway,
+            address
+        }) => {
             const ports = normalizeOptions(options);
 
             if (typeof ports.remote.host === 'undefined') {
@@ -221,17 +229,38 @@ export class UpnpNatClient implements IClient {
             }
 
             return gateway.run('AddPortMapping', [
-                ['NewRemoteHost', `${ports.remote.host}`],
-                ['NewExternalPort', `${ports.remote.port}`],
+                [
+                    'NewRemoteHost',
+                    `${ports.remote.host}`
+                ],
+                [
+                    'NewExternalPort',
+                    `${ports.remote.port}`
+                ],
                 [
                     'NewProtocol',
                     options.protocol ? options.protocol.toUpperCase() : 'TCP'
                 ],
-                ['NewInternalPort', `${ports.internal.port}`],
-                ['NewInternalClient', clientAddress],
-                ['NewEnabled', 1],
-                ['NewPortMappingDescription', options.description || 'node:nat:upnp'],
-                ['NewLeaseDuration', options.ttl ?? 60 * 30]
+                [
+                    'NewInternalPort',
+                    `${ports.internal.port}`
+                ],
+                [
+                    'NewInternalClient',
+                    clientAddress
+                ],
+                [
+                    'NewEnabled',
+                    1
+                ],
+                [
+                    'NewPortMappingDescription',
+                    options.description || 'node:nat:upnp'
+                ],
+                [
+                    'NewLeaseDuration',
+                    options.ttl ?? 60 * 30
+                ]
             ]);
         });
     }
@@ -247,8 +276,14 @@ export class UpnpNatClient implements IClient {
             }
 
             return gateway.run('DeletePortMapping', [
-                ['NewRemoteHost', `${ports.remote.host}`],
-                ['NewExternalPort', `${ports.remote.port}`],
+                [
+                    'NewRemoteHost',
+                    `${ports.remote.host}`
+                ],
+                [
+                    'NewExternalPort',
+                    `${ports.remote.port}`
+                ],
                 [
                     'NewProtocol',
                     options.protocol ? options.protocol.toUpperCase() : 'TCP'
@@ -262,7 +297,10 @@ export class UpnpNatClient implements IClient {
      * @param options
      */
     public async getMappings(options: GetMappingOpts = {}): Promise<Mapping[]> {
-        const {gateway, address} = await this.getGateway();
+        const {
+            gateway,
+            address
+        } = await this.getGateway();
         let i = 0;
         let end = false;
         const results = [];
@@ -271,8 +309,17 @@ export class UpnpNatClient implements IClient {
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
+            // eslint-disable-next-line no-await-in-loop
             const data = (await gateway
-            .run('GetGenericPortMappingEntry', [['NewPortMappingIndex', i++]])
+            .run(
+                'GetGenericPortMappingEntry',
+                [
+                    [
+                        'NewPortMappingIndex',
+                        i++
+                    ]
+                ]
+            )
             // eslint-disable-next-line no-loop-func
             .catch(() => {
                 if (i !== 1) {
@@ -364,34 +411,45 @@ export class UpnpNatClient implements IClient {
             'urn:schemas-upnp-org:device:InternetGatewayDevice:1'
         );
 
-        return new Promise<{ gateway: Device; address: string; }>((s, r) => {
+        return new Promise<{ gateway: Device; address: string; }>((
+            s,
+            r
+        ) => {
             const timeout = setTimeout(() => {
                 timeouted = true;
                 p.emit('end');
                 r(new Error('Connection timed out while searching for the gateway.'));
             }, this.timeout);
-            p.on('device', (info, address) => {
-                if (timeouted) {
-                    return;
-                }
-                p.emit('end');
-                clearTimeout(timeout);
-
-                const usnParts = info.usn.split('::');
-                let uuid = '';
-
-                if (usnParts.length > 1) {
-                    const uuidParts = usnParts[0].split(':');
-
-                    if (uuidParts.length > 1) {
-                        uuid = uuidParts[1];
+            p.on(
+                'device',
+                (
+                    info,
+                    address
+                ) => {
+                    if (timeouted) {
+                        return;
                     }
-                }
+                    p.emit('end');
+                    clearTimeout(timeout);
 
-                // Create gateway
-                s({gateway: new Device(info.location, uuid),
-                    address});
-            });
+                    const usnParts = info.usn.split('::');
+                    let uuid = '';
+
+                    if (usnParts.length > 1) {
+                        const uuidParts = usnParts[0].split(':');
+
+                        if (uuidParts.length > 1) {
+                            uuid = uuidParts[1];
+                        }
+                    }
+
+                    // Create gateway
+                    s({
+                        gateway: new Device(info.location, uuid),
+                        address: address
+                    });
+                }
+            );
         });
     }
 

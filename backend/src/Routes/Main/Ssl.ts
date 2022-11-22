@@ -1,13 +1,13 @@
 import Path from 'path';
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {Certificate} from '../../inc/Cert/Certificate';
-import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
-import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {Certbot} from '../../inc/Provider/Letsencrypt/Certbot';
-import {SslProvider, SslProviders} from '../../inc/Provider/SslProviders';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
-import {StatusCodes} from '../../inc/Routes/StatusCodes';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Certificate} from '../../inc/Cert/Certificate.js';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
+import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
+import {Certbot} from '../../inc/Provider/Letsencrypt/Certbot.js';
+import {SslProvider, SslProviders} from '../../inc/Provider/SslProviders.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * SslDetailsRequest
@@ -61,7 +61,7 @@ export class Ssl {
 
         return {
             status: 'ok',
-            list
+            list: list
         };
     }
 
@@ -73,8 +73,8 @@ export class Ssl {
     @Post('/json/ssl/cert/details')
     public async getCertDetails(@Session() session: any, @Body() request: SslDetailsRequest): Promise<SslDetailsResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
-            const domainRepository = MariaDbHelper.getRepository(DomainDB);
+            const httpRepository = DBHelper.getRepository(NginxHttpDB);
+            const domainRepository = DBHelper.getRepository(DomainDB);
 
             const http = await httpRepository.findOne({
                 where: {

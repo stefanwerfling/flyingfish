@@ -3,9 +3,9 @@ import fs from 'fs';
 import helmet from 'helmet';
 import * as https from 'https';
 import Path from 'path';
-import {useExpressServer} from 'routing-controllers';
-import {Logger} from '../Logger/Logger';
-import {FlyingFishSsl} from '../Utils/FlyingFishSsl';
+import {useExpressServer} from 'routing-controllers-extended';
+import {Logger} from '../Logger/Logger.js';
+import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
 
 /**
  * Server
@@ -22,13 +22,13 @@ export class Server {
      * _sslPath
      * @private
      */
-    private _sslPath?: string;
+    private readonly _sslPath?: string;
 
     /**
      * server default port
      * @private
      */
-    private _port: number = 3000;
+    private readonly _port: number = 3000;
 
     /**
      * constructor

@@ -1,9 +1,9 @@
-import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential';
-import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {Logger} from '../Logger/Logger';
-import {CredentialProvider} from './CredentialProvider';
-import {ICredentialAuthBasic} from './ICredential';
+import {DBHelper} from '../Db/DBHelper.js';
+import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential.js';
+import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation.js';
+import {Logger} from '../Logger/Logger.js';
+import {CredentialProvider} from './CredentialProvider.js';
+import {ICredentialAuthBasic} from './ICredential.js';
 
 /**
  * CredentialSchemes
@@ -32,12 +32,14 @@ export class Credential {
      * @param auth
      */
     public static async authBasic(locationId: string, auth: CredentialSchemeBasic): Promise<boolean> {
-        const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
-        const credentialRepository = MariaDbHelper.getRepository(CredentialDB);
+        const locationRepository = DBHelper.getRepository(NginxLocationDB);
+        const credentialRepository = DBHelper.getRepository(CredentialDB);
+
+        const nLocationId = parseInt(locationId, 10) || 0;
 
         const location = await locationRepository.findOne({
             where: {
-                id: locationId
+                id: nLocationId
             }
         });
 
@@ -55,7 +57,7 @@ export class Credential {
 
             Logger.getLogger().silly(`Credential::authBasic: Found credentials: ${credentials.length}`);
 
-            for (const credential of credentials) {
+            for await (const credential of credentials) {
                 const credentialObj = CredentialProvider.getCredential(credential.provider, credential);
 
                 if (credentialObj) {

@@ -1,8 +1,8 @@
 import {Response} from 'express';
-import {Get, HeaderParam, JsonController, Res} from 'routing-controllers';
-import {Credential} from '../../inc/Credential/Credential';
-import {Logger} from '../../inc/Logger/Logger';
-import {BasicAuthParser} from '../../inc/Server/BasicAuthParser';
+import {Get, HeaderParam, JsonController, Res} from 'routing-controllers-extended';
+import {Credential} from '../../inc/Credential/Credential.js';
+import {Logger} from '../../inc/Logger/Logger.js';
+import {BasicAuthParser} from '../../inc/Server/BasicAuthParser.js';
 
 /**
  * AuthBasic
@@ -42,7 +42,6 @@ export class AuthBasic {
                     Logger.getLogger().error('Wrong Auth, digest not support in basic auth!');
                     break;
             }
-
 
             Logger.getLogger().info(`check -> scheme: ${auth.scheme}, username: ${auth.username}, password: *****`);
 

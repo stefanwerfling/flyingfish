@@ -1,5 +1,5 @@
-import {Get, JsonController, Session} from 'routing-controllers';
-import {NginxService} from '../../inc/Service/NginxService';
+import {Get, JsonController, Session} from 'routing-controllers-extended';
+import {NginxService} from '../../inc/Service/NginxService.js';
 
 /**
  * Nginx

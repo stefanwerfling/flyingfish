@@ -38,57 +38,48 @@ export enum ListenProtocol {
 export class NginxListen extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Column()
-        // @ts-ignore
-    listen_type: number;
+    public listen_type!: number;
 
     @Column({
         default: ListenCategory.default_stream_nonessl
     })
-        // @ts-ignore
-    listen_category: number;
+    public listen_category!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    listen_port: number;
+    public listen_port!: number;
 
     @Index()
     @Column({
         default: ListenProtocol.tcp
     })
-        // @ts-ignore
-    listen_protocol: number;
+    public listen_protocol!: number;
 
     @Column({
         type: 'bool',
         default: false
     })
-        // @ts-ignore
-    enable_ipv6: boolean;
+    public enable_ipv6!: boolean;
 
     @Column({
         type: 'varchar',
         length: 512
     })
-        // @ts-ignore
-    name: string;
+    public name!: string;
 
     @Column({
         type: 'text'
     })
-        // @ts-ignore
-    description: string;
+    public description!: string;
 
     @Column({
         type: 'bool',
         default: false
     })
-        // @ts-ignore
-    enable_upnp_nat: boolean;
+    public enable_upnp_nat!: boolean;
 
     /**
      * declarate (true/false) all incoming connection send to address check
@@ -97,8 +88,7 @@ export class NginxListen extends BaseEntity {
         type: 'bool',
         default: false
     })
-        // @ts-ignore
-    enable_address_check: boolean;
+    public enable_address_check!: boolean;
 
     /**
      * declarate (true/false) a user can delete this listen
@@ -107,8 +97,7 @@ export class NginxListen extends BaseEntity {
         type: 'bool',
         default: false
     })
-        // @ts-ignore
-    fixlisten: boolean;
+    public fixlisten!: boolean;
 
     /**
      * declarate (true/false) a user can add a route (ui) to this listen or not
@@ -117,8 +106,7 @@ export class NginxListen extends BaseEntity {
         type: 'bool',
         default: false
     })
-        // @ts-ignore
-    routeless: boolean;
+    public routeless!: boolean;
 
     /**
      * disable the listen
@@ -128,7 +116,6 @@ export class NginxListen extends BaseEntity {
         type: 'bool',
         default: false
     })
-        // @ts-ignore
-    disable: boolean;
+    public disable!: boolean;
 
 }

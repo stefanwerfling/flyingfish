@@ -7,37 +7,30 @@ import {BaseEntity, Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
 export class DynDnsClient extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Column()
-        // @ts-ignore
-    provider: string;
+    public provider!: string;
 
     @Column()
-        // @ts-ignore
-    username: string;
+    public username!: string;
 
     @Column()
-        // @ts-ignore
-    password: string;
+    public password!: string;
 
     @Column({
         default: false
     })
-        // @ts-ignore
-    update_domain: boolean;
+    public update_domain!: boolean;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    last_status: number;
+    public last_status!: number;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    last_update: number;
+    public last_update!: number;
 
 }

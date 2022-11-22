@@ -1,6 +1,6 @@
 import got from 'got';
-import {Logger} from '../../Logger/Logger';
-import {IHowIsMyPublicIp} from '../IHowIsMyPublicIp';
+import {Logger} from '../../Logger/Logger.js';
+import {IHowIsMyPublicIp} from '../IHowIsMyPublicIp.js';
 
 /**
  * IpifyResponse
@@ -44,6 +44,7 @@ export class Ipify implements IHowIsMyPublicIp {
                 return data.ip;
             }
         } catch (e) {
+            Logger.getLogger().error('Ipify::get:');
             Logger.getLogger().error(e);
         }
 

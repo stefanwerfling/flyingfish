@@ -1,6 +1,6 @@
-import {Get, JsonController, Session} from 'routing-controllers';
-import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {Get, JsonController, Session} from 'routing-controllers-extended';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
 
 /**
  * SshPortEntry
@@ -31,7 +31,7 @@ export class Ssh {
         const list: SshPortEntry[] = [];
 
         if ((session.user !== undefined) && session.user.isLogin) {
-            const sshPortRepository = MariaDbHelper.getRepository(SshPortDB);
+            const sshPortRepository = DBHelper.getRepository(SshPortDB);
             const sshports = await sshPortRepository.find();
 
             if (sshports) {
@@ -46,13 +46,13 @@ export class Ssh {
             return {
                 status: 'error',
                 msg: 'Please login first!',
-                list
+                list: list
             };
         }
 
         return {
             status: 'ok',
-            list
+            list: list
         };
     }
 

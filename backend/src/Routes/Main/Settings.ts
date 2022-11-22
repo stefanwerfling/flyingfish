@@ -1,6 +1,6 @@
-import {Get, JsonController, Session} from 'routing-controllers';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
-import {StatusCodes} from '../../inc/Routes/StatusCodes';
+import {Get, JsonController, Session} from 'routing-controllers-extended';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * SettingsList

@@ -1,7 +1,7 @@
 import {spawn} from 'child_process';
 import fs from 'fs';
-import {Logger} from '../../Logger/Logger';
-import {ISsl} from '../ISsl';
+import {Logger} from '../../Logger/Logger.js';
+import {ISsl} from '../ISsl.js';
 
 /**
  * Certbot

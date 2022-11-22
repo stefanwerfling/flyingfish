@@ -7,25 +7,20 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 export class CredentialUser extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    credential_id: number;
+    public credential_id!: number;
 
     @Column()
-        // @ts-ignore
-    username: string;
+    public username!: string;
 
     @Column()
-        // @ts-ignore
-    password: string;
+    public password!: string;
 
     @Index()
     @Column()
-        // @ts-ignore
-    disabled: boolean;
+    public disabled!: boolean;
 
 }

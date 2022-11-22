@@ -1,9 +1,9 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen';
-import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream';
-import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {Logger} from '../../inc/Logger/Logger';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
+import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream.js';
+import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
+import {Logger} from '../../inc/Logger/Logger.js';
 
 /**
  * ListenData
@@ -68,7 +68,7 @@ export class Listen {
         const list: ListenData[] = [];
 
         if ((session.user !== undefined) && session.user.isLogin) {
-            const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
+            const listenRepository = DBHelper.getRepository(NginxListenDB);
 
             const listens = await listenRepository.find();
 
@@ -93,13 +93,13 @@ export class Listen {
             return {
                 status: 'error',
                 msg: 'Please login first!',
-                list
+                list: list
             };
         }
 
         return {
             status: 'ok',
-            list
+            list: list
         };
     }
 
@@ -114,7 +114,7 @@ export class Listen {
         @Body() request: ListenData
     ): Promise<ListenSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
+            const listenRepository = DBHelper.getRepository(NginxListenDB);
 
             let aListen: NginxListenDB|null = null;
 
@@ -173,7 +173,7 @@ export class Listen {
             aListen.enable_address_check = request.check_address;
             aListen.disable = request.disable;
 
-            await MariaDbHelper.getConnection().manager.save(aListen);
+            await DBHelper.getDataSource().manager.save(aListen);
 
             return {
                 status: 'ok'
@@ -197,9 +197,9 @@ export class Listen {
         @Body() request: ListenData
     ): Promise<ListenDeleteResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
-            const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
-            const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+            const listenRepository = DBHelper.getRepository(NginxListenDB);
+            const streamRepository = DBHelper.getRepository(NginxStreamDB);
+            const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
             const tListen = await listenRepository.findOne({
                 where: {

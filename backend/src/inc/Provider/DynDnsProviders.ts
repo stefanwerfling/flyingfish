@@ -1,5 +1,5 @@
-import {IDynDns} from './IDynDns';
-import {Selfhost} from './Selfhost/Selfhost';
+import {IDynDns} from './IDynDns.js';
+import {Selfhost} from './Selfhost/Selfhost.js';
 
 /**
  * DynDnsProvider

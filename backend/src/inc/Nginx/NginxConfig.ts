@@ -1,7 +1,7 @@
 import fs from 'fs';
-import {Context} from './Config/Context';
-import {Http} from './Config/Http';
-import {Stream} from './Config/Stream';
+import {Context} from './Config/Context.js';
+import {Http} from './Config/Http.js';
+import {Stream} from './Config/Stream.js';
 
 /**
  * NginxConfigs

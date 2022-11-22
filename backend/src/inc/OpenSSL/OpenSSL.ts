@@ -1,7 +1,7 @@
 import {spawn} from 'child_process';
 import fs from 'fs';
-import {Logger} from '../Logger/Logger';
-import {SimpleProcessAwait} from '../Utils/SimpleProcessAwait';
+import {Logger} from '../Logger/Logger.js';
+import {SimpleProcessAwait} from '../Utils/SimpleProcessAwait.js';
 
 /**
  * OpenSSL
@@ -10,6 +10,7 @@ export class OpenSSL {
 
     /**
      * createDhparam
+     * @param dhparamfile
      * @param size
      */
     public static async createDhparam(dhparamfile: string, size: number): Promise<string | null> {

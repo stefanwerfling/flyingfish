@@ -1,7 +1,7 @@
 import got from 'got';
-import {Logger} from '../../Logger/Logger';
-import {NginxStatus, NginxStatusResult} from '../../Nginx/NginxStatus';
-import {NginxService} from '../../Service/NginxService';
+import {Logger} from '../../Logger/Logger.js';
+import {NginxStatus, NginxStatusResult} from '../../Nginx/NginxStatus.js';
+import {NginxService} from '../../Service/NginxService.js';
 
 /**
  * NginxHandler

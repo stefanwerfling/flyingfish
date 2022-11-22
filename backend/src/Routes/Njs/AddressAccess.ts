@@ -1,9 +1,9 @@
 import {Response} from 'express';
-import {Get, HeaderParam, JsonController, Res} from 'routing-controllers';
-import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist';
-import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {Logger} from '../../inc/Logger/Logger';
+import {Get, HeaderParam, JsonController, Res} from 'routing-controllers-extended';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
+import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
+import {Logger} from '../../inc/Logger/Logger.js';
 
 /**
  * AddressAccess
@@ -13,6 +13,8 @@ export class AddressAccess {
 
     /**
      * access
+     * @param response
+     * @param listen_id
      * @param realip_remote_addr
      * @param remote_addr
      * @param type
@@ -27,8 +29,8 @@ export class AddressAccess {
     ): Promise<boolean> {
         Logger.getLogger().info(`AddressAccess::access: realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
 
-        const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
-        const ipBlacklistRepository = MariaDbHelper.getRepository(IpBlacklistDB);
+        const listenRepository = DBHelper.getRepository(NginxListenDB);
+        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
         const locationId = parseInt(listen_id, 10) || 0;
 
         if (locationId === 0) {

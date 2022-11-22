@@ -1,13 +1,13 @@
 import {Job, scheduleJob} from 'node-schedule';
 import Path from 'path';
 import {MoreThan} from 'typeorm';
-import {Certificate} from '../Cert/Certificate';
-import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
-import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {Logger} from '../Logger/Logger';
-import {Certbot} from '../Provider/Letsencrypt/Certbot';
-import {NginxService} from './NginxService';
+import {Certificate} from '../Cert/Certificate.js';
+import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
+import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
+import {DBHelper} from '../Db/DBHelper.js';
+import {Logger} from '../Logger/Logger.js';
+import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
+import {NginxService} from './NginxService.js';
 
 /**
  * SslCertService
@@ -55,7 +55,7 @@ export class SslCertService {
      * resetTry
      */
     public async resetTry(): Promise<void> {
-        const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+        const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const https = await httpRepository.find({
             where: {
                 cert_createtry: MoreThan(SslCertService.CERT_CREATE_TRY)
@@ -63,7 +63,7 @@ export class SslCertService {
         });
 
         if (https) {
-            for (const http of https) {
+            for await (const http of https) {
                 await httpRepository
                 .createQueryBuilder()
                 .update()
@@ -82,8 +82,8 @@ export class SslCertService {
     public async update(): Promise<void> {
         this._inProcess = true;
 
-        const domainRepository = MariaDbHelper.getRepository(DomainDB);
-        const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
+        const domainRepository = DBHelper.getRepository(DomainDB);
+        const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
         const https = await httpRepository.find();
 
@@ -91,7 +91,7 @@ export class SslCertService {
         let reloadNginx = false;
 
         if (https) {
-            for (const http of https) {
+            for await (const http of https) {
                 if (http.ssl_enable) {
                     Logger.getLogger().silly(`SslCertService::update: ssl enable http: ${http.id}`);
 

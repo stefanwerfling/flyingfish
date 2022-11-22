@@ -1,62 +1,67 @@
 import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
-import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord';
-import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier';
-import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream';
-import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings';
-import {Dns2Server} from './inc/Dns/Dns2Server';
-import {Logger} from './inc/Logger/Logger';
-import {NginxStatusService} from './inc/Service/NginxStatusService';
-import {SslCertService} from './inc/Service/SslCertService';
-import {Update as HimHipUpdateController} from './Routes/HimHip/Update';
-import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier';
-import {Ssl as SslController} from './Routes/Main/Ssl';
-import {Domain as DomainController} from './Routes/Main/Domain';
-import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient';
-import {Route as RouteController} from './Routes/Main/Route';
-import {Listen as ListenController} from './Routes/Main/Listen';
-import {Ssh as SshController} from './Routes/Main/Ssh';
-import {Login as LoginController} from './Routes/Main/Login';
-import {Nginx as NginxController} from './Routes/Main/Nginx';
-import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat';
-import {User as UserController} from './Routes/Main/User';
-import {AddressAccess as NjsAddressAccessController} from './Routes/Njs/AddressAccess';
-import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic';
-import {Config} from './inc/Config/Config';
+import {DBHelper} from './inc/Db/DBHelper.js';
+import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
+import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
+import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
+import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from './inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
+import {IpListMaintainer as IpListMaintainerDB} from './inc/Db/MariaDb/Entity/IpListMaintainer.js';
+import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
+import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
+import {Dns2Server} from './inc/Dns/Dns2Server.js';
+import {Logger} from './inc/Logger/Logger.js';
+import {BlacklistService} from './inc/Service/BlacklistService.js';
+import {NginxStatusService} from './inc/Service/NginxStatusService.js';
+import {SslCertService} from './inc/Service/SslCertService.js';
+import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
+import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier.js';
+import {Ssl as SslController} from './Routes/Main/Ssl.js';
+import {Domain as DomainController} from './Routes/Main/Domain.js';
+import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient.js';
+import {Route as RouteController} from './Routes/Main/Route.js';
+import {Listen as ListenController} from './Routes/Main/Listen.js';
+import {Ssh as SshController} from './Routes/Main/Ssh.js';
+import {Login as LoginController} from './Routes/Main/Login.js';
+import {Nginx as NginxController} from './Routes/Main/Nginx.js';
+import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat.js';
+import {User as UserController} from './Routes/Main/User.js';
+import {AddressAccess as NjsAddressAccessController} from './Routes/Njs/AddressAccess.js';
+import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
+import {Config} from './inc/Config/Config.js';
 import {v4 as uuid} from 'uuid';
-import * as bodyParser from 'body-parser';
+import bodyParser from 'body-parser';
 import session from 'express-session';
-import {DBSetup} from './inc/Db/MariaDb/DBSetup';
-import {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential';
-import {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser';
-import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient';
-import {DynDnsClientDomain as DynDnsClientDomainDB} from './inc/Db/MariaDb/Entity/DynDnsClientDomain';
-import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist';
-import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort';
-import {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain';
-import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp';
-import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen';
-import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation';
-import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream';
-import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
-import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser';
-import {User as UserDB} from './inc/Db/MariaDb/Entity/User';
-import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper';
-import {NginxServer} from './inc/Nginx/NginxServer';
-import {Server} from './inc/Server/Server';
+import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
+import {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential.js';
+import {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser.js';
+import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient.js';
+import {DynDnsClientDomain as DynDnsClientDomainDB} from './inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
+import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
+import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
+import {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain.js';
+import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
+import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
+import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
+import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
+import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
+import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
+import {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
+import {NginxServer} from './inc/Nginx/NginxServer.js';
+import {Server} from './inc/Server/Server.js';
 import cookieParser from 'cookie-parser';
-import {DynDnsService} from './inc/Service/DynDnsService';
-import {HowIsMyPublicIpService} from './inc/Service/HowIsMyPublicIpService';
-import {NginxService} from './inc/Service/NginxService';
-import {UpnpNatService} from './inc/Service/UpnpNatService';
+import {DynDnsService} from './inc/Service/DynDnsService.js';
+import {HowIsMyPublicIpService} from './inc/Service/HowIsMyPublicIpService.js';
+import {NginxService} from './inc/Service/NginxService.js';
+import {UpnpNatService} from './inc/Service/UpnpNatService.js';
+import exitHook from 'async-exit-hook';
 
 /**
  * Main
  */
 (async(): Promise<void> => {
     const argv = minimist(process.argv.slice(2));
-    let configfile = path.join(__dirname, `/${Config.DEFAULT_CONFIG_FILE}`);
+    let configfile = path.join(path.resolve(), `/${Config.DEFAULT_CONFIG_FILE}`);
 
     if (argv.config) {
         configfile = argv.config;
@@ -86,11 +91,13 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
     // init logger
     Logger.getLogger();
 
+    Logger.getLogger().info('Start FlyingFish Service ...');
+
     // -----------------------------------------------------------------------------------------------------------------
 
     try {
         // MariaDb -----------------------------------------------------------------------------------------------------
-        await MariaDbHelper.init({
+        await DBHelper.init({
             type: 'mysql',
             host: tconfig.db.mysql.host,
             port: tconfig.db.mysql.port,
@@ -106,7 +113,10 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
                 NginxUpstreamDB,
                 NginxHttpDB,
                 NginxLocationDB,
+                IpListMaintainerDB,
                 IpBlacklistDB,
+                IpBlacklistCategoryDB,
+                IpBlacklistMaintainerDB,
                 DynDnsClientDB,
                 DynDnsClientDomainDB,
                 SshPortDB,
@@ -234,7 +244,7 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
     if (tconfig.upnpnat) {
         if (tconfig.upnpnat.enable) {
             const upnpNat = new UpnpNatService();
-            upnpNat.start();
+            await upnpNat.start();
         }
     }
 
@@ -246,10 +256,22 @@ import {UpnpNatService} from './inc/Service/UpnpNatService';
         }
     }
 
-
     // -----------------------------------------------------------------------------------------------------------------
 
     await NginxStatusService.getInstance().start();
     await HowIsMyPublicIpService.getInstance().start();
     await SslCertService.getInstance().start();
+    await BlacklistService.getInstance().start();
+
+    // exit ------------------------------------------------------------------------------------------------------------
+
+    exitHook(async(callback): Promise<void> => {
+        Logger.getLogger().info('Stop FlyingFish Service ...');
+
+        await NginxService.getInstance().stop(true);
+
+        Logger.getLogger().info('... End.');
+
+        callback();
+    });
 })();

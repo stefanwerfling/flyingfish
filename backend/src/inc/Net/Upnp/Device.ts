@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {XMLParser} from 'fast-xml-parser';
 import {URL} from 'url';
-import {RawResponse} from './RawResponse';
+import {RawResponse} from './RawResponse.js';
 
 /**
  * Service
@@ -81,23 +81,24 @@ export class Device implements IDevice {
     /**
      * uuid
      */
-    readonly _uuid: string;
+    private readonly _uuid: string;
 
     /**
      * description
      */
-    readonly description: string;
+    private readonly description: string;
 
     /**
      * services
      */
-    readonly services: string[];
+    private readonly services: string[];
 
     /**
      * constructor
      * @param url
+     * @param uuid
      */
-    constructor(url: string, uuid: string) {
+    public constructor(url: string, uuid: string) {
         this.description = url;
         this._uuid = uuid;
         this.services = [
@@ -234,8 +235,8 @@ export class Device implements IDevice {
         traverseDevices(info.device);
 
         return {
-            services,
-            devices
+            services: services,
+            devices: devices
         };
     }
 

@@ -1,5 +1,5 @@
-import {Settings as SettingsDB} from '../Db/MariaDb/Entity/Settings';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
+import {Settings as SettingsDB} from '../Db/MariaDb/Entity/Settings.js';
+import {DBHelper} from '../Db/DBHelper.js';
 
 /**
  * Settings
@@ -20,11 +20,11 @@ export class Settings {
      * @param vdefault
      */
     public static async getSetting(name: string, vdefault: string): Promise<string> {
-        const settingsRepository = MariaDbHelper.getRepository(SettingsDB);
+        const settingsRepository = DBHelper.getRepository(SettingsDB);
 
         const setting = await settingsRepository.findOne({
             where: {
-                name
+                name: name
             }
         });
 

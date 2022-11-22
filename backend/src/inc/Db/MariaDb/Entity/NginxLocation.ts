@@ -7,19 +7,16 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 export class NginxLocation extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    http_id: number;
+    public http_id!: number;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    redirect_code: number;
+    public redirect_code!: number;
 
     /**
      * redirect to url
@@ -27,91 +24,76 @@ export class NginxLocation extends BaseEntity {
     @Column({
         default: ''
     })
-        // @ts-ignore
-    redirect: string;
+    public redirect!: string;
 
     @Column({
         default: '/'
     })
-        // @ts-ignore
-    match: string;
+    public match!: string;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    modifier: string;
+    public modifier!: string;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    proxy_pass: string;
+    public proxy_pass!: string;
 
     @Column({
         default: false
     })
-        // @ts-ignore
-    auth_enable: boolean;
+    public auth_enable!: boolean;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    auth_relam: string;
+    public auth_relam!: string;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    sshport_out_id: number;
+    public sshport_out_id!: number;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    sshport_schema: string;
+    public sshport_schema!: string;
 
     @Column({
         default: false
     })
-        // @ts-ignore
-    websocket_enable: boolean;
+    public websocket_enable!: boolean;
 
     @Column({
         default: true
     })
-        // @ts-ignore
-    host_enable: boolean;
+    public host_enable!: boolean;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    host_name: string;
+    public host_name!: string;
 
     @Column({
         default: true
     })
-        // @ts-ignore
-    xforwarded_scheme_enable: boolean;
+    public xforwarded_scheme_enable!: boolean;
 
     @Column({
         default: true
     })
-        // @ts-ignore
-    xforwarded_proto_enable: boolean;
+    public xforwarded_proto_enable!: boolean;
 
     @Column({
         default: true
     })
-        // @ts-ignore
-    xforwarded_for_enable: boolean;
+    public xforwarded_for_enable!: boolean;
 
     @Column({
         default: true
     })
-        // @ts-ignore
-    xrealip_enable: boolean;
+    public xrealip_enable!: boolean;
 
 }

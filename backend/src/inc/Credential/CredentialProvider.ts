@@ -1,6 +1,6 @@
-import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential';
-import {CredentialDatabase} from './CredentialDatabase';
-import {ICredential} from './ICredential';
+import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential.js';
+import {CredentialDatabase} from './CredentialDatabase.js';
+import {ICredential} from './ICredential.js';
 
 /**
  * CredentialProvider

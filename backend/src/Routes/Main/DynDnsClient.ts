@@ -1,11 +1,11 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {DynDnsClient as DynDnsClientDB} from '../../inc/Db/MariaDb/Entity/DynDnsClient';
-import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../inc/Db/MariaDb/Entity/DynDnsClientDomain';
-import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {DynDnsProvider, DynDnsProviders} from '../../inc/Provider/DynDnsProviders';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
-import {StatusCodes} from '../../inc/Routes/StatusCodes';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DynDnsClient as DynDnsClientDB} from '../../inc/Db/MariaDb/Entity/DynDnsClient.js';
+import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
+import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
+import {DynDnsProvider, DynDnsProviders} from '../../inc/Provider/DynDnsProviders.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * DynDnsClientDomain
@@ -64,15 +64,15 @@ export class DynDnsClient {
     @Get('/json/dyndnsclient/list')
     public async getList(@Session() session: any): Promise<DynDnsClientListResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const dyndnsclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
-            const dyndnsclientDomainRepository = MariaDbHelper.getRepository(DynDnsClientDomainDB);
-            const domainRepository = MariaDbHelper.getRepository(DomainDB);
+            const dyndnsclientRepository = DBHelper.getRepository(DynDnsClientDB);
+            const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
+            const domainRepository = DBHelper.getRepository(DomainDB);
 
             const list: DynDnsClientData[] = [];
             const clients = await dyndnsclientRepository.find();
 
             if (clients) {
-                for (const client of clients) {
+                for await (const client of clients) {
                     const provider = DynDnsProviders.getProvider(client.provider);
                     let providerName = '';
                     let providerTitle = '';
@@ -91,9 +91,11 @@ export class DynDnsClient {
                     });
 
                     if (domainList) {
-                        for (const domain of domainList) {
+                        for await (const domain of domainList) {
                             const tdomain = await domainRepository.findOne({
-                                id: domain.domain_id
+                                where: {
+                                    id: domain.domain_id
+                                }
                             });
 
                             if (tdomain) {
@@ -107,7 +109,7 @@ export class DynDnsClient {
 
                     list.push({
                         id: client.id,
-                        domains,
+                        domains: domains,
                         provider: {
                             name: providerName,
                             title: providerTitle
@@ -123,7 +125,7 @@ export class DynDnsClient {
 
             return {
                 statusCode: StatusCodes.OK,
-                list
+                list: list
             };
         }
 
@@ -160,8 +162,8 @@ export class DynDnsClient {
     @Post('/json/dyndnsclient/save')
     public async saveClient(@Session() session: any, @Body() request: DynDnsClientData): Promise<DefaultReturn> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const dyndnsclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
-            const dyndnsclientDomainRepository = MariaDbHelper.getRepository(DynDnsClientDomainDB);
+            const dyndnsclientRepository = DBHelper.getRepository(DynDnsClientDB);
+            const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
 
             let client: DynDnsClientDB|null = null;
 
@@ -190,7 +192,7 @@ export class DynDnsClient {
 
             client.update_domain = request.update_domain;
 
-            client = await MariaDbHelper.getConnection().manager.save(client);
+            client = await DBHelper.getDataSource().manager.save(client);
 
             // domain links --------------------------------------------------------------------------------------------
 
@@ -200,13 +202,15 @@ export class DynDnsClient {
                 });
             } else {
                 const odomains = await dyndnsclientDomainRepository.find({
-                    dyndnsclient_id: client.id
+                    where: {
+                        dyndnsclient_id: client.id
+                    }
                 });
 
                 if (odomains) {
                     const checkDomainExistence = (domainId: number): boolean => request.domains.some(({id}) => id === domainId);
 
-                    for (const oldDomain of odomains) {
+                    for await (const oldDomain of odomains) {
                         if (!checkDomainExistence(oldDomain.domain_id)) {
                             await dyndnsclientDomainRepository.delete({
                                 id: oldDomain.id
@@ -217,7 +221,7 @@ export class DynDnsClient {
 
                 // update or add ---------------------------------------------------------------------------------------
 
-                for (const domain of request.domains) {
+                for await (const domain of request.domains) {
                     let newDomain: DynDnsClientDomainDB|null = null;
 
                     const tdomain = await dyndnsclientDomainRepository.findOne({
@@ -238,7 +242,7 @@ export class DynDnsClient {
                     newDomain.dyndnsclient_id = client.id;
                     newDomain.domain_id = domain.id;
 
-                    await MariaDbHelper.getConnection().manager.save(newDomain);
+                    await DBHelper.getDataSource().manager.save(newDomain);
                 }
             }
 
@@ -263,8 +267,8 @@ export class DynDnsClient {
         @Body() request: DynDnsClientData
     ): Promise<DefaultReturn> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const dyndnsclientRepository = MariaDbHelper.getRepository(DynDnsClientDB);
-            const dyndnsclientDomainRepository = MariaDbHelper.getRepository(DynDnsClientDomainDB);
+            const dyndnsclientRepository = DBHelper.getRepository(DynDnsClientDB);
+            const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
 
             const tclient = await dyndnsclientRepository.findOne({
                 where: {

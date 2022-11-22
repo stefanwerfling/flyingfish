@@ -7,41 +7,33 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 export class DomainRecord extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    domain_id: number;
+    public domain_id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    dtype: number;
+    public dtype!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    dclass: number;
+    public dclass!: number;
 
     @Column()
-        // @ts-ignore
-    ttl: number;
+    public ttl!: number;
 
     @Column()
-        // @ts-ignore
-    dvalue: string;
+    public dvalue!: string;
 
     @Index()
     @Column()
-        // @ts-ignore
-    update_by_dnsclient: boolean;
+    public update_by_dnsclient!: boolean;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    last_update: number;
+    public last_update!: number;
 
 }

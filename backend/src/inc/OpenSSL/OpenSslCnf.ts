@@ -1,8 +1,8 @@
+import fs from 'fs';
+
 /**
  * OpenSslCnfMap
  */
-import fs from 'fs';
-
 interface OpenSslCnfMap {
     [key: string]: string;
 }

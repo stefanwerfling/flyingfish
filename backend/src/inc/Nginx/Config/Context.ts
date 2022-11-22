@@ -78,7 +78,7 @@ export class Context {
         this._variables.forEach((value, key) => {
             if (typeof value === 'string') {
                 buffer += this._createContent(`\t${key} ${value};`, index);
-            } else if (value instanceof Context) {
+            } else {
                 const nindex = index + 1;
 
                 buffer += this._createContent(`\t${value.generate(nindex)}`, index);

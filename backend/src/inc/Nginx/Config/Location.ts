@@ -1,4 +1,4 @@
-import {Context, ContextNames} from './Context';
+import {Context, ContextNames} from './Context.js';
 
 /**
  * Location

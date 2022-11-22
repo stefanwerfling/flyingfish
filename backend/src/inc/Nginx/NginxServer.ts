@@ -1,7 +1,7 @@
 import {ChildProcess, exec, spawn} from 'child_process';
 import * as fs from 'fs';
-import {Logger} from '../Logger/Logger';
-import {NginxConfig} from './NginxConfig';
+import {Logger} from '../Logger/Logger.js';
+import {NginxConfig} from './NginxConfig.js';
 
 /**
  * NginxServerOptions

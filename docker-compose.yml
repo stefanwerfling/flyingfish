@@ -13,7 +13,7 @@ services:
     volumes:
       - flyingfishDbData:/var/lib/mysql
     ports:
-      - 127.0.0.1:3306:3306
+      - "127.0.0.1:3306:3306"
     networks:
       flyingfishNet:
           ipv4_address: 10.103.0.2
@@ -35,7 +35,7 @@ services:
       - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
     ports:
-      - 127.0.0.1:8086:8086
+      - "127.0.0.1:8086:8086"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.5
@@ -56,6 +56,10 @@ services:
       - ./nginx:/opt/app/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw
+      - ./backend/dist:/opt/app/dist
+      - ./backend/node_modules:/opt/app/node_modules
+      - ./backend/package.json:/opt/app/package.json
+      - ./frontend/dist:/opt/app/frontend/dist
     ports:
       - "443:443"
       - "80:80"
@@ -64,6 +68,13 @@ services:
       - "3000:3000"
       - "1900:1900"
       - "10901:10901"
+      - "9229:9229"
+    command:
+      - "supervisor"
+      - "--"
+      - "--inspect-brk=0.0.0.0:9229"
+      - "dist/main.js"
+      - "--config=/opt/app/config.json"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
@@ -116,14 +127,6 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
-
-#      - "9229:9229"
-#    command:
-#      - node
-#      - "--inspect-brk=0.0.0.0:9229"
-#      - "dist/main.js"
-#      - "--config=/opt/app/config.json"
-
 
 #  onionhat:
 #    image: flyingfishonionhat:v1.0

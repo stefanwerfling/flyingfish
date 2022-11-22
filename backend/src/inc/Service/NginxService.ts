@@ -1,31 +1,31 @@
 import fs from 'fs';
 import * as Path from 'path';
-import {Config} from '../Config/Config';
-import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
-import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp';
+import {Config} from '../Config/Config.js';
+import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
+import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
     ListenTypes,
     ListenProtocol as ListenProtocolDB,
     NginxListen as NginxListenDB,
     ListenCategory
-} from '../Db/MariaDb/Entity/NginxListen';
-import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation';
-import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream';
-import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream';
-import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {Context} from '../Nginx/Config/Context';
-import {If} from '../Nginx/Config/If';
-import {Certbot} from '../Provider/Letsencrypt/Certbot';
-import {Logger} from '../Logger/Logger';
-import {Listen, ListenProtocol} from '../Nginx/Config/Listen';
-import {Location} from '../Nginx/Config/Location';
-import {Map as NginxMap} from '../Nginx/Config/Map';
-import {Server as NginxConfServer} from '../Nginx/Config/Server';
-import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream';
-import {NginxServer} from '../Nginx/NginxServer';
-import {OpenSSL} from '../OpenSSL/OpenSSL';
-import {Settings} from '../Settings/Settings';
+} from '../Db/MariaDb/Entity/NginxListen.js';
+import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation.js';
+import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream.js';
+import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream.js';
+import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
+import {DBHelper} from '../Db/DBHelper.js';
+import {Context} from '../Nginx/Config/Context.js';
+import {If} from '../Nginx/Config/If.js';
+import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
+import {Logger} from '../Logger/Logger.js';
+import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
+import {Location} from '../Nginx/Config/Location.js';
+import {Map as NginxMap} from '../Nginx/Config/Map.js';
+import {Server as NginxConfServer} from '../Nginx/Config/Server.js';
+import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream.js';
+import {NginxServer} from '../Nginx/NginxServer.js';
+import {OpenSSL} from '../OpenSSL/OpenSSL.js';
+import {Settings} from '../Settings/Settings.js';
 
 /**
  * HttpLocationCollect
@@ -166,13 +166,15 @@ export class NginxService {
         conf?.getHttp().addVariable('proxy_read_timeout', '90s');
         conf?.getHttp().addVariable('ssl_prefer_server_ciphers', 'on');
         conf?.getHttp().addVariable('gzip', 'on');
-        /*conf?.getHttp().addVariable('proxy_ignore_client_abort', 'off');
-        conf?.getHttp().addVariable('client_max_body_size', '2000m');
-        conf?.getHttp().addVariable('server_names_hash_bucket_size', '1024');
-        conf?.getHttp().addVariable('proxy_http_version', '1.1');
-        conf?.getHttp().addVariable('proxy_set_header Accept-Encoding', '""');
-        conf?.getHttp().addVariable('proxy_cache', 'off');*/
 
+        /*
+         * conf?.getHttp().addVariable('proxy_ignore_client_abort', 'off');
+         * conf?.getHttp().addVariable('client_max_body_size', '2000m');
+         * conf?.getHttp().addVariable('server_names_hash_bucket_size', '1024');
+         * conf?.getHttp().addVariable('proxy_http_version', '1.1');
+         * conf?.getHttp().addVariable('proxy_set_header Accept-Encoding', '""');
+         * conf?.getHttp().addVariable('proxy_cache', 'off');
+         */
 
         // vars --------------------------------------------------------------------------------------------------------
 
@@ -181,13 +183,13 @@ export class NginxService {
 
         // read db -----------------------------------------------------------------------------------------------------
 
-        const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
-        const domainRepository = MariaDbHelper.getRepository(DomainDB);
-        const streamRepository = MariaDbHelper.getRepository(NginxStreamDB);
-        const upstreamRepository = MariaDbHelper.getRepository(NginxUpstreamDB);
-        const httpRepository = MariaDbHelper.getRepository(NginxHttpDB);
-        const locationRepository = MariaDbHelper.getRepository(NginxLocationDB);
-        const sshportRepository = MariaDbHelper.getRepository(SshPortDB);
+        const listenRepository = DBHelper.getRepository(NginxListenDB);
+        const domainRepository = DBHelper.getRepository(DomainDB);
+        const streamRepository = DBHelper.getRepository(NginxStreamDB);
+        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+        const httpRepository = DBHelper.getRepository(NginxHttpDB);
+        const locationRepository = DBHelper.getRepository(NginxLocationDB);
+        const sshportRepository = DBHelper.getRepository(SshPortDB);
 
         const listens = await listenRepository.find({
             where: {
@@ -195,7 +197,7 @@ export class NginxService {
             }
         });
 
-        for (const alisten of listens) {
+        for await (const alisten of listens) {
             // read streams by db --------------------------------------------------------------------------------------
 
             if (alisten.listen_type === ListenTypes.stream) {
@@ -205,7 +207,7 @@ export class NginxService {
                     }
                 });
 
-                for (const astream of tstreams) {
+                for await (const astream of tstreams) {
                     const adomain = await domainRepository.findOne({
                         where: {
                             id: astream.domain_id
@@ -286,7 +288,7 @@ export class NginxService {
                     }
                 });
 
-                for (const http of https) {
+                for await (const http of https) {
                     const adomain = await domainRepository.findOne({
                         where: {
                             id: http.domain_id
@@ -303,7 +305,7 @@ export class NginxService {
 
                         const mapDomainHttp = httpMap.get(alisten.listen_port);
                         const httpCollection: HttpSubCollect = {
-                            http,
+                            http: http,
                             locations: []
                         };
 
@@ -316,7 +318,7 @@ export class NginxService {
                         if (locations) {
                             const locationCollects: HttpLocationCollect[] = [];
 
-                            for (const alocation of locations) {
+                            for await (const alocation of locations) {
                                 const locationCollect: HttpLocationCollect = {
                                     location: alocation
                                 };
@@ -642,7 +644,6 @@ export class NginxService {
                         if (locationCollect.location.host_enable) {
                             let host = locationCollect.location.host_name.trim();
 
-
                             if (host === '') {
                                 host = '$host';
                             }
@@ -803,9 +804,14 @@ export class NginxService {
 
     /**
      * stop
+     * @param forced
      */
-    public async stop(): Promise<void> {
+    public async stop(forced: boolean = false): Promise<void> {
+        Logger.getLogger().info(`NginxService::stop: nginx stop with forced: ${forced}`);
+
         if (NginxServer.getInstance().isRun()) {
+            NginxServer.getInstance().stop();
+        } else if (forced) {
             NginxServer.getInstance().stop();
         }
     }

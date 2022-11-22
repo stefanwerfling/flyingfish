@@ -1,4 +1,4 @@
-import {StatusCodes} from './StatusCodes';
+import {StatusCodes} from './StatusCodes.js';
 
 /**
  * DefaultReturn

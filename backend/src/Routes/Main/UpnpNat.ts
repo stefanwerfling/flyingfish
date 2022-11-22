@@ -1,10 +1,10 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {UpnpNatCache, UpnpNatCacheMapping} from '../../inc/Cache/UpnpNatCache';
-import {NatPort as NatPortDB} from '../../inc/Db/MariaDb/Entity/NatPort';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {HimHIP} from '../../inc/HimHIP/HimHIP';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
-import {StatusCodes} from '../../inc/Routes/StatusCodes';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {UpnpNatCache, UpnpNatCacheMapping} from '../../inc/Cache/UpnpNatCache.js';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {NatPort as NatPortDB} from '../../inc/Db/MariaDb/Entity/NatPort.js';
+import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * UpnpNatDevice
@@ -112,7 +112,7 @@ export class UpnpNat {
 
             return {
                 statusCode: StatusCodes.OK,
-                data
+                data: data
             };
         }
 
@@ -129,7 +129,7 @@ export class UpnpNat {
     @Get('/json/upnpnat/list')
     public async getList(@Session() session: any): Promise<UpnpNatResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
+            const natportRepository = DBHelper.getRepository(NatPortDB);
 
             const list: UpnpNatPort[] = [];
             const entrys = await natportRepository.find();
@@ -198,7 +198,7 @@ export class UpnpNat {
     @Post('/json/upnpnat/save')
     public async save(@Session() session: any, @Body() request: UpnpNatSaveRequest): Promise<UpnpNatSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
+            const natportRepository = DBHelper.getRepository(NatPortDB);
 
             let aNatPort: NatPortDB|null = null;
 
@@ -229,7 +229,7 @@ export class UpnpNat {
             aNatPort.listen_id = request.listen_id;
             aNatPort.description = request.description;
 
-            const result = await MariaDbHelper.getConnection().manager.save(aNatPort);
+            const result = await DBHelper.getDataSource().manager.save(aNatPort);
 
             if (result) {
                 return {
@@ -255,7 +255,7 @@ export class UpnpNat {
     @Post('/json/upnpnat/delete')
     public async delete(@Session() session: any, @Body() request: UpnpNatDeleteRequest): Promise<UpnpNatDeleteResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
+            const natportRepository = DBHelper.getRepository(NatPortDB);
 
             const result = await natportRepository.delete({
                 id: request.id

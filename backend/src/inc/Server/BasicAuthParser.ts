@@ -24,10 +24,11 @@ export class BasicAuthParser {
             const colon = decoded.indexOf(':');
 
             if (colon > -1) {
+                // TODO debug this!
                 return {
                     scheme: parts[0],
-                    username: decoded.substr(0, colon),
-                    password: decoded.substr(colon + 1)
+                    username: decoded.substring(0, colon),
+                    password: decoded.substring(colon + 1)
                 };
             }
         }

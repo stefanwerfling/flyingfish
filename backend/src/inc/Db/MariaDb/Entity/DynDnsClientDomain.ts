@@ -7,17 +7,14 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 export class DynDnsClientDomain extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    dyndnsclient_id: number;
+    public dyndnsclient_id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    domain_id: number;
+    public domain_id!: number;
 
 }

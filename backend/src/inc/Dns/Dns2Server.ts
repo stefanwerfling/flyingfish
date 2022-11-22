@@ -1,11 +1,10 @@
-import DNS = require('dns2');
-import {DnsAnswer, DnsQuestion} from 'dns2';
-import {Config} from '../Config/Config';
-import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain';
-import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {Logger} from '../Logger/Logger';
-const {Packet} = DNS;
+import {RemoteInfo} from 'dgram';
+import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
+import {Config} from '../Config/Config.js';
+import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
+import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
+import {DBHelper} from '../Db/DBHelper.js';
+import {Logger} from '../Logger/Logger.js';
 
 /**
  * DnsAnswerTxt
@@ -55,19 +54,19 @@ export class Dns2Server {
             udp: true,
             tcp: true,
             handle: async(
-                request,
-                send,
-                rinfo
+                request: DnsRequest,
+                send: (response: DnsResponse) => void,
+                rinfo: RemoteInfo
             ) => {
                 try {
-                    const response = Packet.createResponseFromRequest(request);
+                    const response = DNS.Packet.createResponseFromRequest(request);
                     const [question] = request.questions;
                     const questionExt = question as DnsQuestionExt;
 
                     Logger.getLogger().info(`Dns2Server::request: ${request.header.id}`, request.questions[0]);
                     Logger.getLogger().info(`Dns2Server::request: Remote-Info ${rinfo.address}:${rinfo.port}`);
 
-                    const domainRepository = MariaDbHelper.getRepository(DomainDB);
+                    const domainRepository = DBHelper.getRepository(DomainDB);
 
                     const domain = await domainRepository.findOne({
                         where: {
@@ -77,7 +76,7 @@ export class Dns2Server {
                     });
 
                     if (domain) {
-                        const domainRecordRepository = MariaDbHelper.getRepository(DomainRecordDB);
+                        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
                         let records: DomainRecordDB[];
 
                         if ((questionExt.class !== null) && (questionExt.type !== null)) {
@@ -98,7 +97,7 @@ export class Dns2Server {
 
                         for (const record of records) {
                             switch (record.dtype) {
-                                case Packet.TYPE.TXT:
+                                case DNS.Packet.TYPE.TXT:
                                     response.answers.push({
                                         name: questionExt.name,
                                         type: record.dtype,
@@ -108,8 +107,8 @@ export class Dns2Server {
                                     } as DnsAnswerTxt);
                                     break;
 
-                                case Packet.TYPE.A:
-                                case Packet.TYPE.AAAA:
+                                case DNS.Packet.TYPE.A:
+                                case DNS.Packet.TYPE.AAAA:
                                     response.answers.push({
                                         name: questionExt.name,
                                         type: record.dtype,
@@ -119,7 +118,7 @@ export class Dns2Server {
                                     });
                                     break;
 
-                                case Packet.TYPE.NS:
+                                case DNS.Packet.TYPE.NS:
                                     response.answers.push({
                                         name: questionExt.name,
                                         type: record.dtype,
@@ -129,7 +128,7 @@ export class Dns2Server {
                                     } as DnsAnswerNs);
                                     break;
 
-                                case Packet.TYPE.MX:
+                                case DNS.Packet.TYPE.MX:
                                     response.answers.push({
                                         name: questionExt.name,
                                         type: record.dtype,
@@ -139,7 +138,7 @@ export class Dns2Server {
                                     } as DnsAnswerMX);
                                     break;
 
-                                case Packet.TYPE.CNAME:
+                                case DNS.Packet.TYPE.CNAME:
                                     response.answers.push({
                                         name: questionExt.name,
                                         type: record.dtype,
@@ -156,19 +155,19 @@ export class Dns2Server {
                         let result: DNS.DnsResponse | null = null;
 
                         switch (questionExt.type) {
-                            case Packet.TYPE.A:
+                            case DNS.Packet.TYPE.A:
                                 result = await resolver.resolveA(questionExt.name);
                                 break;
 
-                            case Packet.TYPE.AAAA:
+                            case DNS.Packet.TYPE.AAAA:
                                 result = await resolver.resolveAAAA(questionExt.name);
                                 break;
 
-                            case Packet.TYPE.MX:
+                            case DNS.Packet.TYPE.MX:
                                 result = await resolver.resolveMX(questionExt.name);
                                 break;
 
-                            case Packet.TYPE.CNAME:
+                            case DNS.Packet.TYPE.CNAME:
                                 result = await resolver.resolveCNAME(questionExt.name);
                                 break;
                         }

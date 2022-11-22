@@ -1,8 +1,8 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {GatewayIdentifier as GatewayIdentifierDB} from '../../inc/Db/MariaDb/Entity/GatewayIdentifier';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn';
-import {StatusCodes} from '../../inc/Routes/StatusCodes';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {GatewayIdentifier as GatewayIdentifierDB} from '../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * GatewayIdentifierEntry
@@ -52,7 +52,7 @@ export class GatewayIdentifier {
     @Get('/json/gatewayidentifier/list')
     public async getList(@Session() session: any): Promise<GatewayIdentifierListResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const giRepository = MariaDbHelper.getRepository(GatewayIdentifierDB);
+            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
             const list: GatewayIdentifierEntry[] = [];
             const entrys = await giRepository.find();
@@ -86,7 +86,7 @@ export class GatewayIdentifier {
     @Post('/json/gatewayidentifier/save')
     public async save(@Session() session: any, @Body() request: GatewayIdentifierEntry): Promise<GatewayIdentifierSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const giRepository = MariaDbHelper.getRepository(GatewayIdentifierDB);
+            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
             let aGateway: GatewayIdentifierDB|null = null;
 
@@ -111,7 +111,7 @@ export class GatewayIdentifier {
             aGateway.networkname = request.networkname;
             aGateway.color = request.color;
 
-            const result = await MariaDbHelper.getConnection().manager.save(aGateway);
+            const result = await DBHelper.getDataSource().manager.save(aGateway);
 
             if (result) {
                 return {
@@ -137,7 +137,7 @@ export class GatewayIdentifier {
     @Post('/json/gatewayidentifier/delete')
     public async delete(@Session() session: any, @Body() request: GatewayIdentifierDelete): Promise<GatewayIdentifierDeleteResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const giRepository = MariaDbHelper.getRepository(GatewayIdentifierDB);
+            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
             const result = await giRepository.delete({
                 id: request.id

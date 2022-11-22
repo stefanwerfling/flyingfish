@@ -1,4 +1,4 @@
-FROM node:19-bullseye
+FROM node:18-bullseye
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
@@ -59,9 +59,7 @@ COPY nginx/pages ./nginx/pages
 COPY nginx/htpasswd ./nginx/htpasswd
 COPY nginx/package.json ./nginx/package.json
 
-RUN npm install --force --prefix ./
-RUN npm install --force --prefix ./frontend
-RUN npm install --force --prefix ./nginx
+RUN npm install supervisor -g
 
 EXPOSE 80
 EXPOSE 443

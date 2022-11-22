@@ -1,9 +1,9 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers';
-import {User as UserDB} from '../../inc/Db/MariaDb/Entity/User';
-import {MariaDbHelper} from '../../inc/Db/MariaDb/MariaDbHelper';
+import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {User as UserDB} from '../../inc/Db/MariaDb/Entity/User.js';
 import * as bcrypt from 'bcrypt';
-import {Logger} from '../../inc/Logger/Logger';
-import {SessionUserData} from '../../inc/Server/Session';
+import {Logger} from '../../inc/Logger/Logger.js';
+import {SessionUserData} from '../../inc/Server/Session.js';
 
 /**
  * LoginRequest
@@ -57,7 +57,7 @@ export class Login {
         @Body() login: LoginRequest,
         @Session() session: any
     ): Promise<LoginResponse> {
-        const userRepository = MariaDbHelper.getConnection().getRepository(UserDB);
+        const userRepository = DBHelper.getDataSource().getRepository(UserDB);
 
         const user = await userRepository.findOne({
             where: {
@@ -65,12 +65,10 @@ export class Login {
             }
         });
 
-        const userData: SessionUserData = {
+        session.user = {
             isLogin: false,
             userid: 0
-        };
-
-        session.user = userData;
+        } as SessionUserData;
 
         if (user) {
             const bresult = await bcrypt.compare(login.password, user.password);

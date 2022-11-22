@@ -1,6 +1,6 @@
 import got from 'got';
-import {Logger} from '../../Logger/Logger';
-import {IDynDns, IDynDnsUpdate} from '../IDynDns';
+import {Logger} from '../../Logger/Logger.js';
+import {IDynDns, IDynDnsUpdate} from '../IDynDns.js';
 
 /**
  * SelfhostStatusMap

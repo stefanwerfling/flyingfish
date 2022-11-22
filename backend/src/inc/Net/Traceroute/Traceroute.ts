@@ -22,6 +22,7 @@ export class Traceroute {
     /**
      * trace
      * @param destination
+     * @param notResolve
      */
     public async trace(destination: string, notResolve: boolean = false): Promise<TracerouteHop[]> {
         const cmd = 'paris-traceroute';

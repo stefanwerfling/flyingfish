@@ -1,13 +1,13 @@
 import {Job, scheduleJob} from 'node-schedule';
-import {UpnpNatCache} from '../Cache/UpnpNatCache';
-import {GatewayIdentifier as GatewayIdentifierDB} from '../Db/MariaDb/Entity/GatewayIdentifier';
-import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort';
-import {promise as PingPromise} from 'ping';
-import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {HimHIP} from '../HimHIP/HimHIP';
-import {Logger} from '../Logger/Logger';
-import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient';
+import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
+import {DBHelper} from '../Db/DBHelper.js';
+import {GatewayIdentifier as GatewayIdentifierDB} from '../Db/MariaDb/Entity/GatewayIdentifier.js';
+import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort.js';
+import Ping from 'ping';
+import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
+import {HimHIP} from '../HimHIP/HimHIP.js';
+import {Logger} from '../Logger/Logger.js';
+import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient.js';
 
 /**
  * UpnpNatService
@@ -27,9 +27,9 @@ export class UpnpNatService {
         try {
             UpnpNatCache.getInstance().reset();
 
-            const giRepository = MariaDbHelper.getRepository(GatewayIdentifierDB);
-            const natportRepository = MariaDbHelper.getRepository(NatPortDB);
-            const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
+            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
+            const natportRepository = DBHelper.getRepository(NatPortDB);
+            const listenRepository = DBHelper.getRepository(NginxListenDB);
             const himhip = HimHIP.getData();
 
             if (himhip) {
@@ -47,8 +47,8 @@ export class UpnpNatService {
                     });
 
                     if (nats) {
-                        for (const anat of nats) {
-                            const res = await PingPromise.probe(anat.gateway_address);
+                        for await (const anat of nats) {
+                            const res = await Ping.promise.probe(anat.gateway_address);
 
                             if (res.alive) {
                                 const client = new UpnpNatClient({
@@ -60,7 +60,7 @@ export class UpnpNatService {
 
                                     UpnpNatCache.getInstance().addGatewayMappings(
                                         `${gatewayId.mac_address}-${anat.gateway_address}`,
-                                        mappings
+                                        UpnpNatCache.convertMapping(mappings)
                                     );
                                 } catch (et) {
                                     Logger.getLogger().info('UpnpNatService::update: Gateway mapping info error/empty');

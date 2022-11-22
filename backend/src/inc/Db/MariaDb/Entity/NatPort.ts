@@ -7,51 +7,44 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 export class NatPort extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column({
         default: 0
     })
-        // @ts-ignore
-    postion: number;
+    public postion!: number;
 
     /**
      * public port
      */
     @Column()
-        // @ts-ignore
-    public_port: number;
+    public public_port!: number;
 
     /**
      * gateway identifier id
      */
     @Index()
     @Column()
-        // @ts-ignore
-    gateway_identifier_id: number;
+    public gateway_identifier_id!: number;
 
     /**
      * ip address
      */
     @Column()
-        // @ts-ignore
-    gateway_address: string;
+    public gateway_address!: string;
 
     /**
      * privat port
      */
     @Column()
-        // @ts-ignore
-    private_port: number;
+    public private_port!: number;
 
     /**
      * client address
      */
     @Column()
-        // @ts-ignore
-    client_address: string;
+    public client_address!: string;
 
     /**
      * use himhip host address
@@ -59,34 +52,28 @@ export class NatPort extends BaseEntity {
     @Column({
         default: false
     })
-        // @ts-ignore
-    use_himhip_host_address: boolean;
+    public use_himhip_host_address!: boolean;
 
     @Column()
-        // @ts-ignore
-    ttl: number;
+    public ttl!: number;
 
     @Column({
         default: ''
     })
-        // @ts-ignore
-    protocol: string;
+    public protocol!: string;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    last_ttl_update: number;
+    public last_ttl_update!: number;
 
     @Index()
     @Column({
         default: 0
     })
-        // @ts-ignore
-    listen_id: number;
+    public listen_id!: number;
 
     @Column()
-        // @ts-ignore
-    description: string;
+    public description!: string;
 
 }

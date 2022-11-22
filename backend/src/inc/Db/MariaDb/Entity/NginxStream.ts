@@ -1,5 +1,5 @@
 import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
-import {UpstreamLoadBalancingAlgorithm} from '../../../Nginx/Config/Upstream';
+import {UpstreamLoadBalancingAlgorithm} from '../../../Nginx/Config/Upstream.js';
 
 /**
  * Nginx Stream Entity
@@ -8,64 +8,54 @@ import {UpstreamLoadBalancingAlgorithm} from '../../../Nginx/Config/Upstream';
 export class NginxStream extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    domain_id: number;
+    public domain_id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    listen_id: number;
+    public listen_id!: number;
 
     @Index()
     @Column({
         default: 0
     })
-        // @ts-ignore
-    destination_listen_id: number;
+    public destination_listen_id!: number;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    index: number;
+    public index!: number;
 
     @Column({
         type: 'varchar',
         length: 128,
         default: UpstreamLoadBalancingAlgorithm.none
     })
-        // @ts-ignore
-    load_balancing_algorithm: string;
+    public load_balancing_algorithm!: string;
 
     @Column({
         type: 'varchar',
         length: 512,
         default: ''
     })
-        // @ts-ignore
-    alias_name: string;
+    public alias_name!: string;
 
     @Column({
         default: false
     })
-        // @ts-ignore
-    isdefault: boolean;
+    public isdefault!: boolean;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    sshport_in_id: number;
+    public sshport_in_id!: number;
 
     @Column({
         default: 0
     })
-        // @ts-ignore
-    sshport_out_id: number;
+    public sshport_out_id!: number;
 
 }

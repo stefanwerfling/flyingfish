@@ -156,7 +156,7 @@ export class Ssdp implements ISsdp {
      * constructor
      * @param options
      */
-    constructor(private options?: { sourcePort?: number; }) {
+    public constructor(private options?: { sourcePort?: number; }) {
         // Create sockets on all external interfaces
         const interfaces = os.networkInterfaces();
 

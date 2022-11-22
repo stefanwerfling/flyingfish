@@ -1,5 +1,5 @@
-import {IHowIsMyPublicIp} from './IHowIsMyPublicIp';
-import {Ipify} from './Ipify/Ipify';
+import {IHowIsMyPublicIp} from './IHowIsMyPublicIp.js';
+import {Ipify} from './Ipify/Ipify.js';
 
 /**
  * HowIsMyPublicIpProviders

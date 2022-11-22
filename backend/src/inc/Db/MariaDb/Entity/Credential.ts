@@ -1,34 +1,31 @@
 import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
 
+/**
+ * Credential
+ */
 @Entity({name: 'credential'})
 export class Credential extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column()
-        // @ts-ignore
-    location_id: number;
+    public location_id!: number;
 
     @Column()
-        // @ts-ignore
-    scheme: number;
+    public scheme!: number;
 
     @Column()
-        // @ts-ignore
-    provider: string;
+    public provider!: string;
 
     @Column()
-        // @ts-ignore
-    position: number;
+    public position!: number;
 
     @Column({
         type: 'text',
         default: ''
     })
-        // @ts-ignore
-    settings: string;
+    public settings!: string;
 
 }

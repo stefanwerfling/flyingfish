@@ -54,6 +54,8 @@ export class Listen {
      * @param ip
      * @param ssl
      * @param http2
+     * @param protocol
+     * @param default_server
      */
     public constructor(
         port: number,

@@ -1,8 +1,8 @@
 import {Job, scheduleJob} from 'node-schedule';
-import {Config} from '../Config/Config';
-import {Logger} from '../Logger/Logger';
-import {HowIsMyPublicIpProviders} from '../Provider/HowIsMyPublicIpProviders';
-import {DynDnsService} from './DynDnsService';
+import {Config} from '../Config/Config.js';
+import {Logger} from '../Logger/Logger.js';
+import {HowIsMyPublicIpProviders} from '../Provider/HowIsMyPublicIpProviders.js';
+import {DynDnsService} from './DynDnsService.js';
 
 /**
  * HowIsMyPublicIpService

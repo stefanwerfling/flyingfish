@@ -1,7 +1,7 @@
 import {Job, scheduleJob} from 'node-schedule';
-import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {NginxHandler} from '../Provider/Nginx/NginxHandler';
+import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
+import {DBHelper} from '../Db/DBHelper.js';
+import {NginxHandler} from '../Provider/Nginx/NginxHandler.js';
 
 /**
  * NginxStatusService
@@ -36,7 +36,7 @@ export class NginxStatusService {
      * @protected
      */
     public async updateStatus(): Promise<void> {
-        const listenRepository = MariaDbHelper.getRepository(NginxListenDB);
+        const listenRepository = DBHelper.getRepository(NginxListenDB);
 
         const statusListen = await listenRepository.findOne({
             where: {

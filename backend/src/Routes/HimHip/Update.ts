@@ -1,7 +1,7 @@
 import {Response} from 'express';
-import {Get, HeaderParam, JsonController, Res} from 'routing-controllers';
-import {Config} from '../../inc/Config/Config';
-import {HimHIP} from '../../inc/HimHIP/HimHIP';
+import {Get, HeaderParam, JsonController, Res} from 'routing-controllers-extended';
+import {Config} from '../../inc/Config/Config.js';
+import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
 
 /**
  * Update
@@ -24,11 +24,11 @@ export class Update {
         if (configHimHip && configHimHip.use) {
             if (configHimHip.secure === secure) {
                 HimHIP.setData({
-                    gatewaymac,
-                    network,
-                    gateway,
+                    gatewaymac: gatewaymac,
+                    network: network,
+                    gateway: gateway,
                     interface: tinterface,
-                    hostip
+                    hostip: hostip
                 });
 
                 response.status(200);

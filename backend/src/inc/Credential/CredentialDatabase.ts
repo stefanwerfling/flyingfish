@@ -1,10 +1,10 @@
 import * as bcrypt from 'bcrypt';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {Logger} from '../Logger/Logger';
-import {CredentialSchemes} from './Credential';
-import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential';
-import {CredentialUser as CredentialUserDB} from '../Db/MariaDb/Entity/CredentialUser';
-import {ICredential, ICredentialAuthBasic} from './ICredential';
+import {DBHelper} from '../Db/DBHelper.js';
+import {Logger} from '../Logger/Logger.js';
+import {CredentialSchemes} from './Credential.js';
+import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential.js';
+import {CredentialUser as CredentialUserDB} from '../Db/MariaDb/Entity/CredentialUser.js';
+import {ICredential, ICredentialAuthBasic} from './ICredential.js';
 
 /**
  * CredentialDB
@@ -21,7 +21,7 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
      * constructor
      * @param credential
      */
-    constructor(credential: CredentialDB) {
+    public constructor(credential: CredentialDB) {
         this._credentialId = credential.id;
     }
 
@@ -36,11 +36,11 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
      * auth
      */
     public async authBasic(username: string, password: string): Promise<boolean> {
-        const credentialUserRepository = MariaDbHelper.getRepository(CredentialUserDB);
+        const credentialUserRepository = DBHelper.getRepository(CredentialUserDB);
         const user = await credentialUserRepository.findOne({
             where: {
                 credential_id: this._credentialId,
-                username,
+                username: username,
                 disabled: false
             }
         });

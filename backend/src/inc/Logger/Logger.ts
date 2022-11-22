@@ -1,7 +1,7 @@
 import winston, {Logger as WinstonLogger} from 'winston';
 import TransportStream from 'winston-transport';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import {Config} from '../Config/Config';
+import {Config} from '../Config/Config.js';
 
 /**
  * Logger
@@ -62,12 +62,12 @@ export class Logger {
             }
 
             const transport: DailyRotateFile = new DailyRotateFile({
-                dirname,
-                filename,
+                dirname: dirname,
+                filename: filename,
                 datePattern: 'YYYY-MM-DD-HH',
-                zippedArchive,
-                maxSize,
-                maxFiles
+                zippedArchive: zippedArchive,
+                maxSize: maxSize,
+                maxFiles: maxFiles
             });
 
             transport.on('rotate',
@@ -87,8 +87,8 @@ export class Logger {
             }
 
             Logger._logger = winston.createLogger({
-                level,
-                transports
+                level: level,
+                transports: transports
             });
 
             console.log('Create Logger with:');

@@ -7,20 +7,17 @@ import {Entity, PrimaryGeneratedColumn, Column, BaseEntity, Index} from 'typeorm
 export class User extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column({
         type: 'varchar',
         length: 128
     })
-        // @ts-ignore
-    username: string;
+    public username!: string;
 
     @Column()
-        // @ts-ignore
-    password: string;
+    public password!: string;
 
     @Index()
     @Column({
@@ -28,15 +25,13 @@ export class User extends BaseEntity {
         length: 255,
         default: ''
     })
-        // @ts-ignore
-    email: string;
+    public email!: string;
 
     @Index()
     @Column({
         type: 'boolean',
         default: true
     })
-        // @ts-ignore
-    disable: boolean;
+    public disable!: boolean;
 
 }

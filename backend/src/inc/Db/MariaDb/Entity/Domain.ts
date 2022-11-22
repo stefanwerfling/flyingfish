@@ -7,28 +7,24 @@ import {Entity, PrimaryGeneratedColumn, Column, BaseEntity, Index} from 'typeorm
 export class Domain extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-        // @ts-ignore
-    id: number;
+    public id!: number;
 
     @Index()
     @Column({
         type: 'varchar',
         length: 512
     })
-        // @ts-ignore
-    domainname: string;
+    public domainname!: string;
 
     @Column({
         default: false
     })
-        // @ts-ignore
-    fixdomain: boolean;
+    public fixdomain!: boolean;
 
     @Column({
         default: false
     })
-        // @ts-ignore
-    recordless: boolean;
+    public recordless!: boolean;
 
     /**
      * disable the listen
@@ -38,7 +34,6 @@ export class Domain extends BaseEntity {
         type: 'bool',
         default: false
     })
-        // @ts-ignore
-    disable: boolean;
+    public disable!: boolean;
 
 }

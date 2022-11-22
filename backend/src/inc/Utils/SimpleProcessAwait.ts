@@ -1,5 +1,5 @@
 import {ChildProcessWithoutNullStreams} from 'child_process';
-import {Logger} from '../Logger/Logger';
+import {Logger} from '../Logger/Logger.js';
 
 /**
  * SimpleProcessAwait

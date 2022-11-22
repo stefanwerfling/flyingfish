@@ -1,4 +1,5 @@
 import NodeCache from 'node-cache';
+import {Mapping} from '../Net/Upnp/UpnpNatClient.js';
 
 /**
  * UpnpNatCacheMapping
@@ -14,7 +15,7 @@ export type UpnpNatCacheMapping = {
     };
     protocol: string;
     enabled: boolean;
-    description: string;
+    description?: string;
     ttl: number;
     local: boolean;
 };
@@ -92,6 +93,34 @@ export class UpnpNatCache {
      */
     public getLists(): Map<string, UpnpNatCacheMapping[]> | undefined {
         return this._cache.get<Map<string, UpnpNatCacheMapping[]>>(this._name);
+    }
+
+    /**
+     * convertMapping
+     * @param mappings
+     */
+    public static convertMapping(mappings: Mapping[]): UpnpNatCacheMapping[] {
+        const list: UpnpNatCacheMapping[] = [];
+
+        for (const map of mappings) {
+            list.push({
+                public: {
+                    host: map.public.host,
+                    port: map.public.port
+                },
+                private: {
+                    host: map.private.host,
+                    port: map.private.port
+                },
+                protocol: map.protocol,
+                enabled: map.enabled,
+                description: map.description,
+                ttl: map.ttl,
+                local: map.local
+            });
+        }
+
+        return list;
     }
 
 }
