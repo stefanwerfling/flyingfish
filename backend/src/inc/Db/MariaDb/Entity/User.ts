@@ -6,9 +6,15 @@ import {Entity, PrimaryGeneratedColumn, Column, BaseEntity, Index} from 'typeorm
 @Entity({name: 'user'})
 export class User extends BaseEntity {
 
+    /**
+     * id
+     */
     @PrimaryGeneratedColumn()
     public id!: number;
 
+    /**
+     * username
+     */
     @Index()
     @Column({
         type: 'varchar',
@@ -16,9 +22,15 @@ export class User extends BaseEntity {
     })
     public username!: string;
 
+    /**
+     * password
+     */
     @Column()
     public password!: string;
 
+    /**
+     * email
+     */
     @Index()
     @Column({
         type: 'varchar',
@@ -27,6 +39,9 @@ export class User extends BaseEntity {
     })
     public email!: string;
 
+    /**
+     * disable
+     */
     @Index()
     @Column({
         type: 'boolean',

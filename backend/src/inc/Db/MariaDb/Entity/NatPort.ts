@@ -6,9 +6,15 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 @Entity({name: 'nat_port'})
 export class NatPort extends BaseEntity {
 
+    /**
+     * id
+     */
     @PrimaryGeneratedColumn()
     public id!: number;
 
+    /**
+     * postion
+     */
     @Index()
     @Column({
         default: 0
@@ -54,25 +60,40 @@ export class NatPort extends BaseEntity {
     })
     public use_himhip_host_address!: boolean;
 
+    /**
+     * ttl
+     */
     @Column()
     public ttl!: number;
 
+    /**
+     * protocol
+     */
     @Column({
         default: ''
     })
     public protocol!: string;
 
+    /**
+     * last ttl update
+     */
     @Column({
         default: 0
     })
     public last_ttl_update!: number;
 
+    /**
+     * listen id
+     */
     @Index()
     @Column({
         default: 0
     })
     public listen_id!: number;
 
+    /**
+     * description
+     */
     @Column()
     public description!: string;
 

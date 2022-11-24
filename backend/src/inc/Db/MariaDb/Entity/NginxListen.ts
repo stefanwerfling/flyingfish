@@ -37,44 +37,71 @@ export enum ListenProtocol {
 @Entity({name: 'nginx_listen'})
 export class NginxListen extends BaseEntity {
 
+    /**
+     * id
+     */
     @PrimaryGeneratedColumn()
     public id!: number;
 
+    /**
+     * listen type
+     */
     @Column()
     public listen_type!: number;
 
+    /**
+     * listen category
+     */
     @Column({
         default: ListenCategory.default_stream_nonessl
     })
     public listen_category!: number;
 
+    /**
+     * listen port
+     */
     @Index()
     @Column()
     public listen_port!: number;
 
+    /**
+     * listen protocol
+     */
     @Index()
     @Column({
         default: ListenProtocol.tcp
     })
     public listen_protocol!: number;
 
+    /**
+     * enable ipv6
+     */
     @Column({
         type: 'bool',
         default: false
     })
     public enable_ipv6!: boolean;
 
+    /**
+     * name
+     */
     @Column({
         type: 'varchar',
         length: 512
     })
     public name!: string;
 
+    /**
+     * description
+     */
     @Column({
         type: 'text'
     })
     public description!: string;
 
+    /**
+     * enable upnp nat
+     */
     @Column({
         type: 'bool',
         default: false

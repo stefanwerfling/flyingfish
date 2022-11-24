@@ -6,9 +6,15 @@ import {Entity, PrimaryGeneratedColumn, Column, BaseEntity, Index} from 'typeorm
 @Entity({name: 'domain'})
 export class Domain extends BaseEntity {
 
+    /**
+     * id
+     */
     @PrimaryGeneratedColumn()
     public id!: number;
 
+    /**
+     * domain name
+     */
     @Index()
     @Column({
         type: 'varchar',
@@ -16,11 +22,17 @@ export class Domain extends BaseEntity {
     })
     public domainname!: string;
 
+    /**
+     * fix domain
+     */
     @Column({
         default: false
     })
     public fixdomain!: boolean;
 
+    /**
+     * recordless
+     */
     @Column({
         default: false
     })

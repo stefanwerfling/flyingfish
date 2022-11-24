@@ -37,13 +37,18 @@ export class IpAccess extends BasePage {
         const mainTabs = new NavTab(cardIpAccess.getElement(), 'ipaccesstabs');
         const tabBlacklist = mainTabs.addTab('Blacklist', 'ipaccesstabblacklist');
 
-        const blacklistCard = new Card(tabBlacklist.body, CardBodyType.none);
+        const blacklistbodyCard = jQuery('<div class="card-body"/>').appendTo(tabBlacklist.body);
+        const blacklistCard = new Card(blacklistbodyCard, CardBodyType.none);
+
+
+
 
         /**
          * onLoadList
          */
         this._onLoadTable = async(): Promise<void> => {
             blacklistCard.getElement().empty();
+
 
         }
 

@@ -7,28 +7,46 @@ import {UpstreamLoadBalancingAlgorithm} from '../../../Nginx/Config/Upstream.js'
 @Entity({name: 'nginx_stream'})
 export class NginxStream extends BaseEntity {
 
+    /**
+     * id
+     */
     @PrimaryGeneratedColumn()
     public id!: number;
 
+    /**
+     * domain id
+     */
     @Index()
     @Column()
     public domain_id!: number;
 
+    /**
+     * listen id
+     */
     @Index()
     @Column()
     public listen_id!: number;
 
+    /**
+     * destination listen id
+     */
     @Index()
     @Column({
         default: 0
     })
     public destination_listen_id!: number;
 
+    /**
+     * index
+     */
     @Column({
         default: 0
     })
     public index!: number;
 
+    /**
+     * load balancing algorithm
+     */
     @Column({
         type: 'varchar',
         length: 128,
@@ -36,6 +54,9 @@ export class NginxStream extends BaseEntity {
     })
     public load_balancing_algorithm!: string;
 
+    /**
+     * alias name
+     */
     @Column({
         type: 'varchar',
         length: 512,
@@ -43,16 +64,25 @@ export class NginxStream extends BaseEntity {
     })
     public alias_name!: string;
 
+    /**
+     * is default
+     */
     @Column({
         default: false
     })
     public isdefault!: boolean;
 
+    /**
+     * ssh port in id
+     */
     @Column({
         default: 0
     })
     public sshport_in_id!: number;
 
+    /**
+     * ssh port out id
+     */
     @Column({
         default: 0
     })

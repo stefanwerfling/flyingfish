@@ -6,9 +6,15 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 @Entity({name: 'settings'})
 export class Settings extends BaseEntity {
 
+    /**
+     * id
+     */
     @PrimaryGeneratedColumn()
     public id!: number;
 
+    /**
+     * name
+     */
     @Index()
     @Column({
         type: 'varchar',
@@ -16,6 +22,9 @@ export class Settings extends BaseEntity {
     })
     public name!: string;
 
+    /**
+     * value
+     */
     @Column({
         type: 'text',
         default: ''
