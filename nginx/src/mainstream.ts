@@ -3,7 +3,6 @@
  * @param s
  */
 async function accessAddressStream(s: NginxStreamRequest) {
-    s.error(njs.dump(s));
     const v = s.variables;
     let address = v.realip_remote_addr;
 

@@ -212,6 +212,23 @@ export class Domains extends BasePage {
                         new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.secondary);
                     }
 
+                    card.getTitleElement().append('&nbsp;');
+
+                    const btnOpenUrl = new ButtonMenu(
+                        card.getTitleElement(),
+                        IconFa.share,
+                        true,
+                        ButtonType.borderless
+                    );
+
+                    btnOpenUrl.addMenuItem(`http://${domain.name}`, () => {
+                        window.open(`http://${domain.name}`, '_blank');
+                    });
+
+                    btnOpenUrl.addMenuItem(`https://${domain.name}`, () => {
+                        window.open(`https://${domain.name}`, '_blank');
+                    });
+
                     const funcEdit = (): void => {
                         this._domainDialog.setTitle('Domain Edit');
                         this._domainDialog.resetValues();

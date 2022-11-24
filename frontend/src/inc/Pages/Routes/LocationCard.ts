@@ -136,13 +136,14 @@ export class LocationCard {
     /**
      * constructor
      * @param card
+     * @param index
      */
-    public constructor(card: Card) {
+    public constructor(card: Card, index: number) {
         this._card = new Card(card.getElement(), CardBodyType.none, CardType.success);
 
         this._navTab = new NavTab(this._card, 'routehttplocationnavtab');
-        const tabDetails = this._navTab.addTab('Details', 'routehttplocationdetails');
-        const tabAdvanced = this._navTab.addTab('Advanced', 'routehttplocationadvanced');
+        const tabDetails = this._navTab.addTab('Details', `routehttplocationdetails${index}`);
+        const tabAdvanced = this._navTab.addTab('Advanced', `routehttplocationadvanced${index}`);
 
         // tab deatils -------------------------------------------------------------------------------------------------
         const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);

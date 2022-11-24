@@ -149,7 +149,7 @@ export class RouteHttpEditModal extends ModalDialog {
         );
 
         addLocationBtn.setOnClickFn(() => {
-            const location = new LocationCard(this._locationCard);
+            const location = new LocationCard(this._locationCard, this._locationCards.length+1);
             location.setSshListens(this._sshListens);
             location.setLocation({
                 id: 0,
@@ -373,7 +373,7 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setLocations(locations: Location[]): void {
         for (const tlocation of locations) {
-            const location = new LocationCard(this._locationCard);
+            const location = new LocationCard(this._locationCard, this._locationCards.length+1);
             location.setSshListens(this._sshListens);
             location.setLocation(tlocation);
 

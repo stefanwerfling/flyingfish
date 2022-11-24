@@ -285,6 +285,23 @@ export class Routes extends BasePage {
                     } else {
                         // eslint-disable-next-line no-new
                         new Badge(card.getTitleElement(), `${entry.domainname}`, BadgeType.secondary);
+
+                        card.getTitleElement().append('&nbsp;');
+
+                        const btnOpenUrl = new ButtonMenu(
+                            card.getTitleElement(),
+                            IconFa.share,
+                            true,
+                            ButtonType.borderless
+                        );
+
+                        btnOpenUrl.addMenuItem(`http://${entry.domainname}`, () => {
+                            window.open(`http://${entry.domainname}`, '_blank');
+                        });
+
+                        btnOpenUrl.addMenuItem(`https://${entry.domainname}`, () => {
+                            window.open(`https://${entry.domainname}`, '_blank');
+                        });
                     }
 
                     if (!entry.domainfix) {

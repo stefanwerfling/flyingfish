@@ -47,4 +47,20 @@ export class IpBlacklist extends BaseEntity {
     })
     public disable!: boolean;
 
+    /**
+     * last block
+     */
+    @Column({
+        default: 0
+    })
+    public last_block!: number;
+
+    /**
+     * count block
+     */
+    @Column({
+        default: 0
+    })
+    public count_block!: number;
+
 }

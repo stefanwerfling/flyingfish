@@ -4,6 +4,7 @@ import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
 import {Logger} from '../../inc/Logger/Logger.js';
+import {DateHelper} from '../../inc/Utils/DateHelper.js';
 
 /**
  * AddressAccess
@@ -48,6 +49,9 @@ export class AddressAccess {
                     return true;
                 }
 
+                // update and not await
+                AddressAccess._updateBlacklistBlock(address.id, address.count_block + 1).then();
+
                 Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) found in blacklist!`);
             }
         } else {
@@ -76,6 +80,9 @@ export class AddressAccess {
                         }
 
                         Logger.getLogger().info(`AddressAccess::access: Address(${realip_remote_addr}) found in blacklist!`);
+
+                        // update and not await
+                        AddressAccess._updateBlacklistBlock(address.id, address.count_block + 1).then();
                     }
                 } else {
                     response.status(200);
@@ -90,6 +97,25 @@ export class AddressAccess {
         response.status(401);
 
         return false;
+    }
+
+    /**
+     * _updateBlock
+     * @param ipId
+     * @protected
+     */
+    protected static async _updateBlacklistBlock(ipBlacklistId: number, newBlockCount: number): Promise<void> {
+        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
+
+        await ipBlacklistRepository
+        .createQueryBuilder()
+        .update()
+        .set({
+            last_block: DateHelper.getCurrentDbTime(),
+            count_block: newBlockCount
+        })
+        .where('id = :id', {id: ipBlacklistId})
+        .execute();
     }
 
 }

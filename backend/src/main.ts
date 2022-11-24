@@ -16,6 +16,7 @@ import {NginxStatusService} from './inc/Service/NginxStatusService.js';
 import {SslCertService} from './inc/Service/SslCertService.js';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
 import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier.js';
+import {IpAccess as IpAccessController} from './Routes/Main/IpAccess.js';
 import {Ssl as SslController} from './Routes/Main/Ssl.js';
 import {Domain as DomainController} from './Routes/Main/Domain.js';
 import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient.js';
@@ -211,6 +212,7 @@ import exitHook from 'async-exit-hook';
             UpnpNatController,
             SslController,
             NginxController,
+            IpAccessController,
 
             NjsAddressAccessController,
             NjsAuthBasicController,
