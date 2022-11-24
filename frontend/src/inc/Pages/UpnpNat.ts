@@ -148,7 +148,7 @@ export class UpnpNat extends BasePage {
             const trhead = new Tr(table.getThead());
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'Gateway Identifier');
+            new Th(trhead, 'for Gateway');
 
             // eslint-disable-next-line no-new
             new Th(trhead, 'Extern');
@@ -201,8 +201,24 @@ export class UpnpNat extends BasePage {
                     // eslint-disable-next-line no-new
                     new Td(trbody, ' &#8594; ');
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${upnpnat.client_address}:${upnpnat.private_port}`);
+                    if (upnpnat.listen_id == 0) {
+                        let addressStr = upnpnat.client_address;
+
+                        if (upnpnat.use_himhip_host_address) {
+                            addressStr = '(DHCP IP)';
+                        }
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `${addressStr}:${upnpnat.private_port}`);
+                    } else {
+                        let addressStr = upnpnat.client_address;
+
+                        if (upnpnat.use_himhip_host_address) {
+                            addressStr = '(DHCP IP)';
+                        }
+
+                        new Td(trbody, `${addressStr}`);
+                    }
 
                     const sdTd = new Td(trbody, '');
 

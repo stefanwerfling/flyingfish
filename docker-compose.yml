@@ -60,6 +60,7 @@ services:
       - ./backend/node_modules:/opt/app/node_modules
       - ./backend/package.json:/opt/app/package.json
       - ./frontend/dist:/opt/app/frontend/dist
+      - ./frontend/src:/opt/app/frontend/src
     ports:
       - "443:443"
       - "80:80"

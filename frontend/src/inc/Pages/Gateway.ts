@@ -1,5 +1,7 @@
 import {GatewayIdentifier as GatewayIdentifierAPI, GatewayIdentifierEntry} from '../Api/GatewayIdentifier';
+import {UpnpNat} from '../Api/UpnpNat';
 import {Card} from '../Bambooo/Content/Card/Card';
+import {Circle, CircleColor} from '../Bambooo/Content/Circle/Circle';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
@@ -109,6 +111,9 @@ export class Gateway extends BasePage {
             const trhead = new Tr(table.getThead());
 
             // eslint-disable-next-line no-new
+            new Th(trhead, '', '32px');
+
+            // eslint-disable-next-line no-new
             new Th(trhead, 'Networkname');
 
             // eslint-disable-next-line no-new
@@ -122,11 +127,21 @@ export class Gateway extends BasePage {
 
             // gateway identifiers -------------------------------------------------------------------------------------
 
+            const gatewayInfo = await UpnpNat.getCurrentGatewayInfo();
             const gatewayIdentifiers = await GatewayIdentifierAPI.getList();
 
             if (gatewayIdentifiers) {
                 gatewayIdentifiers.forEach((gateway) => {
                     const trbody = new Tr(table.getTbody());
+
+                    const tdStatus = new Td(trbody, '');
+
+                    if (gatewayInfo) {
+                        if (gatewayInfo.gatwaymac_address == gateway.mac_address) {
+                            // eslint-disable-next-line no-new
+                            new Circle(tdStatus, CircleColor.green);
+                        }
+                    }
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${gateway.networkname}`);

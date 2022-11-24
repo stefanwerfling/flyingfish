@@ -210,6 +210,7 @@ export class DynDnsClients extends BasePage {
                             new Circle(tdLStatus, CircleColor.red);
                         }
 
+                        tdLStatus.getElement().append('&nbsp;');
                         tdLStatus.getElement().append(`(${entry.last_status}) ${entry.last_status_msg}`);
 
                         const date = moment(entry.last_update * 1000);

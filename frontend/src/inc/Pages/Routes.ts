@@ -10,11 +10,12 @@ import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
 import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
+import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {Tooltip} from '../Bambooo/Content/Tooltip/Tooltip';
 import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
@@ -363,6 +364,9 @@ export class Routes extends BasePage {
                     new Th(trhead, 'Destination', '150px');
 
                     // eslint-disable-next-line no-new
+                    new Th(trhead, 'Options', '150px');
+
+                    // eslint-disable-next-line no-new
                     new Th(trhead, '');
 
                     // -------------------------------------------------------------------------------------------------
@@ -432,6 +436,13 @@ export class Routes extends BasePage {
                                     badType);
                             }
                         }
+
+                        // options td ----------------------------------------------------------------------------------
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, '');
+
+                        // action td -----------------------------------------------------------------------------------
 
                         const tdAction = new Td(trbody, '');
 
@@ -587,6 +598,17 @@ export class Routes extends BasePage {
                         } else {
                             sdTdD.addValue('None');
                         }
+
+                        // options td ----------------------------------------------------------------------------------
+
+                        const tdOptions = new Td(trbody, '');
+
+                        if (value.ssl && value.ssl.enable) {
+                            const sslTooltip = new Tooltip(tdOptions, `SSL with '${value.ssl.provider}'`);
+                            new Icon(sslTooltip, IconFa.lock);
+                        }
+
+                        // action td -----------------------------------------------------------------------------------
 
                         const tdAction = new Td(trbody, '');
                         const btnMenu = new ButtonMenu(tdAction, IconFa.bars, true, ButtonType.borderless);
