@@ -86,6 +86,7 @@ export class Abuseipdb {
                 }
             }
         } catch (e) {
+            Logger.getLogger().error('Abuseipdb::check:');
             Logger.getLogger().error(e);
         }
 

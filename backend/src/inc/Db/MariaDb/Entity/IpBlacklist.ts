@@ -63,4 +63,13 @@ export class IpBlacklist extends BaseEntity {
     })
     public count_block!: number;
 
+    /**
+     * ip location id
+     */
+    @Index()
+    @Column({
+        default: 0
+    })
+    public ip_location_id!: number;
+
 }

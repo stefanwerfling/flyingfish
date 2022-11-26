@@ -7,16 +7,19 @@ import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from './inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer as IpListMaintainerDB} from './inc/Db/MariaDb/Entity/IpListMaintainer.js';
+import {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js';
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {Logger} from './inc/Logger/Logger.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
+import {IpLocationService} from './inc/Service/IpLocationService.js';
 import {NginxStatusService} from './inc/Service/NginxStatusService.js';
 import {SslCertService} from './inc/Service/SslCertService.js';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
 import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier.js';
 import {IpAccess as IpAccessController} from './Routes/Main/IpAccess.js';
+import {Settings as SettingsController} from './Routes/Main/Settings.js';
 import {Ssl as SslController} from './Routes/Main/Ssl.js';
 import {Domain as DomainController} from './Routes/Main/Domain.js';
 import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient.js';
@@ -115,6 +118,7 @@ import exitHook from 'async-exit-hook';
                 NginxHttpDB,
                 NginxLocationDB,
                 IpListMaintainerDB,
+                IpLocationDB,
                 IpBlacklistDB,
                 IpBlacklistCategoryDB,
                 IpBlacklistMaintainerDB,
@@ -213,6 +217,7 @@ import exitHook from 'async-exit-hook';
             SslController,
             NginxController,
             IpAccessController,
+            SettingsController,
 
             NjsAddressAccessController,
             NjsAuthBasicController,
@@ -260,10 +265,14 @@ import exitHook from 'async-exit-hook';
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    // wait
     await NginxStatusService.getInstance().start();
     await HowIsMyPublicIpService.getInstance().start();
     await SslCertService.getInstance().start();
-    await BlacklistService.getInstance().start();
+
+    // not await
+    BlacklistService.getInstance().start();
+    IpLocationService.getInstance().start();
 
     // exit ------------------------------------------------------------------------------------------------------------
 

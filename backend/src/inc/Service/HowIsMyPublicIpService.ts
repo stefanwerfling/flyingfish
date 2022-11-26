@@ -91,6 +91,8 @@ export class HowIsMyPublicIpService {
      * start
      */
     public async start(): Promise<void> {
+        await this.determined();
+
         this._scheduler = scheduleJob('*/1 * * * *', async() => {
             await this.determined();
         });

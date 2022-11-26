@@ -66,9 +66,11 @@ export class Ssl {
         });
 
         if (result && result.statusCode) {
-            switch (result.statusCode) {
+            const resultContent = result as SslDetailsResponse;
+
+            switch (resultContent.statusCode) {
                 case StatusCodes.OK:
-                    return result.details as SslDetails;
+                    return resultContent.details as SslDetails;
 
                 case StatusCodes.UNAUTHORIZED:
                     throw new UnauthorizedError();

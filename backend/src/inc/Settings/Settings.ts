@@ -35,4 +35,28 @@ export class Settings {
         return vdefault;
     }
 
+    /**
+     * setSetting
+     * @param name
+     * @param value
+     */
+    public static async setSetting(name: string, value: string): Promise<void> {
+        const settingsRepository = DBHelper.getRepository(SettingsDB);
+
+        let setting = await settingsRepository.findOne({
+            where: {
+                name: name
+            }
+        });
+
+        if (!setting) {
+            setting = new SettingsDB();
+            setting.name = name;
+        }
+
+        setting.value = value;
+
+        await DBHelper.getDataSource().manager.save(setting);
+    }
+
 }

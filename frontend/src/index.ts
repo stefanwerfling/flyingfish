@@ -10,7 +10,6 @@ import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {DynDnsClients} from './inc/Pages/DynDnsClients';
 import {IpAccess} from './inc/Pages/IpAccess';
 import {Listens as ListensPage} from './inc/Pages/Listens';
-import {DnsResolver} from './inc/Pages/DnsResolver';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {Settings as SettingsPage} from './inc/Pages/Settings';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
@@ -120,14 +119,14 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                     loadPage(new DomainsPage());
                 },
                 items: [
-                    {
+                    /*{
                         title: 'Dns-Resolver',
                         name: 'dnsresolver',
                         icon: 'fa-solid fa-tag',
                         onClick: (): void => {
                             loadPage(new DnsResolver())
                         }
-                    },
+                    },*/
                     {
                         title: 'DynDns Clients',
                         name: 'dyndnsclients',
@@ -136,14 +135,14 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                             loadPage(new DynDnsClients())
                         }
                     },
-                    {
+                    /*{
                         title: 'DynDns Server',
                         name: 'dyndnsserver',
                         icon: 'fa-solid fa-server',
                         onClick: (): void => {
                             loadPage(new DynDnsClients())
                         }
-                    }
+                    }*/
                 ]
             },
             {
@@ -152,7 +151,23 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 name: 'routes',
                 onClick: (): void => {
                     loadPage(new RoutesPage());
-                }
+                },
+                /*items: [
+                    {
+                        title: 'DynLocation Server',
+                        name: 'dynlocationserver',
+                        icon: 'fa-solid fa-server',
+                        onClick: (): void => {
+                        }
+                    },
+                    {
+                        title: 'SSLCert API Server',
+                        name: 'sslcertapiserver',
+                        icon: 'fa-solid fa-server',
+                        onClick: (): void => {
+                        }
+                    }
+                ]*/
             },
             {
                 title: 'Settings',

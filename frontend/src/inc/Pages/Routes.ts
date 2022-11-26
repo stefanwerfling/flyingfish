@@ -367,7 +367,7 @@ export class Routes extends BasePage {
                     new Th(trhead, 'Options', '150px');
 
                     // eslint-disable-next-line no-new
-                    new Th(trhead, '');
+                    new Th(trhead, 'Action');
 
                     // -------------------------------------------------------------------------------------------------
 
