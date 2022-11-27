@@ -542,11 +542,8 @@ export class NginxService {
                         aServer.addVariable('ssl_trusted_certificate', `${sslCert}/chain.pem`);
                         aServer.addVariable('ssl_certificate', `${sslCert}/fullchain.pem`);
                         aServer.addVariable('ssl_certificate_key', `${sslCert}/privkey.pem`);
-
-                        // aServer.addVariable('resolver', '127.0.0.1 valid=300s');
-
-                        // aServer.addVariable('resolver_timeout', '5s');
-
+                        aServer.addVariable('resolver', `${nginxResolver} valid=300s`);
+                        aServer.addVariable('resolver_timeout', '5s');
                         aServer.addVariable('add_header X-Frame-Options', 'DENY');
                         aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
@@ -760,7 +757,12 @@ export class NginxService {
             });
 
             const locWellKnown = new Location('/.well-known');
+
+            locWellKnown.addVariable('auth_basic', 'off');
+            locWellKnown.addVariable('auth_request', 'off');
+            locWellKnown.addVariable('default_type', '"text/plain"');
             locWellKnown.addVariable('alias', '/opt/app/nginx/html/.well-known');
+
             dServer.addLocation(locWellKnown);
 
             const loc404 = new Location('/404.html');
