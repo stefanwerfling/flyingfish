@@ -142,7 +142,11 @@ export class Server {
             const keyFile = Path.join(this._sslPath, FlyingFishSsl.FILE_KEYPEM);
             const crtFile = Path.join(this._sslPath, FlyingFishSsl.FILE_CRT);
 
-            if (!fs.existsSync(keyFile)) {
+            if (fs.existsSync(keyFile)) {
+                Logger.getLogger().silly(`Server::listen: express certs found in path: ${this._sslPath}`);
+            } else {
+                Logger.getLogger().silly(`Server::listen: create certs for express by path: ${this._sslPath}`);
+
                 await FlyingFishSsl.createExpressCerts(this._sslPath);
             }
 

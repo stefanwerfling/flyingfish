@@ -46,23 +46,36 @@ export class FlyingFishSsl {
         if (cnf) {
             const key = Path.join(sslLibPath, FlyingFishSsl.FILE_KEYPEM);
 
+            Logger.getLogger().silly('FlyingFishSsl::createExpressCerts: genRsa ...');
+
             if (await OpenSSL.genRsa(key, 2048)) {
+                Logger.getLogger().silly('FlyingFishSsl::createExpressCerts: genRsa finish.');
+
                 const crt = Path.join(sslLibPath, FlyingFishSsl.FILE_CRT);
-                const csr = Path.join(sslLibPath, FlyingFishSsl.FILE_CSR);
-                // const ca = Path.join(sslLibPath, FlyingFishSsl.FILE_CA);
+
+                /*
+                 * const csr = Path.join(sslLibPath, FlyingFishSsl.FILE_CSR);
+                 * const ca = Path.join(sslLibPath, FlyingFishSsl.FILE_CA);
+                 */
+
+                Logger.getLogger().silly('FlyingFishSsl::createExpressCerts: createCrt ...');
 
                 if (await OpenSSL.createCrt(key, crt, cnf)) {
-                    Logger.getLogger().info('Crt create');
+                    Logger.getLogger().info('FlyingFishSsl::createExpressCerts: Crt created.');
                 } else {
-                    Logger.getLogger().error('FlyingFishSsl::createExpressCerts: Crt file can not create!');
-                    return;
+                    Logger.getLogger().error('FlyingFishSsl::createExpressCerts: Crt file can not created.');
+                    // return;
                 }
 
-                if (await OpenSSL.createCsr(csr, cnf)) {
-                    Logger.getLogger().info('Csr create');
-                } else {
-                    Logger.getLogger().error('FlyingFishSsl::createExpressCerts: Csr file can not create!');
-                }
+                // Logger.getLogger().silly('FlyingFishSsl::createExpressCerts: createCsr ...');
+
+                /*
+                 * if (await OpenSSL.createCsr(csr, cnf)) {
+                 *     Logger.getLogger().info('FlyingFishSsl::createExpressCerts: Csr created.');
+                 * } else {
+                 *    Logger.getLogger().error('FlyingFishSsl::createExpressCerts: Csr file can not created.');
+                 * }
+                 */
 
                 /*
                  * if (await OpenSSL.createCa(ca, csr, crt, key, cnf)) {

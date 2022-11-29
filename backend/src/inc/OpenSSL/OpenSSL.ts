@@ -14,13 +14,16 @@ export class OpenSSL {
      * @param size
      */
     public static async createDhparam(dhparamfile: string, size: number): Promise<string | null> {
-        const process = spawn('openssl',
-            [
-                'dhparam',
-                '-out',
-                dhparamfile,
-                `${size}`
-            ]);
+        const args = [
+            'dhparam',
+            '-out',
+            dhparamfile,
+            `${size}`
+        ];
+
+        Logger.getLogger().silly(`OpenSSL::createDhparam: "openssl ${args.join(' ')}"`);
+
+        const process = spawn('openssl', args);
 
         await SimpleProcessAwait.process(process);
 
@@ -37,13 +40,16 @@ export class OpenSSL {
      * @param size
      */
     public static async genRsa(pemFile: string, size: number): Promise<boolean> {
-        const process = spawn('openssl',
-            [
-                'genrsa',
-                '-out',
-                pemFile,
-                `${size}`
-            ]);
+        const args = [
+            'genrsa',
+            '-out',
+            pemFile,
+            `${size}`
+        ];
+
+        Logger.getLogger().silly(`OpenSSL::genRsa: "openssl ${args.join(' ')}"`);
+
+        const process = spawn('openssl', args);
 
         await SimpleProcessAwait.process(process);
 
@@ -72,18 +78,21 @@ export class OpenSSL {
             return false;
         }
 
-        const process = spawn('openssl',
-            [
-                'req',
-                '-new',
-                '-x509',
-                '-key',
-                keyFile,
-                '-out',
-                crtFile,
-                '-config',
-                configFile
-            ]);
+        const args = [
+            'req',
+            '-new',
+            '-x509',
+            '-key',
+            keyFile,
+            '-out',
+            crtFile,
+            '-config',
+            configFile
+        ];
+
+        Logger.getLogger().silly(`OpenSSL::createCrt: "openssl ${args.join(' ')}"`);
+
+        const process = spawn('openssl', args);
 
         await SimpleProcessAwait.process(process);
 
@@ -106,15 +115,18 @@ export class OpenSSL {
             return false;
         }
 
-        const process = spawn('openssl',
-            [
-                'req',
-                '-new',
-                '-out',
-                csrFile,
-                '-config',
-                configFile
-            ]);
+        const args = [
+            'req',
+            '-new',
+            '-out',
+            csrFile,
+            '-config',
+            configFile
+        ];
+
+        Logger.getLogger().silly(`OpenSSL::createCsr: "openssl ${args.join(' ')}"`);
+
+        const process = spawn('openssl', args);
 
         await SimpleProcessAwait.process(process);
 
@@ -155,22 +167,25 @@ export class OpenSSL {
             return false;
         }
 
-        const process = spawn('openssl',
-            [
-                'x509',
-                '-req',
-                '-in',
-                csrFile,
-                '-CA',
-                crtFile,
-                '-CAkey',
-                keyFile,
-                '-passin',
-                'pass:\'\'',
-                '-CAcreateserial',
-                '-out',
-                caFile
-            ]);
+        const args = [
+            'x509',
+            '-req',
+            '-in',
+            csrFile,
+            '-CA',
+            crtFile,
+            '-CAkey',
+            keyFile,
+            '-passin',
+            'pass:\'\'',
+            '-CAcreateserial',
+            '-out',
+            caFile
+        ];
+
+        Logger.getLogger().silly(`OpenSSL::createCa: "openssl ${args.join(' ')}"`);
+
+        const process = spawn('openssl', args);
 
         await SimpleProcessAwait.process(process);
 
