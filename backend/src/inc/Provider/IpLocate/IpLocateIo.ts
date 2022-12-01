@@ -21,9 +21,9 @@ export type IpLocateData = {
 };
 
 /**
- * IpLocate
+ * IpLocateIo
  */
-export class IpLocate {
+export class IpLocateIo {
 
     /**
      * location

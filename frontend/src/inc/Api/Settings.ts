@@ -11,6 +11,10 @@ export type SettingsList = {
         worker_connections: string;
         resolver: string;
     };
+    blacklist: {
+        importer: string;
+        iplocate: string;
+    };
 };
 
 /**

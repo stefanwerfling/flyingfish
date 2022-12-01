@@ -4,7 +4,9 @@ import {IpBlacklist as IpBlacklistDB} from '../Db/MariaDb/Entity/IpBlacklist.js'
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer as IpListMaintainerDB} from '../Db/MariaDb/Entity/IpListMaintainer.js';
+import {Logger} from '../Logger/Logger.js';
 import {Firehol} from '../Provider/Firehol/Firehol.js';
+import {Settings as GlobalSettings} from '../Settings/Settings.js';
 import {DateHelper} from '../Utils/DateHelper.js';
 
 /**
@@ -39,6 +41,16 @@ export class BlacklistService {
      * update
      */
     public async update(): Promise<void> {
+        const importer = await GlobalSettings.getSetting(
+            GlobalSettings.BLACKLIST_IMPORTER,
+            GlobalSettings.BLACKLIST_IMPORTER_DEFAULT
+        );
+
+        if (importer === '') {
+            Logger.getLogger().silly('BlacklistService::update: disabled');
+            return;
+        }
+
         const fh = new Firehol();
         await fh.loadList();
 

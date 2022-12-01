@@ -11,6 +11,10 @@ export type SettingsList = {
         worker_connections: string;
         resolver: string;
     };
+    blacklist: {
+        importer: string;
+        iplocate: string;
+    };
 };
 
 /**
@@ -44,6 +48,16 @@ export class Settings {
                         GlobalSettings.NGINX_RESOLVER,
                         GlobalSettings.NGINX_RESOLVER_DEFAULT
                     )
+                },
+                blacklist: {
+                    importer: await GlobalSettings.getSetting(
+                        GlobalSettings.BLACKLIST_IMPORTER,
+                        GlobalSettings.BLACKLIST_IMPORTER_DEFAULT
+                    ),
+                    iplocate: await GlobalSettings.getSetting(
+                        GlobalSettings.BLACKLIST_IPLOCATE,
+                        GlobalSettings.BLACKLIST_IPLOCATE_DEFAULT
+                    )
                 }
             };
 
@@ -68,6 +82,9 @@ export class Settings {
         if ((session.user !== undefined) && session.user.isLogin) {
             await GlobalSettings.setSetting(GlobalSettings.NGINX_WORKER_CONNECTIONS, request.nginx.worker_connections);
             await GlobalSettings.setSetting(GlobalSettings.NGINX_RESOLVER, request.nginx.resolver);
+
+            await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IMPORTER, request.blacklist.importer);
+            await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IPLOCATE, request.blacklist.iplocate);
 
             return true;
         }

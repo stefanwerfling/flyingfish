@@ -4,7 +4,8 @@ import {DBHelper} from '../Db/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../Db/MariaDb/Entity/IpBlacklist.js';
 import {IpLocation as IpLocationDB} from '../Db/MariaDb/Entity/IpLocation.js';
 import {Logger} from '../Logger/Logger.js';
-import {IpLocate} from '../Provider/IpLocate/IpLocate.js';
+import {IpLocateIo} from '../Provider/IpLocate/IpLocateIo.js';
+import {Settings as GlobalSettings} from '../Settings/Settings.js';
 
 /**
  * IpLocationService
@@ -38,6 +39,16 @@ export class IpLocationService {
      * location
      */
     public async location(): Promise<void> {
+        const blacklistLocate = await GlobalSettings.getSetting(
+            GlobalSettings.BLACKLIST_IPLOCATE,
+            GlobalSettings.BLACKLIST_IPLOCATE_DEFAULT
+        );
+
+        if (blacklistLocate === '') {
+            Logger.getLogger().silly('IpLocationService::location: disabled');
+            return;
+        }
+
         // check blacklist ---------------------------------------------------------------------------------------------
 
         const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
@@ -63,7 +74,7 @@ export class IpLocationService {
 
                     await DBHelper.getDataSource().manager.save(entry);
                 } else {
-                    const location = await IpLocate.location(entry.ip);
+                    const location = await IpLocateIo.location(entry.ip);
 
                     if (location && location.ip) {
                         Logger.getLogger().info(`new Location by ip: ${entry.ip}`);

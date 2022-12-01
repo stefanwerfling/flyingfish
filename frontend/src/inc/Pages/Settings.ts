@@ -5,6 +5,7 @@ import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {FormGroup} from '../Bambooo/Content/Form/FormGroup';
 import {InputBottemBorderOnly2, InputType} from '../Bambooo/Content/Form/InputBottemBorderOnly2';
+import {SelectBottemBorderOnly2} from '../Bambooo/Content/Form/SelectBottemBorderOnly2';
 import {BasePage} from './BasePage';
 
 /**
@@ -61,7 +62,44 @@ export class Settings extends BasePage {
                 inputNginxResolver.setPlaceholder('127.0.0.1 or 8.8.8.8');
                 inputNginxResolver.setValue(settingList.nginx.resolver);
 
+                // blacklist -------------------------------------------------------------------------------------------
+
+                const rowBl = new ContentRow(content);
+                const cardBl = new Card(new ContentCol(rowBl, ContentColSize.col12));
+                cardBl.setTitle('Blacklist');
+
+                const bodyCardBl = jQuery('<div class="card-body"/>').appendTo(cardBl.getElement());
+
+                const groupBlImporter = new FormGroup(bodyCardBl, 'Importer Scheduler');
+                const selectBlImporter = new SelectBottemBorderOnly2(groupBlImporter);
+                selectBlImporter.setValues([
+                    {
+                        key: '',
+                        value: 'Disable'
+                    },
+                    {
+                        key: 'firehol',
+                        value: 'Firehol'
+                    }
+                ]);
+                selectBlImporter.setSelectedValue(settingList.blacklist.importer);
+
+                const groupBlIplocate = new FormGroup(bodyCardBl, 'Ip Locate');
+                const selectBlIpLocate = new SelectBottemBorderOnly2(groupBlIplocate);
+                selectBlIpLocate.setValues([
+                    {
+                        key: '',
+                        value: 'Disable'
+                    },
+                    {
+                        key: 'iplocate.io',
+                        value: 'IPLocate.io'
+                    }
+                ]);
+                selectBlIpLocate.setSelectedValue(settingList.blacklist.iplocate);
+
                 // btn -------------------------------------------------------------------------------------------------
+
                 const rowBtn = new ContentRow(content);
                 const btnContent = new ContentCol(rowBtn, ContentColSize.col12);
 
@@ -72,6 +110,10 @@ export class Settings extends BasePage {
                         nginx: {
                             worker_connections: inputNginxWorkerConnections.getValue(),
                             resolver: inputNginxResolver.getValue()
+                        },
+                        blacklist: {
+                            iplocate: selectBlIpLocate.getSelectedValue(),
+                            importer: selectBlImporter.getSelectedValue()
                         }
                     };
 

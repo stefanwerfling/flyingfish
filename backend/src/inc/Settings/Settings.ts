@@ -14,6 +14,12 @@ export class Settings {
     public static readonly NGINX_RESOLVER = 'nginx_resolver';
     public static readonly NGINX_RESOLVER_DEFAULT = '8.8.8.8';
 
+    public static readonly BLACKLIST_IMPORTER = 'blacklist_importer';
+    public static readonly BLACKLIST_IMPORTER_DEFAULT = '';
+
+    public static readonly BLACKLIST_IPLOCATE = 'blacklist_iplocate';
+    public static readonly BLACKLIST_IPLOCATE_DEFAULT = '';
+
     /**
      * getSetting
      * @param name
