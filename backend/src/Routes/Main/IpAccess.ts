@@ -3,6 +3,7 @@ import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../../inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../../inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
+import {IpListMaintainer as IpListMaintainerDB} from '../../inc/Db/MariaDb/Entity/IpListMaintainer.js';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
 import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
@@ -28,10 +29,59 @@ export type IpAccessBlackListImportsResponse = DefaultReturn & {
 };
 
 /**
+ * IpAccessMaintainer
+ */
+export type IpAccessMaintainer = {
+    id: number;
+    maintainer_name: string;
+    maintainer_url: string;
+    list_source_url: string;
+};
+
+/**
+ * IpAccessMaintainerResponse
+ */
+export type IpAccessMaintainerResponse = DefaultReturn & {
+    list?: IpAccessMaintainer[];
+};
+
+/**
  * IpAccess
  */
 @JsonController()
 export class IpAccess {
+
+    /**
+     * getMaintainerList
+     * @param session
+     */
+    @Get('/json/ipaccess/maintainer/list')
+    public async getMaintainerList(@Session() session: any): Promise<IpAccessMaintainerResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const ipListMaintainerRepository = DBHelper.getRepository(IpListMaintainerDB);
+            const maintainers = await ipListMaintainerRepository.find();
+
+            const list: IpAccessMaintainer[] = [];
+
+            for (const maintainer of maintainers) {
+                list.push({
+                    id: maintainer.id,
+                    maintainer_name: maintainer.maintainer_name,
+                    maintainer_url: maintainer.maintainer_url,
+                    list_source_url: maintainer.list_source_url
+                });
+            }
+
+            return {
+                statusCode: StatusCodes.OK,
+                list: list
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
+    }
 
     /**
      * getBlackList
@@ -49,7 +99,7 @@ export class IpAccess {
                     is_imported: true
                 },
                 order: {
-                    last_update: 'DESC'
+                    last_block: 'DESC'
                 }
             });
 

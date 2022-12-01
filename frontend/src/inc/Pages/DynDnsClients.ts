@@ -187,10 +187,13 @@ export class DynDnsClients extends BasePage {
                         new Td(trbody, `#${entry.id}`);
 
                         const domainsTd = new Td(trbody, '');
+                        domainsTd.setCss({
+                            'white-space': 'normal'
+                        });
 
                         for (const domain of entry.domains) {
                             new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
-                            domainsTd.getElement().append('&nbsp;');
+                            domainsTd.append('&nbsp;');
                         }
 
                         // eslint-disable-next-line no-new

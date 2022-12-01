@@ -58,7 +58,7 @@ export class Settings extends BasePage {
                 const groupNginxResolver = new FormGroup(bodyCardNginx, 'Resolver');
                 const inputNginxResolver = new InputBottemBorderOnly2(
                     groupNginxResolver, 'nginxresolver');
-                inputNginxResolver.setPlaceholder('127.0.0.1 or 8.8.8.8')
+                inputNginxResolver.setPlaceholder('127.0.0.1 or 8.8.8.8');
                 inputNginxResolver.setValue(settingList.nginx.resolver);
 
                 // btn -------------------------------------------------------------------------------------------------

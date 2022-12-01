@@ -1,7 +1,7 @@
 import {Job, scheduleJob} from 'node-schedule';
 import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
 import {DBHelper} from '../Db/DBHelper.js';
-import {NginxHandler} from '../Provider/Nginx/NginxHandler.js';
+// import {NginxHandler} from '../Provider/Nginx/NginxHandler.js';
 
 /**
  * NginxStatusService
@@ -46,10 +46,12 @@ export class NginxStatusService {
         });
 
         if (statusListen) {
-            const handler = new NginxHandler();
-            const result = await handler.getStatus(statusListen.listen_port);
 
-            console.log(result);
+            /*
+             * const handler = new NginxHandler();
+             * const result = await handler.getStatus(statusListen.listen_port);
+             * console.log(result);
+             */
         }
 
     }
