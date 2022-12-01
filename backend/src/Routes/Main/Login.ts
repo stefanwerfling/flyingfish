@@ -99,4 +99,21 @@ export class Login {
         };
     }
 
+    /**
+     * logout
+     * @param session
+     */
+    @Get('/json/logout')
+    public async logout(@Session() session: any): Promise<boolean> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            session.user.userid = 0;
+            session.user.isLogin = false;
+
+            Logger.getLogger().info(`Logout success by session: ${session.id}`);
+            return true;
+        }
+
+        return false;
+    }
+
 }
