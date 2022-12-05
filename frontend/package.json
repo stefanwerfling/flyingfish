@@ -15,7 +15,7 @@
     "ionicons-css": "^5.2.2",
     "jquery": "^3.5.1",
     "jquery-ui-dist": "^1.12.1",
-    "moment": "^2.29.1",
+    "moment": "^2.29.4",
     "requirejs": "^2.3.6"
   },
   "devDependencies": {
