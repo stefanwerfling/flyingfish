@@ -35,7 +35,6 @@ export type SshClientForwardPort = {
 
 /**
  * SshClient
- * https://github.com/belodetek/proxy-socks/blob/f1db25613fe0e1d7c55c6b5f7ba4b277dbed17d2/main.js#L227
  */
 export class SshClient {
 
