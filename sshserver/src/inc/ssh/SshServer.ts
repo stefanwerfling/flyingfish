@@ -1,11 +1,7 @@
 import fs from 'fs';
-import net from 'net';
 import * as ssh2 from 'ssh2';
-import {Connection, Server, ServerChannel} from 'ssh2';
-import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
-import {SshUser as SshUserDB} from '../Db/MariaDb/Entity/SshUser';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import * as bcrypt from 'bcrypt';
+import {ClientInfo, Connection, Server} from 'ssh2';
+import {SshClient} from './SshClient';
 import {SshKeygen} from './SshKeygen';
 
 /**
@@ -65,144 +61,49 @@ export class SshServer {
     protected _server: Server;
 
     /**
+     * clients
+     * @protected
+     */
+    protected _clients: Map<string, SshClient>;
+
+    /**
      * constructor
      * @param options
      */
     public constructor(options: SshServerOptions) {
+        this._clients = new Map<string, SshClient>();
+
+        const self = this.getSelf();
+
         this._server = new ssh2.Server({
             hostKeys: [fs.readFileSync(options.hostKeys)]
-        }, this._onConnection);
+        }, (client: Connection, info: ClientInfo) => {
+            self._onClientConnect(client, info);
+        });
     }
 
     /**
-     * _onConnection
+     * getSelf
+     */
+    public getSelf(): SshServer {
+        return this;
+    }
+
+    /**
+     * _onClientConnect
      * @param client
+     * @param info
      * @protected
      */
-    protected _onConnection(client: Connection): void {
-        const sshUserRepository = MariaDbHelper.getRepository(SshUserDB);
-        const sshPortRepository = MariaDbHelper.getRepository(SshPortDB);
+    public _onClientConnect(client: Connection, info: ClientInfo): void {
+        console.log('SshServer::_onConnection: Client connected!');
 
-        console.log('Client connected!');
+        const aclient = new SshClient(client, info);
+        this._clients.set(aclient.getIdent(), aclient);
 
-        let sshPort: SshPortDB|null = null;
-        let shellChannel: ServerChannel|null = null;
-
-        client.on('authentication', async(ctx) => {
-            if (ctx.method === 'password') {
-                const user = await sshUserRepository.findOne({
-                    where: {
-                        username: ctx.username
-                    }
-                });
-
-                if (user) {
-                    const bresult = await bcrypt.compare(ctx.password, user.password);
-
-                    if (bresult) {
-                        const aport = await sshPortRepository.findOne({
-                            where: {
-                                ssh_user_id: user.id
-                            }
-                        });
-
-                        if (aport) {
-                            sshPort = aport;
-                        }
-
-                        ctx.accept();
-                    }
-                } else {
-                    ctx.reject();
-                }
-            } else {
-                ctx.reject();
-            }
-        }).on('ready', () => {
-            console.log('Client authenticated!');
-
-            let fserver: net.Server|null = null;
-
-            client.on('session', (accept) => {
-                const session = accept();
-
-                session.on('shell', (accept2) => {
-                    shellChannel = accept2();
-                    shellChannel.write('Shell-Info:\n');
-                });
-            }).on('request', (accept, reject, name, info) => {
-                if ((name === 'tcpip-forward') && (sshPort !== null)) {
-                    if (accept) {
-                        accept();
-                    }
-
-                    fserver = net.createServer((socket) => {
-                        // socket.setEncoding('utf8');
-                        socket.on('error', (err) => {
-                            if (shellChannel) {
-                                shellChannel.write(`Client::error: ${err.message}`);
-                            }
-
-                            console.log(`Server::error: ${err.message}`);
-                        });
-
-                        client.forwardOut(
-                            info.bindAddr,
-                            info.bindPort,
-                            socket.remoteAddress!,
-                            socket.remotePort!,
-                            (
-                                err,
-                                upstream
-                            ) => {
-                                if (err) {
-                                    socket.end();
-
-                                    if (shellChannel) {
-                                        shellChannel.stderr.write(`not working: ${err}\n`);
-                                    }
-
-                                    console.error(`not working: ${err}`);
-
-                                    return;
-                                }
-
-                                upstream.pipe(socket).pipe(upstream);
-                                upstream.on('error', (errUp: any) => {
-                                    if (shellChannel) {
-                                        shellChannel.write('Server::error: upstream');
-                                    }
-
-                                    console.error(errUp);
-                                });
-                            }
-                        );
-                    }).listen(sshPort!.port, () => {
-                        if (shellChannel) {
-                            shellChannel.write('Listen start on Flyingfish ...');
-                        }
-
-                        console.log(`Listening remote forward on port ${sshPort!.port}->${info.bindPort} by userid: ${sshPort?.ssh_user_id}`);
-                    }).on('error', (err) => {
-                        if (shellChannel) {
-                            shellChannel.write(`Server::error: ${err.message}`);
-                        }
-
-                        console.log(`Server::error: ${err.message}`);
-                    });
-                } else if (reject) {
-                    reject();
-                }
-            }).on('close', (hadError) => {
-                if (hadError) {
-                    console.log('Client close with error!');
-                }
-
-                if (fserver) {
-                    fserver.close();
-                    console.log('Close forward out server');
-                }
-            });
+        client.on('close', (hadError) => {
+            aclient.close(hadError);
+            this._clients.delete(aclient.getIdent());
         });
     }
 

@@ -25,4 +25,20 @@ export class SshPort extends BaseEntity {
     @Column()
     public port!: number;
 
+    /**
+     * forward type, R or L
+     */
+    @Column({
+        default: 'R'
+    })
+    public forwardType!: string;
+
+    /**
+     * destination address, only for forward type L
+     */
+    @Column({
+        default: ''
+    })
+    public destinationAddress!: string;
+
 }

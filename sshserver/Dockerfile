@@ -17,6 +17,7 @@ COPY node_modules/ ./node_modules
 COPY package.json ./package.json
 
 RUN npm install
+RUN npm install supervisor -g
 
 EXPOSE 22
 
