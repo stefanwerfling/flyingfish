@@ -23,6 +23,7 @@
 /sshserver/node_modules
 /sshserver/ssh
 /sshserver/dist
+/sshserver/package-lock.json
 
 /build/node_modules
 /build/package-lock.json
