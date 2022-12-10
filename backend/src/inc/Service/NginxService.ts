@@ -21,7 +21,7 @@ import {Logger} from '../Logger/Logger.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
 import {Location} from '../Nginx/Config/Location.js';
 import {Map as NginxMap} from '../Nginx/Config/Map.js';
-import {Server as NginxConfServer} from '../Nginx/Config/Server.js';
+import {Server as NginxConfServer, ServerXFrameOptions} from '../Nginx/Config/Server.js';
 import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream.js';
 import {NginxServer} from '../Nginx/NginxServer.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
@@ -544,7 +544,17 @@ export class NginxService {
                         aServer.addVariable('ssl_certificate_key', `${sslCert}/privkey.pem`);
                         aServer.addVariable('resolver', `${nginxResolver} valid=300s`);
                         aServer.addVariable('resolver_timeout', '5s');
-                        aServer.addVariable('add_header X-Frame-Options', 'DENY');
+
+                        switch (httpSubCollect.http.x_frame_options) {
+                            case ServerXFrameOptions.deny:
+                                aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.deny);
+                                break;
+
+                            case ServerXFrameOptions.sameorigin:
+                                aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.sameorigin);
+                                break;
+                        }
+
                         aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
                         aServer.addVariable('add_header X-Robots-Tag', 'none');

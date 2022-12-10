@@ -202,7 +202,9 @@ export class Routes extends BasePage {
                             provider: this._routeHttpDialog.getSslProvider(),
                             email: this._routeHttpDialog.getSslEmail()
                         },
-                        locations: this._routeHttpDialog.getLocations()
+                        locations: this._routeHttpDialog.getLocations(),
+                        http2_enable: this._routeHttpDialog.getHttp2Enable(),
+                        x_frame_options: this._routeHttpDialog.getXFrameOptions()
                     }
                 };
 
@@ -641,6 +643,8 @@ export class Routes extends BasePage {
                                 this._routeHttpDialog.setSslProvider(value.ssl.provider);
                                 this._routeHttpDialog.setSslEmail(value.ssl.email);
                                 this._routeHttpDialog.setLocations(value.locations);
+                                this._routeHttpDialog.setHttp2Enable(value.http2_enable);
+                                this._routeHttpDialog.setXFrameOptions(value.x_frame_options);
                             },
                             IconFa.edit);
 

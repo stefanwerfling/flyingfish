@@ -1,4 +1,5 @@
 import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {ServerXFrameOptions} from '../../../Nginx/Config/Server.js';
 
 /**
  * NginxHttp
@@ -81,5 +82,13 @@ export class NginxHttp extends BaseEntity {
         default: 0
     })
     public cert_createtry!: number;
+
+    /**
+     * x-frame-options
+     */
+    @Column({
+        default: ServerXFrameOptions.deny
+    })
+    public x_frame_options!: string;
 
 }

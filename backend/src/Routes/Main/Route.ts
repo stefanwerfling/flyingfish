@@ -92,6 +92,8 @@ export type RouteHttp = {
         email: string;
     };
     locations: Location[];
+    http2_enable: boolean;
+    x_frame_options: string;
 };
 
 /**
@@ -311,7 +313,9 @@ export class Route {
                                     provider: thttp.cert_provider,
                                     email: thttp.cert_email
                                 },
-                                locations: []
+                                locations: [],
+                                http2_enable: thttp.http2_enable,
+                                x_frame_options: thttp.x_frame_options
                             };
 
                             const locations = await locationRepository.find({
@@ -836,6 +840,22 @@ export class Route {
                 }
             }
 
+            const oHttp = await httpRepository.findOne({
+                where: {
+                    listen_id: request.http.listen_id,
+                    domain_id: request.domainid
+                }
+            });
+
+            if (oHttp) {
+                if (!aHttp || aHttp.id !== oHttp.id) {
+                    return {
+                        status: 'error',
+                        error: 'Listen route by domain already in used!'
+                    };
+                }
+            }
+
             if (aHttp === null) {
                 aHttp = new NginxHttpDB();
             }
@@ -846,6 +866,8 @@ export class Route {
             aHttp.ssl_enable = request.http.ssl.enable || false;
             aHttp.cert_provider = request.http.ssl.provider || '';
             aHttp.cert_email = request.http.ssl.email || '';
+            aHttp.http2_enable = request.http.http2_enable;
+            aHttp.x_frame_options = request.http.x_frame_options;
 
             aHttp = await DBHelper.getDataSource().manager.save(aHttp);
 

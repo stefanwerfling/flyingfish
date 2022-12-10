@@ -17,6 +17,15 @@ export enum ServerLogLevel {
 }
 
 /**
+ * ServerXFrameOptions
+ */
+export enum ServerXFrameOptions {
+    none = '',
+    sameorigin = 'SAMEORIGIN',
+    deny = 'DENY'
+}
+
+/**
  * ServerErrorPage
  */
 export type ServerErrorPage = {

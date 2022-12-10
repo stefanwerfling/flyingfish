@@ -117,6 +117,18 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _inputSslEmail: InputBottemBorderOnly2;
 
     /**
+     * switch http2 enable
+     * @protected
+     */
+    protected _switchHttp2Enable: Switch;
+
+    /**
+     * select X-Frame-Options
+     * @protected
+     */
+    protected _selectXFrameOptions: SelectBottemBorderOnly2;
+
+    /**
      * click save fn
      * @protected
      */
@@ -169,10 +181,35 @@ export class RouteHttpEditModal extends ModalDialog {
             this._locationCards.push(location);
         });
 
+        // tab advanced ------------------------------------------------------------------------------------------------
+
         const tabAdvanced = this._navTab.addTab('Advanced', 'routehttpadvanced');
         tabAdvanced.tab.show();
 
+        const bodyACard = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
+
+        const groupHttp2Enable = new FormGroup(bodyACard, 'HTTP2 Enable');
+        this._switchHttp2Enable = new Switch(groupHttp2Enable.getElement(), 'adv_http2_enable');
+
+        const groupXFrameOptions = new FormGroup(bodyACard, 'X-Frame-Options');
+        this._selectXFrameOptions = new SelectBottemBorderOnly2(groupXFrameOptions);
+        this._selectXFrameOptions.addValue({
+            key: '',
+            value: 'None'
+        });
+
+        this._selectXFrameOptions.addValue({
+            key: 'SAMEORIGIN',
+            value: 'SAMEORIGIN'
+        });
+
+        this._selectXFrameOptions.addValue({
+            key: 'DENY',
+            value: 'DENY'
+        });
+
         // tab details -------------------------------------------------------------------------------------------------
+
         const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);
 
         const groupDomainName = new FormGroup(bodyCard, 'Domain Name/IP');
@@ -465,6 +502,36 @@ export class RouteHttpEditModal extends ModalDialog {
     }
 
     /**
+     * setHttp2Enable
+     * @param enable
+     */
+    public setHttp2Enable(enable: boolean): void {
+        this._switchHttp2Enable.setEnable(enable);
+    }
+
+    /**
+     * getHttp2Enable
+     */
+    public getHttp2Enable(): boolean {
+        return this._switchHttp2Enable.isEnable();
+    }
+
+    /**
+     * setXFrameOptions
+     * @param option
+     */
+    public setXFrameOptions(option: string): void {
+        this._selectXFrameOptions.setSelectedValue(option);
+    }
+
+    /**
+     * getXFrameOptions
+     */
+    public getXFrameOptions(): string {
+        return this._selectXFrameOptions.getSelectedValue();
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -473,6 +540,8 @@ export class RouteHttpEditModal extends ModalDialog {
         this._inputIndex.setValue('');
         this.setListen('0');
         this.setSslEnable(false);
+        this.setHttp2Enable(false);
+        this.setXFrameOptions('');
 
         this._locationCards.forEach((element, index) => {
             element.remove();

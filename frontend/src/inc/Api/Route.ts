@@ -74,6 +74,9 @@ export type RouteHttp = {
         email: string;
     };
     locations: Location[];
+
+    http2_enable: boolean;
+    x_frame_options: string;
 };
 
 /**
