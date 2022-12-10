@@ -9,7 +9,7 @@ import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
 import {BasePage} from './BasePage';
-import {BlacklistCategory, IpAccess as IpAccessAPI} from '../Api/IpAccess';
+import {BlacklistCategory, IpAccess as IpAccessAPI, IpAccessMaintainer} from '../Api/IpAccess';
 
 /**
  * IpAccess
@@ -60,10 +60,24 @@ export class IpAccess extends BasePage {
         categories.set(BlacklistCategory.organizations, 'Organizations');
         categories.set(BlacklistCategory.geolocation, 'Geolocation');
 
+        const maintainList: Map<number, IpAccessMaintainer> = new Map<number, IpAccessMaintainer>();
+
         /**
          * onLoadList
          */
         this._onLoadTable = async(): Promise<void> => {
+            cardIpAccess.showLoading();
+
+            if (maintainList.size === 0) {
+                const maintains = await IpAccessAPI.getMaintainerList();
+
+                if (maintains) {
+                    for (const maintain of maintains) {
+                        maintainList.set(maintain.id, maintain);
+                    }
+                }
+            }
+
             // own blacklist -------------------------------------------------------------------------------------------
             tabBlacklistOwn.body.empty();
 
@@ -149,7 +163,19 @@ export class IpAccess extends BasePage {
                         }
                     }
 
-                    new Td(trbodyB, `${bentry.maintainers.join(', ')}`);
+                    const tdMain = new Td(trbodyB, '');
+                    tdMain.setCss({
+                        'white-space': 'normal'
+                    });
+
+                    for (const mainId of bentry.maintainers) {
+                        const tMain = maintainList.get(mainId);
+
+                        if (tMain) {
+                            new Badge(tdMain, `${tMain.maintainer_name}`, BadgeType.primary);
+                            tdMain.append('&nbsp;');
+                        }
+                    }
 
                     const lastUpdate = moment(bentry.last_update * 1000);
 
@@ -158,6 +184,8 @@ export class IpAccess extends BasePage {
                     new Td(trbodyB, '');
                 }
             }
+
+            cardIpAccess.hideLoading();
         };
 
         // load table

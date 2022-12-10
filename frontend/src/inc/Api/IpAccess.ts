@@ -38,6 +38,23 @@ export enum BlacklistCategory {
 }
 
 /**
+ * IpAccessMaintainer
+ */
+export type IpAccessMaintainer = {
+    id: number;
+    maintainer_name: string;
+    maintainer_url: string;
+    list_source_url: string;
+};
+
+/**
+ * IpAccessMaintainerResponse
+ */
+export type IpAccessMaintainerResponse = DefaultReturn & {
+    list?: IpAccessMaintainer[];
+};
+
+/**
  * IpAccess
  */
 export class IpAccess {
@@ -62,4 +79,23 @@ export class IpAccess {
 
         return null;
     }
+
+    public static async getMaintainerList(): Promise<IpAccessMaintainer[] | null> {
+        const result = await NetFetch.getData('/json/ipaccess/maintainer/list');
+
+        if (result && result.statusCode) {
+            const response = result as IpAccessMaintainerResponse;
+
+            switch (result.statusCode) {
+                case StatusCodes.OK:
+                    return response.list!;
+
+                case StatusCodes.UNAUTHORIZED:
+                    throw new UnauthorizedError();
+            }
+        }
+
+        return null;
+    }
+
 }

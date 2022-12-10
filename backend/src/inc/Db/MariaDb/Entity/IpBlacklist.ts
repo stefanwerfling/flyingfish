@@ -25,6 +25,7 @@ export class IpBlacklist extends BaseEntity {
     /**
      * last update
      */
+    @Index()
     @Column({
         default: 0
     })
@@ -50,6 +51,7 @@ export class IpBlacklist extends BaseEntity {
     /**
      * last block
      */
+    @Index()
     @Column({
         default: 0
     })
@@ -58,6 +60,7 @@ export class IpBlacklist extends BaseEntity {
     /**
      * count block
      */
+    @Index()
     @Column({
         default: 0
     })
