@@ -3,13 +3,17 @@ import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {Button, ButtonType} from '../Bambooo/Content/Form/Button';
+import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
 import {NavTab} from '../Bambooo/Content/Tab/NavTab';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
-import {BlacklistCategory, IpAccess as IpAccessAPI, IpAccessMaintainer} from '../Api/IpAccess';
+import {BlacklistCategory, IpAccess as IpAccessAPI, IpAccessLocation, IpAccessMaintainer} from '../Api/IpAccess';
+import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal';
 
 /**
  * IpAccess
@@ -23,12 +27,27 @@ export class IpAccess extends BasePage {
     protected _name: string = 'ipaccess';
 
     /**
+     * import blacklist dialog
+     * @protected
+     */
+    protected _importBlacklistDialog: IpAccessBlacklistImportModal;
+
+    /**
      * constructor
      */
     public constructor() {
         super();
 
         this.setTitle('IP Access');
+
+        this._importBlacklistDialog = new IpAccessBlacklistImportModal(
+            this._wrapper.getContentWrapper().getContent()
+        );
+
+        // eslint-disable-next-line no-new
+        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add to Blacklist', () => {
+
+        });
     }
 
     /**
@@ -112,13 +131,10 @@ export class IpAccess extends BasePage {
             new Th(trheadB, 'IP', '150px');
 
             // eslint-disable-next-line no-new
-            new Th(trheadB, 'Disabled', '150px');
+            new Th(trheadB, 'Last block<br><b>Count blocks</b>', '150px');
 
             // eslint-disable-next-line no-new
-            new Th(trheadB, 'Last block', '150px');
-
-            // eslint-disable-next-line no-new
-            new Th(trheadB, 'Count blocks', '150px');
+            new Th(trheadB, 'Location info');
 
             // eslint-disable-next-line no-new
             new Th(trheadB, 'Categories');
@@ -130,24 +146,47 @@ export class IpAccess extends BasePage {
             new Th(trheadB, 'Last update', '150px');
 
             // eslint-disable-next-line no-new
+            new Th(trheadB, 'Disabled');
+
+            // eslint-disable-next-line no-new
             new Th(trheadB, 'Action');
 
             const blackList = await IpAccessAPI.getBlackListImports();
 
             if (blackList) {
-                for (const bentry of blackList) {
+                const locationList: Map<number, IpAccessLocation> = new Map<number, IpAccessLocation>();
+
+                if (blackList.locations) {
+                    for (const loction of blackList.locations) {
+                        locationList.set(loction.id, loction);
+                    }
+                }
+
+                for (const bentry of blackList.list!) {
                     const trbodyB = new Tr(tableB.getTbody());
 
                     const tdIp = new Td(trbodyB, '');
                     new Badge(tdIp, `${bentry.ip}`, BadgeType.secondary);
 
-                    new Td(trbodyB, `${bentry.disable ? 'yes' : 'no'}`);
-
                     const lastBlock = moment(bentry.last_block * 1000);
 
-                    new Td(trbodyB, `${lastBlock.format('YYYY-MM-DD HH:mm:ss')}`);
+                    new Td(trbodyB, `${lastBlock.format('YYYY-MM-DD HH:mm:ss')}<br><b>${bentry.count_block}</b>`);
 
-                    new Td(trbodyB, `${bentry.count_block}`);
+                    const loactionTd = new Td(trbodyB, 'none');
+
+                    if (bentry.ip_location_id) {
+                        const aLocation = locationList.get(bentry.ip_location_id);
+
+                        if (aLocation) {
+                            const locationDiv = jQuery('<div class="attachment-block clearfix"></div>').appendTo(
+                                loactionTd.getElement().empty()
+                            );
+
+                            locationDiv.append(`${aLocation.org ? aLocation.org : '?'}<br>`);
+                            locationDiv.append(`${aLocation.city ? aLocation.city : '?'}, ${aLocation.postal_code}<br>`);
+                            locationDiv.append(`${aLocation.country}<br>`);
+                        }
+                    }
 
                     const tdCate = new Td(trbodyB, '');
                     tdCate.setCss({
@@ -181,7 +220,22 @@ export class IpAccess extends BasePage {
 
                     new Td(trbodyB, `${lastUpdate.format('YYYY-MM-DD HH:mm:ss')}`);
 
-                    new Td(trbodyB, '');
+                    new Td(trbodyB, `${bentry.disable ? 'yes' : 'no'}`);
+
+                    const tdAction = new Td(trbodyB, '');
+
+                    const editBtn = new Button(tdAction, ButtonType.borderless);
+
+                    // eslint-disable-next-line no-new
+                    new Icon(editBtn.getElement(), IconFa.edit);
+
+                    editBtn.setOnClickFn((): void => {
+                        this._importBlacklistDialog.setTitle('Blacklist Import Edit');
+                        this._importBlacklistDialog.resetValues();
+                        this._importBlacklistDialog.setId(bentry.id);
+                        this._importBlacklistDialog.setDisable(bentry.disable);
+                        this._importBlacklistDialog.show();
+                    });
                 }
             }
 

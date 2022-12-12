@@ -75,4 +75,13 @@ export class IpBlacklist extends BaseEntity {
     })
     public ip_location_id!: number;
 
+    /**
+     * description
+     */
+    @Column({
+        type: 'text',
+        default: ''
+    })
+    public description!: string;
+
 }

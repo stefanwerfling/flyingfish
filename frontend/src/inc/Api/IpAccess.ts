@@ -4,6 +4,24 @@ import {StatusCodes} from './Status/StatusCodes';
 import {DefaultReturn} from './Types/DefaultReturn';
 
 /**
+ * IpAccessLocation
+ */
+export type IpAccessLocation = {
+    id: number;
+    ip: string;
+    country: string;
+    country_code: string;
+    city: string;
+    continent: string;
+    latitude: string;
+    longitude: string;
+    time_zone: string;
+    postal_code: string;
+    org: string;
+    asn: string;
+};
+
+/**
  * IpAccessBlackListImport
  */
 export type IpAccessBlackListImport = {
@@ -15,6 +33,7 @@ export type IpAccessBlackListImport = {
     count_block: number;
     categorys: number[];
     maintainers: number[];
+    ip_location_id?: number;
 };
 
 /**
@@ -22,6 +41,7 @@ export type IpAccessBlackListImport = {
  */
 export type IpAccessBlackListImportsResponse = DefaultReturn & {
     list?: IpAccessBlackListImport[];
+    locations?: IpAccessLocation[];
 };
 
 /**
@@ -62,7 +82,7 @@ export class IpAccess {
     /**
      * getBlackListImports
      */
-    public static async getBlackListImports(): Promise<IpAccessBlackListImport[] | null> {
+    public static async getBlackListImports(): Promise<IpAccessBlackListImportsResponse | null> {
         const result = await NetFetch.getData('/json/ipaccess/blacklist/imports');
 
         if (result && result.statusCode) {
@@ -70,7 +90,7 @@ export class IpAccess {
 
             switch (result.statusCode) {
                 case StatusCodes.OK:
-                    return response.list!;
+                    return response;
 
                 case StatusCodes.UNAUTHORIZED:
                     throw new UnauthorizedError();
