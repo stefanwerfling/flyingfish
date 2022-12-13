@@ -2,6 +2,25 @@ import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm
 import {UpstreamLoadBalancingAlgorithm} from '../../../Nginx/Config/Upstream.js';
 
 /**
+ * NginxStreamDestinationType
+ */
+export enum NginxStreamDestinationType {
+    upstream,
+    listen,
+    ssh_l,
+    ssh_r
+}
+
+/**
+ * NginxStreamSshR
+ */
+export enum NginxStreamSshR {
+    none,
+    in,
+    out
+}
+
+/**
  * Nginx Stream Entity
  */
 @Entity({name: 'nginx_stream'})
@@ -26,6 +45,15 @@ export class NginxStream extends BaseEntity {
     @Index()
     @Column()
     public listen_id!: number;
+
+    /**
+     * destination type
+     */
+    @Index()
+    @Column({
+        default: NginxStreamDestinationType.listen
+    })
+    public destination_type!: number;
 
     /**
      * destination listen id
@@ -73,19 +101,19 @@ export class NginxStream extends BaseEntity {
     public isdefault!: boolean;
 
     /**
-     * ssh port in id
+     * ssh r type
      */
     @Column({
-        default: 0
+        default: NginxStreamSshR.none
     })
-    public sshport_in_id!: number;
+    public ssh_r_type!: number;
 
     /**
-     * ssh port out id
+     * ssh port id (in/out for ssh-r)
      */
     @Column({
         default: 0
     })
-    public sshport_out_id!: number;
+    public sshport_id!: number;
 
 }

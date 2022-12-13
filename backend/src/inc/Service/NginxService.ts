@@ -10,7 +10,11 @@ import {
     ListenCategory
 } from '../Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation.js';
-import {NginxStream as NginxStreamDB} from '../Db/MariaDb/Entity/NginxStream.js';
+import {
+    NginxStream as NginxStreamDB,
+    NginxStreamDestinationType,
+    NginxStreamSshR
+} from '../Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream.js';
 import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
 import {DBHelper} from '../Db/DBHelper.js';
@@ -57,8 +61,7 @@ type HttpCollect = {
 type StreamSubCollect = {
     stream: NginxStreamDB;
     upstreams: NginxUpstreamDB[];
-    sshport_in?: SshPortDB;
-    sshport_out?: SshPortDB;
+    sshport?: SshPortDB;
     destination_listen?: NginxListenDB;
 };
 
@@ -238,27 +241,15 @@ export class NginxService {
                             streamCollection.upstreams = upstreams;
                         }
 
-                        if (astream.sshport_in_id > 0) {
+                        if (astream.sshport_id > 0) {
                             const sshport = await sshportRepository.findOne({
                                 where: {
-                                    id: astream.sshport_in_id
+                                    id: astream.sshport_id
                                 }
                             });
 
                             if (sshport) {
-                                streamCollection.sshport_in = sshport;
-                            }
-                        }
-
-                        if (astream.sshport_out_id > 0) {
-                            const sshport = await sshportRepository.findOne({
-                                where: {
-                                    id: astream.sshport_out_id
-                                }
-                            });
-
-                            if (sshport) {
-                                streamCollection.sshport_out = sshport;
+                                streamCollection.sshport = sshport;
                             }
                         }
 
@@ -375,62 +366,122 @@ export class NginxService {
                     const upStream = new Upstream(upstreamName);
                     upStream.setAlgorithm(tstream.load_balancing_algorithm as UpstreamLoadBalancingAlgorithm);
 
-                    if (collectStream.destination_listen) {
-                        // fill default listen destination
-                        upStream.addServer({
-                            address: NginxService.DEFAULT_IP_LOCAL,
-                            port: collectStream.destination_listen.listen_port,
-                            weight: 0,
-                            max_fails: 0,
-                            fail_timeout: 0
-                        });
-                    } else if (collectStream.sshport_in) {
-                        upstreamName = 'ffus_internsshserver';
-                        upStream.setStreamName(upstreamName);
+                    switch (collectStream.stream.destination_type) {
 
-                        procMap = new NginxMap('$ssl_preread_protocol', `$ffstreamProc${listenPort}`);
-                        procMap.addVariable('"TLSv1.2"', varName);
-                        procMap.addVariable('"TLSv1.3"', varName);
-                        procMap.addVariable('"TLSv1.1"', varName);
-                        procMap.addVariable('"TLSv1.0"', varName);
-                        procMap.addVariable('default', upstreamName);
+                        // listen --------------------------------------------------------------------------------------
+                        case NginxStreamDestinationType.listen:
+                            if (collectStream.destination_listen) {
+                                // fill default listen destination
+                                upStream.addServer({
+                                    address: NginxService.DEFAULT_IP_LOCAL,
+                                    port: collectStream.destination_listen.listen_port,
+                                    weight: 0,
+                                    max_fails: 0,
+                                    fail_timeout: 0
+                                });
+                            } else {
+                                Logger.getLogger().silly(`NginxService::_loadConfig: destination listen not found by domain: ${domainName}`);
+                            }
+                            break;
 
-                        // fill default ssh server
-                        upStream.addServer({
-                            address: Config.get()?.sshserver?.ip!,
-                            port: 22,
-                            weight: 0,
-                            max_fails: 0,
-                            fail_timeout: 0
-                        });
-                    } else if (collectStream.sshport_out) {
-                        // fill default ssh server
-                        upStream.addServer({
-                            address: Config.get()?.sshserver?.ip!,
-                            port: collectStream.sshport_out.port,
-                            weight: 0,
-                            max_fails: 0,
-                            fail_timeout: 0
-                        });
-                    } else if (collectStream.upstreams.length > 0) {
-                        for (const tupstream of collectStream.upstreams) {
+                        // upstream ------------------------------------------------------------------------------------
+                        case NginxStreamDestinationType.upstream:
+                            if (collectStream.upstreams.length > 0) {
+                                for (const tupstream of collectStream.upstreams) {
+                                    upStream.addServer({
+                                        address: tupstream.destination_address,
+                                        port: tupstream.destination_port,
+                                        weight: tupstream.weight,
+                                        max_fails: tupstream.max_fails,
+                                        fail_timeout: tupstream.fail_timeout
+                                    });
+                                }
+                            } else {
+                                Logger.getLogger().silly(`NginxService::_loadConfig: None upstream found by domain: ${domainName}`);
+                            }
+                            break;
+
+                        // ssh r ---------------------------------------------------------------------------------------
+                        case NginxStreamDestinationType.ssh_r:
+                            switch (collectStream.stream.ssh_r_type) {
+
+                                // ssh r in ----------------------------------------------------------------------------
+                                case NginxStreamSshR.in:
+                                    upstreamName = 'ffus_internsshserver';
+                                    upStream.setStreamName(upstreamName);
+
+                                    procMap = new NginxMap('$ssl_preread_protocol', `$ffstreamProc${listenPort}`);
+                                    procMap.addVariable('"TLSv1.2"', varName);
+                                    procMap.addVariable('"TLSv1.3"', varName);
+                                    procMap.addVariable('"TLSv1.1"', varName);
+                                    procMap.addVariable('"TLSv1.0"', varName);
+                                    procMap.addVariable('default', upstreamName);
+
+                                    // fill default ssh server
+                                    upStream.addServer({
+                                        address: Config.get()?.sshserver?.ip!,
+                                        port: 22,
+                                        weight: 0,
+                                        max_fails: 0,
+                                        fail_timeout: 0
+                                    });
+                                    break;
+
+                                case NginxStreamSshR.out:
+                                    if (collectStream.sshport) {
+                                        // fill default ssh server
+                                        upStream.addServer({
+                                            address: Config.get()?.sshserver?.ip!,
+                                            port: collectStream.sshport.port,
+                                            weight: 0,
+                                            max_fails: 0,
+                                            fail_timeout: 0
+                                        });
+                                    } else {
+                                        Logger.getLogger().error(
+                                            `NginxService::_loadConfig: Ssh (r) entry (out) is empty by domain: ${domainName}, streamid: ${tstream.id}`
+                                        );
+                                    }
+                                    break;
+
+                                default:
+                                    Logger.getLogger().error(
+                                        `NginxService::_loadConfig: Ssh (r) entry has not type in/out by domain: ${domainName}, streamid: ${tstream.id}`
+                                    );
+                            }
+                            break;
+
+                        // ssh l ---------------------------------------------------------------------------------------
+                        case NginxStreamDestinationType.ssh_l:
+                            if (collectStream.sshport) {
+                                // fill default ssh server
+                                upStream.addServer({
+                                    address: collectStream.sshport.destinationAddress,
+                                    port: collectStream.sshport.port,
+                                    weight: 0,
+                                    max_fails: 0,
+                                    fail_timeout: 0
+                                });
+                            } else {
+                                Logger.getLogger().error(
+                                    `NginxService::_loadConfig: Ssh (l) entry is empty by domain: ${domainName}, streamid: ${tstream.id}`
+                                );
+                            }
+                            break;
+
+                        default:
+                            // fill default
                             upStream.addServer({
-                                address: tupstream.destination_address,
-                                port: tupstream.destination_port,
-                                weight: tupstream.weight,
-                                max_fails: tupstream.max_fails,
-                                fail_timeout: tupstream.fail_timeout
+                                address: NginxService.DEFAULT_IP_LOCAL,
+                                port: 10080,
+                                weight: 0,
+                                max_fails: 0,
+                                fail_timeout: 0
                             });
-                        }
-                    } else {
-                        // fill default
-                        upStream.addServer({
-                            address: NginxService.DEFAULT_IP_LOCAL,
-                            port: 10080,
-                            weight: 0,
-                            max_fails: 0,
-                            fail_timeout: 0
-                        });
+
+                            Logger.getLogger().warn(
+                                `NginxService::_loadConfig: destination type is not set by domain: ${domainName}, streamid: ${tstream.id}`
+                            );
                     }
 
                     if (!conf?.getStream().hashUpstream(upStream.getStreamName())) {
@@ -565,7 +616,7 @@ export class NginxService {
 
                         aServer.addContext(domainIf);
                     } else {
-                        Logger.getLogger().warn(`Certificat for Domain '${domainName}' not found and ignore settings.`);
+                        Logger.getLogger().warn(`NginxService::_loadConfig: Certificat for Domain '${domainName}' not found and ignore settings.`);
                         return;
                     }
                 }

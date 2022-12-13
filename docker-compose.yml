@@ -69,6 +69,13 @@ services:
       - "3000:3000"
       - "1900:1900"
       - "10901:10901"
+      - "9229:9229"
+    command:
+      - "supervisor"
+      - "--"
+      - "--inspect-brk=0.0.0.0:9229"
+      - "dist/main.js"
+      - "--config=/opt/app/config.json"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
@@ -114,13 +121,6 @@ services:
       - ./sshserver/package.json:/opt/app/package.json
     ports:
       - "2222:22"
-      - "9229:9229"
-    command:
-      - "supervisor"
-      - "--"
-      - "--inspect-brk=0.0.0.0:9229"
-      - "dist/main.js"
-      - "--config=/opt/app/config.json"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.4

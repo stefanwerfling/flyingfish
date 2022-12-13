@@ -5,7 +5,11 @@ import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxLocation as NginxLocationDB} from '../../inc/Db/MariaDb/Entity/NginxLocation.js';
-import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream.js';
+import {
+    NginxStream as NginxStreamDB,
+    NginxStreamDestinationType,
+    NginxStreamSshR
+} from '../../inc/Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
 import {SshUser as SshUserDB} from '../../inc/Db/MariaDb/Entity/SshUser.js';
@@ -20,29 +24,32 @@ export type UpStream = {
 };
 
 /**
+ * RouteStreamSSH
+ */
+export type RouteStreamSSH = {
+    id: number;
+    port: number;
+    user_id: number;
+    username: string;
+    password: string;
+    destinationAddress: string;
+};
+
+/**
  * RouteStream
  */
 export type RouteStream = {
     id: number;
     listen_id: number;
+    destination_type: number;
     destination_listen_id: number;
-    upstreams: UpStream[];
     alias_name: string;
     index: number;
     isdefault: boolean;
-    ssh: {
-        in?: {
-            id: number;
-            port: number;
-            user_id: number;
-            username: string;
-            password: string;
-        };
-        out?: {
-            id: number;
-            port: number;
-        };
-    };
+    load_balancing_algorithm: string;
+    ssh_r_type: number;
+    ssh?: RouteStreamSSH;
+    upstreams: UpStream[];
 };
 
 /**
@@ -212,6 +219,8 @@ export class Route {
                     const streamList: RouteStream[] = [];
                     const httpList: RouteHttp[] = [];
 
+                    // stream ------------------------------------------------------------------------------------------
+
                     const streams = await streamRepository.find({
                         where: {
                             domain_id: adomain.id
@@ -227,8 +236,10 @@ export class Route {
                                 alias_name: tstream.alias_name,
                                 index: tstream.index,
                                 isdefault: tstream.isdefault,
-                                upstreams: [],
-                                ssh: {}
+                                load_balancing_algorithm: tstream.load_balancing_algorithm,
+                                destination_type: tstream.destination_type,
+                                ssh_r_type: tstream.ssh_r_type,
+                                upstreams: []
                             };
 
                             const upstreams = await upstreamRepository.find({
@@ -245,56 +256,41 @@ export class Route {
                                 });
                             }
 
-                            if (tstream.sshport_in_id > 0) {
+                            if (tstream.sshport_id > 0) {
                                 const sshport = await sshportRepository.findOne({
                                     where: {
-                                        id: tstream.sshport_in_id
+                                        id: tstream.sshport_id
                                     }
                                 });
 
                                 if (sshport) {
+                                    streamEntry.ssh = {
+                                        id: sshport.id,
+                                        port: sshport.port,
+                                        destinationAddress: sshport.destinationAddress,
+                                        user_id: 0,
+                                        username: '',
+                                        password: ''
+                                    };
+
                                     const sshuser = await sshuserRepository.findOne({
                                         where: {
                                             id: sshport.ssh_user_id
                                         }
                                     });
 
-                                    let sshusername = '';
-                                    let sshpassword = '';
-
                                     if (sshuser) {
-                                        sshusername = sshuser.username;
-                                        sshpassword = sshuser.password;
+                                        streamEntry.ssh.username = sshuser.username;
+                                        streamEntry.ssh.password = sshuser.password;
                                     }
-
-                                    streamEntry.ssh.in = {
-                                        id: sshport.id,
-                                        port: sshport.port,
-                                        user_id: sshport.ssh_user_id,
-                                        username: sshusername,
-                                        password: sshpassword
-                                    };
-                                }
-                            }
-
-                            if (tstream.sshport_out_id > 0) {
-                                const sshport = await sshportRepository.findOne({
-                                    where: {
-                                        id: tstream.sshport_out_id
-                                    }
-                                });
-
-                                if (sshport) {
-                                    streamEntry.ssh.out = {
-                                        id: sshport.id,
-                                        port: sshport.port
-                                    };
                                 }
                             }
 
                             streamList.push(streamEntry);
                         }
                     }
+
+                    // http --------------------------------------------------------------------------------------------
 
                     const https = await httpRepository.find({
                         where: {
@@ -435,6 +431,165 @@ export class Route {
     }
 
     /**
+     * _getFreePort
+     * @param tport
+     * @protected
+     */
+    protected async _getFreePort(tport: number = 10000): Promise<number> {
+        const sshportRepository = DBHelper.getRepository(SshPortDB);
+        const sshport = await sshportRepository.findOne({
+            where: {
+                port: tport
+            }
+        });
+
+        if (sshport) {
+            return this._getFreePort(tport + 1);
+        }
+
+        return tport;
+    }
+
+    /**
+     * _removeOldSshPort
+     * can only remove when nothing other entry it used
+     * @param sshportId
+     * @protected
+     */
+    protected async _removeOldSshPort(sshportId: number): Promise<boolean> {
+        const streamRepository = DBHelper.getRepository(NginxStreamDB);
+        const sshportRepository = DBHelper.getRepository(SshPortDB);
+        const sshuserRepository = DBHelper.getRepository(SshUserDB);
+        const locationRepository = DBHelper.getRepository(NginxLocationDB);
+
+        // first check in used -----------------------------------------------------------------------------------------
+
+        const usedCountStreamROut = await streamRepository.count({
+            where: {
+                destination_type: NginxStreamDestinationType.ssh_r,
+                ssh_r_type: NginxStreamSshR.out,
+                sshport_id: sshportId
+            }
+        });
+
+        const outUsedCountLoc = await locationRepository.count({
+            where: {
+                sshport_out_id: sshportId
+            }
+        });
+
+        if ((usedCountStreamROut > 0) || (outUsedCountLoc > 0)) {
+            return false;
+        }
+
+        // clean ssh port ----------------------------------------------------------------------------------------------
+
+        const sshport = await sshportRepository.findOne({
+            where: {
+                id: sshportId
+            }
+        });
+
+        if (sshport) {
+            if (sshport.ssh_user_id > 0) {
+                await sshuserRepository.delete({
+                    id: sshport.ssh_user_id
+                });
+            }
+
+            const result = await sshportRepository.delete({
+                id: sshport.id
+            });
+
+            if (result) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * _saveStreamSsh
+     * @param ssh
+     * @param dtype
+     * @protected
+     */
+    protected async _saveStreamSsh(ssh: RouteStreamSSH, dtype: NginxStreamDestinationType): Promise<number> {
+        if (dtype !== NginxStreamDestinationType.ssh_r && dtype !== NginxStreamDestinationType.ssh_l) {
+            throw Error('Is not a ssh type for save!');
+        }
+
+        const sshportRepository = DBHelper.getRepository(SshPortDB);
+        const sshuserRepository = DBHelper.getRepository(SshUserDB);
+
+        let sshuser: SshUserDB|null = null;
+        let sshport: SshPortDB|null = null;
+
+        if (ssh.user_id > 0) {
+            const tsshuser = await sshuserRepository.findOne({
+                where: {
+                    id: ssh.user_id
+                }
+            });
+
+            if (tsshuser) {
+                sshuser = tsshuser;
+            }
+        }
+
+        if (sshuser === null) {
+            sshuser = new SshUserDB();
+        }
+
+        sshuser.username = ssh.username;
+
+        if (ssh.password !== '') {
+            sshuser.password = await bcrypt.hash(ssh.password, 10);
+        }
+
+        sshuser.disable = false;
+
+        sshuser = await DBHelper.getDataSource().manager.save(sshuser);
+
+        if (ssh.id > 0) {
+            const tsshport = await sshportRepository.findOne({
+                where: {
+                    id: ssh.id
+                }
+            });
+
+            if (tsshport) {
+                sshport = tsshport;
+            }
+        }
+
+        if (sshport === null) {
+            sshport = new SshPortDB();
+        }
+
+        if (dtype === NginxStreamDestinationType.ssh_r) {
+            if (ssh.port === 0) {
+                sshport.port = await this._getFreePort();
+            } else {
+                if (await this._isSshPortUsed(ssh.port, ssh.id)) {
+                    throw Error('SSH Port is alrady in use!');
+                }
+
+                sshport.port = ssh.port;
+            }
+        } else {
+            sshport.port = ssh.port;
+        }
+
+        sshport.ssh_user_id = sshuser.id;
+
+        sshport = await DBHelper.getDataSource().manager.save(sshport);
+
+        return sshport.id;
+    }
+
+    /**
      * saveStreamRoute
      * @param session
      * @param request
@@ -447,9 +602,6 @@ export class Route {
         if ((session.user !== undefined) && session.user.isLogin) {
             const streamRepository = DBHelper.getRepository(NginxStreamDB);
             const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
-            const sshportRepository = DBHelper.getRepository(SshPortDB);
-            const sshuserRepository = DBHelper.getRepository(SshUserDB);
-            const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
             let aStream: NginxStreamDB|null = null;
 
@@ -490,137 +642,74 @@ export class Route {
                 aStream.index = request.stream.index;
             }
 
+            aStream.destination_type = request.stream.destination_type;
             aStream.destination_listen_id = request.stream.destination_listen_id;
-            aStream.sshport_in_id = 0;
-            aStream.sshport_out_id = 0;
+            aStream.load_balancing_algorithm = request.stream.load_balancing_algorithm;
+            aStream.ssh_r_type = NginxStreamSshR.none;
+            aStream.sshport_id = 0;
 
             if (request.stream.ssh) {
-                if (request.stream.ssh.in) {
-                    let sshuser: SshUserDB|null = null;
-                    let sshport: SshPortDB|null = null;
+                switch (aStream.destination_type) {
 
-                    if (request.stream.ssh.in.user_id > 0) {
-                        const tsshuser = await sshuserRepository.findOne({
-                            where: {
-                                id: request.stream.ssh.in.user_id
-                            }
-                        });
+                    // ssh r -------------------------------------------------------------------------------------------
+                    case NginxStreamDestinationType.ssh_r:
+                        aStream.ssh_r_type = request.stream.ssh_r_type;
 
-                        if (tsshuser) {
-                            sshuser = tsshuser;
+                        switch (aStream.ssh_r_type) {
+
+                            // ssh r in --------------------------------------------------------------------------------
+                            case NginxStreamSshR.in:
+                                try {
+                                    aStream.sshport_id = await this._saveStreamSsh(
+                                        request.stream.ssh,
+                                        NginxStreamDestinationType.ssh_r
+                                    );
+                                } catch (e) {
+                                    return {
+                                        status: 'error',
+                                        error: (e as Error).message
+                                    };
+                                }
+                                break;
+
+                            // ssh r out -------------------------------------------------------------------------------
+                            case NginxStreamSshR.out:
+                                aStream.sshport_id = request.stream.ssh.id;
+                                break;
                         }
-                    }
 
-                    if (sshuser === null) {
-                        sshuser = new SshUserDB();
-                    }
+                        break;
 
-                    sshuser.username = request.stream.ssh.in.username;
-
-                    if (request.stream.ssh.in.password !== '') {
-                        sshuser.password = await bcrypt.hash(request.stream.ssh.in.password, 10);
-                    }
-
-                    sshuser.disable = false;
-
-                    sshuser = await DBHelper.getDataSource().manager.save(sshuser);
-
-                    if (request.stream.ssh.in.id > 0) {
-                        const tsshport = await sshportRepository.findOne({
-                            where: {
-                                id: request.stream.ssh.in.id
-                            }
-                        });
-
-                        if (tsshport) {
-                            sshport = tsshport;
-                        }
-                    }
-
-                    if (sshport === null) {
-                        sshport = new SshPortDB();
-                    }
-
-                    if (request.stream.ssh.in.port === 0) {
-                        let portBegin = 1000;
-
-                        while (await this._isSshPortUsed(portBegin, request.stream.ssh.in.id)) {
-                            portBegin++;
-                        }
-                    } else {
-                        if (await this._isSshPortUsed(request.stream.ssh.in.port, request.stream.ssh.in.id)) {
+                    // ssh l -------------------------------------------------------------------------------------------
+                    case NginxStreamDestinationType.ssh_l:
+                        try {
+                            aStream.sshport_id = await this._saveStreamSsh(
+                                request.stream.ssh,
+                                NginxStreamDestinationType.ssh_l
+                            );
+                        } catch (e) {
                             return {
                                 status: 'error',
-                                error: 'SSH Port is in used!'
+                                error: (e as Error).message
                             };
                         }
-
-                        sshport.port = request.stream.ssh.in.port;
-                    }
-
-                    sshport.ssh_user_id = sshuser.id;
-
-                    sshport = await DBHelper.getDataSource().manager.save(sshport);
-
-                    aStream.sshport_in_id = sshport.id;
-
-                } else if (request.stream.ssh.out) {
-                    aStream.sshport_in_id = request.stream.ssh.out.id;
+                        break;
                 }
             } else {
                 // remove old ssh in -----------------------------------------------------------------------------------
-                if (aStream.sshport_in_id > 0) {
-
-                    // first check in used -----------------------------------------------------------------------------
-
-                    const outUsedCountStream = await streamRepository.count({
-                        where: {
-                            sshport_out_id: aStream.sshport_in_id
-                        }
-                    });
-
-                    const outUsedCountLoc = await locationRepository.count({
-                        where: {
-                            sshport_out_id: aStream.sshport_in_id
-                        }
-                    });
-
-                    if ((outUsedCountStream > 0) && (outUsedCountLoc > 0)) {
+                if (aStream.sshport_id > 0 && aStream.ssh_r_type !== NginxStreamSshR.out) {
+                    if (!await this._removeOldSshPort(aStream.sshport_id)) {
                         return {
                             status: 'error',
-                            error: 'SSH Server is currently in use, please remove Ssh port outgoning link!'
+                            error: 'SSH Server is currently in use, please remove SSH port outgoning link!'
                         };
-                    }
-
-                    // clean ssh port ----------------------------------------------------------------------------------
-
-                    const sshport = await sshportRepository.findOne({
-                        where: {
-                            id: aStream.sshport_in_id
-                        }
-                    });
-
-                    if (sshport) {
-                        if (sshport.ssh_user_id > 0) {
-                            await sshuserRepository.delete({
-                                id: sshport.ssh_user_id
-                            });
-                        }
-
-                        const result = await sshportRepository.delete({
-                            id: sshport.id
-                        });
-
-                        if (result) {
-                            aStream.sshport_in_id = 0;
-                        }
                     }
                 }
 
                 // remove old ssh out ----------------------------------------------------------------------------------
 
-                if (aStream.sshport_out_id > 0) {
-                    aStream.sshport_out_id = 0;
+                if (aStream.sshport_id > 0) {
+                    aStream.sshport_id = 0;
                 }
             }
 
@@ -715,9 +804,6 @@ export class Route {
 
             const streamRepository = DBHelper.getRepository(NginxStreamDB);
             const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
-            const locationRepository = DBHelper.getRepository(NginxLocationDB);
-            const sshportRepository = DBHelper.getRepository(SshPortDB);
-            const sshuserRepository = DBHelper.getRepository(SshUserDB);
 
             const stream = await streamRepository.findOne({
                 where: {
@@ -733,46 +819,12 @@ export class Route {
                     };
                 }
 
-                if (stream.sshport_in_id > 0) {
-                    // check is sshport_in in used ---------------------------------------------------------------------
-
-                    const outUsedCountStream = await streamRepository.count({
-                        where: {
-                            sshport_out_id: stream.sshport_in_id
-                        }
-                    });
-
-                    const outUsedCountLoc = await locationRepository.count({
-                        where: {
-                            sshport_out_id: stream.sshport_in_id
-                        }
-                    });
-
-                    if ((outUsedCountStream > 0) && (outUsedCountLoc > 0)) {
+                if (stream.sshport_id > 0) {
+                    if (!await this._removeOldSshPort(stream.sshport_id)) {
                         return {
                             status: 'error',
                             error: 'SSH Server is currently in use, please remove Ssh port outgoning link!'
                         };
-                    }
-
-                    // remove ssh user and ssh port --------------------------------------------------------------------
-
-                    const sshport = await sshportRepository.findOne({
-                        where: {
-                            id: stream.sshport_in_id
-                        }
-                    });
-
-                    if (sshport) {
-                        if (sshport.ssh_user_id > 0) {
-                            await sshuserRepository.delete({
-                                id: sshport.ssh_user_id
-                            });
-                        }
-
-                        await sshportRepository.delete({
-                            id: sshport.id
-                        });
                     }
                 }
 

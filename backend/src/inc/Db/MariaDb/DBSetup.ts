@@ -3,7 +3,7 @@ import {Logger} from '../../Logger/Logger.js';
 import {DBHelper} from '../DBHelper.js';
 import {Domain as DomainDB} from './Entity/Domain.js';
 import {ListenCategory, ListenProtocol, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen.js';
-import {NginxStream as NginxStreamDB} from './Entity/NginxStream.js';
+import {NginxStream as NginxStreamDB, NginxStreamDestinationType} from './Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from './Entity/NginxUpstream.js';
 import {User as UserDB} from './Entity/User.js';
 
@@ -77,7 +77,7 @@ export class DBSetup {
         l80 = await DBHelper.getDataSource().manager.save(l80);
 
         // add 10443 listener
-        const l10443 = new NginxListenDB();
+        let l10443 = new NginxListenDB();
         l10443.name = 'HTTPS INTERN';
         l10443.listen_port = 10443;
         l10443.listen_type = ListenTypes.http;
@@ -85,10 +85,10 @@ export class DBSetup {
         l10443.description = 'HTTPS Listener Intern';
         l10443.fixlisten = true;
 
-        await DBHelper.getDataSource().manager.save(l10443);
+        l10443 = await DBHelper.getDataSource().manager.save(l10443);
 
         // add 10080 listener
-        const l10080 = new NginxListenDB();
+        let l10080 = new NginxListenDB();
         l10080.name = 'HTTP INTERN';
         l10080.listen_port = 10080;
         l10080.listen_type = ListenTypes.http;
@@ -96,7 +96,7 @@ export class DBSetup {
         l10080.description = 'HTTP Listener Intern';
         l10080.fixlisten = true;
 
-        await DBHelper.getDataSource().manager.save(l10080);
+        l10080 = await DBHelper.getDataSource().manager.save(l10080);
 
         // add 10081 listener status
         const l10081 = new NginxListenDB();
@@ -129,6 +129,7 @@ export class DBSetup {
         sTo5333.alias_name = 'StreamTo5333';
         sTo5333.isdefault = true;
         sTo5333.index = 9999;
+        sTo5333.destination_type = NginxStreamDestinationType.upstream;
 
         sTo5333 = await DBHelper.getDataSource().manager.save(sTo5333);
 
@@ -139,37 +140,27 @@ export class DBSetup {
 
         await DBHelper.getDataSource().manager.save(sTo5333Up);
 
-        let sTo10443 = new NginxStreamDB();
+        const sTo10443 = new NginxStreamDB();
         sTo10443.domain_id = defaultDomain.id;
         sTo10443.listen_id = l443.id;
         sTo10443.alias_name = 'StreamTo10443';
         sTo10443.isdefault = true;
         sTo10443.index = 9999;
+        sTo10443.destination_type = NginxStreamDestinationType.listen;
+        sTo10443.destination_listen_id = l10443.id;
 
-        sTo10443 = await DBHelper.getDataSource().manager.save(sTo10443);
+        await DBHelper.getDataSource().manager.save(sTo10443);
 
-        const sTo10443Up = new NginxUpstreamDB();
-        sTo10443Up.stream_id = sTo10443.id;
-        sTo10443Up.destination_address = '127.0.0.1';
-        sTo10443Up.destination_port = 10443;
-
-        await DBHelper.getDataSource().manager.save(sTo10443Up);
-
-        let sTo10080 = new NginxStreamDB();
+        const sTo10080 = new NginxStreamDB();
         sTo10080.domain_id = defaultDomain.id;
         sTo10080.listen_id = l80.id;
         sTo10080.alias_name = 'StreamTo10080';
         sTo10080.isdefault = true;
         sTo10080.index = 9999;
+        sTo10080.destination_type = NginxStreamDestinationType.listen;
+        sTo10080.destination_listen_id = l10080.id;
 
-        sTo10080 = await DBHelper.getDataSource().manager.save(sTo10080);
-
-        const sTo10080Up = new NginxUpstreamDB();
-        sTo10080Up.stream_id = sTo10080.id;
-        sTo10080Up.destination_address = '127.0.0.1';
-        sTo10080Up.destination_port = 10080;
-
-        await DBHelper.getDataSource().manager.save(sTo10080Up);
+        await DBHelper.getDataSource().manager.save(sTo10080);
     }
 
 }

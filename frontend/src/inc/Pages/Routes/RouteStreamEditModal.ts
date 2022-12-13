@@ -1,6 +1,7 @@
 import {ListenData, ListenTypes} from '../../Api/Listen';
-import {UpStream} from '../../Api/Route';
+import {NginxStreamDestinationType, NginxStreamSshR, UpStream} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
+import {BadgeType} from '../../Bambooo/Content/Badge/Badge';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
 import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
@@ -9,24 +10,6 @@ import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBo
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
-
-/**
- * RouteStreamEditModalDesType
- */
-export enum RouteStreamEditModalDesType {
-    upstream = '1',
-    ssh = '2',
-    listen = '3'
-}
-
-/**
- * RouteStreamEditModalSshType
- */
-export enum RouteStreamEditModalSshType {
-    none= '0',
-    in = '1',
-    out = '2'
-}
 
 /**
  * UpstreamCard
@@ -221,10 +204,10 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _upstreamCards: UpstreamCard[] = [];
 
     /**
-     * ssh type
+     * ssh r type
      * @protected
      */
-    protected _selectSshType: SelectBottemBorderOnly2;
+    protected _selectSshRType: SelectBottemBorderOnly2;
 
     /**
      * ssh port id
@@ -361,24 +344,30 @@ export class RouteStreamEditModal extends ModalDialog {
         this._selectDestinationType = new SelectBottemBorderOnly2(groupDesType);
 
         this._selectDestinationType.addValue({
-            key: '0',
+            key: '-1',
             value: 'Please select a destination type'
         });
 
         this._selectDestinationType.addValue({
-            key: RouteStreamEditModalDesType.upstream,
+            key: `${NginxStreamDestinationType.upstream}`,
             value: 'IP/Host direct (Stream)',
             style: 'background:#ffc107;'
         });
 
         this._selectDestinationType.addValue({
-            key: RouteStreamEditModalDesType.ssh,
+            key: `${NginxStreamDestinationType.ssh_r}`,
             value: 'Intern ssh server (Stream)',
             style: 'background:#007bff;'
         });
 
         this._selectDestinationType.addValue({
-            key: RouteStreamEditModalDesType.listen,
+            key: `${NginxStreamDestinationType.ssh_l}`,
+            value: 'Extern ssh server (Stream)',
+            style: `background:${BadgeType.color_cream_purpel};`
+        });
+
+        this._selectDestinationType.addValue({
+            key: `${NginxStreamDestinationType.listen}`,
             value: 'Intern Listen (Http/Https)',
             style: 'background:#28a745;'
         });
@@ -388,20 +377,20 @@ export class RouteStreamEditModal extends ModalDialog {
             tabSsh.tab.hide();
             tabListen.tab.hide();
 
-            switch (value) {
-                case RouteStreamEditModalDesType.upstream:
+            switch (parseInt(value, 10)) {
+                case NginxStreamDestinationType.upstream:
                     tabUpstream.tab.show();
                     tabSsh.tab.hide();
                     tabListen.tab.hide();
                     break;
 
-                case RouteStreamEditModalDesType.ssh:
+                case NginxStreamDestinationType.ssh_r:
                     tabUpstream.tab.hide();
                     tabSsh.tab.show();
                     tabListen.tab.hide();
                     break;
 
-                case RouteStreamEditModalDesType.listen:
+                case NginxStreamDestinationType.listen:
                     tabUpstream.tab.hide();
                     tabSsh.tab.hide();
                     tabListen.tab.show();
@@ -414,20 +403,20 @@ export class RouteStreamEditModal extends ModalDialog {
         const bodyCardSsh = jQuery('<div class="card-body"/>').appendTo(tabSsh.body);
 
         const groupSshType = new FormGroup(bodyCardSsh, 'SSH Type');
-        this._selectSshType = new SelectBottemBorderOnly2(groupSshType);
+        this._selectSshRType = new SelectBottemBorderOnly2(groupSshType);
 
-        this._selectSshType.addValue({
-            key: RouteStreamEditModalSshType.none,
+        this._selectSshRType.addValue({
+            key: `${NginxStreamSshR.none}`,
             value: 'Please select your SSH Type'
         });
 
-        this._selectSshType.addValue({
-            key: RouteStreamEditModalSshType.in,
+        this._selectSshRType.addValue({
+            key: `${NginxStreamSshR.in}`,
             value: 'SSH Server'
         });
 
-        this._selectSshType.addValue({
-            key: RouteStreamEditModalSshType.out,
+        this._selectSshRType.addValue({
+            key: `${NginxStreamSshR.out}`,
             value: 'SSH Port Listen'
         });
 
@@ -449,20 +438,20 @@ export class RouteStreamEditModal extends ModalDialog {
         this._selectSshListen = new SelectBottemBorderOnly2(this._groupSshListen);
         this._groupSshListen.getElement().hide();
 
-        this._selectSshType.setChangeFn(value => {
+        this._selectSshRType.setChangeFn(value => {
             this._groupSshPort.getElement().hide();
             this._groupSshUsername.getElement().hide();
             this._groupSshPaasword.getElement().hide();
             this._groupSshListen.getElement().hide();
 
             switch (value) {
-                case '1':
+                case `${NginxStreamSshR.in}`:
                     this._groupSshPort.getElement().show();
                     this._groupSshUsername.getElement().show();
                     this._groupSshPaasword.getElement().show();
                     break;
 
-                case '2':
+                case `${NginxStreamSshR.out}`:
                     this._groupSshListen.getElement().show();
                     break;
             }
@@ -587,15 +576,15 @@ export class RouteStreamEditModal extends ModalDialog {
      * setDestinationType
      * @param type
      */
-    public setDestinationType(type: RouteStreamEditModalDesType): void {
+    public setDestinationType(type: NginxStreamDestinationType): void {
         this._selectDestinationType.setSelectedValue(`${type}`);
     }
 
     /**
      * getDestinatonType
      */
-    public getDestinatonType(): string {
-        return this._selectDestinationType.getSelectedValue();
+    public getDestinatonType(): number {
+        return parseInt(this._selectDestinationType.getSelectedValue(), 10);
     }
 
     /**
@@ -669,18 +658,18 @@ export class RouteStreamEditModal extends ModalDialog {
     }
 
     /**
-     * setSshType
+     * setSshRType
      * @param type
      */
-    public setSshType(type: RouteStreamEditModalSshType): void {
-        this._selectSshType.setSelectedValue(type);
+    public setSshRType(type: NginxStreamSshR): void {
+        this._selectSshRType.setSelectedValue(`${type}`);
     }
 
     /**
      * getSshType
      */
-    public getSshType(): string {
-        return this._selectSshType.getSelectedValue();
+    public getSshRType(): number {
+        return parseInt(this._selectSshRType.getSelectedValue(), 10);
     }
 
     /**
@@ -801,8 +790,8 @@ export class RouteStreamEditModal extends ModalDialog {
         this._inputIndex.setValue('');
         this.setAliasName('');
         this.setListen('0');
-        this.setDestinationType(RouteStreamEditModalDesType.listen);
-        this.setSshType(RouteStreamEditModalSshType.none);
+        this.setDestinationType(NginxStreamDestinationType.listen);
+        this.setSshRType(NginxStreamSshR.none);
         this._inputSshPort.setValue('');
         this._navTab.setTabSelect(0);
         this._inputSshPassword.setPlaceholder('');

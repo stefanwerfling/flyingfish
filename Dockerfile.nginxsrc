@@ -19,7 +19,7 @@ RUN apt-get install -y build-essential
 RUN apt-get install -y libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev
 RUN apt-get install -y mercurial
 RUN cd ~ && \
-    git clone https://github.com/nginx/njs.git && \
+    git clone --depth 1 --branch 0.7.9 https://github.com/nginx/njs.git && \
     cd ~/njs && \
     ./configure && \
     make

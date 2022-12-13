@@ -1,6 +1,34 @@
 import {NetFetch} from '../Net/NetFetch';
 
 /**
+ * NginxStreamDestinationType
+ */
+export enum NginxStreamDestinationType {
+    upstream,
+    listen,
+    ssh_l,
+    ssh_r
+}
+
+/**
+ * NginxStreamSshR
+ */
+export enum NginxStreamSshR {
+    none,
+    in,
+    out
+}
+
+/**
+ * Upstream load balancing algorithm
+ */
+export enum UpstreamLoadBalancingAlgorithm {
+    none = 'none',
+    least_conn = 'least_conn',
+    ip_hash = 'ip_hash'
+}
+
+/**
  * UpStream
  */
 export type UpStream = {
@@ -10,29 +38,32 @@ export type UpStream = {
 };
 
 /**
+ * RouteStreamSSH
+ */
+export type RouteStreamSSH = {
+    id: number;
+    port: number;
+    user_id: number;
+    username: string;
+    password: string;
+    destinationAddress: string;
+};
+
+/**
  * RouteStream
  */
 export type RouteStream = {
     id: number;
     listen_id: number;
+    destination_type: number;
     destination_listen_id: number;
-    upstreams: UpStream[];
     alias_name: string;
     index: number;
     isdefault: boolean;
-    ssh: {
-        in?: {
-            id: number;
-            port: number;
-            user_id: number;
-            username: string;
-            password: string;
-        };
-        out?: {
-            id: number;
-            port: number;
-        };
-    };
+    load_balancing_algorithm: string;
+    ssh_r_type: number;
+    ssh?: RouteStreamSSH;
+    upstreams: UpStream[];
 };
 
 /**

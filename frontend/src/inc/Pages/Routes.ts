@@ -1,6 +1,13 @@
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {Route as RouteAPI, RouteHttpSave, RouteStreamSave} from '../Api/Route';
+import {
+    NginxStreamDestinationType,
+    NginxStreamSshR,
+    Route as RouteAPI,
+    RouteHttpSave,
+    RouteStreamSave,
+    UpstreamLoadBalancingAlgorithm
+} from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
@@ -20,11 +27,7 @@ import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
 import {RouteHttpEditModal} from './Routes/RouteHttpEditModal';
-import {
-    RouteStreamEditModal,
-    RouteStreamEditModalDesType,
-    RouteStreamEditModalSshType
-} from './Routes/RouteStreamEditModal';
+import {RouteStreamEditModal} from './Routes/RouteStreamEditModal';
 
 /**
  * Hosts Page
@@ -113,39 +116,57 @@ export class Routes extends BasePage {
                         index: this._routeStreamDialog.getIndex(),
                         listen_id: this._routeStreamDialog.getListen(),
                         destination_listen_id: 0,
-                        ssh: {},
+                        destination_type: this._routeStreamDialog.getDestinatonType(),
+                        ssh_r_type: NginxStreamSshR.none,
+                        load_balancing_algorithm: UpstreamLoadBalancingAlgorithm.none,
                         upstreams: []
                     }
                 };
 
                 switch (this._routeStreamDialog.getDestinatonType()) {
-                    case RouteStreamEditModalDesType.listen:
+                    case NginxStreamDestinationType.listen:
                         stream.stream.destination_listen_id = this._routeStreamDialog.getDestinationListen();
                         break;
 
-                    case RouteStreamEditModalDesType.upstream:
+                    case NginxStreamDestinationType.upstream:
                         stream.stream.upstreams = this._routeStreamDialog.getUpstreamList();
                         break;
 
-                    case RouteStreamEditModalDesType.ssh:
-                        switch (this._routeStreamDialog.getSshType()) {
-                            case RouteStreamEditModalSshType.in:
-                                stream.stream.ssh.in = {
+                    case NginxStreamDestinationType.ssh_r:
+                        switch (this._routeStreamDialog.getSshRType()) {
+                            case NginxStreamSshR.in:
+                                stream.stream.ssh = {
                                     id: this._routeStreamDialog.getSshPortId(),
                                     port: this._routeStreamDialog.getSshPort(),
                                     username: this._routeStreamDialog.getSshUsername(),
                                     password: this._routeStreamDialog.getSshPassword(),
-                                    user_id: this._routeStreamDialog.getSshUserId()
+                                    user_id: this._routeStreamDialog.getSshUserId(),
+                                    destinationAddress: ''
                                 };
                                 break;
 
-                            case RouteStreamEditModalSshType.out:
-                                stream.stream.ssh.out = {
+                            case NginxStreamSshR.out:
+                                stream.stream.ssh = {
                                     id: parseInt(this._routeStreamDialog.getSshListen(), 10),
-                                    port: 0
+                                    port: 0,
+                                    username: '',
+                                    password: '',
+                                    user_id: 0,
+                                    destinationAddress: ''
                                 };
                                 break;
                         }
+                        break;
+
+                    case NginxStreamDestinationType.ssh_l:
+                        stream.stream.ssh = {
+                            id: this._routeStreamDialog.getSshPortId(),
+                            port: this._routeStreamDialog.getSshPort(),
+                            username: this._routeStreamDialog.getSshUsername(),
+                            password: this._routeStreamDialog.getSshPassword(),
+                            user_id: this._routeStreamDialog.getSshUserId(),
+                            destinationAddress: ''
+                        };
                         break;
                 }
 
@@ -390,53 +411,70 @@ export class Routes extends BasePage {
 
                         const sdTdD = new Td(trbody, '');
 
-                        if (value.destination_listen_id > 0) {
-                            const dlisten = listenMap.get(value.destination_listen_id);
+                        switch (value.destination_type) {
+                            case NginxStreamDestinationType.listen:
+                                const dlisten = listenMap.get(value.destination_listen_id);
 
-                            if (dlisten) {
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD,
-                                    `${dlisten.name} (${dlisten.port})`, BadgeType.success
-                                );
-                            } else {
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD,
-                                    `destination listen not found! `, BadgeType.danger
-                                );
-                            }
-                        } else if (value.ssh.in) {
-                            // eslint-disable-next-line no-new
-                            new Badge(sdTdD, `SSH INTERNT IN (--> ${value.ssh.in.port})`, BadgeType.primary);
-                        } else if(value.ssh.out) {
-                            // eslint-disable-next-line no-new
-                            new Badge(sdTdD, `SSH INTERNT OUT (<-- ${value.ssh.out.port})`, BadgeType.primary);
-                        } else {
-                            if (value.upstreams.length === 0) {
-                                sdTdD.addValue('None');
-                            } else {
-                                const firstUpstream = value.upstreams[0];
-
-                                let badType = BadgeType.warning;
-
-                                if (firstUpstream.address === '127.0.0.1') {
-                                    badType = BadgeType.success;
+                                if (dlisten) {
+                                    // eslint-disable-next-line no-new
+                                    new Badge(sdTdD,
+                                        `${dlisten.name} (${dlisten.port})`, BadgeType.success
+                                    );
+                                } else {
+                                    // eslint-disable-next-line no-new
+                                    new Badge(sdTdD,
+                                        `destination listen not found! `, BadgeType.danger
+                                    );
                                 }
+                                break;
 
-                                if (firstUpstream.port === dnsserverport) {
-                                    badType = BadgeType.color_cream_purpel;
+                            case NginxStreamDestinationType.ssh_r:
+                                switch (value.ssh_r_type) {
+                                    case NginxStreamSshR.in:
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, `SSH INTERNT IN (--> ${value.ssh!.port})`, BadgeType.primary);
+                                        break;
+
+                                    case NginxStreamSshR.out:
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, `SSH INTERNT OUT (<-- ${value.ssh!.port})`, BadgeType.primary);
+                                        break;
                                 }
+                                break;
 
-                                let andMore = '';
+                            case NginxStreamDestinationType.upstream:
+                                if (value.upstreams.length === 0) {
+                                    sdTdD.addValue('None');
+                                } else {
+                                    const firstUpstream = value.upstreams[0];
 
-                                if (value.upstreams.length > 1) {
-                                    andMore = ', ...';
+                                    let badType = BadgeType.warning;
+
+                                    if (firstUpstream.address === '127.0.0.1') {
+                                        badType = BadgeType.success;
+                                    }
+
+                                    if (firstUpstream.port === dnsserverport) {
+                                        badType = BadgeType.color_cream_purpel;
+                                    }
+
+                                    let andMore = '';
+
+                                    if (value.upstreams.length > 1) {
+                                        andMore = ', ...';
+                                    }
+
+                                    // eslint-disable-next-line no-new
+                                    new Badge(sdTdD,
+                                        `${firstUpstream.address}:${firstUpstream.port}${andMore} (${value.alias_name})`,
+                                        badType);
                                 }
+                                break;
 
+                            case NginxStreamDestinationType.ssh_l:
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTdD,
-                                    `${firstUpstream.address}:${firstUpstream.port}${andMore} (${value.alias_name})`,
-                                    badType);
-                            }
+                                new Badge(sdTdD, `SSH EXTERN (--> ${value.ssh!.destinationAddress}:${value.ssh!.port})`, BadgeType.color_cream_purpel);
+                                break;
                         }
 
                         // options td ----------------------------------------------------------------------------------
@@ -467,6 +505,7 @@ export class Routes extends BasePage {
                                     this._routeStreamDialog.setDomainId(entry.id);
                                     this._routeStreamDialog.setListen(`${value.listen_id}`);
                                     this._routeStreamDialog.setAliasName(value.alias_name);
+                                    this._routeStreamDialog.setDestinationType(value.destination_type);
 
                                     if (value.index > 0) {
                                         this._routeStreamDialog.setIndex(value.index);
@@ -478,30 +517,27 @@ export class Routes extends BasePage {
                                         this._routeStreamDialog.setSshListens(sshListens.list);
                                     }
 
-                                    if (value.ssh.in || value.ssh.out) {
-                                        this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.ssh);
+                                    if (value.ssh) {
+                                        this._routeStreamDialog.setSshRType(value.ssh_r_type);
 
-                                        if (value.ssh.in) {
-                                            this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.in);
-                                            this._routeStreamDialog.setSshPortId(value.ssh.in.id);
+                                        switch (value.ssh_r_type) {
+                                            case NginxStreamSshR.out:
+                                                this._routeStreamDialog.setSshListen(value.ssh.id);
+                                                break;
 
-                                            if (value.ssh.in.port > 0) {
-                                                this._routeStreamDialog.setSshPort(value.ssh.in.port);
-                                            }
+                                            default:
+                                                this._routeStreamDialog.setSshPortId(value.ssh.id);
 
-                                            this._routeStreamDialog.setSshUserId(value.ssh.in.user_id);
-                                            this._routeStreamDialog.setSshUsername(value.ssh.in.username);
-                                        } else if (value.ssh.out) {
-                                            this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.out);
-                                            this._routeStreamDialog.setSshListen(value.ssh.out.id);
-                                        } else {
-                                            this._routeStreamDialog.setSshType(RouteStreamEditModalSshType.none);
+                                                if (value.ssh.port > 0) {
+                                                    this._routeStreamDialog.setSshPort(value.ssh.port);
+                                                }
+
+                                                this._routeStreamDialog.setSshUserId(value.ssh.user_id);
+                                                this._routeStreamDialog.setSshUsername(value.ssh.username);
                                         }
                                     } else if (value.destination_listen_id > 0) {
-                                        this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.listen);
                                         this._routeStreamDialog.setDestinationListen(value.destination_listen_id);
                                     } else {
-                                        this._routeStreamDialog.setDestinationType(RouteStreamEditModalDesType.upstream);
                                         this._routeStreamDialog.setUpstreamList(value.upstreams);
                                     }
                                 },
