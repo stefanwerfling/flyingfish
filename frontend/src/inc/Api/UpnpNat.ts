@@ -4,6 +4,15 @@ import {StatusCodes} from './Status/StatusCodes';
 import {DefaultReturn} from './Types/DefaultReturn';
 
 /**
+ * NatStatuts
+ */
+export enum NatStatus {
+    inactive,
+    ok,
+    error
+}
+
+/**
  * UpnpNatCacheMapping
  */
 export type UpnpNatCacheMapping = {
@@ -48,6 +57,8 @@ export type UpnpNatPort = {
     last_ttl_update: number;
     listen_id: number;
     description: string;
+    last_status: number;
+    last_update: number;
 };
 
 /**

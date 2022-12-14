@@ -1,13 +1,14 @@
 import {Job, scheduleJob} from 'node-schedule';
+import Ping from 'ping';
 import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
 import {DBHelper} from '../Db/DBHelper.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../Db/MariaDb/Entity/GatewayIdentifier.js';
-import {NatPort as NatPortDB} from '../Db/MariaDb/Entity/NatPort.js';
-import Ping from 'ping';
+import {NatPort as NatPortDB, NatStatus} from '../Db/MariaDb/Entity/NatPort.js';
 import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
 import {HimHIP} from '../HimHIP/HimHIP.js';
 import {Logger} from '../Logger/Logger.js';
 import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient.js';
+import {DateHelper} from '../Utils/DateHelper.js';
 
 /**
  * UpnpNatService
@@ -21,6 +22,25 @@ export class UpnpNatService {
     protected _scheduler: Job|null = null;
 
     /**
+     * _setNatPortStatus
+     * @param status
+     * @param natId
+     * @protected
+     */
+    protected async _setNatPortStatus(status: NatStatus, natId: number): Promise<void> {
+        const natportRepository = DBHelper.getRepository(NatPortDB);
+
+        await natportRepository.createQueryBuilder()
+        .update()
+        .set({
+            last_status: status,
+            last_update: DateHelper.getCurrentDbTime()
+        })
+        .where('id = :id', {id: natId})
+        .execute();
+    }
+
+    /**
      * update
      */
     public async update(): Promise<void> {
@@ -31,6 +51,18 @@ export class UpnpNatService {
             const natportRepository = DBHelper.getRepository(NatPortDB);
             const listenRepository = DBHelper.getRepository(NginxListenDB);
             const himhip = HimHIP.getData();
+
+            // reset all status ----------------------------------------------------------------------------------------
+
+            await natportRepository.createQueryBuilder()
+            .update()
+            .set({
+                last_status: NatStatus.inactive,
+                last_update: DateHelper.getCurrentDbTime()
+            })
+            .execute();
+
+            // map -----------------------------------------------------------------------------------------------------
 
             if (himhip) {
                 const gatewayId = await giRepository.findOne({
@@ -91,7 +123,11 @@ export class UpnpNatService {
                                             options.private = alisten.listen_port;
 
                                             if (alisten.disable) {
-                                                Logger.getLogger().info(`UpnpNatService::update: Listen (${alisten.listen_port}, ${alisten.description}) is disable, skip to next ...`);
+                                                Logger.getLogger().info(
+                                                    `UpnpNatService::update: Listen (${alisten.listen_port}, ${alisten.description}) is disable, skip to next ...`
+                                                );
+
+                                                await this._setNatPortStatus(NatStatus.inactive, anat.id);
                                                 continue;
                                             }
                                         }
@@ -101,12 +137,20 @@ export class UpnpNatService {
 
                                     if (map) {
                                         Logger.getLogger().info(`UpnpNatService::update: Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
+
+                                        await this._setNatPortStatus(NatStatus.ok, anat.id);
+                                    } else {
+                                        await this._setNatPortStatus(NatStatus.error, anat.id);
                                     }
                                 } catch (ex) {
                                     Logger.getLogger().info(`UpnpNatService::update: Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
+
+                                    await this._setNatPortStatus(NatStatus.error, anat.id);
                                 }
                             } else {
                                 Logger.getLogger().info(`UpnpNatService::update: Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
+
+                                await this._setNatPortStatus(NatStatus.error, anat.id);
                             }
                         }
                     } else {

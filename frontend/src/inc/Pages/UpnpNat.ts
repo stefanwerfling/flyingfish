@@ -1,8 +1,10 @@
+import moment from 'moment';
 import {GatewayIdentifier as GatewayIdentifierAPI, GatewayIdentifierEntry} from '../Api/GatewayIdentifier';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
-import {UpnpNat as UpnpNatAPI, UpnpNatSaveRequest} from '../Api/UpnpNat';
+import {NatStatus, UpnpNat as UpnpNatAPI, UpnpNatSaveRequest} from '../Api/UpnpNat';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
+import {Circle, CircleColor} from '../Bambooo/Content/Circle/Circle';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
@@ -77,7 +79,9 @@ export class UpnpNat extends BasePage {
                     protocol: this._upnpnatDialog.getProtocol(),
                     last_ttl_update: 0,
                     listen_id: this._upnpnatDialog.getListen(),
-                    description: this._upnpnatDialog.getDescription()
+                    description: this._upnpnatDialog.getDescription(),
+                    last_update: 0,
+                    last_status: 0
                 };
 
                 if (await UpnpNatAPI.save(upnpnat)) {
@@ -148,19 +152,19 @@ export class UpnpNat extends BasePage {
             const trhead = new Tr(table.getThead());
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'for Gateway');
+            new Th(trhead, 'Status');
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'Extern');
+            new Th(trhead, 'for Gateway<br>Extern');
 
             // eslint-disable-next-line no-new
-            new Th(trhead, '');
+            new Th(trhead, '', '150px');
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'Intern');
+            new Th(trhead, 'Intern<br>Listen');
 
             // eslint-disable-next-line no-new
-            new Th(trhead, 'Listen');
+            new Th(trhead, 'Last update');
 
             // eslint-disable-next-line no-new
             new Th(trhead, 'TTL');
@@ -176,31 +180,49 @@ export class UpnpNat extends BasePage {
             if (list) {
                 list.forEach((upnpnat) => {
                     const trbody = new Tr(table.getTbody());
-                    const sgTd = new Td(trbody, '');
+                    const statusTd = new Td(trbody, '');
 
+                    switch (upnpnat.last_status) {
+                        case NatStatus.inactive:
+                            // eslint-disable-next-line no-new
+                            new Circle(statusTd, CircleColor.gray);
+                            break;
+
+                        case NatStatus.ok:
+                            // eslint-disable-next-line no-new
+                            new Circle(statusTd, CircleColor.green);
+                            break;
+
+                        case NatStatus.error:
+                            // eslint-disable-next-line no-new
+                            new Circle(statusTd, CircleColor.red);
+                            break;
+                    }
+
+                    const externTd = new Td(trbody, '');
                     const gatewayIdentifier = gatewayIdentifierMap.get(upnpnat.gateway_identifier_id);
 
                     if (gatewayIdentifier) {
                         new Badge(
-                            sgTd,
+                            externTd,
                             `${gatewayIdentifier.networkname}`,
                             BadgeType.primary,
                             `${gatewayIdentifier.color}`
                         );
                     } else {
                         new Badge(
-                            sgTd,
+                            externTd,
                             'Default FlyingFish',
                             BadgeType.secondary,
                         );
                     }
 
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${upnpnat.gateway_address}:${upnpnat.public_port}`);
+                    externTd.append(`<br>${upnpnat.gateway_address}:${upnpnat.public_port}`);
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, ' &#8594; ');
 
+                    const internTd = new Td(trbody, '');
                     if (upnpnat.listen_id == 0) {
                         let addressStr = upnpnat.client_address;
 
@@ -208,8 +230,7 @@ export class UpnpNat extends BasePage {
                             addressStr = '(DHCP IP)';
                         }
 
-                        // eslint-disable-next-line no-new
-                        new Td(trbody, `${addressStr}:${upnpnat.private_port}`);
+                        internTd.append(`${addressStr}:${upnpnat.private_port}`);
                     } else {
                         let addressStr = upnpnat.client_address;
 
@@ -217,18 +238,23 @@ export class UpnpNat extends BasePage {
                             addressStr = '(DHCP IP)';
                         }
 
-                        new Td(trbody, `${addressStr}`);
+                        internTd.append(`${addressStr}`);
                     }
 
-                    const sdTd = new Td(trbody, '');
+                    internTd.append('<br>');
 
                     const listen = listenMap.get(upnpnat.listen_id);
 
                     if (listen) {
                         // eslint-disable-next-line no-new
-                        new Badge(sdTd, `${listen.name} (${listen.port})`,
+                        new Badge(internTd, `${listen.name} (${listen.port})`,
                             listen.type === 0 ? BadgeType.warning : BadgeType.success);
                     }
+
+                    const date = moment(upnpnat.last_update * 1000);
+
+                    // eslint-disable-next-line no-new
+                    new Td(trbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${upnpnat.ttl}`);

@@ -38,6 +38,8 @@ export type UpnpNatPort = {
     last_ttl_update: number;
     listen_id: number;
     description: string;
+    last_status: number;
+    last_update: number;
 };
 
 /**
@@ -148,7 +150,9 @@ export class UpnpNat {
                     protocol: entry.protocol,
                     last_ttl_update: entry.last_ttl_update,
                     listen_id: entry.listen_id,
-                    description: entry.description
+                    description: entry.description,
+                    last_status: entry.last_status,
+                    last_update: entry.last_update
                 });
             }
 

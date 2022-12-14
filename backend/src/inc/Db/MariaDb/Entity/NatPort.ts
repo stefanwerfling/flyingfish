@@ -1,6 +1,15 @@
 import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
 
 /**
+ * NatStatuts
+ */
+export enum NatStatus {
+    inactive,
+    ok,
+    error
+}
+
+/**
  * Nat port Entity
  */
 @Entity({name: 'nat_port'})
@@ -96,5 +105,21 @@ export class NatPort extends BaseEntity {
      */
     @Column()
     public description!: string;
+
+    /**
+     * last status
+     */
+    @Column({
+        default: NatStatus.inactive
+    })
+    public last_status!: number;
+
+    /**
+     * last update
+     */
+    @Column({
+        default: 0
+    })
+    public last_update!: number;
 
 }
