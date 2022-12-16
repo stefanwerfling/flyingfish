@@ -583,6 +583,7 @@ export class Route {
         }
 
         sshport.ssh_user_id = sshuser.id;
+        sshport.destinationAddress = ssh.destinationAddress;
 
         sshport = await DBHelper.getDataSource().manager.save(sshport);
 

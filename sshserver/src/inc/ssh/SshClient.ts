@@ -139,6 +139,12 @@ export class SshClient {
             });
 
             if (user) {
+                // empty password not supported
+                if (user.password === '') {
+                    ctx.reject();
+                    return;
+                }
+
                 const bresult = await bcrypt.compare(ctx.password, user.password);
 
                 if (bresult) {

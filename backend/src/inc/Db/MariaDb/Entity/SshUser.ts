@@ -25,7 +25,9 @@ export class SshUser extends BaseEntity {
     /**
      * password
      */
-    @Column()
+    @Column({
+        default: ''
+    })
     public password!: string;
 
     /**

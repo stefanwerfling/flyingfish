@@ -165,7 +165,7 @@ export class Routes extends BasePage {
                             username: this._routeStreamDialog.getSshUsername(),
                             password: this._routeStreamDialog.getSshPassword(),
                             user_id: this._routeStreamDialog.getSshUserId(),
-                            destinationAddress: ''
+                            destinationAddress: this._routeStreamDialog.getSshDestinationAddress()
                         };
                         break;
                 }
@@ -519,6 +519,7 @@ export class Routes extends BasePage {
 
                                     if (value.ssh) {
                                         this._routeStreamDialog.setSshRType(value.ssh_r_type);
+                                        this._routeStreamDialog.setSshDestinationAddress(value.ssh.destinationAddress);
 
                                         switch (value.ssh_r_type) {
                                             case NginxStreamSshR.out:

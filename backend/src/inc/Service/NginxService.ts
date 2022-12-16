@@ -454,10 +454,20 @@ export class NginxService {
                         // ssh l ---------------------------------------------------------------------------------------
                         case NginxStreamDestinationType.ssh_l:
                             if (collectStream.sshport) {
+                                upstreamName = 'ffus_internsshserver';
+                                upStream.setStreamName(upstreamName);
+
+                                procMap = new NginxMap('$ssl_preread_protocol', `$ffstreamProc${listenPort}`);
+                                procMap.addVariable('"TLSv1.2"', varName);
+                                procMap.addVariable('"TLSv1.3"', varName);
+                                procMap.addVariable('"TLSv1.1"', varName);
+                                procMap.addVariable('"TLSv1.0"', varName);
+                                procMap.addVariable('default', upstreamName);
+
                                 // fill default ssh server
                                 upStream.addServer({
-                                    address: collectStream.sshport.destinationAddress,
-                                    port: collectStream.sshport.port,
+                                    address: Config.get()?.sshserver?.ip!,
+                                    port: 22,
                                     weight: 0,
                                     max_fails: 0,
                                     fail_timeout: 0

@@ -3,123 +3,14 @@ import {NginxStreamDestinationType, NginxStreamSshR, UpStream} from '../../Api/R
 import {SshPortEntry} from '../../Api/Ssh';
 import {BadgeType} from '../../Bambooo/Content/Badge/Badge';
 import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
+import {Card, CardBodyType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
 import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
 import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
-
-/**
- * UpstreamCard
- */
-class UpstreamCard {
-
-    /**
-     * info card
-     * @protected
-     */
-    protected _card: Card;
-
-    /**
-     * upstream
-     * @protected
-     */
-    protected _upstream: UpStream;
-
-    /**
-     * input address
-     * @protected
-     */
-    protected _inputAddress: InputBottemBorderOnly2;
-
-    /**
-     * input port
-     * @protected
-     */
-    protected _inputPort: InputBottemBorderOnly2;
-
-    /**
-     * constructor
-     * @param card
-     * @param upstream
-     */
-    public constructor(card: Card, upstream: UpStream) {
-        this._upstream = upstream;
-
-        this._card = new Card(card.getElement(), CardBodyType.none, CardType.warning);
-        this._card.setTitle(`#${upstream.id}`);
-
-        const groupAddress = new FormGroup(this._card, 'Address');
-        this._inputAddress = new InputBottemBorderOnly2(groupAddress);
-
-        const groupPort = new FormGroup(this._card, 'Port');
-        this._inputPort = new InputBottemBorderOnly2(groupPort, undefined, InputType.number);
-
-        const removeUpstreamBtn = new ButtonDefault(
-            this._card.getToolsElement(),
-            '',
-            'fa-trash',
-            ButtonClass.tool,
-            ButtonDefaultType.none
-        );
-
-        removeUpstreamBtn.setOnClickFn(() => {
-            // todo mark as delete
-            this.remove();
-        });
-
-        this.setAddress(upstream.address);
-        this.setPort(`${upstream.port}`);
-    }
-
-    /**
-     * setAddress
-     * @param address
-     */
-    public setAddress(address: string): void {
-        this._inputAddress.setValue(address);
-    }
-
-    /**
-     * getAddress
-     */
-    public getAddress(): string {
-        return this._inputAddress.getValue();
-    }
-
-    /**
-     * setPort
-     * @param port
-     */
-    public setPort(port: string): void {
-        this._inputPort.setValue(port);
-    }
-
-    /**
-     * getPort
-     */
-    public getPort(): string {
-        return this._inputPort.getValue();
-    }
-
-    /**
-     * remove
-     */
-    public remove(): void {
-        this._card.getMainElement().remove();
-    }
-
-    /**
-     * getUpstream
-     */
-    public getUpstream(): UpStream {
-        this._upstream.port = parseInt(this.getPort(), 10);
-        this._upstream.address = this.getAddress();
-        return this._upstream;
-    }
-}
+import {UpstreamCard} from './UpstreamCard';
 
 /**
  * RouteStreamEditModalButtonClickFn
@@ -258,6 +149,18 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _inputSshPassword: InputBottemBorderOnly2;
 
     /**
+     * group ssh destination address
+     * @protected
+     */
+    protected _groupSshDesAddress: FormGroup;
+
+    /**
+     * input ssh destination address
+     * @protected
+     */
+    protected _inputSshDesAddress: InputBottemBorderOnly2;
+
+    /**
      * group ssh listen
      * @protected
      */
@@ -372,32 +275,6 @@ export class RouteStreamEditModal extends ModalDialog {
             style: 'background:#28a745;'
         });
 
-        this._selectDestinationType.setChangeFn((value) => {
-            tabUpstream.tab.hide();
-            tabSsh.tab.hide();
-            tabListen.tab.hide();
-
-            switch (parseInt(value, 10)) {
-                case NginxStreamDestinationType.upstream:
-                    tabUpstream.tab.show();
-                    tabSsh.tab.hide();
-                    tabListen.tab.hide();
-                    break;
-
-                case NginxStreamDestinationType.ssh_r:
-                    tabUpstream.tab.hide();
-                    tabSsh.tab.show();
-                    tabListen.tab.hide();
-                    break;
-
-                case NginxStreamDestinationType.listen:
-                    tabUpstream.tab.hide();
-                    tabSsh.tab.hide();
-                    tabListen.tab.show();
-                    break;
-            }
-        });
-
         // tab ssh -----------------------------------------------------------------------------------------------------
 
         const bodyCardSsh = jQuery('<div class="card-body"/>').appendTo(tabSsh.body);
@@ -431,29 +308,35 @@ export class RouteStreamEditModal extends ModalDialog {
 
         this._groupSshPaasword = new FormGroup(bodyCardSsh, 'Password');
         this._inputSshPassword = new InputBottemBorderOnly2(this._groupSshPaasword, undefined, InputType.password);
-        this._inputSshPassword.setPlaceholder('');
+        this._inputSshPassword.setPlaceholder('leave blank if you do not want to change it');
         this._groupSshPaasword.getElement().hide();
+
+        this._groupSshDesAddress = new FormGroup(bodyCardSsh, 'Destination IP Address');
+        this._inputSshDesAddress = new InputBottemBorderOnly2(this._groupSshDesAddress);
+        this._inputSshDesAddress.setPlaceholder('');
 
         this._groupSshListen = new FormGroup(bodyCardSsh, 'Listen');
         this._selectSshListen = new SelectBottemBorderOnly2(this._groupSshListen);
         this._groupSshListen.getElement().hide();
 
         this._selectSshRType.setChangeFn(value => {
-            this._groupSshPort.getElement().hide();
-            this._groupSshUsername.getElement().hide();
-            this._groupSshPaasword.getElement().hide();
-            this._groupSshListen.getElement().hide();
+            if (this._selectDestinationType.getSelectedValue() === `${NginxStreamDestinationType.ssh_r}`) {
+                this._groupSshPort.getElement().hide();
+                this._groupSshUsername.getElement().hide();
+                this._groupSshPaasword.getElement().hide();
+                this._groupSshListen.getElement().hide();
 
-            switch (value) {
-                case `${NginxStreamSshR.in}`:
-                    this._groupSshPort.getElement().show();
-                    this._groupSshUsername.getElement().show();
-                    this._groupSshPaasword.getElement().show();
-                    break;
+                switch (value) {
+                    case `${NginxStreamSshR.in}`:
+                        this._groupSshPort.getElement().show();
+                        this._groupSshUsername.getElement().show();
+                        this._groupSshPaasword.getElement().show();
+                        break;
 
-                case `${NginxStreamSshR.out}`:
-                    this._groupSshListen.getElement().show();
-                    break;
+                    case `${NginxStreamSshR.out}`:
+                        this._groupSshListen.getElement().show();
+                        break;
+                }
             }
         });
 
@@ -466,6 +349,49 @@ export class RouteStreamEditModal extends ModalDialog {
         this._selectDestinationListen.addValue({
             key: '0',
             value: 'Please select your Intern Listen'
+        });
+
+        // select destination type -------------------------------------------------------------------------------------
+
+        this._selectDestinationType.setChangeFn((value) => {
+            tabUpstream.tab.hide();
+            tabSsh.tab.hide();
+            tabListen.tab.hide();
+
+            switch (parseInt(value, 10)) {
+                case NginxStreamDestinationType.upstream:
+                    tabUpstream.tab.show();
+                    tabSsh.tab.hide();
+                    tabListen.tab.hide();
+                    break;
+
+                case NginxStreamDestinationType.ssh_l:
+                    this._groupSshPort.getElement().show();
+                    this._groupSshUsername.getElement().show();
+                    this._groupSshPaasword.getElement().show();
+                    this._groupSshDesAddress.show();
+
+                    groupSshType.hide();
+                    tabUpstream.tab.hide();
+                    tabSsh.tab.show();
+                    tabListen.tab.hide();
+                    break;
+
+                case NginxStreamDestinationType.ssh_r:
+                    this._groupSshDesAddress.hide();
+                    this.setSshRType(NginxStreamSshR.none);
+                    groupSshType.show();
+                    tabUpstream.tab.hide();
+                    tabSsh.tab.show();
+                    tabListen.tab.hide();
+                    break;
+
+                case NginxStreamDestinationType.listen:
+                    tabUpstream.tab.hide();
+                    tabSsh.tab.hide();
+                    tabListen.tab.show();
+                    break;
+            }
         });
 
         // buttons -----------------------------------------------------------------------------------------------------
@@ -782,6 +708,21 @@ export class RouteStreamEditModal extends ModalDialog {
     }
 
     /**
+     * setSshDestinationAddress
+     * @param address
+     */
+    public setSshDestinationAddress(address: string): void {
+        this._inputSshDesAddress.setValue(address);
+    }
+
+    /**
+     * getSshDestinationAddress
+     */
+    public getSshDestinationAddress(): string {
+        return this._inputSshDesAddress.getValue();
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -796,6 +737,7 @@ export class RouteStreamEditModal extends ModalDialog {
         this._navTab.setTabSelect(0);
         this._inputSshPassword.setPlaceholder('');
         this._selectSshListen.clearValues();
+        this._inputSshDesAddress.setValue('');
 
         this._upstreamCards.forEach((element, index) => {
             element.remove();
