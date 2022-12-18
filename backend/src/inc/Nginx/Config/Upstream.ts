@@ -126,8 +126,17 @@ export class Upstream extends Context {
 
         buffer += this._generateStr(index);
 
-        if (this._algorithm !== UpstreamLoadBalancingAlgorithm.none) {
-            buffer += this._createContent(`${this._algorithm};`, index + 1);
+        // only use by more one server
+        if (this._server.length > 1) {
+            switch (this._algorithm) {
+                case UpstreamLoadBalancingAlgorithm.ip_hash:
+                    buffer += this._createContent(`${UpstreamLoadBalancingAlgorithm.ip_hash};`, index + 1);
+                    break;
+
+                case UpstreamLoadBalancingAlgorithm.least_conn:
+                    buffer += this._createContent(`${UpstreamLoadBalancingAlgorithm.least_conn};`, index + 1);
+                    break;
+            }
         }
 
         buffer += this._generateServers(index);

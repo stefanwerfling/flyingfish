@@ -5,8 +5,7 @@ import {
     NginxStreamSshR,
     Route as RouteAPI,
     RouteHttpSave,
-    RouteStreamSave,
-    UpstreamLoadBalancingAlgorithm
+    RouteStreamSave
 } from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';
@@ -118,7 +117,7 @@ export class Routes extends BasePage {
                         destination_listen_id: 0,
                         destination_type: this._routeStreamDialog.getDestinatonType(),
                         ssh_r_type: NginxStreamSshR.none,
-                        load_balancing_algorithm: UpstreamLoadBalancingAlgorithm.none,
+                        load_balancing_algorithm: this._routeStreamDialog.getLoadBalancingAlgorithm(),
                         upstreams: []
                     }
                 };
@@ -133,6 +132,8 @@ export class Routes extends BasePage {
                         break;
 
                     case NginxStreamDestinationType.ssh_r:
+                        stream.stream.ssh_r_type = this._routeStreamDialog.getSshRType();
+
                         switch (this._routeStreamDialog.getSshRType()) {
                             case NginxStreamSshR.in:
                                 stream.stream.ssh = {
@@ -329,7 +330,12 @@ export class Routes extends BasePage {
                     }
 
                     if (!entry.domainfix) {
-                        const btnMenu = new ButtonMenu(card.getToolsElement(), IconFa.bars, true, ButtonType.borderless);
+                        const btnMenu = new ButtonMenu(
+                            card.getToolsElement(),
+                            IconFa.bars,
+                            true,
+                            ButtonType.borderless
+                        );
 
                         btnMenu.addMenuItem(
                             'Add Stream Route',
@@ -506,6 +512,7 @@ export class Routes extends BasePage {
                                     this._routeStreamDialog.setListen(`${value.listen_id}`);
                                     this._routeStreamDialog.setAliasName(value.alias_name);
                                     this._routeStreamDialog.setDestinationType(value.destination_type);
+                                    this._routeStreamDialog.setLoadBalancingAlgorithm(value.load_balancing_algorithm);
 
                                     if (value.index > 0) {
                                         this._routeStreamDialog.setIndex(value.index);

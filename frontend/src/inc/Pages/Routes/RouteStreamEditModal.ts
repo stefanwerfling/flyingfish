@@ -179,6 +179,12 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _selectDestinationListen: SelectBottemBorderOnly2;
 
     /**
+     * load balancing algorithm
+     * @protected
+     */
+    protected _selectLoadBalanceAlg: SelectBottemBorderOnly2;
+
+    /**
      * click save fn
      * @protected
      */
@@ -341,15 +347,37 @@ export class RouteStreamEditModal extends ModalDialog {
         });
 
         // tab intern listen -------------------------------------------------------------------------------------------
+
         const bodyCardListen = jQuery('<div class="card-body"/>').appendTo(tabListen.body);
 
         const groupDListen = new FormGroup(bodyCardListen, 'Listen (Intern)');
-        this._selectDestinationListen = new SelectBottemBorderOnly2(groupDListen.getElement());
+        this._selectDestinationListen = new SelectBottemBorderOnly2(groupDListen);
 
         this._selectDestinationListen.addValue({
             key: '0',
             value: 'Please select your Intern Listen'
         });
+
+        // tab advanced ------------------------------------------------------------------------------------------------
+
+        const bodyCardAdvanced = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
+        const groupLoadBalanceAlg = new FormGroup(bodyCardAdvanced, 'Load balancing algorithm');
+        this._selectLoadBalanceAlg = new SelectBottemBorderOnly2(groupLoadBalanceAlg);
+
+        this._selectLoadBalanceAlg.addValue({
+            key: 'none',
+            value: 'None'
+        });
+
+        this._selectLoadBalanceAlg.addValue({
+            key: 'least_conn',
+            value: 'Least conn'
+        });
+
+        this._selectLoadBalanceAlg.addValue({
+            key: 'ip_hash',
+            value: 'IP Hash'
+        })
 
         // select destination type -------------------------------------------------------------------------------------
 
@@ -720,6 +748,21 @@ export class RouteStreamEditModal extends ModalDialog {
      */
     public getSshDestinationAddress(): string {
         return this._inputSshDesAddress.getValue();
+    }
+
+    /**
+     * setLoadBalancingAlgorithm
+     * @param alg
+     */
+    public setLoadBalancingAlgorithm(alg: string): void {
+        this._selectLoadBalanceAlg.setSelectedValue(alg);
+    }
+
+    /**
+     * getLoadBalancingAlgorithm
+     */
+    public getLoadBalancingAlgorithm(): string {
+        return this._selectLoadBalanceAlg.getSelectedValue();
     }
 
     /**
