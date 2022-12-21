@@ -463,6 +463,11 @@ export class RouteHttpEditModal extends ModalDialog {
     public setSslProviders(providers: SslProvider[]): void {
         this._selectSslProvider.clearValues();
 
+        this._selectSslProvider.addValue({
+            key: '',
+            value: 'Please select your Provider'
+        });
+
         for (const provider of providers) {
             this._selectSslProvider.addValue({
                 key: provider.name,
