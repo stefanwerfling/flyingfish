@@ -35,7 +35,9 @@ export class IpBlacklist extends BaseEntity {
      * is imported
      */
     @Index()
-    @Column()
+    @Column({
+        default: false
+    })
     public is_imported!: boolean;
 
     /**

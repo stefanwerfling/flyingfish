@@ -253,7 +253,7 @@ export class LocationCard {
         const groupEnableHeaderHost = new FormGroup(rowHost.createCol(4), 'Header Host Enable');
         this._switchHeaderHost = new Switch(groupEnableHeaderHost, 'locheaderhost');
 
-        const groupHeaderHostName = new FormGroup(rowHost.createCol(8), 'Header Host Name');
+        const groupHeaderHostName = new FormGroup(rowHost.createCol(8), 'Header Hostname');
         this._inputHeaderHostName = new InputBottemBorderOnly2(groupHeaderHostName);
         this._inputHeaderHostName.setPlaceholder('Bypass a Hostname, empty set by $host');
 

@@ -32,13 +32,14 @@ export class AddressAccess {
 
         const listenRepository = DBHelper.getRepository(NginxListenDB);
         const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-        const locationId = parseInt(listen_id, 10) || 0;
+        const listenId = parseInt(listen_id, 10) || 0;
 
-        if (locationId === 0) {
+        if (listenId === 0) {
             if (realip_remote_addr) {
                 const address = await ipBlacklistRepository.findOne({
                     where: {
-                        ip: realip_remote_addr
+                        ip: realip_remote_addr,
+                        disable: false
                     }
                 });
 
@@ -57,7 +58,7 @@ export class AddressAccess {
         } else {
             const listen = await listenRepository.findOne({
                 where: {
-                    id: locationId
+                    id: listenId
                 }
             });
 
@@ -68,7 +69,8 @@ export class AddressAccess {
                     if (realip_remote_addr) {
                         const address = await ipBlacklistRepository.findOne({
                             where: {
-                                ip: realip_remote_addr
+                                ip: realip_remote_addr,
+                                disable: false
                             }
                         });
 
@@ -100,8 +102,9 @@ export class AddressAccess {
     }
 
     /**
-     * _updateBlock
-     * @param ipId
+     * _updateBlacklistBlock
+     * @param ipBlacklistId
+     * @param newBlockCount
      * @protected
      */
     protected static async _updateBlacklistBlock(ipBlacklistId: number, newBlockCount: number): Promise<void> {
