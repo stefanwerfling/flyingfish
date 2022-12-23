@@ -1,6 +1,14 @@
 import {NetFetch} from '../Net/NetFetch';
 
 /**
+ * ListenAddressCheckType
+ */
+export enum ListenAddressCheckType {
+    black,
+    white
+}
+
+/**
  * ListenTypes
  */
 export enum ListenTypes {
@@ -31,6 +39,7 @@ export type ListenData = {
     protocol: number;
     enable_ipv6: boolean;
     check_address: boolean;
+    check_address_type: number;
     name: string;
     routeless: boolean;
     description: string;

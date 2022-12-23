@@ -32,6 +32,14 @@ export enum ListenProtocol {
 }
 
 /**
+ * ListenAddressCheckType
+ */
+export enum ListenAddressCheckType {
+    black,
+    white
+}
+
+/**
  * Nginx Stream Entity
  */
 @Entity({name: 'nginx_listen'})
@@ -116,6 +124,14 @@ export class NginxListen extends BaseEntity {
         default: false
     })
     public enable_address_check!: boolean;
+
+    /**
+     * type of use the address check (by blacklist or whitelist)
+     */
+    @Column({
+        default: ListenAddressCheckType.black
+    })
+    public address_check_type!: number;
 
     /**
      * declarate (true/false) a user can delete this listen

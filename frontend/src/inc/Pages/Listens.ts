@@ -1,4 +1,4 @@
-import {Listen as ListenAPI, ListenData, ListenTypes} from '../Api/Listen';
+import {Listen as ListenAPI, ListenAddressCheckType, ListenData, ListenTypes} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
@@ -83,6 +83,7 @@ export class Listens extends BasePage {
                     routeless: false,
                     enable_ipv6: this._listenDialog.getIp6(),
                     check_address: this._listenDialog.getAddressCheck(),
+                    check_address_type: this._listenDialog.getAddressCheckType(),
                     disable: this._listenDialog.getDisable()
                 };
 
@@ -183,6 +184,7 @@ export class Listens extends BasePage {
                         // eslint-disable-next-line no-new
                         new Badge(typeDiv, 'Stream', BadgeType.warning);
                     } else {
+                        // eslint-disable-next-line no-new
                         new Badge(typeDiv, 'Http/Https', BadgeType.success);
                     }
 
@@ -192,32 +194,31 @@ export class Listens extends BasePage {
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${entry.description}`);
 
-                    let options = '';
+                    const optionTd = new Td(trbody, '');
+                    optionTd.setCss({
+                        'white-space': 'normal'
+                    });
 
                     if (entry.enable_ipv6) {
-                        if (options !== '') {
-                            options += ', ';
-                        }
-
-                        options += 'IP6';
+                        // eslint-disable-next-line no-new
+                        new Badge(optionTd, 'IP6', BadgeType.secondary);
+                        optionTd.append('&nbsp;');
                     }
 
                     if (entry.check_address) {
-                        if (options !== '') {
-                            options += ', ';
-                        }
-
-                        options += 'Address Check';
+                        // eslint-disable-next-line no-new
+                        new Badge(
+                            optionTd,
+                            `Address check (${entry.check_address_type !== ListenAddressCheckType.white ? 'black' : 'white'})`,
+                            BadgeType.secondary
+                        );
+                        optionTd.append('&nbsp;');
                     }
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${options}`);
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${entry.disable ? 'yes' : 'no'}`);
 
                     const tdAction = new Td(trbody, '');
-
                     const editBtn = new Button(tdAction, ButtonType.borderless);
 
                     // eslint-disable-next-line no-new
@@ -234,6 +235,7 @@ export class Listens extends BasePage {
                         this._listenDialog.setDescription(entry.description);
                         this._listenDialog.setIp6(entry.enable_ipv6);
                         this._listenDialog.setAddressCheck(entry.check_address);
+                        this._listenDialog.setAddressCheckType(entry.check_address_type);
                         this._listenDialog.setDisable(entry.disable);
                         this._listenDialog.show();
                     });

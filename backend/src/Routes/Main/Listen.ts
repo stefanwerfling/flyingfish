@@ -15,6 +15,7 @@ export type ListenData = {
     protocol: number;
     enable_ipv6: boolean;
     check_address: boolean;
+    check_address_type: number;
     name: string;
     routeless: boolean;
     description: string;
@@ -81,6 +82,7 @@ export class Listen {
                         protocol: listen.listen_protocol,
                         enable_ipv6: listen.enable_ipv6,
                         check_address: listen.enable_address_check,
+                        check_address_type: listen.address_check_type,
                         name: listen.name,
                         routeless: listen.routeless,
                         description: listen.description,
@@ -171,6 +173,7 @@ export class Listen {
             aListen.description = request.description;
             aListen.enable_ipv6 = request.enable_ipv6;
             aListen.enable_address_check = request.check_address;
+            aListen.address_check_type = request.check_address_type;
             aListen.disable = request.disable;
 
             await DBHelper.getDataSource().manager.save(aListen);

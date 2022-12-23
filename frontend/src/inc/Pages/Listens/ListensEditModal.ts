@@ -1,4 +1,4 @@
-import {ListenTypes} from '../../Api/Listen';
+import {ListenAddressCheckType, ListenTypes} from '../../Api/Listen';
 import {Switch} from '../../Bambooo/Content/Form/Switch';
 import {FormRow} from '../../Bambooo/Content/Form/FormRow';
 import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
@@ -64,6 +64,12 @@ export class ListensEditModal extends ModalDialog {
      * @protected
      */
     protected _switchAddressCheck: Switch;
+
+    /**
+     * select address check type
+     * @protected
+     */
+    protected _selectAddressCheckType: SelectBottemBorderOnly2;
 
     /**
      * switch disable
@@ -135,10 +141,23 @@ export class ListensEditModal extends ModalDialog {
         const groupIP6 = new FormGroup(rowOptions.createCol(6), 'IP6');
         this._switchIp6 = new Switch(groupIP6, 'ip6');
 
-        const groupAC = new FormGroup(rowOptions.createCol(6), 'Address Check');
-        this._switchAddressCheck = new Switch(groupAC, 'address_check');
+        const rowOptionsAc = new FormRow(bodyCard);
+        const groupAc = new FormGroup(rowOptionsAc.createCol(6), 'Address check');
+        this._switchAddressCheck = new Switch(groupAc, 'address_check');
 
-        const groupDisable = new FormGroup(bodyCard, 'Disable this Listen');
+        const groupAcType = new FormGroup(rowOptionsAc.createCol(6), 'Address check type');
+        this._selectAddressCheckType = new SelectBottemBorderOnly2(groupAcType);
+        this._selectAddressCheckType.addValue({
+            key: `${ListenAddressCheckType.black}`,
+            value: 'Blacklist'
+        });
+
+        this._selectAddressCheckType.addValue({
+            key: `${ListenAddressCheckType.white}`,
+            value: 'Whitelist'
+        });
+
+        const groupDisable = new FormGroup(bodyCard, 'Disable this listen');
         this._switchDisable = new Switch(groupDisable, 'disablelisten');
 
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
@@ -272,6 +291,21 @@ export class ListensEditModal extends ModalDialog {
     }
 
     /**
+     * getAddressCheckType
+     */
+    public getAddressCheckType(): number {
+        return parseInt(this._selectAddressCheckType.getSelectedValue(), 10) | ListenAddressCheckType.black;
+    }
+
+    /**
+     * setAddressCheckType
+     * @param actype
+     */
+    public setAddressCheckType(actype: number): void {
+        this._selectAddressCheckType.setSelectedValue(`${actype}`);
+    }
+
+    /**
      * setDisable
      * @param disable
      */
@@ -298,6 +332,7 @@ export class ListensEditModal extends ModalDialog {
         this.setDescription('');
         this.setIp6(false);
         this.setAddressCheck(false);
+        this.setAddressCheckType(ListenAddressCheckType.black);
         this.setDisable(false);
     }
 
