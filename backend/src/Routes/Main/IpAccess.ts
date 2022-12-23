@@ -8,6 +8,7 @@ import {IpListMaintainer as IpListMaintainerDB} from '../../inc/Db/MariaDb/Entit
 import {IpLocation as IpLocationDB} from '../../inc/Db/MariaDb/Entity/IpLocation.js';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
 import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
+import {DateHelper} from '../../inc/Utils/DateHelper.js';
 
 /**
  * IpAccessLocation
@@ -419,6 +420,7 @@ export class IpAccess {
             entrie.disable = request.disable;
             entrie.description = request.description;
             entrie.is_imported = false;
+            entrie.last_update = DateHelper.getCurrentDbTime();
 
             await DBHelper.getDataSource().manager.save(entrie);
 
