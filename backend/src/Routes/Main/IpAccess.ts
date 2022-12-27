@@ -157,6 +157,18 @@ export type IpAccessWhiteSaveRequest = {
 export type IpAccessWhiteSaveResponse = DefaultReturn;
 
 /**
+ * IpAccessWhiteDeleteRequest
+ */
+export type IpAccessWhiteDeleteRequest = {
+    id: number;
+};
+
+/**
+ * IpAccessWhiteDeleteResponse
+ */
+export type IpAccessWhiteDeleteResponse = DefaultReturn;
+
+/**
  * IpAccess
  */
 @JsonController()
@@ -532,6 +544,36 @@ export class IpAccess {
 
             return {
                 statusCode: StatusCodes.OK
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
+    }
+
+    /**
+     * delete
+     * @param session
+     * @param request
+     */
+    @Post('/json/ipaccess/whitelist/delete')
+    public async delete(@Session() session: any, @Body() request: IpAccessWhiteDeleteRequest): Promise<IpAccessWhiteDeleteResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+
+            const result = await ipWhitelistRepository.delete({
+                id: request.id
+            });
+
+            if (result) {
+                return {
+                    statusCode: StatusCodes.OK
+                };
+            }
+
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR
             };
         }
 

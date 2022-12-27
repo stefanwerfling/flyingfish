@@ -3,13 +3,16 @@ import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
+import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {Button, ButtonType} from '../Bambooo/Content/Form/Button';
+import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
 import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
 import {NavTab} from '../Bambooo/Content/Tab/NavTab';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
+import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
 import {
@@ -290,25 +293,25 @@ export class IpAccess extends BasePage {
                     }
                 }
 
-                for (const bentry of whiteList.list!) {
+                for (const wentry of whiteList.list!) {
                     const trbodyW = new Tr(tableW.getTbody());
 
                     const tdIp = new Td(trbodyW, '');
 
                     // eslint-disable-next-line no-new
-                    new Badge(tdIp, `${bentry.ip}`, BadgeType.secondary);
+                    new Badge(tdIp, `${wentry.ip}`, BadgeType.secondary);
 
-                    const lastBlock = moment(bentry.last_access * 1000);
+                    const lastBlock = moment(wentry.last_access * 1000);
 
                     const tdaccess = new Td(trbodyW, `${lastBlock.format('YYYY-MM-DD HH:mm:ss')}<br>`);
 
                     // eslint-disable-next-line no-new
-                    new Badge(tdaccess, `${bentry.count_access}`, BadgeType.success);
+                    new Badge(tdaccess, `${wentry.count_access}`, BadgeType.success);
 
                     const loactionTd = new Td(trbodyW, 'none');
 
-                    if (bentry.ip_location_id) {
-                        const aLocation = locationWList.get(bentry.ip_location_id);
+                    if (wentry.ip_location_id) {
+                        const aLocation = locationWList.get(wentry.ip_location_id);
 
                         if (aLocation) {
                             const locationDiv = jQuery('<div class="attachment-block clearfix"></div>').appendTo(
@@ -322,32 +325,78 @@ export class IpAccess extends BasePage {
                     }
 
                     // eslint-disable-next-line no-new
-                    new Td(trbodyW, `${bentry.description}`);
+                    new Td(trbodyW, `${wentry.description}`);
 
-                    const lastUpdate = moment(bentry.last_update * 1000);
+                    const lastUpdate = moment(wentry.last_update * 1000);
 
                     // eslint-disable-next-line no-new
                     new Td(trbodyW, `${lastUpdate.format('YYYY-MM-DD HH:mm:ss')}`);
 
                     // eslint-disable-next-line no-new
-                    new Td(trbodyW, `${bentry.disable ? 'yes' : 'no'}`);
+                    new Td(trbodyW, `${wentry.disable ? 'yes' : 'no'}`);
 
                     const tdAction = new Td(trbodyW, '');
 
-                    const editBtn = new Button(tdAction, ButtonType.borderless);
+                    const btnMenu = new ButtonMenu(
+                        tdAction,
+                        IconFa.bars,
+                        true,
+                        ButtonType.borderless
+                    );
 
-                    // eslint-disable-next-line no-new
-                    new Icon(editBtn.getElement(), IconFa.edit);
+                    btnMenu.addMenuItem(
+                        'Edit',
+                        async(): Promise<void> => {
+                            this._whitelistDialog.setTitle('Whitelist Edit');
+                            this._whitelistDialog.resetValues();
+                            this._whitelistDialog.setId(wentry.id);
+                            this._whitelistDialog.setIp(wentry.ip);
+                            this._whitelistDialog.setDisable(wentry.disable);
+                            this._whitelistDialog.setDescription(wentry.description);
+                            this._whitelistDialog.show();
+                        },
+                        IconFa.edit
+                    );
 
-                    editBtn.setOnClickFn((): void => {
-                        this._whitelistDialog.setTitle('Whitelist Edit');
-                        this._whitelistDialog.resetValues();
-                        this._whitelistDialog.setId(bentry.id);
-                        this._whitelistDialog.setIp(bentry.ip);
-                        this._whitelistDialog.setDisable(bentry.disable);
-                        this._whitelistDialog.setDescription(bentry.description);
-                        this._whitelistDialog.show();
-                    });
+                    btnMenu.addDivider();
+
+                    btnMenu.addMenuItem(
+                        'Delete',
+                        (): void => {
+                            DialogConfirm.confirm(
+                                'whitelistDelete',
+                                ModalDialogType.large,
+                                'Delete whitelist entrie',
+                                `Delete this IP: "${wentry.ip}" from whitelist?`,
+                                async(_, dialog) => {
+                                    try {
+                                        if (await IpAccessAPI.deleteWhitelist({
+                                            id: wentry.id
+                                        })) {
+                                            this._toast.fire({
+                                                icon: 'success',
+                                                title: 'Whitelist entrie delete success.'
+                                            });
+                                        }
+                                    } catch ({message}) {
+                                        this._toast.fire({
+                                            icon: 'error',
+                                            title: message
+                                        });
+                                    }
+
+                                    dialog.hide();
+
+                                    if (this._onLoadTable) {
+                                        this._onLoadTable();
+                                    }
+                                },
+                                undefined,
+                                'Delete'
+                            );
+                        },
+                        IconFa.trash
+                    );
                 }
             }
 

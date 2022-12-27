@@ -162,6 +162,18 @@ export type IpAccessWhiteSaveRequest = {
 export type IpAccessWhiteSaveResponse = DefaultReturn;
 
 /**
+ * IpAccessWhiteDeleteRequest
+ */
+export type IpAccessWhiteDeleteRequest = {
+    id: number;
+};
+
+/**
+ * IpAccessWhiteDeleteResponse
+ */
+export type IpAccessWhiteDeleteResponse = DefaultReturn;
+
+/**
  * IpAccess
  */
 export class IpAccess {
@@ -299,6 +311,23 @@ export class IpAccess {
             const response = result as IpAccessWhiteSaveResponse;
 
             switch (response.statusCode) {
+                case StatusCodes.OK:
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * deleteWhitelist
+     * @param whitelist
+     */
+    public static async deleteWhitelist(whitelist: IpAccessWhiteDeleteRequest): Promise<boolean> {
+        const result = await NetFetch.postData('/json/ipaccess/whitelist/delete', whitelist);
+
+        if (result && result.statusCode) {
+            switch (result.statusCode) {
                 case StatusCodes.OK:
                     return true;
             }
