@@ -2,6 +2,7 @@ import {Body, Get, JsonController, Post, Session} from 'routing-controllers-exte
 import {In} from 'typeorm';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
+import {IpWhitelist as IpWhitelistDB} from '../../inc/Db/MariaDb/Entity/IpWhitelist.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../../inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../../inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer as IpListMaintainerDB} from '../../inc/Db/MariaDb/Entity/IpListMaintainer.js';
@@ -119,6 +120,43 @@ export type IpAccessBlackListOwnSaveRequest = {
 export type IpAccessBlackListOwnSaveResponse = DefaultReturn;
 
 /**
+ * IpAccessWhiteList
+ */
+export type IpAccessWhiteList = {
+    id: number;
+    ip: string;
+    last_update: number;
+    disable: boolean;
+    last_access: number;
+    count_access: number;
+    ip_location_id?: number;
+    description: string;
+};
+
+/**
+ * IpAccessWhiteListResponse
+ */
+export type IpAccessWhiteListResponse = DefaultReturn & {
+    list?: IpAccessWhiteList[];
+    locations?: IpAccessLocation[];
+};
+
+/**
+ * IpAccessWhiteSaveRequest
+ */
+export type IpAccessWhiteSaveRequest = {
+    id: number;
+    ip: string;
+    disable: boolean;
+    description: string;
+};
+
+/**
+ * IpAccessWhiteSaveResponse
+ */
+export type IpAccessWhiteSaveResponse = DefaultReturn;
+
+/**
  * IpAccess
  */
 @JsonController()
@@ -157,6 +195,44 @@ export class IpAccess {
     }
 
     /**
+     * _getLocations
+     * @param locationIds
+     * @protected
+     */
+    protected async _getLocations(locationIds: number[]): Promise<IpAccessLocation[]> {
+        const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
+
+        const locations: IpAccessLocation[] = [];
+
+        const tlocations = await ipLocationRepository.find({
+            where: {
+                id: In(locationIds)
+            }
+        });
+
+        if (tlocations) {
+            for (const tlocation of tlocations) {
+                locations.push({
+                    id: tlocation.id,
+                    ip: tlocation.ip,
+                    country: tlocation.country,
+                    country_code: tlocation.country_code,
+                    city: tlocation.city,
+                    continent: tlocation.continent,
+                    latitude: tlocation.latitude,
+                    longitude: tlocation.longitude,
+                    time_zone: tlocation.time_zone,
+                    postal_code: tlocation.postal_code,
+                    org: tlocation.org,
+                    asn: tlocation.asn
+                });
+            }
+        }
+
+        return locations;
+    }
+
+    /**
      * getBlackList
      */
     @Get('/json/ipaccess/blacklist/imports')
@@ -167,7 +243,6 @@ export class IpAccess {
             const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
             const ipBlacklistCategoryRepository = DBHelper.getRepository(IpBlacklistCategoryDB);
             const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
-            const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
 
             const entries = await ipBlacklistRepository.find({
                 take: limit,
@@ -229,37 +304,10 @@ export class IpAccess {
                 }
             }
 
-            const locations: IpAccessLocation[] = [];
-
-            const tlocations = await ipLocationRepository.find({
-                where: {
-                    id: In(locationIds)
-                }
-            });
-
-            if (tlocations) {
-                for (const tlocation of tlocations) {
-                    locations.push({
-                        id: tlocation.id,
-                        ip: tlocation.ip,
-                        country: tlocation.country,
-                        country_code: tlocation.country_code,
-                        city: tlocation.city,
-                        continent: tlocation.continent,
-                        latitude: tlocation.latitude,
-                        longitude: tlocation.longitude,
-                        time_zone: tlocation.time_zone,
-                        postal_code: tlocation.postal_code,
-                        org: tlocation.org,
-                        asn: tlocation.asn
-                    });
-                }
-            }
-
             return {
                 statusCode: StatusCodes.OK,
                 list: list,
-                locations: locations
+                locations: await this._getLocations(locationIds)
             };
         }
 
@@ -316,13 +364,9 @@ export class IpAccess {
     @Get('/json/ipaccess/blacklist/owns')
     public async getBlackListOwns(@Session() session: any): Promise<IpAccessBlackListOwnsResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
-            const limit = 20;
-
             const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-            const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
 
             const entries = await ipBlacklistRepository.find({
-                take: limit,
                 where: {
                     is_imported: false
                 },
@@ -353,37 +397,10 @@ export class IpAccess {
                 }
             }
 
-            const locations: IpAccessLocation[] = [];
-
-            const tlocations = await ipLocationRepository.find({
-                where: {
-                    id: In(locationIds)
-                }
-            });
-
-            if (tlocations) {
-                for (const tlocation of tlocations) {
-                    locations.push({
-                        id: tlocation.id,
-                        ip: tlocation.ip,
-                        country: tlocation.country,
-                        country_code: tlocation.country_code,
-                        city: tlocation.city,
-                        continent: tlocation.continent,
-                        latitude: tlocation.latitude,
-                        longitude: tlocation.longitude,
-                        time_zone: tlocation.time_zone,
-                        postal_code: tlocation.postal_code,
-                        org: tlocation.org,
-                        asn: tlocation.asn
-                    });
-                }
-            }
-
             return {
                 statusCode: StatusCodes.OK,
                 list: list,
-                locations: locations
+                locations: await this._getLocations(locationIds)
             };
         }
 
@@ -420,6 +437,95 @@ export class IpAccess {
             entrie.disable = request.disable;
             entrie.description = request.description;
             entrie.is_imported = false;
+            entrie.last_update = DateHelper.getCurrentDbTime();
+
+            await DBHelper.getDataSource().manager.save(entrie);
+
+            return {
+                statusCode: StatusCodes.OK
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
+    }
+
+    /**
+     * getWhiteList
+     * @param session
+     */
+    @Get('/json/ipaccess/whitelist')
+    public async getWhiteList(@Session() session: any): Promise<IpAccessWhiteListResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+
+            const entries = await ipWhitelistRepository.find({
+                order: {
+                    last_access: 'DESC'
+                }
+            });
+
+            const list: IpAccessWhiteList[] = [];
+            const locationIds: number[] = [];
+
+            if (entries) {
+                for await (const entry of entries) {
+                    if (entry.ip_location_id !== 0) {
+                        locationIds.push(entry.ip_location_id);
+                    }
+
+                    list.push({
+                        id: entry.id,
+                        ip: entry.ip,
+                        disable: entry.disable,
+                        last_update: entry.last_update,
+                        last_access: entry.last_access,
+                        count_access: entry.count_access,
+                        ip_location_id: entry.ip_location_id,
+                        description: entry.description
+                    });
+                }
+            }
+
+            return {
+                statusCode: StatusCodes.OK,
+                list: list,
+                locations: await this._getLocations(locationIds)
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
+    }
+
+    /**
+     * saveWhiteList
+     * @param session
+     * @param request
+     */
+    @Post('/json/ipaccess/whitelist/save')
+    public async saveWhiteList(
+        @Session() session: any,
+        @Body() request: IpAccessWhiteSaveRequest
+    ): Promise<IpAccessWhiteSaveResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+
+            let entrie = await ipWhitelistRepository.findOne({
+                where: {
+                    id: request.id
+                }
+            });
+
+            if (!entrie) {
+                entrie = new IpWhitelistDB();
+            }
+
+            entrie.ip = request.ip;
+            entrie.disable = request.disable;
+            entrie.description = request.description;
             entrie.last_update = DateHelper.getCurrentDbTime();
 
             await DBHelper.getDataSource().manager.save(entrie);

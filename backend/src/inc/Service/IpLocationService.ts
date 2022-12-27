@@ -3,6 +3,7 @@ import {MoreThan} from 'typeorm';
 import {DBHelper} from '../Db/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../Db/MariaDb/Entity/IpBlacklist.js';
 import {IpLocation as IpLocationDB} from '../Db/MariaDb/Entity/IpLocation.js';
+import {IpWhitelist as IpWhitelistDB} from '../Db/MariaDb/Entity/IpWhitelist.js';
 import {Logger} from '../Logger/Logger.js';
 import {IpLocateIo} from '../Provider/IpLocate/IpLocateIo.js';
 import {Settings as GlobalSettings} from '../Settings/Settings.js';
@@ -36,6 +37,50 @@ export class IpLocationService {
     protected _scheduler: Job|null = null;
 
     /**
+     * _getIpLocation
+     * @param ip
+     * @protected
+     */
+    protected async _getIpLocation(ip: string): Promise<number | null> {
+        const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
+        const aIpLocation = await ipLocationRepository.findOne({
+            where: {
+                ip: ip
+            }
+        });
+
+        if (aIpLocation) {
+            return aIpLocation.id;
+        }
+
+        const location = await IpLocateIo.location(ip);
+
+        if (location && location.ip) {
+            Logger.getLogger().info(`new Location by ip: ${ip}`);
+
+            let newIpLocation = new IpLocationDB();
+
+            newIpLocation.ip = location.ip;
+            newIpLocation.country = location.country || '';
+            newIpLocation.country_code = location.country_code || '';
+            newIpLocation.city = location.city || '';
+            newIpLocation.continent = location.continent || '';
+            newIpLocation.latitude = location.latitude || '';
+            newIpLocation.longitude = location.longitude || '';
+            newIpLocation.time_zone = location.time_zone || '';
+            newIpLocation.postal_code = location.postal_code || '';
+            newIpLocation.org = location.org || '';
+            newIpLocation.asn = location.asn || '';
+
+            newIpLocation = await DBHelper.getDataSource().manager.save(newIpLocation);
+
+            return newIpLocation.id;
+        }
+
+        return null;
+    }
+
+    /**
      * location
      */
     public async location(): Promise<void> {
@@ -52,55 +97,48 @@ export class IpLocationService {
         // check blacklist ---------------------------------------------------------------------------------------------
 
         const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-        const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
 
-        const list = await ipBlacklistRepository.find({
+        const listB = await ipBlacklistRepository.find({
             where: {
                 count_block: MoreThan(0),
                 ip_location_id: 0
             }
         });
 
-        if (list) {
-            for await (const entry of list) {
-                const aIpLocation = await ipLocationRepository.findOne({
-                    where: {
-                        ip: entry.ip
-                    }
-                });
+        if (listB) {
+            for await (const entry of listB) {
+                const ipLocationId = await this._getIpLocation(entry.ip);
 
-                if (aIpLocation) {
-                    entry.ip_location_id = aIpLocation.id;
+                if (ipLocationId === null) {
+                    Logger.getLogger().info(`Location not found by ip: ${entry.ip}`);
+                } else {
+                    entry.ip_location_id = ipLocationId;
 
                     await DBHelper.getDataSource().manager.save(entry);
+                }
+            }
+        }
+
+        // check whitelist ---------------------------------------------------------------------------------------------
+
+        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+
+        const listW = await ipWhitelistRepository.find({
+            where: {
+                ip_location_id: 0
+            }
+        });
+
+        if (listW) {
+            for await (const entry of listW) {
+                const ipLocationId = await this._getIpLocation(entry.ip);
+
+                if (ipLocationId === null) {
+                    Logger.getLogger().info(`Location not found by ip: ${entry.ip}`);
                 } else {
-                    const location = await IpLocateIo.location(entry.ip);
+                    entry.ip_location_id = ipLocationId;
 
-                    if (location && location.ip) {
-                        Logger.getLogger().info(`new Location by ip: ${entry.ip}`);
-
-                        let newIpLocation = new IpLocationDB();
-
-                        newIpLocation.ip = location.ip;
-                        newIpLocation.country = location.country || '';
-                        newIpLocation.country_code = location.country_code || '';
-                        newIpLocation.city = location.city || '';
-                        newIpLocation.continent = location.continent || '';
-                        newIpLocation.latitude = location.latitude || '';
-                        newIpLocation.longitude = location.longitude || '';
-                        newIpLocation.time_zone = location.time_zone || '';
-                        newIpLocation.postal_code = location.postal_code || '';
-                        newIpLocation.org = location.org || '';
-                        newIpLocation.asn = location.asn || '';
-
-                        newIpLocation = await DBHelper.getDataSource().manager.save(newIpLocation);
-
-                        entry.ip_location_id = newIpLocation.id;
-
-                        await DBHelper.getDataSource().manager.save(entry);
-                    } else {
-                        Logger.getLogger().info(`Location not found by ip: ${entry.ip}`);
-                    }
+                    await DBHelper.getDataSource().manager.save(entry);
                 }
             }
         }

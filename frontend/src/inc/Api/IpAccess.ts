@@ -125,6 +125,43 @@ export type IpAccessBlackListOwnSaveRequest = {
 export type IpAccessBlackListOwnSaveResponse = DefaultReturn;
 
 /**
+ * IpAccessWhiteList
+ */
+export type IpAccessWhiteList = {
+    id: number;
+    ip: string;
+    last_update: number;
+    disable: boolean;
+    last_access: number;
+    count_access: number;
+    ip_location_id?: number;
+    description: string;
+};
+
+/**
+ * IpAccessWhiteListResponse
+ */
+export type IpAccessWhiteListResponse = DefaultReturn & {
+    list?: IpAccessWhiteList[];
+    locations?: IpAccessLocation[];
+};
+
+/**
+ * IpAccessWhiteSaveRequest
+ */
+export type IpAccessWhiteSaveRequest = {
+    id: number;
+    ip: string;
+    disable: boolean;
+    description: string;
+};
+
+/**
+ * IpAccessWhiteSaveResponse
+ */
+export type IpAccessWhiteSaveResponse = DefaultReturn;
+
+/**
  * IpAccess
  */
 export class IpAccess {
@@ -229,4 +266,45 @@ export class IpAccess {
 
         return false;
     }
+
+    /**
+     * getWhiteList
+     */
+    public static async getWhiteList(): Promise<IpAccessWhiteListResponse | null> {
+        const result = await NetFetch.getData('/json/ipaccess/whitelist');
+
+        if (result && result.statusCode) {
+            const response = result as IpAccessWhiteListResponse;
+
+            switch (result.statusCode) {
+                case StatusCodes.OK:
+                    return response;
+
+                case StatusCodes.UNAUTHORIZED:
+                    throw new UnauthorizedError();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * saveWhiteList
+     * @param whitelistEntrie
+     */
+    public static async saveWhiteList(whitelistEntrie: IpAccessWhiteSaveRequest): Promise<boolean> {
+        const result = await NetFetch.postData('/json/ipaccess/whitelist/save', whitelistEntrie);
+
+        if (result && result.statusCode) {
+            const response = result as IpAccessWhiteSaveResponse;
+
+            switch (response.statusCode) {
+                case StatusCodes.OK:
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
 }
