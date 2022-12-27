@@ -498,7 +498,7 @@ export class LocationCard {
      * getHeaderHostPort
      */
     public getHeaderHostPort(): number {
-        return parseInt(this._inputHeaderHostPort.getValue()) | 0;
+        return parseInt(this._inputHeaderHostPort.getValue()) || 0;
     }
 
     /**

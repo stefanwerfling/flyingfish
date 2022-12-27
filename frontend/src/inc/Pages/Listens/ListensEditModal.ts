@@ -294,7 +294,7 @@ export class ListensEditModal extends ModalDialog {
      * getAddressCheckType
      */
     public getAddressCheckType(): number {
-        return parseInt(this._selectAddressCheckType.getSelectedValue(), 10) | ListenAddressCheckType.black;
+        return parseInt(this._selectAddressCheckType.getSelectedValue(), 10) || ListenAddressCheckType.black;
     }
 
     /**
