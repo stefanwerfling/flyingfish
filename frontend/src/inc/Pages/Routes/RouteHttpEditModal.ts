@@ -175,7 +175,8 @@ export class RouteHttpEditModal extends ModalDialog {
                 xforwarded_proto_enable: true,
                 xforwarded_scheme_enable: true,
                 host_enable: true,
-                host_name: ''
+                host_name: '',
+                host_name_port: 0
             });
 
             this._locationCards.push(location);

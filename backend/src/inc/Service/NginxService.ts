@@ -716,6 +716,10 @@ export class NginxService {
                                 host = '$host';
                             }
 
+                            if (locationCollect.location.host_name_port !== 0) {
+                                host += `:${locationCollect.location.host_name_port}`;
+                            }
+
                             location.addVariable('proxy_set_header Host', host);
                         }
 

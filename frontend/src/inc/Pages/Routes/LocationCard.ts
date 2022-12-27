@@ -110,6 +110,12 @@ export class LocationCard {
     protected _inputHeaderHostName: InputBottemBorderOnly2;
 
     /**
+     * input header host port
+     * @protected
+     */
+    protected _inputHeaderHostPort: InputBottemBorderOnly2;
+
+    /**
      * switch x forwarded scheme
      * @protected
      */
@@ -253,9 +259,15 @@ export class LocationCard {
         const groupEnableHeaderHost = new FormGroup(rowHost.createCol(4), 'Header Host Enable');
         this._switchHeaderHost = new Switch(groupEnableHeaderHost, 'locheaderhost');
 
-        const groupHeaderHostName = new FormGroup(rowHost.createCol(8), 'Header Hostname');
+        const rowHostOptions = new FormRow(bodyCardAdv);
+        const groupHeaderHostName = new FormGroup(rowHostOptions.createCol(6), 'Header Hostname');
         this._inputHeaderHostName = new InputBottemBorderOnly2(groupHeaderHostName);
         this._inputHeaderHostName.setPlaceholder('Bypass a Hostname, empty set by $host');
+
+        const groupHeaderHostPort = new FormGroup(rowHostOptions.createCol(6), 'Header Port');
+        this._inputHeaderHostPort = new InputBottemBorderOnly2(groupHeaderHostPort);
+        this._inputHeaderHostPort.setPlaceholder('Only use by diff port on router');
+
 
         const enableL3 = new FormRow(bodyCardAdv);
 
@@ -475,6 +487,21 @@ export class LocationCard {
     }
 
     /**
+     * setHeaderHostPort
+     * @param port
+     */
+    public setHeaderHostPort(port: number): void {
+        this._inputHeaderHostPort.setValue(port > 0 ? `${port}` : '');
+    }
+
+    /**
+     * getHeaderHostPort
+     */
+    public getHeaderHostPort(): number {
+        return parseInt(this._inputHeaderHostPort.getValue()) | 0;
+    }
+
+    /**
      * setXForwardedSchemeEnable
      * @param enable
      */
@@ -548,6 +575,7 @@ export class LocationCard {
         this.setEnableAuth(location.auth_enable);
         this.setHeaderHostEnable(location.host_enable);
         this.setHeaderHostName(location.host_name);
+        this.setHeaderHostPort(location.host_name_port);
         this.setXForwardedSchemeEnable(location.xforwarded_scheme_enable);
         this.setXForwardedProtoEnable(location.xforwarded_proto_enable);
         this.setXForwardedForEnable(location.xforwarded_for_enable);
@@ -581,6 +609,7 @@ export class LocationCard {
             websocket_enable: this.getEnableWebsocket(),
             host_enable: this.getHeaderHostEnable(),
             host_name: this.getHeaderHostName(),
+            host_name_port: this.getHeaderHostPort(),
             xforwarded_scheme_enable: this.getXForwardedSchemeEnable(),
             xforwarded_proto_enable: this.getXForwardedProtoEnable(),
             xforwarded_for_enable: this.getXForwardedForEnable(),

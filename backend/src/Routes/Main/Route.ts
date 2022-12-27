@@ -80,6 +80,7 @@ export type Location = {
     websocket_enable: boolean;
     host_enable: boolean;
     host_name: string;
+    host_name_port: number;
     xforwarded_scheme_enable: boolean;
     xforwarded_proto_enable: boolean;
     xforwarded_for_enable: boolean;
@@ -329,6 +330,7 @@ export class Route {
                                     websocket_enable: alocation.websocket_enable,
                                     host_enable: alocation.host_enable,
                                     host_name: alocation.host_name,
+                                    host_name_port: alocation.host_name_port,
                                     xforwarded_scheme_enable: alocation.xforwarded_scheme_enable,
                                     xforwarded_proto_enable: alocation.xforwarded_proto_enable,
                                     xforwarded_for_enable: alocation.xforwarded_for_enable,
@@ -977,6 +979,7 @@ export class Route {
                 aNewLocation.websocket_enable = aLocation.websocket_enable;
                 aNewLocation.host_enable = aLocation.host_enable;
                 aNewLocation.host_name = aLocation.host_name;
+                aNewLocation.host_name_port = aLocation.host_name_port;
                 aNewLocation.xforwarded_scheme_enable = aLocation.xforwarded_scheme_enable;
                 aNewLocation.xforwarded_proto_enable = aLocation.xforwarded_proto_enable;
                 aNewLocation.xforwarded_for_enable = aLocation.xforwarded_for_enable;

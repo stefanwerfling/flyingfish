@@ -116,6 +116,14 @@ export class NginxLocation extends BaseEntity {
     public host_name!: string;
 
     /**
+     * host name port
+     */
+    @Column({
+        default: 0
+    })
+    public host_name_port!: number;
+
+    /**
      * xforwarded scheme enable
      */
     @Column({

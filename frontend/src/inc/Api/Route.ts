@@ -86,6 +86,7 @@ export type Location = {
     websocket_enable: boolean;
     host_enable: boolean;
     host_name: string;
+    host_name_port: number;
     xforwarded_scheme_enable: boolean;
     xforwarded_proto_enable: boolean;
     xforwarded_for_enable: boolean;
