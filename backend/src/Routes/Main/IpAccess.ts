@@ -169,6 +169,18 @@ export type IpAccessWhiteDeleteRequest = {
 export type IpAccessWhiteDeleteResponse = DefaultReturn;
 
 /**
+ * IpAccessBlackDeleteRequest
+ */
+export type IpAccessBlackDeleteRequest = {
+    id: number;
+};
+
+/**
+ * IpAccessBlackDeleteResponse
+ */
+export type IpAccessBlackDeleteResponse = DefaultReturn;
+
+/**
  * IpAccess
  */
 @JsonController()
@@ -464,6 +476,37 @@ export class IpAccess {
     }
 
     /**
+     * deleteBlacklist
+     * @param session
+     * @param request
+     */
+    @Post('/json/ipaccess/blacklist/delete')
+    public async deleteBlacklist(@Session() session: any, @Body() request: IpAccessBlackDeleteRequest): Promise<IpAccessBlackDeleteResponse> {
+        if ((session.user !== undefined) && session.user.isLogin) {
+            const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
+
+            const result = await ipBlacklistRepository.delete({
+                id: request.id,
+                is_imported: false
+            });
+
+            if (result) {
+                return {
+                    statusCode: StatusCodes.OK
+                };
+            }
+
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR
+            };
+        }
+
+        return {
+            statusCode: StatusCodes.UNAUTHORIZED
+        };
+    }
+
+    /**
      * getWhiteList
      * @param session
      */
@@ -553,12 +596,12 @@ export class IpAccess {
     }
 
     /**
-     * delete
+     * deleteWhitelist
      * @param session
      * @param request
      */
     @Post('/json/ipaccess/whitelist/delete')
-    public async delete(@Session() session: any, @Body() request: IpAccessWhiteDeleteRequest): Promise<IpAccessWhiteDeleteResponse> {
+    public async deleteWhitelist(@Session() session: any, @Body() request: IpAccessWhiteDeleteRequest): Promise<IpAccessWhiteDeleteResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
             const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
 

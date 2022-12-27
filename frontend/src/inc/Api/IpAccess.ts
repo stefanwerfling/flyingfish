@@ -174,6 +174,18 @@ export type IpAccessWhiteDeleteRequest = {
 export type IpAccessWhiteDeleteResponse = DefaultReturn;
 
 /**
+ * IpAccessBlackDeleteRequest
+ */
+export type IpAccessBlackDeleteRequest = {
+    id: number;
+};
+
+/**
+ * IpAccessBlackDeleteResponse
+ */
+export type IpAccessBlackDeleteResponse = DefaultReturn;
+
+/**
  * IpAccess
  */
 export class IpAccess {
@@ -262,15 +274,32 @@ export class IpAccess {
 
     /**
      * saveBlackListOwn
-     * @param blocklistEntrie
+     * @param blacklistEntrie
      */
-    public static async saveBlackListOwn(blocklistEntrie: IpAccessBlackListOwnSaveRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/ipaccess/blacklist/own/save', blocklistEntrie);
+    public static async saveBlackListOwn(blacklistEntrie: IpAccessBlackListOwnSaveRequest): Promise<boolean> {
+        const result = await NetFetch.postData('/json/ipaccess/blacklist/own/save', blacklistEntrie);
 
         if (result && result.statusCode) {
             const response = result as IpAccessBlackListOwnSaveResponse;
 
             switch (response.statusCode) {
+                case StatusCodes.OK:
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * deleteBlackList
+     * @param blacklist
+     */
+    public static async deleteBlackList(blacklist: IpAccessBlackDeleteRequest): Promise<boolean> {
+        const result = await NetFetch.postData('/json/ipaccess/blacklist/delete', blacklist);
+
+        if (result && result.statusCode) {
+            switch (result.statusCode) {
                 case StatusCodes.OK:
                     return true;
             }

@@ -482,20 +482,66 @@ export class IpAccess extends BasePage {
 
                     const tdAction = new Td(trbodyO, '');
 
-                    const editBtn = new Button(tdAction, ButtonType.borderless);
+                    const btnMenu = new ButtonMenu(
+                        tdAction,
+                        IconFa.bars,
+                        true,
+                        ButtonType.borderless
+                    );
 
-                    // eslint-disable-next-line no-new
-                    new Icon(editBtn.getElement(), IconFa.edit);
+                    btnMenu.addMenuItem(
+                        'Edit',
+                        async(): Promise<void> => {
+                            this._ownBlacklistDialog.setTitle('Blacklist Edit');
+                            this._ownBlacklistDialog.resetValues();
+                            this._ownBlacklistDialog.setId(bentry.id);
+                            this._ownBlacklistDialog.setIp(bentry.ip);
+                            this._ownBlacklistDialog.setDisable(bentry.disable);
+                            this._ownBlacklistDialog.setDescription(bentry.description);
+                            this._ownBlacklistDialog.show();
+                        },
+                        IconFa.edit
+                    );
 
-                    editBtn.setOnClickFn((): void => {
-                        this._ownBlacklistDialog.setTitle('Blacklist Edit');
-                        this._ownBlacklistDialog.resetValues();
-                        this._ownBlacklistDialog.setId(bentry.id);
-                        this._ownBlacklistDialog.setIp(bentry.ip);
-                        this._ownBlacklistDialog.setDisable(bentry.disable);
-                        this._ownBlacklistDialog.setDescription(bentry.description);
-                        this._ownBlacklistDialog.show();
-                    });
+                    btnMenu.addDivider();
+
+                    btnMenu.addMenuItem(
+                        'Delete',
+                        (): void => {
+                            DialogConfirm.confirm(
+                                'blacklistDelete',
+                                ModalDialogType.large,
+                                'Delete blacklist entrie',
+                                `Delete this IP: "${bentry.ip}" from blacklist?`,
+                                async(_, dialog) => {
+                                    try {
+                                        if (await IpAccessAPI.deleteBlackList({
+                                            id: bentry.id
+                                        })) {
+                                            this._toast.fire({
+                                                icon: 'success',
+                                                title: 'Blacklist entrie delete success.'
+                                            });
+                                        }
+                                    } catch ({message}) {
+                                        this._toast.fire({
+                                            icon: 'error',
+                                            title: message
+                                        });
+                                    }
+
+                                    dialog.hide();
+
+                                    if (this._onLoadTable) {
+                                        this._onLoadTable();
+                                    }
+                                },
+                                undefined,
+                                'Delete'
+                            );
+                        },
+                        IconFa.trash
+                    );
                 }
             }
 
