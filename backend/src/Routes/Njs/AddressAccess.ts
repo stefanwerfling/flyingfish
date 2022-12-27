@@ -185,12 +185,35 @@ export class AddressAccess {
         if (address) {
             Logger.getLogger().info(`AddressAccess::_listCheckWhiteList: Address(${realip_remote_addr}) found in whitelist!`);
 
+            // update and not await
+            AddressAccess._updateWhiteListAccess(address.id, address.count_access + 1).then();
+
             return true;
         }
 
         Logger.getLogger().info(`AddressAccess::_listCheckWhiteList: Address(${realip_remote_addr}) not found in whitelist.`);
 
         return false;
+    }
+
+    /**
+     * _updateWhiteListAccess
+     * @param ipWhitelistId
+     * @param newAccessCount
+     * @protected
+     */
+    protected static async _updateWhiteListAccess(ipWhitelistId: number, newAccessCount: number): Promise<void> {
+        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+
+        await ipWhitelistRepository
+        .createQueryBuilder()
+        .update()
+        .set({
+            last_access: DateHelper.getCurrentDbTime(),
+            count_access: newAccessCount
+        })
+        .where('id = :id', {id: ipWhitelistId})
+        .execute();
     }
 
 }
