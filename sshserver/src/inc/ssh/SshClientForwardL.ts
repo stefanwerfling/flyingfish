@@ -79,6 +79,8 @@ export class SshClientForwardL extends SshClientForward {
                 self.getSshClient().logToClient('SshClientForwardL::start::close: close connection to destination.');
             });
 
+            self.getSshClient().logToClient(`SshClientForwardL::start: connect to ${forwardPort!.destination!}:${forwardPort!.port!}`);
+
             this._fclient.connect(
                 forwardPort!.port!,
                 forwardPort!.destination!

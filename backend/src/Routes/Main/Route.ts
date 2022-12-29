@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Not} from 'typeorm';
 import {Config} from '../../inc/Config/Config.js';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
@@ -605,7 +606,34 @@ export class Route {
         @Body() request: RouteStreamSave
     ): Promise<RouteStreamSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
+            // check is listen select ----------------------------------------------------------------------------------
+
+            if (request.stream.listen_id === 0) {
+                return {
+                    status: 'error',
+                    error: 'Please select a listen!'
+                };
+            }
+
+            // check is stream listen and domain already exist ---------------------------------------------------------
+
             const streamRepository = DBHelper.getRepository(NginxStreamDB);
+
+            const caStream = await streamRepository.countBy({
+                listen_id: request.stream.listen_id,
+                domain_id: request.domainid,
+                id: Not(request.stream.id)
+            });
+
+            if (caStream > 0) {
+                return {
+                    status: 'error',
+                    error: 'You can only add one stream by this listen to this domain!'
+                };
+            }
+
+            // ---------------------------------------------------------------------------------------------------------
+
             const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
 
             let aStream: NginxStreamDB|null = null;

@@ -232,9 +232,9 @@ export class SshClient {
         if (this._shellChannel) {
             this._shellChannel.write(msg);
             this._shellChannel.write('\n');
-        } else {
-            console.log(`SshClientHander::logToClient:(${this._clientInfo.ip}): ${msg}`);
         }
+
+        console.log(`SshClientHander::logToClient:(${this._clientInfo.ip}): ${msg}`);
     }
 
     /**
