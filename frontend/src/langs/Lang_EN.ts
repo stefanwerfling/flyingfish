@@ -7,7 +7,9 @@ export class Lang_EN implements LangDefine {
 
     private _content: {[index: string]: string;} = {
         title: 'FlyingFish',
-        login_title: '<b>FlyingFish</b>'
+        login_title: '<b>FlyingFish</b>',
+        copyrightname: '<a href="https://github.com/stefanwerfling/flyingfish/" target="_blank">FlyingFish</a>',
+        version: 'v1.0.0'
     };
 
     /**
