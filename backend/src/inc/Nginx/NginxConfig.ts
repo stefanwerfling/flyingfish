@@ -46,7 +46,7 @@ export class NginxConfig {
         this._confFile = confFile;
 
         // set defaults ------------------------------------------------------------------------------------------------
-
+        this._variables.set('user', 'root');
         this._variables.set('worker_processes', 'auto');
         this._variables.set('pid', '');
         this._variables.set('error_log', '');

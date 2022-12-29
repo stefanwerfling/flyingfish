@@ -128,7 +128,6 @@ export class NginxService {
         // add nginx global variables ----------------------------------------------------------------------------------
 
         conf?.addVariable('daemon', 'off');
-        conf?.addVariable('user', 'root');
         conf?.addVariable('worker_processes', 'auto');
         conf?.addVariable('pcre_jit', 'on');
 
