@@ -253,6 +253,7 @@ export class LocationCard {
 
         const groupEnableAuth = new FormGroup(enableL1.createCol(6), 'Authentication Enable');
         this._switchAuth = new Switch(groupEnableAuth, 'locauth');
+        this._switchAuth.hide();    // todo
 
         const rowHost = new FormRow(bodyCardAdv);
 
