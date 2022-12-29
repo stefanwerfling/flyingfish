@@ -134,9 +134,9 @@ export class UpnpNat {
             const natportRepository = DBHelper.getRepository(NatPortDB);
 
             const list: UpnpNatPort[] = [];
-            const entrys = await natportRepository.find();
+            const entries = await natportRepository.find();
 
-            for (const entry of entrys) {
+            for (const entry of entries) {
                 list.push({
                     id: entry.id,
                     postion: entry.postion,

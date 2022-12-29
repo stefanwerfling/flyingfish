@@ -55,9 +55,9 @@ export class GatewayIdentifier {
             const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
             const list: GatewayIdentifierEntry[] = [];
-            const entrys = await giRepository.find();
+            const entries = await giRepository.find();
 
-            for (const entry of entrys) {
+            for (const entry of entries) {
                 list.push({
                     id: entry.id,
                     networkname: entry.networkname,

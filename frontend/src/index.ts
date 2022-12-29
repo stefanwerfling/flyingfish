@@ -14,6 +14,7 @@ import {Routes as RoutesPage} from './inc/Pages/Routes';
 import {Settings as SettingsPage} from './inc/Pages/Settings';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway';
+import {Users as UsersPage} from './inc/Pages/Users';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
 import {UtilColor} from './inc/Utils/UtilColor';
 import {UtilRedirect} from './inc/Utils/UtilRedirect';
@@ -175,7 +176,17 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 name: 'settings',
                 onClick: (): void => {
                     loadPage(new SettingsPage());
-                }
+                },
+                items: [
+                    {
+                        title: 'Users',
+                        name: 'users',
+                        icon: 'fa-solid fa-users',
+                        onClick: (): void => {
+                            loadPage(new UsersPage());
+                        }
+                    }
+                ]
             }
         ];
 

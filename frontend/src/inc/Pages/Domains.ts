@@ -45,12 +45,6 @@ export class Domains extends BasePage {
     protected _domainRecordDialog: DomainRecordEditModal;
 
     /**
-     * toast
-     * @protected
-     */
-    protected _toast: any;
-
-    /**
      * constructor
      */
     public constructor() {
