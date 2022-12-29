@@ -116,6 +116,7 @@ export class Routes extends BasePage {
                         listen_id: this._routeStreamDialog.getListen(),
                         destination_listen_id: 0,
                         destination_type: this._routeStreamDialog.getDestinatonType(),
+                        use_as_default: this._routeStreamDialog.getUseAsDefault(),
                         ssh_r_type: NginxStreamSshR.none,
                         load_balancing_algorithm: this._routeStreamDialog.getLoadBalancingAlgorithm(),
                         upstreams: []
@@ -485,8 +486,12 @@ export class Routes extends BasePage {
 
                         // options td ----------------------------------------------------------------------------------
 
-                        // eslint-disable-next-line no-new
-                        new Td(trbody, '');
+                        const soptionTd = new Td(trbody, '');
+
+                        if (value.use_as_default) {
+                            new Badge(soptionTd, 'D', BadgeType.danger);
+                            soptionTd.append('&nbsp;');
+                        }
 
                         // action td -----------------------------------------------------------------------------------
 
@@ -512,6 +517,7 @@ export class Routes extends BasePage {
                                     this._routeStreamDialog.setListen(`${value.listen_id}`);
                                     this._routeStreamDialog.setAliasName(value.alias_name);
                                     this._routeStreamDialog.setDestinationType(value.destination_type);
+                                    this._routeStreamDialog.setUseAsDefault(value.use_as_default);
                                     this._routeStreamDialog.setLoadBalancingAlgorithm(value.load_balancing_algorithm);
 
                                     if (value.index > 0) {

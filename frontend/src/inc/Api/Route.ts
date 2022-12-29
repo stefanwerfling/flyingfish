@@ -60,6 +60,7 @@ export type RouteStream = {
     alias_name: string;
     index: number;
     isdefault: boolean;
+    use_as_default: boolean;
     load_balancing_algorithm: string;
     ssh_r_type: number;
     ssh?: RouteStreamSSH;

@@ -46,6 +46,7 @@ export type RouteStream = {
     alias_name: string;
     index: number;
     isdefault: boolean;
+    use_as_default: boolean;
     load_balancing_algorithm: string;
     ssh_r_type: number;
     ssh?: RouteStreamSSH;
@@ -237,6 +238,7 @@ export class Route {
                                 alias_name: tstream.alias_name,
                                 index: tstream.index,
                                 isdefault: tstream.isdefault,
+                                use_as_default: tstream.use_as_default,
                                 load_balancing_algorithm: tstream.load_balancing_algorithm,
                                 destination_type: tstream.destination_type,
                                 ssh_r_type: tstream.ssh_r_type,
@@ -647,6 +649,7 @@ export class Route {
 
             aStream.destination_type = request.stream.destination_type;
             aStream.destination_listen_id = request.stream.destination_listen_id;
+            aStream.use_as_default = request.stream.use_as_default;
             aStream.load_balancing_algorithm = request.stream.load_balancing_algorithm;
             aStream.ssh_r_type = NginxStreamSshR.none;
             aStream.sshport_id = 0;

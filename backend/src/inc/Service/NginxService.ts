@@ -498,7 +498,7 @@ export class NginxService {
                     }
                 }
 
-                if (tstream.isdefault) {
+                if (tstream.isdefault || tstream.use_as_default) {
                     defaultMapDomain = upstreamName;
                 } else {
                     aMap.addVariable(`${domainName}`, upstreamName);

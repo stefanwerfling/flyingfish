@@ -229,7 +229,7 @@ export class RouteHttpEditModal extends ModalDialog {
         const bodyCardSsl = jQuery('<div class="card-body"/>').appendTo(tabSsl.body);
 
         const groupSslEnable = new FormGroup(bodyCardSsl, 'SSL Enable');
-        this._switchSslEnable = new Switch(groupSslEnable.getElement(), 'ssl_enable');
+        this._switchSslEnable = new Switch(groupSslEnable, 'ssl_enable');
 
         const groupSslProvider = new FormGroup(bodyCardSsl, 'SSL Provider');
         this._selectSslProvider = new SelectBottemBorderOnly2(groupSslProvider);

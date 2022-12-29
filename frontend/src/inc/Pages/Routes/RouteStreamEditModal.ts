@@ -7,6 +7,7 @@ import {Card, CardBodyType} from '../../Bambooo/Content/Card/Card';
 import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
 import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
 import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
+import {Switch} from '../../Bambooo/Content/Form/Switch';
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
@@ -177,6 +178,12 @@ export class RouteStreamEditModal extends ModalDialog {
      * @protected
      */
     protected _selectDestinationListen: SelectBottemBorderOnly2;
+
+    /**
+     * use the stream as default
+     * @protected
+     */
+    protected _switchUseAsDefault: Switch;
 
     /**
      * load balancing algorithm
@@ -361,6 +368,10 @@ export class RouteStreamEditModal extends ModalDialog {
         // tab advanced ------------------------------------------------------------------------------------------------
 
         const bodyCardAdvanced = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
+
+        const groupUseAsDefault = new FormGroup(bodyCardAdvanced, 'Use as default stream');
+        this._switchUseAsDefault = new Switch(groupUseAsDefault, 'use_as_default');
+
         const groupLoadBalanceAlg = new FormGroup(bodyCardAdvanced, 'Load balancing algorithm');
         this._selectLoadBalanceAlg = new SelectBottemBorderOnly2(groupLoadBalanceAlg);
 
@@ -751,6 +762,21 @@ export class RouteStreamEditModal extends ModalDialog {
     }
 
     /**
+     * setUseAsDefault
+     * @param asdefault
+     */
+    public setUseAsDefault(asdefault: boolean): void {
+        this._switchUseAsDefault.setEnable(asdefault);
+    }
+
+    /**
+     * getUseAsDefault
+     */
+    public getUseAsDefault(): boolean {
+        return this._switchUseAsDefault.isEnable();
+    }
+
+    /**
      * setLoadBalancingAlgorithm
      * @param alg
      */
@@ -776,6 +802,7 @@ export class RouteStreamEditModal extends ModalDialog {
         this.setListen('0');
         this.setDestinationType(NginxStreamDestinationType.listen);
         this.setSshRType(NginxStreamSshR.none);
+        this.setUseAsDefault(false);
         this._inputSshPort.setValue('');
         this._navTab.setTabSelect(0);
         this._inputSshPassword.setPlaceholder('');

@@ -93,12 +93,20 @@ export class NginxStream extends BaseEntity {
     public alias_name!: string;
 
     /**
-     * is default
+     * is default (by setup)
      */
     @Column({
         default: false
     })
     public isdefault!: boolean;
+
+    /**
+     * use this stream as default
+     */
+    @Column({
+        default: false
+    })
+    public use_as_default!: boolean;
 
     /**
      * ssh r type
