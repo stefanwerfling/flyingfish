@@ -909,6 +909,17 @@ export class Route {
         @Body() request: RouteHttpSave
     ): Promise<RouteHttpSaveResponse> {
         if ((session.user !== undefined) && session.user.isLogin) {
+            // check is listen select ----------------------------------------------------------------------------------
+
+            if (request.http.listen_id === 0) {
+                return {
+                    status: 'error',
+                    error: 'Please select a listen!'
+                };
+            }
+
+            // ---------------------------------------------------------------------------------------------------------
+
             const httpRepository = DBHelper.getRepository(NginxHttpDB);
             const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
