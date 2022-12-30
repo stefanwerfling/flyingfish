@@ -1,9 +1,8 @@
 ## Quick Setup
 
 #### 1. Install Docker and Docker-Compose
-
-    - [Docker Install documentation](https://docs.docker.com/install/)
-    - [Docker-Compose Install documentation](https://docs.docker.com/compose/install/)
+- [Docker Install documentation](https://docs.docker.com/install/)
+- [Docker-Compose Install documentation](https://docs.docker.com/compose/install/)
 
 #### 2. Create files:
 
