@@ -7,7 +7,8 @@
 On the "Flyingfish", a nginx proxy connection manager and more.
 </h1>
 
-[![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.0.0-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
+[![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.0.0--alpha-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
+![Docker Pulls](https://img.shields.io/docker/pulls/stefanwerfling/flyingfish?style=for-the-badge)
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 ![Issues](https://img.shields.io/github/issues/stefanwerfling/flyingfish?style=for-the-badge)
 ![Forks](https://img.shields.io/github/forks/stefanwerfling/flyingfish?style=for-the-badge)
