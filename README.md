@@ -26,6 +26,9 @@ Flyingfish is a proxy manager with its own DNS server, own SSH server, DynDNS, U
 
 With a frontend, it simplifies setup and management. Each route can be edited with extensive settings.
 
+# Docker Hub
+[FlyingFish Image](https://hub.docker.com/r/stefanwerfling/flyingfish)
+
 # Index
 1. [Project Description](doc/description.md)
 2. [First installation](doc/firstinstall.md)
