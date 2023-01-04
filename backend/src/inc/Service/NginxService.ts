@@ -493,6 +493,14 @@ export class NginxService {
                             );
                     }
 
+                    if (upStream.countServer() === 0) {
+                        Logger.getLogger().warn(
+                            `NginxService::_loadConfig: upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`
+                        );
+
+                        return;
+                    }
+
                     if (!conf?.getStream().hashUpstream(upStream.getStreamName())) {
                         conf?.getStream().addUpstream(upStream);
                     }

@@ -77,6 +77,13 @@ export class Upstream extends Context {
     }
 
     /**
+     * countServer
+     */
+    public countServer(): number {
+        return this._server.length;
+    }
+
+    /**
      * setAlgorithm
      * @param algorithm
      */
