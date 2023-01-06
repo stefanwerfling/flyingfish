@@ -426,6 +426,7 @@ export class NginxService {
                                     });
                                     break;
 
+                                // ssh r out ---------------------------------------------------------------------------
                                 case NginxStreamSshR.out:
                                     if (collectStream.sshport) {
                                         // fill default ssh server
