@@ -1,4 +1,13 @@
 import moment from 'moment';
+import {
+    BlacklistCategory,
+    IpAccess as IpAccessAPI,
+    IpAccessBlackListImportSaveRequest,
+    IpAccessBlackListOwn,
+    IpAccessLocation,
+    IpAccessMaintainer,
+    IpAccessWhiteSaveRequest
+} from '../Api/IpAccess';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
@@ -15,13 +24,6 @@ import {Tr} from '../Bambooo/Content/Table/Tr';
 import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
-import {
-    BlacklistCategory,
-    IpAccess as IpAccessAPI, IpAccessBlackListOwn,
-    IpAccessBlackListImportSaveRequest,
-    IpAccessLocation,
-    IpAccessMaintainer, IpAccessWhiteSaveRequest
-} from '../Api/IpAccess';
 import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal';
 import {IpAccessBlacklistOwnModal} from './IpAccess/IpAccessBlacklistOwnModal';
 import {IpAccessWhitelistModal} from './IpAccess/IpAccessWhitelistModal';
@@ -81,7 +83,7 @@ export class IpAccess extends BasePage {
             this._ownBlacklistDialog.setTitle('Blacklist Add');
             this._ownBlacklistDialog.show();
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
 
@@ -91,7 +93,7 @@ export class IpAccess extends BasePage {
             this._whitelistDialog.setTitle('Whitelist Add');
             this._whitelistDialog.show();
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         // -------------------------------------------------------------------------------------------------------------
 

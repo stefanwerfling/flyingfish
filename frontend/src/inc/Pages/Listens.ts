@@ -5,8 +5,9 @@ import {Card} from '../Bambooo/Content/Card/Card';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {Button, ButtonType} from '../Bambooo/Content/Form/Button';
-import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
+import {ButtonType} from '../Bambooo/Content/Form/Button';
+import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
+import {IconFa} from '../Bambooo/Content/Icon/Icon';
 import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
@@ -59,7 +60,7 @@ export class Listens extends BasePage {
             this._listenDialog.setTitle('Listen Add');
             this._listenDialog.show();
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
 
@@ -219,76 +220,81 @@ export class Listens extends BasePage {
                     new Td(trbody, `${entry.disable ? 'yes' : 'no'}`);
 
                     const tdAction = new Td(trbody, '');
-                    const editBtn = new Button(tdAction, ButtonType.borderless);
 
-                    // eslint-disable-next-line no-new
-                    new Icon(editBtn.getElement(), IconFa.edit);
+                    const btnMenu = new ButtonMenu(
+                        tdAction,
+                        IconFa.bars,
+                        true,
+                        ButtonType.borderless
+                    );
 
-                    editBtn.setOnClickFn((): void => {
-                        this._listenDialog.resetValues();
-                        this._listenDialog.setId(entry.id);
-                        this._listenDialog.setTitle('Listen Edit');
-                        this._listenDialog.setName(entry.name);
-                        this._listenDialog.setType(`${entry.type}`);
-                        this._listenDialog.setPort(`${entry.port}`);
-                        this._listenDialog.setProtocol(`${entry.protocol}`);
-                        this._listenDialog.setDescription(entry.description);
-                        this._listenDialog.setIp6(entry.enable_ipv6);
-                        this._listenDialog.setAddressCheck(entry.check_address);
-                        this._listenDialog.setAddressCheckType(entry.check_address_type);
-                        this._listenDialog.setDisable(entry.disable);
-                        this._listenDialog.show();
-                    });
+                    btnMenu.addMenuItem(
+                        'Edit',
+                        async(): Promise<void> => {
+                            this._listenDialog.resetValues();
+                            this._listenDialog.setId(entry.id);
+                            this._listenDialog.setTitle('Listen Edit');
+                            this._listenDialog.setName(entry.name);
+                            this._listenDialog.setType(`${entry.type}`);
+                            this._listenDialog.setPort(`${entry.port}`);
+                            this._listenDialog.setProtocol(`${entry.protocol}`);
+                            this._listenDialog.setDescription(entry.description);
+                            this._listenDialog.setIp6(entry.enable_ipv6);
+                            this._listenDialog.setAddressCheck(entry.check_address);
+                            this._listenDialog.setAddressCheckType(entry.check_address_type);
+                            this._listenDialog.setDisable(entry.disable);
+                            this._listenDialog.show();
+                        },
+                        IconFa.edit);
 
                     if (!entry.fix) {
-                        const trashBtn = new Button(tdAction, ButtonType.borderless);
+                        btnMenu.addDivider();
 
-                        // eslint-disable-next-line no-new
-                        new Icon(trashBtn.getElement(), IconFa.trash);
-
-                        trashBtn.setOnClickFn((): void => {
-                            DialogConfirm.confirm(
-                                'dcDelete',
-                                ModalDialogType.small,
-                                'Delete Listen',
-                                `Delete this Listen "${entry.name}" Port: ${entry.port}?`,
-                                async(_, dialog) => {
-                                    try {
-                                        if (await ListenAPI.deleteListen(entry)) {
-                                            this._toast.fire({
-                                                icon: 'success',
-                                                title: 'Listen delete success.'
-                                            });
-
-                                            if (await NginxAPI.reload()) {
+                        btnMenu.addMenuItem(
+                            'Delete',
+                            (): void => {
+                                DialogConfirm.confirm(
+                                    'dcDelete',
+                                    ModalDialogType.small,
+                                    'Delete Listen',
+                                    `Delete this Listen "${entry.name}" Port: ${entry.port}?`,
+                                    async(_, dialog) => {
+                                        try {
+                                            if (await ListenAPI.deleteListen(entry)) {
                                                 this._toast.fire({
                                                     icon: 'success',
-                                                    title: 'Nginx server reload config success.'
+                                                    title: 'Listen delete success.'
                                                 });
-                                            } else {
-                                                this._toast.fire({
-                                                    icon: 'error',
-                                                    title: 'Nginx server reload config faild, please check your last settings!'
-                                                });
+
+                                                if (await NginxAPI.reload()) {
+                                                    this._toast.fire({
+                                                        icon: 'success',
+                                                        title: 'Nginx server reload config success.'
+                                                    });
+                                                } else {
+                                                    this._toast.fire({
+                                                        icon: 'error',
+                                                        title: 'Nginx server reload config faild, please check your last settings!'
+                                                    });
+                                                }
                                             }
+                                        } catch ({message}) {
+                                            this._toast.fire({
+                                                icon: 'error',
+                                                title: message
+                                            });
                                         }
-                                    } catch ({message}) {
-                                        this._toast.fire({
-                                            icon: 'error',
-                                            title: message
-                                        });
-                                    }
 
-                                    dialog.hide();
+                                        dialog.hide();
 
-                                    if (this._onLoadTable) {
-                                        this._onLoadTable();
-                                    }
-                                },
-                                undefined,
-                                'Delete'
-                            );
-                        });
+                                        if (this._onLoadTable) {
+                                            this._onLoadTable();
+                                        }
+                                    },
+                                    undefined,
+                                    'Delete'
+                                );
+                            }, IconFa.trash);
                     }
                 }
             }

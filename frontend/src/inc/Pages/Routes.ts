@@ -10,7 +10,7 @@ import {
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {Card} from '../Bambooo/Content/Card/Card';
+import {Card, CardBodyType, CardLine, CardType} from '../Bambooo/Content/Card/Card';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
@@ -94,7 +94,7 @@ export class Routes extends BasePage {
             }
 
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.redo);
 
         // -------------------------------------------------------------------------------------------------------------
 
@@ -299,7 +299,12 @@ export class Routes extends BasePage {
 
                 for (const entry of routes.list) {
                     const row = new ContentRow(content);
-                    const card = new Card(new ContentCol(row, ContentColSize.col12));
+                    const card = new Card(
+                        new ContentCol(row, ContentColSize.col12),
+                        CardBodyType.table,
+                        entry.domainfix ? CardType.danger : CardType.primary,
+                        CardLine.outline
+                    );
 
                     jQuery('<span>Routes for Domain:&nbsp;</span>').appendTo(card.getTitleElement());
 
@@ -309,25 +314,35 @@ export class Routes extends BasePage {
                         // eslint-disable-next-line no-new
                         new Badge(card.getTitleElement(), 'default', BadgeType.danger);
                     } else {
-                        // eslint-disable-next-line no-new
-                        new Badge(card.getTitleElement(), `${entry.domainname}`, BadgeType.secondary);
-
-                        card.getTitleElement().append('&nbsp;');
-
                         const btnOpenUrl = new ButtonMenu(
                             card.getTitleElement(),
-                            IconFa.share,
+                            null,
                             true,
                             ButtonType.borderless
                         );
 
+                        // eslint-disable-next-line no-new
+                        new Badge(btnOpenUrl, `${entry.domainname}`, BadgeType.secondary);
+
                         btnOpenUrl.addMenuItem(`http://${entry.domainname}`, () => {
                             window.open(`http://${entry.domainname}`, '_blank');
-                        });
+                        }, IconFa.external_link);
 
                         btnOpenUrl.addMenuItem(`https://${entry.domainname}`, () => {
                             window.open(`https://${entry.domainname}`, '_blank');
-                        });
+                        }, IconFa.external_link);
+
+                        btnOpenUrl.addDivider();
+
+                        btnOpenUrl.addMenuItem('Copy to clipboard', () => {
+                            navigator.clipboard.writeText(entry.domainname);
+
+                            this._toast.fire({
+                                icon: 'success',
+                                title: 'Domainname copy to clipboard'
+                            });
+
+                        }, IconFa.copy);
                     }
 
                     if (!entry.domainfix) {

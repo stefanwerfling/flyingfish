@@ -51,7 +51,7 @@ export class Gateway extends BasePage {
             this._gatewayDialog.setTitle('Gateway Add');
             this._gatewayDialog.show();
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         // -------------------------------------------------------------------------------------------------------------
 

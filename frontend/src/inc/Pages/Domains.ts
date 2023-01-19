@@ -3,8 +3,9 @@ import {Domain as DomainAPI, DomainData} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {ButtonClass, ButtonDefault} from '../Bambooo/Content/Button/ButtonDefault';
-import {Card} from '../Bambooo/Content/Card/Card';
+import {Card, CardBodyType, CardLine, CardType} from '../Bambooo/Content/Card/Card';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
+import {ContentDisable} from '../Bambooo/Content/ContentDisable';
 import {ContentRow} from '../Bambooo/Content/ContentRow';
 import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
 import {ButtonType} from '../Bambooo/Content/Form/Button';
@@ -14,7 +15,6 @@ import {Table} from '../Bambooo/Content/Table/Table';
 import {Td} from '../Bambooo/Content/Table/Td';
 import {Th} from '../Bambooo/Content/Table/Th';
 import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ContentDisable} from '../Bambooo/Content/ContentDisable';
 import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
 import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
 import {BasePage} from './BasePage';
@@ -66,7 +66,7 @@ export class Domains extends BasePage {
             this._domainDialog.setTitle('Domain Add');
             this._domainDialog.show();
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
 
@@ -194,34 +194,49 @@ export class Domains extends BasePage {
                     }
 
                     const row1 = new ContentRow(content);
-                    const card = new Card(new ContentCol(row1, ContentColSize.col12));
+                    const card = new Card(
+                        new ContentCol(row1, ContentColSize.col12),
+                        CardBodyType.table,
+                        CardType.primary,
+                        CardLine.outline
+                    );
 
                     jQuery('<span>Domainname/Zone:&nbsp;</span>').appendTo(card.getTitleElement());
 
-                    if (domain.fix) {
-                        // eslint-disable-next-line no-new
-                        new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.danger);
-                    } else {
-                        // eslint-disable-next-line no-new
-                        new Badge(card.getTitleElement(), `${domain.name}`, BadgeType.secondary);
-                    }
-
-                    card.getTitleElement().append('&nbsp;');
-
                     const btnOpenUrl = new ButtonMenu(
                         card.getTitleElement(),
-                        IconFa.share,
+                        null,
                         true,
                         ButtonType.borderless
                     );
 
+                    if (domain.fix) {
+                        // eslint-disable-next-line no-new
+                        new Badge(btnOpenUrl, `${domain.name}`, BadgeType.danger);
+                    } else {
+                        // eslint-disable-next-line no-new
+                        new Badge(btnOpenUrl, `${domain.name}`, BadgeType.secondary);
+                    }
+
                     btnOpenUrl.addMenuItem(`http://${domain.name}`, () => {
                         window.open(`http://${domain.name}`, '_blank');
-                    });
+                    }, IconFa.external_link);
 
                     btnOpenUrl.addMenuItem(`https://${domain.name}`, () => {
                         window.open(`https://${domain.name}`, '_blank');
-                    });
+                    }, IconFa.external_link);
+
+                    btnOpenUrl.addDivider();
+
+                    btnOpenUrl.addMenuItem('Copy to clipboard', () => {
+                        navigator.clipboard.writeText(domain.name);
+
+                        this._toast.fire({
+                            icon: 'success',
+                            title: 'Domainname copy to clipboard'
+                        });
+
+                    }, IconFa.copy);
 
                     const funcEdit = (): void => {
                         this._domainDialog.setTitle('Domain Edit');

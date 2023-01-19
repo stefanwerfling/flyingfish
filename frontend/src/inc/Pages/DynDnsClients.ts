@@ -79,7 +79,7 @@ export class DynDnsClients extends BasePage {
             }
 
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
 

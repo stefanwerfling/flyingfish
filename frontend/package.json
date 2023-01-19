@@ -8,7 +8,7 @@
   },
   "keywords": [],
   "author": "Stefan Werfling",
-  "license": "ISC",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "admin-lte": "^3.2.0",
     "bambooo": "github:stefanwerfling/bambooo",

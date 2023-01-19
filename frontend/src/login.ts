@@ -6,7 +6,7 @@ import {Login} from './inc/Api/Login';
     jQuery('#login_title').html(Lang.i().l('login_title'));
 
     jQuery(async() => {
-        jQuery('#btnsignin').on('click', async(): Promise<void> => {
+        const fnLogin = async(): Promise<void> => {
             const email = jQuery('#input_email').val() as string;
             const password = jQuery('#input_password').val() as string;
 
@@ -21,6 +21,20 @@ import {Login} from './inc/Api/Login';
                     alert(e);
                 }
             }
+        };
+
+        jQuery('#input_email').on('keypress',function(ev) {
+            if (ev.key === "Enter") {
+                jQuery('#input_password').trigger("focus");
+            }
         });
+
+        jQuery('#input_password').on('keypress',function(ev) {
+            if (ev.key === "Enter") {
+                fnLogin();
+            }
+        });
+
+        jQuery('#btnsignin').on('click', fnLogin);
     });
 })();

@@ -107,7 +107,7 @@ export class BlacklistService {
 
                 if (ipBlacklistEntry) {
 
-                    // check have category ---------------------------------------------------------------------------------
+                    // check have category -----------------------------------------------------------------------------
 
                     if (catenum) {
                         const blackCate = await ipBlacklistCategoryRepository.findOne({
@@ -127,7 +127,7 @@ export class BlacklistService {
                         }
                     }
 
-                    // link maintainer -------------------------------------------------------------------------------------
+                    // link maintainer ---------------------------------------------------------------------------------
 
                     if (ipListMaintainer) {
                         const blackMaintainer = await ipBlacklistMaintainerRepository.findOne({
@@ -146,7 +146,7 @@ export class BlacklistService {
                         }
                     }
 
-                    // update blacklist entry ------------------------------------------------------------------------------
+                    // update blacklist entry --------------------------------------------------------------------------
 
                     ipBlacklistEntry!.last_update = DateHelper.getCurrentDbTime();
 

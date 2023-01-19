@@ -17,6 +17,8 @@ export class Settings {
     public static readonly BLACKLIST_IMPORTER = 'blacklist_importer';
     public static readonly BLACKLIST_IMPORTER_DEFAULT = '';
 
+    // BLACKLIST -------------------------------------------------------------------------------------------------------
+
     public static readonly BLACKLIST_IPLOCATE = 'blacklist_iplocate';
     public static readonly BLACKLIST_IPLOCATE_DEFAULT = '';
 

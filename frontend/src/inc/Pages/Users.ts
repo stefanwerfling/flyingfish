@@ -50,7 +50,7 @@ export class Users extends BasePage {
             this._userDialog.setTitle('User add');
             this._userDialog.show();
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         // -------------------------------------------------------------------------------------------------------------
 

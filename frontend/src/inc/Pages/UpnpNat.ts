@@ -54,7 +54,7 @@ export class UpnpNat extends BasePage {
             this._upnpnatDialog.setTitle('Upnp-Nat Add');
             this._upnpnatDialog.show();
             return false;
-        }, 'btn btn-block btn-default btn-sm');
+        }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         // -------------------------------------------------------------------------------------------------------------
 

@@ -141,6 +141,7 @@ export class SshClient {
             if (user) {
                 // empty password not supported
                 if (user.password === '') {
+                    console.log('SshClient::_authentication: empty password not allowed!');
                     ctx.reject();
                     return;
                 }
@@ -170,8 +171,16 @@ export class SshClient {
                         ctx.accept();
                         return;
                     }
+
+                    console.log(`SshClient::_authentication: port not found in DB by id: ${user.id}`);
+                } else {
+                    console.log('SshClient::_authentication: user password is wrong!');
                 }
+            } else {
+                console.log(`SshClient::_authentication: user not found "${ctx.username}"!`);
             }
+        } else {
+            console.log(`SshClient::_authentication: method "${ctx.method}" not supproted!`);
         }
 
         ctx.reject();

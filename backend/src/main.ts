@@ -15,6 +15,7 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {Logger} from './inc/Logger/Logger.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
 import {IpLocationService} from './inc/Service/IpLocationService.js';
+import {IpService} from './inc/Service/IpService.js';
 import {NginxStatusService} from './inc/Service/NginxStatusService.js';
 import {SslCertService} from './inc/Service/SslCertService.js';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
@@ -275,6 +276,7 @@ import exitHook from 'async-exit-hook';
     // not await
     BlacklistService.getInstance().start();
     IpLocationService.getInstance().start();
+    IpService.getInstance().start();
 
     // exit ------------------------------------------------------------------------------------------------------------
 
