@@ -45,7 +45,7 @@ With a frontend, it simplifies setup and management. Each route can be edited wi
 
 	All port requests (HTTP, HTTPS, DNS) first go through Nginx as a stream. A check for the IP with a blacklist or whitelist can be set for each stream.
 
-	The whitelist allows access to the port only for the stored IPs. As an example, a server online saves its backup on port 2224 on the FlyingFish Listed. This TCP stream with port 2224 is saved in the intranet on a NAS with SSH. Now the whitelist takes effect and there is only one server in it. The result is now that there are no more "BrutForce" attempts on the SSH from the NAS.
+	The whitelist allows access to the port only for the stored IPs.
 
 	The blacklist is divided into two parts. Own added IPs that no longer get access, or the imported list. The imported list is a list of all known attackers and scanners from around the world.
 
