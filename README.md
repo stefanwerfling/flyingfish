@@ -74,20 +74,28 @@ With a frontend, it simplifies setup and management. Each route can be edited wi
 <table>
     <tr>
         <td> 
-            <img src="doc/screenshots/login.png" alt="1" width="360px" >
+            <img src="doc/screenshots/login.png" alt="1" width="360px" />
         </td>
         <td>
-            <img src="doc/screenshots/listens.png" alt="1" width="360px" >
+			&nbsp;
         </td>
     </tr>
     <tr>
         <td>
-            <img src="doc/screenshots/listens_edit.png" alt="1" width="360px" >
+			<img src="doc/screenshots/listens.png" alt="1" width="360px" />
         </td>
         <td>
-            &nbsp;
+            <img src="doc/screenshots/listens_edit.png" alt="1" width="360px" />
         </td>
     </tr>
+	<tr>
+		<td>
+			<img src="doc/screenshots/ip_access.png" alt="1" width="360px" />
+		</td>
+		<td>
+			<img src="doc/screenshots/gateway.png" alt="1" width="360px" />
+		</td>
+	</tr>
 </table>
 
 # Contributors
