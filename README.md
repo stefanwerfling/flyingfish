@@ -96,6 +96,38 @@ With a frontend, it simplifies setup and management. Each route can be edited wi
 			<img src="doc/screenshots/gateway.png" alt="1" width="360px" />
 		</td>
 	</tr>
+	<tr>
+		<td>
+			<img src="doc/screenshots/upnp-nat.png" alt="1" width="360px" />
+		</td>
+		<td>
+			<img src="doc/screenshots/upnp-nat_edit.png" alt="1" width="360px" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<img src="doc/screenshots/domains.png" alt="1" width="360px" />
+		</td>
+		<td>
+			<img src="doc/screenshots/domains_record.png" alt="1" width="360px" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<img src="doc/screenshots/dyndns_client.png" alt="1" width="360px" />
+		</td>
+		<td>
+			<img src="doc/screenshots/routes.png" alt="1" width="360px" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<img src="doc/screenshots/routes_stream_edit.png" alt="1" width="360px" />
+		</td>
+		<td>
+			<img src="doc/screenshots/routes_http_edit_ssl.png" alt="1" width="360px" />
+		</td>
+	</tr>
 </table>
 
 # Contributors
