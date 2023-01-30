@@ -9,8 +9,11 @@ import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/Inpu
 import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
 import {Switch} from '../../Bambooo/Content/Form/Switch';
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
+import {Tooltip} from '../../Bambooo/Content/Tooltip/Tooltip';
+import {TooltipInfo} from '../../Bambooo/Content/Tooltip/TooltipInfo';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {Lang} from '../../Lang';
 import {UpstreamCard} from './UpstreamCard';
 
 /**
@@ -370,9 +373,11 @@ export class RouteStreamEditModal extends ModalDialog {
         const bodyCardAdvanced = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
 
         const groupUseAsDefault = new FormGroup(bodyCardAdvanced, 'Use as default stream');
+        new TooltipInfo(groupUseAsDefault.getLabelElement(), Lang.i().l('route_stream_useasdefault'));
         this._switchUseAsDefault = new Switch(groupUseAsDefault, 'use_as_default');
 
         const groupLoadBalanceAlg = new FormGroup(bodyCardAdvanced, 'Load balancing algorithm');
+        new TooltipInfo(groupLoadBalanceAlg.getLabelElement(), Lang.i().l('route_stream_loadbalancealg'));
         this._selectLoadBalanceAlg = new SelectBottemBorderOnly2(groupLoadBalanceAlg);
 
         this._selectLoadBalanceAlg.addValue({
@@ -443,6 +448,9 @@ export class RouteStreamEditModal extends ModalDialog {
                 this._onSaveClick();
             }
         });
+
+        // init tooltips
+        Tooltip.init();
     }
 
     /**

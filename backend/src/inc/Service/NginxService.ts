@@ -646,7 +646,7 @@ export class NginxService {
                         listenPort,
                         '',
                         ssl_enable,
-                        httpSubCollect.http.http2_enable
+                        ssl_enable ? httpSubCollect.http.http2_enable : false
                     ));
 
                     if (domainHttps.listen.enable_ipv6) {
@@ -654,7 +654,7 @@ export class NginxService {
                             listenPort,
                             '[::]',
                             ssl_enable,
-                            httpSubCollect.http.http2_enable
+                            ssl_enable ? httpSubCollect.http.http2_enable : false
                         ));
                     }
 

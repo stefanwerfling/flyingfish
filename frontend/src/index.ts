@@ -6,6 +6,7 @@ import {NavbarLinkButton} from './inc/Bambooo/Navbar/NavbarLinkButton';
 import {SidebarMenuTree} from './inc/Bambooo/Sidebar/SidebarMenuTree';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
+import {Dashboard as DashboardPage} from './inc/Pages/Dashboard';
 import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {DynDnsClients} from './inc/Pages/DynDnsClients';
 import {IpAccess} from './inc/Pages/IpAccess';
@@ -76,8 +77,17 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
             }
         );
 
-        // sidemenu ------------------------------------------------------------------------------------------------
+        // sidemenu ----------------------------------------------------------------------------------------------------
+
         const sidemenuList = [
+            {
+                title: 'Dashboard',
+                icon: 'nav-icon fas fa-tachometer-alt',
+                name: 'dashboard',
+                onClick: (): void => {
+                    loadPage(new DashboardPage());
+                }
+            },
             {
                 title: 'Listens',
                 icon: 'fa-solid fa-door-open',
@@ -247,5 +257,5 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
         globalPage = page;
     };
 
-    await loadPage(new RoutesPage());
+    await loadPage(new DashboardPage());
 })();

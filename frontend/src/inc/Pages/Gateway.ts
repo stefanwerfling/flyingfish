@@ -1,5 +1,6 @@
 import {GatewayIdentifier as GatewayIdentifierAPI, GatewayIdentifierEntry} from '../Api/GatewayIdentifier';
 import {UpnpNat} from '../Api/UpnpNat';
+import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
 import {Card} from '../Bambooo/Content/Card/Card';
 import {Circle, CircleColor} from '../Bambooo/Content/Circle/Circle';
 import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
@@ -111,7 +112,7 @@ export class Gateway extends BasePage {
             const trhead = new Tr(table.getThead());
 
             // eslint-disable-next-line no-new
-            new Th(trhead, '', '32px');
+            new Th(trhead, 'Status', '32px');
 
             // eslint-disable-next-line no-new
             new Th(trhead, 'Networkname');
@@ -140,11 +141,22 @@ export class Gateway extends BasePage {
                         if (gatewayInfo.gatwaymac_address == gateway.mac_address) {
                             // eslint-disable-next-line no-new
                             new Circle(tdStatus, CircleColor.green);
+                        } else {
+                            new Circle(tdStatus, CircleColor.gray);
                         }
+                    } else {
+                        new Circle(tdStatus, CircleColor.gray);
                     }
 
                     // eslint-disable-next-line no-new
-                    new Td(trbody, `${gateway.networkname}`);
+                    const tdNetworkName = new Td(trbody, '');
+
+                    new Badge(
+                        tdNetworkName,
+                        `${gateway.networkname}`,
+                        BadgeType.primary,
+                        `${gateway.color}`
+                    );
 
                     // eslint-disable-next-line no-new
                     new Td(trbody, `${gateway.mac_address}`);

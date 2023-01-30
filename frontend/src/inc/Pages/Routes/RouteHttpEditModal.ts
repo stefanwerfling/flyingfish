@@ -12,8 +12,11 @@ import {Icon, IconFa} from '../../Bambooo/Content/Icon/Icon';
 import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
 import {PText, PTextType} from '../../Bambooo/Content/Text/PText';
 import {StrongText} from '../../Bambooo/Content/Text/StrongText';
+import {Tooltip} from '../../Bambooo/Content/Tooltip/Tooltip';
+import {TooltipInfo} from '../../Bambooo/Content/Tooltip/TooltipInfo';
 import {Element} from '../../Bambooo/Element';
 import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {Lang} from '../../Lang';
 import {LocationCard} from './LocationCard';
 
 /**
@@ -190,7 +193,9 @@ export class RouteHttpEditModal extends ModalDialog {
         const bodyACard = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
 
         const groupHttp2Enable = new FormGroup(bodyACard, 'HTTP2 Enable');
+        new TooltipInfo(groupHttp2Enable.getLabelElement(), Lang.i().l('route_http_http2'));
         this._switchHttp2Enable = new Switch(groupHttp2Enable.getElement(), 'adv_http2_enable');
+        this._switchHttp2Enable.setInativ(true);
 
         const groupXFrameOptions = new FormGroup(bodyACard, 'X-Frame-Options');
         this._selectXFrameOptions = new SelectBottemBorderOnly2(groupXFrameOptions);
@@ -246,11 +251,13 @@ export class RouteHttpEditModal extends ModalDialog {
         this._sslCertDetails.hide();
 
         this._switchSslEnable.setChangeFn(async(value) => {
+            this._switchHttp2Enable.setInativ(true);
             groupSslProvider.hide();
             groupSslEmail.hide();
             this._sslCertDetails.hide();
 
             if (value) {
+                this._switchHttp2Enable.setInativ(false);
                 groupSslProvider.show();
                 groupSslEmail.show();
 
@@ -299,6 +306,9 @@ export class RouteHttpEditModal extends ModalDialog {
                 this._onSaveClick();
             }
         });
+
+        // init tooltips
+        Tooltip.init();
     }
 
     /**
@@ -448,6 +458,7 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setSslEnable(enable: boolean): void {
         this._switchSslEnable.setEnable(enable);
+        this._switchHttp2Enable.setInativ(false);
     }
 
     /**
@@ -546,6 +557,7 @@ export class RouteHttpEditModal extends ModalDialog {
         this._inputIndex.setValue('');
         this.setListen('0');
         this.setSslEnable(false);
+        this._switchHttp2Enable.setInativ(true);
         this.setHttp2Enable(false);
         this.setXFrameOptions('');
 

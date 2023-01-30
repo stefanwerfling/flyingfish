@@ -19,6 +19,7 @@ import {IpService} from './inc/Service/IpService.js';
 import {NginxStatusService} from './inc/Service/NginxStatusService.js';
 import {SslCertService} from './inc/Service/SslCertService.js';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
+import {Dashboard as DashboardController} from './Routes/Main/Dashboard.js';
 import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier.js';
 import {IpAccess as IpAccessController} from './Routes/Main/IpAccess.js';
 import {Settings as SettingsController} from './Routes/Main/Settings.js';
@@ -210,6 +211,7 @@ import exitHook from 'async-exit-hook';
         controllers: [
             LoginController,
             UserController,
+            DashboardController,
             DomainController,
             DynDnsClientController,
             RouteController,
@@ -274,9 +276,9 @@ import exitHook from 'async-exit-hook';
     await SslCertService.getInstance().start();
 
     // not await
-    BlacklistService.getInstance().start();
-    IpLocationService.getInstance().start();
-    IpService.getInstance().start();
+    BlacklistService.getInstance().start().then();
+    IpLocationService.getInstance().start().then();
+    IpService.getInstance().start().then();
 
     // exit ------------------------------------------------------------------------------------------------------------
 
