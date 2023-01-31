@@ -2,6 +2,7 @@
 /doc/work
 /config.json
 /.idea
+/.env
 
 /nginx/logs
 /nginx/servers
@@ -40,3 +41,7 @@
 /onionhat/node_modules
 /onionhat/package-lock.json
 /onionhat/dist
+
+/iptable/node_modules
+/iptable/package-lock.json
+/iptable/dist
