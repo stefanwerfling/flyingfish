@@ -660,7 +660,20 @@ export class NginxService {
 
                     aServer.setServerName(domainName);
 
-                    // locations -------------------------------------------------------------------------------------------
+                    // well-known --------------------------------------------------------------------------------------
+
+                    if (!ssl_enable) {
+                        // add as default, when add a redirect, then acme not work
+                        const acme = new Location('/.well-known/acme-challenge/');
+                        acme.addVariable('auth_basic', 'off');
+                        acme.addVariable('auth_request', 'off');
+                        acme.addVariable('default_type', '"text/plain"');
+                        acme.addVariable('alias', '/opt/app/nginx/html/.well-known/acme-challenge/');
+
+                        aServer.addLocation(acme);
+                    }
+
+                    // locations ---------------------------------------------------------------------------------------
 
                     for (const locationCollect of httpSubCollect.locations) {
                         const entry = locationCollect.location;
