@@ -1,5 +1,4 @@
 {
-  "compileOnSave": true,
   "compilerOptions": {
     "noImplicitAny": true,
     "target": "ES2017",
@@ -14,7 +13,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "dist",
-    "sourceMap": true,
-    "strict": true
   }
 }
