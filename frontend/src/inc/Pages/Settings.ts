@@ -1,11 +1,6 @@
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Settings as SettingsAPI, SettingsList} from '../Api/Settings';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {FormGroup} from '../Bambooo/Content/Form/FormGroup';
-import {InputBottemBorderOnly2, InputType} from '../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {SelectBottemBorderOnly2} from '../Bambooo/Content/Form/SelectBottemBorderOnly2';
+import {Card, ContentCol, ContentColSize, ContentRow, FormGroup, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2} from 'bambooo';
 import {BasePage} from './BasePage';
 
 /**
@@ -52,13 +47,17 @@ export class Settings extends BasePage {
 
                 const groupNginxWorkerConnections = new FormGroup(bodyCardNginx, 'Worker Connections');
                 const inputNginxWorkerConnections = new InputBottemBorderOnly2(
-                    groupNginxWorkerConnections, 'nginxworkerconnections', InputType.number);
+                    groupNginxWorkerConnections, 'nginxworkerconnections', InputType.number
+                );
+
                 inputNginxWorkerConnections.setPlaceholder('4096');
                 inputNginxWorkerConnections.setValue(settingList.nginx.worker_connections);
 
                 const groupNginxResolver = new FormGroup(bodyCardNginx, 'Resolver');
                 const inputNginxResolver = new InputBottemBorderOnly2(
-                    groupNginxResolver, 'nginxresolver');
+                    groupNginxResolver, 'nginxresolver'
+                );
+
                 inputNginxResolver.setPlaceholder('127.0.0.1 or 8.8.8.8');
                 inputNginxResolver.setValue(settingList.nginx.resolver);
 

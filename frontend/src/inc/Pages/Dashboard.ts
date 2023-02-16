@@ -1,12 +1,7 @@
 import {Dashboard as DashboardApi} from '../Api/Dashboard';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {InfoBox, InfoBoxBg} from '../Bambooo/Content/Box/InfoBox';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu, ButtonMenuPosition} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
+import {Badge, BadgeType, InfoBox, InfoBoxBg, Card, ContentCol, ContentColSize, ContentRow, ButtonType, ButtonMenu, ButtonMenuPosition, IconFa} from 'bambooo';
 import {BasePage} from './BasePage';
+import {DashboardMapIp} from './Dashboard/DashboardMapIp';
 
 /**
  * Dashboard
@@ -42,8 +37,9 @@ export class Dashboard extends BasePage {
 
             const dashboardInfo = await DashboardApi.getInfo();
 
-            const row = new ContentRow(content);
+            // ip infos ------------------------------------------------------------------------------------------------
 
+            const row = new ContentRow(content);
             const col1 = new ContentCol(row, ContentColSize.col12ColSm6ColMd3);
 
             // public ip
@@ -133,6 +129,15 @@ export class Dashboard extends BasePage {
 
                 }, IconFa.copy);
             }
+
+            // ip access map -------------------------------------------------------------------------------------------
+
+            const rowMap = new ContentRow(content);
+            const cardMap = new Card(new ContentCol(rowMap, ContentColSize.colMd8));
+            cardMap.setTitle('IP Map/Blacklist');
+
+            // @ts-ignore
+            const dmip = new DashboardMapIp(cardMap);
         };
 
         // load table

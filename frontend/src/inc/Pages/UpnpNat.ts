@@ -2,20 +2,8 @@ import moment from 'moment';
 import {GatewayIdentifier as GatewayIdentifierAPI, GatewayIdentifierEntry} from '../Api/GatewayIdentifier';
 import {Listen as ListenAPI, ListenData} from '../Api/Listen';
 import {NatStatus, UpnpNat as UpnpNatAPI, UpnpNatSaveRequest} from '../Api/UpnpNat';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {Circle, CircleColor} from '../Bambooo/Content/Circle/Circle';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, Card, Circle, CircleColor, ContentCol, ContentColSize, DialogConfirm, ButtonType,
+    ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {UpnpNatEditModal} from './UpnpNat/UpnpNatEditModal';
 
@@ -203,6 +191,7 @@ export class UpnpNat extends BasePage {
                     const gatewayIdentifier = gatewayIdentifierMap.get(upnpnat.gateway_identifier_id);
 
                     if (gatewayIdentifier) {
+                        // eslint-disable-next-line no-new
                         new Badge(
                             externTd,
                             `${gatewayIdentifier.networkname}`,
@@ -210,10 +199,11 @@ export class UpnpNat extends BasePage {
                             `${gatewayIdentifier.color}`
                         );
                     } else {
+                        // eslint-disable-next-line no-new
                         new Badge(
                             externTd,
                             'Default FlyingFish',
-                            BadgeType.secondary,
+                            BadgeType.secondary
                         );
                     }
 
@@ -223,7 +213,7 @@ export class UpnpNat extends BasePage {
                     new Td(trbody, ' &#8594; ');
 
                     const internTd = new Td(trbody, '');
-                    if (upnpnat.listen_id == 0) {
+                    if (upnpnat.listen_id === 0) {
                         let addressStr = upnpnat.client_address;
 
                         if (upnpnat.use_himhip_host_address) {
@@ -289,7 +279,8 @@ export class UpnpNat extends BasePage {
                             this._upnpnatDialog.setProtocol(upnpnat.protocol);
                             this._upnpnatDialog.setDescription(upnpnat.description);
                         },
-                        IconFa.edit);
+                        IconFa.edit
+                    );
 
                     btnMenu.addDivider();
 

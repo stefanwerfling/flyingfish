@@ -1,11 +1,6 @@
 import {ListenAddressCheckType, ListenTypes} from '../../Api/Listen';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {FormRow} from '../../Bambooo/Content/Form/FormRow';
-import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element,
+    ModalDialog, ModalDialogType} from 'bambooo';
 
 /**
  * ListensEditModalButtonClickFn
@@ -115,17 +110,17 @@ export class ListensEditModal extends ModalDialog {
         const groupProtocol = new FormGroup(rowTP.createCol(4), 'Protocol');
         this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol);
         this._selectProtocol.addValue({
-            key: `0`,
+            key: '0',
             value: 'TCP'
         });
 
         this._selectProtocol.addValue({
-            key: `1`,
+            key: '1',
             value: 'UDP'
         });
 
         this._selectProtocol.addValue({
-            key: `2`,
+            key: '2',
             value: 'TCP & UDP'
         });
 

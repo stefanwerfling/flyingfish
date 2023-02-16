@@ -23,14 +23,14 @@ import {Login} from './inc/Api/Login';
             }
         };
 
-        jQuery('#input_email').on('keypress',function(ev) {
-            if (ev.key === "Enter") {
-                jQuery('#input_password').trigger("focus");
+        jQuery('#input_email').on('keypress', (ev) => {
+            if (ev.key === 'Enter') {
+                jQuery('#input_password').trigger('focus');
             }
         });
 
-        jQuery('#input_password').on('keypress',function(ev) {
-            if (ev.key === "Enter") {
+        jQuery('#input_password').on('keypress', (ev) => {
+            if (ev.key === 'Enter') {
                 fnLogin();
             }
         });

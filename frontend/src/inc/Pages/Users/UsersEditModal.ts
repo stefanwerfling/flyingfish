@@ -1,9 +1,4 @@
-import {Form} from '../../Bambooo/Content/Form/Form';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {Form, FormGroup, InputBottemBorderOnly2, InputType, Switch, Element, ModalDialog, ModalDialogType} from 'bambooo';
 
 /**
  * UsersEditModalButtonClickFn

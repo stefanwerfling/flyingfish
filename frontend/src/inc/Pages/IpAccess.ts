@@ -8,21 +8,8 @@ import {
     IpAccessMaintainer,
     IpAccessWhiteSaveRequest
 } from '../Api/IpAccess';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {Button, ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
-import {NavTab} from '../Bambooo/Content/Tab/NavTab';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, Button, ButtonType,
+    ButtonMenu, Icon, IconFa, NavTab, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal';
 import {IpAccessBlacklistOwnModal} from './IpAccess/IpAccessBlacklistOwnModal';
@@ -98,7 +85,7 @@ export class IpAccess extends BasePage {
         // -------------------------------------------------------------------------------------------------------------
 
         this._importBlacklistDialog.setOnSave(async(): Promise<void> => {
-            let tid = this._importBlacklistDialog.getId();
+            const tid = this._importBlacklistDialog.getId();
 
             if (tid && tid > 0) {
                 const entrie: IpAccessBlackListImportSaveRequest = {
@@ -628,6 +615,7 @@ export class IpAccess extends BasePage {
                         const cate = categories.get(cateId);
 
                         if (cate) {
+                            // eslint-disable-next-line no-new
                             new Badge(tdCate, `${cate}`, BadgeType.light);
                             tdCate.append('&nbsp;');
                         }
@@ -680,4 +668,5 @@ export class IpAccess extends BasePage {
         // load table
         await this._onLoadTable();
     }
+
 }

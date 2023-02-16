@@ -1,19 +1,7 @@
 import {GatewayIdentifier as GatewayIdentifierAPI, GatewayIdentifierEntry} from '../Api/GatewayIdentifier';
 import {UpnpNat} from '../Api/UpnpNat';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {Circle, CircleColor} from '../Bambooo/Content/Circle/Circle';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, Card, Circle, CircleColor, ContentCol, ContentColSize, DialogConfirm, ButtonType,
+    ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {GatewayEditModal} from './Gateway/GatewayEditModal';
 
@@ -138,19 +126,22 @@ export class Gateway extends BasePage {
                     const tdStatus = new Td(trbody, '');
 
                     if (gatewayInfo) {
-                        if (gatewayInfo.gatwaymac_address == gateway.mac_address) {
+                        if (gatewayInfo.gatwaymac_address === gateway.mac_address) {
                             // eslint-disable-next-line no-new
                             new Circle(tdStatus, CircleColor.green);
                         } else {
+                            // eslint-disable-next-line no-new
                             new Circle(tdStatus, CircleColor.gray);
                         }
                     } else {
+                        // eslint-disable-next-line no-new
                         new Circle(tdStatus, CircleColor.gray);
                     }
 
                     // eslint-disable-next-line no-new
                     const tdNetworkName = new Td(trbody, '');
 
+                    // eslint-disable-next-line no-new
                     new Badge(
                         tdNetworkName,
                         `${gateway.networkname}`,
@@ -185,7 +176,8 @@ export class Gateway extends BasePage {
                             this._gatewayDialog.setGatewayIpAddress(gateway.address);
                             this._gatewayDialog.setColor(gateway.color);
                         },
-                        IconFa.edit);
+                        IconFa.edit
+                    );
 
                     btnMenu.addDivider();
 
@@ -231,4 +223,5 @@ export class Gateway extends BasePage {
         // load table
         await this._onLoadTable();
     }
+
 }

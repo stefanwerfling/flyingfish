@@ -1,19 +1,7 @@
 import {Listen as ListenAPI, ListenAddressCheckType, ListenData, ListenTypes} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, ButtonType,
+    ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {ListensEditModal} from './Listens/ListensEditModal';
 
@@ -210,6 +198,7 @@ export class Listens extends BasePage {
                         // eslint-disable-next-line no-new
                         new Badge(
                             optionTd,
+                            // eslint-disable-next-line no-negated-condition
                             `Address check (${entry.check_address_type !== ListenAddressCheckType.white ? 'black' : 'white'})`,
                             BadgeType.secondary
                         );
@@ -245,7 +234,8 @@ export class Listens extends BasePage {
                             this._listenDialog.setDisable(entry.disable);
                             this._listenDialog.show();
                         },
-                        IconFa.edit);
+                        IconFa.edit
+                    );
 
                     if (!entry.fix) {
                         btnMenu.addDivider();
@@ -294,7 +284,8 @@ export class Listens extends BasePage {
                                     undefined,
                                     'Delete'
                                 );
-                            }, IconFa.trash);
+                            }, IconFa.trash
+                        );
                     }
                 }
             }

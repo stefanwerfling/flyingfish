@@ -1,8 +1,6 @@
 import {UpStream} from '../../Api/Route';
-import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
+import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup,
+    InputBottemBorderOnly2, InputType} from 'bambooo';
 
 /**
  * UpstreamCard
@@ -112,4 +110,5 @@ export class UpstreamCard {
         this._upstream.address = this.getAddress();
         return this._upstream;
     }
+
 }

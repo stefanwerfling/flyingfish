@@ -2,22 +2,8 @@ import moment from 'moment';
 import {Domain} from '../Api/Domain';
 import {DynDnsClient as DynDnsClientAPI, DynDnsClientData} from '../Api/DynDnsClient';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {Circle, CircleColor} from '../Bambooo/Content/Circle/Circle';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, ButtonClass, Card, Circle, CircleColor, ContentCol, ContentColSize, ContentRow,
+    DialogConfirm, ButtonType, ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
 import {DynDnsClientEditModal} from './DynDnsClient/DynDnsClientEditModal';
@@ -192,6 +178,7 @@ export class DynDnsClients extends BasePage {
                         });
 
                         for (const domain of entry.domains) {
+                            // eslint-disable-next-line no-new
                             new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
                             domainsTd.append('&nbsp;');
                         }
@@ -259,7 +246,8 @@ export class DynDnsClients extends BasePage {
                                 this._dynDnsClientDialog.setUsername(entry.username);
                                 this._dynDnsClientDialog.setUpdateDomains(entry.update_domain);
                             },
-                            IconFa.edit);
+                            IconFa.edit
+                        );
 
                         btnRMenu.addDivider();
 
@@ -270,7 +258,7 @@ export class DynDnsClients extends BasePage {
                                     'dnydnsDeleteClient',
                                     ModalDialogType.large,
                                     'Delete Client',
-                                    `Are you sure you want to delete the client?`,
+                                    'Are you sure you want to delete the client?',
                                     async(_, dialog) => {
                                         try {
                                             if (await DynDnsClientAPI.deleteClient(entry)) {
@@ -297,7 +285,8 @@ export class DynDnsClients extends BasePage {
                                     ButtonClass.danger
                                 );
                             },
-                            IconFa.trash);
+                            IconFa.trash
+                        );
                     }
                 }
             } catch (error) {

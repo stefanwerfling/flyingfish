@@ -1,29 +1,20 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
+    "noImplicitAny": true,
+    "target": "ES2017",
+    "module": "ES2015",
+    "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "AMD",
-    "moduleResolution": "Node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "dist",
     "sourceMap": true,
-    "strict": true,
-    "target": "ES2016"
-  },
-  "exclude": [
-    "node_modules",
-    "**/*.d.ts"
-  ],
-  "files": [
-    "./src/index.ts",
-    "./src/login.ts",
-    "./src/config.ts",
-    "./src/service-worker.ts"
-  ]
+    "strict": true
+  }
 }

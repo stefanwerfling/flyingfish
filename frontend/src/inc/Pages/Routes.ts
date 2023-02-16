@@ -9,21 +9,8 @@ import {
 } from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {Card, CardBodyType, CardLine, CardType} from '../Bambooo/Content/Card/Card';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {Icon, IconFa} from '../Bambooo/Content/Icon/Icon';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {Tooltip} from '../Bambooo/Content/Tooltip/Tooltip';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, Card, CardBodyType, CardLine, CardType, ContentCol, ContentColSize, ContentRow,
+    DialogConfirm, ButtonType, ButtonMenu, Icon, IconFa, Table, Td, Th, Tr, Tooltip, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {RouteHttpEditModal} from './Routes/RouteHttpEditModal';
 import {RouteStreamEditModal} from './Routes/RouteStreamEditModal';
@@ -368,7 +355,8 @@ export class Routes extends BasePage {
                                     this._routeStreamDialog.setSshListens(sshListens.list);
                                 }
                             },
-                            IconFa.add);
+                            IconFa.add
+                        );
 
                         btnMenu.addMenuItem(
                             'Add Http/Https Route',
@@ -391,7 +379,8 @@ export class Routes extends BasePage {
                                     this._routeHttpDialog.setSslProviders(sslProviders.list);
                                 }
                             },
-                            IconFa.add);
+                            IconFa.add
+                        );
                     }
 
                     // table -------------------------------------------------------------------------------------------
@@ -416,7 +405,7 @@ export class Routes extends BasePage {
 
                     // -------------------------------------------------------------------------------------------------
 
-                    entry.streams.forEach(value => {
+                    entry.streams.forEach((value) => {
                         const trbody = new Tr(table.getTbody());
                         const sdTd = new Td(trbody, '');
 
@@ -435,18 +424,17 @@ export class Routes extends BasePage {
 
                         switch (value.destination_type) {
                             case NginxStreamDestinationType.listen:
+                                // eslint-disable-next-line no-case-declarations
                                 const dlisten = listenMap.get(value.destination_listen_id);
 
                                 if (dlisten) {
                                     // eslint-disable-next-line no-new
                                     new Badge(sdTdD,
-                                        `${dlisten.name} (${dlisten.port})`, BadgeType.success
-                                    );
+                                        `${dlisten.name} (${dlisten.port})`, BadgeType.success);
                                 } else {
                                     // eslint-disable-next-line no-new
                                     new Badge(sdTdD,
-                                        `destination listen not found! `, BadgeType.danger
-                                    );
+                                        'destination listen not found! ', BadgeType.danger);
                                 }
                                 break;
 
@@ -504,6 +492,7 @@ export class Routes extends BasePage {
                         const soptionTd = new Td(trbody, '');
 
                         if (value.use_as_default) {
+                            // eslint-disable-next-line no-new
                             new Badge(soptionTd, 'D', BadgeType.danger);
                             soptionTd.append('&nbsp;');
                         }
@@ -570,7 +559,8 @@ export class Routes extends BasePage {
                                         this._routeStreamDialog.setUpstreamList(value.upstreams);
                                     }
                                 },
-                                IconFa.edit);
+                                IconFa.edit
+                            );
 
                             btnMenu.addDivider();
 
@@ -626,7 +616,7 @@ export class Routes extends BasePage {
                         }
                     });
 
-                    entry.https.forEach(value => {
+                    entry.https.forEach((value) => {
                         const trbody = new Tr(table.getTbody());
                         const sdTd = new Td(trbody, '');
 
@@ -635,8 +625,7 @@ export class Routes extends BasePage {
                         if (listen) {
                             // eslint-disable-next-line no-new
                             new Badge(sdTd, `${listen.name} (${listen.port})`,
-                                listen.type === 0 ? BadgeType.warning : BadgeType.success
-                            );
+                                listen.type === 0 ? BadgeType.warning : BadgeType.success);
                         }
 
                         // eslint-disable-next-line no-new
@@ -650,7 +639,8 @@ export class Routes extends BasePage {
                             if (aLocation.ssh && aLocation.ssh.port_out) {
                                 // eslint-disable-next-line no-new
                                 new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
-                            } else if(aLocation.redirect && (aLocation.redirect.redirect !== '')) {
+                            } else if (aLocation.redirect && (aLocation.redirect.redirect !== '')) {
+                                // eslint-disable-next-line no-new
                                 new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
                             } else {
                                 let andMore = '';
@@ -672,6 +662,7 @@ export class Routes extends BasePage {
 
                         if (value.ssl && value.ssl.enable) {
                             const sslTooltip = new Tooltip(tdOptions, `SSL with '${value.ssl.provider}'`);
+                            // eslint-disable-next-line no-new
                             new Icon(sslTooltip, IconFa.lock);
                         }
 
@@ -711,7 +702,8 @@ export class Routes extends BasePage {
                                 this._routeHttpDialog.setHttp2Enable(value.http2_enable);
                                 this._routeHttpDialog.setXFrameOptions(value.x_frame_options);
                             },
-                            IconFa.edit);
+                            IconFa.edit
+                        );
 
                         btnMenu.addDivider();
 
@@ -762,7 +754,8 @@ export class Routes extends BasePage {
                                     'Delete'
                                 );
                             },
-                            IconFa.trash);
+                            IconFa.trash
+                        );
                     });
 
                     card.hideLoading();

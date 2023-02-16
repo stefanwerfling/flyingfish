@@ -2,20 +2,9 @@ import {ListenData} from '../../Api/Listen';
 import {Location} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {Ssl as SslAPI, SslProvider} from '../../Api/Ssl';
-import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType, CardLine, CardType} from '../../Bambooo/Content/Card/Card';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {Icon, IconFa} from '../../Bambooo/Content/Icon/Icon';
-import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
-import {PText, PTextType} from '../../Bambooo/Content/Text/PText';
-import {StrongText} from '../../Bambooo/Content/Text/StrongText';
-import {Tooltip} from '../../Bambooo/Content/Tooltip/Tooltip';
-import {TooltipInfo} from '../../Bambooo/Content/Tooltip/TooltipInfo';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardLine, CardType, FormGroup,
+    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, Icon, IconFa, NavTab, PText, PTextType,
+    StrongText, Tooltip, TooltipInfo, Element, ModalDialog, ModalDialogType} from 'bambooo';
 import {Lang} from '../../Lang';
 import {LocationCard} from './LocationCard';
 
@@ -164,7 +153,7 @@ export class RouteHttpEditModal extends ModalDialog {
         );
 
         addLocationBtn.setOnClickFn(() => {
-            const location = new LocationCard(this._locationCard, this._locationCards.length+1);
+            const location = new LocationCard(this._locationCard, this._locationCards.length + 1);
             location.setSshListens(this._sshListens);
             location.setLocation({
                 id: 0,
@@ -193,6 +182,7 @@ export class RouteHttpEditModal extends ModalDialog {
         const bodyACard = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
 
         const groupHttp2Enable = new FormGroup(bodyACard, 'HTTP2 Enable');
+        // eslint-disable-next-line no-new
         new TooltipInfo(groupHttp2Enable.getLabelElement(), Lang.i().l('route_http_http2'));
         this._switchHttp2Enable = new Switch(groupHttp2Enable.getElement(), 'adv_http2_enable');
         this._switchHttp2Enable.setInativ(true);
@@ -246,6 +236,7 @@ export class RouteHttpEditModal extends ModalDialog {
         groupSslEmail.hide();
 
         this._sslCertDetails = new Card(bodyCardSsl, CardBodyType.none, CardType.primary, CardLine.none);
+        // eslint-disable-next-line no-new
         new Icon(this._sslCertDetails.getTitleElement(), IconFa.certificate);
         this._sslCertDetails.getTitleElement().append('&nbsp;Certificate Details');
         this._sslCertDetails.hide();
@@ -270,6 +261,7 @@ export class RouteHttpEditModal extends ModalDialog {
                     if (certDetails) {
                         // serial number
                         const strongSerial = new StrongText(this._sslCertDetails);
+                        // eslint-disable-next-line no-new
                         new Icon(strongSerial, IconFa.info);
                         strongSerial.getElement().append('&nbsp;Serial');
 
@@ -284,6 +276,7 @@ export class RouteHttpEditModal extends ModalDialog {
 
                         // valid from
                         const strongDate = new StrongText(this._sslCertDetails);
+                        // eslint-disable-next-line no-new
                         new Icon(strongDate, IconFa.info);
                         strongDate.getElement().append('&nbsp;Validate');
 
@@ -368,6 +361,7 @@ export class RouteHttpEditModal extends ModalDialog {
 
         for (const alisten of this._listens) {
             if (alisten.routeless) {
+                // eslint-disable-next-line no-continue
                 continue;
             }
 
@@ -421,7 +415,7 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setLocations(locations: Location[]): void {
         for (const tlocation of locations) {
-            const location = new LocationCard(this._locationCard, this._locationCards.length+1);
+            const location = new LocationCard(this._locationCard, this._locationCards.length + 1);
             location.setSshListens(this._sshListens);
             location.setLocation(tlocation);
 
@@ -484,7 +478,7 @@ export class RouteHttpEditModal extends ModalDialog {
             this._selectSslProvider.addValue({
                 key: provider.name,
                 value: provider.title
-            })
+            });
         }
     }
 
@@ -574,4 +568,5 @@ export class RouteHttpEditModal extends ModalDialog {
     public setOnSave(onSave: RouteHttpEditModalButtonClickFn): void {
         this._onSaveClick = onSave;
     }
+
 }

@@ -1,8 +1,4 @@
-import {InputBottemBorderOnly2} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {InputBottemBorderOnly2, FormGroup, Switch, Element, ModalDialog, ModalDialogType} from 'bambooo';
 
 /**
  * DomainEditModalButtonClickFn

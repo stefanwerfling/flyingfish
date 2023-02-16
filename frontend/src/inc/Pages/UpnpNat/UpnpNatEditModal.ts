@@ -1,17 +1,8 @@
 import {GatewayIdentifierEntry} from '../../Api/GatewayIdentifier';
 import {ListenData, ListenTypes} from '../../Api/Listen';
 import {UpnpNat} from '../../Api/UpnpNat';
-import {DialogInfo} from '../../Bambooo/Content/Dialog/DialogInfo';
-import {Form} from '../../Bambooo/Content/Form/Form';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {FormGroupButton} from '../../Bambooo/Content/Form/FormGroupButton';
-import {FormRow} from '../../Bambooo/Content/Form/FormRow';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {Icon, IconFa} from '../../Bambooo/Content/Icon/Icon';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorderOnly2, InputType,
+    SelectBottemBorderOnly2, Switch, Icon, IconFa, Element, ModalDialog, ModalDialogType} from 'bambooo';
 
 /**
  * UpnpNatEditModalButtonClickFn
@@ -110,6 +101,7 @@ export class UpnpNatEditModal extends ModalDialog {
 
         const groupGatewayAddress = new FormGroup(form, 'Gateway address');
         const pickGatewayIp = new FormGroupButton(groupGatewayAddress);
+        // eslint-disable-next-line no-new
         new Icon(pickGatewayIp.getIconElement(), IconFa.hockeypuck);
         this._inputGatewayAddress = new InputBottemBorderOnly2(pickGatewayIp, 'gatewayaddress');
 
@@ -138,6 +130,7 @@ export class UpnpNatEditModal extends ModalDialog {
 
         const groupClientAddress = new FormGroup(rowClient.createCol(7), 'Client address');
         const pickClientIp = new FormGroupButton(groupClientAddress);
+        // eslint-disable-next-line no-new
         new Icon(pickClientIp.getIconElement(), IconFa.ethernet);
         this._inputClientAddress = new InputBottemBorderOnly2(pickClientIp, 'clientaddress');
 
@@ -179,6 +172,7 @@ export class UpnpNatEditModal extends ModalDialog {
         const groupPrivatPort = new FormGroup(rowPrivatPort.createCol(5), 'Privat port');
         this._inputPrivatPort = new InputBottemBorderOnly2(groupPrivatPort, 'privatport', InputType.number);
 
+        // eslint-disable-next-line no-new
         new FormGroup(rowPrivatPort.createCol(1), 'or');
 
         const groupListen = new FormGroup(rowPrivatPort.createCol(6), 'Listen');
@@ -186,13 +180,13 @@ export class UpnpNatEditModal extends ModalDialog {
 
         this._selectListen.setChangeFn((value) => {
             switch (value) {
-                case "0":
+                case '0':
                     this._inputPrivatPort.setReadOnly(false);
                     break;
 
                 default:
                     this._inputPrivatPort.setReadOnly(true);
-                    this._inputPrivatPort.setValue("");
+                    this._inputPrivatPort.setValue('');
             }
         });
 
@@ -204,12 +198,12 @@ export class UpnpNatEditModal extends ModalDialog {
         this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol);
         this._selectProtocol.addValue({
             key: 'tcp',
-            value: 'TCP',
+            value: 'TCP'
         });
 
         this._selectProtocol.addValue({
             key: 'udp',
-            value: 'UDP',
+            value: 'UDP'
         });
 
         const groupDescription = new FormGroup(form, 'Description');
@@ -460,4 +454,5 @@ export class UpnpNatEditModal extends ModalDialog {
     public setOnSave(onSave: UpnpNatEditModalButtonClickFn): void {
         this._onSaveClick = onSave;
     }
+
 }

@@ -1,5 +1,4 @@
-import {Wrapper} from '../Bambooo/Wrapper';
-import {LeftNavbarPushmenu} from '../Bambooo/Navbar/LeftNavbarPushmenu';
+import {Wrapper, LeftNavbarPushmenu} from 'bambooo';
 
 /**
  * loadPageFn
@@ -78,6 +77,7 @@ export class BasePage {
         // -------------------------------------------------------------------------------------------------------------
 
         // @ts-ignore
+        // eslint-disable-next-line no-undef
         this._toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -105,7 +105,7 @@ export class BasePage {
      * @param title
      * @protected
      */
-    protected setTitle(title: string) {
+    protected setTitle(title: string): void {
         this._wrapper.getContentWrapper().getContentHeader().setTitle(title);
     }
 

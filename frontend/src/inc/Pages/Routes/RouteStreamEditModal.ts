@@ -1,18 +1,9 @@
 import {ListenData, ListenTypes} from '../../Api/Listen';
 import {NginxStreamDestinationType, NginxStreamSshR, UpStream} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
-import {BadgeType} from '../../Bambooo/Content/Badge/Badge';
-import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType} from '../../Bambooo/Content/Card/Card';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
-import {Tooltip} from '../../Bambooo/Content/Tooltip/Tooltip';
-import {TooltipInfo} from '../../Bambooo/Content/Tooltip/TooltipInfo';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
+    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, Tooltip, TooltipInfo, Element,
+    ModalDialog, ModalDialogType} from 'bambooo';
 import {Lang} from '../../Lang';
 import {UpstreamCard} from './UpstreamCard';
 
@@ -229,7 +220,7 @@ export class RouteStreamEditModal extends ModalDialog {
                 port: 80,
                 address: '192.168.178.1',
                 id: 0
-            }))
+            }));
         });
 
         const tabSsh = this._navTab.addTab('SSH', 'routestreamssh');
@@ -335,7 +326,7 @@ export class RouteStreamEditModal extends ModalDialog {
         this._selectSshListen = new SelectBottemBorderOnly2(this._groupSshListen);
         this._groupSshListen.getElement().hide();
 
-        this._selectSshRType.setChangeFn(value => {
+        this._selectSshRType.setChangeFn((value) => {
             if (this._selectDestinationType.getSelectedValue() === `${NginxStreamDestinationType.ssh_r}`) {
                 this._groupSshPort.getElement().hide();
                 this._groupSshUsername.getElement().hide();
@@ -373,10 +364,12 @@ export class RouteStreamEditModal extends ModalDialog {
         const bodyCardAdvanced = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
 
         const groupUseAsDefault = new FormGroup(bodyCardAdvanced, 'Use as default stream');
+        // eslint-disable-next-line no-new
         new TooltipInfo(groupUseAsDefault.getLabelElement(), Lang.i().l('route_stream_useasdefault'));
         this._switchUseAsDefault = new Switch(groupUseAsDefault, 'use_as_default');
 
         const groupLoadBalanceAlg = new FormGroup(bodyCardAdvanced, 'Load balancing algorithm');
+        // eslint-disable-next-line no-new
         new TooltipInfo(groupLoadBalanceAlg.getLabelElement(), Lang.i().l('route_stream_loadbalancealg'));
         this._selectLoadBalanceAlg = new SelectBottemBorderOnly2(groupLoadBalanceAlg);
 
@@ -393,7 +386,7 @@ export class RouteStreamEditModal extends ModalDialog {
         this._selectLoadBalanceAlg.addValue({
             key: 'ip_hash',
             value: 'IP Hash'
-        })
+        });
 
         // select destination type -------------------------------------------------------------------------------------
 
@@ -510,6 +503,7 @@ export class RouteStreamEditModal extends ModalDialog {
 
         for (const alisten of this._listens) {
             if (alisten.routeless) {
+                // eslint-disable-next-line no-continue
                 continue;
             }
 
@@ -521,11 +515,10 @@ export class RouteStreamEditModal extends ModalDialog {
                 style: alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;'
             };
 
-            if (alisten.type !== this._type) {
-                this._selectDestinationListen.addValue(option);
-
-            } else {
+            if (alisten.type === this._type) {
                 this._selectListen.addValue(option);
+            } else {
+                this._selectDestinationListen.addValue(option);
             }
         }
     }
@@ -735,7 +728,7 @@ export class RouteStreamEditModal extends ModalDialog {
             this._selectSshListen.addValue({
                 key: `${entry.id}`,
                 value: `SSH INTERNT OUT (<-- ${entry.port})`
-            })
+            });
         }
     }
 
@@ -830,4 +823,5 @@ export class RouteStreamEditModal extends ModalDialog {
     public setOnSave(onSave: RouteStreamEditModalButtonClickFn): void {
         this._onSaveClick = onSave;
     }
+
 }

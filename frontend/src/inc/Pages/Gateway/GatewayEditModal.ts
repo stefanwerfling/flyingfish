@@ -1,12 +1,7 @@
 import {UpnpNat} from '../../Api/UpnpNat';
-import {DialogInfo} from '../../Bambooo/Content/Dialog/DialogInfo';
-import {Form} from '../../Bambooo/Content/Form/Form';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {FormGroupButton} from '../../Bambooo/Content/Form/FormGroupButton';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {Icon, IconFa} from '../../Bambooo/Content/Icon/Icon';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {DialogInfo, Form, FormGroup, FormGroupButton, InputBottemBorderOnly2, InputType, Icon, IconFa,
+    Element, ModalDialog, ModalDialogType} from 'bambooo';
+
 
 /**
  * GatewayEditModalButtonClickFn
@@ -69,6 +64,7 @@ export class GatewayEditModal extends ModalDialog {
 
         const groupGatewayMacAddress = new FormGroup(form, 'Gateway MAC address');
         const pickGatewayMac = new FormGroupButton(groupGatewayMacAddress);
+        // eslint-disable-next-line no-new
         new Icon(pickGatewayMac.getIconElement(), IconFa.hockeypuck);
         this._inputGatewayMacAddress = new InputBottemBorderOnly2(pickGatewayMac, 'gatewaymacaddress');
 
@@ -92,6 +88,7 @@ export class GatewayEditModal extends ModalDialog {
 
         const groupGatewayIPAddress = new FormGroup(form, 'Gateway IP address');
         const pickGatewayIp = new FormGroupButton(groupGatewayIPAddress);
+        // eslint-disable-next-line no-new
         new Icon(pickGatewayIp.getIconElement(), IconFa.hockeypuck);
         this._inputGatewayIpAddress = new InputBottemBorderOnly2(pickGatewayIp, 'gatewayipaddress');
 
@@ -221,4 +218,5 @@ export class GatewayEditModal extends ModalDialog {
     public setOnSave(onSave: GatewayEditModalButtonClickFn): void {
         this._onSaveClick = onSave;
     }
+
 }

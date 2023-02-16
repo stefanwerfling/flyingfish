@@ -1,22 +1,9 @@
 import moment from 'moment';
 import {Domain as DomainAPI, DomainData} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {Badge, BadgeType} from '../Bambooo/Content/Badge/Badge';
-import {ButtonClass, ButtonDefault} from '../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType, CardLine, CardType} from '../Bambooo/Content/Card/Card';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {ContentDisable} from '../Bambooo/Content/ContentDisable';
-import {ContentRow} from '../Bambooo/Content/ContentRow';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {Badge, BadgeType, ButtonClass, ButtonDefault, Card, CardBodyType, CardLine, CardType, ContentCol,
+    ContentColSize, ContentDisable, ContentRow, DialogConfirm, ButtonType, ButtonMenu, IconFa, Table, Td, Th,
+    Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {DomainEditModal} from './Domains/DomainEditModal';
 import {DomainRecordEditModal} from './Domains/DomainRecordEditModal';
@@ -135,7 +122,7 @@ export class Domains extends BasePage {
             if (domainId === null) {
                 this._toast.fire({
                     icon: 'error',
-                    title: `Domain id is empty!`
+                    title: 'Domain id is empty!'
                 });
                 return;
             }
@@ -190,6 +177,7 @@ export class Domains extends BasePage {
             if (domains && domains.list) {
                 for (const domain of domains.list) {
                     if (domain.name === '_') {
+                        // eslint-disable-next-line no-continue
                         continue;
                     }
 
@@ -264,7 +252,8 @@ export class Domains extends BasePage {
                         btnMenu.addMenuItem(
                             'Edit',
                             funcEdit,
-                            IconFa.edit);
+                            IconFa.edit
+                        );
                     }
 
                     if (!domain.recordless) {
@@ -277,7 +266,8 @@ export class Domains extends BasePage {
                                 this._domainRecordDialog.setDomainName(domain.name);
                                 this._domainRecordDialog.show();
                             },
-                            IconFa.add);
+                            IconFa.add
+                        );
                     }
 
                     if (!domain.fix) {
@@ -289,7 +279,7 @@ export class Domains extends BasePage {
                                     'dcDeleteDomain',
                                     ModalDialogType.large,
                                     'Delete Domain',
-                                    `Are you sure to delete the domain? All data on the domain will also be deleted!`,
+                                    'Are you sure to delete the domain? All data on the domain will also be deleted!',
                                     async(_, dialog) => {
                                         try {
                                             if (await DomainAPI.deleteDomain(domain)) {
@@ -328,10 +318,11 @@ export class Domains extends BasePage {
                                     ButtonClass.danger
                                 );
                             },
-                            IconFa.trash);
+                            IconFa.trash
+                        );
                     }
 
-                    if (domain.records.length > 0 ) {
+                    if (domain.records.length > 0) {
                         card.showLoading();
 
                         // record table
@@ -458,7 +449,8 @@ export class Domains extends BasePage {
                                     this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
                                     this._domainRecordDialog.show();
                                 },
-                                IconFa.edit);
+                                IconFa.edit
+                            );
 
                             btnRMenu.addDivider();
 
@@ -469,7 +461,7 @@ export class Domains extends BasePage {
                                         'dcDeleteRecord',
                                         ModalDialogType.large,
                                         'Delete Record',
-                                        `Are you sure you want to delete the record?`,
+                                        'Are you sure you want to delete the record?',
                                         async(_, dialog) => {
                                             try {
                                                 if (await DomainAPI.deleteDomainRecord(record)) {
@@ -496,7 +488,8 @@ export class Domains extends BasePage {
                                         ButtonClass.danger
                                     );
                                 },
-                                IconFa.trash);
+                                IconFa.trash
+                            );
                         }
 
                         card.hideLoading();

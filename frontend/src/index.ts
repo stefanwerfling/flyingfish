@@ -1,9 +1,9 @@
+import {NavbarLinkButton} from 'bambooo/dist/Navbar/NavbarLinkButton';
+import {NavbarLinkFullsize} from 'bambooo/dist/Navbar/NavbarLinkFullsize';
+import {SidebarMenuItem} from 'bambooo/dist/Sidebar/SidebarMenuItem';
+import {SidebarMenuTree} from 'bambooo/dist/Sidebar/SidebarMenuTree';
 import {Login as LoginAPI} from './inc/Api/Login';
 import {User as UserAPI} from './inc/Api/User';
-import {SidebarMenuItem} from './inc/Bambooo/Sidebar/SidebarMenuItem';
-import {NavbarLinkFullsize} from './inc/Bambooo/Navbar/NavbarLinkFullsize';
-import {NavbarLinkButton} from './inc/Bambooo/Navbar/NavbarLinkButton';
-import {SidebarMenuTree} from './inc/Bambooo/Sidebar/SidebarMenuTree';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
 import {Dashboard as DashboardPage} from './inc/Pages/Dashboard';
@@ -130,30 +130,36 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                     loadPage(new DomainsPage());
                 },
                 items: [
-                    /*{
-                        title: 'Dns-Resolver',
-                        name: 'dnsresolver',
-                        icon: 'fa-solid fa-tag',
-                        onClick: (): void => {
-                            loadPage(new DnsResolver())
-                        }
-                    },*/
+
+                    /*
+                     *{
+                     *  title: 'Dns-Resolver',
+                     *  name: 'dnsresolver',
+                     *  icon: 'fa-solid fa-tag',
+                     *  onClick: (): void => {
+                     *      loadPage(new DnsResolver())
+                     *  }
+                     *},
+                     */
                     {
                         title: 'DynDns Clients',
                         name: 'dyndnsclients',
                         icon: 'fa-solid fa-satellite-dish',
                         onClick: (): void => {
-                            loadPage(new DynDnsClients())
+                            loadPage(new DynDnsClients());
                         }
-                    },
-                    /*{
-                        title: 'DynDns Server',
-                        name: 'dyndnsserver',
-                        icon: 'fa-solid fa-server',
-                        onClick: (): void => {
-                            loadPage(new DynDnsClients())
-                        }
-                    }*/
+                    }
+
+                    /*
+                     *{
+                     *  title: 'DynDns Server',
+                     *  name: 'dyndnsserver',
+                     *  icon: 'fa-solid fa-server',
+                     *  onClick: (): void => {
+                     *      loadPage(new DynDnsClients())
+                     *  }
+                     *}
+                     */
                 ]
             },
             {
@@ -162,23 +168,26 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 name: 'routes',
                 onClick: (): void => {
                     loadPage(new RoutesPage());
-                },
-                /*items: [
-                    {
-                        title: 'DynLocation Server',
-                        name: 'dynlocationserver',
-                        icon: 'fa-solid fa-server',
-                        onClick: (): void => {
-                        }
-                    },
-                    {
-                        title: 'SSLCert API Server',
-                        name: 'sslcertapiserver',
-                        icon: 'fa-solid fa-server',
-                        onClick: (): void => {
-                        }
-                    }
-                ]*/
+                }
+
+                /*
+                 *items: [
+                 *  {
+                 *      title: 'DynLocation Server',
+                 *      name: 'dynlocationserver',
+                 *      icon: 'fa-solid fa-server',
+                 *      onClick: (): void => {
+                 *      }
+                 *  },
+                 *  {
+                 *      title: 'SSLCert API Server',
+                 *      name: 'sslcertapiserver',
+                 *      icon: 'fa-solid fa-server',
+                 *      onClick: (): void => {
+                 *      }
+                 *  }
+                 *]
+                 */
             },
             {
                 title: 'Settings',
@@ -216,7 +225,7 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
             if (item.items) {
                 const menuTree = new SidebarMenuTree(menuItem);
 
-                for( const sitem of item.items) {
+                for (const sitem of item.items) {
                     const pmenuItem = new SidebarMenuItem(menuTree, true);
                     pmenuItem.setTitle(sitem.title);
                     pmenuItem.setName(sitem.name);
@@ -233,7 +242,7 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                 }
             }
 
-            if ( (page.getName() === item.name) || isSubActiv) {
+            if ((page.getName() === item.name) || isSubActiv) {
                 menuItem.setActiv(true);
             }
         }

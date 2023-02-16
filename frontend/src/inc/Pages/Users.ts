@@ -1,17 +1,6 @@
 import {User as UserAPI, UserEntry} from '../Api/User';
-import {ButtonClass} from '../Bambooo/Content/Button/ButtonDefault';
-import {Card} from '../Bambooo/Content/Card/Card';
-import {ContentCol, ContentColSize} from '../Bambooo/Content/ContentCol';
-import {DialogConfirm} from '../Bambooo/Content/Dialog/DialogConfirm';
-import {ButtonType} from '../Bambooo/Content/Form/Button';
-import {ButtonMenu} from '../Bambooo/Content/Form/ButtonMenu';
-import {IconFa} from '../Bambooo/Content/Icon/Icon';
-import {Table} from '../Bambooo/Content/Table/Table';
-import {Td} from '../Bambooo/Content/Table/Td';
-import {Th} from '../Bambooo/Content/Table/Th';
-import {Tr} from '../Bambooo/Content/Table/Tr';
-import {ModalDialogType} from '../Bambooo/Modal/ModalDialog';
-import {LeftNavbarLink} from '../Bambooo/Navbar/LeftNavbarLink';
+import {ButtonClass, Card, ContentCol, ContentColSize, DialogConfirm, ButtonType, ButtonMenu, IconFa, Table,
+    Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {UsersEditModal} from './Users/UsersEditModal';
 
@@ -184,7 +173,7 @@ export class Users extends BasePage {
                                 'userDelete',
                                 ModalDialogType.large,
                                 'Delete User',
-                                `Are you sure you want to delete the user?`,
+                                'Are you sure you want to delete the user?',
                                 async(_, dialog) => {
                                     try {
                                         if (await UserAPI.deleteUser({id: aUser.id})) {
@@ -220,4 +209,5 @@ export class Users extends BasePage {
         // load table
         await this._onLoadTable();
     }
+
 }

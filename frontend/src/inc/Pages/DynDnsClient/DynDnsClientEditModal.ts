@@ -1,13 +1,7 @@
 import {DomainData} from '../../Api/Domain';
 import {DynDnsClientDomain, DynDnsProvider} from '../../Api/DynDnsClient';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {FormRow} from '../../Bambooo/Content/Form/FormRow';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {Multiple} from '../../Bambooo/Content/Form/Multiple';
-import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {FormGroup, FormRow, InputBottemBorderOnly2, InputType, Multiple, SelectBottemBorderOnly2, Switch, Element,
+    ModalDialog, ModalDialogType} from 'bambooo';
 
 /**
  * DynDnsClientEditModalButtonClickFn
@@ -212,7 +206,7 @@ export class DynDnsClientEditModal extends ModalDialog {
 
         for (const value of values) {
             list.push({
-                id: parseInt(value),
+                id: parseInt(value, 10),
                 name: ''
             });
         }
@@ -282,4 +276,5 @@ export class DynDnsClientEditModal extends ModalDialog {
     public setOnSave(onSave: DynDnsClientEditModalButtonClickFn): void {
         this._onSaveClick = onSave;
     }
+
 }

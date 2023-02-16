@@ -86,8 +86,6 @@ COPY frontend/assets ./frontend/assets
 COPY frontend/images ./frontend/images
 COPY frontend/dist ./frontend/dist
 COPY frontend/src ./frontend/src
-RUN rm -r /opt/app/frontend/src/inc/Bambooo
-COPY frontend/node_modules/bambooo/src ./frontend/src/inc/Bambooo
 COPY frontend/index.html ./frontend/index.html
 COPY frontend/login.html ./frontend/login.html
 COPY frontend/manifest.json ./frontend/manifest.json

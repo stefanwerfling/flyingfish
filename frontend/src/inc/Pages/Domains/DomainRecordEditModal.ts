@@ -1,11 +1,5 @@
-import {BadgeType} from '../../Bambooo/Content/Badge/Badge';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {FormRow} from '../../Bambooo/Content/Form/FormRow';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
-import {Element} from '../../Bambooo/Element';
-import {ModalDialog, ModalDialogType} from '../../Bambooo/Modal/ModalDialog';
+import {BadgeType, FormGroup, FormRow, Switch, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2,
+    Element, ModalDialog, ModalDialogType} from 'bambooo';
 
 /**
  * DomainRecordEditModalButtonClickFn

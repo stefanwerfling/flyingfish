@@ -1,13 +1,7 @@
 import {Location} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
-import {ButtonClass, ButtonDefault, ButtonDefaultType} from '../../Bambooo/Content/Button/ButtonDefault';
-import {Card, CardBodyType, CardType} from '../../Bambooo/Content/Card/Card';
-import {FormGroup} from '../../Bambooo/Content/Form/FormGroup';
-import {FormRow} from '../../Bambooo/Content/Form/FormRow';
-import {InputBottemBorderOnly2, InputType} from '../../Bambooo/Content/Form/InputBottemBorderOnly2';
-import {SelectBottemBorderOnly2} from '../../Bambooo/Content/Form/SelectBottemBorderOnly2';
-import {Switch} from '../../Bambooo/Content/Form/Switch';
-import {NavTab} from '../../Bambooo/Content/Tab/NavTab';
+import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup, FormRow,
+    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab} from 'bambooo';
 import {UtilNumber} from '../../Utils/UtilNumber';
 
 /**
@@ -253,7 +247,7 @@ export class LocationCard {
 
         const groupEnableAuth = new FormGroup(enableL1.createCol(6), 'Authentication Enable');
         this._switchAuth = new Switch(groupEnableAuth, 'locauth');
-        this._switchAuth.hide();    // todo
+        this._switchAuth.hide();
 
         const rowHost = new FormRow(bodyCardAdv);
 
@@ -407,7 +401,7 @@ export class LocationCard {
             this._selectSshListen.addValue({
                 key: `${entry.id}`,
                 value: `SSH INTERNT OUT (<-- ${entry.port})`
-            })
+            });
         }
     }
 
@@ -499,7 +493,7 @@ export class LocationCard {
      * getHeaderHostPort
      */
     public getHeaderHostPort(): number {
-        return parseInt(this._inputHeaderHostPort.getValue()) || 0;
+        return parseInt(this._inputHeaderHostPort.getValue(), 10) || 0;
     }
 
     /**
@@ -582,7 +576,7 @@ export class LocationCard {
         this.setXForwardedForEnable(location.xforwarded_for_enable);
         this.setXrealipEnable(location.xrealip_enable);
 
-        if (location.proxy_pass != '') {
+        if (location.proxy_pass !== '') {
             this.setDestinationType(RouteHttpEditLocationModalDesType.proxypass);
             this.setProxyPass(location.proxy_pass);
         } else if (location.ssh && location.ssh.port_out) {
@@ -646,4 +640,5 @@ export class LocationCard {
     public remove(): void {
         this._card.getMainElement().remove();
     }
+
 }
