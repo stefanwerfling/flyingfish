@@ -45,3 +45,6 @@
 /iptable/node_modules
 /iptable/package-lock.json
 /iptable/dist
+/vpn/node_modules/
+/vpn/dist/
+/vpn/package-lock.json
