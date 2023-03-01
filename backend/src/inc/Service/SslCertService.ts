@@ -130,7 +130,7 @@ export class SslCertService {
 
                                 if (cert.isValidate()) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is up to date for domain: ${domain.domainname}`);
-                                } else if (await certbot.renew(domain.domainname)) {
+                                } else if (await certbot.create(domain.domainname, http.cert_email)) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
 
                                     reloadNginx = true;

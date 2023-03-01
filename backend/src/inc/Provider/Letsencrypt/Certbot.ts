@@ -58,6 +58,7 @@ export class Certbot implements ISsl {
         const process = spawn(this._command,
             [
                 'certonly',
+                '--non-interactive',
                 '--rsa-key-size',
                 `${keysize}`,
                 '--webroot',
@@ -65,38 +66,6 @@ export class Certbot implements ISsl {
                 '--no-eff-email',
                 '--email',
                 email,
-                '-w',
-                '/opt/app/nginx/html/',
-                '-d',
-                domain
-            ]);
-
-        process.stdout!.on('data', (buf) => {
-            Logger.getLogger().info(buf.toString());
-        });
-
-        process.stderr!.on('data', (buf) => {
-            Logger.getLogger().error(buf.toString());
-        });
-
-        await new Promise((resolve) => {
-            process.on('close', resolve);
-        });
-
-        return Certbot.existCertificate(domain) !== null;
-    }
-
-    /**
-     * renew
-     * @param domain
-     */
-    public async renew(domain: string): Promise<boolean> {
-        const process = spawn(this._command,
-            [
-                'renew',
-                '--non-interactive',
-                '--quiet',
-                '--disable-hook-validation',
                 '-w',
                 '/opt/app/nginx/html/',
                 '-d',
