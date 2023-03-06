@@ -76,12 +76,20 @@ export class NginxHttp extends BaseEntity {
     public cert_lastupdate!: number;
 
     /**
-     * cert create try
+     * cert last request
      */
     @Column({
         default: 0
     })
-    public cert_createtry!: number;
+    public cert_last_request!: number;
+
+    /**
+     * cert create attempts
+     */
+    @Column({
+        default: 0
+    })
+    public cert_create_attempts!: number;
 
     /**
      * x-frame-options
