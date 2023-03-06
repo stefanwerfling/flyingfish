@@ -7,6 +7,7 @@ import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {DBHelper} from '../Db/DBHelper.js';
 import {Logger} from '../Logger/Logger.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
+import {DateHelper} from '../Utils/DateHelper.js';
 import {NginxService} from './NginxService.js';
 
 /**
@@ -58,7 +59,7 @@ export class SslCertService {
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const https = await httpRepository.find({
             where: {
-                cert_createtry: MoreThan(SslCertService.CERT_CREATE_TRY)
+                cert_create_attempts: MoreThan(SslCertService.CERT_CREATE_TRY)
             }
         });
 
@@ -68,7 +69,7 @@ export class SslCertService {
                 .createQueryBuilder()
                 .update()
                 .set({
-                    cert_createtry: 0
+                    cert_create_attempts: 0
                 })
                 .where('id = :id', {id: http.id})
                 .execute();
@@ -107,7 +108,7 @@ export class SslCertService {
                             continue;
                         }
 
-                        if (http.cert_createtry >= SslCertService.CERT_CREATE_TRY) {
+                        if (http.cert_create_attempts >= SslCertService.CERT_CREATE_TRY) {
                             Logger.getLogger().info(`SslCertService::update: to max try for domain: ${domain.domainname}`);
                             continue;
                         }
@@ -117,14 +118,21 @@ export class SslCertService {
                         } else {
                             const sslCert = Certbot.existCertificate(domain.domainname);
 
+                            let isCreateFailed = false;
+                            let isCreate = false;
+
                             if (sslCert === null) {
                                 if (await certbot.create(domain.domainname, http.cert_email)) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is created for domain: ${domain.domainname}`);
 
+                                    isCreate = true;
                                     reloadNginx = true;
                                 } else {
                                     Logger.getLogger().error(`SslCertService::update: certificate is faild to create for domain: ${domain.domainname}`);
+                                    isCreateFailed = true;
                                 }
+                            } else if (certbot.isOverLimit(http.cert_create_attempts, http.cert_last_request)) {
+                                Logger.getLogger().info(`SslCertService::update: too many attempts for cert request, waiting for domain: ${domain.domainname}`);
                             } else {
                                 const cert = new Certificate(Path.join(sslCert, 'cert.pem'));
 
@@ -133,19 +141,35 @@ export class SslCertService {
                                 } else if (await certbot.create(domain.domainname, http.cert_email)) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
 
+                                    isCreate = true;
                                     reloadNginx = true;
                                 } else {
                                     Logger.getLogger().error(`SslCertService::update: certificate is faild to renew for domain: ${domain.domainname}`);
 
-                                    await httpRepository
-                                    .createQueryBuilder()
-                                    .update()
-                                    .set({
-                                        cert_createtry: http.cert_createtry + 1
-                                    })
-                                    .where('id = :id', {id: http.id})
-                                    .execute();
+                                    isCreateFailed = true;
                                 }
+                            }
+
+                            if (isCreateFailed) {
+                                await httpRepository
+                                .createQueryBuilder()
+                                .update()
+                                .set({
+                                    cert_create_attempts: http.cert_create_attempts + 1,
+                                    cert_last_request: DateHelper.getCurrentDbTime()
+                                })
+                                .where('id = :id', {id: http.id})
+                                .execute();
+                            } else if (isCreate) {
+                                await httpRepository
+                                .createQueryBuilder()
+                                .update()
+                                .set({
+                                    cert_create_attempts: 0,
+                                    cert_last_request: DateHelper.getCurrentDbTime()
+                                })
+                                .where('id = :id', {id: http.id})
+                                .execute();
                             }
                         }
                     }

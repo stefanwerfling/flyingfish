@@ -1,12 +1,16 @@
 import {spawn} from 'child_process';
 import fs from 'fs';
 import {Logger} from '../../Logger/Logger.js';
+import {DateHelper} from '../../Utils/DateHelper.js';
 import {ISsl} from '../ISsl.js';
 
 /**
  * Certbot
  */
 export class Certbot implements ISsl {
+
+    public static readonly LIMIT_REQUESTS = 5;
+    public static readonly LIMIT_TIME_HOUR = 1;
 
     /**
      * command
@@ -80,11 +84,34 @@ export class Certbot implements ISsl {
             Logger.getLogger().error(buf.toString());
         });
 
-        await new Promise((resolve) => {
+        const reutnCode = await new Promise((resolve) => {
             process.on('close', resolve);
         });
 
-        return Certbot.existCertificate(domain) !== null;
+        const isCertExist = Certbot.existCertificate(domain) !== null;
+
+        if (!isCertExist) {
+            Logger.getLogger().error('Certbot::create: cert not create/found.');
+        }
+
+        let isSuccess = false;
+
+        if (reutnCode === 0) {
+            isSuccess = true;
+        } else {
+            Logger.getLogger().error(`Certbot::create: return code: ${reutnCode}`);
+        }
+
+        return isCertExist && isSuccess;
+    }
+
+    /**
+     * isOverLimit
+     * @param trycount
+     * @param lastrequstTime
+     */
+    public isOverLimit(trycount: number, lastrequstTime: number): boolean {
+        return (trycount >= Certbot.LIMIT_REQUESTS) && !DateHelper.isOverAHour(lastrequstTime, Certbot.LIMIT_TIME_HOUR);
     }
 
     /**
