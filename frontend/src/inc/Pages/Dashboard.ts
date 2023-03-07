@@ -1,7 +1,20 @@
+import {
+    Badge,
+    BadgeType,
+    ButtonMenu,
+    ButtonMenuPosition,
+    ButtonType,
+    Card,
+    ContentCol,
+    ContentColSize,
+    ContentRow,
+    IconFa,
+    InfoBox,
+    InfoBoxBg, LeftNavbarLink, SwitchTimer
+} from 'bambooo';
 import {Dashboard as DashboardApi} from '../Api/Dashboard';
-import {Badge, BadgeType, InfoBox, InfoBoxBg, Card, ContentCol, ContentColSize, ContentRow, ButtonType, ButtonMenu, ButtonMenuPosition, IconFa} from 'bambooo';
 import {BasePage} from './BasePage';
-import {DashboardMapIp} from './Dashboard/DashboardMapIp';
+import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp';
 
 /**
  * Dashboard
@@ -15,12 +28,28 @@ export class Dashboard extends BasePage {
     protected _name: string = 'dashboard';
 
     /**
+     * switch timer
+     * @protected
+     */
+    protected _updateSwitch: SwitchTimer;
+
+    /**
      * constructor
      */
     public constructor() {
         super();
 
         this.setTitle('Dashboard');
+
+        const switchNav = new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), '', null);
+        this._updateSwitch = new SwitchTimer(
+            switchNav.getAElement(),
+            'autoUpdate',
+            30,
+            'Update'
+        );
+
+        this._updateSwitch.setEnable(true);
     }
 
     /**
@@ -138,10 +167,44 @@ export class Dashboard extends BasePage {
 
             // @ts-ignore
             const dmip = new DashboardMapIp(cardMap);
+
+            const blockMarkList: DashboardMapIpMark[] = [];
+
+            if (dashboardInfo) {
+                for (const block of dashboardInfo.ipblocks) {
+                    blockMarkList.push({
+                        latitude: block.latitude,
+                        longitude: block.longitude
+                    });
+                }
+            }
+
+            dmip.setMarks(blockMarkList);
+
+            const mapContentInfo = new ContentCol(rowMap, ContentColSize.colMd4);
+            const infoBoxBlocks = new InfoBox(mapContentInfo, InfoBoxBg.none);
+            infoBoxBlocks.setIcon(IconFa.ban, InfoBoxBg.light);
+            infoBoxBlocks.getTextElement().append('Blocks');
+
+            const ipblockCounts = dashboardInfo ? dashboardInfo.ipblock_count : 0;
+
+            infoBoxBlocks.getNumberElement().append(ipblockCounts);
+
         };
 
         // load table
         await this._onLoadTable();
+
+        this._updateSwitch.setTimeoutFn(async() => {
+            await this._onLoadTable();
+        });
+    }
+
+    /**
+     * unloadContent
+     */
+    public unloadContent(): void {
+        this._updateSwitch.setEnable(false);
     }
 
 }

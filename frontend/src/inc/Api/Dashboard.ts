@@ -15,11 +15,24 @@ export type HimHIPData = {
 };
 
 /**
+ * DashboardInfoIpBlock
+ */
+export type DashboardInfoIpBlock = {
+    ip: string;
+    info: string;
+    last_block: number;
+    latitude: string;
+    longitude: string;
+};
+
+/**
  * DashboardInfoResponse
  */
 export type DashboardInfoResponse = DefaultReturn & {
     public_ip: string|null;
     host: HimHIPData|null;
+    ipblocks: DashboardInfoIpBlock[];
+    ipblock_count: number;
 };
 
 /**
