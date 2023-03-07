@@ -5,14 +5,19 @@ import {
     ButtonMenuPosition,
     ButtonType,
     Card,
+    Circle,
+    CircleColor,
     ContentCol,
     ContentColSize,
     ContentRow,
     IconFa,
     InfoBox,
-    InfoBoxBg, LeftNavbarLink, SwitchTimer
+    InfoBoxBg,
+    LeftNavbarLink,
+    SwitchTimer, Tooltip, TooltipInfo
 } from 'bambooo';
 import {Dashboard as DashboardApi} from '../Api/Dashboard';
+import {Lang} from '../Lang';
 import {BasePage} from './BasePage';
 import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp';
 
@@ -190,6 +195,21 @@ export class Dashboard extends BasePage {
 
             infoBoxBlocks.getNumberElement().append(ipblockCounts);
 
+            const infoBoxPubIpBlacklist = new InfoBox(mapContentInfo, InfoBoxBg.none);
+            infoBoxPubIpBlacklist.setIcon(IconFa.ethernet, InfoBoxBg.success);
+            infoBoxPubIpBlacklist.getTextElement().append('Public IP blacklist check');
+
+            // eslint-disable-next-line no-new
+            new TooltipInfo(infoBoxPubIpBlacklist.getTextElement(), Lang.i().l('dahsboard_ip_blacklisted'));
+
+            if (dashboardInfo) {
+                // eslint-disable-next-line no-new
+                new Circle(infoBoxPubIpBlacklist.getNumberElement(), dashboardInfo.public_ip_blacklisted ? CircleColor.red : CircleColor.green);
+                infoBoxPubIpBlacklist.getNumberElement().append(`&nbsp;${dashboardInfo.public_ip_blacklisted ? 'IP is blacklisted' : 'IP is not blacklisted'}`);
+            }
+
+            // init tooltips
+            Tooltip.init();
         };
 
         // load table

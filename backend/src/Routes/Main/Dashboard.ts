@@ -6,6 +6,7 @@ import {HimHIP, HimHIPData} from '../../inc/HimHIP/HimHIP.js';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
 import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 import {HowIsMyPublicIpService} from '../../inc/Service/HowIsMyPublicIpService.js';
+import {IpService} from '../../inc/Service/IpService.js';
 
 /**
  * DashboardInfoIpBlock
@@ -23,6 +24,7 @@ export type DashboardInfoIpBlock = {
  */
 export type DashboardInfoResponse = DefaultReturn & {
     public_ip: string|null;
+    public_ip_blacklisted: boolean;
     host: HimHIPData|null;
     ipblocks: DashboardInfoIpBlock[];
     ipblock_count: number;
@@ -90,6 +92,7 @@ export class Dashboard {
 
             return {
                 public_ip: await HowIsMyPublicIpService.getInstance().getCurrentIp(),
+                public_ip_blacklisted: IpService.isBlacklisted,
                 host: HimHIP.getData(),
                 ipblocks: ipblocks,
                 ipblock_count: ipblock_count,
@@ -99,6 +102,7 @@ export class Dashboard {
 
         return {
             public_ip: null,
+            public_ip_blacklisted: false,
             host: null,
             ipblocks: [],
             ipblock_count: 0,

@@ -30,6 +30,7 @@ export type DashboardInfoIpBlock = {
  */
 export type DashboardInfoResponse = DefaultReturn & {
     public_ip: string|null;
+    public_ip_blacklisted: boolean;
     host: HimHIPData|null;
     ipblocks: DashboardInfoIpBlock[];
     ipblock_count: number;

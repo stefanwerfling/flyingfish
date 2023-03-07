@@ -1,4 +1,5 @@
 import DNS from 'dns2';
+import {Logger} from '../../Logger/Logger.js';
 
 /**
  * IpBlacklistCheck
@@ -27,7 +28,7 @@ export class IpBlacklist {
         'dnsbl-2.uceprotect.net',
         'dnsbl.anticaptcha.net',
         'dnsbl.inps.de',
-        'dnsbl.spfbl.net',
+        // 'dnsbl.spfbl.net',
         'duinv.aupads.org',
         'dyna.spamrats.com',
         'http.dnsbl.sorbs.net',
@@ -111,8 +112,9 @@ export class IpBlacklist {
      */
     public async checkdnsrr(dnsName: string): Promise<boolean> {
         const dns = new DNS();
-
         const result = await dns.resolveA(dnsName);
+
+        Logger.getLogger().silly(`IpBlacklist::checkdnsrr: result for "${dnsName}" is: ${result.answers.length > 0}`);
 
         return result.answers.length > 0;
     }
