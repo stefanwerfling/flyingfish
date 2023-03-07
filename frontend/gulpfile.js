@@ -6,6 +6,7 @@ const GetGoogleFonts = require('get-google-fonts');
 const webpack = require('webpack');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const webpackConfig = require('./webpack.config.js');
+const {exec} = require('child_process');
 
 const currentPath = './';
 const assetsPath = `${currentPath}assets/`;
@@ -14,8 +15,8 @@ const assetsPath = `${currentPath}assets/`;
  * copy-data
  * for frontend to assets
  */
-gulp.task('copy-data', async function() {
-    const downloadGoogleFont = async function() {
+gulp.task('copy-data', async() => {
+    const downloadGoogleFont = async() => {
         const ggf = new GetGoogleFonts({
             outputDir: `${assetsPath}css/fonts`
         });
@@ -52,7 +53,8 @@ gulp.task('copy-data', async function() {
     &&
 
     gulp.src([
-        `${currentPath}/node_modules/admin-lte/dist/css/**/*`
+        `${currentPath}node_modules/admin-lte/dist/css/**/*`,
+        `${currentPath}node_modules/ol/ol.css`
     ])
     .pipe(gulp.dest(`${assetsPath}css`))
 
@@ -75,6 +77,24 @@ gulp.task('build-webpack', () => {
 
             resolve();
         });
+    });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+gulp.task('setup-bambooo', (cb) => {
+    exec('cd node_modules && rm -R bambooo && git submodule add -f https://github.com/stefanwerfling/bambooo.git', (err, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        cb(err);
+    });
+});
+
+gulp.task('build-bambooo', (cb) => {
+    exec('cd node_modules/bambooo && npm install && npm run build', (err, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        cb(err);
     });
 });
 
