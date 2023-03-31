@@ -1,6 +1,9 @@
-import {Get, JsonController, Session} from 'routing-controllers-extended';
+import {Router} from 'express';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * SshPortEntry
@@ -13,47 +16,60 @@ export type SshPortEntry = {
 /**
  * SshPortListResponse
  */
-export type SshPortListResponse = {
-    status: string;
-    msg?: string;
+export type SshPortListResponse = DefaultReturn & {
     list: SshPortEntry[];
 };
 
-@JsonController()
-export class Ssh {
+/**
+ * Ssh
+ */
+export class Ssh extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * getList
-     * @param session
      */
-    @Get('/json/ssh/list')
-    public async getList(@Session() session: any): Promise<SshPortListResponse> {
+    public async getList(): Promise<SshPortListResponse> {
         const list: SshPortEntry[] = [];
 
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const sshPortRepository = DBHelper.getRepository(SshPortDB);
-            const sshports = await sshPortRepository.find();
+        const sshPortRepository = DBHelper.getRepository(SshPortDB);
+        const sshports = await sshPortRepository.find();
 
-            if (sshports) {
-                for (const asshport of sshports) {
-                    list.push({
-                        id: asshport.id,
-                        port: asshport.port
-                    });
-                }
+        if (sshports) {
+            for (const asshport of sshports) {
+                list.push({
+                    id: asshport.id,
+                    port: asshport.port
+                });
             }
-        } else {
-            return {
-                status: 'error',
-                msg: 'Please login first!',
-                list: list
-            };
         }
 
         return {
-            status: 'ok',
+            statusCode: StatusCodes.OK,
             list: list
         };
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/json/ssh/list',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getList());
+                }
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

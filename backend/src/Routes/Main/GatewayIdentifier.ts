@@ -1,19 +1,23 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Router} from 'express';
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
 import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * GatewayIdentifierEntry
  */
-export type GatewayIdentifierEntry = {
-    id: number;
-    networkname: string;
-    mac_address: string;
-    address: string;
-    color: string;
-};
+export const SchemaGatewayIdentifierEntry = Vts.object({
+    id: Vts.number(),
+    networkname: Vts.string(),
+    mac_address: Vts.string(),
+    address: Vts.string(),
+    color: Vts.string()
+});
+
+export type GatewayIdentifierEntry = ExtractSchemaResultType<typeof SchemaGatewayIdentifierEntry>;
 
 /**
  * GatewayIdentifierListResponse
@@ -30,9 +34,11 @@ export type GatewayIdentifierSaveResponse = DefaultReturn;
 /**
  * GatewayIdentifierDelete
  */
-export type GatewayIdentifierDelete = {
-    id: number;
-};
+export const SchemaGatewayIdentifierDelete = Vts.object({
+    id: Vts.number()
+});
+
+export type GatewayIdentifierDelete = ExtractSchemaResultType<typeof SchemaGatewayIdentifierDelete>;
 
 /**
  * GatewayIdentifierDeleteResponse
@@ -42,121 +48,141 @@ export type GatewayIdentifierDeleteResponse = DefaultReturn;
 /**
  * GatewayIdentifier
  */
-@JsonController()
-export class GatewayIdentifier {
+export class GatewayIdentifier extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * getList
-     * @param session
      */
-    @Get('/json/gatewayidentifier/list')
-    public async getList(@Session() session: any): Promise<GatewayIdentifierListResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
+    public async getList(): Promise<GatewayIdentifierListResponse> {
+        const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
-            const list: GatewayIdentifierEntry[] = [];
-            const entries = await giRepository.find();
+        const list: GatewayIdentifierEntry[] = [];
+        const entries = await giRepository.find();
 
-            for (const entry of entries) {
-                list.push({
-                    id: entry.id,
-                    networkname: entry.networkname,
-                    mac_address: entry.mac_address,
-                    address: entry.address,
-                    color: entry.color
-                });
-            }
-
-            return {
-                statusCode: StatusCodes.OK,
-                data: list
-            };
+        for (const entry of entries) {
+            list.push({
+                id: entry.id,
+                networkname: entry.networkname,
+                mac_address: entry.mac_address,
+                address: entry.address,
+                color: entry.color
+            });
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.OK,
+            data: list
         };
     }
 
     /**
      * save
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/gatewayidentifier/save')
-    public async save(@Session() session: any, @Body() request: GatewayIdentifierEntry): Promise<GatewayIdentifierSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
+    public async save(data: GatewayIdentifierEntry): Promise<GatewayIdentifierSaveResponse> {
+        const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
-            let aGateway: GatewayIdentifierDB|null = null;
+        let aGateway: GatewayIdentifierDB|null = null;
 
-            if (request.id !== 0) {
-                const tgi = await giRepository.findOne({
-                    where: {
-                        id: request.id
-                    }
-                });
-
-                if (tgi) {
-                    aGateway = tgi;
+        if (data.id !== 0) {
+            const tgi = await giRepository.findOne({
+                where: {
+                    id: data.id
                 }
+            });
+
+            if (tgi) {
+                aGateway = tgi;
             }
+        }
 
-            if (aGateway === null) {
-                aGateway = new GatewayIdentifierDB();
-            }
+        if (aGateway === null) {
+            aGateway = new GatewayIdentifierDB();
+        }
 
-            aGateway.mac_address = request.mac_address;
-            aGateway.address = request.address;
-            aGateway.networkname = request.networkname;
-            aGateway.color = request.color;
+        aGateway.mac_address = data.mac_address;
+        aGateway.address = data.address;
+        aGateway.networkname = data.networkname;
+        aGateway.color = data.color;
 
-            const result = await DBHelper.getDataSource().manager.save(aGateway);
+        const result = await DBHelper.getDataSource().manager.save(aGateway);
 
-            if (result) {
-                return {
-                    statusCode: StatusCodes.OK
-                };
-            }
-
+        if (result) {
             return {
-                statusCode: StatusCodes.INTERNAL_ERROR
+                statusCode: StatusCodes.OK
             };
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.INTERNAL_ERROR
         };
     }
 
     /**
      * delete
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/gatewayidentifier/delete')
-    public async delete(@Session() session: any, @Body() request: GatewayIdentifierDelete): Promise<GatewayIdentifierDeleteResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
+    public async delete(data: GatewayIdentifierDelete): Promise<GatewayIdentifierDeleteResponse> {
+        const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
-            const result = await giRepository.delete({
-                id: request.id
-            });
+        const result = await giRepository.delete({
+            id: data.id
+        });
 
-            if (result) {
-                return {
-                    statusCode: StatusCodes.OK
-                };
-            }
-
+        if (result) {
             return {
-                statusCode: StatusCodes.INTERNAL_ERROR
+                statusCode: StatusCodes.OK
             };
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.INTERNAL_ERROR
         };
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/json/gatewayidentifier/list',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getList());
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/gatewayidentifier/save',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaGatewayIdentifierEntry, req.body, res)) {
+                        res.status(200).json(await this.save(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/gatewayidentifier/delete',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaGatewayIdentifierDelete, req.body, res)) {
+                        res.status(200).json(await this.delete(req.body));
+                    }
+                }
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

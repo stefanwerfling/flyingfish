@@ -1,21 +1,25 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Router} from 'express';
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
 import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 import {Settings as GlobalSettings} from '../../inc/Settings/Settings.js';
 
 /**
  * SettingsList
  */
-export type SettingsList = {
-    nginx: {
-        worker_connections: string;
-        resolver: string;
-    };
-    blacklist: {
-        importer: string;
-        iplocate: string;
-    };
-};
+export const SchemaSettingsList = Vts.object({
+    nginx: Vts.object({
+        worker_connections: Vts.string(),
+        resolver: Vts.string()
+    }),
+    blacklist: Vts.object({
+        importer: Vts.string(),
+        iplocate: Vts.string()
+    })
+});
+
+export type SettingsList = ExtractSchemaResultType<typeof SchemaSettingsList>;
 
 /**
  * SettingsResponse
@@ -27,69 +31,89 @@ export type SettingsResponse = DefaultReturn & {
 /**
  * Settings
  */
-@JsonController()
-export class Settings {
+export class Settings extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * getList
-     * @param session
      */
-    @Get('/json/settings/list')
-    public async getList(@Session() session: any): Promise<SettingsResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const setting: SettingsList = {
-                // nginx -----------------------------------------------------------------------------------------------
-                nginx: {
-                    worker_connections: await GlobalSettings.getSetting(
-                        GlobalSettings.NGINX_WORKER_CONNECTIONS,
-                        GlobalSettings.NGINX_WORKER_CONNECTIONS_DEFAULT
-                    ),
-                    resolver: await GlobalSettings.getSetting(
-                        GlobalSettings.NGINX_RESOLVER,
-                        GlobalSettings.NGINX_RESOLVER_DEFAULT
-                    )
-                },
-                blacklist: {
-                    importer: await GlobalSettings.getSetting(
-                        GlobalSettings.BLACKLIST_IMPORTER,
-                        GlobalSettings.BLACKLIST_IMPORTER_DEFAULT
-                    ),
-                    iplocate: await GlobalSettings.getSetting(
-                        GlobalSettings.BLACKLIST_IPLOCATE,
-                        GlobalSettings.BLACKLIST_IPLOCATE_DEFAULT
-                    )
-                }
-            };
-
-            return {
-                statusCode: StatusCodes.OK,
-                list: setting
-            };
-        }
+    public async getList(): Promise<SettingsResponse> {
+        const setting: SettingsList = {
+            // nginx ---------------------------------------------------------------------------------------------------
+            nginx: {
+                worker_connections: await GlobalSettings.getSetting(
+                    GlobalSettings.NGINX_WORKER_CONNECTIONS,
+                    GlobalSettings.NGINX_WORKER_CONNECTIONS_DEFAULT
+                ),
+                resolver: await GlobalSettings.getSetting(
+                    GlobalSettings.NGINX_RESOLVER,
+                    GlobalSettings.NGINX_RESOLVER_DEFAULT
+                )
+            },
+            // blacklist -----------------------------------------------------------------------------------------------
+            blacklist: {
+                importer: await GlobalSettings.getSetting(
+                    GlobalSettings.BLACKLIST_IMPORTER,
+                    GlobalSettings.BLACKLIST_IMPORTER_DEFAULT
+                ),
+                iplocate: await GlobalSettings.getSetting(
+                    GlobalSettings.BLACKLIST_IPLOCATE,
+                    GlobalSettings.BLACKLIST_IPLOCATE_DEFAULT
+                )
+            }
+        };
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.OK,
+            list: setting
         };
     }
 
     /**
      * saveSettings
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/settings/save')
-    public async saveSettings(@Session() session: any, @Body() request: SettingsList): Promise<boolean> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            await GlobalSettings.setSetting(GlobalSettings.NGINX_WORKER_CONNECTIONS, request.nginx.worker_connections);
-            await GlobalSettings.setSetting(GlobalSettings.NGINX_RESOLVER, request.nginx.resolver);
+    public async saveSettings(data: SettingsList): Promise<boolean> {
+        await GlobalSettings.setSetting(GlobalSettings.NGINX_WORKER_CONNECTIONS, data.nginx.worker_connections);
+        await GlobalSettings.setSetting(GlobalSettings.NGINX_RESOLVER, data.nginx.resolver);
 
-            await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IMPORTER, request.blacklist.importer);
-            await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IPLOCATE, request.blacklist.iplocate);
+        await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IMPORTER, data.blacklist.importer);
+        await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IPLOCATE, data.blacklist.iplocate);
 
-            return true;
-        }
+        return true;
+    }
 
-        return false;
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/json/settings/list',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getList());
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/settings/save',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaSettingsList, req.body, res)) {
+                        res.status(200).json(await this.saveSettings(req.body));
+                    }
+                }
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

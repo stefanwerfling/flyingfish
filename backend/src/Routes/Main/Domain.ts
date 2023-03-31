@@ -1,385 +1,418 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Router} from 'express';
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {DomainRecord as DomainRecordDB} from '../../inc/Db/MariaDb/Entity/DomainRecord.js';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 import {HowIsMyPublicIpService} from '../../inc/Service/HowIsMyPublicIpService.js';
 
 /**
  * DomainRecord
  */
-export type DomainRecord = {
-    id: number;
-    type: number;
-    class: number;
-    ttl: number;
-    value: string;
-    update_by_dnsclient: boolean;
-    last_update: number;
-};
+export const SchemaDomainRecord = Vts.object({
+    id: Vts.number(),
+    type: Vts.number(),
+    class: Vts.number(),
+    ttl: Vts.number(),
+    value: Vts.string(),
+    update_by_dnsclient: Vts.boolean(),
+    last_update: Vts.number()
+});
+
+export type DomainRecord = ExtractSchemaResultType<typeof SchemaDomainRecord>;
 
 /**
  * DomainData
  */
-export type DomainData = {
-    id: number;
-    name: string;
-    fix: boolean;
-    recordless: boolean;
-    records: DomainRecord[];
-    disable: boolean;
-};
+export const SchemaDomainData = Vts.object({
+    id: Vts.number(),
+    name: Vts.string(),
+    fix: Vts.boolean(),
+    recordless: Vts.boolean(),
+    records: Vts.array(SchemaDomainRecord),
+    disable: Vts.boolean()
+});
+
+export type DomainData = ExtractSchemaResultType<typeof SchemaDomainData>;
 
 /**
  * DomainResponse
  */
-export type DomainResponse = {
-    status: string;
-    msg?: string;
-    list: DomainData[];
+export type DomainResponse = DefaultReturn & {
+    list?: DomainData[];
 };
 
 /**
  * DomainSaveResponse
  */
-export type DomainSaveResponse = {
-    status: string;
-    error?: string;
-};
+export type DomainSaveResponse = DefaultReturn;
 
 /**
  * DomainDeleteResponse
  */
-export type DomainDeleteResponse = {
-    status: string;
-    error?: string;
-};
+export type DomainDeleteResponse = DefaultReturn;
 
 /**
  * DomainRecordSave
  */
-export type DomainRecordSave = {
-    domain_id: number;
-    record: DomainRecord;
-};
+export const SchemaDomainRecordSave = Vts.object({
+    domain_id: Vts.number(),
+    record: SchemaDomainRecord
+});
+
+export type DomainRecordSave = ExtractSchemaResultType<typeof SchemaDomainRecordSave>;
 
 /**
  * DomainRecordSaveResponse
  */
-export type DomainRecordSaveResponse = {
-    status: string;
-    error?: string;
-};
+export type DomainRecordSaveResponse = DefaultReturn;
+
+/**
+ * DomainRecordDelete
+ */
+export const SchemaDomainRecordDelete = Vts.object({
+    id: Vts.number()
+});
+
+export type DomainRecordDelete = ExtractSchemaResultType<typeof SchemaDomainRecordDelete>;
 
 /**
  * DomainRecordDeleteResponse
  */
-export type DomainRecordDeleteResponse = {
-    status: string;
-    error?: string;
-};
+export type DomainRecordDeleteResponse = DefaultReturn;
+
+export const SchemaDomainDelete = Vts.object({
+    id: Vts.number()
+});
+
+export type DomainDelete = ExtractSchemaResultType<typeof SchemaDomainDelete>;
 
 /**
  * Domain
  */
-@JsonController()
-export class Domain {
+export class Domain extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * getDomains
-     * @param session
      */
-    @Get('/json/domain/list')
-    public async getDomains(@Session() session: any): Promise<DomainResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = DBHelper.getRepository(DomainDB);
-            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
+    public async getDomains(): Promise<DomainResponse> {
+        const domainRepository = DBHelper.getRepository(DomainDB);
+        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
-            const domainList: DomainData[] = [];
-            const domains = await domainRepository.find();
+        const domainList: DomainData[] = [];
+        const domains = await domainRepository.find();
 
-            for await (const domain of domains) {
-                const recordList: DomainRecord[] = [];
+        for await (const domain of domains) {
+            const recordList: DomainRecord[] = [];
 
-                const records = await domainRecordRepository.find({
-                    where: {
-                        domain_id: domain.id
-                    }
-                });
-
-                for (const record of records) {
-                    recordList.push({
-                        id: record.id,
-                        type: record.dtype,
-                        class: record.dclass,
-                        ttl: record.ttl,
-                        value: record.dvalue,
-                        update_by_dnsclient: record.update_by_dnsclient,
-                        last_update: record.last_update
-                    });
+            const records = await domainRecordRepository.find({
+                where: {
+                    domain_id: domain.id
                 }
+            });
 
-                domainList.push({
-                    id: domain.id,
-                    name: domain.domainname,
-                    fix: domain.fixdomain,
-                    recordless: domain.recordless,
-                    disable: domain.disable,
-                    records: recordList
+            for (const record of records) {
+                recordList.push({
+                    id: record.id,
+                    type: record.dtype,
+                    class: record.dclass,
+                    ttl: record.ttl,
+                    value: record.dvalue,
+                    update_by_dnsclient: record.update_by_dnsclient,
+                    last_update: record.last_update
                 });
             }
 
-            return {
-                status: 'ok',
-                list: domainList
-            };
+            domainList.push({
+                id: domain.id,
+                name: domain.domainname,
+                fix: domain.fixdomain,
+                recordless: domain.recordless,
+                disable: domain.disable,
+                records: recordList
+            });
         }
 
         return {
-            status: 'error',
-            msg: 'Please login!',
-            list: []
+            statusCode: StatusCodes.OK,
+            list: domainList
         };
     }
 
     /**
      * saveDomain
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/domain/save')
-    public async saveDomain(
-        @Session() session: any,
-        @Body() request: DomainData
-    ): Promise<DomainSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = DBHelper.getRepository(DomainDB);
+    public async saveDomain(data: DomainData): Promise<DomainSaveResponse> {
+        const domainRepository = DBHelper.getRepository(DomainDB);
 
-            let aDomain: DomainDB|null = null;
+        let aDomain: DomainDB | null = null;
 
-            if (request.id !== 0) {
-                const tDomain = await domainRepository.findOne({
-                    where: {
-                        id: request.id
-                    }
-                });
+        if (data.id !== 0) {
+            const tDomain = await domainRepository.findOne({
+                where: {
+                    id: data.id
+                }
+            });
 
-                if (tDomain) {
-                    if (tDomain.fixdomain) {
-                        return {
-                            status: 'error',
-                            error: `entry is not editable by id: ${request.id}`
-                        };
-                    }
-
-                    aDomain = tDomain;
-                } else {
+            if (tDomain) {
+                if (tDomain.fixdomain) {
                     return {
-                        status: 'error',
-                        error: `entry not found by id: ${request.id}`
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: `entry is not editable by id: ${data.id}`
                     };
                 }
+
+                aDomain = tDomain;
+            } else {
+                return {
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: `entry not found by id: ${data.id}`
+                };
             }
-
-            if (aDomain === null) {
-                aDomain = new DomainDB();
-            }
-
-            aDomain.domainname = request.name;
-            aDomain.disable = request.disable;
-
-            await DBHelper.getDataSource().manager.save(aDomain);
-
-            return {
-                status: 'ok'
-            };
         }
 
+        if (aDomain === null) {
+            aDomain = new DomainDB();
+        }
+
+        aDomain.domainname = data.name;
+        aDomain.disable = data.disable;
+
+        await DBHelper.getDataSource().manager.save(aDomain);
+
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.OK
         };
     }
 
     /**
      * deleteDomain
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/domain/delete')
-    public async deleteDomain(
-        @Session() session: any,
-        @Body() request: DomainData
-    ): Promise<DomainDeleteResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = DBHelper.getRepository(DomainDB);
-            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
-            const streamRepository = DBHelper.getRepository(NginxStreamDB);
-            const httpRepository = DBHelper.getRepository(NginxHttpDB);
+    public async deleteDomain(data: DomainDelete): Promise<DomainDeleteResponse> {
+        const domainRepository = DBHelper.getRepository(DomainDB);
+        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
+        const streamRepository = DBHelper.getRepository(NginxStreamDB);
+        const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
-            const domain = await domainRepository.findOne({
+        const domain = await domainRepository.findOne({
+            where: {
+                id: data.id
+            }
+        });
+
+        if (domain) {
+            if (domain.fixdomain) {
+                return {
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: `domain is fix and can not delete by id: ${data.id}`
+                };
+            }
+
+            const countStreams = await streamRepository.count({
                 where: {
-                    id: request.id
+                    domain_id: domain.id
                 }
             });
 
-            if (domain) {
-                if (domain.fixdomain) {
-                    return {
-                        status: 'error',
-                        error: `domain is fix and can not delete by id: ${request.id}`
-                    };
+            const countHttps = await httpRepository.count({
+                where: {
+                    domain_id: domain.id
                 }
+            });
 
-                const countStreams = await streamRepository.count({
-                    where: {
-                        domain_id: domain.id
-                    }
-                });
-
-                const countHttps = await httpRepository.count({
-                    where: {
-                        domain_id: domain.id
-                    }
-                });
-
-                if ((countStreams > 0) || (countHttps > 0)) {
-                    return {
-                        status: 'error',
-                        error: `domain in use, can not delete by id: ${request.id}`
-                    };
-                }
-
-                await domainRecordRepository.delete({
-                    domain_id: request.id
-                });
-
-                const result = await domainRepository.delete({
-                    id: request.id
-                });
-
-                if (result) {
-                    return {
-                        status: 'ok'
-                    };
-                }
-            } else {
+            if ((countStreams > 0) || (countHttps > 0)) {
                 return {
-                    status: 'error',
-                    error: `domain not found by id: ${request.id}`
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: `domain in use, can not delete by id: ${data.id}`
+                };
+            }
+
+            await domainRecordRepository.delete({
+                domain_id: data.id
+            });
+
+            const result = await domainRepository.delete({
+                id: data.id
+            });
+
+            if (result) {
+                return {
+                    statusCode: StatusCodes.OK
                 };
             }
         }
 
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            msg: `domain not found by id: ${data.id}`
         };
     }
 
     /**
      * saveDomainRecord
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/domain/record/save')
-    public async saveDomainRecord(
-        @Session() session: any,
-        @Body() request: DomainRecordSave
-    ): Promise<DomainRecordSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
+    public async saveDomainRecord(data: DomainRecordSave): Promise<DomainRecordSaveResponse> {
+        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
-            let aRecord: DomainRecordDB|null = null;
+        let aRecord: DomainRecordDB | null = null;
 
-            if (request.record.id !== 0) {
-                const tRecord = await domainRecordRepository.findOne({
-                    where: {
-                        id: request.record.id
-                    }
-                });
-
-                if (tRecord) {
-                    aRecord = tRecord;
+        if (data.record.id !== 0) {
+            const tRecord = await domainRecordRepository.findOne({
+                where: {
+                    id: data.record.id
                 }
+            });
+
+            if (tRecord) {
+                aRecord = tRecord;
             }
-
-            if (aRecord === null) {
-                aRecord = new DomainRecordDB();
-                aRecord.domain_id = request.domain_id;
-            }
-
-            aRecord.dtype = request.record.type;
-            aRecord.dclass = request.record.class;
-            aRecord.ttl = request.record.ttl;
-            aRecord.dvalue = request.record.value;
-            aRecord.update_by_dnsclient = request.record.update_by_dnsclient;
-
-            // when update by dnsclient, then set value for ip by public ip
-            if (aRecord.dvalue === '' && aRecord.update_by_dnsclient) {
-                const publicIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
-
-                if (publicIp) {
-                    aRecord.dvalue = publicIp;
-                }
-            }
-
-            await DBHelper.getDataSource().manager.save(aRecord);
-
-            return {
-                status: 'ok'
-            };
         }
 
+        if (aRecord === null) {
+            aRecord = new DomainRecordDB();
+            aRecord.domain_id = data.domain_id;
+        }
+
+        aRecord.dtype = data.record.type;
+        aRecord.dclass = data.record.class;
+        aRecord.ttl = data.record.ttl;
+        aRecord.dvalue = data.record.value;
+        aRecord.update_by_dnsclient = data.record.update_by_dnsclient;
+
+        // when update by dnsclient, then set value for ip by public ip
+        if (aRecord.dvalue === '' && aRecord.update_by_dnsclient) {
+            const publicIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
+
+            if (publicIp) {
+                aRecord.dvalue = publicIp;
+            }
+        }
+
+        await DBHelper.getDataSource().manager.save(aRecord);
+
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.OK
         };
     }
 
     /**
      * deleteDomainRecord
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/domain/record/delete')
-    public async deleteDomainRecord(
-        @Session() session: any,
-        @Body() request: DomainRecord
-    ): Promise<DomainRecordDeleteResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
+    public async deleteDomainRecord(data: DomainRecordDelete): Promise<DomainRecordDeleteResponse> {
+        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
-            const arecord = await domainRecordRepository.findOne({
-                where: {
-                    id: request.id
-                }
+        const arecord = await domainRecordRepository.findOne({
+            where: {
+                id: data.id
+            }
+        });
+
+        if (arecord) {
+            const result = await domainRecordRepository.delete({
+                id: data.id
             });
 
-            if (arecord) {
-                const result = await domainRecordRepository.delete({
-                    id: request.id
-                });
-
-                if (result) {
-                    return {
-                        status: 'ok'
-                    };
-                }
+            if (result) {
+                return {
+                    statusCode: StatusCodes.OK
+                };
             }
-
-            return {
-                status: 'error',
-                error: `domain record not found by id: ${request.id}`
-            };
-
         }
 
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            msg: `domain record not found by id: ${data.id}`
         };
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/json/domain/list',
+            async(
+                req,
+                res
+            ) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getDomains());
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/domain/save',
+            async(
+                req,
+                res
+            ) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaDomainData, req.body, res)) {
+                        res.status(200).json(await this.saveDomain(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/domain/delete',
+            async(
+                req,
+                res
+            ) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaDomainDelete, req.body, res)) {
+                        res.status(200).json(await this.deleteDomain(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/domain/record/save',
+            async(
+                req,
+                res
+            ) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaDomainRecordSave, req.body, res)) {
+                        res.status(200).json(await this.saveDomainRecord(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/domain/record/delete',
+            async(
+                req,
+                res
+            ) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaDomainRecordDelete, req.body, res)) {
+                        res.status(200).json(await this.deleteDomainRecord(req.body));
+                    }
+                }
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

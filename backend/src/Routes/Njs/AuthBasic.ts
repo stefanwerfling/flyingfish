@@ -1,14 +1,20 @@
-import {Response} from 'express';
-import {Get, HeaderParam, JsonController, Res} from 'routing-controllers-extended';
+import {Response, Router} from 'express';
 import {Credential} from '../../inc/Credential/Credential.js';
 import {Logger} from '../../inc/Logger/Logger.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
 import {BasicAuthParser} from '../../inc/Server/BasicAuthParser.js';
 
 /**
  * AuthBasic
  */
-@JsonController()
-export class AuthBasic {
+export class AuthBasic extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * check
@@ -16,11 +22,10 @@ export class AuthBasic {
      * @param location_id
      * @param authHeader
      */
-    @Get('/njs/auth_basic')
     public async check(
-        @Res() response: Response,
-        @HeaderParam('location_id') location_id: string,
-        @HeaderParam('authheader') authHeader: string
+        response: Response,
+        location_id: string,
+        authHeader: string
     ): Promise<boolean> {
         Logger.getLogger().info(`check -> location_id: ${location_id}`);
         Logger.getLogger().info(`check -> authheader: ${authHeader}`);
@@ -55,6 +60,24 @@ export class AuthBasic {
 
         response.status(500);
         return false;
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/njs/auth_basic',
+            async(req, res) => {
+                await this.check(
+                    res,
+                    req.header('location_id') ?? '',
+                    req.header('authheader') ?? ''
+                );
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

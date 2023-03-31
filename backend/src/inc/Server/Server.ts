@@ -1,10 +1,13 @@
-import express, {Application} from 'express';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import express, {Application, NextFunction, Request, Response} from 'express';
+import session from 'express-session';
 import fs from 'fs';
 import helmet from 'helmet';
 import * as https from 'https';
 import Path from 'path';
-import {useExpressServer} from 'routing-controllers-extended';
 import {Logger} from '../Logger/Logger.js';
+import {DefaultRoute} from '../Routes/DefaultRoute.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
 
 /**
@@ -35,12 +38,16 @@ export class Server {
      * @param appInit
      */
     public constructor(appInit: {
-        port?: number;
-        middleWares?: any;
-        routes?: any;
-        controllers?: any;
-        publicDir?: string | null;
-        sslPath?: string;
+        sslPath: string;
+        routes: DefaultRoute[];
+        port: number;
+        session: {
+            max_age: number;
+            ssl_path: string;
+            cookie_path: string;
+            secret: string;
+        };
+        publicDir: string;
     }) {
         if (appInit.port) {
             this._port = appInit.port;
@@ -74,18 +81,31 @@ export class Server {
             }
         }));
 
-        if (appInit.middleWares) {
-            this._middlewares(appInit.middleWares);
-        }
+        this._server.use(bodyParser.urlencoded({extended: true}));
+        this._server.use(bodyParser.json());
+        this._server.use(cookieParser());
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._server.use(
+            session({
+                secret: appInit.session.secret,
+                proxy: true,
+                resave: true,
+                saveUninitialized: true,
+                store: new session.MemoryStore(),
+                cookie: {
+                    path: appInit.session.cookie_path,
+                    secure: appInit.session.ssl_path !== '',
+                    maxAge: appInit.session.max_age
+                }
+            })
+        );
+
+        // -------------------------------------------------------------------------------------------------------------
 
         if (appInit.routes) {
             this._routes(appInit.routes);
-        }
-
-        if (appInit.controllers) {
-            useExpressServer(this._server, {
-                controllers: appInit.controllers
-            });
         }
 
         if (appInit.publicDir) {
@@ -95,16 +115,12 @@ export class Server {
         if (appInit.sslPath) {
             this._sslPath = appInit.sslPath;
         }
-    }
 
-    /**
-     * _middlewares
-     * @param middleWares
-     * @private
-     */
-    private _middlewares(middleWares: { forEach: (arg0: (middleWare: any) => void) => void; }): void {
-        middleWares.forEach((middleWare) => {
-            this._server.use(middleWare);
+        // add error handling
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        this._server.use((error: Error, request: Request, response: Response, _next: NextFunction) => {
+            response.status(500);
+            Logger.getLogger().error(error.stack);
         });
     }
 
@@ -113,9 +129,9 @@ export class Server {
      * @param routes
      * @private
      */
-    private _routes(routes: { forEach: (arg0: (route: any) => void) => void; }): void {
+    private _routes(routes: DefaultRoute[]): void {
         routes.forEach((route) => {
-            this._server.use('/', route.router);
+            this._server.use(route.getExpressRouter());
         });
     }
 

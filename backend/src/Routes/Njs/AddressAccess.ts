@@ -1,17 +1,23 @@
-import {Response} from 'express';
-import {Get, HeaderParam, JsonController, Res} from 'routing-controllers-extended';
+import {Response, Router} from 'express';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {IpWhitelist as IpWhitelistDB} from '../../inc/Db/MariaDb/Entity/IpWhitelist.js';
 import {ListenAddressCheckType, NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
 import {Logger} from '../../inc/Logger/Logger.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
 import {DateHelper} from '../../inc/Utils/DateHelper.js';
 
 /**
  * AddressAccess
  */
-@JsonController()
-export class AddressAccess {
+export class AddressAccess extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * access
@@ -21,13 +27,12 @@ export class AddressAccess {
      * @param remote_addr
      * @param type
      */
-    @Get('/njs/address_access')
     public async access(
-        @Res() response: Response,
-        @HeaderParam('listen_id') listen_id: string,
-        @HeaderParam('realip_remote_addr') realip_remote_addr: string,
-        @HeaderParam('remote_addr') remote_addr: string,
-        @HeaderParam('type') type: string
+        response: Response,
+        listen_id: string,
+        realip_remote_addr: string,
+        remote_addr: string,
+        type: string
     ): Promise<boolean> {
         Logger.getLogger().info(`AddressAccess::access: realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
 
@@ -214,6 +219,26 @@ export class AddressAccess {
         })
         .where('id = :id', {id: ipWhitelistId})
         .execute();
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/njs/address_access',
+            async(req, res) => {
+                await this.access(
+                    res,
+                    req.header('listen_id') ?? '',
+                    req.header('realip_remote_addr') ?? '',
+                    req.header('remote_addr') ?? '',
+                    req.header('type') ?? ''
+                );
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

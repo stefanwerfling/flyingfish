@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcrypt';
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Router} from 'express';
 import {Not} from 'typeorm';
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {Config} from '../../inc/Config/Config.js';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
@@ -14,105 +15,120 @@ import {
 import {NginxUpstream as NginxUpstreamDB} from '../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
 import {SshUser as SshUserDB} from '../../inc/Db/MariaDb/Entity/SshUser.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * UpStream
  */
-export type UpStream = {
-    id: number;
-    address: string;
-    port: number;
-};
+export const SchemaUpStream = Vts.object({
+    id: Vts.number(),
+    address: Vts.string(),
+    port: Vts.number()
+});
 
 /**
  * RouteStreamSSH
  */
-export type RouteStreamSSH = {
-    id: number;
-    port: number;
-    user_id: number;
-    username: string;
-    password: string;
-    destinationAddress: string;
-};
+export const SchemaRouteStreamSSH = Vts.object({
+    id: Vts.number(),
+    port: Vts.number(),
+    user_id: Vts.number(),
+    username: Vts.string(),
+    password: Vts.string(),
+    destinationAddress: Vts.string()
+});
+
+export type RouteStreamSSH = ExtractSchemaResultType<typeof SchemaRouteStreamSSH>;
 
 /**
  * RouteStream
  */
-export type RouteStream = {
-    id: number;
-    listen_id: number;
-    destination_type: number;
-    destination_listen_id: number;
-    alias_name: string;
-    index: number;
-    isdefault: boolean;
-    use_as_default: boolean;
-    load_balancing_algorithm: string;
-    ssh_r_type: number;
-    ssh?: RouteStreamSSH;
-    upstreams: UpStream[];
-};
+export const SchemaRouteStream = Vts.object({
+    id: Vts.number(),
+    listen_id: Vts.number(),
+    destination_type: Vts.number(),
+    destination_listen_id: Vts.number(),
+    alias_name: Vts.string(),
+    index: Vts.number(),
+    isdefault: Vts.boolean(),
+    use_as_default: Vts.boolean(),
+    load_balancing_algorithm: Vts.string(),
+    ssh_r_type: Vts.number(),
+    ssh: Vts.optional(SchemaRouteStreamSSH),
+    upstreams: Vts.array(SchemaUpStream)
+});
+
+export type RouteStream = ExtractSchemaResultType<typeof SchemaRouteStream>;
 
 /**
  * RouteStreamSave
  */
-export type RouteStreamSave = {
-    domainid: number;
-    stream: RouteStream;
-};
+export const SchemaRouteStreamSave = Vts.object({
+    domainid: Vts.number(),
+    stream: SchemaRouteStream
+});
+
+export type RouteStreamSave = ExtractSchemaResultType<typeof SchemaRouteStreamSave>;
 
 /**
  * Location
  */
-export type Location = {
-    id: number;
-    match: string;
-    proxy_pass: string;
-    ssh?: {
-        id?: number;
-        port_out?: number;
-        schema?: string;
-    };
-    redirect?: {
-        code: number;
-        redirect: string;
-    };
-    auth_enable: boolean;
-    websocket_enable: boolean;
-    host_enable: boolean;
-    host_name: string;
-    host_name_port: number;
-    xforwarded_scheme_enable: boolean;
-    xforwarded_proto_enable: boolean;
-    xforwarded_for_enable: boolean;
-    xrealip_enable: boolean;
-};
+export const SchemaLocation = Vts.object({
+    id: Vts.number(),
+    match: Vts.string(),
+    proxy_pass: Vts.string(),
+    ssh: Vts.optional(Vts.object({
+        id: Vts.optional(Vts.number()),
+        port_out: Vts.optional(Vts.number()),
+        schema: Vts.optional(Vts.string())
+    })),
+    redirect: Vts.optional(Vts.object({
+        code: Vts.number(),
+        redirect: Vts.string()
+    })),
+    auth_enable: Vts.boolean(),
+    websocket_enable: Vts.boolean(),
+    host_enable: Vts.boolean(),
+    host_name: Vts.string(),
+    host_name_port: Vts.number(),
+    xforwarded_scheme_enable: Vts.boolean(),
+    xforwarded_proto_enable: Vts.boolean(),
+    xforwarded_for_enable: Vts.boolean(),
+    xrealip_enable: Vts.boolean()
+});
+
+export type Location = ExtractSchemaResultType<typeof SchemaLocation>;
 
 /**
  * RouteHttp
  */
-export type RouteHttp = {
-    id: number;
-    listen_id: number;
-    index: number;
-    ssl: {
-        enable: boolean;
-        provider: string;
-        email: string;
-    };
-    locations: Location[];
-    http2_enable: boolean;
-    x_frame_options: string;
-};
+export const SchemaRouteHttp = Vts.object({
+    id: Vts.number(),
+    listen_id: Vts.number(),
+    index: Vts.number(),
+    ssl: Vts.object({
+        enable: Vts.boolean(),
+        provider: Vts.string(),
+        email: Vts.string()
+    }),
+    locations: Vts.array(SchemaLocation),
+    http2_enable: Vts.boolean(),
+    x_frame_options: Vts.string()
+});
+
+export type RouteHttp = ExtractSchemaResultType<typeof SchemaRouteHttp>;
 
 /**
  * RouteHttpSave
  */
-export type RouteHttpSave = {
-    domainid: number;
-    http: RouteHttp;
-};
+export const SchemaRouteHttpSave = Vts.object({
+    domainid: Vts.number(),
+    http: SchemaRouteHttp
+});
+
+export type RouteHttpSave = ExtractSchemaResultType<typeof SchemaRouteHttpSave>;
 
 /**
  * HostData
@@ -149,252 +165,240 @@ export type RoutesResponse = {
 /**
  * RouteStreamSaveResponse
  */
-export type RouteStreamSaveResponse = {
-    status: string;
-    error?: string;
-};
+export type RouteStreamSaveResponse = DefaultReturn;
 
 /**
  * RouteHttpSaveResponse
  */
-export type RouteHttpSaveResponse = {
-    status: string;
-    error?: string;
-};
+export type RouteHttpSaveResponse = DefaultReturn;
 
 /**
  * RouteStreamDelete
  */
-export type RouteStreamDelete = {
-    id: number;
-};
+export const SchemaRouteStreamDelete = Vts.object({
+    id: Vts.number()
+});
+
+export type RouteStreamDelete = ExtractSchemaResultType<typeof SchemaRouteStreamDelete>;
 
 /**
  * RouteStreamDeleteResponse
  */
-export type RouteStreamDeleteResponse = {
-    status: string;
-    error?: string;
-};
+export type RouteStreamDeleteResponse = DefaultReturn;
 
 /**
  * RouteHttpDelete
  */
-export type RouteHttpDelete = {
-    id: number;
-};
+export const SchemaRouteHttpDelete = Vts.object({
+    id: Vts.number()
+});
+
+export type RouteHttpDelete = ExtractSchemaResultType<typeof SchemaRouteHttpDelete>;
 
 /**
  * RouteHttpDeleteResponse
  */
-export type RouteHttpDeleteResponse = {
-    status: string;
-    error?: string;
-};
+export type RouteHttpDeleteResponse = DefaultReturn;
 
 /**
  * Route
  */
-@JsonController()
-export class Route {
+export class Route extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * getRoutes
-     * @param session
      */
-    @Get('/json/route/list')
-    public async getRoutes(@Session() session: any): Promise<RoutesResponse> {
+    public async getRoutes(): Promise<RoutesResponse> {
         const list: RouteData[] = [];
         const sshportList: RouteSshPort[] = [];
 
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const domainRepository = DBHelper.getRepository(DomainDB);
-            const streamRepository = DBHelper.getRepository(NginxStreamDB);
-            const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
-            const httpRepository = DBHelper.getRepository(NginxHttpDB);
-            const locationRepository = DBHelper.getRepository(NginxLocationDB);
-            const sshportRepository = DBHelper.getRepository(SshPortDB);
-            const sshuserRepository = DBHelper.getRepository(SshUserDB);
-            const domains = await domainRepository.find();
+        const domainRepository = DBHelper.getRepository(DomainDB);
+        const streamRepository = DBHelper.getRepository(NginxStreamDB);
+        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+        const httpRepository = DBHelper.getRepository(NginxHttpDB);
+        const locationRepository = DBHelper.getRepository(NginxLocationDB);
+        const sshportRepository = DBHelper.getRepository(SshPortDB);
+        const sshuserRepository = DBHelper.getRepository(SshUserDB);
+        const domains = await domainRepository.find();
 
-            if (domains) {
-                for await (const adomain of domains) {
-                    const streamList: RouteStream[] = [];
-                    const httpList: RouteHttp[] = [];
+        if (domains) {
+            for await (const adomain of domains) {
+                const streamList: RouteStream[] = [];
+                const httpList: RouteHttp[] = [];
 
-                    // stream ------------------------------------------------------------------------------------------
+                // stream ------------------------------------------------------------------------------------------
 
-                    const streams = await streamRepository.find({
-                        where: {
-                            domain_id: adomain.id
+                const streams = await streamRepository.find({
+                    where: {
+                        domain_id: adomain.id
+                    }
+                });
+
+                if (streams) {
+                    for await (const tstream of streams) {
+                        const streamEntry: RouteStream = {
+                            id: tstream.id,
+                            listen_id: tstream.listen_id,
+                            destination_listen_id: tstream.destination_listen_id,
+                            alias_name: tstream.alias_name,
+                            index: tstream.index,
+                            isdefault: tstream.isdefault,
+                            use_as_default: tstream.use_as_default,
+                            load_balancing_algorithm: tstream.load_balancing_algorithm,
+                            destination_type: tstream.destination_type,
+                            ssh_r_type: tstream.ssh_r_type,
+                            upstreams: []
+                        };
+
+                        const upstreams = await upstreamRepository.find({
+                            where: {
+                                stream_id: tstream.id
+                            }
+                        });
+
+                        for (const aupstream of upstreams) {
+                            streamEntry.upstreams.push({
+                                id: aupstream.id,
+                                address: aupstream.destination_address,
+                                port: aupstream.destination_port
+                            });
                         }
-                    });
 
-                    if (streams) {
-                        for await (const tstream of streams) {
-                            const streamEntry: RouteStream = {
-                                id: tstream.id,
-                                listen_id: tstream.listen_id,
-                                destination_listen_id: tstream.destination_listen_id,
-                                alias_name: tstream.alias_name,
-                                index: tstream.index,
-                                isdefault: tstream.isdefault,
-                                use_as_default: tstream.use_as_default,
-                                load_balancing_algorithm: tstream.load_balancing_algorithm,
-                                destination_type: tstream.destination_type,
-                                ssh_r_type: tstream.ssh_r_type,
-                                upstreams: []
-                            };
-
-                            const upstreams = await upstreamRepository.find({
+                        if (tstream.sshport_id > 0) {
+                            const sshport = await sshportRepository.findOne({
                                 where: {
-                                    stream_id: tstream.id
+                                    id: tstream.sshport_id
                                 }
                             });
 
-                            for (const aupstream of upstreams) {
-                                streamEntry.upstreams.push({
-                                    id: aupstream.id,
-                                    address: aupstream.destination_address,
-                                    port: aupstream.destination_port
-                                });
-                            }
+                            if (sshport) {
+                                streamEntry.ssh = {
+                                    id: sshport.id,
+                                    port: sshport.port,
+                                    destinationAddress: sshport.destinationAddress,
+                                    user_id: 0,
+                                    username: '',
+                                    password: ''
+                                };
 
-                            if (tstream.sshport_id > 0) {
+                                const sshuser = await sshuserRepository.findOne({
+                                    where: {
+                                        id: sshport.ssh_user_id
+                                    }
+                                });
+
+                                if (sshuser) {
+                                    streamEntry.ssh.username = sshuser.username;
+                                    streamEntry.ssh.password = sshuser.password;
+                                }
+                            }
+                        }
+
+                        streamList.push(streamEntry);
+                    }
+                }
+
+                // http --------------------------------------------------------------------------------------------
+
+                const https = await httpRepository.find({
+                    where: {
+                        domain_id: adomain.id
+                    }
+                });
+
+                if (https) {
+                    for await (const thttp of https) {
+                        const httpEntry: RouteHttp = {
+                            id: thttp.id,
+                            listen_id: thttp.listen_id,
+                            index: thttp.index,
+                            ssl: {
+                                enable: thttp.ssl_enable,
+                                provider: thttp.cert_provider,
+                                email: thttp.cert_email
+                            },
+                            locations: [],
+                            http2_enable: thttp.http2_enable,
+                            x_frame_options: thttp.x_frame_options
+                        };
+
+                        const locations = await locationRepository.find({
+                            where: {
+                                http_id: thttp.id
+                            }
+                        });
+
+                        for await (const alocation of locations) {
+                            const location: Location = {
+                                id: alocation.id,
+                                match: alocation.match,
+                                proxy_pass: alocation.proxy_pass,
+                                auth_enable: alocation.auth_enable,
+                                websocket_enable: alocation.websocket_enable,
+                                host_enable: alocation.host_enable,
+                                host_name: alocation.host_name,
+                                host_name_port: alocation.host_name_port,
+                                xforwarded_scheme_enable: alocation.xforwarded_scheme_enable,
+                                xforwarded_proto_enable: alocation.xforwarded_proto_enable,
+                                xforwarded_for_enable: alocation.xforwarded_for_enable,
+                                xrealip_enable: alocation.xrealip_enable
+                            };
+
+                            if (alocation.sshport_out_id > 0) {
                                 const sshport = await sshportRepository.findOne({
                                     where: {
-                                        id: tstream.sshport_id
+                                        id: alocation.sshport_out_id
                                     }
                                 });
 
                                 if (sshport) {
-                                    streamEntry.ssh = {
-                                        id: sshport.id,
-                                        port: sshport.port,
-                                        destinationAddress: sshport.destinationAddress,
-                                        user_id: 0,
-                                        username: '',
-                                        password: ''
-                                    };
-
-                                    const sshuser = await sshuserRepository.findOne({
-                                        where: {
-                                            id: sshport.ssh_user_id
-                                        }
-                                    });
-
-                                    if (sshuser) {
-                                        streamEntry.ssh.username = sshuser.username;
-                                        streamEntry.ssh.password = sshuser.password;
-                                    }
+                                    location.ssh = {};
+                                    location.ssh.id = sshport.id;
+                                    location.ssh.port_out = sshport.port;
+                                    location.ssh.schema = alocation.sshport_schema;
                                 }
                             }
 
-                            streamList.push(streamEntry);
-                        }
-                    }
-
-                    // http --------------------------------------------------------------------------------------------
-
-                    const https = await httpRepository.find({
-                        where: {
-                            domain_id: adomain.id
-                        }
-                    });
-
-                    if (https) {
-                        for await (const thttp of https) {
-                            const httpEntry: RouteHttp = {
-                                id: thttp.id,
-                                listen_id: thttp.listen_id,
-                                index: thttp.index,
-                                ssl: {
-                                    enable: thttp.ssl_enable,
-                                    provider: thttp.cert_provider,
-                                    email: thttp.cert_email
-                                },
-                                locations: [],
-                                http2_enable: thttp.http2_enable,
-                                x_frame_options: thttp.x_frame_options
-                            };
-
-                            const locations = await locationRepository.find({
-                                where: {
-                                    http_id: thttp.id
-                                }
-                            });
-
-                            for await (const alocation of locations) {
-                                const location: Location = {
-                                    id: alocation.id,
-                                    match: alocation.match,
-                                    proxy_pass: alocation.proxy_pass,
-                                    auth_enable: alocation.auth_enable,
-                                    websocket_enable: alocation.websocket_enable,
-                                    host_enable: alocation.host_enable,
-                                    host_name: alocation.host_name,
-                                    host_name_port: alocation.host_name_port,
-                                    xforwarded_scheme_enable: alocation.xforwarded_scheme_enable,
-                                    xforwarded_proto_enable: alocation.xforwarded_proto_enable,
-                                    xforwarded_for_enable: alocation.xforwarded_for_enable,
-                                    xrealip_enable: alocation.xrealip_enable
+                            if (alocation.redirect !== '') {
+                                location.redirect = {
+                                    code: alocation.redirect_code,
+                                    redirect: alocation.redirect
                                 };
-
-                                if (alocation.sshport_out_id > 0) {
-                                    const sshport = await sshportRepository.findOne({
-                                        where: {
-                                            id: alocation.sshport_out_id
-                                        }
-                                    });
-
-                                    if (sshport) {
-                                        location.ssh = {};
-                                        location.ssh.id = sshport.id;
-                                        location.ssh.port_out = sshport.port;
-                                        location.ssh.schema = alocation.sshport_schema;
-                                    }
-                                }
-
-                                if (alocation.redirect !== '') {
-                                    location.redirect = {
-                                        code: alocation.redirect_code,
-                                        redirect: alocation.redirect
-                                    };
-                                }
-
-                                httpEntry.locations.push(location);
                             }
 
-                            httpList.push(httpEntry);
+                            httpEntry.locations.push(location);
                         }
+
+                        httpList.push(httpEntry);
                     }
-
-                    list.push({
-                        id: adomain.id,
-                        domainname: adomain.domainname,
-                        domainfix: adomain.fixdomain,
-                        streams: streamList,
-                        https: httpList
-                    });
                 }
-            }
 
-            // load defaults -------------------------------------------------------------------------------------------
-
-            const sshports = await sshportRepository.find();
-
-            for (const sshport of sshports) {
-                sshportList.push({
-                    id: sshport.id,
-                    port: sshport.port
+                list.push({
+                    id: adomain.id,
+                    domainname: adomain.domainname,
+                    domainfix: adomain.fixdomain,
+                    streams: streamList,
+                    https: httpList
                 });
             }
-        } else {
-            return {
-                status: 'error',
-                msg: 'Please login!',
-                list: []
-            };
+        }
+
+        // load defaults -------------------------------------------------------------------------------------------
+
+        const sshports = await sshportRepository.find();
+
+        for (const sshport of sshports) {
+            sshportList.push({
+                id: sshport.id,
+                port: sshport.port
+            });
         }
 
         // defaults ----------------------------------------------------------------------------------------------------
@@ -597,518 +601,530 @@ export class Route {
 
     /**
      * saveStreamRoute
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/route/stream/save')
-    public async saveStreamRoute(
-        @Session() session: any,
-        @Body() request: RouteStreamSave
-    ): Promise<RouteStreamSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            // check is listen select ----------------------------------------------------------------------------------
+    public async saveStreamRoute(data: RouteStreamSave): Promise<RouteStreamSaveResponse> {
+        // check is listen select ----------------------------------------------------------------------------------
 
-            if (request.stream.listen_id === 0) {
-                return {
-                    status: 'error',
-                    error: 'Please select a listen!'
-                };
-            }
+        if (data.stream.listen_id === 0) {
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'Please select a listen!'
+            };
+        }
 
-            // check is stream listen and domain already exist ---------------------------------------------------------
+        // check is stream listen and domain already exist ---------------------------------------------------------
 
-            const streamRepository = DBHelper.getRepository(NginxStreamDB);
+        const streamRepository = DBHelper.getRepository(NginxStreamDB);
 
-            const caStream = await streamRepository.countBy({
-                listen_id: request.stream.listen_id,
-                domain_id: request.domainid,
-                id: Not(request.stream.id)
+        const caStream = await streamRepository.countBy({
+            listen_id: data.stream.listen_id,
+            domain_id: data.domainid,
+            id: Not(data.stream.id)
+        });
+
+        if (caStream > 0) {
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'You can only add one stream by this listen to this domain!'
+            };
+        }
+
+        // ---------------------------------------------------------------------------------------------------------
+
+        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+
+        let aStream: NginxStreamDB|null = null;
+
+        if (data.stream.id !== 0) {
+            const tStream = await streamRepository.findOne({
+                where: {
+                    id: data.stream.id
+                }
             });
 
-            if (caStream > 0) {
+            if (tStream) {
+                if (tStream.isdefault) {
+                    return {
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: `stream can not edit, this is a default route by id: ${data.stream.id}`
+                    };
+                }
+
+                aStream = tStream;
+            } else {
                 return {
-                    status: 'error',
-                    error: 'You can only add one stream by this listen to this domain!'
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: `entry not found by id: ${data.stream.id}`
                 };
             }
+        }
 
-            // ---------------------------------------------------------------------------------------------------------
+        if (aStream === null) {
+            aStream = new NginxStreamDB();
+        }
 
-            const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+        aStream.domain_id = data.domainid;
+        aStream.listen_id = data.stream.listen_id;
+        aStream.alias_name = data.stream.alias_name;
+        aStream.index = 0;
 
-            let aStream: NginxStreamDB|null = null;
+        if (data.stream.index > 0) {
+            aStream.index = data.stream.index;
+        }
 
-            if (request.stream.id !== 0) {
-                const tStream = await streamRepository.findOne({
-                    where: {
-                        id: request.stream.id
+        aStream.destination_type = data.stream.destination_type;
+        aStream.destination_listen_id = data.stream.destination_listen_id;
+        aStream.use_as_default = data.stream.use_as_default;
+        aStream.load_balancing_algorithm = data.stream.load_balancing_algorithm;
+        aStream.ssh_r_type = NginxStreamSshR.none;
+        aStream.sshport_id = 0;
+
+        if (data.stream.ssh) {
+            switch (aStream.destination_type) {
+
+                // ssh r -------------------------------------------------------------------------------------------
+                case NginxStreamDestinationType.ssh_r:
+                    aStream.ssh_r_type = data.stream.ssh_r_type;
+
+                    switch (aStream.ssh_r_type) {
+
+                        // ssh r in --------------------------------------------------------------------------------
+                        case NginxStreamSshR.in:
+                            try {
+                                aStream.sshport_id = await this._saveStreamSsh(
+                                    data.stream.ssh,
+                                    NginxStreamDestinationType.ssh_r
+                                );
+                            } catch (e) {
+                                return {
+                                    statusCode: StatusCodes.INTERNAL_ERROR,
+                                    msg: (e as Error).message
+                                };
+                            }
+                            break;
+
+                        // ssh r out -------------------------------------------------------------------------------
+                        case NginxStreamSshR.out:
+                            aStream.sshport_id = data.stream.ssh.id;
+                            break;
                     }
-                });
 
-                if (tStream) {
-                    if (tStream.isdefault) {
+                    break;
+
+                // ssh l -------------------------------------------------------------------------------------------
+                case NginxStreamDestinationType.ssh_l:
+                    try {
+                        aStream.sshport_id = await this._saveStreamSsh(
+                            data.stream.ssh,
+                            NginxStreamDestinationType.ssh_l
+                        );
+                    } catch (e) {
                         return {
-                            status: 'error',
-                            error: `stream can not edit, this is a default route by id: ${request.stream.id}`
+                            statusCode: StatusCodes.INTERNAL_ERROR,
+                            msg: (e as Error).message
                         };
                     }
-
-                    aStream = tStream;
-                } else {
+                    break;
+            }
+        } else {
+            // remove old ssh in -----------------------------------------------------------------------------------
+            if (aStream.sshport_id > 0 && aStream.ssh_r_type !== NginxStreamSshR.out) {
+                if (!await this._removeOldSshPort(aStream.sshport_id)) {
                     return {
-                        status: 'error',
-                        error: `entry not found by id: ${request.stream.id}`
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: 'SSH Server is currently in use, please remove SSH port outgoning link!'
                     };
                 }
             }
 
-            if (aStream === null) {
-                aStream = new NginxStreamDB();
+            // remove old ssh out ----------------------------------------------------------------------------------
+
+            if (aStream.sshport_id > 0) {
+                aStream.sshport_id = 0;
             }
+        }
 
-            aStream.domain_id = request.domainid;
-            aStream.listen_id = request.stream.listen_id;
-            aStream.alias_name = request.stream.alias_name;
-            aStream.index = 0;
+        aStream = await DBHelper.getDataSource().manager.save(aStream);
 
-            if (request.stream.index > 0) {
-                aStream.index = request.stream.index;
-            }
-
-            aStream.destination_type = request.stream.destination_type;
-            aStream.destination_listen_id = request.stream.destination_listen_id;
-            aStream.use_as_default = request.stream.use_as_default;
-            aStream.load_balancing_algorithm = request.stream.load_balancing_algorithm;
-            aStream.ssh_r_type = NginxStreamSshR.none;
-            aStream.sshport_id = 0;
-
-            if (request.stream.ssh) {
-                switch (aStream.destination_type) {
-
-                    // ssh r -------------------------------------------------------------------------------------------
-                    case NginxStreamDestinationType.ssh_r:
-                        aStream.ssh_r_type = request.stream.ssh_r_type;
-
-                        switch (aStream.ssh_r_type) {
-
-                            // ssh r in --------------------------------------------------------------------------------
-                            case NginxStreamSshR.in:
-                                try {
-                                    aStream.sshport_id = await this._saveStreamSsh(
-                                        request.stream.ssh,
-                                        NginxStreamDestinationType.ssh_r
-                                    );
-                                } catch (e) {
-                                    return {
-                                        status: 'error',
-                                        error: (e as Error).message
-                                    };
-                                }
-                                break;
-
-                            // ssh r out -------------------------------------------------------------------------------
-                            case NginxStreamSshR.out:
-                                aStream.sshport_id = request.stream.ssh.id;
-                                break;
-                        }
-
-                        break;
-
-                    // ssh l -------------------------------------------------------------------------------------------
-                    case NginxStreamDestinationType.ssh_l:
-                        try {
-                            aStream.sshport_id = await this._saveStreamSsh(
-                                request.stream.ssh,
-                                NginxStreamDestinationType.ssh_l
-                            );
-                        } catch (e) {
-                            return {
-                                status: 'error',
-                                error: (e as Error).message
-                            };
-                        }
-                        break;
-                }
-            } else {
-                // remove old ssh in -----------------------------------------------------------------------------------
-                if (aStream.sshport_id > 0 && aStream.ssh_r_type !== NginxStreamSshR.out) {
-                    if (!await this._removeOldSshPort(aStream.sshport_id)) {
-                        return {
-                            status: 'error',
-                            error: 'SSH Server is currently in use, please remove SSH port outgoning link!'
-                        };
-                    }
-                }
-
-                // remove old ssh out ----------------------------------------------------------------------------------
-
-                if (aStream.sshport_id > 0) {
-                    aStream.sshport_id = 0;
-                }
-            }
-
-            aStream = await DBHelper.getDataSource().manager.save(aStream);
-
-            if (aStream.destination_listen_id > 0) {
-                // clear old upstreams
-                await upstreamRepository.delete({
+        if (aStream.destination_listen_id > 0) {
+            // clear old upstreams
+            await upstreamRepository.delete({
+                stream_id: aStream.id
+            });
+        } else if (data.stream.upstreams.length > 0) {
+            // remove delete upstreams -----------------------------------------------------------------------------
+            const tupstreams = await upstreamRepository.find({
+                where: {
                     stream_id: aStream.id
-                });
-            } else if (request.stream.upstreams.length > 0) {
-                // remove delete upstreams -----------------------------------------------------------------------------
-                const tupstreams = await upstreamRepository.find({
-                    where: {
-                        stream_id: aStream.id
-                    }
-                });
-
-                if (tupstreams) {
-                    const checkUpstreamExistence = (upstreamId: number): boolean => request.stream.upstreams.some(({id}) => id === upstreamId);
-
-                    for await (const oldUpstream of tupstreams) {
-                        if (!checkUpstreamExistence(oldUpstream.id)) {
-                            await upstreamRepository.delete({
-                                id: oldUpstream.id
-                            });
-                        }
-                    }
                 }
+            });
 
-                // update or add new upstreams -------------------------------------------------------------------------
-                let index = 0;
+            if (tupstreams) {
+                const checkUpstreamExistence = (upstreamId: number): boolean => data.stream.upstreams.some(({id}) => id === upstreamId);
 
-                for await (const aUpstream of request.stream.upstreams) {
-                    let aNewUpstream: NginxUpstreamDB|null = null;
-
-                    if (aUpstream.id > 0) {
-                        const tUpstream = await upstreamRepository.findOne({
-                            where: {
-                                id: aUpstream.id
-                            }
+                for await (const oldUpstream of tupstreams) {
+                    if (!checkUpstreamExistence(oldUpstream.id)) {
+                        await upstreamRepository.delete({
+                            id: oldUpstream.id
                         });
-
-                        if (tUpstream) {
-                            aNewUpstream = tUpstream;
-                        }
                     }
-
-                    if (aNewUpstream === null) {
-                        aNewUpstream = new NginxUpstreamDB();
-                        aNewUpstream.stream_id = aStream.id;
-                    }
-
-                    aNewUpstream.destination_address = aUpstream.address;
-                    aNewUpstream.destination_port = aUpstream.port;
-                    aNewUpstream.index = index;
-
-                    await DBHelper.getDataSource().manager.save(aNewUpstream);
-
-                    index++;
                 }
             }
 
-            return {
-                status: 'ok'
-            };
+            // update or add new upstreams -------------------------------------------------------------------------
+            let index = 0;
+
+            for await (const aUpstream of data.stream.upstreams) {
+                let aNewUpstream: NginxUpstreamDB|null = null;
+
+                if (aUpstream.id > 0) {
+                    const tUpstream = await upstreamRepository.findOne({
+                        where: {
+                            id: aUpstream.id
+                        }
+                    });
+
+                    if (tUpstream) {
+                        aNewUpstream = tUpstream;
+                    }
+                }
+
+                if (aNewUpstream === null) {
+                    aNewUpstream = new NginxUpstreamDB();
+                    aNewUpstream.stream_id = aStream.id;
+                }
+
+                aNewUpstream.destination_address = aUpstream.address;
+                aNewUpstream.destination_port = aUpstream.port;
+                aNewUpstream.index = index;
+
+                await DBHelper.getDataSource().manager.save(aNewUpstream);
+
+                index++;
+            }
         }
 
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.OK
         };
     }
 
     /**
      * deleteStreamRoute
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/route/stream/delete')
-    public async deleteStreamRoute(
-        @Session() session: any,
-        @Body() request: RouteStreamDelete
-    ): Promise<RouteStreamDeleteResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            if (request.id === 0) {
+    public async deleteStreamRoute(data: RouteStreamDelete): Promise<RouteStreamDeleteResponse> {
+        if (data.id === 0) {
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'id is null!'
+            };
+        }
+
+        const streamRepository = DBHelper.getRepository(NginxStreamDB);
+        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
+
+        const stream = await streamRepository.findOne({
+            where: {
+                id: data.id
+            }
+        });
+
+        if (stream) {
+            if (stream.isdefault) {
                 return {
-                    status: 'error',
-                    error: 'id is null!'
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: 'Stream route can not delete, this is a default route!'
                 };
             }
 
-            const streamRepository = DBHelper.getRepository(NginxStreamDB);
-            const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
-
-            const stream = await streamRepository.findOne({
-                where: {
-                    id: request.id
+            if (stream.sshport_id > 0) {
+                if (!await this._removeOldSshPort(stream.sshport_id)) {
+                    return {
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: 'SSH Server is currently in use, please remove Ssh port outgoning link!'
+                    };
                 }
+            }
+
+            // delete upstreams ------------------------------------------------------------------------------------
+
+            await upstreamRepository.delete({
+                stream_id: stream.id
             });
 
-            if (stream) {
-                if (stream.isdefault) {
-                    return {
-                        status: 'error',
-                        error: 'Stream route can not delete, this is a default route!'
-                    };
-                }
+            // delete stream ---------------------------------------------------------------------------------------
 
-                if (stream.sshport_id > 0) {
-                    if (!await this._removeOldSshPort(stream.sshport_id)) {
-                        return {
-                            status: 'error',
-                            error: 'SSH Server is currently in use, please remove Ssh port outgoning link!'
-                        };
-                    }
-                }
+            const result = await streamRepository.delete({
+                id: stream.id
+            });
 
-                // delete upstreams ------------------------------------------------------------------------------------
-
-                await upstreamRepository.delete({
-                    stream_id: stream.id
-                });
-
-                // delete stream ---------------------------------------------------------------------------------------
-
-                const result = await streamRepository.delete({
-                    id: stream.id
-                });
-
-                if (result) {
-                    return {
-                        status: 'ok'
-                    };
-                }
-
+            if (result) {
                 return {
-                    status: 'error',
-                    error: `stream route can not delete by id: ${request.id}`
+                    statusCode: StatusCodes.OK
                 };
             }
 
             return {
-                status: 'error',
-                error: `stream route not found by id: ${request.id}`
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: `stream route can not delete by id: ${data.id}`
             };
         }
 
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            msg: `stream route not found by id: ${data.id}`
         };
     }
 
     /**
      * saveHttpRoute
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/route/http/save')
-    public async saveHttpRoute(
-        @Session() session: any,
-        @Body() request: RouteHttpSave
-    ): Promise<RouteHttpSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            // check is listen select ----------------------------------------------------------------------------------
+    public async saveHttpRoute(data: RouteHttpSave): Promise<RouteHttpSaveResponse> {
+        // check is listen select ----------------------------------------------------------------------------------
 
-            if (request.http.listen_id === 0) {
-                return {
-                    status: 'error',
-                    error: 'Please select a listen!'
-                };
-            }
-
-            // ---------------------------------------------------------------------------------------------------------
-
-            const httpRepository = DBHelper.getRepository(NginxHttpDB);
-            const locationRepository = DBHelper.getRepository(NginxLocationDB);
-
-            let aHttp: NginxHttpDB|null = null;
-
-            if (request.http.id > 0) {
-                const tHttp = await httpRepository.findOne({
-                    where: {
-                        id: request.http.id
-                    }
-                });
-
-                if (tHttp) {
-                    aHttp = tHttp;
-                }
-            }
-
-            const oHttp = await httpRepository.findOne({
-                where: {
-                    listen_id: request.http.listen_id,
-                    domain_id: request.domainid
-                }
-            });
-
-            if (oHttp) {
-                if (!aHttp || aHttp.id !== oHttp.id) {
-                    return {
-                        status: 'error',
-                        error: 'Listen route by domain already in used!'
-                    };
-                }
-            }
-
-            if (aHttp === null) {
-                aHttp = new NginxHttpDB();
-            }
-
-            aHttp.domain_id = request.domainid;
-            aHttp.index = request.http.index;
-            aHttp.listen_id = request.http.listen_id;
-            aHttp.ssl_enable = request.http.ssl.enable || false;
-            aHttp.cert_provider = request.http.ssl.provider || '';
-            aHttp.cert_email = request.http.ssl.email || '';
-            aHttp.http2_enable = request.http.http2_enable;
-            aHttp.x_frame_options = request.http.x_frame_options;
-
-            aHttp = await DBHelper.getDataSource().manager.save(aHttp);
-
-            // remove location -----------------------------------------------------------------------------------------
-
-            const oldLocations = await locationRepository.find({
-                where: {
-                    http_id: aHttp.id
-                }
-            });
-
-            if (oldLocations) {
-                const checkLocationExistence = (locationId: number): boolean => request.http.locations.some(({id}) => id === locationId);
-
-                for await (const oldLocation of oldLocations) {
-                    if (!checkLocationExistence(oldLocation.id)) {
-                        await locationRepository.delete({
-                            id: oldLocation.id
-                        });
-                    }
-                }
-            }
-
-            // update or add new locations -----------------------------------------------------------------------------
-
-            for await (const aLocation of request.http.locations) {
-                let aNewLocation: NginxLocationDB | null = null;
-
-                const tLocation = await locationRepository.findOne({
-                    where: {
-                        id: aLocation.id
-                    }
-                });
-
-                if (tLocation) {
-                    aNewLocation = tLocation;
-                }
-
-                if (aNewLocation === null) {
-                    aNewLocation = new NginxLocationDB();
-                    aNewLocation.http_id = aHttp.id;
-                }
-
-                aNewLocation.match = aLocation.match;
-
-                // fill default reset
-                aNewLocation.proxy_pass = '';
-                aNewLocation.modifier = '';
-                aNewLocation.redirect_code = 0;
-                aNewLocation.redirect = '';
-                aNewLocation.sshport_out_id = 0;
-                aNewLocation.sshport_schema = '';
-                aNewLocation.auth_enable = aLocation.auth_enable;
-                aNewLocation.websocket_enable = aLocation.websocket_enable;
-                aNewLocation.host_enable = aLocation.host_enable;
-                aNewLocation.host_name = aLocation.host_name;
-                aNewLocation.host_name_port = aLocation.host_name_port;
-                aNewLocation.xforwarded_scheme_enable = aLocation.xforwarded_scheme_enable;
-                aNewLocation.xforwarded_proto_enable = aLocation.xforwarded_proto_enable;
-                aNewLocation.xforwarded_for_enable = aLocation.xforwarded_for_enable;
-                aNewLocation.xrealip_enable = aLocation.xrealip_enable;
-
-                if (aLocation.proxy_pass !== '') {
-                    aNewLocation.proxy_pass = aLocation.proxy_pass;
-                } else if (aLocation.redirect) {
-                    aNewLocation.redirect_code = aLocation.redirect.code;
-                    aNewLocation.redirect = aLocation.redirect.redirect || '';
-                } else if (aLocation.ssh) {
-                    aNewLocation.sshport_schema = aLocation.ssh.schema || '';
-                    aNewLocation.sshport_out_id = aLocation.ssh.id || 0;
-                }
-
-                await DBHelper.getDataSource().manager.save(aNewLocation);
-            }
-
+        if (data.http.listen_id === 0) {
             return {
-                status: 'ok'
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'Please select a listen!'
             };
         }
 
+        // ---------------------------------------------------------------------------------------------------------
+
+        const httpRepository = DBHelper.getRepository(NginxHttpDB);
+        const locationRepository = DBHelper.getRepository(NginxLocationDB);
+
+        let aHttp: NginxHttpDB|null = null;
+
+        if (data.http.id > 0) {
+            const tHttp = await httpRepository.findOne({
+                where: {
+                    id: data.http.id
+                }
+            });
+
+            if (tHttp) {
+                aHttp = tHttp;
+            }
+        }
+
+        const oHttp = await httpRepository.findOne({
+            where: {
+                listen_id: data.http.listen_id,
+                domain_id: data.domainid
+            }
+        });
+
+        if (oHttp) {
+            if (!aHttp || aHttp.id !== oHttp.id) {
+                return {
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: 'Listen route by domain already in used!'
+                };
+            }
+        }
+
+        if (aHttp === null) {
+            aHttp = new NginxHttpDB();
+        }
+
+        aHttp.domain_id = data.domainid;
+        aHttp.index = data.http.index;
+        aHttp.listen_id = data.http.listen_id;
+        aHttp.ssl_enable = data.http.ssl.enable || false;
+        aHttp.cert_provider = data.http.ssl.provider || '';
+        aHttp.cert_email = data.http.ssl.email || '';
+        aHttp.http2_enable = data.http.http2_enable;
+        aHttp.x_frame_options = data.http.x_frame_options;
+
+        aHttp = await DBHelper.getDataSource().manager.save(aHttp);
+
+        // remove location -----------------------------------------------------------------------------------------
+
+        const oldLocations = await locationRepository.find({
+            where: {
+                http_id: aHttp.id
+            }
+        });
+
+        if (oldLocations) {
+            const checkLocationExistence = (locationId: number): boolean => data.http.locations.some(({id}) => id === locationId);
+
+            for await (const oldLocation of oldLocations) {
+                if (!checkLocationExistence(oldLocation.id)) {
+                    await locationRepository.delete({
+                        id: oldLocation.id
+                    });
+                }
+            }
+        }
+
+        // update or add new locations -----------------------------------------------------------------------------
+
+        for await (const aLocation of data.http.locations) {
+            let aNewLocation: NginxLocationDB | null = null;
+
+            const tLocation = await locationRepository.findOne({
+                where: {
+                    id: aLocation.id
+                }
+            });
+
+            if (tLocation) {
+                aNewLocation = tLocation;
+            }
+
+            if (aNewLocation === null) {
+                aNewLocation = new NginxLocationDB();
+                aNewLocation.http_id = aHttp.id;
+            }
+
+            aNewLocation.match = aLocation.match;
+
+            // fill default reset
+            aNewLocation.proxy_pass = '';
+            aNewLocation.modifier = '';
+            aNewLocation.redirect_code = 0;
+            aNewLocation.redirect = '';
+            aNewLocation.sshport_out_id = 0;
+            aNewLocation.sshport_schema = '';
+            aNewLocation.auth_enable = aLocation.auth_enable;
+            aNewLocation.websocket_enable = aLocation.websocket_enable;
+            aNewLocation.host_enable = aLocation.host_enable;
+            aNewLocation.host_name = aLocation.host_name;
+            aNewLocation.host_name_port = aLocation.host_name_port;
+            aNewLocation.xforwarded_scheme_enable = aLocation.xforwarded_scheme_enable;
+            aNewLocation.xforwarded_proto_enable = aLocation.xforwarded_proto_enable;
+            aNewLocation.xforwarded_for_enable = aLocation.xforwarded_for_enable;
+            aNewLocation.xrealip_enable = aLocation.xrealip_enable;
+
+            if (aLocation.proxy_pass !== '') {
+                aNewLocation.proxy_pass = aLocation.proxy_pass;
+            } else if (aLocation.redirect) {
+                aNewLocation.redirect_code = aLocation.redirect.code;
+                aNewLocation.redirect = aLocation.redirect.redirect || '';
+            } else if (aLocation.ssh) {
+                aNewLocation.sshport_schema = aLocation.ssh.schema || '';
+                aNewLocation.sshport_out_id = aLocation.ssh.id || 0;
+            }
+
+            await DBHelper.getDataSource().manager.save(aNewLocation);
+        }
+
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.OK
         };
     }
 
     /**
      * deleteHttpRoute
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/route/http/delete')
-    public async deleteHttpRoute(
-        @Session() session: any,
-        @Body() request: RouteHttpDelete
-    ): Promise<RouteHttpDeleteResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            if (request.id === 0) {
-                return {
-                    status: 'error',
-                    error: 'id is null!'
-                };
+    public async deleteHttpRoute(data: RouteHttpDelete): Promise<RouteHttpDeleteResponse> {
+        if (data.id === 0) {
+            return {
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'id is null!'
+            };
+        }
+
+        const httpRepository = DBHelper.getRepository(NginxHttpDB);
+        const locationRepository = DBHelper.getRepository(NginxLocationDB);
+
+        const http = await httpRepository.findOne({
+            where: {
+                id: data.id
             }
+        });
 
-            const httpRepository = DBHelper.getRepository(NginxHttpDB);
-            const locationRepository = DBHelper.getRepository(NginxLocationDB);
-
-            const http = await httpRepository.findOne({
-                where: {
-                    id: request.id
-                }
+        if (http) {
+            await locationRepository.delete({
+                http_id: http.id
             });
 
-            if (http) {
-                await locationRepository.delete({
-                    http_id: http.id
-                });
+            const result = await httpRepository.delete({
+                id: http.id
+            });
 
-                const result = await httpRepository.delete({
-                    id: http.id
-                });
-
-                if (result) {
-                    return {
-                        status: 'ok'
-                    };
-                }
-
+            if (result) {
                 return {
-                    status: 'error',
-                    error: `http route can not delete by id: ${request.id}`
+                    statusCode: StatusCodes.OK
                 };
             }
 
             return {
-                status: 'error',
-                error: `http route not found by id: ${request.id}`
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: `http route can not delete by id: ${data.id}`
             };
         }
 
         return {
-            status: 'error',
-            error: 'user not login!'
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            msg: `http route not found by id: ${data.id}`
         };
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/json/route/list',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getRoutes());
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/route/stream/save',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaRouteStreamSave, req.body, res)) {
+                        res.status(200).json(await this.saveStreamRoute(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/route/stream/delete',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaRouteStreamDelete, req.body, res)) {
+                        res.status(200).json(await this.deleteStreamRoute(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/route/http/save',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaRouteHttpSave, req.body, res)) {
+                        res.status(200).json(await this.saveHttpRoute(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/route/http/delete',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaRouteHttpDelete, req.body, res)) {
+                        res.status(200).json(await this.deleteHttpRoute(req.body));
+                    }
+                }
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

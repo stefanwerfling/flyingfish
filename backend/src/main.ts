@@ -1,4 +1,3 @@
-import minimist from 'minimist';
 import * as path from 'path';
 import * as fs from 'fs';
 import {DBHelper} from './inc/Db/DBHelper.js';
@@ -12,6 +11,7 @@ import {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
+import {Args} from './inc/Env/Args.js';
 import {Logger} from './inc/Logger/Logger.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
 import {IpLocationService} from './inc/Service/IpLocationService.js';
@@ -37,8 +37,6 @@ import {AddressAccess as NjsAddressAccessController} from './Routes/Njs/AddressA
 import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
 import {Config} from './inc/Config/Config.js';
 import {v4 as uuid} from 'uuid';
-import bodyParser from 'body-parser';
-import session from 'express-session';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
 import {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential.js';
 import {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser.js';
@@ -56,7 +54,6 @@ import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 import {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
 import {NginxServer} from './inc/Nginx/NginxServer.js';
 import {Server} from './inc/Server/Server.js';
-import cookieParser from 'cookie-parser';
 import {DynDnsService} from './inc/Service/DynDnsService.js';
 import {HowIsMyPublicIpService} from './inc/Service/HowIsMyPublicIpService.js';
 import {NginxService} from './inc/Service/NginxService.js';
@@ -67,7 +64,7 @@ import exitHook from 'async-exit-hook';
  * Main
  */
 (async(): Promise<void> => {
-    const argv = minimist(process.argv.slice(2));
+    const argv = Args.get();
     let configfile = path.join(path.resolve(), `/${Config.DEFAULT_CONFIG_FILE}`);
 
     if (argv.config) {
@@ -190,44 +187,32 @@ import exitHook from 'async-exit-hook';
 
     const mServer = new Server({
         port: aport,
-        middleWares: [
-            bodyParser.urlencoded({extended: true}),
-            bodyParser.json(),
-            cookieParser(),
-            session({
-                secret: session_secret,
-                proxy: true,
-                resave: true,
-                saveUninitialized: true,
-                store: new session.MemoryStore(),
-                cookie: {
-                    path: session_cookie_path,
-                    secure: ssl_path !== '',
-                    maxAge: session_cookie_max_age
-                }
-            })
-        ],
-        routes: [],
-        controllers: [
-            LoginController,
-            UserController,
-            DashboardController,
-            DomainController,
-            DynDnsClientController,
-            RouteController,
-            ListenController,
-            SshController,
-            GatewayIdentifierController,
-            UpnpNatController,
-            SslController,
-            NginxController,
-            IpAccessController,
-            SettingsController,
+        session: {
+            secret: session_secret,
+            cookie_path: session_cookie_path,
+            ssl_path: ssl_path,
+            max_age: session_cookie_max_age
+        },
+        routes: [
+            new LoginController(),
+            new UserController(),
+            new DomainController(),
+            new DynDnsClientController(),
+            new RouteController(),
+            new ListenController(),
+            new UpnpNatController(),
+            new NginxController(),
+            new DashboardController(),
+            new GatewayIdentifierController(),
+            new IpAccessController(),
+            new SslController(),
+            new SshController(),
+            new SettingsController(),
 
-            NjsAddressAccessController,
-            NjsAuthBasicController,
+            new NjsAddressAccessController(),
+            new NjsAuthBasicController(),
 
-            HimHipUpdateController
+            new HimHipUpdateController()
         ],
         publicDir: public_dir,
         sslPath: ssl_path

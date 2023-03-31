@@ -1,62 +1,52 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import * as bcrypt from 'bcrypt';
+import {Request, Router} from 'express';
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {User as UserDB} from '../../inc/Db/MariaDb/Entity/User.js';
-import * as bcrypt from 'bcrypt';
 import {Logger} from '../../inc/Logger/Logger.js';
+import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
+import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 import {SessionUserData} from '../../inc/Server/Session.js';
 
 /**
  * LoginRequest
  */
-export type LoginRequest = {
-    email: string;
-    password: string;
-};
+export const SchemaLoginRequest = Vts.object({
+    email: Vts.string(),
+    password: Vts.string()
+});
+
+export type LoginRequest = ExtractSchemaResultType<typeof SchemaLoginRequest>;
 
 /**
  * LoginResponse
  */
-export type LoginResponse = {
-    success: boolean;
-    error: string | null;
-};
+export type LoginResponse = DefaultReturn;
 
 /**
  * LoginIsLoginResponse
  */
-export type LoginIsLoginResponse = {
+export type LoginIsLoginResponse = DefaultReturn & {
     status: boolean;
 };
 
 /**
+ * LoginLogoutResponse
+ */
+export type LoginLogoutResponse = DefaultReturn;
+
+/**
  * Login
  */
-@JsonController()
-export class Login {
-
-    /**
-     * islogin
-     * @param session
-     */
-    @Get('/json/islogin')
-    public islogin(@Session() session: any): LoginIsLoginResponse {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            return {status: true};
-        }
-
-        return {status: false};
-    }
+export class Login extends DefaultRoute {
 
     /**
      * login
+     * @param req
      * @param login
-     * @param session
      */
-    @Post('/json/login')
-    public async login(
-        @Body() login: LoginRequest,
-        @Session() session: any
-    ): Promise<LoginResponse> {
+    public async login(req: Request, login: LoginRequest): Promise<LoginResponse> {
         const userRepository = DBHelper.getDataSource().getRepository(UserDB);
 
         const user = await userRepository.findOne({
@@ -65,7 +55,8 @@ export class Login {
             }
         });
 
-        session.user = {
+        // @ts-ignore
+        req.session.user = {
             isLogin: false,
             userid: 0
         } as SessionUserData;
@@ -74,46 +65,84 @@ export class Login {
             const bresult = await bcrypt.compare(login.password, user.password);
 
             if (bresult) {
-                session.user.userid = user.id;
-                session.user.isLogin = true;
+                // @ts-ignore
+                req.session.user.userid = user.id;
+                // @ts-ignore
+                req.session.user.isLogin = true;
 
-                Logger.getLogger().info(`Login success by session: ${session.id}`);
+                Logger.getLogger().info(`Login success by session: ${req.session.id}`);
 
                 return {
-                    success: true,
-                    error: ''
+                    statusCode: StatusCodes.OK
                 };
             }
 
             Logger.getLogger().warn(`Login faild: wrong password by email: ${login.email}`);
 
             return {
-                success: false,
-                error: 'Wrong password!'
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: 'Wrong password!'
             };
         }
 
         return {
-            success: false,
-            error: 'User not found.'
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            msg: 'User not found.'
         };
     }
 
     /**
      * logout
-     * @param session
+     * @param req
      */
-    @Get('/json/logout')
-    public async logout(@Session() session: any): Promise<boolean> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            session.user.userid = 0;
-            session.user.isLogin = false;
+    public async logout(req: Request): Promise<LoginLogoutResponse> {
+        // @ts-ignore
+        req.session.user.userid = 0;
+        // @ts-ignore
+        req.session.user.isLogin = false;
 
-            Logger.getLogger().info(`Logout success by session: ${session.id}`);
-            return true;
-        }
+        Logger.getLogger().info(`Logout success by session: ${req.session.id}`);
 
-        return false;
+        return {
+            statusCode: StatusCodes.OK
+        };
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/json/islogin',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json({
+                        statusCode: StatusCodes.OK,
+                        status: true
+                    } as LoginIsLoginResponse);
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/login',
+            async(req, res) => {
+                if (this.isSchemaValidate(SchemaLoginRequest, req.body, res)) {
+                    res.status(200).json(await this.login(req, req.body));
+                }
+            }
+        );
+
+        this._routes.get(
+            '/json/logout',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.logout(req));
+                }
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }

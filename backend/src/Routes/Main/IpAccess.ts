@@ -1,5 +1,6 @@
-import {Body, Get, JsonController, Post, Session} from 'routing-controllers-extended';
+import {Router} from 'express';
 import {In} from 'typeorm';
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {IpWhitelist as IpWhitelistDB} from '../../inc/Db/MariaDb/Entity/IpWhitelist.js';
@@ -8,41 +9,46 @@ import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../../inc/Db/Mar
 import {IpListMaintainer as IpListMaintainerDB} from '../../inc/Db/MariaDb/Entity/IpListMaintainer.js';
 import {IpLocation as IpLocationDB} from '../../inc/Db/MariaDb/Entity/IpLocation.js';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
+import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
 import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 import {DateHelper} from '../../inc/Utils/DateHelper.js';
 
 /**
  * IpAccessLocation
  */
-export type IpAccessLocation = {
-    id: number;
-    ip: string;
-    country: string;
-    country_code: string;
-    city: string;
-    continent: string;
-    latitude: string;
-    longitude: string;
-    time_zone: string;
-    postal_code: string;
-    org: string;
-    asn: string;
-};
+export const SchemaIpAccessLocation = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    country: Vts.string(),
+    country_code: Vts.string(),
+    city: Vts.string(),
+    continent: Vts.string(),
+    latitude: Vts.string(),
+    longitude: Vts.string(),
+    time_zone: Vts.string(),
+    postal_code: Vts.string(),
+    org: Vts.string(),
+    asn: Vts.string()
+});
+
+export type IpAccessLocation = ExtractSchemaResultType<typeof SchemaIpAccessLocation>;
 
 /**
  * IpAccessBlackListImport
  */
-export type IpAccessBlackListImport = {
-    id: number;
-    ip: string;
-    last_update: number;
-    disable: boolean;
-    last_block: number;
-    count_block: number;
-    categorys: number[];
-    maintainers: number[];
-    ip_location_id?: number;
-};
+export const SchemaIpAccessBlackListImport = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    last_update: Vts.number(),
+    disable: Vts.boolean(),
+    last_block: Vts.number(),
+    count_block: Vts.number(),
+    categorys: Vts.array(Vts.number()),
+    maintainers: Vts.array(Vts.number()),
+    ip_location_id: Vts.optional(Vts.number())
+});
+
+export type IpAccessBlackListImport = ExtractSchemaResultType<typeof SchemaIpAccessBlackListImport>;
 
 /**
  * IpAccessBlackListImportsResponse
@@ -55,12 +61,14 @@ export type IpAccessBlackListImportsResponse = DefaultReturn & {
 /**
  * IpAccessMaintainer
  */
-export type IpAccessMaintainer = {
-    id: number;
-    maintainer_name: string;
-    maintainer_url: string;
-    list_source_url: string;
-};
+export const SchemaIpAccessMaintainer = Vts.object({
+    id: Vts.number(),
+    maintainer_name: Vts.string(),
+    maintainer_url: Vts.string(),
+    list_source_url: Vts.string()
+});
+
+export type IpAccessMaintainer = ExtractSchemaResultType<typeof SchemaIpAccessMaintainer>;
 
 /**
  * IpAccessMaintainerResponse
@@ -72,10 +80,12 @@ export type IpAccessMaintainerResponse = DefaultReturn & {
 /**
  * IpAccessBlackListImportSaveRequest
  */
-export type IpAccessBlackListImportSaveRequest = {
-    id: number;
-    disable: boolean;
-};
+export const SchemaIpAccessBlackListImportSaveRequest = Vts.object({
+    id: Vts.number(),
+    disable: Vts.boolean()
+});
+
+export type IpAccessBlackListImportSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackListImportSaveRequest>;
 
 /**
  * IpAccessBlackListImportSaveResponse
@@ -85,16 +95,18 @@ export type IpAccessBlackListImportSaveResponse = DefaultReturn;
 /**
  * IpAccessBlackListOwn
  */
-export type IpAccessBlackListOwn = {
-    id: number;
-    ip: string;
-    last_update: number;
-    disable: boolean;
-    last_block: number;
-    count_block: number;
-    ip_location_id?: number;
-    description: string;
-};
+export const SchemaIpAccessBlackListOwn = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    last_update: Vts.number(),
+    disable: Vts.boolean(),
+    last_block: Vts.number(),
+    count_block: Vts.number(),
+    ip_location_id: Vts.optional(Vts.number()),
+    description: Vts.string()
+});
+
+export type IpAccessBlackListOwn = ExtractSchemaResultType<typeof SchemaIpAccessBlackListOwn>;
 
 /**
  * IpAccessBlackListOwnsResponse
@@ -107,12 +119,14 @@ export type IpAccessBlackListOwnsResponse = DefaultReturn & {
 /**
  * IpAccessBlackListOwnSaveRequest
  */
-export type IpAccessBlackListOwnSaveRequest = {
-    id: number;
-    ip: string;
-    disable: boolean;
-    description: string;
-};
+export const SchemaIpAccessBlackListOwnSaveRequest = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    disable: Vts.boolean(),
+    description: Vts.string()
+});
+
+export type IpAccessBlackListOwnSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackListOwnSaveRequest>;
 
 /**
  * IpAccessBlackListOwnSaveResponse
@@ -122,16 +136,18 @@ export type IpAccessBlackListOwnSaveResponse = DefaultReturn;
 /**
  * IpAccessWhiteList
  */
-export type IpAccessWhiteList = {
-    id: number;
-    ip: string;
-    last_update: number;
-    disable: boolean;
-    last_access: number;
-    count_access: number;
-    ip_location_id?: number;
-    description: string;
-};
+export const SchemaIpAccessWhiteList = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    last_update: Vts.number(),
+    disable: Vts.boolean(),
+    last_access: Vts.number(),
+    count_access: Vts.number(),
+    ip_location_id: Vts.optional(Vts.number()),
+    description: Vts.string()
+});
+
+export type IpAccessWhiteList = ExtractSchemaResultType<typeof SchemaIpAccessWhiteList>;
 
 /**
  * IpAccessWhiteListResponse
@@ -144,12 +160,14 @@ export type IpAccessWhiteListResponse = DefaultReturn & {
 /**
  * IpAccessWhiteSaveRequest
  */
-export type IpAccessWhiteSaveRequest = {
-    id: number;
-    ip: string;
-    disable: boolean;
-    description: string;
-};
+export const SchemaIpAccessWhiteSaveRequest = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    disable: Vts.boolean(),
+    description: Vts.string()
+});
+
+export type IpAccessWhiteSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessWhiteSaveRequest>;
 
 /**
  * IpAccessWhiteSaveResponse
@@ -159,9 +177,11 @@ export type IpAccessWhiteSaveResponse = DefaultReturn;
 /**
  * IpAccessWhiteDeleteRequest
  */
-export type IpAccessWhiteDeleteRequest = {
-    id: number;
-};
+export const SchemaIpAccessWhiteDeleteRequest = Vts.object({
+    id: Vts.number()
+});
+
+export type IpAccessWhiteDeleteRequest = ExtractSchemaResultType<typeof SchemaIpAccessWhiteDeleteRequest>;
 
 /**
  * IpAccessWhiteDeleteResponse
@@ -171,9 +191,11 @@ export type IpAccessWhiteDeleteResponse = DefaultReturn;
 /**
  * IpAccessBlackDeleteRequest
  */
-export type IpAccessBlackDeleteRequest = {
-    id: number;
-};
+const SchemaIpAccessBlackDeleteRequest = Vts.object({
+    id: Vts.number()
+});
+
+export type IpAccessBlackDeleteRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackDeleteRequest>;
 
 /**
  * IpAccessBlackDeleteResponse
@@ -183,38 +205,36 @@ export type IpAccessBlackDeleteResponse = DefaultReturn;
 /**
  * IpAccess
  */
-@JsonController()
-export class IpAccess {
+export class IpAccess extends DefaultRoute {
+
+    /**
+     * constructor
+     */
+    public constructor() {
+        super();
+    }
 
     /**
      * getMaintainerList
-     * @param session
      */
-    @Get('/json/ipaccess/maintainer/list')
-    public async getMaintainerList(@Session() session: any): Promise<IpAccessMaintainerResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipListMaintainerRepository = DBHelper.getRepository(IpListMaintainerDB);
-            const maintainers = await ipListMaintainerRepository.find();
+    public async getMaintainerList(): Promise<IpAccessMaintainerResponse> {
+        const ipListMaintainerRepository = DBHelper.getRepository(IpListMaintainerDB);
+        const maintainers = await ipListMaintainerRepository.find();
 
-            const list: IpAccessMaintainer[] = [];
+        const list: IpAccessMaintainer[] = [];
 
-            for (const maintainer of maintainers) {
-                list.push({
-                    id: maintainer.id,
-                    maintainer_name: maintainer.maintainer_name,
-                    maintainer_url: maintainer.maintainer_url,
-                    list_source_url: maintainer.list_source_url
-                });
-            }
-
-            return {
-                statusCode: StatusCodes.OK,
-                list: list
-            };
+        for (const maintainer of maintainers) {
+            list.push({
+                id: maintainer.id,
+                maintainer_name: maintainer.maintainer_name,
+                maintainer_url: maintainer.maintainer_url,
+                list_source_url: maintainer.list_source_url
+            });
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.OK,
+            list: list
         };
     }
 
@@ -259,370 +279,396 @@ export class IpAccess {
     /**
      * getBlackList
      */
-    @Get('/json/ipaccess/blacklist/imports')
-    public async getBlackListImports(@Session() session: any): Promise<IpAccessBlackListImportsResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const limit = 20;
+    public async getBlackListImports(): Promise<IpAccessBlackListImportsResponse> {
+        const limit = 20;
 
-            const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-            const ipBlacklistCategoryRepository = DBHelper.getRepository(IpBlacklistCategoryDB);
-            const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
+        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
+        const ipBlacklistCategoryRepository = DBHelper.getRepository(IpBlacklistCategoryDB);
+        const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
 
-            const entries = await ipBlacklistRepository.find({
-                take: limit,
-                where: {
-                    is_imported: true
-                },
-                order: {
-                    last_block: 'DESC'
-                }
-            });
-
-            const list: IpAccessBlackListImport[] = [];
-            const locationIds: number[] = [];
-
-            if (entries) {
-                for await (const entry of entries) {
-                    const categorys: number[] = [];
-                    const maintainers: number[] = [];
-
-                    const cats = await ipBlacklistCategoryRepository.find({
-                        where: {
-                            ip_id: entry.id
-                        }
-                    });
-
-                    if (cats) {
-                        for (const cat of cats) {
-                            categorys.push(cat.cat_num);
-                        }
-                    }
-
-                    const maints = await ipBlacklistMaintainerRepository.find({
-                        where: {
-                            ip_id: entry.id
-                        }
-                    });
-
-                    if (maints) {
-                        for (const maint of maints) {
-                            maintainers.push(maint.ip_maintainer_id);
-                        }
-                    }
-
-                    if (entry.ip_location_id !== 0) {
-                        locationIds.push(entry.ip_location_id);
-                    }
-
-                    list.push({
-                        id: entry.id,
-                        ip: entry.ip,
-                        disable: entry.disable,
-                        last_update: entry.last_update,
-                        last_block: entry.last_block,
-                        count_block: entry.count_block,
-                        categorys: categorys,
-                        maintainers: maintainers,
-                        ip_location_id: entry.ip_location_id
-                    });
-                }
+        const entries = await ipBlacklistRepository.find({
+            take: limit,
+            where: {
+                is_imported: true
+            },
+            order: {
+                last_block: 'DESC'
             }
+        });
 
-            return {
-                statusCode: StatusCodes.OK,
-                list: list,
-                locations: await this._getLocations(locationIds)
-            };
+        const list: IpAccessBlackListImport[] = [];
+        const locationIds: number[] = [];
+
+        if (entries) {
+            for await (const entry of entries) {
+                const categorys: number[] = [];
+                const maintainers: number[] = [];
+
+                const cats = await ipBlacklistCategoryRepository.find({
+                    where: {
+                        ip_id: entry.id
+                    }
+                });
+
+                if (cats) {
+                    for (const cat of cats) {
+                        categorys.push(cat.cat_num);
+                    }
+                }
+
+                const maints = await ipBlacklistMaintainerRepository.find({
+                    where: {
+                        ip_id: entry.id
+                    }
+                });
+
+                if (maints) {
+                    for (const maint of maints) {
+                        maintainers.push(maint.ip_maintainer_id);
+                    }
+                }
+
+                if (entry.ip_location_id !== 0) {
+                    locationIds.push(entry.ip_location_id);
+                }
+
+                list.push({
+                    id: entry.id,
+                    ip: entry.ip,
+                    disable: entry.disable,
+                    last_update: entry.last_update,
+                    last_block: entry.last_block,
+                    count_block: entry.count_block,
+                    categorys: categorys,
+                    maintainers: maintainers,
+                    ip_location_id: entry.ip_location_id
+                });
+            }
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.OK,
+            list: list,
+            locations: await this._getLocations(locationIds)
         };
     }
 
     /**
      * saveBlackListImport
-     * @param session
      * @param request
      */
-    @Post('/json/ipaccess/blacklist/import/save')
-    public async saveBlackListImport(
-        @Session() session: any,
-        @Body() request: IpAccessBlackListImportSaveRequest
-    ): Promise<IpAccessBlackListImportSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
+    public async saveBlackListImport(request: IpAccessBlackListImportSaveRequest): Promise<IpAccessBlackListImportSaveResponse> {
+        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
 
-            const entrie = await ipBlacklistRepository.findOne({
-                where: {
-                    id: request.id,
-                    is_imported: true
-                }
-            });
-
-            if (entrie) {
-                entrie.disable = request.disable;
-
-                await DBHelper.getDataSource().manager.save(entrie);
-
-                return {
-                    statusCode: StatusCodes.OK
-                };
+        const entrie = await ipBlacklistRepository.findOne({
+            where: {
+                id: request.id,
+                is_imported: true
             }
+        });
+
+        if (entrie) {
+            entrie.disable = request.disable;
+
+            await DBHelper.getDataSource().manager.save(entrie);
 
             return {
-                statusCode: StatusCodes.INTERNAL_ERROR,
-                msg: 'Entrie not found by id!'
+                statusCode: StatusCodes.OK
             };
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            msg: 'Entrie not found by id!'
         };
     }
 
     /**
      * getBlackListOwns
-     * @param session
      */
-    @Get('/json/ipaccess/blacklist/owns')
-    public async getBlackListOwns(@Session() session: any): Promise<IpAccessBlackListOwnsResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
+    public async getBlackListOwns(): Promise<IpAccessBlackListOwnsResponse> {
+        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
 
-            const entries = await ipBlacklistRepository.find({
-                where: {
-                    is_imported: false
-                },
-                order: {
-                    last_block: 'DESC'
-                }
-            });
-
-            const list: IpAccessBlackListOwn[] = [];
-            const locationIds: number[] = [];
-
-            if (entries) {
-                for await (const entry of entries) {
-                    if (entry.ip_location_id !== 0) {
-                        locationIds.push(entry.ip_location_id);
-                    }
-
-                    list.push({
-                        id: entry.id,
-                        ip: entry.ip,
-                        disable: entry.disable,
-                        last_update: entry.last_update,
-                        last_block: entry.last_block,
-                        count_block: entry.count_block,
-                        ip_location_id: entry.ip_location_id,
-                        description: entry.description
-                    });
-                }
+        const entries = await ipBlacklistRepository.find({
+            where: {
+                is_imported: false
+            },
+            order: {
+                last_block: 'DESC'
             }
+        });
 
-            return {
-                statusCode: StatusCodes.OK,
-                list: list,
-                locations: await this._getLocations(locationIds)
-            };
+        const list: IpAccessBlackListOwn[] = [];
+        const locationIds: number[] = [];
+
+        if (entries) {
+            for await (const entry of entries) {
+                if (entry.ip_location_id !== 0) {
+                    locationIds.push(entry.ip_location_id);
+                }
+
+                list.push({
+                    id: entry.id,
+                    ip: entry.ip,
+                    disable: entry.disable,
+                    last_update: entry.last_update,
+                    last_block: entry.last_block,
+                    count_block: entry.count_block,
+                    ip_location_id: entry.ip_location_id,
+                    description: entry.description
+                });
+            }
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.OK,
+            list: list,
+            locations: await this._getLocations(locationIds)
         };
     }
 
     /**
      * saveBlackListOwn
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/ipaccess/blacklist/own/save')
-    public async saveBlackListOwn(
-        @Session() session: any,
-        @Body() request: IpAccessBlackListOwnSaveRequest
-    ): Promise<IpAccessBlackListOwnSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
+    public async saveBlackListOwn(data: IpAccessBlackListOwnSaveRequest): Promise<IpAccessBlackListOwnSaveResponse> {
+        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
 
-            let entrie = await ipBlacklistRepository.findOne({
-                where: {
-                    id: request.id,
-                    is_imported: false
-                }
-            });
-
-            if (!entrie) {
-                entrie = new IpBlacklistDB();
+        let entrie = await ipBlacklistRepository.findOne({
+            where: {
+                id: data.id,
+                is_imported: false
             }
+        });
 
-            entrie.ip = request.ip;
-            entrie.disable = request.disable;
-            entrie.description = request.description;
-            entrie.is_imported = false;
-            entrie.last_update = DateHelper.getCurrentDbTime();
-
-            await DBHelper.getDataSource().manager.save(entrie);
-
-            return {
-                statusCode: StatusCodes.OK
-            };
+        if (!entrie) {
+            entrie = new IpBlacklistDB();
         }
 
+        entrie.ip = data.ip;
+        entrie.disable = data.disable;
+        entrie.description = data.description;
+        entrie.is_imported = false;
+        entrie.last_update = DateHelper.getCurrentDbTime();
+
+        await DBHelper.getDataSource().manager.save(entrie);
+
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.OK
         };
     }
 
     /**
      * deleteBlacklist
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/ipaccess/blacklist/delete')
-    public async deleteBlacklist(@Session() session: any, @Body() request: IpAccessBlackDeleteRequest): Promise<IpAccessBlackDeleteResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
+    public async deleteBlacklist(data: IpAccessBlackDeleteRequest): Promise<IpAccessBlackDeleteResponse> {
+        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
 
-            const result = await ipBlacklistRepository.delete({
-                id: request.id,
-                is_imported: false
-            });
+        const result = await ipBlacklistRepository.delete({
+            id: data.id,
+            is_imported: false
+        });
 
-            if (result) {
-                return {
-                    statusCode: StatusCodes.OK
-                };
-            }
-
-            return {
-                statusCode: StatusCodes.INTERNAL_ERROR
-            };
-        }
-
-        return {
-            statusCode: StatusCodes.UNAUTHORIZED
-        };
-    }
-
-    /**
-     * getWhiteList
-     * @param session
-     */
-    @Get('/json/ipaccess/whitelist')
-    public async getWhiteList(@Session() session: any): Promise<IpAccessWhiteListResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
-
-            const entries = await ipWhitelistRepository.find({
-                order: {
-                    last_access: 'DESC'
-                }
-            });
-
-            const list: IpAccessWhiteList[] = [];
-            const locationIds: number[] = [];
-
-            if (entries) {
-                for await (const entry of entries) {
-                    if (entry.ip_location_id !== 0) {
-                        locationIds.push(entry.ip_location_id);
-                    }
-
-                    list.push({
-                        id: entry.id,
-                        ip: entry.ip,
-                        disable: entry.disable,
-                        last_update: entry.last_update,
-                        last_access: entry.last_access,
-                        count_access: entry.count_access,
-                        ip_location_id: entry.ip_location_id,
-                        description: entry.description
-                    });
-                }
-            }
-
-            return {
-                statusCode: StatusCodes.OK,
-                list: list,
-                locations: await this._getLocations(locationIds)
-            };
-        }
-
-        return {
-            statusCode: StatusCodes.UNAUTHORIZED
-        };
-    }
-
-    /**
-     * saveWhiteList
-     * @param session
-     * @param request
-     */
-    @Post('/json/ipaccess/whitelist/save')
-    public async saveWhiteList(
-        @Session() session: any,
-        @Body() request: IpAccessWhiteSaveRequest
-    ): Promise<IpAccessWhiteSaveResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
-
-            let entrie = await ipWhitelistRepository.findOne({
-                where: {
-                    id: request.id
-                }
-            });
-
-            if (!entrie) {
-                entrie = new IpWhitelistDB();
-            }
-
-            entrie.ip = request.ip;
-            entrie.disable = request.disable;
-            entrie.description = request.description;
-            entrie.last_update = DateHelper.getCurrentDbTime();
-
-            await DBHelper.getDataSource().manager.save(entrie);
-
+        if (result) {
             return {
                 statusCode: StatusCodes.OK
             };
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.INTERNAL_ERROR
+        };
+    }
+
+    /**
+     * getWhiteList
+     */
+    public async getWhiteList(): Promise<IpAccessWhiteListResponse> {
+        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+
+        const entries = await ipWhitelistRepository.find({
+            order: {
+                last_access: 'DESC'
+            }
+        });
+
+        const list: IpAccessWhiteList[] = [];
+        const locationIds: number[] = [];
+
+        if (entries) {
+            for await (const entry of entries) {
+                if (entry.ip_location_id !== 0) {
+                    locationIds.push(entry.ip_location_id);
+                }
+
+                list.push({
+                    id: entry.id,
+                    ip: entry.ip,
+                    disable: entry.disable,
+                    last_update: entry.last_update,
+                    last_access: entry.last_access,
+                    count_access: entry.count_access,
+                    ip_location_id: entry.ip_location_id,
+                    description: entry.description
+                });
+            }
+        }
+
+        return {
+            statusCode: StatusCodes.OK,
+            list: list,
+            locations: await this._getLocations(locationIds)
+        };
+    }
+
+    /**
+     * saveWhiteList
+     * @param data
+     */
+    public async saveWhiteList(data: IpAccessWhiteSaveRequest): Promise<IpAccessWhiteSaveResponse> {
+        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+
+        let entrie = await ipWhitelistRepository.findOne({
+            where: {
+                id: data.id
+            }
+        });
+
+        if (!entrie) {
+            entrie = new IpWhitelistDB();
+        }
+
+        entrie.ip = data.ip;
+        entrie.disable = data.disable;
+        entrie.description = data.description;
+        entrie.last_update = DateHelper.getCurrentDbTime();
+
+        await DBHelper.getDataSource().manager.save(entrie);
+
+        return {
+            statusCode: StatusCodes.OK
         };
     }
 
     /**
      * deleteWhitelist
-     * @param session
-     * @param request
+     * @param data
      */
-    @Post('/json/ipaccess/whitelist/delete')
-    public async deleteWhitelist(@Session() session: any, @Body() request: IpAccessWhiteDeleteRequest): Promise<IpAccessWhiteDeleteResponse> {
-        if ((session.user !== undefined) && session.user.isLogin) {
-            const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
+    public async deleteWhitelist(data: IpAccessWhiteDeleteRequest): Promise<IpAccessWhiteDeleteResponse> {
+        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
 
-            const result = await ipWhitelistRepository.delete({
-                id: request.id
-            });
+        const result = await ipWhitelistRepository.delete({
+            id: data.id
+        });
 
-            if (result) {
-                return {
-                    statusCode: StatusCodes.OK
-                };
-            }
-
+        if (result) {
             return {
-                statusCode: StatusCodes.INTERNAL_ERROR
+                statusCode: StatusCodes.OK
             };
         }
 
         return {
-            statusCode: StatusCodes.UNAUTHORIZED
+            statusCode: StatusCodes.INTERNAL_ERROR
         };
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public getExpressRouter(): Router {
+        this._routes.get(
+            '/json/ipaccess/maintainer/list',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getMaintainerList());
+                }
+            }
+        );
+
+        this._routes.get(
+            '/json/ipaccess/blacklist/imports',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getBlackListImports());
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/ipaccess/blacklist/import/save',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaIpAccessBlackListImportSaveRequest, req.body, res)) {
+                        res.status(200).json(await this.saveBlackListImport(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.get(
+            '/json/ipaccess/blacklist/owns',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getBlackListOwns());
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/ipaccess/blacklist/own/save',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaIpAccessBlackListOwnSaveRequest, req.body, res)) {
+                        res.status(200).json(await this.saveBlackListOwn(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/ipaccess/blacklist/delete',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaIpAccessBlackDeleteRequest, req.body, res)) {
+                        res.status(200).json(await this.deleteBlacklist(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.get(
+            '/json/ipaccess/whitelist',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await this.getWhiteList());
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/ipaccess/whitelist/save',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaIpAccessWhiteSaveRequest, req.body, res)) {
+                        res.status(200).json(await this.saveWhiteList(req.body));
+                    }
+                }
+            }
+        );
+
+        this._routes.post(
+            '/json/ipaccess/whitelist/delete',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaIpAccessWhiteDeleteRequest, req.body, res)) {
+                        res.status(200).json(await this.deleteWhitelist(req.body));
+                    }
+                }
+            }
+        );
+
+        return super.getExpressRouter();
     }
 
 }
