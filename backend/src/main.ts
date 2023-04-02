@@ -82,7 +82,13 @@ import exitHook from 'async-exit-hook';
         return;
     }
 
-    const tconfig = await Config.load(configfile);
+    let useEnv = false;
+
+    if (argv.envargs && argv.envargs === '1') {
+        useEnv = true;
+    }
+
+    const tconfig = await Config.load(configfile, useEnv);
 
     if (tconfig === null) {
         console.log(`Configloader is return empty config, please check your configfile: ${configfile}`);
