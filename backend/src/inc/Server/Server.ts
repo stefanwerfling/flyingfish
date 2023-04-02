@@ -1,6 +1,7 @@
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express, {Application, NextFunction, Request, Response} from 'express';
+import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import fs from 'fs';
 import helmet from 'helmet';
@@ -81,6 +82,14 @@ export class Server {
             }
         }));
 
+        const limiter = rateLimit({
+            windowMs: 15 * 60 * 1000,
+            max: 100,
+            standardHeaders: true,
+            legacyHeaders: false
+        });
+
+        this._server.use(limiter);
         this._server.use(bodyParser.urlencoded({extended: true}));
         this._server.use(bodyParser.json());
         this._server.use(cookieParser());
