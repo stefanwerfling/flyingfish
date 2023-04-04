@@ -37,7 +37,8 @@ export const SchemaConfigOptions = Vts.object({
     nginx: Vts.optional(Vts.object({
         config: Vts.string(),
         prefix: Vts.string(),
-        dhparamfile: Vts.optional(Vts.string())
+        dhparamfile: Vts.optional(Vts.string()),
+        module_mode_dyn: Vts.optional(Vts.boolean())
     })),
     sshserver: Vts.optional(Vts.object({
         ip: Vts.string()
@@ -86,6 +87,16 @@ export enum ENV_OPTIONAL {
     DB_MYSQL_HOST = 'FLYINGFISH_DB_MYSQL_HOST',
     DB_MYSQL_PORT = 'FLYINGFISH_DB_MYSQL_PORT',
     HTTPSERVER_PORT = 'FLYINGFISH_HTTPSERVER_PORT',
+    HTTPSERVER_PUBLICDIR = 'FLYINGFISH_HTTPSERVER_PUBLICDIR',
+    DNSSERVER_PORT = 'FLYINGFISH_DNSSERVER_PORT',
+    NGINX_CONFIG = 'FLYINGFISH_NGINX_CONFIG',
+    NGINX_PREFIX = 'FLYINGFISH_NGINX_PREFIX',
+    NGINX_MODULE_MODE_DYN = 'FLYINGFISH_NGINX_MODULE_MODE_DYN',
+    SSHSERVER_IP = 'FLYINGFISH_SSHSERVER_IP',
+    DOCKER_INSIDE = 'FLYINGFISH_DOCKER_INSIDE',
+    LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
+    HIMHIP_USE = 'FLYINGFISH_HIMHIP_USE',
+    HIMHIP_SECURE = 'FLYINGFISH_HIMHIP_SECURE',
     FF_LIBPATH = 'FLYINGFISH_LIBPATH'
 }
 
@@ -102,6 +113,14 @@ export class Config {
     public static readonly DEFAULT_DB_MYSQL_HOST = '10.103.0.2';
     public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
     public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
+    public static readonly DEFAULT_HTTPSERVER_PUBLICDIR = 'frontend';
+    public static readonly DEFAULT_DNSSERVER_PORT = 5333;
+    public static readonly DEFAULT_NGINX_CONFIG = '/opt/app/nginx/nginx.conf';
+    public static readonly DEFAULT_NGINX_PREFIX = '/opt/app/nginx';
+    public static readonly DEFAULT_SSHSERVER_IP = '10.103.0.4';
+    public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
+    public static readonly DEFAULT_HIMHIP_USE = true;
+    public static readonly DEFAULT_HIMHIP_SECURE = '';
 
     /**
      * global config
@@ -155,6 +174,7 @@ export class Config {
                 config = fileConfig;
             } catch (err) {
                 console.error(err);
+                return null;
             }
         }
 
@@ -199,12 +219,22 @@ export class Config {
                     },
                     httpserver: {
                         port: Config.DEFAULT_HTTPSERVER_PORT,
-                        publicdir: ''
+                        publicdir: Config.DEFAULT_HTTPSERVER_PUBLICDIR
+                    },
+                    nginx: {
+                        config: Config.DEFAULT_NGINX_CONFIG,
+                        prefix: Config.DEFAULT_NGINX_PREFIX
+                    },
+                    himhip: {
+                        use: Config.DEFAULT_HIMHIP_USE,
+                        secure: Config.DEFAULT_HIMHIP_SECURE
                     }
                 };
             }
 
-            // variables -----------------------------------------------------------------------------------------------
+            // optional ------------------------------------------------------------------------------------------------
+
+            // db mysql ------------------------------------------------------------------------------------------------
 
             if (process.env[ENV_OPTIONAL.DB_MYSQL_HOST]) {
                 config.db.mysql.host = process.env[ENV_OPTIONAL.DB_MYSQL_HOST];
@@ -214,9 +244,86 @@ export class Config {
                 config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) || Config.DEFAULT_DB_MYSQL_PORT;
             }
 
+            // httpserver ----------------------------------------------------------------------------------------------
+
             if (process.env[ENV_OPTIONAL.HTTPSERVER_PORT]) {
                 config.httpserver.port = parseInt(process.env[ENV_OPTIONAL.HTTPSERVER_PORT]!, 10) || Config.DEFAULT_HTTPSERVER_PORT;
             }
+
+            if (process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR]) {
+                config.httpserver.publicdir = process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR];
+            }
+
+            // dnsserver -----------------------------------------------------------------------------------------------
+
+            if (process.env[ENV_OPTIONAL.DNSSERVER_PORT]) {
+                config.dnsserver = {
+                    port: parseInt(process.env[ENV_OPTIONAL.DNSSERVER_PORT]!, 10) || Config.DEFAULT_DNSSERVER_PORT
+                };
+            }
+
+            // nginx ---------------------------------------------------------------------------------------------------
+
+            if (!config.nginx) {
+                config.nginx = {
+                    config: Config.DEFAULT_NGINX_CONFIG,
+                    prefix: Config.DEFAULT_NGINX_PREFIX
+                };
+            }
+
+            if (process.env[ENV_OPTIONAL.NGINX_CONFIG]) {
+                config.nginx.config = process.env[ENV_OPTIONAL.NGINX_CONFIG];
+            }
+
+            if (process.env[ENV_OPTIONAL.NGINX_PREFIX]) {
+                config.nginx.prefix = process.env[ENV_OPTIONAL.NGINX_PREFIX];
+            }
+
+            if (process.env[ENV_OPTIONAL.NGINX_MODULE_MODE_DYN]) {
+                config.nginx.module_mode_dyn = process.env[ENV_OPTIONAL.NGINX_MODULE_MODE_DYN] === '1';
+            }
+
+            // sshserver -----------------------------------------------------------------------------------------------
+
+            if (process.env[ENV_OPTIONAL.SSHSERVER_IP]) {
+                config.sshserver = {
+                    ip: process.env[ENV_OPTIONAL.SSHSERVER_IP]
+                };
+            }
+
+            // docker --------------------------------------------------------------------------------------------------
+
+            if (process.env[ENV_OPTIONAL.DOCKER_INSIDE]) {
+                config.docker = {
+                    inside: process.env[ENV_OPTIONAL.DOCKER_INSIDE] === '1',
+                    gateway: Config.DEFAULT_DOCKER_GATEWAY
+                };
+            }
+
+            if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
+                config.logging = {
+                    level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
+                };
+            }
+
+            // himhip --------------------------------------------------------------------------------------------------
+
+            if (!config.himhip) {
+                config.himhip = {
+                    use: Config.DEFAULT_HIMHIP_USE,
+                    secure: Config.DEFAULT_HIMHIP_SECURE
+                };
+            }
+
+            if (process.env[ENV_OPTIONAL.HIMHIP_USE]) {
+                config.himhip.use = process.env[ENV_OPTIONAL.HIMHIP_USE] === '1';
+            }
+
+            if (process.env[ENV_OPTIONAL.HIMHIP_SECURE]) {
+                config.himhip.secure = process.env[ENV_OPTIONAL.HIMHIP_SECURE];
+            }
+
+            // ff ------------------------------------------------------------------------------------------------------
 
             if (process.env[ENV_OPTIONAL.FF_LIBPATH]) {
                 config.flyingfish_libpath = process.env[ENV_OPTIONAL.FF_LIBPATH];
@@ -243,7 +350,13 @@ export class Config {
 
             if (!config.dnsserver) {
                 config.dnsserver = {
-                    port: 5333
+                    port: Config.DEFAULT_DNSSERVER_PORT
+                };
+            }
+
+            if (!config.sshserver) {
+                config.sshserver = {
+                    ip: Config.DEFAULT_SSHSERVER_IP
                 };
             }
 

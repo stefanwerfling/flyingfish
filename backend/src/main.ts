@@ -65,21 +65,28 @@ import exitHook from 'async-exit-hook';
  */
 (async(): Promise<void> => {
     const argv = Args.get();
-    let configfile = path.join(path.resolve(), `/${Config.DEFAULT_CONFIG_FILE}`);
+    let configfile = null;
 
     if (argv.config) {
         configfile = argv.config;
-    }
 
-    try {
-        if (!fs.existsSync(configfile)) {
-            console.log(`Config not found: ${configfile}, exit.`);
+        try {
+            if (!fs.existsSync(configfile)) {
+                console.log(`Config not found: ${configfile}, exit.`);
+                return;
+            }
+        } catch (err) {
+            console.log(`Config is not load: ${configfile}, exit.`);
+            console.error(err);
             return;
         }
-    } catch (err) {
-        console.log(`Config is not load: ${configfile}, exit.`);
-        console.error(err);
-        return;
+    } else {
+        const defaultConfig = path.join(path.resolve(), `/${Config.DEFAULT_CONFIG_FILE}`);
+
+        if (fs.existsSync(defaultConfig)) {
+            console.log(`Found and use setup config: ${defaultConfig} ....`);
+            configfile = defaultConfig;
+        }
     }
 
     let useEnv = false;

@@ -46,36 +46,43 @@ services:
         max-file: "50"
 
   flyingfish:
-    image: flyingfish:v1.0
+    image: flyingfish:v1.2
     build:
       context: ./
       dockerfile: Dockerfile.nginxsrc
     container_name: flyingfish_service
     volumes:
-      - ./config.json:/opt/app/config.json
       - ./nginx:/opt/app/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw
       - ./backend/dist:/opt/app/dist
       - ./backend/node_modules:/opt/app/node_modules
       - ./backend/package.json:/opt/app/package.json
+      - ./frontend/assets:/opt/app/frontend/assets
       - ./frontend/dist:/opt/app/frontend/dist
       - ./frontend/src:/opt/app/frontend/src
+    environment:
+      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
+      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+      FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
+      FLYINGFISH_HIMHIP_SECURE: "${HIMHIP_SECURE}"
     ports:
       - "443:443"
       - "80:80"
       - "5333:53/udp"
       - "5333:53/tcp"
-      - "3000:3000"
+      - "${HTTPSERVER_PORT}:${HTTPSERVER_PORT}"
       - "1900:1900"
       - "10901:10901"
       - "9229:9229"
     command:
-      - "supervisor"
-      - "--"
+      - node
       - "--inspect-brk=0.0.0.0:9229"
       - "dist/main.js"
-      - "--config=/opt/app/config.json"
+      - "--envargs=1"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
@@ -95,8 +102,34 @@ services:
     command:
       - node
       - "dist/main.js"
-      - "--reciverurl=https://10.103.0.3:3000/himhip/update"
-      - "--secure=${HIMHIP_SECURE_TOKEN}"
+      - "--reciverurl=https://10.103.0.3:${HTTPSERVER_PORT}/himhip/update"
+      - "--secure=${HIMHIP_SECURE}"
+    network_mode: host
+    cap_add:
+      - ALL
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - flyingfish
+
+  iptable:
+    image: flyingfish_iptable:v1.0
+    build:
+      context: ./iptable/
+    container_name: flyingfish_iptable
+    volumes:
+      - ./iptable/dist:/opt/app/dist
+      - ./iptable/node_modules:/opt/app/node_modules
+      - ./iptable/package.json:/opt/app/package.json
+    command:
+      - node
+      - "--inspect-brk=0.0.0.0:9229"
+      - "dist/main.js"
+      - "--reciverurl=https://10.103.0.3:3000/iptable/list"
+      - "--secure=${IPTABLE_SECURE_TOKEN}"
     network_mode: host
     cap_add:
       - ALL
@@ -139,10 +172,8 @@ services:
     container_name: flyingfish_vpn
     volumes:
       - ./vpn/dist:/opt/app/dist
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun
+    privileged: true
+    network_mode: host
     logging:
       driver: "json-file"
       options:

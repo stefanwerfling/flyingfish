@@ -1,6 +1,7 @@
 /doc/work/internnotes.txt
 /doc/work
 /config.json
+/package-lock.json
 /.idea
 /.env
 
@@ -48,3 +49,4 @@
 /vpn/node_modules/
 /vpn/dist/
 /vpn/package-lock.json
+

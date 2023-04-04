@@ -182,11 +182,11 @@ export class Server {
                 key: privateKey,
                 cert: crt
             }, app).listen(this._port, () => {
-                Logger.getLogger().info(`Flingfish listening on the https://localhost:${this._port}`);
+                Logger.getLogger().info(`Server::listen: Flingfish listening on the https://localhost:${this._port}`);
             });
         } else {
             app.listen(this._port, () => {
-                Logger.getLogger().info(`Flingfish listening on the http://localhost:${this._port}`);
+                Logger.getLogger().info(`Server::listen: Flingfish listening on the http://localhost:${this._port}`);
             });
         }
     }

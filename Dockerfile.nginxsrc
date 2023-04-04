@@ -65,6 +65,8 @@ RUN pip3 install pip --upgrade
 RUN pip3 install certbot-nginx
 RUN mkdir /etc/letsencrypt
 
+# Init App dirs --------------------------------------------------------------------------------------------------------
+
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/frontend
 RUN mkdir -p /opt/app/nginx
@@ -73,34 +75,68 @@ RUN mkdir -p /opt/app/nginx/logs
 RUN mkdir -p /opt/app/nginx/servers
 RUN mkdir -p /opt/app/nginx/servers/logs
 RUN mkdir -p /opt/app/nginx/html
-RUN mkdir -p /var/log/flyingfish/
+RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
+
+# Copy/Install Backend -------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/app
 
-COPY backend/dist ./dist
-COPY backend/node_modules ./node_modules
-COPY backend/package.json ./package.json
+COPY backend ./
 
-COPY frontend/assets ./frontend/assets
-COPY frontend/images ./frontend/images
-COPY frontend/dist ./frontend/dist
-COPY frontend/src ./frontend/src
-COPY frontend/index.html ./frontend/index.html
-COPY frontend/login.html ./frontend/login.html
-COPY frontend/manifest.json ./frontend/manifest.json
-COPY frontend/package.json ./frontend/package.json
+RUN rm -R node_modules | true
+RUN rm -R dist | true
+RUN rm package-lock.json | true
 
-COPY nginx/dist ./nginx/dist
-COPY nginx/node_modules ./nginx/node_modules
-COPY nginx/pages ./nginx/pages
-COPY nginx/htpasswd ./nginx/htpasswd
-COPY nginx/package.json ./nginx/package.json
+RUN npm install
+RUN npm run build
+
+# Copy/Install Frontend ------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/app/frontend
+
+COPY frontend ./
+RUN rm -R ./node_modules | true
+RUN rm -R ./dist | true
+RUN rm ./package-lock.json | true
+
+RUN npm install --force
+RUN npm run gulp-clone-bambooo
+RUN npm run gulp-copy-data
+RUN npm run gulp-build-webpack
+
+# Copy/Install nginx ---------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/app/nginx
+
+COPY nginx ./
+RUN rm -R ./node_modules | true
+RUN rm -R ./dist | true
+RUN rm -R ./logs | true
+RUN rm -R ./body | true
+RUN rm -R ./sample | true
+RUN rm -R ./servers | true
+RUN rm ./package-lock.json | true
+RUN rm ./nginx.pid | true
+RUN rm ./dhparam.pem | true
+RUN rm nginx.conf | true
+
+RUN npm install
+
+# add supervisor -------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/app
 
 RUN npm install supervisor -g
+
+# defaults ports -------------------------------------------------------------------------------------------------------
 
 EXPOSE 80
 EXPOSE 443
 EXPOSE 3000
 
-CMD [ "node",  "dist/main.js", "--config=/opt/app/config.json"]
+# start main app -------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/app
+
+CMD [ "node",  "dist/main.js", "--envargs=1"]

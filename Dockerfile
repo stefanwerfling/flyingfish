@@ -1,5 +1,7 @@
 FROM node:18-bullseye
 
+ENV FLYINGFISH_NGINX_MODULE_MODE_DYN "1"
+
 RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y dublin-traceroute
@@ -46,8 +48,6 @@ COPY frontend/assets ./frontend/assets
 COPY frontend/images ./frontend/images
 COPY frontend/dist ./frontend/dist
 COPY frontend/src ./frontend/src
-RUN rm -r /opt/app/frontend/src/inc/Bambooo
-COPY frontend/node_modules/bambooo/src ./frontend/src/inc/Bambooo
 COPY frontend/index.html ./frontend/index.html
 COPY frontend/login.html ./frontend/login.html
 COPY frontend/manifest.json ./frontend/manifest.json
@@ -65,4 +65,4 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 3000
 
-CMD [ "node",  "dist/main.js", "--config=/opt/app/config.json"]
+CMD [ "node",  "dist/main.js", "--envargs=1"]
