@@ -662,7 +662,7 @@ export class NginxService {
 
                     // well-known --------------------------------------------------------------------------------------
 
-                    if (!ssl_enable) {
+                    if (!ssl_enable && !httpSubCollect.http.wellknown_disabled) {
                         // add as default, when add a redirect, then acme not work
                         const acme = new Location('/.well-known/acme-challenge/');
                         acme.addVariable('auth_basic', 'off');
