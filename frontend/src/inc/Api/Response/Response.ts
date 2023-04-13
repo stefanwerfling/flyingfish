@@ -15,7 +15,6 @@ export class Response {
      * isSchemaValidate
      * @param schema
      * @param data
-     * @param res
      */
     public static isSchemaValidate<T>(
         schema: Schema<T>,
@@ -32,7 +31,8 @@ export class Response {
 
     /**
      * isResponse
-     * @param res
+     * @param schema
+     * @param data
      */
     public static isResponse<T>(
         schema: Schema<T>,

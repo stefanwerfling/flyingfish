@@ -7,7 +7,7 @@ export class SchemaError extends Error {
 
     /**
      * constructor
-     * @param message
+     * @param errors
      */
     public constructor(errors: SchemaErrors) {
         super(errors.join(', '));

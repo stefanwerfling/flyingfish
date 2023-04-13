@@ -49,6 +49,7 @@ export class DefaultRoute {
      * isUserLogin
      * @param req
      * @param res
+     * @param sendAutoResoonse
      */
     public isUserLogin(
         req: Request,
