@@ -1,7 +1,6 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {UnauthorizedError} from './Error/UnauthorizedError';
-import {StatusCodes} from './Status/StatusCodes';
-import {DefaultReturn} from './Types/DefaultReturn';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * NatStatuts
@@ -15,74 +14,86 @@ export enum NatStatus {
 /**
  * UpnpNatCacheMapping
  */
-export type UpnpNatCacheMapping = {
-    public: {
-        gateway: string;
-        host: string;
-        port: number;
-    };
-    private: {
-        host: string;
-        port: number;
-    };
-    protocol: string;
-    enabled: boolean;
-    description: string;
-    ttl: number;
-    local: boolean;
-};
+export const SchemaUpnpNatCacheMapping = Vts.object({
+    public: Vts.object({
+        gateway: Vts.string(),
+        host: Vts.string(),
+        port: Vts.number()
+    }),
+    private: Vts.object({
+        host: Vts.string(),
+        port: Vts.number()
+    }),
+    protocol: Vts.string(),
+    enabled: Vts.boolean(),
+    description: Vts.string(),
+    ttl: Vts.number(),
+    local: Vts.boolean()
+});
+
+export type UpnpNatCacheMapping = ExtractSchemaResultType<typeof SchemaUpnpNatCacheMapping>;
 
 /**
  * UpnpNatDevice
  */
-export type UpnpNatDevice = {
-    deviceId: string;
-    mappings: UpnpNatCacheMapping[];
-};
+export const SchemaUpnpNatDevice = Vts.object({
+    deviceId: Vts.string(),
+    mappings: Vts.array(SchemaUpnpNatCacheMapping)
+});
+
+export type UpnpNatDevice = ExtractSchemaResultType<typeof SchemaUpnpNatDevice>;
 
 /**
  * UpnpNatPort
  */
-export type UpnpNatPort = {
-    id: number;
-    postion: number;
-    public_port: number;
-    gateway_identifier_id: number;
-    gateway_address: string;
-    private_port: number;
-    client_address: string;
-    use_himhip_host_address: boolean;
-    ttl: number;
-    protocol: string;
-    last_ttl_update: number;
-    listen_id: number;
-    description: string;
-    last_status: number;
-    last_update: number;
-};
+export const SchemaUpnpNatPort = Vts.object({
+    id: Vts.number(),
+    postion: Vts.number(),
+    public_port: Vts.number(),
+    gateway_identifier_id: Vts.number(),
+    gateway_address: Vts.string(),
+    private_port: Vts.number(),
+    client_address: Vts.string(),
+    use_himhip_host_address: Vts.boolean(),
+    ttl: Vts.number(),
+    protocol: Vts.string(),
+    last_ttl_update: Vts.number(),
+    listen_id: Vts.number(),
+    description: Vts.string(),
+    last_status: Vts.number(),
+    last_update: Vts.number()
+});
+
+export type UpnpNatPort = ExtractSchemaResultType<typeof SchemaUpnpNatPort>;
 
 /**
  * UpnpNatResponse
  */
-export type UpnpNatResponse = DefaultReturn & {
-    data: UpnpNatPort[];
-};
+export const SchemaUpnpNatResponse = SchemaDefaultReturn.extend({
+    data: Vts.array(SchemaUpnpNatPort)
+});
+
+export type UpnpNatResponse = ExtractSchemaResultType<typeof SchemaUpnpNatResponse>;
 
 /**
  * UpnpNatGatwayInfo
  */
-export type UpnpNatGatwayInfo = {
-    gatway_address: string;
-    gatwaymac_address: string;
-    client_address: string;
-};
+export const SchemaUpnpNatGatwayInfo = Vts.object({
+    gatway_address: Vts.string(),
+    gatwaymac_address: Vts.string(),
+    client_address: Vts.string()
+});
+
+export type UpnpNatGatwayInfo = ExtractSchemaResultType<typeof SchemaUpnpNatGatwayInfo>;
 
 /**
  * UpnpNatCurrentGatwayInfoResponse
  */
-export type UpnpNatCurrentGatwayInfoResponse = DefaultReturn & {
-    data?: UpnpNatGatwayInfo;
-};
+export const SchemaUpnpNatCurrentGatwayInfoResponse = SchemaDefaultReturn.extend({
+    data: Vts.optional(SchemaUpnpNatGatwayInfo)
+});
+
+export type UpnpNatCurrentGatwayInfoResponse = ExtractSchemaResultType<typeof SchemaUpnpNatCurrentGatwayInfoResponse>;
 
 /**
  * UpnpNatSaveRequest
@@ -104,39 +115,17 @@ export class UpnpNat {
     /**
      * getList
      */
-    public static async getList(): Promise<UpnpNatPort[] | null> {
-        const result = await NetFetch.getData('/json/upnpnat/list');
-
-        if (result && result.statusCode) {
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return result.data as UpnpNatPort[];
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getList(): Promise<UpnpNatPort[]> {
+        const result = await NetFetch.getData('/json/upnpnat/list', SchemaUpnpNatResponse);
+        return result.data;
     }
 
     /**
      * getCurrentGatewayInfo
      */
-    public static async getCurrentGatewayInfo(): Promise<UpnpNatGatwayInfo | null> {
-        const result = await NetFetch.getData('/json/upnpnat/current_gateway_info');
-
-        if (result && result.statusCode) {
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return result.data as UpnpNatGatwayInfo;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getCurrentGatewayInfo(): Promise<UpnpNatGatwayInfo> {
+        const result = await NetFetch.getData('/json/upnpnat/current_gateway_info', SchemaUpnpNatCurrentGatwayInfoResponse);
+        return result.data;
     }
 
     /**
@@ -144,16 +133,8 @@ export class UpnpNat {
      * @param upnpnat
      */
     public static async save(upnpnat: UpnpNatSaveRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/upnpnat/save', upnpnat);
-
-        if (result && result.statusCode) {
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/upnpnat/save', upnpnat, SchemaDefaultReturn);
+        return true;
     }
 
     /**
@@ -162,19 +143,11 @@ export class UpnpNat {
      */
     public static async delete(id: number): Promise<boolean> {
         const request: UpnpNatDeleteRequest = {
-            id: id
+            id
         };
 
-        const result = await NetFetch.postData('/json/upnpnat/delete', request);
-
-        if (result && result.statusCode) {
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/upnpnat/delete', request, SchemaDefaultReturn);
+        return true;
     }
 
 }

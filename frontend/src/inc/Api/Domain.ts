@@ -1,46 +1,54 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * DomainRecord
  */
-export type DomainRecord = {
-    id: number;
-    type: number;
-    class: number;
-    ttl: number;
-    value: string;
-    update_by_dnsclient: boolean;
-    last_update: number;
-};
+export const SchemaDomainRecord = Vts.object({
+    id: Vts.number(),
+    type: Vts.number(),
+    class: Vts.number(),
+    ttl: Vts.number(),
+    value: Vts.string(),
+    update_by_dnsclient: Vts.boolean(),
+    last_update: Vts.number()
+});
+
+export type DomainRecord = ExtractSchemaResultType<typeof SchemaDomainRecord>;
 
 /**
  * DomainData
  */
-export type DomainData = {
-    id: number;
-    name: string;
-    fix: boolean;
-    recordless: boolean;
-    records: DomainRecord[];
-    disable: boolean;
-};
+export const SchemaDomainData = Vts.object({
+    id: Vts.number(),
+    name: Vts.string(),
+    fix: Vts.boolean(),
+    recordless: Vts.boolean(),
+    records: Vts.array(SchemaDomainRecord),
+    disable: Vts.boolean()
+});
+
+export type DomainData = ExtractSchemaResultType<typeof SchemaDomainData>;
 
 /**
  * DomainResponse
  */
-export type DomainResponse = {
-    status: string;
-    msg?: string;
-    list: DomainData[];
-};
+export const SchemaDomainResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaDomainData)
+});
+
+export type DomainResponse = ExtractSchemaResultType<typeof SchemaDomainResponse>;
 
 /**
  * DomainRecordSave
  */
-export type DomainRecordSave = {
-    domain_id: number;
-    record: DomainRecord;
-};
+export const SchemaDomainRecordSave = Vts.object({
+    domain_id: Vts.number(),
+    record: SchemaDomainRecord
+});
+
+export type DomainRecordSave = ExtractSchemaResultType<typeof SchemaDomainRecordSave>;
 
 /**
  * Domain
@@ -50,16 +58,8 @@ export class Domain {
     /**
      * getDomains
      */
-    public static async getDomains(): Promise<DomainResponse| null> {
-        const result = await NetFetch.getData('/json/domain/list');
-
-        if (result) {
-            if (result.status === 'ok') {
-                return result as DomainResponse;
-            }
-        }
-
-        return null;
+    public static async getDomains(): Promise<DomainResponse> {
+        return NetFetch.getData('/json/domain/list', SchemaDomainResponse);
     }
 
     /**
@@ -67,35 +67,17 @@ export class Domain {
      * @param domain
      */
     public static async saveDomain(domain: DomainData): Promise<boolean> {
-        const result = await NetFetch.postData('/json/domain/save', domain);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/domain/save', domain, SchemaDefaultReturn);
+        return true;
     }
 
     /**
      * deleteDomain
-     * @param listen
+     * @param domain
      */
     public static async deleteDomain(domain: DomainData): Promise<boolean> {
-        const result = await NetFetch.postData('/json/domain/delete', domain);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/domain/delete', domain, SchemaDefaultReturn);
+        return true;
     }
 
     /**
@@ -103,34 +85,17 @@ export class Domain {
      * @param srecord
      */
     public static async saveDomainRecord(srecord: DomainRecordSave): Promise<boolean> {
-        const result = await NetFetch.postData('/json/domain/record/save', srecord);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/domain/record/save', srecord, SchemaDefaultReturn);
+        return true;
     }
 
     /**
      * deleteDomainRecord
-     * @param listen
+     * @param record
      */
     public static async deleteDomainRecord(record: DomainRecord): Promise<boolean> {
-        const result = await NetFetch.postData('/json/domain/record/delete', record);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/domain/record/delete', record, SchemaDefaultReturn);
+        return true;
     }
+
 }

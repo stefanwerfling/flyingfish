@@ -4,7 +4,11 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
-    "build": "webpack"
+    "gulp-copy-data": "gulp copy-data",
+    "gulp-setup-bambooo": "gulp setup-bambooo",
+    "gulp-clone-bambooo": "gulp clone-bambooo",
+    "gulp-build-bambooo": "gulp build-bambooo",
+    "gulp-build-webpack": "gulp build-webpack"
   },
   "keywords": [],
   "author": "",
@@ -14,22 +18,23 @@
     "admin-lte": "^3.2.0",
     "bambooo": "git+https://github.com/stefanwerfling/bambooo.git",
     "ionicons-css": "^5.2.2",
-    "jquery": "^3.6.3",
+    "jquery": "^3.6.4",
     "jquery-ui-dist": "^1.13.2",
     "moment": "^2.29.4",
-    "ol": "^7.2.2"
+    "ol": "^7.3.0",
+    "vts": "git+https://github.com/OpenSourcePKG/vts.git"
   },
   "devDependencies": {
-    "@popperjs/core": "^2.11.6",
-    "@typescript-eslint/eslint-plugin": "^5.50.0",
-    "@typescript-eslint/parser": "^5.50.0",
+    "@popperjs/core": "^2.11.7",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "bootstrap": "^5.2.3",
     "bootstrap-switch": "^3.4.0",
     "dotenv": "^8.2.0",
-    "eslint": "^8.33.0",
+    "eslint": "^8.38.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-promise": "^6.1.1",
@@ -46,7 +51,7 @@
     "node": "^17.7.2",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
-    "webpack": "^5.75.0",
+    "webpack": "^5.78.0",
     "webpack-cli": "^5.0.1"
   }
 }

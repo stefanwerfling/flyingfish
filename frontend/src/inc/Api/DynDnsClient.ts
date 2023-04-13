@@ -1,61 +1,72 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {UnauthorizedError} from './Error/UnauthorizedError';
-import {StatusCodes} from './Status/StatusCodes';
-import {DefaultReturn} from './Types/DefaultReturn';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * DynDnsClientDomain
  */
-export type DynDnsClientDomain = {
-    id: number;
-    name: string;
-};
+export const SchemaDynDnsClientDomain = Vts.object({
+    id: Vts.number(),
+    name: Vts.string()
+});
+
+export type DynDnsClientDomain = ExtractSchemaResultType<typeof SchemaDynDnsClientDomain>;
 
 /**
  * DynDnsClientProvider
  */
-export type DynDnsClientProvider = {
-    name: string;
-    title: string;
-};
+export const SchemaDynDnsClientProvider = Vts.object({
+    name: Vts.string(),
+    title: Vts.string()
+});
+
+export type DynDnsClientProvider = ExtractSchemaResultType<typeof SchemaDynDnsClientProvider>;
 
 /**
  * DynDnsClientData
  */
-export type DynDnsClientData = {
-    id: number;
-    domains: DynDnsClientDomain[];
-    provider: DynDnsClientProvider;
-    username: string;
-    password?: string;
-    update_domain: boolean;
-    last_status: number;
-    last_status_msg: string;
-    last_update: number;
-};
+export const SchemaDynDnsClientData = Vts.object({
+    id: Vts.number(),
+    domains: Vts.array(SchemaDynDnsClientDomain),
+    provider: SchemaDynDnsClientProvider,
+    username: Vts.string(),
+    password: Vts.optional(Vts.string()),
+    update_domain: Vts.boolean(),
+    last_status: Vts.number(),
+    last_status_msg: Vts.string(),
+    last_update: Vts.number()
+});
+
+export type DynDnsClientData = ExtractSchemaResultType<typeof SchemaDynDnsClientData>;
 
 /**
  * DynDnsClientListResponse
  */
-export type DynDnsClientListResponse = DefaultReturn & {
-    list: DynDnsClientData[];
-};
+export const SchemaDynDnsClientListResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaDynDnsClientData)
+});
+
+export type DynDnsClientListResponse = ExtractSchemaResultType<typeof SchemaDynDnsClientListResponse>;
 
 /**
  * DynDnsProvider
  */
-export type DynDnsProvider = {
-    name: string;
-    title: string;
-};
+export const SchemaDynDnsProvider = Vts.object({
+    name: Vts.string(),
+    title: Vts.string()
+});
+
+export type DynDnsProvider = ExtractSchemaResultType<typeof SchemaDynDnsProvider>;
 
 
 /**
  * DynDnsClientProviderListResponse
  */
-export type DynDnsClientProviderListResponse = DefaultReturn & {
-    list: DynDnsProvider[];
-};
+export const SchemaDynDnsClientProviderListResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaDynDnsProvider)
+});
+
+export type DynDnsClientProviderListResponse = ExtractSchemaResultType<typeof SchemaDynDnsClientProviderListResponse>;
 
 /**
  * DynDnsClient
@@ -65,39 +76,15 @@ export class DynDnsClient {
     /**
      * getClients
      */
-    public static async getClients(): Promise<DynDnsClientListResponse| null> {
-        const result = await NetFetch.getData('/json/dyndnsclient/list');
-
-        if (result && result.statusCode) {
-            switch(result.statusCode) {
-                case StatusCodes.OK:
-                    return result as DynDnsClientListResponse;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getClients(): Promise<DynDnsClientListResponse> {
+        return NetFetch.getData('/json/dyndnsclient/list', SchemaDynDnsClientListResponse);
     }
 
     /**
      * getProviderList
      */
-    public static async getProviderList(): Promise<DynDnsClientProviderListResponse| null> {
-        const result = await NetFetch.getData('/json/dyndnsclient/provider/list');
-
-        if (result && result.statusCode) {
-            switch(result.statusCode) {
-                case StatusCodes.OK:
-                    return result as DynDnsClientProviderListResponse;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getProviderList(): Promise<DynDnsClientProviderListResponse> {
+        return NetFetch.getData('/json/dyndnsclient/provider/list', SchemaDynDnsClientProviderListResponse);
     }
 
     /**
@@ -105,38 +92,17 @@ export class DynDnsClient {
      * @param client
      */
     public static async saveClient(client: DynDnsClientData): Promise<boolean> {
-        const result = await NetFetch.postData('/json/dyndnsclient/save', client);
-
-        if (result && result.statusCode) {
-            switch(result.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/dyndnsclient/save', client, SchemaDefaultReturn);
+        return true;
     }
 
     /**
      * deleteClient
-     * @param listen
+     * @param client
      */
     public static async deleteClient(client: DynDnsClientData): Promise<boolean> {
-        const result = await NetFetch.postData('/json/dyndnsclient/delete', client);
-
-        if (result && result.statusCode) {
-            switch(result.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/dyndnsclient/delete', client, SchemaDefaultReturn);
+        return true;
     }
+
 }

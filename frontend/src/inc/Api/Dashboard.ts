@@ -1,40 +1,45 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {UnauthorizedError} from './Error/UnauthorizedError';
-import {StatusCodes} from './Status/StatusCodes';
-import {DefaultReturn} from './Types/DefaultReturn';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * HimHIPData
  */
-export type HimHIPData = {
-    gatewaymac: string;
-    network: string;
-    gateway: string;
-    interface: string;
-    hostip: string;
-};
+export const SchemaHimHIPData = Vts.object({
+    gatewaymac: Vts.string(),
+    network: Vts.string(),
+    gateway: Vts.string(),
+    interface: Vts.string(),
+    hostip: Vts.string()
+});
+
+export type HimHIPData = ExtractSchemaResultType<typeof SchemaHimHIPData>;
 
 /**
  * DashboardInfoIpBlock
  */
-export type DashboardInfoIpBlock = {
-    ip: string;
-    info: string;
-    last_block: number;
-    latitude: string;
-    longitude: string;
-};
+export const SchemaDashboardInfoIpBlock = Vts.object({
+    ip: Vts.string(),
+    info: Vts.string(),
+    last_block: Vts.number(),
+    latitude: Vts.string(),
+    longitude: Vts.string()
+});
+
+export type DashboardInfoIpBlock = ExtractSchemaResultType<typeof SchemaDashboardInfoIpBlock>;
 
 /**
  * DashboardInfoResponse
  */
-export type DashboardInfoResponse = DefaultReturn & {
-    public_ip: string|null;
-    public_ip_blacklisted: boolean;
-    host: HimHIPData|null;
-    ipblocks: DashboardInfoIpBlock[];
-    ipblock_count: number;
-};
+export const SchemaDashboardInfoResponse = SchemaDefaultReturn.extend({
+    public_ip: Vts.or([Vts.string(), Vts.null()]),
+    public_ip_blacklisted: Vts.boolean(),
+    host: Vts.or([SchemaHimHIPData, Vts.null()]),
+    ipblocks: Vts.array(SchemaDashboardInfoIpBlock),
+    ipblock_count: Vts.number()
+});
+
+export type DashboardInfoResponse = ExtractSchemaResultType<typeof SchemaDashboardInfoResponse>;
 
 /**
  * Dashboard
@@ -44,22 +49,8 @@ export class Dashboard {
     /**
      * getInfo
      */
-    public static async getInfo(): Promise<DashboardInfoResponse|null> {
-        const result = await NetFetch.getData('/json/dashboard/info');
-
-        if (result && result.statusCode) {
-            const resultContent = result as DashboardInfoResponse;
-
-            switch (resultContent.statusCode) {
-                case StatusCodes.OK:
-                    return resultContent;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getInfo(): Promise<DashboardInfoResponse> {
+        return NetFetch.getData('/json/dashboard/info', SchemaDashboardInfoResponse);
     }
 
 }

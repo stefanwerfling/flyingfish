@@ -1,43 +1,57 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {UnauthorizedError} from './Error/UnauthorizedError';
-import {StatusCodes} from './Status/StatusCodes';
-import {DefaultReturn} from './Types/DefaultReturn';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * UserData
  */
-export type UserData = {
-    id: number;
-    username: string;
-    email: string;
-};
+export const SchemaUserData = Vts.object({
+    id: Vts.number(),
+    username: Vts.string(),
+    email: Vts.string()
+});
+
+export type UserData = ExtractSchemaResultType<typeof SchemaUserData>;
 
 /**
  * UserInfo
  */
-export type UserInfo = {
-    islogin: boolean;
-    user?: UserData;
-};
+export const SchemaUserInfo = Vts.object({
+    islogin: Vts.boolean(),
+    user: Vts.optional(SchemaUserData)
+});
+
+export type UserInfo = ExtractSchemaResultType<typeof SchemaUserInfo>;
+
+/**
+ * SchemaUserInfoResponse
+ */
+export const SchemaUserInfoResponse = SchemaDefaultReturn.extend({
+    data: Vts.optional(SchemaUserInfo)
+});
 
 /**
  * UserEntry
  */
-export type UserEntry = {
-    id: number;
-    username: string;
-    password?: string;
-    password_repeat?: string;
-    email: string;
-    disable: boolean;
-};
+export const SchemaUserEntry = Vts.object({
+    id: Vts.number(),
+    username: Vts.string(),
+    password: Vts.optional(Vts.string()),
+    password_repeat: Vts.optional(Vts.string()),
+    email: Vts.string(),
+    disable: Vts.boolean()
+});
+
+export type UserEntry = ExtractSchemaResultType<typeof SchemaUserEntry>;
 
 /**
  * UserListResponse
  */
-export type UserListResponse = DefaultReturn & {
-    list: UserEntry[];
-};
+export const SchemaUserListResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaUserEntry)
+});
+
+export type UserListResponse = ExtractSchemaResultType<typeof SchemaUserListResponse>;
 
 /**
  * UserDeleteRequest
@@ -49,7 +63,8 @@ export type UserDeleteRequest = {
 /**
  * UserDeleteResponse
  */
-export type UserDeleteResponse = DefaultReturn;
+export const SchemaUserDeleteResponse = SchemaDefaultReturn;
+export type UserDeleteResponse = ExtractSchemaResultType<typeof SchemaUserDeleteResponse>;
 
 /**
  * User
@@ -59,39 +74,17 @@ export class User {
     /**
      * getUserInfo
      */
-    public static async getUserInfo(): Promise<UserInfo | null> {
-        const result = await NetFetch.getData('/json/user/info');
-
-        if (result) {
-            if (result.status === 'ok') {
-                return result.data as UserInfo;
-            }
-
-            console.log(result.error);
-        }
-
-        return null;
+    public static async getUserInfo(): Promise<UserInfo> {
+        const result = await NetFetch.getData('/json/user/info', SchemaUserInfoResponse);
+        return result.data;
     }
 
     /**
      * getUserList
      */
     public static async getUserList(): Promise<UserEntry[] | null> {
-        const result = await NetFetch.getData('/json/user/list');
-
-        if (result && result.statusCode) {
-            const resultData = result as UserListResponse;
-
-            switch (resultData.statusCode) {
-                case StatusCodes.OK:
-                    return resultData.list;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+        const result = await NetFetch.getData('/json/user/list', SchemaUserListResponse);
+        return result.list;
     }
 
     /**
@@ -99,22 +92,8 @@ export class User {
      * @param user
      */
     public static async saveUser(user: UserEntry): Promise<boolean> {
-        const result = await NetFetch.postData('/json/user/save', user);
-
-        if (result && result.statusCode) {
-            switch(result.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-
-                default:
-                    throw new Error(result.msg);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/user/save', user, SchemaDefaultReturn);
+        return true;
     }
 
     /**
@@ -122,23 +101,8 @@ export class User {
      * @param user
      */
     public static async deleteUser(user: UserDeleteRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/user/delete', user);
-
-        if (result && result.statusCode) {
-            const resultData = result as UserDeleteResponse;
-
-            switch(resultData.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-
-                default:
-                    throw new Error(resultData.msg);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/user/delete', user, SchemaUserDeleteResponse);
+        return true;
     }
+
 }

@@ -1,11 +1,15 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * IsLogin
  */
-export type IsLogin = {
-    status: boolean;
-};
+export const SchemaIsLogin = SchemaDefaultReturn.extend({
+    status: Vts.boolean()
+});
+
+export type IsLogin = ExtractSchemaResultType<typeof SchemaIsLogin>;
 
 /**
  * Login
@@ -18,46 +22,28 @@ export class Login {
      * @param _password
      */
     public static async login(_email: string, _password: string): Promise<boolean> {
-        const response = await NetFetch.postData('/json/login', {
+        await NetFetch.postData('/json/login', {
             email: _email,
             password: _password
-        });
+        }, SchemaDefaultReturn);
 
-        if (response) {
-            if (response.success) {
-                return true;
-            }
-
-            throw new Error(response.error);
-        }
-
-        return false;
+        return true;
     }
 
     /**
      * isLogin
      */
     public static async isLogin(): Promise<boolean> {
-        const resulte = await NetFetch.getData('/json/islogin') as IsLogin;
-
-        if (resulte.status) {
-            return true;
-        }
-
-        return false;
+        const result = await NetFetch.getData('/json/islogin', SchemaIsLogin);
+        return result.status;
     }
 
     /**
      * logout
      */
     public static async logout(): Promise<boolean> {
-        const response = await NetFetch.getData('/json/logout');
-
-        if (response) {
-            return true;
-        }
-
-        return false;
+        await NetFetch.getData('/json/logout', SchemaDefaultReturn);
+        return true;
     }
 
 }

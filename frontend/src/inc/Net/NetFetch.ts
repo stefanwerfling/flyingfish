@@ -1,3 +1,8 @@
+import {Schema} from 'vts';
+import {UnknownResponse} from '../Api/Error/UnknownResponse';
+import {Response} from '../Api/Response/Response';
+import {DefaultReturn} from '../Api/Types/DefaultReturn';
+
 /**
  * NetFetch
  */
@@ -7,8 +12,9 @@ export class NetFetch {
      * postData
      * @param url
      * @param data
+     * @param schema
      */
-    public static async postData(url = '', data = {}): Promise<any> {
+    public static async postData<T>(url: string, data: object, schema: Schema<T>): Promise<T & DefaultReturn> {
         // Default options are marked with *
         const response = await fetch(url, {
             method: 'POST',
@@ -23,14 +29,25 @@ export class NetFetch {
             body: JSON.stringify(data)
         });
 
-        return response.json();
+        let rdata: any;
+
+        try {
+            rdata = await response.json();
+        } catch (e) {
+            throw new UnknownResponse('Json prase error!');
+        }
+
+        Response.isResponse(schema, rdata);
+
+        return rdata;
     }
 
     /**
      * getData
      * @param url
+     * @param schema
      */
-    public static async getData(url = ''): Promise<any> {
+    public static async getData<T>(url: string, schema: Schema<T>): Promise<T & DefaultReturn> {
         const response = await fetch(url, {
             method: 'GET',
             mode: 'cors',
@@ -43,7 +60,17 @@ export class NetFetch {
             referrerPolicy: 'no-referrer'
         });
 
-        return response.json();
+        let data: any;
+
+        try {
+            data = await response.json();
+        } catch (e) {
+            throw new UnknownResponse('Json prase error!');
+        }
+
+        Response.isResponse(schema, data);
+
+        return data;
     }
 
 }

@@ -1,4 +1,6 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * ListenAddressCheckType
@@ -32,29 +34,31 @@ export enum ListenCategory {
 /**
  * ListenData
  */
-export type ListenData = {
-    id: number;
-    type: number;
-    port: number;
-    protocol: number;
-    enable_ipv6: boolean;
-    check_address: boolean;
-    check_address_type: number;
-    name: string;
-    routeless: boolean;
-    description: string;
-    fix?: boolean;
-    disable: boolean;
-};
+export const SchemaListenData = Vts.object({
+    id: Vts.number(),
+    type: Vts.number(),
+    port: Vts.number(),
+    protocol: Vts.number(),
+    enable_ipv6: Vts.boolean(),
+    check_address: Vts.boolean(),
+    check_address_type: Vts.number(),
+    name: Vts.string(),
+    routeless: Vts.boolean(),
+    description: Vts.string(),
+    fix: Vts.optional(Vts.boolean()),
+    disable: Vts.boolean()
+});
+
+export type ListenData = ExtractSchemaResultType<typeof SchemaListenData>;
 
 /**
  * ListenResponse
  */
-export type ListenResponse = {
-    status: string;
-    msg?: string;
-    list: ListenData[];
-};
+export const SchemaListenResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaListenData)
+});
+
+export type ListenResponse = ExtractSchemaResultType<typeof SchemaListenResponse>;
 
 /**
  * Listen
@@ -64,16 +68,8 @@ export class Listen {
     /**
      * getListens
      */
-    public static async getListens(): Promise<ListenResponse| null> {
-        const result = await NetFetch.getData('/json/listen/list');
-
-        if (result) {
-            if (result.status === 'ok') {
-                return result as ListenResponse;
-            }
-        }
-
-        return null;
+    public static async getListens(): Promise<ListenResponse> {
+        return NetFetch.getData('/json/listen/list', SchemaListenResponse);
     }
 
     /**
@@ -81,17 +77,8 @@ export class Listen {
      * @param listen
      */
     public static async saveListen(listen: ListenData): Promise<boolean> {
-        const result = await NetFetch.postData('/json/listen/save', listen);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/listen/save', listen, SchemaDefaultReturn);
+        return true;
     }
 
     /**
@@ -99,16 +86,8 @@ export class Listen {
      * @param listen
      */
     public static async deleteListen(listen: ListenData): Promise<boolean> {
-        const result = await NetFetch.postData('/json/listen/delete', listen);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/listen/delete', listen, SchemaDefaultReturn);
+        return true;
     }
+
 }

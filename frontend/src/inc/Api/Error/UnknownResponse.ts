@@ -1,13 +1,13 @@
 /**
- * UnauthorizedError
+ * UnknownResponse
  */
-export class UnauthorizedError extends Error {
+export class UnknownResponse extends Error {
 
     /**
      * constructor
      * @param message
      */
-    public constructor(message?: string) {
+    public constructor(message?: any) {
         let msg = '';
 
         if (message) {

@@ -1,48 +1,53 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {UnauthorizedError} from './Error/UnauthorizedError';
-import {StatusCodes} from './Status/StatusCodes';
-import {DefaultReturn} from './Types/DefaultReturn';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * IpAccessLocation
  */
-export type IpAccessLocation = {
-    id: number;
-    ip: string;
-    country: string;
-    country_code: string;
-    city: string;
-    continent: string;
-    latitude: string;
-    longitude: string;
-    time_zone: string;
-    postal_code: string;
-    org: string;
-    asn: string;
-};
+export const SchemaIpAccessLocation = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    country: Vts.string(),
+    country_code: Vts.string(),
+    city: Vts.string(),
+    continent: Vts.string(),
+    latitude: Vts.string(),
+    longitude: Vts.string(),
+    time_zone: Vts.string(),
+    postal_code: Vts.string(),
+    org: Vts.string(),
+    asn: Vts.string()
+});
+
+export type IpAccessLocation = ExtractSchemaResultType<typeof SchemaIpAccessLocation>;
 
 /**
  * IpAccessBlackListImport
  */
-export type IpAccessBlackListImport = {
-    id: number;
-    ip: string;
-    last_update: number;
-    disable: boolean;
-    last_block: number;
-    count_block: number;
-    categorys: number[];
-    maintainers: number[];
-    ip_location_id?: number;
-};
+export const SchemaIpAccessBlackListImport = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    last_update: Vts.number(),
+    disable: Vts.boolean(),
+    last_block: Vts.number(),
+    count_block: Vts.number(),
+    categorys: Vts.array(Vts.number()),
+    maintainers: Vts.array(Vts.number()),
+    ip_location_id: Vts.optional(Vts.number())
+});
+
+export type IpAccessBlackListImport = ExtractSchemaResultType<typeof SchemaIpAccessBlackListImport>;
 
 /**
  * IpAccessBlackListImportsResponse
  */
-export type IpAccessBlackListImportsResponse = DefaultReturn & {
-    list?: IpAccessBlackListImport[];
-    locations?: IpAccessLocation[];
-};
+export const SchemaIpAccessBlackListImportsResponse = SchemaDefaultReturn.extend({
+    list: Vts.optional(Vts.array(SchemaIpAccessBlackListImport)),
+    locations: Vts.optional(Vts.array(SchemaIpAccessLocation))
+});
+
+export type IpAccessBlackListImportsResponse = ExtractSchemaResultType<typeof SchemaIpAccessBlackListImportsResponse>;
 
 /**
  * BlacklistCategory
@@ -60,130 +65,157 @@ export enum BlacklistCategory {
 /**
  * IpAccessMaintainer
  */
-export type IpAccessMaintainer = {
-    id: number;
-    maintainer_name: string;
-    maintainer_url: string;
-    list_source_url: string;
-};
+export const SchemaIpAccessMaintainer = Vts.object({
+    id: Vts.number(),
+    maintainer_name: Vts.string(),
+    maintainer_url: Vts.string(),
+    list_source_url: Vts.string()
+});
+
+export type IpAccessMaintainer = ExtractSchemaResultType<typeof SchemaIpAccessMaintainer>;
 
 /**
  * IpAccessMaintainerResponse
  */
-export type IpAccessMaintainerResponse = DefaultReturn & {
-    list?: IpAccessMaintainer[];
-};
+export const SchemaIpAccessMaintainerResponse = SchemaDefaultReturn.extend({
+    list: Vts.optional(Vts.array(SchemaIpAccessMaintainer))
+});
+
+export type IpAccessMaintainerResponse = ExtractSchemaResultType<typeof SchemaIpAccessMaintainerResponse>;
 
 /**
  * IpAccessBlackListImportSaveRequest
  */
-export type IpAccessBlackListImportSaveRequest = {
-    id: number;
-    disable: boolean;
-};
+export const SchemaIpAccessBlackListImportSaveRequest = Vts.object({
+    id: Vts.number(),
+    disable: Vts.boolean()
+});
+
+export type IpAccessBlackListImportSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackListImportSaveRequest>;
 
 /**
  * IpAccessBlackListImportSaveResponse
  */
-export type IpAccessBlackListImportSaveResponse = DefaultReturn;
+export const SchemaIpAccessBlackListImportSaveResponse = SchemaDefaultReturn;
+export type IpAccessBlackListImportSaveResponse = ExtractSchemaResultType<typeof SchemaIpAccessBlackListImportSaveResponse>;
 
 /**
  * IpAccessBlackListOwn
  */
-export type IpAccessBlackListOwn = {
-    id: number;
-    ip: string;
-    last_update: number;
-    disable: boolean;
-    last_block: number;
-    count_block: number;
-    ip_location_id?: number;
-    description: string;
-};
+export const SchemaIpAccessBlackListOwn = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    last_update: Vts.number(),
+    disable: Vts.boolean(),
+    last_block: Vts.number(),
+    count_block: Vts.number(),
+    ip_location_id: Vts.optional(Vts.number()),
+    description: Vts.string()
+});
+
+export type IpAccessBlackListOwn = ExtractSchemaResultType<typeof SchemaIpAccessBlackListOwn>;
 
 /**
  * IpAccessBlackListOwnsResponse
  */
-export type IpAccessBlackListOwnsResponse = DefaultReturn & {
-    list?: IpAccessBlackListOwn[];
-    locations?: IpAccessLocation[];
-};
+export const SchemaIpAccessBlackListOwnsResponse = SchemaDefaultReturn.extend({
+    list: Vts.optional(Vts.array(SchemaIpAccessBlackListOwn)),
+    locations: Vts.optional(Vts.array(SchemaIpAccessLocation))
+});
+
+export type IpAccessBlackListOwnsResponse = ExtractSchemaResultType<typeof SchemaIpAccessBlackListOwnsResponse>;
 
 /**
  * IpAccessBlackListOwnSaveRequest
  */
-export type IpAccessBlackListOwnSaveRequest = {
-    id: number;
-    ip: string;
-    disable: boolean;
-    description: string;
-};
+export const SchemaIpAccessBlackListOwnSaveRequest = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    disable: Vts.boolean(),
+    description: Vts.string()
+});
+
+export type IpAccessBlackListOwnSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackListOwnSaveRequest>;
 
 /**
  * IpAccessBlackListOwnSaveResponse
  */
-export type IpAccessBlackListOwnSaveResponse = DefaultReturn;
+export const SchemaIpAccessBlackListOwnSaveResponse = SchemaDefaultReturn;
+export type IpAccessBlackListOwnSaveResponse = ExtractSchemaResultType<typeof SchemaIpAccessBlackListOwnSaveResponse>;
 
 /**
  * IpAccessWhiteList
  */
-export type IpAccessWhiteList = {
-    id: number;
-    ip: string;
-    last_update: number;
-    disable: boolean;
-    last_access: number;
-    count_access: number;
-    ip_location_id?: number;
-    description: string;
-};
+export const SchemaIpAccessWhiteList = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    last_update: Vts.number(),
+    disable: Vts.boolean(),
+    last_access: Vts.number(),
+    count_access: Vts.number(),
+    ip_location_id: Vts.optional(Vts.number()),
+    description: Vts.string()
+});
+
+export type IpAccessWhiteList = ExtractSchemaResultType<typeof SchemaIpAccessWhiteList>;
 
 /**
  * IpAccessWhiteListResponse
  */
-export type IpAccessWhiteListResponse = DefaultReturn & {
-    list?: IpAccessWhiteList[];
-    locations?: IpAccessLocation[];
-};
+export const SchemaIpAccessWhiteListResponse = SchemaDefaultReturn.extend({
+    list: Vts.optional(Vts.array(SchemaIpAccessWhiteList)),
+    locations: Vts.optional(Vts.array(SchemaIpAccessLocation))
+});
+
+export type IpAccessWhiteListResponse = ExtractSchemaResultType<typeof SchemaIpAccessWhiteListResponse>;
 
 /**
  * IpAccessWhiteSaveRequest
  */
-export type IpAccessWhiteSaveRequest = {
-    id: number;
-    ip: string;
-    disable: boolean;
-    description: string;
-};
+export const SchemaIpAccessWhiteSaveRequest = Vts.object({
+    id: Vts.number(),
+    ip: Vts.string(),
+    disable: Vts.boolean(),
+    description: Vts.string()
+});
+
+export type IpAccessWhiteSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessWhiteSaveRequest>;
 
 /**
  * IpAccessWhiteSaveResponse
  */
-export type IpAccessWhiteSaveResponse = DefaultReturn;
+export const SchemaIpAccessWhiteSaveResponse = SchemaDefaultReturn;
+export type IpAccessWhiteSaveResponse = ExtractSchemaResultType<typeof SchemaIpAccessWhiteSaveResponse>;
 
 /**
  * IpAccessWhiteDeleteRequest
  */
-export type IpAccessWhiteDeleteRequest = {
-    id: number;
-};
+export const SchemaIpAccessWhiteDeleteRequest = Vts.object({
+    id: Vts.number()
+});
+
+export type IpAccessWhiteDeleteRequest = ExtractSchemaResultType<typeof SchemaIpAccessWhiteDeleteRequest>;
 
 /**
  * IpAccessWhiteDeleteResponse
  */
-export type IpAccessWhiteDeleteResponse = DefaultReturn;
+export const SchemaIpAccessWhiteDeleteResponse = SchemaDefaultReturn;
+export type IpAccessWhiteDeleteResponse = ExtractSchemaResultType<typeof SchemaIpAccessWhiteDeleteResponse>;
 
 /**
  * IpAccessBlackDeleteRequest
  */
-export type IpAccessBlackDeleteRequest = {
-    id: number;
-};
+export const SchemaIpAccessBlackDeleteRequest = Vts.object({
+    id: Vts.number()
+});
+
+export type IpAccessBlackDeleteRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackDeleteRequest>;
 
 /**
  * IpAccessBlackDeleteResponse
  */
-export type IpAccessBlackDeleteResponse = DefaultReturn;
+export const SchemaIpAccessBlackDeleteResponse = SchemaDefaultReturn;
+export type IpAccessBlackDeleteResponse = ExtractSchemaResultType<typeof SchemaIpAccessBlackDeleteResponse>;
 
 /**
  * IpAccess
@@ -193,22 +225,8 @@ export class IpAccess {
     /**
      * getBlackListImports
      */
-    public static async getBlackListImports(): Promise<IpAccessBlackListImportsResponse | null> {
-        const result = await NetFetch.getData('/json/ipaccess/blacklist/imports');
-
-        if (result && result.statusCode) {
-            const response = result as IpAccessBlackListImportsResponse;
-
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return response;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getBlackListImports(): Promise<IpAccessBlackListImportsResponse> {
+        return NetFetch.getData('/json/ipaccess/blacklist/imports', SchemaIpAccessBlackListImportsResponse);
     }
 
     /**
@@ -216,60 +234,23 @@ export class IpAccess {
      * @param blocklistEntrie
      */
     public static async saveBlackListImport(blocklistEntrie: IpAccessBlackListImportSaveRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/ipaccess/blacklist/import/save', blocklistEntrie);
-
-        if (result && result.statusCode) {
-            const response = result as IpAccessBlackListImportSaveResponse;
-
-            switch (response.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/ipaccess/blacklist/import/save', blocklistEntrie, SchemaIpAccessBlackListImportSaveResponse);
+        return true;
     }
 
     /**
      * getMaintainerList
      */
-    public static async getMaintainerList(): Promise<IpAccessMaintainer[] | null> {
-        const result = await NetFetch.getData('/json/ipaccess/maintainer/list');
-
-        if (result && result.statusCode) {
-            const response = result as IpAccessMaintainerResponse;
-
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return response.list!;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getMaintainerList(): Promise<IpAccessMaintainer[]> {
+        const result = await NetFetch.getData('/json/ipaccess/maintainer/list', SchemaIpAccessMaintainerResponse);
+        return result.list;
     }
 
     /**
      * getBlackListOwns
      */
-    public static async getBlackListOwns(): Promise<IpAccessBlackListOwnsResponse | null> {
-        const result = await NetFetch.getData('/json/ipaccess/blacklist/owns');
-
-        if (result && result.statusCode) {
-            const response = result as IpAccessBlackListOwnsResponse;
-
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return response;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getBlackListOwns(): Promise<IpAccessBlackListOwnsResponse> {
+        return NetFetch.getData('/json/ipaccess/blacklist/owns', SchemaIpAccessBlackListOwnsResponse);
     }
 
     /**
@@ -277,18 +258,8 @@ export class IpAccess {
      * @param blacklistEntrie
      */
     public static async saveBlackListOwn(blacklistEntrie: IpAccessBlackListOwnSaveRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/ipaccess/blacklist/own/save', blacklistEntrie);
-
-        if (result && result.statusCode) {
-            const response = result as IpAccessBlackListOwnSaveResponse;
-
-            switch (response.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/ipaccess/blacklist/own/save', blacklistEntrie, SchemaIpAccessBlackListOwnSaveResponse);
+        return true;
     }
 
     /**
@@ -296,37 +267,15 @@ export class IpAccess {
      * @param blacklist
      */
     public static async deleteBlackList(blacklist: IpAccessBlackDeleteRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/ipaccess/blacklist/delete', blacklist);
-
-        if (result && result.statusCode) {
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/ipaccess/blacklist/delete', blacklist, SchemaIpAccessBlackDeleteResponse);
+        return true;
     }
 
     /**
      * getWhiteList
      */
-    public static async getWhiteList(): Promise<IpAccessWhiteListResponse | null> {
-        const result = await NetFetch.getData('/json/ipaccess/whitelist');
-
-        if (result && result.statusCode) {
-            const response = result as IpAccessWhiteListResponse;
-
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return response;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getWhiteList(): Promise<IpAccessWhiteListResponse> {
+        return NetFetch.getData('/json/ipaccess/whitelist', SchemaIpAccessWhiteListResponse);
     }
 
     /**
@@ -334,18 +283,8 @@ export class IpAccess {
      * @param whitelistEntrie
      */
     public static async saveWhiteList(whitelistEntrie: IpAccessWhiteSaveRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/ipaccess/whitelist/save', whitelistEntrie);
-
-        if (result && result.statusCode) {
-            const response = result as IpAccessWhiteSaveResponse;
-
-            switch (response.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/ipaccess/whitelist/save', whitelistEntrie, SchemaIpAccessWhiteSaveResponse);
+        return true;
     }
 
     /**
@@ -353,16 +292,8 @@ export class IpAccess {
      * @param whitelist
      */
     public static async deleteWhitelist(whitelist: IpAccessWhiteDeleteRequest): Promise<boolean> {
-        const result = await NetFetch.postData('/json/ipaccess/whitelist/delete', whitelist);
-
-        if (result && result.statusCode) {
-            switch (result.statusCode) {
-                case StatusCodes.OK:
-                    return true;
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/ipaccess/whitelist/delete', whitelist, SchemaIpAccessWhiteDeleteResponse);
+        return true;
     }
 
 }

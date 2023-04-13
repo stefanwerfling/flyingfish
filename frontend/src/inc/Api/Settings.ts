@@ -1,28 +1,31 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {UnauthorizedError} from './Error/UnauthorizedError';
-import {StatusCodes} from './Status/StatusCodes';
-import {DefaultReturn} from './Types/DefaultReturn';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * SettingsList
  */
-export type SettingsList = {
-    nginx: {
-        worker_connections: string;
-        resolver: string;
-    };
-    blacklist: {
-        importer: string;
-        iplocate: string;
-    };
-};
+export const SchemaSettingsList = Vts.object({
+    nginx: Vts.object({
+        worker_connections: Vts.string(),
+        resolver: Vts.string()
+    }),
+    blacklist: Vts.object({
+        importer: Vts.string(),
+        iplocate: Vts.string()
+    })
+});
+
+export type SettingsList = ExtractSchemaResultType<typeof SchemaSettingsList>;
 
 /**
  * SettingsResponse
  */
-export type SettingsResponse = DefaultReturn & {
-    list?: SettingsList;
-};
+export const SchemaSettingsResponse = SchemaDefaultReturn.extend({
+    list: Vts.optional(SchemaSettingsList)
+});
+
+export type SettingsResponse = ExtractSchemaResultType<typeof SchemaSettingsResponse>;
 
 /**
  * Settings
@@ -32,22 +35,9 @@ export class Settings {
     /**
      * getSettings
      */
-    public static async getSettings(): Promise<SettingsList|null> {
-        const result = await NetFetch.getData('/json/settings/list');
-
-        if (result && result.statusCode) {
-            const resultcontent = result as SettingsResponse;
-
-            switch (resultcontent.statusCode) {
-                case StatusCodes.OK:
-                    return resultcontent.list!;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+    public static async getSettings(): Promise<SettingsList> {
+        const result = await NetFetch.getData('/json/settings/list', SchemaSettingsResponse);
+        return result.list;
     }
 
     /**
@@ -55,8 +45,8 @@ export class Settings {
      * @param settings
      */
     public static async saveSettings(settings: SettingsList): Promise<boolean> {
-        const result = await NetFetch.postData('/json/settings/save', settings);
-
-        return !!result;
+        await NetFetch.postData('/json/settings/save', settings, SchemaDefaultReturn);
+        return true;
     }
+
 }

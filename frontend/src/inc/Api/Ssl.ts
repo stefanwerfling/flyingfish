@@ -1,40 +1,45 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {UnauthorizedError} from './Error/UnauthorizedError';
-import {StatusCodes} from './Status/StatusCodes';
-import {DefaultReturn} from './Types/DefaultReturn';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * SslProvider
  */
-export type SslProvider = {
-    name: string;
-    title: string;
-};
+export const SchemaSslProvider = Vts.object({
+    name: Vts.string(),
+    title: Vts.string()
+});
+
+export type SslProvider = ExtractSchemaResultType<typeof SchemaSslProvider>;
 
 /**
  * SslProvidersResponse
  */
-export type SslProvidersResponse = {
-    status: string;
-    msg?: string;
-    list: SslProvider[];
-};
+export const SchemaSslProvidersResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaSslProvider)
+});
+
+export type SslProvidersResponse = ExtractSchemaResultType<typeof SchemaSslProvidersResponse>;
 
 /**
  * SslDetails
  */
-export type SslDetails = {
-    serialNumber: string;
-    dateNotBefore: string;
-    dateNotAfter: string;
-};
+export const SchemaSslDetails = Vts.object({
+    serialNumber: Vts.string(),
+    dateNotBefore: Vts.string(),
+    dateNotAfter: Vts.string()
+});
+
+export type SslDetails = ExtractSchemaResultType<typeof SchemaSslDetails>;
 
 /**
  * SslDetailsResponse
  */
-export type SslDetailsResponse = DefaultReturn & {
-    details?: SslDetails;
-};
+export const SchemaSslDetailsResponse = SchemaDefaultReturn.extend({
+    details: Vts.optional(SchemaSslDetails)
+});
+
+export type SslDetailsResponse = ExtractSchemaResultType<typeof SchemaSslDetailsResponse>;
 
 /**
  * Ssl
@@ -43,40 +48,20 @@ export class Ssl {
 
     /**
      * getList
+     * @throws
      */
-    public static async getProviders(): Promise<SslProvidersResponse| null> {
-        const result = await NetFetch.getData('/json/ssl/provider/list');
-
-        if (result) {
-            if (result.status === 'ok') {
-                return result as SslProvidersResponse;
-            }
-        }
-
-        return null;
+    public static async getProviders(): Promise<SslProvidersResponse> {
+        return NetFetch.getData('/json/ssl/provider/list', SchemaSslProvidersResponse);
     }
 
     /**
      * getCertDetails
      * @param httpid
      */
-    public static async getCertDetails(httpid: number): Promise<SslDetails| null> {
-        const result = await NetFetch.postData('/json/ssl/cert/details', {
-            httpid: httpid
-        });
+    public static async getCertDetails(httpid: number): Promise<SslDetails> {
+        const resultContent = await NetFetch.postData('/json/ssl/cert/details', {httpid}, SchemaSslDetailsResponse);
 
-        if (result && result.statusCode) {
-            const resultContent = result as SslDetailsResponse;
-
-            switch (resultContent.statusCode) {
-                case StatusCodes.OK:
-                    return resultContent.details as SslDetails;
-
-                case StatusCodes.UNAUTHORIZED:
-                    throw new UnauthorizedError();
-            }
-        }
-
-        return null;
+        return resultContent.details;
     }
+
 }

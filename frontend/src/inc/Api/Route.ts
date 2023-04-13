@@ -1,4 +1,6 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * NginxStreamDestinationType
@@ -31,156 +33,175 @@ export enum UpstreamLoadBalancingAlgorithm {
 /**
  * UpStream
  */
-export type UpStream = {
-    id: number;
-    address: string;
-    port: number;
-};
+export const SchemaUpStream = Vts.object({
+    id: Vts.number(),
+    address: Vts.string(),
+    port: Vts.number()
+});
+
+export type UpStream = ExtractSchemaResultType<typeof SchemaUpStream>;
 
 /**
  * RouteStreamSSH
  */
-export type RouteStreamSSH = {
-    id: number;
-    port: number;
-    user_id: number;
-    username: string;
-    password: string;
-    destinationAddress: string;
-};
+export const SchemaRouteStreamSSH = Vts.object({
+    id: Vts.number(),
+    port: Vts.number(),
+    user_id: Vts.number(),
+    username: Vts.string(),
+    password: Vts.string(),
+    destinationAddress: Vts.string()
+});
+
+export type RouteStreamSSH = ExtractSchemaResultType<typeof SchemaRouteStreamSSH>;
 
 /**
  * RouteStream
  */
-export type RouteStream = {
-    id: number;
-    listen_id: number;
-    destination_type: number;
-    destination_listen_id: number;
-    alias_name: string;
-    index: number;
-    isdefault: boolean;
-    use_as_default: boolean;
-    load_balancing_algorithm: string;
-    ssh_r_type: number;
-    ssh?: RouteStreamSSH;
-    upstreams: UpStream[];
-};
+export const SchemaRouteStream = Vts.object({
+    id: Vts.number(),
+    listen_id: Vts.number(),
+    destination_type: Vts.number(),
+    destination_listen_id: Vts.number(),
+    alias_name: Vts.string(),
+    index: Vts.number(),
+    isdefault: Vts.boolean(),
+    use_as_default: Vts.boolean(),
+    load_balancing_algorithm: Vts.string(),
+    ssh_r_type: Vts.number(),
+    ssh: Vts.optional(SchemaRouteStreamSSH),
+    upstreams: Vts.array(SchemaUpStream)
+});
+
+export type RouteStream = ExtractSchemaResultType<typeof SchemaRouteStream>;
 
 /**
  * Location
  */
-export type Location = {
-    id: number;
-    match: string;
-    proxy_pass: string;
-    ssh?: {
-        id?: number;
-        port_out?: number;
-        schema?: string;
-    };
-    redirect?: {
-        code: number;
-        redirect: string;
-    };
-    auth_enable: boolean;
-    websocket_enable: boolean;
-    host_enable: boolean;
-    host_name: string;
-    host_name_port: number;
-    xforwarded_scheme_enable: boolean;
-    xforwarded_proto_enable: boolean;
-    xforwarded_for_enable: boolean;
-    xrealip_enable: boolean;
-};
+export const SchemaLocation = Vts.object({
+    id: Vts.number(),
+    match: Vts.string(),
+    proxy_pass: Vts.string(),
+    ssh: Vts.optional(Vts.object({
+        id: Vts.optional(Vts.number()),
+        port_out: Vts.optional(Vts.number()),
+        schema: Vts.optional(Vts.string())
+    })),
+    redirect: Vts.optional(Vts.object({
+        code: Vts.number(),
+        redirect: Vts.string()
+    })),
+    auth_enable: Vts.boolean(),
+    websocket_enable: Vts.boolean(),
+    host_enable: Vts.boolean(),
+    host_name: Vts.string(),
+    host_name_port: Vts.number(),
+    xforwarded_scheme_enable: Vts.boolean(),
+    xforwarded_proto_enable: Vts.boolean(),
+    xforwarded_for_enable: Vts.boolean(),
+    xrealip_enable: Vts.boolean()
+});
+
+export type Location = ExtractSchemaResultType<typeof SchemaLocation>;
 
 /**
  * RouteHttp
  */
-export type RouteHttp = {
-    id: number;
-    listen_id: number;
-    index: number;
-    ssl: {
-        enable: boolean;
-        provider: string;
-        email: string;
-    };
-    locations: Location[];
+export const SchemaRouteHttp = Vts.object({
+    id: Vts.number(),
+    listen_id: Vts.number(),
+    index: Vts.number(),
+    ssl: Vts.object({
+        enable: Vts.boolean(),
+        provider: Vts.string(),
+        email: Vts.string()
+    }),
+    locations: Vts.array(SchemaLocation),
+    http2_enable: Vts.boolean(),
+    x_frame_options: Vts.string()
+});
 
-    http2_enable: boolean;
-    x_frame_options: string;
-};
+export type RouteHttp = ExtractSchemaResultType<typeof SchemaRouteHttp>;
 
 /**
  * HostData
  */
-export type RouteData = {
-    id: number;
-    domainname: string;
-    domainfix: boolean;
-    streams: RouteStream[];
-    https: RouteHttp[];
-};
+export const SchemaRouteData = Vts.object({
+    id: Vts.number(),
+    domainname: Vts.string(),
+    domainfix: Vts.boolean(),
+    streams: Vts.array(SchemaRouteStream),
+    https: Vts.array(SchemaRouteHttp)
+});
+
+export type RouteData = ExtractSchemaResultType<typeof SchemaRouteData>;
 
 /**
  * RouteSshPort
  */
-export type RouteSshPort = {
-    id: number;
-    port: number;
-};
+export const SchemaRouteSshPort = Vts.object({
+    id: Vts.number(),
+    port: Vts.number()
+});
+
+export type RouteSshPort = ExtractSchemaResultType<typeof SchemaRouteSshPort>;
 
 /**
  * RoutesResponse
  */
-export type RoutesResponse = {
-    status: string;
-    msg?: string;
-    list: RouteData[];
-    defaults?: {
-        dnsserverport: number;
-        sshports: RouteSshPort[];
-    };
-};
+export const SchemaRoutesResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaRouteData),
+    defaults: Vts.optional(Vts.object({
+        dnsserverport: Vts.number(),
+        sshports: Vts.array(SchemaRouteSshPort)
+    }))
+});
+
+export type RoutesResponse = ExtractSchemaResultType<typeof SchemaRoutesResponse>;
 
 /**
  * RouteStreamSave
  */
-export type RouteStreamSave = {
-    domainid: number;
-    stream: RouteStream;
-};
+export const SchemaRouteStreamSave = Vts.object({
+    domainid: Vts.number(),
+    stream: SchemaRouteStream
+});
+
+export type RouteStreamSave = ExtractSchemaResultType<typeof SchemaRouteStreamSave>;
 
 /**
  * RouteStreamDelete
  */
-export type RouteStreamDelete = {
-    id: number;
-};
+export const SchemaRouteStreamDelete = Vts.object({
+    id: Vts.number()
+});
+
+export type RouteStreamDelete = ExtractSchemaResultType<typeof SchemaRouteStreamDelete>;
 
 /**
  * RouteHttpSave
  */
-export type RouteHttpSave = {
-    domainid: number;
-    http: RouteHttp;
-};
+export const SchemaRouteHttpSave = Vts.object({
+    domainid: Vts.number(),
+    http: SchemaRouteHttp
+});
+
+export type RouteHttpSave = ExtractSchemaResultType<typeof SchemaRouteHttpSave>;
 
 /**
  * RouteStreamDeleteResponse
  */
-export type RouteStreamDeleteResponse = {
-    status: string;
-    error?: string;
-};
+export const SchemaRouteStreamDeleteResponse = SchemaDefaultReturn;
+export type RouteStreamDeleteResponse = ExtractSchemaResultType<typeof SchemaRouteStreamDeleteResponse>;
 
 /**
  * RouteHttpDelete
  */
-export type RouteHttpDelete = {
-    id: number;
-};
+export const SchemaRouteHttpDelete = Vts.object({
+    id: Vts.number()
+});
+
+export type RouteHttpDelete = ExtractSchemaResultType<typeof SchemaRouteHttpDelete>;
 
 /**
  * Route
@@ -190,16 +211,8 @@ export class Route {
     /**
      * getHosts
      */
-    public static async getRoutes(): Promise<RoutesResponse| null> {
-        const result = await NetFetch.getData('/json/route/list');
-
-        if (result) {
-            if (result.status === 'ok') {
-                return result as RoutesResponse;
-            }
-        }
-
-        return null;
+    public static async getRoutes(): Promise<RoutesResponse> {
+        return NetFetch.getData('/json/route/list', SchemaRoutesResponse);
     }
 
     /**
@@ -207,17 +220,8 @@ export class Route {
      * @param stream
      */
     public static async saveRouteStream(stream: RouteStreamSave): Promise<boolean> {
-        const result = await NetFetch.postData('/json/route/stream/save', stream);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/route/stream/save', stream, SchemaDefaultReturn);
+        return true;
     }
 
     /**
@@ -225,17 +229,8 @@ export class Route {
      * @param data
      */
     public static async deleteRouteStream(data: RouteStreamDelete): Promise<boolean> {
-        const result = await NetFetch.postData('/json/route/stream/delete', data);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/route/stream/delete', data, SchemaRouteStreamDeleteResponse);
+        return true;
     }
 
     /**
@@ -243,17 +238,8 @@ export class Route {
      * @param stream
      */
     public static async saveRouteHttp(stream: RouteHttpSave): Promise<boolean> {
-        const result = await NetFetch.postData('/json/route/http/save', stream);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/route/http/save', stream, SchemaDefaultReturn);
+        return true;
     }
 
     /**
@@ -261,16 +247,8 @@ export class Route {
      * @param data
      */
     public static async deleteRouteHttp(data: RouteHttpDelete): Promise<boolean> {
-        const result = await NetFetch.postData('/json/route/http/delete', data);
-
-        if (result) {
-            if (result.status === 'ok') {
-                return true;
-            } else {
-                throw new Error(result.error);
-            }
-        }
-
-        return false;
+        await NetFetch.postData('/json/route/http/delete', data, SchemaDefaultReturn);
+        return true;
     }
+
 }

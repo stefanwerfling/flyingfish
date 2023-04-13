@@ -1,21 +1,25 @@
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * SshPortEntry
  */
-export type SshPortEntry = {
-    id: number;
-    port: number;
-};
+export const SchemaSshPortEntry = Vts.object({
+    id: Vts.number(),
+    port: Vts.number()
+});
+
+export type SshPortEntry = ExtractSchemaResultType<typeof SchemaSshPortEntry>;
 
 /**
  * SshPortListResponse
  */
-export type SshPortListResponse = {
-    status: string;
-    msg?: string;
-    list: SshPortEntry[];
-};
+export const SchemaSshPortListResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaSshPortEntry)
+});
+
+export type SshPortListResponse = ExtractSchemaResultType<typeof SchemaSshPortListResponse>;
 
 /**
  * Ssh
@@ -25,15 +29,8 @@ export class Ssh {
     /**
      * getList
      */
-    public static async getList(): Promise<SshPortListResponse| null> {
-        const result = await NetFetch.getData('/json/ssh/list');
-
-        if (result) {
-            if (result.status === 'ok') {
-                return result as SshPortListResponse;
-            }
-        }
-
-        return null;
+    public static async getList(): Promise<SshPortListResponse> {
+        return NetFetch.getData('/json/ssh/list', SchemaSshPortListResponse);
     }
+
 }
