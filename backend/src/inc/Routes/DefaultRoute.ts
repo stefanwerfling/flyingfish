@@ -52,15 +52,18 @@ export class DefaultRoute {
      */
     public isUserLogin(
         req: Request,
-        res: Response
+        res: Response,
+        sendAutoResoonse: boolean = true
     ): boolean {
         if (Session.isUserLogin(req.session)) {
             return true;
         }
 
-        res.status(200).json({
-            statusCode: StatusCodes.UNAUTHORIZED
-        } as DefaultReturn);
+        if (sendAutoResoonse) {
+            res.status(200).json({
+                statusCode: StatusCodes.UNAUTHORIZED
+            } as DefaultReturn);
+        }
 
         return false;
     }

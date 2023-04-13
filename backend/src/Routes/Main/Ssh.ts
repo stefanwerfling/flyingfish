@@ -1,4 +1,5 @@
 import {Router} from 'express';
+import {ExtractSchemaResultType, Vts} from 'vts';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
 import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
@@ -8,10 +9,12 @@ import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 /**
  * SshPortEntry
  */
-export type SshPortEntry = {
-    id: number;
-    port: number;
-};
+export const SchemaSshPortEntry = Vts.object({
+    id: Vts.number(),
+    port: Vts.number()
+});
+
+export type SshPortEntry = ExtractSchemaResultType<typeof SchemaSshPortEntry>;
 
 /**
  * SshPortListResponse

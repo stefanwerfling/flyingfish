@@ -65,7 +65,7 @@ export class Dashboard extends DefaultRoute {
         .getRawOne();
 
         if (result) {
-            ipblock_count = result.total_count_blocks;
+            ipblock_count = parseInt(result.total_count_blocks, 10) ?? 0;
         }
 
         const entries = await ipBlacklistRepository.find({

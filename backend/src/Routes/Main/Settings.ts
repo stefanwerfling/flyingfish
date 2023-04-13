@@ -79,14 +79,16 @@ export class Settings extends DefaultRoute {
      * saveSettings
      * @param data
      */
-    public async saveSettings(data: SettingsList): Promise<boolean> {
+    public async saveSettings(data: SettingsList): Promise<DefaultReturn> {
         await GlobalSettings.setSetting(GlobalSettings.NGINX_WORKER_CONNECTIONS, data.nginx.worker_connections);
         await GlobalSettings.setSetting(GlobalSettings.NGINX_RESOLVER, data.nginx.resolver);
 
         await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IMPORTER, data.blacklist.importer);
         await GlobalSettings.setSetting(GlobalSettings.BLACKLIST_IPLOCATE, data.blacklist.iplocate);
 
-        return true;
+        return {
+            statusCode: StatusCodes.OK
+        };
     }
 
     /**

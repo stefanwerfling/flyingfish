@@ -115,10 +115,15 @@ export class Login extends DefaultRoute {
         this._routes.get(
             '/json/islogin',
             async(req, res) => {
-                if (this.isUserLogin(req, res)) {
+                if (this.isUserLogin(req, res, false)) {
                     res.status(200).json({
                         statusCode: StatusCodes.OK,
                         status: true
+                    } as LoginIsLoginResponse);
+                } else {
+                    res.status(200).json({
+                        statusCode: StatusCodes.OK,
+                        status: false
                     } as LoginIsLoginResponse);
                 }
             }

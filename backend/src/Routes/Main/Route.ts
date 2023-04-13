@@ -152,9 +152,7 @@ export type RouteSshPort = {
 /**
  * RoutesResponse
  */
-export type RoutesResponse = {
-    status: string;
-    msg?: string;
+export type RoutesResponse = DefaultReturn & {
     list: RouteData[];
     defaults?: {
         dnsserverport: number;
@@ -406,7 +404,7 @@ export class Route extends DefaultRoute {
         const dnsserverport = Config.get()?.dnsserver?.port || 5333;
 
         return {
-            status: 'ok',
+            statusCode: StatusCodes.OK,
             list: list,
             defaults: {
                 dnsserverport: dnsserverport,

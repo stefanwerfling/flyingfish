@@ -10,6 +10,7 @@ import Path from 'path';
 import {Logger} from '../Logger/Logger.js';
 import {DefaultRoute} from '../Routes/DefaultRoute.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
+import {Session} from './Session.js';
 
 /**
  * Server
@@ -84,9 +85,19 @@ export class Server {
 
         const limiter = rateLimit({
             windowMs: 15 * 60 * 1000,
-            max: 100,
             standardHeaders: true,
-            legacyHeaders: false
+            legacyHeaders: false,
+            max: async(request) => {
+                if (request.baseUrl.indexOf('/json/') === 0) {
+                    if (Session.isUserLogin(request.session)) {
+                        return 0;
+                    }
+
+                    return 100;
+                }
+
+                return 0;
+            }
         });
 
         this._server.use(limiter);
