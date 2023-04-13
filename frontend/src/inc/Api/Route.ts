@@ -118,7 +118,8 @@ export const SchemaRouteHttp = Vts.object({
     }),
     locations: Vts.array(SchemaLocation),
     http2_enable: Vts.boolean(),
-    x_frame_options: Vts.string()
+    x_frame_options: Vts.string(),
+    wellknown_disabled: Vts.boolean()
 });
 
 export type RouteHttp = ExtractSchemaResultType<typeof SchemaRouteHttp>;

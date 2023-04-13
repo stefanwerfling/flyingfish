@@ -99,4 +99,12 @@ export class NginxHttp extends BaseEntity {
     })
     public x_frame_options!: string;
 
+    /**
+     * well-known disabled
+     */
+    @Column({
+        default: false
+    })
+    public wellknown_disabled!: boolean;
+
 }

@@ -214,7 +214,8 @@ export class Routes extends BasePage {
                         },
                         locations: this._routeHttpDialog.getLocations(),
                         http2_enable: this._routeHttpDialog.getHttp2Enable(),
-                        x_frame_options: this._routeHttpDialog.getXFrameOptions()
+                        x_frame_options: this._routeHttpDialog.getXFrameOptions(),
+                        wellknown_disabled: this._routeHttpDialog.getWellKnwonDisabled()
                     }
                 };
 
@@ -701,6 +702,7 @@ export class Routes extends BasePage {
                                 this._routeHttpDialog.setLocations(value.locations);
                                 this._routeHttpDialog.setHttp2Enable(value.http2_enable);
                                 this._routeHttpDialog.setXFrameOptions(value.x_frame_options);
+                                this._routeHttpDialog.setWellKnownDisabled(value.wellknown_disabled);
                             },
                             IconFa.edit
                         );

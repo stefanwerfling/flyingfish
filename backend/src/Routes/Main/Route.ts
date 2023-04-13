@@ -115,7 +115,8 @@ export const SchemaRouteHttp = Vts.object({
     }),
     locations: Vts.array(SchemaLocation),
     http2_enable: Vts.boolean(),
-    x_frame_options: Vts.string()
+    x_frame_options: Vts.string(),
+    wellknown_disabled: Vts.boolean()
 });
 
 export type RouteHttp = ExtractSchemaResultType<typeof SchemaRouteHttp>;
@@ -324,7 +325,8 @@ export class Route extends DefaultRoute {
                             },
                             locations: [],
                             http2_enable: thttp.http2_enable,
-                            x_frame_options: thttp.x_frame_options
+                            x_frame_options: thttp.x_frame_options,
+                            wellknown_disabled: thttp.wellknown_disabled
                         };
 
                         const locations = await locationRepository.find({
@@ -937,6 +939,7 @@ export class Route extends DefaultRoute {
         aHttp.cert_email = data.http.ssl.email || '';
         aHttp.http2_enable = data.http.http2_enable;
         aHttp.x_frame_options = data.http.x_frame_options;
+        aHttp.wellknown_disabled = data.http.wellknown_disabled;
 
         aHttp = await DBHelper.getDataSource().manager.save(aHttp);
 

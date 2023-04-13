@@ -121,6 +121,12 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _selectXFrameOptions: SelectBottemBorderOnly2;
 
     /**
+     * switch wellknown disabled
+     * @protected
+     */
+    protected _switchWellknownDisabled: Switch;
+
+    /**
      * click save fn
      * @protected
      */
@@ -186,6 +192,9 @@ export class RouteHttpEditModal extends ModalDialog {
         new TooltipInfo(groupHttp2Enable.getLabelElement(), Lang.i().l('route_http_http2'));
         this._switchHttp2Enable = new Switch(groupHttp2Enable.getElement(), 'adv_http2_enable');
         this._switchHttp2Enable.setInativ(true);
+
+        const groupWellknown = new FormGroup(bodyACard, 'well-known disabled');
+        this._switchWellknownDisabled = new Switch(groupWellknown.getElement(), 'adv_wellknown_disabled');
 
         const groupXFrameOptions = new FormGroup(bodyACard, 'X-Frame-Options');
         this._selectXFrameOptions = new SelectBottemBorderOnly2(groupXFrameOptions);
@@ -540,6 +549,21 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public getXFrameOptions(): string {
         return this._selectXFrameOptions.getSelectedValue();
+    }
+
+    /**
+     * setWellKnownDisabled
+     * @param disabled
+     */
+    public setWellKnownDisabled(disabled: boolean): void {
+        this._switchWellknownDisabled.setEnable(disabled);
+    }
+
+    /**
+     * getWellKnwonDisabled
+     */
+    public getWellKnwonDisabled(): boolean {
+        return this._switchWellknownDisabled.isEnable();
     }
 
     /**
