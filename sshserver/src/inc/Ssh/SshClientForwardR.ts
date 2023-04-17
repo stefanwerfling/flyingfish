@@ -1,6 +1,6 @@
 import net, {Socket} from 'net';
 import {TcpipBindInfo} from 'ssh2';
-import {SshClientForward} from './SshClientForward';
+import {SshClientForward} from './SshClientForward.js';
 
 /**
  * SshClientForwardR

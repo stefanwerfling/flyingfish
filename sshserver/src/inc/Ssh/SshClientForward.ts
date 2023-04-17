@@ -1,5 +1,5 @@
 import {ServerChannel, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
-import {SshClient} from './SshClient';
+import {SshClient} from './SshClient.js';
 
 /**
  * ISshClientForward

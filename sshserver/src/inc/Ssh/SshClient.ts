@@ -1,12 +1,12 @@
 import * as bcrypt from 'bcrypt';
 import {AuthContext, ClientInfo, Connection, ServerChannel, Session, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
-import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort';
-import {SshUser as SshUserDB} from '../Db/MariaDb/Entity/SshUser';
-import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper';
-import {ISshClientForward} from './SshClientForward';
-import {SshClientForwardL} from './SshClientForwardL';
-import {SshClientForwardR} from './SshClientForwardR';
-import {v4 as uuidv4} from 'uuid';
+import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
+import {SshUser as SshUserDB} from '../Db/MariaDb/Entity/SshUser.js';
+import {MariaDbHelper} from '../Db/MariaDb/MariaDbHelper.js';
+import {ISshClientForward} from './SshClientForward.js';
+import {SshClientForwardL} from './SshClientForwardL.js';
+import {SshClientForwardR} from './SshClientForwardR.js';
+import {v4 as uuid} from 'uuid';
 
 /**
  * SshClientUser
@@ -92,7 +92,7 @@ export class SshClient {
      * @param info
      */
     public constructor(clientConnection: Connection, info: ClientInfo) {
-        this._ident = uuidv4();
+        this._ident = uuid();
         this._clientConnection = clientConnection;
         this._clientInfo = info;
 
@@ -199,11 +199,20 @@ export class SshClient {
             self._session(accept);
         });
 
-        this._clientConnection.on('request', (accept: ((chosenPort?: number) => void) | undefined, reject: (() => void) | undefined, name: 'tcpip-forward' | 'cancel-tcpip-forward', info: TcpipBindInfo) => {
+        this._clientConnection.on('request', (
+            accept: ((chosenPort?: number) => void) |
+            undefined, reject: (() => void) |
+            undefined, name: 'tcpip-forward' | 'cancel-tcpip-forward',
+            info: TcpipBindInfo
+        ) => {
             self._request(accept, reject, name, info);
         });
 
-        this._clientConnection.on('tcpip', (accept: () => ServerChannel, reject: () => boolean, info: TcpipRequestInfo) => {
+        this._clientConnection.on('tcpip', (
+            accept: () => ServerChannel,
+            reject: () => boolean,
+            info: TcpipRequestInfo
+        ) => {
             self._tcpip(accept, reject, info);
         });
     }
@@ -230,7 +239,7 @@ export class SshClient {
      */
     public _shell(accept: () => ServerChannel): void {
         this._shellChannel = accept();
-        this._shellChannel.write('Shell-Info:\n');
+        this._shellChannel.write('FlyingFish Shell-Info (readonly):\n');
     }
 
     /**
@@ -282,7 +291,12 @@ export class SshClient {
      * @param info
      * @protected
      */
-    public _request(accept: ((chosenPort?: number) => void) | undefined, reject: (() => void) | undefined, name: 'tcpip-forward' | 'cancel-tcpip-forward', info: TcpipBindInfo): void {
+    public _request(
+        accept: ((chosenPort?: number) => void) | undefined,
+        reject: (() => void) | undefined,
+        name: 'tcpip-forward' | 'cancel-tcpip-forward',
+        info: TcpipBindInfo
+    ): void {
         if (name === 'tcpip-forward') {
             if (accept) {
                 accept();
@@ -308,7 +322,11 @@ export class SshClient {
      * @param reject
      * @param info
      */
-    public _tcpip(accept: () => ServerChannel, reject: () => boolean, info: TcpipRequestInfo): void {
+    public _tcpip(
+        accept: () => ServerChannel,
+        reject: () => boolean,
+        info: TcpipRequestInfo
+    ): void {
         switch (this._forwardPort?.type) {
             case SshClientForwardType.L:
                 this._clientForward = new SshClientForwardL(this, info);

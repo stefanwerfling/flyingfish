@@ -1,41 +1,56 @@
 import * as fs from 'fs';
-import minimist from 'minimist';
 import path from 'path';
-import {Config} from './inc/Config/Config';
-import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort';
-import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser';
-import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper';
-import {SshServer} from './inc/ssh/SshServer';
+import {Config} from './inc/Config/Config.js';
+import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
+import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
+import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper.js';
+import {SshServer} from './inc/Ssh/SshServer.js';
+import {Args} from './inc/Env/Args.js';
 
 /**
  * Main
  */
 (async(): Promise<void> => {
-
-    const argv = minimist(process.argv.slice(2));
-    let configfile = path.join(__dirname, `/config.json`);
+    const argv = Args.get();
+    let configfile = null;
 
     if (argv.config) {
         configfile = argv.config;
-    }
 
-    try {
-        if (!fs.existsSync(configfile)) {
-            console.log(`Config not found: ${configfile}, exit.`);
+        try {
+            if (!fs.existsSync(configfile)) {
+                console.log(`Config not found: ${configfile}, exit.`);
+                return;
+            }
+        } catch (err) {
+            console.log(`Config is not load: ${configfile}, exit.`);
+            console.error(err);
             return;
         }
-    } catch (err) {
-        console.log(`Config is not load: ${configfile}, exit.`);
-        console.error(err);
-        return;
+    } else {
+        const defaultConfig = path.join(path.resolve(), `/${Config.DEFAULT_CONFIG_FILE}`);
+
+        if (fs.existsSync(defaultConfig)) {
+            console.log(`Found and use setup config: ${defaultConfig} ....`);
+            configfile = defaultConfig;
+        }
     }
 
-    const tconfig = await Config.load(configfile);
+    let useEnv = false;
+
+    if (argv.envargs && argv.envargs === '1') {
+        useEnv = true;
+    }
+
+    const tconfig = await Config.load(configfile, useEnv);
 
     if (tconfig === null) {
         console.log(`Configloader is return empty config, please check your configfile: ${configfile}`);
         return;
     }
+
+    // set global
+    Config.set(tconfig);
 
     // -----------------------------------------------------------------------------------------------------------------
 

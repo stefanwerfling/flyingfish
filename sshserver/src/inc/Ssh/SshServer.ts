@@ -1,8 +1,9 @@
 import fs from 'fs';
-import * as ssh2 from 'ssh2';
-import {ClientInfo, Connection, Server} from 'ssh2';
-import {SshClient} from './SshClient';
-import {SshKeygen} from './SshKeygen';
+import ssh2, {ClientInfo, Connection, Server as Ssh2Server} from 'ssh2';
+import {SshClient} from './SshClient.js';
+import {SshKeygen} from './SshKeygen.js';
+
+const {Server} = ssh2;
 
 /**
  * SshServerOptions
@@ -31,12 +32,12 @@ export class SshServer {
             const hostKeyRsaFile = './ssh/ssh_host_rsa_key';
 
             if (!fs.existsSync(hostKeyRsaFile)) {
-                console.log(`Keyfile not found, create new: ${hostKeyRsaFile}`);
+                console.log(`SshServer::getInstance: Keyfile not found, create new: ${hostKeyRsaFile}`);
 
                 if (!await SshKeygen.create(hostKeyRsaFile)) {
-                    console.log('Keyfile can not create!');
+                    console.log('SshServer::getInstance: Keyfile can not create!');
 
-                    throw new Error(`Keyfile can not create! ${hostKeyRsaFile}`);
+                    throw new Error(`SshServer::getInstance: Keyfile can not create! ${hostKeyRsaFile}`);
                 }
             }
 
@@ -58,7 +59,7 @@ export class SshServer {
      * server
      * @protected
      */
-    protected _server: Server;
+    protected _server: Ssh2Server;
 
     /**
      * clients
@@ -75,7 +76,7 @@ export class SshServer {
 
         const self = this.getSelf();
 
-        this._server = new ssh2.Server({
+        this._server = new Server({
             hostKeys: [fs.readFileSync(options.hostKeys)]
         }, (client: Connection, info: ClientInfo) => {
             self._onClientConnect(client, info);
@@ -112,7 +113,7 @@ export class SshServer {
      */
     public listen(): void {
         this._server.listen(22, '0.0.0.0', () => {
-            console.log(`Listening on port ${this._server.address().port}`);
+            console.log(`SshServer::listen: Listening on port ${this._server.address().port}`);
         });
     }
 

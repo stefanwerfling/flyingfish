@@ -1,7 +1,7 @@
 import net from 'net';
 import {ServerChannel} from 'ssh2';
-import {SshClientForwardType} from './SshClient';
-import {SshClientForward} from './SshClientForward';
+import {SshClientForwardType} from './SshClient.js';
+import {SshClientForward} from './SshClientForward.js';
 
 /**
  * SshClientForwardL
