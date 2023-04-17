@@ -46,12 +46,12 @@ export class Update extends DefaultRoute {
                     hostip: hHostip
                 });
 
-                response.status(200);
+                response.status(200).send();
                 return true;
             }
         }
 
-        response.status(401);
+        response.status(401).send();
         return false;
     }
 

@@ -41,18 +41,18 @@ export class AddressAccess extends DefaultRoute {
         if (realip_remote_addr) {
             // global check (blacklist) --------------------------------------------------------------------------------
             if ((listenId === 0) && await this._globalCheckBlacklist(realip_remote_addr)) {
-                response.status(200);
+                response.status(200).send();
                 return true;
             } else if ((listenId !== 0) && await this._listCheck(listenId, realip_remote_addr)) {
                 // listen check (blacklist & whitelist) ----------------------------------------------------------------
-                response.status(200);
+                response.status(200).send();
                 return true;
             }
         } else {
             Logger.getLogger().error('AddressAccess::access: realip_remote_addr is empty!');
         }
 
-        response.status(401);
+        response.status(401).send();
 
         return false;
     }

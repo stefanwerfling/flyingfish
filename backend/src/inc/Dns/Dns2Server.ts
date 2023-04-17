@@ -203,6 +203,8 @@ export class Dns2Server {
             udp: port,
             tcp: port
         });
+
+        Logger.getLogger().info(`Dns2Server::listen: Flingfish DNS listening on the TCP/UDP: ${port}`);
     }
 
 }

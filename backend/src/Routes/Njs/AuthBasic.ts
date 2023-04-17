@@ -51,14 +51,14 @@ export class AuthBasic extends DefaultRoute {
             Logger.getLogger().info(`check -> scheme: ${auth.scheme}, username: ${auth.username}, password: *****`);
 
             if (resulte) {
-                response.status(200);
+                response.status(200).send();
                 return true;
             }
         } else {
             Logger.getLogger().error('check -> auth parse faild');
         }
 
-        response.status(500);
+        response.status(500).send();
         return false;
     }
 
