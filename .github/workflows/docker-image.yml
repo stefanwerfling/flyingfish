@@ -36,7 +36,7 @@ jobs:
       - name: Build and push FlyingFish SSH
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ./sshserver/
           file: ./sshserver/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/flyingfish_ssh:${{github.ref_name }}
@@ -45,7 +45,7 @@ jobs:
       - name: Build and push FlyingFish Himhip
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ./himhip/
           file: ./himhip/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/flyingfish_himip:${{github.ref_name }}
