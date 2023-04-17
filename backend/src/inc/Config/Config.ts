@@ -1,5 +1,5 @@
 import {readFileSync} from 'fs';
-import * as Path from 'path';
+import path from 'path';
 import * as process from 'process';
 import {ExtractSchemaResultType, SchemaErrors, Vts} from 'vts';
 
@@ -109,14 +109,14 @@ export class Config {
      * DEFAULTS
      */
     public static readonly DEFAULT_CONFIG_FILE = 'config.json';
-    public static readonly DEFAULT_FF_DIR = '/var/lib/flyingfish';
+    public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
     public static readonly DEFAULT_DB_MYSQL_HOST = '10.103.0.2';
     public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
     public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
     public static readonly DEFAULT_HTTPSERVER_PUBLICDIR = 'frontend';
     public static readonly DEFAULT_DNSSERVER_PORT = 5333;
-    public static readonly DEFAULT_NGINX_CONFIG = '/opt/app/nginx/nginx.conf';
-    public static readonly DEFAULT_NGINX_PREFIX = '/opt/app/nginx';
+    public static readonly DEFAULT_NGINX_CONFIG = path.join('/', 'opt', 'app', 'nginx', 'nginx.conf');
+    public static readonly DEFAULT_NGINX_PREFIX = path.join('/', 'opt', 'app', 'nginx');
     public static readonly DEFAULT_SSHSERVER_IP = '10.103.0.4';
     public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
     public static readonly DEFAULT_HIMHIP_USE = true;
@@ -126,7 +126,7 @@ export class Config {
      * global config
      * @private
      */
-    private static _config: ConfigOptions|null = null;
+    private static _config: ConfigOptions | null = null;
 
     /**
      * set
@@ -139,7 +139,7 @@ export class Config {
     /**
      * get
      */
-    public static get(): ConfigOptions|null {
+    public static get(): ConfigOptions | null {
         return this._config;
     }
 
@@ -148,8 +148,11 @@ export class Config {
      * @param configFile
      * @param useEnv
      */
-    public static async load(configFile: string|null = null, useEnv: boolean = false): Promise<ConfigOptions | null> {
-        let config: ConfigOptions|null = null;
+    public static async load(
+        configFile: string | null = null,
+        useEnv: boolean = false
+    ): Promise<ConfigOptions | null> {
+        let config: ConfigOptions | null = null;
         let ffPath = Config.DEFAULT_FF_DIR;
 
         if (configFile) {
@@ -166,7 +169,7 @@ export class Config {
 
                 if (!SchemaConfigOptions.validate(fileConfig, errors)) {
                     console.log('Config::load: Config file error:');
-                    console.log(errors);
+                    console.log(JSON.stringify(errors, null, 2));
 
                     return null;
                 }
@@ -241,13 +244,15 @@ export class Config {
             }
 
             if (process.env[ENV_OPTIONAL.DB_MYSQL_PORT]) {
-                config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) || Config.DEFAULT_DB_MYSQL_PORT;
+                config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
+                    Config.DEFAULT_DB_MYSQL_PORT;
             }
 
             // httpserver ----------------------------------------------------------------------------------------------
 
             if (process.env[ENV_OPTIONAL.HTTPSERVER_PORT]) {
-                config.httpserver.port = parseInt(process.env[ENV_OPTIONAL.HTTPSERVER_PORT]!, 10) || Config.DEFAULT_HTTPSERVER_PORT;
+                config.httpserver.port = parseInt(process.env[ENV_OPTIONAL.HTTPSERVER_PORT]!, 10) ||
+                    Config.DEFAULT_HTTPSERVER_PORT;
             }
 
             if (process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR]) {
@@ -340,12 +345,12 @@ export class Config {
             }
 
             if (!config.httpserver.sslpath) {
-                config.httpserver.sslpath = Path.join(ffPath, 'ssl/');
+                config.httpserver.sslpath = path.join(ffPath, 'ssl');
             }
 
             // default dhparam
             if (config.nginx) {
-                config.nginx.dhparamfile = Path.join(ffPath, 'nginx/dhparam.pem');
+                config.nginx.dhparamfile = path.join(ffPath, 'nginx', 'dhparam.pem');
             }
 
             if (!config.dnsserver) {
