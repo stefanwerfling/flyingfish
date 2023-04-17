@@ -1,6 +1,7 @@
 import {readFileSync} from 'fs';
 import path from 'path';
 import * as process from 'process';
+import {v4 as uuid} from 'uuid';
 import {ExtractSchemaResultType, SchemaErrors, Vts} from 'vts';
 
 /**
@@ -38,7 +39,8 @@ export const SchemaConfigOptions = Vts.object({
         config: Vts.string(),
         prefix: Vts.string(),
         dhparamfile: Vts.optional(Vts.string()),
-        module_mode_dyn: Vts.optional(Vts.boolean())
+        module_mode_dyn: Vts.optional(Vts.boolean()),
+        secret: Vts.optional(Vts.string())
     })),
     sshserver: Vts.optional(Vts.object({
         ip: Vts.string()
@@ -92,6 +94,7 @@ export enum ENV_OPTIONAL {
     NGINX_CONFIG = 'FLYINGFISH_NGINX_CONFIG',
     NGINX_PREFIX = 'FLYINGFISH_NGINX_PREFIX',
     NGINX_MODULE_MODE_DYN = 'FLYINGFISH_NGINX_MODULE_MODE_DYN',
+    NGINX_SECRET = 'FLYINGFISH_NGINX_SECRET',
     SSHSERVER_IP = 'FLYINGFISH_SSHSERVER_IP',
     DOCKER_INSIDE = 'FLYINGFISH_DOCKER_INSIDE',
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
@@ -288,6 +291,10 @@ export class Config {
                 config.nginx.module_mode_dyn = process.env[ENV_OPTIONAL.NGINX_MODULE_MODE_DYN] === '1';
             }
 
+            if (process.env[ENV_OPTIONAL.NGINX_SECRET]) {
+                config.nginx.secret = process.env[ENV_OPTIONAL.NGINX_SECRET];
+            }
+
             // sshserver -----------------------------------------------------------------------------------------------
 
             if (process.env[ENV_OPTIONAL.SSHSERVER_IP]) {
@@ -351,6 +358,10 @@ export class Config {
             // default dhparam
             if (config.nginx) {
                 config.nginx.dhparamfile = path.join(ffPath, 'nginx', 'dhparam.pem');
+
+                if (!config.nginx.secret) {
+                    config.nginx.secret = uuid().replaceAll('-', '');
+                }
             }
 
             if (!config.dnsserver) {

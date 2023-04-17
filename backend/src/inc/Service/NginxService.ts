@@ -545,6 +545,7 @@ export class NginxService {
             }
 
             if (streamCollect.listen.enable_address_check) {
+                aServer.addVariable('set $ff_secret', Config.get()!.nginx!.secret ?? '');
                 aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
                 aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
                 aServer.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
@@ -720,6 +721,7 @@ export class NginxService {
 
                             const authLocation = new Location(`/auth${entry.id}`);
                             authLocation.addVariable('internal', '');
+                            authLocation.addVariable('set $ff_secret', Config.get()!.nginx!.secret ?? '');
                             authLocation.addVariable('set $ff_auth_basic_url', NginxService.INTERN_SERVER_AUTH_BASIC);
                             authLocation.addVariable('set $ff_location_id', `${entry.id}`);
                             authLocation.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);

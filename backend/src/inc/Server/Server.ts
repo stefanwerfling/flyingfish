@@ -7,6 +7,7 @@ import fs from 'fs';
 import helmet from 'helmet';
 import * as https from 'https';
 import Path from 'path';
+import {Config} from '../Config/Config.js';
 import {Logger} from '../Logger/Logger.js';
 import {DefaultRoute} from '../Routes/DefaultRoute.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
@@ -94,6 +95,15 @@ export class Server {
                     }
 
                     return 100;
+                } else if (request.baseUrl.indexOf('/njs/') === 0) {
+                    const secret = request.header('secret') ?? '';
+                    const ssecret = Config.get()!.nginx!.secret ?? '';
+
+                    if (secret === ssecret) {
+                        return 0;
+                    }
+
+                    return -1;
                 }
 
                 return 0;

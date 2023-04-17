@@ -41,9 +41,14 @@ async function addressCheckFlyingFish(url: string, s: NginxStreamRequest|NginxHT
     try {
         const v = s.variables;
         let listen_id = '0';
+        let secret = '';
 
         if (v.ff_listen_id) {
             listen_id = v.ff_listen_id;
+        }
+
+        if (v.ff_secret) {
+            secret = v.ff_secret;
         }
 
         s.warn(`addressCheck(fetch) -> listenId: ${listen_id}, type: ${type} -> ${url}`);
@@ -55,6 +60,7 @@ async function addressCheckFlyingFish(url: string, s: NginxStreamRequest|NginxHT
                 'Accept-Encoding' : '',
                 'realip_remote_addr': v.realip_remote_addr,
                 'remote_addr': s.remoteAddress,
+                'secret': secret,
                 'type': type,
                 'listen_id': listen_id
             },

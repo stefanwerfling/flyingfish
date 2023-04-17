@@ -10,14 +10,20 @@ async function authorizeHttp(s: NginxHTTPRequest) {
         s.return(401);
     } else if (v.ff_auth_basic_url) {
         let location_id = '0';
+        let secret = '';
 
         if (v.ff_location_id) {
             location_id = v.ff_location_id;
         }
 
+        if (v.ff_secret) {
+            secret = v.ff_secret;
+        }
+
         const resulte = await ngx.fetch(v.ff_auth_basic_url, {
             body: '',
             headers: {
+                'secret': secret,
                 'authheader': v.ff_authheader,
                 'location_id': location_id
             },
