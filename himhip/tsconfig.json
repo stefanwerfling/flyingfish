@@ -1,16 +1,16 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
+    "module": "NodeNext",
+    "target": "ES2022",
     "strict": true,
     "baseUrl": "./",
     "outDir": "dist",
     "sourceMap": true,
     "removeComments": true,
     "experimentalDecorators": true,
-    "target": "es6",
     "emitDecoratorMetadata": true,
-    "moduleResolution": "node",
     "importHelpers": true,
     "esModuleInterop": true,
     "types": [
@@ -22,8 +22,5 @@
   },
   "include": [
     "./src/**/*.ts"
-  ],
-  "exclude": [
-    "./src/public/build"
   ]
 }

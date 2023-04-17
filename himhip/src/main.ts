@@ -1,12 +1,12 @@
-import minimist from 'minimist';
 import {scheduleJob} from 'node-schedule';
-import {HimHIP} from './inc/HimHIP';
+import {Args} from './inc/Env/Args.js';
+import {HimHIP} from './inc/HimHIP.js';
 
 /**
  * Main
  */
 (async(): Promise<void> => {
-    const argv = minimist(process.argv.slice(2));
+    const argv = Args.get();
 
     if (argv.reciverurl && argv.secure) {
         scheduleJob('*/1 * * * *', async() => {

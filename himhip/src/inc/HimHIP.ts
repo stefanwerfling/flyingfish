@@ -1,6 +1,6 @@
 import arp from '@network-utils/arp-lookup';
 import got from 'got';
-import {IpRoute} from './IpRoute';
+import {IpRoute} from './IpRoute.js';
 
 /**
  * HimHIP
@@ -9,7 +9,7 @@ export class HimHIP {
 
     /**
      * update
-     * @param reciver
+     * @param reciverUrl
      * @param secure
      */
     public static async update(reciverUrl: string, secure: string): Promise<void> {
