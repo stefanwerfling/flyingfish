@@ -17,6 +17,7 @@ export class SshKeygen {
     /**
      * create
      * @param file
+     * @param passphrase
      * @param crypt
      */
     public static async create(file: string, passphrase: string = '', crypt: SshKeygenCrypt = SshKeygenCrypt.rsa): Promise<boolean> {
@@ -41,11 +42,7 @@ export class SshKeygen {
             process.on('close', resolve);
         });
 
-        if (fs.existsSync(file)) {
-            return true;
-        }
-
-        return false;
+        return fs.existsSync(file);
     }
 
 }

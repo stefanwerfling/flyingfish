@@ -70,7 +70,7 @@ export class Config {
      * @param configFile
      * @param useEnv
      */
-    static async load(
+    public static async load(
         configFile: string | null = null,
         useEnv: boolean = false
     ): Promise<ConfigOptions | null> {
