@@ -70,11 +70,6 @@ RUN mkdir /etc/letsencrypt
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/frontend
 RUN mkdir -p /opt/app/nginx
-RUN mkdir -p /opt/app/nginx/body
-RUN mkdir -p /opt/app/nginx/logs
-RUN mkdir -p /opt/app/nginx/servers
-RUN mkdir -p /opt/app/nginx/servers/logs
-RUN mkdir -p /opt/app/nginx/html
 RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
 
@@ -120,6 +115,12 @@ RUN rm ./package-lock.json | true
 RUN rm ./nginx.pid | true
 RUN rm ./dhparam.pem | true
 RUN rm nginx.conf | true
+
+RUN mkdir /opt/app/nginx/servers
+RUN mkdir /opt/app/nginx/servers/proxy_temp
+RUN chmod 700 /opt/app/nginx/servers/proxy_temp
+RUN mkdir /opt/app/nginx/logs
+RUN chmod 755 /opt/app/nginx/logs
 
 RUN npm install
 
