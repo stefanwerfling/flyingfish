@@ -53,7 +53,7 @@ export class IpRoute {
                     network: parts[0],
                     gateway: parts[2],
                     interface: parts[4],
-                    hostip: parts[7]
+                    hostip: parts[6]
                 };
             }
         }
