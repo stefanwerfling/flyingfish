@@ -691,7 +691,6 @@ export class NginxService {
                         // Mitigate httpoxy attack
                         location.addVariable('proxy_set_header Proxy', '');
 
-
                         // redirect ------------------------------------------------------------------------------------
 
                         if (entry.redirect !== '') {
