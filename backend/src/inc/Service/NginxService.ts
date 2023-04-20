@@ -686,6 +686,14 @@ export class NginxService {
 
                         const location = new Location(match, entry.modifier);
 
+                        // default proctetions -------------------------------------------------------------------------
+
+                        // Mitigate httpoxy attack
+                        location.addVariable('proxy_set_header Proxy', '');
+
+
+                        // redirect ------------------------------------------------------------------------------------
+
                         if (entry.redirect !== '') {
                             let redirectCode = 301;
 
@@ -699,7 +707,7 @@ export class NginxService {
                             continue;
                         }
 
-                        // auth use ----------------------------------------------------------------------------------------
+                        // auth use ------------------------------------------------------------------------------------
 
                         if (entry.auth_enable) {
                             let releam = domainName;
@@ -730,7 +738,7 @@ export class NginxService {
                             aServer.addLocation(authLocation);
                         }
 
-                        // proxy header ------------------------------------------------------------------------------------
+                        // proxy header --------------------------------------------------------------------------------
 
                         if (locationCollect.location.host_enable) {
                             let host = locationCollect.location.host_name.trim();
@@ -778,7 +786,7 @@ export class NginxService {
                             location.addVariable('proxy_pass', entry.proxy_pass);
                         }
 
-                        // websocket use -----------------------------------------------------------------------------------
+                        // websocket use -------------------------------------------------------------------------------
 
                         if (locationCollect.location.websocket_enable) {
                             location.addVariable('proxy_set_header Upgrade', '$http_upgrade');
