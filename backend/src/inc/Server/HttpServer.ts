@@ -16,7 +16,7 @@ import {Session} from './Session.js';
 /**
  * Server
  */
-export class Server {
+export class HttpServer {
 
     /**
      * server object

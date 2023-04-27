@@ -53,7 +53,7 @@ import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 import {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
 import {NginxServer} from './inc/Nginx/NginxServer.js';
-import {Server} from './inc/Server/Server.js';
+import {HttpServer} from './inc/Server/HttpServer.js';
 import {DynDnsService} from './inc/Service/DynDnsService.js';
 import {HowIsMyPublicIpService} from './inc/Service/HowIsMyPublicIpService.js';
 import {NginxService} from './inc/Service/NginxService.js';
@@ -198,7 +198,7 @@ import exitHook from 'async-exit-hook';
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    const mServer = new Server({
+    const mServer = new HttpServer({
         port: aport,
         session: {
             secret: session_secret,
