@@ -11,7 +11,7 @@ import {HimHIP} from './inc/HimHIP.js';
     const config = await Config.load(Args.get());
 
     if (config === null) {
-        console.log(`Configloader is return empty config, please check your arguments or envirements`);
+        console.log('Configloader is return empty config, please check your arguments or envirements');
         return;
     }
 

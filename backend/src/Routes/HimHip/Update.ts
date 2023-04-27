@@ -18,7 +18,7 @@ export class Update extends DefaultRoute {
     /**
      * update
      * @param response
-     * @param hSecure
+     * @param hSecret
      * @param hGatewaymac
      * @param hNetwork
      * @param hGateway
