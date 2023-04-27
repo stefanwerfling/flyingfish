@@ -27,7 +27,7 @@ export class Update extends DefaultRoute {
      */
     public async update(
         response: Response,
-        hSecure: string,
+        hSecret: string,
         hGatewaymac: string,
         hNetwork: string,
         hGateway: string,
@@ -37,7 +37,7 @@ export class Update extends DefaultRoute {
         const configHimHip = Config.get()?.himhip;
 
         if (configHimHip && configHimHip.use) {
-            if (configHimHip.secure === hSecure) {
+            if (configHimHip.secret === hSecret) {
                 HimHIP.setData({
                     gatewaymac: hGatewaymac,
                     network: hNetwork,
@@ -64,7 +64,7 @@ export class Update extends DefaultRoute {
             async(req, res) => {
                 await this.update(
                     res,
-                    req.header('secure') ?? '',
+                    req.header('secret') ?? '',
                     req.header('gatewaymac') ?? '',
                     req.header('network') ?? '',
                     req.header('gateway') ?? '',

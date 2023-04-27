@@ -104,6 +104,15 @@ export class Server {
                     }
 
                     return -1;
+                } else if (request.baseUrl.indexOf('/himhip/') === 0) {
+                    const secret = request.header('secret') ?? '';
+                    const ssecret = Config.get()!.himhip!.secret ?? '';
+
+                    if (secret === ssecret) {
+                        return 0;
+                    }
+
+                    return -1;
                 }
 
                 return 0;

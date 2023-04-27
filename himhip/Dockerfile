@@ -25,4 +25,4 @@ RUN npm install
 RUN npm run build
 RUN npm install supervisor -g
 
-CMD [ "node",  "dist/main.js"]
+CMD [ "node",  "dist/main.js", "--envargs=1"]

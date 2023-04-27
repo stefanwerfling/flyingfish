@@ -63,7 +63,7 @@ export const SchemaConfigOptions = Vts.object({
     })),
     himhip: Vts.optional(Vts.object({
         use: Vts.boolean(),
-        secure: Vts.string()
+        secret: Vts.string()
     })),
     logging: Vts.optional(Vts.object({
         dirname: Vts.optional(Vts.string()),
@@ -99,7 +99,7 @@ export enum ENV_OPTIONAL {
     DOCKER_INSIDE = 'FLYINGFISH_DOCKER_INSIDE',
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
     HIMHIP_USE = 'FLYINGFISH_HIMHIP_USE',
-    HIMHIP_SECURE = 'FLYINGFISH_HIMHIP_SECURE',
+    HIMHIP_SECRET = 'FLYINGFISH_HIMHIP_SECRET',
     FF_LIBPATH = 'FLYINGFISH_LIBPATH'
 }
 
@@ -123,7 +123,7 @@ export class Config {
     public static readonly DEFAULT_SSHSERVER_IP = '10.103.0.4';
     public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
     public static readonly DEFAULT_HIMHIP_USE = true;
-    public static readonly DEFAULT_HIMHIP_SECURE = '';
+    public static readonly DEFAULT_HIMHIP_SECRET = '';
 
     /**
      * global config
@@ -233,7 +233,7 @@ export class Config {
                     },
                     himhip: {
                         use: Config.DEFAULT_HIMHIP_USE,
-                        secure: Config.DEFAULT_HIMHIP_SECURE
+                        secret: Config.DEFAULT_HIMHIP_SECRET
                     }
                 };
             }
@@ -323,7 +323,7 @@ export class Config {
             if (!config.himhip) {
                 config.himhip = {
                     use: Config.DEFAULT_HIMHIP_USE,
-                    secure: Config.DEFAULT_HIMHIP_SECURE
+                    secret: Config.DEFAULT_HIMHIP_SECRET
                 };
             }
 
@@ -331,8 +331,8 @@ export class Config {
                 config.himhip.use = process.env[ENV_OPTIONAL.HIMHIP_USE] === '1';
             }
 
-            if (process.env[ENV_OPTIONAL.HIMHIP_SECURE]) {
-                config.himhip.secure = process.env[ENV_OPTIONAL.HIMHIP_SECURE];
+            if (process.env[ENV_OPTIONAL.HIMHIP_SECRET]) {
+                config.himhip.secret = process.env[ENV_OPTIONAL.HIMHIP_SECRET];
             }
 
             // ff ------------------------------------------------------------------------------------------------------

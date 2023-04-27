@@ -52,15 +52,15 @@ services:
       dockerfile: Dockerfile.nginxsrc
     container_name: flyingfish_service
     volumes:
-      - ./nginx:/opt/app/nginx:rw
+#      - ./nginx:/opt/app/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw
-      - ./backend/dist:/opt/app/dist
-      - ./backend/node_modules:/opt/app/node_modules
-      - ./backend/package.json:/opt/app/package.json
-      - ./frontend/assets:/opt/app/frontend/assets
-      - ./frontend/dist:/opt/app/frontend/dist
-      - ./frontend/src:/opt/app/frontend/src
+#      - ./backend/dist:/opt/app/dist
+#      - ./backend/node_modules:/opt/app/node_modules
+#      - ./backend/package.json:/opt/app/package.json
+#      - ./frontend/assets:/opt/app/frontend/assets
+#      - ./frontend/dist:/opt/app/frontend/dist
+#      - ./frontend/src:/opt/app/frontend/src
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -68,7 +68,7 @@ services:
       FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
-      FLYINGFISH_HIMHIP_SECURE: "${HIMHIP_SECURE}"
+      FLYINGFISH_HIMHIP_SECRET: "${HIMHIP_SECRET}"
     ports:
       - "443:443"
       - "80:80"
@@ -99,11 +99,9 @@ services:
     build:
       context: ./himhip
     container_name: flyingfish_himhip
-    command:
-      - node
-      - "dist/main.js"
-      - "--reciverurl=https://10.103.0.3:${HTTPSERVER_PORT}/himhip/update"
-      - "--secure=${HIMHIP_SECURE}"
+    environment:
+      FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
+      FLYINGFISH_SERVER_PORT: "${HTTPSERVER_PORT}"
     network_mode: host
     cap_add:
       - ALL
@@ -129,7 +127,7 @@ services:
       - "--inspect-brk=0.0.0.0:9229"
       - "dist/main.js"
       - "--reciverurl=https://10.103.0.3:3000/iptable/list"
-      - "--secure=${IPTABLE_SECURE_TOKEN}"
+      - "--secret=${IPTABLE_SECURE_TOKEN}"
     network_mode: host
     cap_add:
       - ALL

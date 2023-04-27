@@ -10,9 +10,9 @@ export class HimHIP {
     /**
      * update
      * @param reciverUrl
-     * @param secure
+     * @param secret
      */
-    public static async update(reciverUrl: string, secure: string): Promise<void> {
+    public static async update(reciverUrl: string, secret: string): Promise<void> {
         const ipRouteInfo = await IpRoute.get();
 
         if (ipRouteInfo) {
@@ -23,7 +23,7 @@ export class HimHIP {
                     const response = await got({
                         url: reciverUrl,
                         headers: {
-                            secure,
+                            secret,
                             gatewaymac,
                             network: ipRouteInfo.network,
                             gateway: ipRouteInfo.gateway,
