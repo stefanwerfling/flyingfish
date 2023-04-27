@@ -1,31 +1,14 @@
 import {RemoteInfo} from 'dgram';
-import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
+import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
 import {Config} from '../Config/Config.js';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
 import {DBHelper} from '../Db/DBHelper.js';
 import {Logger} from '../Logger/Logger.js';
-
-/**
- * DnsAnswerTxt
- */
-interface DnsAnswerTxt extends DnsAnswer {
-    data?: string;
-}
-
-/**
- * DnsAnswerMX
- */
-interface DnsAnswerMX extends DnsAnswer {
-    exchange?: string;
-}
-
-/**
- * DnsAnswerNs
- */
-interface DnsAnswerNs extends DnsAnswer {
-    ns?: string;
-}
+import {DnsAnswerMX} from './RecordType/MX.js';
+import {DnsAnswerNS} from './RecordType/NS.js';
+import {DnsAnswerTlSA, TLSAMatchingType} from './RecordType/TLSA.js';
+import {DnsAnswerTXT} from './RecordType/TXT.js';
 
 /**
  * DnsQuestionExt
@@ -34,6 +17,14 @@ interface DnsQuestionExt extends DnsQuestion {
     class?: number;
     type?: number;
 }
+
+/**
+ * TYPE_EXT
+ * see https://de.wikipedia.org/wiki/Resource_Record
+ */
+export const TYPE_EXT = {
+    TLSA: 52
+};
 
 /**
  * Dns2Server
@@ -104,7 +95,7 @@ export class Dns2Server {
                                         class: record.dclass,
                                         ttl: record.ttl,
                                         data: record.dvalue
-                                    } as DnsAnswerTxt);
+                                    } as DnsAnswerTXT);
                                     break;
 
                                 case DNS.Packet.TYPE.A:
@@ -125,7 +116,7 @@ export class Dns2Server {
                                         class: record.dclass,
                                         ttl: record.ttl,
                                         ns: record.dvalue
-                                    } as DnsAnswerNs);
+                                    } as DnsAnswerNS);
                                     break;
 
                                 case DNS.Packet.TYPE.MX:
@@ -146,6 +137,20 @@ export class Dns2Server {
                                         ttl: record.ttl,
                                         domain: record.dvalue
                                     });
+                                    break;
+
+                                case TYPE_EXT.TLSA:
+                                    // support currently defaults
+                                    response.answers.push({
+                                        name: questionExt.name,
+                                        type: record.dtype,
+                                        class: record.dclass,
+                                        ttl: record.ttl,
+                                        certificate_usage: 3,
+                                        selector: 1,
+                                        matching_type: TLSAMatchingType.SHA256,
+                                        certificate_association_data: record.dvalue
+                                    } as DnsAnswerTlSA);
                                     break;
                             }
                         }
