@@ -1,5 +1,6 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
+import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
@@ -7,7 +8,7 @@ import {DBHelper} from '../Db/DBHelper.js';
 import {Logger} from '../Logger/Logger.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
 import {DnsAnswerNS} from './RecordType/NS.js';
-import {DnsAnswerTlSA, TLSAMatchingType} from './RecordType/TLSA.js';
+import {DnsAnswerTlSA, SchemaRecordSettingsTlSA, TLSAMatchingType} from './RecordType/TLSA.js';
 import {DnsAnswerTXT} from './RecordType/TXT.js';
 
 /**
@@ -87,6 +88,18 @@ export class Dns2Server {
                         }
 
                         for (const record of records) {
+                            let recordSettings = null;
+
+                            if (record.settings !== '') {
+                                try {
+                                    recordSettings = JSON.parse(record.settings);
+                                } catch (e) {
+                                    Logger.getLogger().error(`Dns2Server::request: record settings parse failed: ${record.id}`);
+                                }
+                            }
+
+                            const settingsErrors: SchemaErrors = [];
+
                             switch (record.dtype) {
                                 case DNS.Packet.TYPE.TXT:
                                     response.answers.push({
@@ -140,18 +153,26 @@ export class Dns2Server {
                                     break;
 
                                 case TYPE_EXT.TLSA:
-                                    // support currently defaults
-                                    response.answers.push({
-                                        name: questionExt.name,
-                                        type: record.dtype,
-                                        class: record.dclass,
-                                        ttl: record.ttl,
-                                        certificate_usage: 3,
-                                        selector: 1,
-                                        matching_type: TLSAMatchingType.SHA256,
-                                        certificate_association_data: record.dvalue
-                                    } as DnsAnswerTlSA);
+                                    if (SchemaRecordSettingsTlSA.validate(recordSettings, settingsErrors)) {
+                                        response.answers.push({
+                                            name: questionExt.name,
+                                            type: record.dtype,
+                                            class: record.dclass,
+                                            ttl: record.ttl,
+                                            certificate_usage: parseInt(recordSettings.certificate_usage, 10),
+                                            selector: parseInt(recordSettings.selector, 10),
+                                            matching_type: parseInt(recordSettings.matching_type, 10),
+                                            certificate_association_data: record.dvalue
+                                        } as DnsAnswerTlSA);
+                                    }
                                     break;
+                            }
+
+                            if (settingsErrors.length > 0) {
+                                Logger.getLogger().error('Dns2Server::request:recordSettings:');
+                                for (const error of settingsErrors) {
+                                    Logger.getLogger().error(`- ${error}`);
+                                }
                             }
                         }
                     } else {

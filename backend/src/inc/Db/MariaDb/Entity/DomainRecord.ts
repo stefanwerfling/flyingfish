@@ -42,8 +42,21 @@ export class DomainRecord extends BaseEntity {
     /**
      * dvalue
      */
-    @Column()
+    @Column({
+        type: 'text',
+        default: ''
+    })
     public dvalue!: string;
+
+    /**
+     * settings
+     * for a record, save the data as json
+     */
+    @Column({
+        type: 'text',
+        default: ''
+    })
+    public settings!: string;
 
     /**
      * update by dnsclient

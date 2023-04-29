@@ -167,7 +167,7 @@ export class Config {
 
                 console.log(`Config::load: Load json-file: ${configFile}`);
 
-                const fileConfig = JSON.parse(rawdata) as ConfigOptions;
+                const fileConfig = JSON.parse(rawdata);
                 const errors: SchemaErrors = [];
 
                 if (!SchemaConfigOptions.validate(fileConfig, errors)) {
