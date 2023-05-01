@@ -1,6 +1,6 @@
+import {Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
 import {IpBlacklist, IpBlacklistCheck} from '../Analysis/Ip/IpBlacklist.js';
-import {Logger} from '../Logger/Logger.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 
 /**

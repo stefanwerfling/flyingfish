@@ -1,7 +1,6 @@
 import {spawn} from 'child_process';
+import {DateHelper, Logger} from 'flyingfish_core';
 import fs from 'fs';
-import {Logger} from '../../Logger/Logger.js';
-import {DateHelper} from '../../Utils/DateHelper.js';
 import {ISsl} from '../ISsl.js';
 
 /**

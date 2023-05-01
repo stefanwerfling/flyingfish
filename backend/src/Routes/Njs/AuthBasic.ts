@@ -1,7 +1,6 @@
 import {Response, Router} from 'express';
+import {DefaultRoute, Logger} from 'flyingfish_core';
 import {Credential} from '../../inc/Credential/Credential.js';
-import {Logger} from '../../inc/Logger/Logger.js';
-import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
 import {BasicAuthParser} from '../../inc/Server/BasicAuthParser.js';
 
 /**

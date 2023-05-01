@@ -1,12 +1,34 @@
+import {Vts} from 'vts';
 import winston, {Logger as WinstonLogger} from 'winston';
 import TransportStream from 'winston-transport';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import {Config} from '../Config/Config.js';
 
 /**
+ * Schema logger config
+ */
+export const SchemaLoggerConfig = Vts.object({
+    dirname: Vts.optional(Vts.string()),
+    filename: Vts.optional(Vts.string()),
+    zippedArchive: Vts.optional(Vts.boolean()),
+    maxSize: Vts.optional(Vts.string()),
+    maxFiles: Vts.optional(Vts.string()),
+    enableConsole: Vts.optional(Vts.boolean()),
+    level: Vts.optional(Vts.string())
+});
+
+/**
  * Logger
  */
 export class Logger {
+
+    public static readonly DEFAULT_DIR = '/var/log/flyingfish/';
+    public static readonly DEFAULT_FILENAME = 'flyingfish-%DATE%.log';
+    public static readonly DEFAULT_ZIPPED = false;
+    public static readonly DEFAULT_MAX_SIZE = '20m';
+    public static readonly DEFAULT_MAX_FILES = '14d';
+    public static readonly DEFAULT_LEVEL = 'warn';
+    public static readonly DEFAULT_CONSOLE = true;
 
     /**
      * winston logger
@@ -19,15 +41,15 @@ export class Logger {
      */
     public static getLogger(): WinstonLogger {
         if (Logger._logger === null) {
-            const config = Config.get();
+            const config = Config.getInstance().get();
 
-            let dirname = '/var/log/flyingfish/';
-            let filename = 'flyingfish-%DATE%.log';
-            let zippedArchive = false;
-            let maxSize = '20m';
-            let maxFiles = '14d';
-            let level = 'warn';
-            let enableConsole = true;
+            let dirname = Logger.DEFAULT_DIR;
+            let filename = Logger.DEFAULT_FILENAME;
+            let zippedArchive = Logger.DEFAULT_ZIPPED;
+            let maxSize = Logger.DEFAULT_MAX_SIZE;
+            let maxFiles = Logger.DEFAULT_MAX_FILES;
+            let level = Logger.DEFAULT_LEVEL;
+            let enableConsole = Logger.DEFAULT_CONSOLE;
 
             if (config !== null) {
                 if (config.logging) {

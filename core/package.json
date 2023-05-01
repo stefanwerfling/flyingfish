@@ -1,0 +1,43 @@
+{
+  "name": "flyingfish_core",
+  "version": "1.0.0",
+  "description": "The core code for flyingfish",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "tsc": "tsc",
+    "build": "npm run tsc",
+    "install": "npm run tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stefanwerfling/flyingfish.git/core"
+  },
+  "bugs": {
+    "url": "https://github.com/stefanwerfling/flyingfish/issues"
+  },
+  "homepage": "https://github.com/stefanwerfling/flyingfish#readme",
+  "keywords": [
+    "flyingfish"
+  ],
+  "author": "Stefan Werfling",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/express-session": "^1.17.7",
+    "@types/node": "^18.15.10",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "eslint": "^8.36.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "vts": "git+https://github.com/OpenSourcePKG/vts.git",
+    "winston": "^3.8.2",
+    "winston-daily-rotate-file": "^4.7.1"
+  }
+}

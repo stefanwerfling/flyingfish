@@ -1,7 +1,6 @@
 import {spawn} from 'child_process';
+import {Logger, SimpleProcessAwait} from 'flyingfish_core';
 import fs from 'fs';
-import {Logger} from '../Logger/Logger.js';
-import {SimpleProcessAwait} from '../Utils/SimpleProcessAwait.js';
 
 /**
  * OpenSSL

@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import {Args, Logger} from 'flyingfish_core';
 import {DBHelper} from './inc/Db/DBHelper.js';
 import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
@@ -11,8 +12,7 @@ import {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
-import {Args} from './inc/Env/Args.js';
-import {Logger} from './inc/Logger/Logger.js';
+import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
 import {IpLocationService} from './inc/Service/IpLocationService.js';
 import {IpService} from './inc/Service/IpService.js';
@@ -64,7 +64,7 @@ import exitHook from 'async-exit-hook';
  * Main
  */
 (async(): Promise<void> => {
-    const argv = Args.get();
+    const argv = Args.get(SchemaFlyingFishArgs);
     let configfile = null;
 
     if (argv.config) {
@@ -95,15 +95,12 @@ import exitHook from 'async-exit-hook';
         useEnv = true;
     }
 
-    const tconfig = await Config.load(configfile, useEnv);
+    const tconfig = await Config.getInstance().load(configfile, useEnv);
 
     if (tconfig === null) {
         console.log(`Configloader is return empty config, please check your configfile: ${configfile}`);
         return;
     }
-
-    // set global
-    Config.set(tconfig);
 
     // init logger
     Logger.getLogger();

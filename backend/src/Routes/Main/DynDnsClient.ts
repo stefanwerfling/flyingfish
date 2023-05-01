@@ -1,13 +1,11 @@
 import {Router} from 'express';
+import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {DynDnsClient as DynDnsClientDB} from '../../inc/Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {DynDnsProvider, DynDnsProviders} from '../../inc/Provider/DynDnsProviders.js';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
-import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
-import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * DynDnsClientDomain

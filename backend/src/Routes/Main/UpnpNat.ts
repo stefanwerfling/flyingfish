@@ -1,12 +1,10 @@
 import {Router} from 'express';
+import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaUpnpNatCacheMapping, UpnpNatCache} from '../../inc/Cache/UpnpNatCache.js';
 import {DBHelper} from '../../inc/Db/DBHelper.js';
 import {NatPort as NatPortDB} from '../../inc/Db/MariaDb/Entity/NatPort.js';
 import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
-import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
-import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * UpnpNatDevice

@@ -1,5 +1,5 @@
+import {Logger} from 'flyingfish_core';
 import got from 'got';
-import {Logger} from '../../Logger/Logger.js';
 import {NginxStatus, NginxStatusResult} from '../../Nginx/NginxStatus.js';
 import {NginxService} from '../../Service/NginxService.js';
 

@@ -1,3 +1,4 @@
+import {Logger} from 'flyingfish_core';
 import fs from 'fs';
 import * as Path from 'path';
 import {Config} from '../Config/Config.js';
@@ -21,7 +22,6 @@ import {DBHelper} from '../Db/DBHelper.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
-import {Logger} from '../Logger/Logger.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
 import {Location} from '../Nginx/Config/Location.js';
 import {Map as NginxMap} from '../Nginx/Config/Map.js';
@@ -418,7 +418,7 @@ export class NginxService {
 
                                     // fill default ssh server
                                     upStream.addServer({
-                                        address: Config.get()?.sshserver?.ip!,
+                                        address: Config.getInstance().get()?.sshserver?.ip!,
                                         port: 22,
                                         weight: 0,
                                         max_fails: 0,
@@ -431,7 +431,7 @@ export class NginxService {
                                     if (collectStream.sshport) {
                                         // fill default ssh server
                                         upStream.addServer({
-                                            address: Config.get()?.sshserver?.ip!,
+                                            address: Config.getInstance().get()?.sshserver?.ip!,
                                             port: collectStream.sshport.port,
                                             weight: 0,
                                             max_fails: 0,
@@ -466,7 +466,7 @@ export class NginxService {
 
                                 // fill default ssh server
                                 upStream.addServer({
-                                    address: Config.get()?.sshserver?.ip!,
+                                    address: Config.getInstance().get()?.sshserver?.ip!,
                                     port: 22,
                                     weight: 0,
                                     max_fails: 0,
@@ -545,7 +545,7 @@ export class NginxService {
             }
 
             if (streamCollect.listen.enable_address_check) {
-                aServer.addVariable('set $ff_secret', Config.get()!.nginx!.secret ?? '');
+                aServer.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
                 aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
                 aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
                 aServer.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
@@ -597,7 +597,7 @@ export class NginxService {
                             'ECDHE-RSA-AES128-SHA256\'');
                         aServer.addVariable('ssl_ecdh_curve', 'secp384r1');
 
-                        const dhparam = Config.get()?.nginx?.dhparamfile;
+                        const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
 
                         if (dhparam) {
                             aServer.addVariable('ssl_dhparam', dhparam);
@@ -689,7 +689,7 @@ export class NginxService {
                         // default proctetions -------------------------------------------------------------------------
 
                         // Mitigate httpoxy attack
-                        location.addVariable('proxy_set_header Proxy', '');
+                        location.addVariable('proxy_set_header Proxy', '""');
 
                         // redirect ------------------------------------------------------------------------------------
 
@@ -728,7 +728,7 @@ export class NginxService {
 
                             const authLocation = new Location(`/auth${entry.id}`);
                             authLocation.addVariable('internal', '');
-                            authLocation.addVariable('set $ff_secret', Config.get()!.nginx!.secret ?? '');
+                            authLocation.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
                             authLocation.addVariable('set $ff_auth_basic_url', NginxService.INTERN_SERVER_AUTH_BASIC);
                             authLocation.addVariable('set $ff_location_id', `${entry.id}`);
                             authLocation.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
@@ -779,7 +779,7 @@ export class NginxService {
 
                             location.addVariable(
                                 'proxy_pass',
-                                `${entry.sshport_schema}://${Config.get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
+                                `${entry.sshport_schema}://${Config.getInstance().get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
                             );
                         } else if (entry.proxy_pass) {
                             location.addVariable('proxy_pass', entry.proxy_pass);
@@ -883,7 +883,7 @@ export class NginxService {
      * start
      */
     public async start(): Promise<void> {
-        const dhparam = Config.get()?.nginx?.dhparamfile;
+        const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
 
         if (dhparam) {
             if (fs.existsSync(dhparam)) {

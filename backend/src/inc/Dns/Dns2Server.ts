@@ -1,14 +1,14 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
+import {Logger} from 'flyingfish_core';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
 import {DBHelper} from '../Db/DBHelper.js';
-import {Logger} from '../Logger/Logger.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
 import {DnsAnswerNS} from './RecordType/NS.js';
-import {DnsAnswerTlSA, SchemaRecordSettingsTlSA, TLSAMatchingType} from './RecordType/TLSA.js';
+import {DnsAnswerTlSA, SchemaRecordSettingsTlSA} from './RecordType/TLSA.js';
 import {DnsAnswerTXT} from './RecordType/TXT.js';
 
 /**
@@ -215,9 +215,9 @@ export class Dns2Server {
      * start server listen
      */
     public listen(): void {
-        let port = 5333;
+        let port = Config.DEFAULT_DNSSERVER_PORT;
 
-        const dnsserver = Config.get()?.dnsserver;
+        const dnsserver = Config.getInstance().get()?.dnsserver;
 
         if (dnsserver) {
             if (dnsserver.port) {

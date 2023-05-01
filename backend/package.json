@@ -2,7 +2,7 @@
   "name": "flyingfish",
   "version": "1.0.0",
   "description": "On the fly fish, a ngnix proxy connection manager.",
-  "main": "main.js",
+  "main": "dist/main.js",
   "type": "module",
   "scripts": {
     "npm-check-updates": "npm-check-updates",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stefanwerfling/flyingfish.git"
+    "url": "git+https://github.com/stefanwerfling/flyingfish.git/backend"
   },
   "keywords": [],
   "author": "Stefan Werfling",
@@ -52,6 +52,7 @@
     "express-rate-limit": "^6.7.0",
     "express-session": "^1.17.3",
     "fast-xml-parser": "^4.1.3",
+    "flyingfish_core": "file:../core",
     "got": "^12.6.0",
     "helmet": "^6.0.1",
     "mysql": "^2.18.1",

@@ -1,7 +1,7 @@
 import AdmZip from 'adm-zip';
+import {Logger} from 'flyingfish_core';
 import {unlink} from 'fs/promises';
 import path from 'path';
-import {Logger} from '../../Logger/Logger.js';
 import {IpSetParser} from '../../Utils/IpSetParser.js';
 import {FireholDownloader} from './FireholDownloader.js';
 

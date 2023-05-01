@@ -1,7 +1,5 @@
 import {Router} from 'express';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
-import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
-import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
+import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {NginxService} from '../../inc/Service/NginxService.js';
 
 /**

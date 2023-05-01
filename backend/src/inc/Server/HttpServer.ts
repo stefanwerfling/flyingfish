@@ -3,15 +3,13 @@ import cookieParser from 'cookie-parser';
 import express, {Application, NextFunction, Request, Response} from 'express';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
+import {DefaultRoute, Logger, Session} from 'flyingfish_core';
 import fs from 'fs';
 import helmet from 'helmet';
 import * as https from 'https';
 import Path from 'path';
 import {Config} from '../Config/Config.js';
-import {Logger} from '../Logger/Logger.js';
-import {DefaultRoute} from '../Routes/DefaultRoute.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
-import {Session} from './Session.js';
 
 /**
  * Server
@@ -97,7 +95,7 @@ export class HttpServer {
                     return 100;
                 } else if (request.baseUrl.indexOf('/njs/') === 0) {
                     const secret = request.header('secret') ?? '';
-                    const ssecret = Config.get()!.nginx!.secret ?? '';
+                    const ssecret = Config.getInstance().get()!.nginx!.secret ?? '';
 
                     if (secret === ssecret) {
                         return 0;
@@ -106,7 +104,7 @@ export class HttpServer {
                     return -1;
                 } else if (request.baseUrl.indexOf('/himhip/') === 0) {
                     const secret = request.header('secret') ?? '';
-                    const ssecret = Config.get()!.himhip!.secret ?? '';
+                    const ssecret = Config.getInstance().get()!.himhip!.secret ?? '';
 
                     if (secret === ssecret) {
                         return 0;

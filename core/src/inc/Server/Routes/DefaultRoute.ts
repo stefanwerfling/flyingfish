@@ -1,6 +1,6 @@
 import {Request, Response, Router} from 'express';
 import {Schema, SchemaErrors} from 'vts';
-import {Session} from '../Server/Session.js';
+import {Session} from '../Session.js';
 import {DefaultReturn} from './DefaultReturn.js';
 import {StatusCodes} from './StatusCodes.js';
 
@@ -56,6 +56,7 @@ export class DefaultRoute {
         res: Response,
         sendAutoResoonse: boolean = true
     ): boolean {
+        // @ts-ignore
         if (Session.isUserLogin(req.session)) {
             return true;
         }

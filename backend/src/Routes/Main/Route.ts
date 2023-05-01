@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {Router} from 'express';
+import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {Not} from 'typeorm';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {Config} from '../../inc/Config/Config.js';
@@ -15,9 +16,6 @@ import {
 import {NginxUpstream as NginxUpstreamDB} from '../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
 import {SshUser as SshUserDB} from '../../inc/Db/MariaDb/Entity/SshUser.js';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
-import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
-import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * UpStream
@@ -403,7 +401,7 @@ export class Route extends DefaultRoute {
 
         // defaults ----------------------------------------------------------------------------------------------------
 
-        const dnsserverport = Config.get()?.dnsserver?.port || 5333;
+        const dnsserverport = Config.getInstance().get()?.dnsserver?.port || 5333;
 
         return {
             statusCode: StatusCodes.OK,

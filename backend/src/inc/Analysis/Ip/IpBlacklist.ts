@@ -1,5 +1,5 @@
 import DNS from 'dns2';
-import {Logger} from '../../Logger/Logger.js';
+import {Logger} from 'flyingfish_core';
 
 /**
  * IpBlacklistCheck

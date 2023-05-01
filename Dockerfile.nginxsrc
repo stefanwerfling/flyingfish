@@ -67,11 +67,18 @@ RUN mkdir /etc/letsencrypt
 
 # Init App dirs --------------------------------------------------------------------------------------------------------
 
+RUN mkdir -p /opt/core
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/frontend
 RUN mkdir -p /opt/app/nginx
 RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
+
+# Copy/Install Core ----------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/core
+
+COPY core ./
 
 # Copy/Install Backend -------------------------------------------------------------------------------------------------
 
@@ -84,6 +91,7 @@ RUN rm -R dist | true
 RUN rm package-lock.json | true
 
 RUN npm install
+RUN npm update
 RUN npm run build
 
 # Copy/Install Frontend ------------------------------------------------------------------------------------------------

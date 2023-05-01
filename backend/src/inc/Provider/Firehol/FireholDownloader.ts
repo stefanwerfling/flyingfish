@@ -1,9 +1,8 @@
+import {FileHelper, Logger} from 'flyingfish_core';
 import fs, {createWriteStream} from 'fs';
 import got from 'got';
 import * as stream from 'stream';
 import {promisify} from 'util';
-import {Logger} from '../../Logger/Logger.js';
-import {FileHelper} from '../../Utils/FileHelper.js';
 
 /**
  * FireholDownloader

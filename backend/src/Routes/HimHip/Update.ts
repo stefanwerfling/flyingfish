@@ -1,7 +1,7 @@
 import {Response, Router} from 'express';
+import {DefaultRoute} from 'flyingfish_core';
 import {Config} from '../../inc/Config/Config.js';
 import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
-import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
 
 /**
  * Update
@@ -34,7 +34,7 @@ export class Update extends DefaultRoute {
         hInterface: string,
         hHostip: string
     ): Promise<boolean> {
-        const configHimHip = Config.get()?.himhip;
+        const configHimHip = Config.getInstance().get()?.himhip;
 
         if (configHimHip && configHimHip.use) {
             if (configHimHip.secret === hSecret) {

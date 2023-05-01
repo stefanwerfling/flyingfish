@@ -1,4 +1,5 @@
 import {Router} from 'express';
+import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import Path from 'path';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {Certificate} from '../../inc/Cert/Certificate.js';
@@ -7,9 +8,6 @@ import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {Certbot} from '../../inc/Provider/Letsencrypt/Certbot.js';
 import {SslProvider, SslProviders} from '../../inc/Provider/SslProviders.js';
-import {DefaultReturn} from '../../inc/Routes/DefaultReturn.js';
-import {DefaultRoute} from '../../inc/Routes/DefaultRoute.js';
-import {StatusCodes} from '../../inc/Routes/StatusCodes.js';
 
 /**
  * SslDetailsRequest

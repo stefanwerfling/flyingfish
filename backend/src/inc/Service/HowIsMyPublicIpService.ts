@@ -1,6 +1,6 @@
+import {Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
 import {Config} from '../Config/Config.js';
-import {Logger} from '../Logger/Logger.js';
 import {HowIsMyPublicIpProviders} from '../Provider/HowIsMyPublicIpProviders.js';
 import {DynDnsService} from './DynDnsService.js';
 
@@ -53,7 +53,7 @@ export class HowIsMyPublicIpService {
      * determined
      */
     public async determined(): Promise<void> {
-        const providername = Config.get()?.himpip?.provider!;
+        const providername = Config.getInstance().get()?.himpip?.provider!;
         const provider = HowIsMyPublicIpProviders.getProvider(providername);
 
         if (provider) {
@@ -71,8 +71,8 @@ export class HowIsMyPublicIpService {
 
                     this._currentIp = ip;
 
-                    if (Config.get()?.dyndnsclient) {
-                        if (Config.get()?.dyndnsclient?.enable) {
+                    if (Config.getInstance().get()?.dyndnsclient) {
+                        if (Config.getInstance().get()?.dyndnsclient?.enable) {
                             await DynDnsService.getInstance().updateDns();
                         } else {
                             Logger.getLogger().silly('HowIsMyPublicIpService::determined: DynDnsClient is disabled by config!');

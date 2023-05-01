@@ -1,8 +1,8 @@
 /**
  * AbuseipdbReport
  */
+import {Logger} from 'flyingfish_core';
 import got from 'got';
-import {Logger} from '../../Logger/Logger.js';
 
 /**
  * AbuseipdbReport

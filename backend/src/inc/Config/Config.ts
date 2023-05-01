@@ -3,11 +3,12 @@ import path from 'path';
 import * as process from 'process';
 import {v4 as uuid} from 'uuid';
 import {ExtractSchemaResultType, SchemaErrors, Vts} from 'vts';
+import {Config as ConfigCore, SchemaConfigOptions as SchemaConfigOptionsCore} from 'flyingfish_core';
 
 /**
  * ConfigOptions
  */
-export const SchemaConfigOptions = Vts.object({
+export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
     db: Vts.object({
         mysql: Vts.object({
             host: Vts.string(),
@@ -65,15 +66,6 @@ export const SchemaConfigOptions = Vts.object({
         use: Vts.boolean(),
         secret: Vts.string()
     })),
-    logging: Vts.optional(Vts.object({
-        dirname: Vts.optional(Vts.string()),
-        filename: Vts.optional(Vts.string()),
-        zippedArchive: Vts.optional(Vts.boolean()),
-        maxSize: Vts.optional(Vts.string()),
-        maxFiles: Vts.optional(Vts.string()),
-        enableConsole: Vts.optional(Vts.boolean()),
-        level: Vts.optional(Vts.string())
-    })),
     flyingfish_libpath: Vts.optional(Vts.string())
 });
 
@@ -106,7 +98,7 @@ export enum ENV_OPTIONAL {
 /**
  * Config
  */
-export class Config {
+export class Config extends ConfigCore<ConfigOptions> {
 
     /**
      * DEFAULTS
@@ -126,24 +118,14 @@ export class Config {
     public static readonly DEFAULT_HIMHIP_SECRET = '';
 
     /**
-     * global config
-     * @private
+     * getInstance
      */
-    private static _config: ConfigOptions | null = null;
+    public static getInstance(): Config {
+        if (!ConfigCore._instance) {
+            ConfigCore._instance = new Config();
+        }
 
-    /**
-     * set
-     * @param config
-     */
-    public static set(config: ConfigOptions): void {
-        this._config = config;
-    }
-
-    /**
-     * get
-     */
-    public static get(): ConfigOptions | null {
-        return this._config;
+        return ConfigCore._instance as Config;
     }
 
     /**
@@ -151,7 +133,7 @@ export class Config {
      * @param configFile
      * @param useEnv
      */
-    public static async load(
+    public async load(
         configFile: string | null = null,
         useEnv: boolean = false
     ): Promise<ConfigOptions | null> {
@@ -398,6 +380,7 @@ export class Config {
             }
         }
 
+        this.set(config!);
         return config;
     }
 

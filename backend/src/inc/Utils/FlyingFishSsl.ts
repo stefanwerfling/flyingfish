@@ -1,5 +1,5 @@
+import {Logger} from 'flyingfish_core';
 import * as Path from 'path';
-import {Logger} from '../Logger/Logger.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
 import {OpenSslCnf} from '../OpenSSL/OpenSslCnf.js';
 
