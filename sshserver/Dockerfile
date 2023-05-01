@@ -17,6 +17,13 @@ WORKDIR /opt/core
 
 COPY ./core/ ./
 
+RUN rm -R node_modules | true
+RUN rm -R dist | true
+RUN rm package-lock.json | true
+
+RUN npm install
+RUN npm run build
+
 # Copy/Install sshserver -----------------------------------------------------------------------------------------------
 
 WORKDIR /opt/app
