@@ -18,6 +18,10 @@
 /nginxtest
 /letsencrypt
 
+/core/node_modules
+/core/package-lock.json
+/core/dist
+
 /backend/node_modules
 /backend/package-lock.json
 /backend/dist

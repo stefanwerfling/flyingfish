@@ -1,4 +1,5 @@
 import arp from '@network-utils/arp-lookup';
+import {Logger} from 'flyingfish_core';
 import got from 'got';
 import {IpRoute} from './IpRoute.js';
 
@@ -36,20 +37,20 @@ export class HimHIP {
                     });
 
                     if (response.statusCode !== 200) {
-                        console.error('HimHip::update: response return failed');
+                        Logger.getLogger().error('HimHip::update: response return failed');
 
                         if (response.body) {
-                            console.error(response.body);
+                            Logger.getLogger().error(response.body);
                         }
                     }
                 } catch (e) {
-                    console.error(`HimHip::update: error can not send information to server: '${reciverUrl}'.`);
+                    Logger.getLogger().error(`HimHip::update: error can not send information to server: '${reciverUrl}'.`);
                 }
             } else {
-                console.error('HimHip::update: arp mac request is empty!');
+                Logger.getLogger().error('HimHip::update: arp mac request is empty!');
             }
         } else {
-            console.error('HimHip::update: ip route information not return.');
+            Logger.getLogger().error('HimHip::update: ip route information not return.');
         }
     }
 

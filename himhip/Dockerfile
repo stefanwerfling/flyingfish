@@ -5,16 +5,20 @@ RUN apt-get upgrade -y
 RUN apt-get install -y iproute2
 RUN apt-get install -y net-tools
 
+RUN mkdir -p /opt/core
 RUN mkdir -p /opt/app
-
 RUN mkdir -p /opt/app/dist
 RUN mkdir -p /opt/app/node_modules
 
-WORKDIR /opt/app
+# Copy/Install Core ----------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/core
+
+COPY ./core/ ./
 
 WORKDIR /opt/app
 
-COPY ./ ./
+COPY ./himhip/ ./
 
 RUN rm -R Dockerfile | true
 RUN rm -R node_modules | true

@@ -78,7 +78,7 @@ RUN mkdir -p /var/lib/flyingfish
 
 WORKDIR /opt/core
 
-COPY core ./
+COPY ./core/ ./
 
 # Copy/Install Backend -------------------------------------------------------------------------------------------------
 
@@ -91,7 +91,6 @@ RUN rm -R dist | true
 RUN rm package-lock.json | true
 
 RUN npm install
-RUN npm update
 RUN npm run build
 
 # Copy/Install Frontend ------------------------------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 import {spawn} from 'child_process';
+import {Logger} from 'flyingfish_core';
 
 /**
  * IpRouteGet
@@ -44,7 +45,7 @@ export class IpRoute {
         });
 
         if (buffer === '') {
-            console.log('IpRoute::get: Buffer is empty!');
+            Logger.getLogger().warn('IpRoute::get: Buffer is empty!');
         } else {
             const parts = buffer.split(' ');
 

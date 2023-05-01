@@ -1,8 +1,9 @@
 import process from 'process';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {FlyingFishArgs} from '../Env/Args.js';
+import {Config as ConfigCore, SchemaConfigOptions as SchemaConfigOptionsCore} from 'flyingfish_core';
 
-export const SchemaConfigOptions = Vts.object({
+export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
     secret: Vts.string(),
     url_path: Vts.string(),
     server_host: Vts.string(),
@@ -20,10 +21,11 @@ export enum ENV_OPTIONAL {
     URL_PATH = 'FLYINGFISH_URL_PATH',
     SERVER_HOST = 'FLYINGFISH_SERVER_HOST',
     SERVER_PORT = 'FLYINGFISH_SERVER_PORT',
-    SERVER_PROTOCOL = 'FLYINGFISH_SERVER_PROTOCOL'
+    SERVER_PROTOCOL = 'FLYINGFISH_SERVER_PROTOCOL',
+    LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL'
 }
 
-export class Config {
+export class Config extends ConfigCore<ConfigOptions> {
 
     public static readonly DEFAULT_URL_PATH = '/himhip/update';
     public static readonly DEFAULT_SERVER_HOST = '10.103.0.3';
@@ -31,31 +33,21 @@ export class Config {
     public static readonly DEFAULT_SERVER_PROTOCOL = 'https';
 
     /**
-     * global config
-     * @private
+     * getInstance
      */
-    private static _config: ConfigOptions | null = null;
+    public static getInstance(): Config {
+        if (!ConfigCore._instance) {
+            ConfigCore._instance = new Config();
+        }
 
-    /**
-     * set
-     * @param config
-     */
-    public static set(config: ConfigOptions): void {
-        this._config = config;
-    }
-
-    /**
-     * get
-     */
-    public static get(): ConfigOptions | null {
-        return this._config;
+        return ConfigCore._instance as Config;
     }
 
     /**
      * load
      * @param args
      */
-    public static async load(args: FlyingFishArgs): Promise<ConfigOptions | null> {
+    public async load(args: FlyingFishArgs): Promise<ConfigOptions | null> {
         const config: ConfigOptions = {
             secret: '',
             url_path: Config.DEFAULT_URL_PATH,
@@ -117,8 +109,15 @@ export class Config {
             if (process.env[ENV_OPTIONAL.SERVER_PROTOCOL]) {
                 config.server_protocol = process.env[ENV_OPTIONAL.SERVER_PROTOCOL];
             }
+
+            if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
+                config.logging = {
+                    level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
+                };
+            }
         }
 
+        this.set(config!);
         return config;
     }
 

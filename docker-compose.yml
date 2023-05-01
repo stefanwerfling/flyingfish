@@ -77,12 +77,12 @@ services:
       - "${HTTPSERVER_PORT}:${HTTPSERVER_PORT}"
       - "1900:1900"
       - "10901:10901"
-      - "9229:9229"
-    command:
-      - node
-      - "--inspect-brk=0.0.0.0:9229"
-      - "dist/main.js"
-      - "--envargs=1"
+#      - "9229:9229"
+#    command:
+#      - node
+#      - "--inspect-brk=0.0.0.0:9229"
+#      - "dist/main.js"
+#      - "--envargs=1"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
@@ -97,11 +97,13 @@ services:
   himhip:
     image: flyingfish_himip:v1.0
     build:
-      context: ./himhip
+      context: ./
+      dockerfile: ./himhip/Dockerfile
     container_name: flyingfish_himhip
     environment:
       FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_SERVER_PORT: "${HTTPSERVER_PORT}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
     network_mode: host
     cap_add:
       - ALL
