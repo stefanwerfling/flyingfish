@@ -2,11 +2,12 @@ import {readFileSync} from 'fs';
 import path from 'path';
 import process from 'process';
 import {ExtractSchemaResultType, SchemaErrors, Vts} from 'vts';
+import {Config as ConfigCore, SchemaConfigOptions as SchemaConfigOptionsCore} from 'flyingfish_core';
 
 /**
  * ConfigOptions
  */
-export const SchemaConfigOptions = Vts.object({
+export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
     db: Vts.object({
         mysql: Vts.object({
             host: Vts.string(),
@@ -30,13 +31,14 @@ export enum ENV_DUTY {
 
 export enum ENV_OPTIONAL {
     DB_MYSQL_HOST = 'FLYINGFISH_DB_MYSQL_HOST',
-    DB_MYSQL_PORT = 'FLYINGFISH_DB_MYSQL_PORT'
+    DB_MYSQL_PORT = 'FLYINGFISH_DB_MYSQL_PORT',
+    LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL'
 }
 
 /**
  * Config
  */
-export class Config {
+export class Config extends ConfigCore<ConfigOptions> {
 
     public static readonly DEFAULT_CONFIG_FILE = 'config.json';
     public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
@@ -45,24 +47,14 @@ export class Config {
     public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
 
     /**
-     * global config
-     * @private
+     * getInstance
      */
-    private static _config: ConfigOptions | null = null;
+    public static getInstance(): Config {
+        if (!ConfigCore._instance) {
+            ConfigCore._instance = new Config();
+        }
 
-    /**
-     * set
-     * @param config
-     */
-    public static set(config: ConfigOptions): void {
-        this._config = config;
-    }
-
-    /**
-     * get
-     */
-    public static get(): ConfigOptions | null {
-        return this._config;
+        return ConfigCore._instance as Config;
     }
 
     /**
@@ -70,7 +62,7 @@ export class Config {
      * @param configFile
      * @param useEnv
      */
-    public static async load(
+    public async load(
         configFile: string | null = null,
         useEnv: boolean = false
     ): Promise<ConfigOptions | null> {
@@ -158,6 +150,12 @@ export class Config {
                 config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
                     Config.DEFAULT_DB_MYSQL_PORT;
             }
+
+            if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
+                config.logging = {
+                    level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
+                };
+            }
         }
 
         // -------------------------------------------------------------------------------------------------------------
@@ -174,6 +172,7 @@ export class Config {
             }
         }
 
+        this.set(config!);
         return config;
     }
 

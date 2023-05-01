@@ -16,6 +16,8 @@ WORKDIR /opt/core
 
 COPY ./core/ ./
 
+# Copy/Install HimHip --------------------------------------------------------------------------------------------------
+
 WORKDIR /opt/app
 
 COPY ./himhip/ ./

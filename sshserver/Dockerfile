@@ -4,16 +4,24 @@ RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y openssh-client
 
+RUN mkdir -p /opt/core
 RUN mkdir -p /opt/app
-
 RUN mkdir -p /opt/app/dist
 RUN mkdir -p /opt/app/node_modules
 RUN mkdir -p /var/lib/flyingfish
 RUN mkdir -p /var/lib/flyingfish/ssh
 
+# Copy/Install Core ----------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/core
+
+COPY ./core/ ./
+
+# Copy/Install sshserver -----------------------------------------------------------------------------------------------
+
 WORKDIR /opt/app
 
-COPY ./ ./
+COPY ./sshserver ./
 
 RUN rm -R Dockerfile | true
 RUN rm -R node_modules | true

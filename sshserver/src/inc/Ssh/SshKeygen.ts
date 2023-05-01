@@ -1,4 +1,5 @@
 import {spawn} from 'child_process';
+import {Logger} from 'flyingfish_core';
 import fs from 'fs';
 
 /**
@@ -31,11 +32,11 @@ export class SshKeygen {
         ]);
 
         process.stdout!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().info(buf.toString());
         });
 
         process.stderr!.on('data', (buf) => {
-            console.log(buf.toString());
+            Logger.getLogger().error(buf.toString());
         });
 
         await new Promise((resolve) => {

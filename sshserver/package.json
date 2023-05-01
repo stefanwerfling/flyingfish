@@ -33,6 +33,7 @@
     "ssh2": "^1.9.0",
     "typeorm": "^0.3.15",
     "uuid": "^9.0.0",
-    "vts": "git+https://github.com/OpenSourcePKG/vts.git"
+    "vts": "git+https://github.com/OpenSourcePKG/vts.git",
+    "flyingfish_core": "file:../core"
   }
 }

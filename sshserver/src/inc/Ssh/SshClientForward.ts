@@ -1,3 +1,4 @@
+import {Logger} from 'flyingfish_core';
 import {ServerChannel, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
 import {SshClient} from './SshClient.js';
 
@@ -58,14 +59,14 @@ export class SshClientForward implements ISshClientForward {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public start(accept?: () => ServerChannel, reject?: () => boolean): void {
-        console.log('SshClientForward::start: Please overwrite start!');
+        Logger.getLogger().error('SshClientForward::start: Please overwrite start!');
     }
 
     /**
      * close
      */
     public close(): void {
-        console.log('SshClientForward::close: Please overwrite close!');
+        Logger.getLogger().error('SshClientForward::close: Please overwrite close!');
     }
 
 }

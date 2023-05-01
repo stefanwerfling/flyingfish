@@ -1,3 +1,4 @@
+import {Args, Logger} from 'flyingfish_core';
 import * as fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
@@ -5,13 +6,13 @@ import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper.js';
 import {SshServer} from './inc/Ssh/SshServer.js';
-import {Args} from './inc/Env/Args.js';
+import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 
 /**
  * Main
  */
 (async(): Promise<void> => {
-    const argv = Args.get();
+    const argv = Args.get(SchemaFlyingFishArgs);
     let configfile = null;
 
     if (argv.config) {
@@ -42,15 +43,19 @@ import {Args} from './inc/Env/Args.js';
         useEnv = true;
     }
 
-    const tconfig = await Config.load(configfile, useEnv);
+    const tconfig = await Config.getInstance().load(configfile, useEnv);
 
     if (tconfig === null) {
         console.log(`Configloader is return empty config, please check your configfile: ${configfile}`);
         return;
     }
 
-    // set global
-    Config.set(tconfig);
+    // -----------------------------------------------------------------------------------------------------------------
+
+    // init logger
+    Logger.getLogger();
+
+    Logger.getLogger().info('Start FlyingFish SSH Server ...');
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -79,7 +84,7 @@ import {Args} from './inc/Env/Args.js';
         });
 
     } catch (error) {
-        console.log('Error while connecting to the database', error);
+        Logger.getLogger().error('Error while connecting to the database', error);
         return;
     }
 

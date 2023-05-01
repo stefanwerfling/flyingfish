@@ -1,3 +1,4 @@
+import {Logger} from 'flyingfish_core';
 import fs from 'fs';
 import ssh2, {ClientInfo, Connection, Server as Ssh2Server} from 'ssh2';
 import {SshClient} from './SshClient.js';
@@ -32,10 +33,10 @@ export class SshServer {
             const hostKeyRsaFile = './ssh/ssh_host_rsa_key';
 
             if (!fs.existsSync(hostKeyRsaFile)) {
-                console.log(`SshServer::getInstance: Keyfile not found, create new: ${hostKeyRsaFile}`);
+                Logger.getLogger().info(`SshServer::getInstance: Keyfile not found, create new: ${hostKeyRsaFile}`);
 
                 if (!await SshKeygen.create(hostKeyRsaFile)) {
-                    console.log('SshServer::getInstance: Keyfile can not create!');
+                    Logger.getLogger().error('SshServer::getInstance: Keyfile can not create!');
 
                     throw new Error(`SshServer::getInstance: Keyfile can not create! ${hostKeyRsaFile}`);
                 }
@@ -113,7 +114,7 @@ export class SshServer {
      */
     public listen(): void {
         this._server.listen(22, '0.0.0.0', () => {
-            console.log(`SshServer::listen: Listening on port ${this._server.address().port}`);
+            Logger.getLogger().info(`SshServer::listen: Listening on port ${this._server.address().port}`);
         });
     }
 

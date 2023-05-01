@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcrypt';
+import {Logger} from 'flyingfish_core';
 import {AuthContext, ClientInfo, Connection, ServerChannel, Session, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
 import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
 import {SshUser as SshUserDB} from '../Db/MariaDb/Entity/SshUser.js';
@@ -141,7 +142,7 @@ export class SshClient {
             if (user) {
                 // empty password not supported
                 if (user.password === '') {
-                    console.log('SshClient::_authentication: empty password not allowed!');
+                    Logger.getLogger().error('SshClient::_authentication: empty password not allowed!');
                     ctx.reject();
                     return;
                 }
@@ -172,15 +173,15 @@ export class SshClient {
                         return;
                     }
 
-                    console.log(`SshClient::_authentication: port not found in DB by id: ${user.id}`);
+                    Logger.getLogger().error(`SshClient::_authentication: port not found in DB by id: ${user.id}`);
                 } else {
-                    console.log('SshClient::_authentication: user password is wrong!');
+                    Logger.getLogger().error('SshClient::_authentication: user password is wrong!');
                 }
             } else {
-                console.log(`SshClient::_authentication: user not found "${ctx.username}"!`);
+                Logger.getLogger().warn(`SshClient::_authentication: user not found "${ctx.username}"!`);
             }
         } else {
-            console.log(`SshClient::_authentication: method "${ctx.method}" not supproted!`);
+            Logger.getLogger().warn(`SshClient::_authentication: method "${ctx.method}" not supproted!`);
         }
 
         ctx.reject();
@@ -252,7 +253,7 @@ export class SshClient {
             this._shellChannel.write('\n');
         }
 
-        console.log(`SshClientHander::logToClient:(${this._clientInfo.ip}): ${msg}`);
+        Logger.getLogger().info(`SshClientHander::logToClient:(${this._clientInfo.ip}): ${msg}`);
     }
 
     /**
@@ -309,7 +310,7 @@ export class SshClient {
                     break;
 
                 default:
-                    console.log('SshClient::_request: SshClientForward type/port not found!');
+                    Logger.getLogger().error('SshClient::_request: SshClientForward type/port not found!');
             }
         } else if (reject) {
             reject();
@@ -345,13 +346,13 @@ export class SshClient {
      */
     public close(hadError: boolean): void {
         if (hadError) {
-            console.log('SshClient::_close: Client close with error!');
+            Logger.getLogger().error('SshClient::_close: Client close with error!');
         }
 
         if (this._clientForward) {
             this._clientForward.close();
 
-            console.log('SshClient::_close: Close forward out server');
+            Logger.getLogger().info('SshClient::_close: Close forward out server');
         }
     }
 

@@ -144,7 +144,8 @@ services:
   sshremote:
     image: flyingfish_ssh:v1.0
     build:
-      context: ./sshserver/
+      context: ./
+      dockerfile: ./sshserver/Dockerfile
     container_name: flyingfish_ssh
     volumes:
       - flyingfishSsh:/opt/app/ssh:rw
