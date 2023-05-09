@@ -10,3 +10,7 @@ export {StatusCodes} from './inc/Server/Routes/StatusCodes.js';
 export {DateHelper} from './inc/Utils/DateHelper.js';
 export {FileHelper} from './inc/Utils/FileHelper.js';
 export {SimpleProcessAwait} from './inc/Utils/SimpleProcessAwait.js';
+
+export {PluginDefinition, SchemaPluginDefinition} from './inc/PluginSystem/PluginDefinition.js';
+export {Plugin} from './inc/PluginSystem/Plugin.js';
+export {PluginInformation, PluginManager} from './inc/PluginSystem/PluginManager.js';
