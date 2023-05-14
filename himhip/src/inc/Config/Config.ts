@@ -3,6 +3,9 @@ import {ExtractSchemaResultType, Vts} from 'vts';
 import {FlyingFishArgs} from '../Env/Args.js';
 import {Config as ConfigCore, SchemaConfigOptions as SchemaConfigOptionsCore} from 'flyingfish_core';
 
+/**
+ * ConfigOptions
+ */
 export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
     secret: Vts.string(),
     url_path: Vts.string(),
@@ -13,10 +16,16 @@ export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
 
 export type ConfigOptions = ExtractSchemaResultType<typeof SchemaConfigOptions>;
 
+/**
+ * env duty
+ */
 export enum ENV_DUTY {
     SECRET = 'FLYINGFISH_SECRET'
 }
 
+/**
+ * env optional
+ */
 export enum ENV_OPTIONAL {
     URL_PATH = 'FLYINGFISH_URL_PATH',
     SERVER_HOST = 'FLYINGFISH_SERVER_HOST',
@@ -25,6 +34,9 @@ export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL'
 }
 
+/**
+ * Config
+ */
 export class Config extends ConfigCore<ConfigOptions> {
 
     public static readonly DEFAULT_URL_PATH = '/himhip/update';

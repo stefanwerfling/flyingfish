@@ -21,6 +21,7 @@ import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
 import {DBHelper} from '../Db/DBHelper.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
+import {NginxLogFormatJson} from '../Nginx/NginxLogFormatJson.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
 import {Location} from '../Nginx/Config/Location.js';
@@ -30,6 +31,7 @@ import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream
 import {NginxServer} from '../Nginx/NginxServer.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
 import {Settings} from '../Settings/Settings.js';
+import {SysLogServer} from '../SysLogServer/SysLogServer.js';
 
 /**
  * HttpLocationCollect
@@ -83,6 +85,8 @@ export class NginxService {
 
     public static readonly LOCATION_STATUS = '/flyingfish_status';
 
+    public static readonly SYSLOG_TAG = 'nginx';
+
     public static readonly DEFAULT_DOMAIN_NAME = '_';
     public static readonly DEFAULT_IP_LOCAL = '127.0.0.1';
     public static readonly DEFAULT_IP_PUBLIC = '0.0.0.0';
@@ -103,6 +107,12 @@ export class NginxService {
 
         return NginxService._instance;
     }
+
+    /**
+     * nginx private syslog server for logs controll
+     * @private
+     */
+    private _syslog: SysLogServer | null = null;
 
     /**
      * _loadConfig
@@ -343,14 +353,14 @@ export class NginxService {
 
         const tupstreams: string[] = [];
 
-        streamMap.forEach((streamCollect, listenPort) => {
+        streamMap.forEach((streamCollects, listenPort) => {
             const varName = `$ffstream${listenPort}`;
             const aMap = new NginxMap('$ssl_preread_server_name', varName);
             let defaultMapDomain: string|null = null;
             let procMap: NginxMap|null = null;
 
-            streamCollect.domains.forEach((collectStream, domainName) => {
-                const tstream = collectStream.stream;
+            streamCollects.domains.forEach((streamCollect, domainName) => {
+                const tstream = streamCollect.stream;
                 let upstreamName = 'ffus_';
 
                 if (tstream.alias_name !== '') {
@@ -365,15 +375,15 @@ export class NginxService {
                     const upStream = new Upstream(upstreamName);
                     upStream.setAlgorithm(tstream.load_balancing_algorithm as UpstreamLoadBalancingAlgorithm);
 
-                    switch (collectStream.stream.destination_type) {
+                    switch (streamCollect.stream.destination_type) {
 
                         // listen --------------------------------------------------------------------------------------
                         case NginxStreamDestinationType.listen:
-                            if (collectStream.destination_listen) {
+                            if (streamCollect.destination_listen) {
                                 // fill default listen destination
                                 upStream.addServer({
                                     address: NginxService.DEFAULT_IP_LOCAL,
-                                    port: collectStream.destination_listen.listen_port,
+                                    port: streamCollect.destination_listen.listen_port,
                                     weight: 0,
                                     max_fails: 0,
                                     fail_timeout: 0
@@ -385,8 +395,8 @@ export class NginxService {
 
                         // upstream ------------------------------------------------------------------------------------
                         case NginxStreamDestinationType.upstream:
-                            if (collectStream.upstreams.length > 0) {
-                                for (const tupstream of collectStream.upstreams) {
+                            if (streamCollect.upstreams.length > 0) {
+                                for (const tupstream of streamCollect.upstreams) {
                                     upStream.addServer({
                                         address: tupstream.destination_address,
                                         port: tupstream.destination_port,
@@ -402,7 +412,7 @@ export class NginxService {
 
                         // ssh r ---------------------------------------------------------------------------------------
                         case NginxStreamDestinationType.ssh_r:
-                            switch (collectStream.stream.ssh_r_type) {
+                            switch (streamCollect.stream.ssh_r_type) {
 
                                 // ssh r in ----------------------------------------------------------------------------
                                 case NginxStreamSshR.in:
@@ -428,11 +438,11 @@ export class NginxService {
 
                                 // ssh r out ---------------------------------------------------------------------------
                                 case NginxStreamSshR.out:
-                                    if (collectStream.sshport) {
+                                    if (streamCollect.sshport) {
                                         // fill default ssh server
                                         upStream.addServer({
                                             address: Config.getInstance().get()?.sshserver?.ip!,
-                                            port: collectStream.sshport.port,
+                                            port: streamCollect.sshport.port,
                                             weight: 0,
                                             max_fails: 0,
                                             fail_timeout: 0
@@ -453,7 +463,7 @@ export class NginxService {
 
                         // ssh l ---------------------------------------------------------------------------------------
                         case NginxStreamDestinationType.ssh_l:
-                            if (collectStream.sshport) {
+                            if (streamCollect.sshport) {
                                 upstreamName = 'ffus_internsshserver';
                                 upStream.setStreamName(upstreamName);
 
@@ -522,32 +532,44 @@ export class NginxService {
 
             const aServer = new NginxConfServer();
 
-            if ((streamCollect.listen.listen_protocol === ListenProtocolDB.tcp) ||
-                (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+            conf?.getStream().addVariable(`log_format ff_s_accesslogs_${streamCollects.listen.id}`,
+                `escape=json '${NginxLogFormatJson.generateAccessStream(streamCollects.listen.id)}'`);
+
+            if (this._syslog && this._syslog.isRunning()) {
+                aServer.addVariable(
+                    'access_log',
+                    `syslog:server=${this._syslog.getOptions().address}:${this._syslog.getOptions().port},` +
+                    `tag=${NginxService.SYSLOG_TAG} ` +
+                    `ff_s_accesslogs_${streamCollects.listen.id}`
+                );
+            }
+
+            if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
+                (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
                 aServer.addListen(new Listen(listenPort));
             }
 
-            if ((streamCollect.listen.listen_protocol === ListenProtocolDB.udp) ||
-                (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+            if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
+                (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
                 aServer.addListen(new Listen(listenPort, '', false, false, ListenProtocol.udp));
             }
 
-            if (streamCollect.listen.enable_ipv6) {
-                if ((streamCollect.listen.listen_protocol === ListenProtocolDB.tcp) ||
-                    (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+            if (streamCollects.listen.enable_ipv6) {
+                if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
+                    (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
                     aServer.addListen(new Listen(listenPort, '[::]'));
                 }
 
-                if ((streamCollect.listen.listen_protocol === ListenProtocolDB.udp) ||
-                    (streamCollect.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+                if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
+                    (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
                     aServer.addListen(new Listen(listenPort, '[::]', false, false, ListenProtocol.udp));
                 }
             }
 
-            if (streamCollect.listen.enable_address_check) {
+            if (streamCollects.listen.enable_address_check) {
                 aServer.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
                 aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
-                aServer.addVariable('set $ff_listen_id', `${streamCollect.listen.id}`);
+                aServer.addVariable('set $ff_listen_id', `${streamCollects.listen.id}`);
                 aServer.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
                 aServer.addVariable('js_access', 'mainstream.accessAddressStream');
             }
@@ -571,6 +593,22 @@ export class NginxService {
                 const ssl_enable = httpSubCollect.http.ssl_enable;
 
                 const aServer = new NginxConfServer();
+
+                // log -------------------------------------------------------------------------------------------------
+
+                conf?.getHttp().addVariable(
+                    `log_format ff_h_accesslogs_${httpSubCollect.http.id}`,
+                    `escape=json '${NginxLogFormatJson.generateAccessHtml(httpSubCollect.http.id)}'`
+                );
+
+                if (this._syslog && this._syslog.isRunning()) {
+                    aServer.addVariable(
+                        'access_log',
+                        `syslog:server=${this._syslog.getOptions().address}:${this._syslog.getOptions().port},` +
+                        `tag=${NginxService.SYSLOG_TAG} ` +
+                        `ff_h_accesslogs_${httpSubCollect.http.id}`
+                    );
+                }
 
                 // secure variables ------------------------------------------------------------------------------------
 
@@ -851,6 +889,20 @@ export class NginxService {
                 true
             ));
 
+            conf?.getHttp().addVariable(
+                'log_format ff_h_accesslogs_0',
+                `escape=json '${NginxLogFormatJson.generateAccessHtml(0)}'`
+            );
+
+            if (this._syslog && this._syslog.isRunning()) {
+                dServer.addVariable(
+                    'access_log',
+                    `syslog:server=${this._syslog.getOptions().address}:${this._syslog.getOptions().port},` +
+                    `tag=${NginxService.SYSLOG_TAG} ` +
+                    'ff_h_accesslogs_0'
+                );
+            }
+
             dServer.addErrorPage({
                 code: '500 502 503 504',
                 uri: '/50x.html'
@@ -880,6 +932,38 @@ export class NginxService {
     }
 
     /**
+     * _startSysLog
+     * @protected
+     */
+    protected _startSysLog(): void {
+        this._syslog = new SysLogServer();
+        this._syslog.setOnListen((sysLogServer) => {
+            Logger.getLogger().info(`NginxService::_startSysLog::SysLogServer::setOnListen: Liste started on: ${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`);
+        });
+
+        this._syslog.setOnError((sysLogServer, err) => {
+            Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnError: ');
+            Logger.getLogger().error(err);
+        });
+
+        this._syslog.setOnMessage((sysLogServer, msg) => {
+            Logger.getLogger().info(`NginxService::_startSysLog::SysLogServer::setOnMessage: ${msg.toString()}`);
+
+            const parts = msg.toString().split(`${NginxService.SYSLOG_TAG}: `);
+
+            try {
+                const nginxLog = JSON.parse(parts[1]);
+                console.log(nginxLog);
+            } catch (e) {
+                Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnMessage: ');
+                Logger.getLogger().error(e);
+            }
+        });
+
+        this._syslog.listen();
+    }
+
+    /**
      * start
      */
     public async start(): Promise<void> {
@@ -901,6 +985,7 @@ export class NginxService {
             }
         }
 
+        this._startSysLog();
         await this._loadConfig();
         NginxServer.getInstance().start();
 
