@@ -34,6 +34,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.nginxsrc
+          platforms: linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish.outputs.tags }}
           labels: ${{ steps.meta_flyingfish.outputs.labels }}
@@ -49,6 +50,7 @@ jobs:
         with:
           context: ./
           file: ./sshserver/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_ssh.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_ssh.outputs.labels }}
@@ -64,6 +66,7 @@ jobs:
         with:
           context: ./
           file: ./himhip/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_himhip.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_himhip.outputs.labels }}
