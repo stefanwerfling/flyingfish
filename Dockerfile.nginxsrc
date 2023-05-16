@@ -71,6 +71,7 @@ RUN mkdir -p /opt/core
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/frontend
 RUN mkdir -p /opt/app/nginx
+RUN mkdir -p /opt/app/nginx/html
 RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
 

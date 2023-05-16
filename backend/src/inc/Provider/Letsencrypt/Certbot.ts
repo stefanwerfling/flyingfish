@@ -1,6 +1,7 @@
 import {spawn} from 'child_process';
 import {DateHelper, Logger} from 'flyingfish_core';
-import fs from 'fs';
+import {stat, mkdir} from 'fs/promises';
+import path from 'path';
 import {ISsl} from '../ISsl.js';
 
 /**
@@ -22,6 +23,12 @@ export class Certbot implements ISsl {
      * @protected
      */
     protected _config: string = '/etc/letsencrypt.ini';
+
+    /**
+     * public www directory
+     * @protected
+     */
+    protected _publicWwwDirectory = '/opt/app/nginx/html/';
 
     /**
      * getName
@@ -58,6 +65,10 @@ export class Certbot implements ISsl {
      * @param keysize
      */
     public async create(domain: string, email: string, keysize: number = 4096): Promise<boolean> {
+        await mkdir(this._publicWwwDirectory, {
+            recursive: true
+        });
+
         const process = spawn(this._command,
             [
                 'certonly',
@@ -70,7 +81,7 @@ export class Certbot implements ISsl {
                 '--email',
                 email,
                 '-w',
-                '/opt/app/nginx/html/',
+                this._publicWwwDirectory,
                 '-d',
                 domain
             ]);
@@ -87,7 +98,7 @@ export class Certbot implements ISsl {
             process.on('close', resolve);
         });
 
-        const isCertExist = Certbot.existCertificate(domain) !== null;
+        const isCertExist = await Certbot.existCertificate(domain) !== null;
 
         if (!isCertExist) {
             Logger.getLogger().error('Certbot::create: cert not create/found.');
@@ -117,11 +128,11 @@ export class Certbot implements ISsl {
      * existCertificate
      * @param domainName
      */
-    public static existCertificate(domainName: string): string|null {
-        const domainDir = `/etc/letsencrypt/live/${domainName}`;
+    public static async existCertificate(domainName: string): Promise<string|null> {
+        const domainDir = path.join('/etc/letsencrypt/live', domainName);
 
-        if (fs.existsSync(domainDir)) {
-            if (fs.existsSync(`${domainDir}/cert.pem`)) {
+        if ((await stat(domainDir)).isDirectory()) {
+            if ((await stat(path.join(domainDir, 'cert.pem'))).isFile()) {
                 return domainDir;
             }
         }
