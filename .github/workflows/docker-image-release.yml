@@ -14,7 +14,13 @@ jobs:
 
     steps:
       - name: Checkout 
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       
       - name: Login to Docker Hub
         if: github.ref_type == 'tag'
@@ -30,10 +36,11 @@ jobs:
           images: ${{ secrets.DOCKER_USERNAME }}/flyingfish
 
       - name: Build and push FlyingFish
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile.nginxsrc
+          platforms: linux/amd64,linux/arm64/v8
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish.outputs.tags }}
           labels: ${{ steps.meta_flyingfish.outputs.labels }}
@@ -45,10 +52,11 @@ jobs:
           images: ${{ secrets.DOCKER_USERNAME }}/flyingfish_ssh
 
       - name: Build and push FlyingFish SSH
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: ./
           file: ./sshserver/Dockerfile
+          platforms: linux/amd64,linux/arm64/v8
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_ssh.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_ssh.outputs.labels }}
@@ -60,10 +68,11 @@ jobs:
           images: ${{ secrets.DOCKER_USERNAME }}/flyingfish_himip
 
       - name: Build and push FlyingFish Himhip
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: ./
           file: ./himhip/Dockerfile
+          platforms: linux/amd64,linux/arm64/v8
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_himhip.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_himhip.outputs.labels }}
