@@ -87,11 +87,9 @@ export class InfluxDbHelper {
      * @protected
      */
     protected static _getQuery(): QueryApi {
-        const queryApi = InfluxDbHelper.getConnection().getQueryApi(
+        return InfluxDbHelper.getConnection().getQueryApi(
             InfluxDbHelper._options.org
         );
-
-        return queryApi;
     }
 
     /**

@@ -8,7 +8,7 @@ import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.
 import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
 import {DnsAnswerNS} from './RecordType/NS.js';
-import {DnsAnswerTlSA, SchemaRecordSettingsTlSA} from './RecordType/TLSA.js';
+import {DnsAnswerTlSA, SchemaRecordSettingsTlSA, TLSACertificateUsage} from './RecordType/TLSA.js';
 import {DnsAnswerTXT} from './RecordType/TXT.js';
 
 /**
@@ -159,7 +159,7 @@ export class Dns2Server {
                                             type: record.dtype,
                                             class: record.dclass,
                                             ttl: record.ttl,
-                                            certificate_usage: parseInt(recordSettings.certificate_usage, 10),
+                                            certificate_usage: parseInt(recordSettings.certificate_usage, 10) ?? TLSACertificateUsage.DOMAIN_ISSUED_CERTIFICATE,
                                             selector: parseInt(recordSettings.selector, 10),
                                             matching_type: parseInt(recordSettings.matching_type, 10),
                                             certificate_association_data: record.dvalue

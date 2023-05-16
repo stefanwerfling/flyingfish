@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {Logger} from 'flyingfish_core';
-import {DBHelper} from '../MariaDb/DBHelper.js';
+import {DBHelper} from './DBHelper.js';
 import {Domain as DomainDB} from './Entity/Domain.js';
 import {ListenCategory, ListenProtocol, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen.js';
 import {NginxStream as NginxStreamDB, NginxStreamDestinationType} from './Entity/NginxStream.js';

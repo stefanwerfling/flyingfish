@@ -57,6 +57,7 @@ export class DBHelper {
     /**
      * getRepository
      * @param target
+     * @param sourceName
      */
     public static getRepository<Entity extends ObjectLiteral>(target: EntityTarget<Entity>, sourceName?: string): Repository<Entity> {
         const dataSource = DBHelper.getDataSource(sourceName);
