@@ -1,7 +1,7 @@
 import {Router} from 'express';
 import {DefaultReturn, DefaultRoute, Logger, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
 import {NginxStream as NginxStreamDB} from '../../inc/Db/MariaDb/Entity/NginxStream.js';
@@ -122,7 +122,12 @@ export class Listen extends DefaultRoute {
 
             if (tListen) {
                 aListen = tListen;
-                Logger.getLogger().silly(`Listen::saveListen: Found listen by id: ${aListen.id}`);
+
+                if (aListen) {
+                    Logger.getLogger().silly(`Listen::saveListen: Found listen by id: ${aListen.id}`);
+                } else {
+                    Logger.getLogger().error(`Listen::saveListen: Not found listen by id: ${data.id}`);
+                }
             } else {
                 return {
                     statusCode: StatusCodes.INTERNAL_ERROR,

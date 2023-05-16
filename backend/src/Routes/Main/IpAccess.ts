@@ -2,7 +2,7 @@ import {Router} from 'express';
 import {DateHelper, DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {In} from 'typeorm';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {IpWhitelist as IpWhitelistDB} from '../../inc/Db/MariaDb/Entity/IpWhitelist.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../../inc/Db/MariaDb/Entity/IpBlacklistCategory.js';

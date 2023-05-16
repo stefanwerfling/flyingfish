@@ -3,7 +3,7 @@ import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import Path from 'path';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {Certificate} from '../../inc/Cert/Certificate.js';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {Certbot} from '../../inc/Provider/Letsencrypt/Certbot.js';
@@ -94,7 +94,7 @@ export class Ssl extends DefaultRoute {
             });
 
             if (domain) {
-                const sslCert = Certbot.existCertificate(domain.domainname);
+                const sslCert = await Certbot.existCertificate(domain.domainname);
 
                 if (sslCert) {
                     const cert = new Certificate(Path.join(sslCert, 'cert.pem'));

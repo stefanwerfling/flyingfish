@@ -1,7 +1,10 @@
 import {Logger} from 'flyingfish_core';
 import fs from 'fs';
 import * as Path from 'path';
+import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
+import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
+import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
@@ -18,10 +21,10 @@ import {
 } from '../Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream.js';
 import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
-import {DBHelper} from '../Db/DBHelper.js';
+import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
-import {NginxLogFormatJson} from '../Nginx/NginxLogFormatJson.js';
+import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../Nginx/NginxLogFormatJson.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
 import {Location} from '../Nginx/Config/Location.js';
@@ -121,25 +124,30 @@ export class NginxService {
     private async _loadConfig(): Promise<void> {
         const conf = NginxServer.getInstance().getConf();
 
+        if (conf === null) {
+            Logger.getLogger().error('NginxService::_loadConfig: Erro config object is empty!');
+            return;
+        }
+
         if (process.env.FLYINGFISH_NGINX_MODULE_MODE_DYN) {
             switch (process.env.FLYINGFISH_NGINX_MODULE_MODE_DYN) {
                 case '0':
                     break;
 
                 default:
-                    conf?.addModule('/usr/lib/nginx/modules/ngx_stream_js_module.so');
-                    conf?.addModule('/usr/lib/nginx/modules/ngx_http_js_module.so');
+                    conf.addModule('/usr/lib/nginx/modules/ngx_stream_js_module.so');
+                    conf.addModule('/usr/lib/nginx/modules/ngx_http_js_module.so');
             }
         }
 
-        conf?.resetStream();
-        conf?.resetHttp();
+        conf.resetStream();
+        conf.resetHttp();
 
         // add nginx global variables ----------------------------------------------------------------------------------
 
-        conf?.addVariable('daemon', 'off');
-        conf?.addVariable('worker_processes', 'auto');
-        conf?.addVariable('pcre_jit', 'on');
+        conf.addVariable('daemon', 'off');
+        conf.addVariable('worker_processes', 'auto');
+        conf.addVariable('pcre_jit', 'on');
 
         // set nginx events --------------------------------------------------------------------------------------------
 
@@ -150,42 +158,42 @@ export class NginxService {
             Settings.NGINX_WORKER_CONNECTIONS_DEFAULT
         ));
 
-        conf?.addVariable(events.getName(), events);
+        conf.addVariable(events.getName(), events);
 
         // nginx stream variables --------------------------------------------------------------------------------------
 
-        conf?.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/mainstream.js');
+        conf.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/mainstream.js');
 
         const nginxResolver = await Settings.getSetting(
             Settings.NGINX_RESOLVER,
             Settings.NGINX_RESOLVER_DEFAULT
         );
 
-        conf?.getStream().addVariable('resolver', `${nginxResolver} valid=1s`);
+        conf.getStream().addVariable('resolver', `${nginxResolver} valid=1s`);
 
         // nginx http variables ----------------------------------------------------------------------------------------
 
-        conf?.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/mainhttp.js');
-        conf?.getHttp().addVariable('default_type', 'application/octet-stream');
-        conf?.getHttp().addVariable('sendfile', 'on');
-        conf?.getHttp().addVariable('server_tokens', 'off');
-        conf?.getHttp().addVariable('tcp_nopush', 'on');
-        conf?.getHttp().addVariable('tcp_nodelay', 'on');
-        conf?.getHttp().addVariable('client_body_temp_path', '/opt/app/nginx/body 1 2');
-        conf?.getHttp().addVariable('keepalive_timeout', '90s');
-        conf?.getHttp().addVariable('proxy_connect_timeout', '90s');
-        conf?.getHttp().addVariable('proxy_send_timeout', '90s');
-        conf?.getHttp().addVariable('proxy_read_timeout', '90s');
-        conf?.getHttp().addVariable('ssl_prefer_server_ciphers', 'on');
-        conf?.getHttp().addVariable('gzip', 'on');
+        conf.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/mainhttp.js');
+        conf.getHttp().addVariable('default_type', 'application/octet-stream');
+        conf.getHttp().addVariable('sendfile', 'on');
+        conf.getHttp().addVariable('server_tokens', 'off');
+        conf.getHttp().addVariable('tcp_nopush', 'on');
+        conf.getHttp().addVariable('tcp_nodelay', 'on');
+        conf.getHttp().addVariable('client_body_temp_path', '/opt/app/nginx/body 1 2');
+        conf.getHttp().addVariable('keepalive_timeout', '90s');
+        conf.getHttp().addVariable('proxy_connect_timeout', '90s');
+        conf.getHttp().addVariable('proxy_send_timeout', '90s');
+        conf.getHttp().addVariable('proxy_read_timeout', '90s');
+        conf.getHttp().addVariable('ssl_prefer_server_ciphers', 'on');
+        conf.getHttp().addVariable('gzip', 'on');
 
         /*
-         * conf?.getHttp().addVariable('proxy_ignore_client_abort', 'off');
-         * conf?.getHttp().addVariable('client_max_body_size', '2000m');
-         * conf?.getHttp().addVariable('server_names_hash_bucket_size', '1024');
-         * conf?.getHttp().addVariable('proxy_http_version', '1.1');
-         * conf?.getHttp().addVariable('proxy_set_header Accept-Encoding', '""');
-         * conf?.getHttp().addVariable('proxy_cache', 'off');
+         * conf.getHttp().addVariable('proxy_ignore_client_abort', 'off');
+         * conf.getHttp().addVariable('client_max_body_size', '2000m');
+         * conf.getHttp().addVariable('server_names_hash_bucket_size', '1024');
+         * conf.getHttp().addVariable('proxy_http_version', '1.1');
+         * conf.getHttp().addVariable('proxy_set_header Accept-Encoding', '""');
+         * conf.getHttp().addVariable('proxy_cache', 'off');
          */
 
         // vars --------------------------------------------------------------------------------------------------------
@@ -353,13 +361,25 @@ export class NginxService {
 
         const tupstreams: string[] = [];
 
-        streamMap.forEach((streamCollects, listenPort) => {
+        for (const listenPort of streamMap.keys()) {
+            const streamCollects = streamMap.get(listenPort);
+
+            if (streamCollects === undefined) {
+                continue;
+            }
+
             const varName = `$ffstream${listenPort}`;
             const aMap = new NginxMap('$ssl_preread_server_name', varName);
             let defaultMapDomain: string|null = null;
             let procMap: NginxMap|null = null;
 
-            streamCollects.domains.forEach((streamCollect, domainName) => {
+            for (const domainName of streamCollects.domains.keys()) {
+                const streamCollect = streamCollects.domains.get(domainName);
+
+                if (streamCollect === undefined) {
+                    continue;
+                }
+
                 const tstream = streamCollect.stream;
                 let upstreamName = 'ffus_';
 
@@ -389,7 +409,9 @@ export class NginxService {
                                     fail_timeout: 0
                                 });
                             } else {
-                                Logger.getLogger().silly(`NginxService::_loadConfig: destination listen not found by domain: ${domainName}`);
+                                Logger.getLogger().silly(
+                                    `NginxService::_loadConfig: destination listen not found by domain: ${domainName}`
+                                );
                             }
                             break;
 
@@ -406,7 +428,9 @@ export class NginxService {
                                     });
                                 }
                             } else {
-                                Logger.getLogger().silly(`NginxService::_loadConfig: None upstream found by domain: ${domainName}`);
+                                Logger.getLogger().silly(
+                                    `NginxService::_loadConfig: None upstream found by domain: ${domainName}`
+                                );
                             }
                             break;
 
@@ -509,11 +533,11 @@ export class NginxService {
                             `NginxService::_loadConfig: upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`
                         );
 
-                        return;
+                        continue;
                     }
 
-                    if (!conf?.getStream().hashUpstream(upStream.getStreamName())) {
-                        conf?.getStream().addUpstream(upStream);
+                    if (!conf.getStream().hashUpstream(upStream.getStreamName())) {
+                        conf.getStream().addUpstream(upStream);
                     }
                 }
 
@@ -522,17 +546,17 @@ export class NginxService {
                 } else {
                     aMap.addVariable(`${domainName}`, upstreamName);
                 }
-            });
+            }
 
             if (defaultMapDomain !== null) {
                 aMap.addVariable('default', defaultMapDomain);
             }
 
-            conf?.getStream().addMap(aMap);
+            conf.getStream().addMap(aMap);
 
             const aServer = new NginxConfServer();
 
-            conf?.getStream().addVariable(`log_format ff_s_accesslogs_${streamCollects.listen.id}`,
+            conf.getStream().addVariable(`log_format ff_s_accesslogs_${streamCollects.listen.id}`,
                 `escape=json '${NginxLogFormatJson.generateAccessStream(streamCollects.listen.id)}'`);
 
             if (this._syslog && this._syslog.isRunning()) {
@@ -579,24 +603,36 @@ export class NginxService {
             if (procMap !== null && procMap as NginxMap) {
                 const tprocMap: NginxMap = procMap;
 
-                conf?.getStream().addMap(tprocMap);
+                conf.getStream().addMap(tprocMap);
                 aServer.addVariable('proxy_pass', tprocMap.getDestinationVar());
             } else {
                 aServer.addVariable('proxy_pass', varName);
             }
 
-            conf?.getStream().addServer(aServer);
-        });
+            conf.getStream().addServer(aServer);
+        }
 
-        httpMap.forEach((domainHttps, listenPort) => {
-            domainHttps.domains.forEach((httpSubCollect, domainName) => {
+        for await (const listenPort of httpMap.keys()) {
+            const domainHttps = httpMap.get(listenPort);
+
+            if (domainHttps === undefined) {
+                continue;
+            }
+
+            for await (const domainName of domainHttps.domains.keys()) {
+                const httpSubCollect = domainHttps.domains.get(domainName);
+
+                if (httpSubCollect === undefined) {
+                    continue;
+                }
+
                 const ssl_enable = httpSubCollect.http.ssl_enable;
 
                 const aServer = new NginxConfServer();
 
                 // log -------------------------------------------------------------------------------------------------
 
-                conf?.getHttp().addVariable(
+                conf.getHttp().addVariable(
                     `log_format ff_h_accesslogs_${httpSubCollect.http.id}`,
                     `escape=json '${NginxLogFormatJson.generateAccessHtml(httpSubCollect.http.id)}'`
                 );
@@ -617,7 +653,7 @@ export class NginxService {
                 // ssl use ---------------------------------------------------------------------------------------------
 
                 if (ssl_enable) {
-                    const sslCert = Certbot.existCertificate(domainName);
+                    const sslCert = await Certbot.existCertificate(domainName);
 
                     if (sslCert) {
                         aServer.addVariable('ssl_protocols', 'TLSv1 TLSv1.1 TLSv1.2');
@@ -674,7 +710,7 @@ export class NginxService {
                         aServer.addContext(domainIf);
                     } else {
                         Logger.getLogger().warn(`NginxService::_loadConfig: Certificat for Domain '${domainName}' not found and ignore settings.`);
-                        return;
+                        continue;
                     }
                 }
 
@@ -834,10 +870,10 @@ export class NginxService {
                         aServer.addLocation(location);
                     }
 
-                    conf?.getHttp().addServer(aServer);
+                    conf.getHttp().addServer(aServer);
                 }
-            });
-        });
+            }
+        }
 
         // set status server -------------------------------------------------------------------------------------------
 
@@ -866,7 +902,7 @@ export class NginxService {
             locStatus.addVariable('deny', 'all');
             sServer.addLocation(locStatus);
 
-            conf?.getHttp().addServer(sServer);
+            conf.getHttp().addServer(sServer);
         }
 
         // set default server ------------------------------------------------------------------------------------------
@@ -889,7 +925,7 @@ export class NginxService {
                 true
             ));
 
-            conf?.getHttp().addVariable(
+            conf.getHttp().addVariable(
                 'log_format ff_h_accesslogs_0',
                 `escape=json '${NginxLogFormatJson.generateAccessHtml(0)}'`
             );
@@ -927,7 +963,7 @@ export class NginxService {
             loc404.addVariable('internal', '');
             dServer.addLocation(loc404);
 
-            conf?.getHttp().addServer(dServer);
+            conf.getHttp().addServer(dServer);
         }
     }
 
@@ -938,7 +974,8 @@ export class NginxService {
     protected _startSysLog(): void {
         this._syslog = new SysLogServer();
         this._syslog.setOnListen((sysLogServer) => {
-            Logger.getLogger().info(`NginxService::_startSysLog::SysLogServer::setOnListen: Liste started on: ${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`);
+            Logger.getLogger().info('NginxService::_startSysLog::SysLogServer::setOnListen: Liste started on: ' +
+                `${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`);
         });
 
         this._syslog.setOnError((sysLogServer, err) => {
@@ -947,16 +984,41 @@ export class NginxService {
         });
 
         this._syslog.setOnMessage((sysLogServer, msg) => {
-            Logger.getLogger().info(`NginxService::_startSysLog::SysLogServer::setOnMessage: ${msg.toString()}`);
+            Logger.getLogger().silly(`NginxService::_startSysLog::SysLogServer::setOnMessage: ${msg.toString()}`);
 
             const parts = msg.toString().split(`${NginxService.SYSLOG_TAG}: `);
 
             try {
                 const nginxLog = JSON.parse(parts[1]);
-                console.log(nginxLog);
+
+                if (nginxLog.source_type) {
+                    const errors: SchemaErrors = [];
+
+                    if (nginxLog.source_type === 'stream') {
+                        if (SchemaJsonLogAccessStream.validate(nginxLog, errors)) {
+                            NginxStreamAccessInfluxDB.addLog(nginxLog);
+                        } else {
+                            Logger.getLogger().error(
+                                'NginxService::_startSysLog::SysLogServer::setOnMessage:stream: Validation error SchemaJsonLogAccessStream:'
+                            );
+
+                            Logger.getLogger().error(JSON.stringify(errors, null, 2));
+                        }
+                    } else if (nginxLog.source_type === 'http') {
+                        if (SchemaJsonLogAccessHttp.validate(nginxLog, errors)) {
+                            NginxHttpAccessInfluxDB.addLog(nginxLog);
+                        } else {
+                            Logger.getLogger().error(
+                                'NginxService::_startSysLog::SysLogServer::setOnMessage: Validation error SchemaJsonLogAccessHttp:'
+                            );
+
+                            Logger.getLogger().error(JSON.stringify(errors, null, 2));
+                        }
+                    }
+                }
             } catch (e) {
-                Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnMessage: ');
-                Logger.getLogger().error(e);
+                Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnMessage: Exception:');
+                Logger.getLogger().error(JSON.stringify(e, null, 2));
             }
         });
 

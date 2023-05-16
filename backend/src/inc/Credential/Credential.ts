@@ -1,5 +1,5 @@
 import {Logger} from 'flyingfish_core';
-import {DBHelper} from '../Db/DBHelper.js';
+import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential.js';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation.js';
 import {CredentialProvider} from './CredentialProvider.js';

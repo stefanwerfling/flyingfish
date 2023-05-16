@@ -1,7 +1,7 @@
 import {Router} from 'express';
 import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {DomainRecord as DomainRecordDB} from '../../inc/Db/MariaDb/Entity/DomainRecord.js';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';

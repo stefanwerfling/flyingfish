@@ -2,7 +2,7 @@ import {Router} from 'express';
 import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
 
 /**
  * GatewayIdentifierEntry

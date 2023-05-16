@@ -80,6 +80,10 @@ export enum ENV_DUTY {
 export enum ENV_OPTIONAL {
     DB_MYSQL_HOST = 'FLYINGFISH_DB_MYSQL_HOST',
     DB_MYSQL_PORT = 'FLYINGFISH_DB_MYSQL_PORT',
+    DB_INFLUX_URL = 'FLYINGFISH_DB_INFLUX_URL',
+    DB_INFLUX_TOKEN = 'FLYINGFISH_DB_INFLUX_TOKEN',
+    DB_INFLUX_ORG = 'FLYINGFISH_DB_INFLUX_ORG',
+    DB_INFLUX_BUCKET = 'FLYINGFISH_DB_INFLUX_BUCKET',
     HTTPSERVER_PORT = 'FLYINGFISH_HTTPSERVER_PORT',
     HTTPSERVER_PUBLICDIR = 'FLYINGFISH_HTTPSERVER_PUBLICDIR',
     DNSSERVER_PORT = 'FLYINGFISH_DNSSERVER_PORT',
@@ -231,6 +235,47 @@ export class Config extends ConfigCore<ConfigOptions> {
             if (process.env[ENV_OPTIONAL.DB_MYSQL_PORT]) {
                 config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
                     Config.DEFAULT_DB_MYSQL_PORT;
+            }
+
+            // db influx -----------------------------------------------------------------------------------------------
+
+            const influxEnvList = [
+                ENV_OPTIONAL.DB_INFLUX_URL,
+                ENV_OPTIONAL.DB_INFLUX_TOKEN,
+                ENV_OPTIONAL.DB_INFLUX_ORG,
+                ENV_OPTIONAL.DB_INFLUX_BUCKET
+            ];
+
+            for (const entry of influxEnvList) {
+                if (process.env[entry]) {
+                    config.db.influx = {
+                        url: '',
+                        password: '',
+                        username: '',
+                        org: '',
+                        bucket: '',
+                        token: ''
+                    };
+                    break;
+                }
+            }
+
+            if (config.db.influx) {
+                if (process.env[ENV_OPTIONAL.DB_INFLUX_URL]) {
+                    config.db.influx.url = process.env[ENV_OPTIONAL.DB_INFLUX_URL];
+                }
+
+                if (process.env[ENV_OPTIONAL.DB_INFLUX_TOKEN]) {
+                    config.db.influx.token = process.env[ENV_OPTIONAL.DB_INFLUX_TOKEN];
+                }
+
+                if (process.env[ENV_OPTIONAL.DB_INFLUX_ORG]) {
+                    config.db.influx.org = process.env[ENV_OPTIONAL.DB_INFLUX_ORG];
+                }
+
+                if (process.env[ENV_OPTIONAL.DB_INFLUX_BUCKET]) {
+                    config.db.influx.bucket = process.env[ENV_OPTIONAL.DB_INFLUX_BUCKET];
+                }
             }
 
             // httpserver ----------------------------------------------------------------------------------------------

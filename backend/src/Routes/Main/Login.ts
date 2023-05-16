@@ -2,7 +2,7 @@ import * as bcrypt from 'bcrypt';
 import {Request, Router} from 'express';
 import {DefaultReturn, DefaultRoute, Logger, SessionUserData, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
 import {User as UserDB} from '../../inc/Db/MariaDb/Entity/User.js';
 
 /**

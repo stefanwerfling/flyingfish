@@ -2,7 +2,7 @@ import {DateHelper, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
 import Ping from 'ping';
 import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
-import {DBHelper} from '../Db/DBHelper.js';
+import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../Db/MariaDb/Entity/GatewayIdentifier.js';
 import {NatPort as NatPortDB, NatStatus} from '../Db/MariaDb/Entity/NatPort.js';
 import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';

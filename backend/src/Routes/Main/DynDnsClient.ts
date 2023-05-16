@@ -1,10 +1,10 @@
 import {Router} from 'express';
 import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
+import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {DynDnsClient as DynDnsClientDB} from '../../inc/Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
-import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {DynDnsProvider, DynDnsProviders} from '../../inc/Provider/DynDnsProviders.js';
 
 /**
@@ -193,60 +193,67 @@ export class DynDnsClient extends DefaultRoute {
 
         client = await DBHelper.getDataSource().manager.save(client);
 
-        // domain links --------------------------------------------------------------------------------------------
+        if (client) {
+            // domain links --------------------------------------------------------------------------------------------
 
-        if (data.domains.length === 0) {
-            await dyndnsclientDomainRepository.delete({
-                dyndnsclient_id: client.id
-            });
-        } else {
-            const odomains = await dyndnsclientDomainRepository.find({
-                where: {
+            if (data.domains.length === 0) {
+                await dyndnsclientDomainRepository.delete({
                     dyndnsclient_id: client.id
-                }
-            });
-
-            if (odomains) {
-                const checkDomainExistence = (domainId: number): boolean => data.domains.some(({id}) => id === domainId);
-
-                for await (const oldDomain of odomains) {
-                    if (!checkDomainExistence(oldDomain.domain_id)) {
-                        await dyndnsclientDomainRepository.delete({
-                            id: oldDomain.id
-                        });
-                    }
-                }
-            }
-
-            // update or add ---------------------------------------------------------------------------------------
-
-            for await (const domain of data.domains) {
-                let newDomain: DynDnsClientDomainDB|null = null;
-
-                const tdomain = await dyndnsclientDomainRepository.findOne({
+                });
+            } else {
+                const odomains = await dyndnsclientDomainRepository.find({
                     where: {
-                        domain_id: domain.id,
                         dyndnsclient_id: client.id
                     }
                 });
 
-                if (tdomain) {
-                    newDomain = tdomain;
+                if (odomains) {
+                    const checkDomainExistence = (domainId: number): boolean => data.domains.some(({id}) => id === domainId);
+
+                    for await (const oldDomain of odomains) {
+                        if (!checkDomainExistence(oldDomain.domain_id)) {
+                            await dyndnsclientDomainRepository.delete({
+                                id: oldDomain.id
+                            });
+                        }
+                    }
                 }
 
-                if (newDomain === null) {
-                    newDomain = new DynDnsClientDomainDB();
+                // update or add ---------------------------------------------------------------------------------------
+
+                for await (const domain of data.domains) {
+                    let newDomain: DynDnsClientDomainDB|null = null;
+
+                    const tdomain = await dyndnsclientDomainRepository.findOne({
+                        where: {
+                            domain_id: domain.id,
+                            dyndnsclient_id: client.id
+                        }
+                    });
+
+                    if (tdomain) {
+                        newDomain = tdomain;
+                    }
+
+                    if (newDomain === null) {
+                        newDomain = new DynDnsClientDomainDB();
+                    }
+
+                    newDomain.dyndnsclient_id = client.id;
+                    newDomain.domain_id = domain.id;
+
+                    await DBHelper.getDataSource().manager.save(newDomain);
                 }
-
-                newDomain.dyndnsclient_id = client.id;
-                newDomain.domain_id = domain.id;
-
-                await DBHelper.getDataSource().manager.save(newDomain);
             }
+
+            return {
+                statusCode: StatusCodes.OK
+            };
         }
 
         return {
-            statusCode: StatusCodes.OK
+            statusCode: StatusCodes.INTERNAL_ERROR,
+            msg: 'Client data can not save.'
         };
     }
 

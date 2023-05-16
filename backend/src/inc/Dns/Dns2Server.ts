@@ -5,7 +5,7 @@ import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
-import {DBHelper} from '../Db/DBHelper.js';
+import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
 import {DnsAnswerNS} from './RecordType/NS.js';
 import {DnsAnswerTlSA, SchemaRecordSettingsTlSA} from './RecordType/TLSA.js';

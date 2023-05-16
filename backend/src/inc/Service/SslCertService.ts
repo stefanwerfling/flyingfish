@@ -5,7 +5,7 @@ import {MoreThan} from 'typeorm';
 import {Certificate} from '../Cert/Certificate.js';
 import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
-import {DBHelper} from '../Db/DBHelper.js';
+import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {NginxService} from './NginxService.js';
 
@@ -115,7 +115,7 @@ export class SslCertService {
                         if (http.cert_email === '') {
                             Logger.getLogger().info(`SslCertService::update: missing email address for domain: ${domain.domainname}`);
                         } else {
-                            const sslCert = Certbot.existCertificate(domain.domainname);
+                            const sslCert = await Certbot.existCertificate(domain.domainname);
 
                             let isCreateFailed = false;
                             let isCreate = false;

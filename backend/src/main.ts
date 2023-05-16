@@ -1,7 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import {Args, Logger} from 'flyingfish_core';
-import {DBHelper} from './inc/Db/DBHelper.js';
+import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
+import {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
@@ -95,9 +96,9 @@ import exitHook from 'async-exit-hook';
         useEnv = true;
     }
 
-    const tconfig = await Config.getInstance().load(configfile, useEnv);
+    const tConfig = await Config.getInstance().load(configfile, useEnv);
 
-    if (tconfig === null) {
+    if (tConfig === null) {
         console.log(`Configloader is return empty config, please check your configfile: ${configfile}`);
         return;
     }
@@ -113,11 +114,11 @@ import exitHook from 'async-exit-hook';
         // MariaDb -----------------------------------------------------------------------------------------------------
         await DBHelper.init({
             type: 'mysql',
-            host: tconfig.db.mysql.host,
-            port: tconfig.db.mysql.port,
-            username: tconfig.db.mysql.username,
-            password: tconfig.db.mysql.password,
-            database: tconfig.db.mysql.database,
+            host: tConfig.db.mysql.host,
+            port: tConfig.db.mysql.port,
+            username: tConfig.db.mysql.username,
+            password: tConfig.db.mysql.password,
+            database: tConfig.db.mysql.database,
             entities: [
                 UserDB,
                 NginxListenDB,
@@ -151,6 +152,17 @@ import exitHook from 'async-exit-hook';
 
         // db setup first init
         await DBSetup.firstInit();
+
+        // InfluxDb ----------------------------------------------------------------------------------------------------
+
+        if (tConfig.db.influx) {
+            await InfluxDbHelper.init({
+                url: tConfig.db.influx.url,
+                token: tConfig.db.influx.token,
+                org: tConfig.db.influx.org,
+                bucket: tConfig.db.influx.bucket
+            });
+        }
     } catch (error) {
         Logger.getLogger().error('Error while connecting to the database', error);
         return;
@@ -165,31 +177,31 @@ import exitHook from 'async-exit-hook';
     let session_cookie_path = '/';
     let session_cookie_max_age = 6000000;
 
-    if (tconfig.httpserver) {
-        if (tconfig.httpserver.port) {
-            aport = tconfig.httpserver.port;
+    if (tConfig.httpserver) {
+        if (tConfig.httpserver.port) {
+            aport = tConfig.httpserver.port;
         }
 
-        if (tconfig.httpserver.publicdir) {
-            public_dir = tconfig.httpserver.publicdir;
+        if (tConfig.httpserver.publicdir) {
+            public_dir = tConfig.httpserver.publicdir;
         }
 
-        if (tconfig.httpserver.session) {
-            if (tconfig.httpserver.session.secret) {
-                session_secret = tconfig.httpserver.session.secret;
+        if (tConfig.httpserver.session) {
+            if (tConfig.httpserver.session.secret) {
+                session_secret = tConfig.httpserver.session.secret;
             }
 
-            if (tconfig.httpserver.session.cookie_path) {
-                session_cookie_path = tconfig.httpserver.session.cookie_path;
+            if (tConfig.httpserver.session.cookie_path) {
+                session_cookie_path = tConfig.httpserver.session.cookie_path;
             }
 
-            if (tconfig.httpserver.session.cookie_max_age) {
-                session_cookie_max_age = tconfig.httpserver.session.cookie_max_age;
+            if (tConfig.httpserver.session.cookie_max_age) {
+                session_cookie_max_age = tConfig.httpserver.session.cookie_max_age;
             }
         }
 
-        if (tconfig.httpserver.sslpath) {
-            ssl_path = tconfig.httpserver.sslpath;
+        if (tConfig.httpserver.sslpath) {
+            ssl_path = tConfig.httpserver.sslpath;
         }
     }
 
@@ -233,10 +245,10 @@ import exitHook from 'async-exit-hook';
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    if (tconfig.nginx) {
+    if (tConfig.nginx) {
         NginxServer.getInstance({
-            config: tconfig.nginx.config,
-            prefix: tconfig.nginx.prefix
+            config: tConfig.nginx.config,
+            prefix: tConfig.nginx.prefix
         });
     }
 
@@ -248,8 +260,8 @@ import exitHook from 'async-exit-hook';
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    if (tconfig.upnpnat) {
-        if (tconfig.upnpnat.enable) {
+    if (tConfig.upnpnat) {
+        if (tConfig.upnpnat.enable) {
             const upnpNat = new UpnpNatService();
             await upnpNat.start();
         }
@@ -257,8 +269,8 @@ import exitHook from 'async-exit-hook';
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    if (tconfig.dyndnsclient) {
-        if (tconfig.dyndnsclient.enable) {
+    if (tConfig.dyndnsclient) {
+        if (tConfig.dyndnsclient.enable) {
             await DynDnsService.getInstance().start();
         }
     }

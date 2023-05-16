@@ -1,5 +1,5 @@
 import {Settings as SettingsDB} from '../Db/MariaDb/Entity/Settings.js';
-import {DBHelper} from '../Db/DBHelper.js';
+import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 
 /**
  * Settings

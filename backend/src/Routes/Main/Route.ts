@@ -4,7 +4,7 @@ import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
 import {Not} from 'typeorm';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {Config} from '../../inc/Config/Config.js';
-import {DBHelper} from '../../inc/Db/DBHelper.js';
+import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
 import {Domain as DomainDB} from '../../inc/Db/MariaDb/Entity/Domain.js';
 import {NginxHttp as NginxHttpDB} from '../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxLocation as NginxLocationDB} from '../../inc/Db/MariaDb/Entity/NginxLocation.js';
@@ -559,42 +559,50 @@ export class Route extends DefaultRoute {
 
         sshuser = await DBHelper.getDataSource().manager.save(sshuser);
 
-        if (ssh.id > 0) {
-            const tsshport = await sshportRepository.findOne({
-                where: {
-                    id: ssh.id
-                }
-            });
+        if (sshuser) {
+            if (ssh.id > 0) {
+                const tsshport = await sshportRepository.findOne({
+                    where: {
+                        id: ssh.id
+                    }
+                });
 
-            if (tsshport) {
-                sshport = tsshport;
+                if (tsshport) {
+                    sshport = tsshport;
+                }
             }
-        }
 
-        if (sshport === null) {
-            sshport = new SshPortDB();
-        }
+            if (sshport === null) {
+                sshport = new SshPortDB();
+            }
 
-        if (dtype === NginxStreamDestinationType.ssh_r) {
-            if (ssh.port === 0) {
-                sshport.port = await this._getFreePort();
-            } else {
-                if (await this._isSshPortUsed(ssh.port, ssh.id)) {
-                    throw Error('SSH Port is alrady in use!');
+            if (dtype === NginxStreamDestinationType.ssh_r) {
+                if (ssh.port === 0) {
+                    sshport.port = await this._getFreePort();
+                } else {
+                    if (await this._isSshPortUsed(ssh.port, ssh.id)) {
+                        throw Error('SSH Port is alrady in use!');
+                    }
+
+                    sshport.port = ssh.port;
                 }
-
+            } else {
                 sshport.port = ssh.port;
             }
-        } else {
-            sshport.port = ssh.port;
+
+            sshport.ssh_user_id = sshuser.id;
+            sshport.destinationAddress = ssh.destinationAddress;
+
+            sshport = await DBHelper.getDataSource().manager.save(sshport);
+
+            if (sshport) {
+                return sshport.id;
+            }
+
+            throw Error('Can not save ssh port.');
         }
 
-        sshport.ssh_user_id = sshuser.id;
-        sshport.destinationAddress = ssh.destinationAddress;
-
-        sshport = await DBHelper.getDataSource().manager.save(sshport);
-
-        return sshport.id;
+        throw Error('Can not save ssh user');
     }
 
     /**

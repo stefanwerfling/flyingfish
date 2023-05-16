@@ -11,8 +11,6 @@ export const SchemaFlyingFishJsonLog = Vts.object({
 
 /**
  * SchemaJsonLogAccessHttp
- * https://www.npmjs.com/package/nginx-access-log
- * https://vahid4m.medium.com/monitoring-response-times-using-nginx-telegraf-and-influxdb-c96c1be8fa75
  */
 export const SchemaJsonLogAccessHttp = SchemaFlyingFishJsonLog.extend({
     ff_http_id: Vts.number(),
@@ -21,6 +19,7 @@ export const SchemaJsonLogAccessHttp = SchemaFlyingFishJsonLog.extend({
     forwardedfor: Vts.string(),
     req: Vts.string(),
     method: Vts.string(),
+    scheme: Vts.string(),
     uri: Vts.string(),
     status: Vts.string(),
     size: Vts.string(),
@@ -38,6 +37,7 @@ export type JsonLogAccessHttp = ExtractSchemaResultType<typeof SchemaJsonLogAcce
 export const SchemaJsonLogAccessStream = SchemaFlyingFishJsonLog.extend({
     ff_stream_id: Vts.number(),
     time: Vts.string(),
+    msec: Vts.string(),
     host: Vts.string(),
     protocol: Vts.string(),
     status: Vts.string(),
@@ -62,11 +62,13 @@ export class NginxLogFormatJson {
      * @param streamId
      */
     public static generateAccessStream(streamId: number): string {
-        return JSON.stringify({
+        const data: JsonLogAccessStream = {
             source: 'nginx',
             source_type: 'stream',
+            logging: 'access',
             ff_stream_id: streamId,
             time: '$time_iso8601',
+            msec: '$msec',
             host: '$remote_addr',
             protocol: '$protocol',
             status: '$status',
@@ -77,7 +79,9 @@ export class NginxLogFormatJson {
             upstream_bytes_sent: '$upstream_bytes_sent',
             upstream_bytes_received: '$upstream_bytes_received',
             upstream_connect_time: '$upstream_connect_time'
-        } as JsonLogAccessStream);
+        };
+
+        return JSON.stringify(data);
     }
 
     /**
@@ -85,15 +89,17 @@ export class NginxLogFormatJson {
      * @param httpId
      */
     public static generateAccessHtml(httpId: number): string {
-        return JSON.stringify({
+        const data: JsonLogAccessHttp = {
             source: 'nginx',
             source_type: 'http',
+            logging: 'access',
             ff_http_id: httpId,
             time: '$time_iso8601',
             host: '$remote_addr',
             forwardedfor: '$http_x_forwarded_for',
             req: '$request',
             method: '$request_method',
+            scheme: '$scheme',
             uri: '$request_uri',
             status: '$status',
             size: '$body_bytes_sent',
@@ -104,7 +110,9 @@ export class NginxLogFormatJson {
             apptime: '$upstream_response_time',
             cache: '$upstream_http_x_cache',
             vhost: '$host'
-        } as JsonLogAccessHttp);
+        };
+
+        return JSON.stringify(data);
     }
 
 }
