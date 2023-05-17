@@ -50,6 +50,25 @@ export class BlacklistService {
             return;
         }
 
+        const lastUpdate = parseInt(await GlobalSettings.getSetting(
+            GlobalSettings.BLACKLIST_IMPORTER_LASTUPDATE,
+            '0'
+        ), 10) ?? 0;
+
+        if (lastUpdate > 0) {
+            if (!DateHelper.isOverAHour(lastUpdate, 24)) {
+                Logger.getLogger().silly('BlacklistService::update: wait for time over ...');
+                return;
+            }
+        }
+
+        await GlobalSettings.setSetting(
+            GlobalSettings.BLACKLIST_IMPORTER_LASTUPDATE,
+            `${DateHelper.getCurrentDbTime()}`
+        );
+
+        // -------------------------------------------------------------------------------------------------------------
+
         const fh = new Firehol();
         await fh.loadList();
 
