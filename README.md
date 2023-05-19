@@ -61,8 +61,31 @@ With a frontend, it simplifies setup and management. Each route can be edited wi
 
 	This means that the FlyingFish can always be reached correctly with the DynDns client from outside (Internet).
 
-# Docker Hub
-[FlyingFish Image](https://hub.docker.com/r/stefanwerfling/flyingfish)
+## Docker Hub
+
+
+I utilise the docker manifest for multi-platform awareness. Simply getting "stefanwerfling/flyingfish:latest" should get the correct image for your arch. However, you can also get specific Arch images via tags.
+
+The architectures supported by this image are:
+
+| Architecture | Available | Tag |
+| :----: | :----: | ---- |
+| x86-64 | ✅ | amd64-\<version tag\> |
+| arm64 | ✅ | arm64v8-\<version tag\> |
+
+Other platforms cannot be created as an image, because the restriction comes from the node docker image, but also because "certbot with pip" only supports amd64 and arm64 installation.
+
+But it's better you run the installation with the instructions in Docker-Compose. Because FlyingFish consists of multiple images & containers.
+
+[FlyingFish on hub.docker.com](https://hub.docker.com/r/stefanwerfling/flyingfish)
+
+### Docker images (latest)
+* stefanwerfling/flyingfish:latest
+* stefanwerfling/flyingfish:v1.0.16
+* stefanwerfling/flyingfish_ssh:latest
+* stefanwerfling/flyingfish_ssh:v1.0.16
+* stefanwerfling/flyingfish_himip:latest
+* stefanwerfling/flyingfish_himip:v1.0.16
 
 # Index
 1. [Project Description](doc/description.md)
