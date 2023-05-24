@@ -3,7 +3,7 @@ import {Job, scheduleJob} from 'node-schedule';
 import Path from 'path';
 import {MoreThan} from 'typeorm';
 import {Certificate} from '../Cert/Certificate.js';
-import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
+import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
@@ -82,7 +82,6 @@ export class SslCertService {
     public async update(): Promise<void> {
         this._inProcess = true;
 
-        const domainRepository = DBHelper.getRepository(DomainDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
         const https = await httpRepository.find();
@@ -95,11 +94,7 @@ export class SslCertService {
                 if (http.ssl_enable) {
                     Logger.getLogger().silly(`SslCertService::update: ssl enable http: ${http.id}`);
 
-                    const domain = await domainRepository.findOne({
-                        where: {
-                            id: http.domain_id
-                        }
-                    });
+                    const domain = await DomainService.findOne(http.domain_id);
 
                     if (domain) {
                         if (domain.disable) {

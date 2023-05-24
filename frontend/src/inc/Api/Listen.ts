@@ -46,7 +46,8 @@ export const SchemaListenData = Vts.object({
     routeless: Vts.boolean(),
     description: Vts.string(),
     fix: Vts.optional(Vts.boolean()),
-    disable: Vts.boolean()
+    disable: Vts.boolean(),
+    listen_category: Vts.optional(Vts.number())
 });
 
 export type ListenData = ExtractSchemaResultType<typeof SchemaListenData>;

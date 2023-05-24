@@ -10,7 +10,7 @@ export type HimHIPData = {
 };
 
 /**
- * HimHIP
+ * HimHIP - how is my host ip
  */
 export class HimHIP {
 

@@ -3,7 +3,7 @@ import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
 import {Logger} from 'flyingfish_core';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
-import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
+import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
 import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
@@ -58,14 +58,7 @@ export class Dns2Server {
                     Logger.getLogger().info(`Dns2Server::request: ${request.header.id}`, request.questions[0]);
                     Logger.getLogger().info(`Dns2Server::request: Remote-Info ${rinfo.address}:${rinfo.port}`);
 
-                    const domainRepository = DBHelper.getRepository(DomainDB);
-
-                    const domain = await domainRepository.findOne({
-                        where: {
-                            domainname: questionExt.name,
-                            disable: false
-                        }
-                    });
+                    const domain = await DomainService.findByName(questionExt.name);
 
                     if (domain) {
                         const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);

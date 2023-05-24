@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import {Logger} from 'flyingfish_core';
 import {DBHelper} from './DBHelper.js';
+import {DomainService} from './DomainService.js';
 import {Domain as DomainDB} from './Entity/Domain.js';
 import {ListenCategory, ListenProtocol, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen.js';
 import {NginxStream as NginxStreamDB, NginxStreamDestinationType} from './Entity/NginxStream.js';
@@ -119,7 +120,7 @@ export class DBSetup {
         defaultDomain.fixdomain = true;
         defaultDomain.recordless = true;
 
-        defaultDomain = await DBHelper.getDataSource().manager.save(defaultDomain);
+        defaultDomain = await DomainService.save(defaultDomain);
 
         // add streams _ --------------------------------------------------------------------------------------------
 

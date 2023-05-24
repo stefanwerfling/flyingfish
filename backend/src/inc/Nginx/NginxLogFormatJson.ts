@@ -16,6 +16,7 @@ export const SchemaJsonLogAccessHttp = SchemaFlyingFishJsonLog.extend({
     ff_http_id: Vts.number(),
     time: Vts.string(),
     host: Vts.string(),
+    proxy_protocol_addr: Vts.string(),
     forwardedfor: Vts.string(),
     req: Vts.string(),
     method: Vts.string(),
@@ -88,7 +89,7 @@ export class NginxLogFormatJson {
      * generateAccessHtml
      * @param httpId
      */
-    public static generateAccessHtml(httpId: number): string {
+    public static generateAccessHttp(httpId: number): string {
         const data: JsonLogAccessHttp = {
             source: 'nginx',
             source_type: 'http',
@@ -96,6 +97,7 @@ export class NginxLogFormatJson {
             ff_http_id: httpId,
             time: '$time_iso8601',
             host: '$remote_addr',
+            proxy_protocol_addr: '$proxy_protocol_addr',
             forwardedfor: '$http_x_forwarded_for',
             req: '$request',
             method: '$request_method',

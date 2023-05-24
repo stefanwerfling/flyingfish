@@ -1,4 +1,27 @@
-import {Listen as ListenAPI, ListenData} from '../Api/Listen';
+import {
+    Badge,
+    BadgeType,
+    ButtonMenu,
+    ButtonType,
+    Card,
+    CardBodyType,
+    CardLine,
+    CardType,
+    ContentCol,
+    ContentColSize,
+    ContentRow,
+    DialogConfirm,
+    Icon,
+    IconFa,
+    LeftNavbarLink,
+    ModalDialogType,
+    Table,
+    Td,
+    Th,
+    Tooltip,
+    Tr
+} from 'bambooo';
+import {Listen as ListenAPI, ListenCategory, ListenData} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {
     NginxStreamDestinationType,
@@ -9,8 +32,6 @@ import {
 } from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';
-import {Badge, BadgeType, Card, CardBodyType, CardLine, CardType, ContentCol, ContentColSize, ContentRow,
-    DialogConfirm, ButtonType, ButtonMenu, Icon, IconFa, Table, Td, Th, Tr, Tooltip, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {RouteHttpEditModal} from './Routes/RouteHttpEditModal';
 import {RouteStreamEditModal} from './Routes/RouteStreamEditModal';
@@ -215,7 +236,8 @@ export class Routes extends BasePage {
                         locations: this._routeHttpDialog.getLocations(),
                         http2_enable: this._routeHttpDialog.getHttp2Enable(),
                         x_frame_options: this._routeHttpDialog.getXFrameOptions(),
-                        wellknown_disabled: this._routeHttpDialog.getWellKnwonDisabled()
+                        wellknown_disabled: this._routeHttpDialog.getWellKnwonDisabled(),
+                        variables: []
                     }
                 };
 
@@ -396,13 +418,15 @@ export class Routes extends BasePage {
                     new Th(trhead, ' &#8594; ', '20px');
 
                     // eslint-disable-next-line no-new
-                    new Th(trhead, 'Destination', '150px');
+                    new Th(trhead, 'Destination', entry.domainfix ? '100%' : '150px');
 
-                    // eslint-disable-next-line no-new
-                    new Th(trhead, 'Options', '150px');
+                    if (!entry.domainfix) {
+                        // eslint-disable-next-line no-new
+                        new Th(trhead, 'Options', '100%');
 
-                    // eslint-disable-next-line no-new
-                    new Th(trhead, 'Action');
+                        // eslint-disable-next-line no-new
+                        new Th(trhead, 'Action');
+                    }
 
                     // -------------------------------------------------------------------------------------------------
 
@@ -429,9 +453,25 @@ export class Routes extends BasePage {
                                 const dlisten = listenMap.get(value.destination_listen_id);
 
                                 if (dlisten) {
+                                    let badgeType = BadgeType.light;
+
+                                    if (dlisten.listen_category) {
+                                        badgeType = BadgeType.success;
+
+                                        switch (dlisten.listen_category) {
+                                            case ListenCategory.default_http:
+                                                badgeType = BadgeType.color_cream_purpel;
+                                                break;
+
+                                            case ListenCategory.default_https:
+                                                badgeType = BadgeType.success;
+                                                break;
+                                        }
+                                    }
+
                                     // eslint-disable-next-line no-new
                                     new Badge(sdTdD,
-                                        `${dlisten.name} (${dlisten.port})`, BadgeType.success);
+                                        `${dlisten.name} (${dlisten.port})`, badgeType);
                                 } else {
                                     // eslint-disable-next-line no-new
                                     new Badge(sdTdD,
@@ -466,7 +506,7 @@ export class Routes extends BasePage {
                                     }
 
                                     if (firstUpstream.port === dnsserverport) {
-                                        badType = BadgeType.color_cream_purpel;
+                                        badType = BadgeType.color_cream_rorange;
                                     }
 
                                     let andMore = '';
@@ -488,77 +528,240 @@ export class Routes extends BasePage {
                                 break;
                         }
 
-                        // options td ----------------------------------------------------------------------------------
+                        if (!entry.domainfix) {
+                            // options td ----------------------------------------------------------------------------------
 
-                        const soptionTd = new Td(trbody, '');
+                            const soptionTd = new Td(trbody, '');
 
-                        if (value.use_as_default) {
+                            if (value.use_as_default) {
+                                // eslint-disable-next-line no-new
+                                new Badge(soptionTd, 'D', BadgeType.danger);
+                                soptionTd.append('&nbsp;');
+                            }
+
+                            // action td -----------------------------------------------------------------------------------
+
+                            const tdAction = new Td(trbody, '');
+
+                            if (!value.isdefault) {
+                                const btnMenu = new ButtonMenu(
+                                    tdAction,
+                                    IconFa.bars,
+                                    true,
+                                    ButtonType.borderless
+                                );
+
+                                btnMenu.addMenuItem(
+                                    'Edit',
+                                    async(): Promise<void> => {
+                                        this._routeStreamDialog.resetValues();
+                                        this._routeStreamDialog.setTitle('Edit Stream Route');
+                                        this._routeStreamDialog.show();
+                                        this._routeStreamDialog.setId(value.id);
+                                        this._routeStreamDialog.setDomainName(entry.domainname);
+                                        this._routeStreamDialog.setDomainId(entry.id);
+                                        this._routeStreamDialog.setListen(`${value.listen_id}`);
+                                        this._routeStreamDialog.setAliasName(value.alias_name);
+                                        this._routeStreamDialog.setDestinationType(value.destination_type);
+                                        this._routeStreamDialog.setUseAsDefault(value.use_as_default);
+                                        this._routeStreamDialog.setLoadBalancingAlgorithm(value.load_balancing_algorithm);
+
+                                        if (value.index > 0) {
+                                            this._routeStreamDialog.setIndex(value.index);
+                                        }
+
+                                        const sshListens = await SshAPI.getList();
+
+                                        if (sshListens) {
+                                            this._routeStreamDialog.setSshListens(sshListens.list);
+                                        }
+
+                                        if (value.ssh) {
+                                            this._routeStreamDialog.setSshRType(value.ssh_r_type);
+                                            this._routeStreamDialog.setSshDestinationAddress(value.ssh.destinationAddress);
+
+                                            switch (value.ssh_r_type) {
+                                                case NginxStreamSshR.out:
+                                                    this._routeStreamDialog.setSshListen(value.ssh.id);
+                                                    break;
+
+                                                default:
+                                                    this._routeStreamDialog.setSshPortId(value.ssh.id);
+
+                                                    if (value.ssh.port > 0) {
+                                                        this._routeStreamDialog.setSshPort(value.ssh.port);
+                                                    }
+
+                                                    this._routeStreamDialog.setSshUserId(value.ssh.user_id);
+                                                    this._routeStreamDialog.setSshUsername(value.ssh.username);
+                                            }
+                                        } else if (value.destination_listen_id > 0) {
+                                            this._routeStreamDialog.setDestinationListen(value.destination_listen_id);
+                                        } else {
+                                            this._routeStreamDialog.setUpstreamList(value.upstreams);
+                                        }
+                                    },
+                                    IconFa.edit
+                                );
+
+                                btnMenu.addDivider();
+
+                                btnMenu.addMenuItem(
+                                    'Delete',
+                                    (): void => {
+                                        DialogConfirm.confirm(
+                                            'streamDelete',
+                                            ModalDialogType.large,
+                                            'Delete Stream Route',
+                                            `Delete this Stream Route "${entry.domainname}" Alias: ${value.alias_name}?`,
+                                            async(
+                                                _,
+                                                dialog
+                                            ) => {
+                                                try {
+                                                    if (await RouteAPI.deleteRouteStream({
+                                                        id: value.id
+                                                    })) {
+                                                        this._toast.fire({
+                                                            icon: 'success',
+                                                            title: 'Stream Route delete success.'
+                                                        });
+
+                                                        if (await NginxAPI.reload()) {
+                                                            this._toast.fire({
+                                                                icon: 'success',
+                                                                title: 'Nginx server reload config success.'
+                                                            });
+                                                        } else {
+                                                            this._toast.fire({
+                                                                icon: 'error',
+                                                                title: 'Nginx server reload config faild, please check your last settings!'
+                                                            });
+                                                        }
+                                                    }
+                                                } catch ({message}) {
+                                                    this._toast.fire({
+                                                        icon: 'error',
+                                                        title: message
+                                                    });
+                                                }
+
+                                                dialog.hide();
+
+                                                if (this._onLoadTable) {
+                                                    this._onLoadTable();
+                                                }
+                                            },
+                                            undefined,
+                                            'Delete'
+                                        );
+                                    },
+                                    IconFa.trash
+                                );
+                            }
+                        }
+                    });
+
+                    entry.https.forEach((value) => {
+                        const trbody = new Tr(table.getTbody());
+                        const sdTd = new Td(trbody, '');
+
+                        const listen = listenMap.get(value.listen_id);
+
+                        if (listen) {
+                            let badgeType = listen.type === 0 ? BadgeType.warning : BadgeType.success;
+
+                            if (listen.listen_category) {
+                                switch (listen.listen_category) {
+                                    case ListenCategory.default_https:
+                                        badgeType = BadgeType.success;
+                                        break;
+
+                                    case ListenCategory.default_http:
+                                        badgeType = BadgeType.color_cream_purpel;
+                                        break;
+                                }
+                            }
+
                             // eslint-disable-next-line no-new
-                            new Badge(soptionTd, 'D', BadgeType.danger);
-                            soptionTd.append('&nbsp;');
+                            new Badge(sdTd, `${listen.name} (${listen.port})`, badgeType);
                         }
 
-                        // action td -----------------------------------------------------------------------------------
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, ' &#8594; ');
 
-                        const tdAction = new Td(trbody, '');
+                        const sdTdD = new Td(trbody, '');
 
-                        if (!value.isdefault) {
-                            const btnMenu = new ButtonMenu(
-                                tdAction,
-                                IconFa.bars,
-                                true,
-                                ButtonType.borderless
-                            );
+                        if (value.locations.length > 0) {
+                            const aLocation = value.locations[0];
+
+                            if (aLocation.ssh && aLocation.ssh.port_out) {
+                                // eslint-disable-next-line no-new
+                                new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                            } else if (aLocation.redirect && (aLocation.redirect.redirect !== '')) {
+                                // eslint-disable-next-line no-new
+                                new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
+                            } else {
+                                let andMore = '';
+
+                                if (value.locations.length > 1) {
+                                    andMore = ', ...';
+                                }
+
+                                // eslint-disable-next-line no-new
+                                new Badge(sdTdD, `${aLocation.proxy_pass}${andMore}`, BadgeType.info);
+                            }
+                        } else {
+                            sdTdD.addValue('None');
+                        }
+
+                        if (!entry.domainfix) {
+                            // options td ----------------------------------------------------------------------------------
+
+                            const tdOptions = new Td(trbody, '');
+
+                            if (value.ssl && value.ssl.enable) {
+                                const sslTooltip = new Tooltip(tdOptions, `SSL with '${value.ssl.provider}'`);
+                                // eslint-disable-next-line no-new
+                                new Icon(sslTooltip, IconFa.lock);
+                            }
+
+                            // action td -----------------------------------------------------------------------------------
+
+                            const tdAction = new Td(trbody, '');
+                            const btnMenu = new ButtonMenu(tdAction, IconFa.bars, true, ButtonType.borderless);
 
                             btnMenu.addMenuItem(
                                 'Edit',
                                 async(): Promise<void> => {
-                                    this._routeStreamDialog.resetValues();
-                                    this._routeStreamDialog.setTitle('Edit Stream Route');
-                                    this._routeStreamDialog.show();
-                                    this._routeStreamDialog.setId(value.id);
-                                    this._routeStreamDialog.setDomainName(entry.domainname);
-                                    this._routeStreamDialog.setDomainId(entry.id);
-                                    this._routeStreamDialog.setListen(`${value.listen_id}`);
-                                    this._routeStreamDialog.setAliasName(value.alias_name);
-                                    this._routeStreamDialog.setDestinationType(value.destination_type);
-                                    this._routeStreamDialog.setUseAsDefault(value.use_as_default);
-                                    this._routeStreamDialog.setLoadBalancingAlgorithm(value.load_balancing_algorithm);
-
-                                    if (value.index > 0) {
-                                        this._routeStreamDialog.setIndex(value.index);
-                                    }
+                                    this._routeHttpDialog.resetValues();
+                                    this._routeHttpDialog.setTitle('Edit Http/Https Route');
+                                    this._routeHttpDialog.show();
+                                    this._routeHttpDialog.setId(value.id);
+                                    this._routeHttpDialog.setDomainName(entry.domainname);
+                                    this._routeHttpDialog.setDomainId(entry.id);
+                                    this._routeHttpDialog.setIndex(value.index);
+                                    this._routeHttpDialog.setListen(`${value.listen_id}`);
+                                    this._routeHttpDialog.setSslEnable(value.ssl.enable);
 
                                     const sshListens = await SshAPI.getList();
 
                                     if (sshListens) {
-                                        this._routeStreamDialog.setSshListens(sshListens.list);
+                                        this._routeHttpDialog.setSshListens(sshListens.list);
                                     }
 
-                                    if (value.ssh) {
-                                        this._routeStreamDialog.setSshRType(value.ssh_r_type);
-                                        this._routeStreamDialog.setSshDestinationAddress(value.ssh.destinationAddress);
+                                    const sslProviders = await SslAPI.getProviders();
 
-                                        switch (value.ssh_r_type) {
-                                            case NginxStreamSshR.out:
-                                                this._routeStreamDialog.setSshListen(value.ssh.id);
-                                                break;
-
-                                            default:
-                                                this._routeStreamDialog.setSshPortId(value.ssh.id);
-
-                                                if (value.ssh.port > 0) {
-                                                    this._routeStreamDialog.setSshPort(value.ssh.port);
-                                                }
-
-                                                this._routeStreamDialog.setSshUserId(value.ssh.user_id);
-                                                this._routeStreamDialog.setSshUsername(value.ssh.username);
-                                        }
-                                    } else if (value.destination_listen_id > 0) {
-                                        this._routeStreamDialog.setDestinationListen(value.destination_listen_id);
-                                    } else {
-                                        this._routeStreamDialog.setUpstreamList(value.upstreams);
+                                    if (sslProviders) {
+                                        this._routeHttpDialog.setSslProviders(sslProviders.list);
                                     }
+
+                                    this._routeHttpDialog.setSslProvider(value.ssl.provider);
+                                    this._routeHttpDialog.setSslEmail(value.ssl.email);
+                                    this._routeHttpDialog.setLocations(value.locations);
+                                    this._routeHttpDialog.setHttp2Enable(value.http2_enable);
+                                    this._routeHttpDialog.setXFrameOptions(value.x_frame_options);
+                                    this._routeHttpDialog.setWellKnownDisabled(value.wellknown_disabled);
                                 },
                                 IconFa.edit
                             );
@@ -569,18 +772,21 @@ export class Routes extends BasePage {
                                 'Delete',
                                 (): void => {
                                     DialogConfirm.confirm(
-                                        'streamDelete',
+                                        'httpDelete',
                                         ModalDialogType.large,
-                                        'Delete Stream Route',
-                                        `Delete this Stream Route "${entry.domainname}" Alias: ${value.alias_name}?`,
-                                        async(_, dialog) => {
+                                        'Delete Http Route',
+                                        `Delete this Http Route "${entry.domainname}"?`,
+                                        async(
+                                            _,
+                                            dialog
+                                        ) => {
                                             try {
-                                                if (await RouteAPI.deleteRouteStream({
+                                                if (await RouteAPI.deleteRouteHttp({
                                                     id: value.id
                                                 })) {
                                                     this._toast.fire({
                                                         icon: 'success',
-                                                        title: 'Stream Route delete success.'
+                                                        title: 'Stream Http delete success.'
                                                     });
 
                                                     if (await NginxAPI.reload()) {
@@ -615,149 +821,6 @@ export class Routes extends BasePage {
                                 IconFa.trash
                             );
                         }
-                    });
-
-                    entry.https.forEach((value) => {
-                        const trbody = new Tr(table.getTbody());
-                        const sdTd = new Td(trbody, '');
-
-                        const listen = listenMap.get(value.listen_id);
-
-                        if (listen) {
-                            // eslint-disable-next-line no-new
-                            new Badge(sdTd, `${listen.name} (${listen.port})`,
-                                listen.type === 0 ? BadgeType.warning : BadgeType.success);
-                        }
-
-                        // eslint-disable-next-line no-new
-                        new Td(trbody, ' &#8594; ');
-
-                        const sdTdD = new Td(trbody, '');
-
-                        if (value.locations.length > 0) {
-                            const aLocation = value.locations[0];
-
-                            if (aLocation.ssh && aLocation.ssh.port_out) {
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
-                            } else if (aLocation.redirect && (aLocation.redirect.redirect !== '')) {
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
-                            } else {
-                                let andMore = '';
-
-                                if (value.locations.length > 1) {
-                                    andMore = ', ...';
-                                }
-
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD, `${aLocation.proxy_pass}${andMore}`, BadgeType.info);
-                            }
-                        } else {
-                            sdTdD.addValue('None');
-                        }
-
-                        // options td ----------------------------------------------------------------------------------
-
-                        const tdOptions = new Td(trbody, '');
-
-                        if (value.ssl && value.ssl.enable) {
-                            const sslTooltip = new Tooltip(tdOptions, `SSL with '${value.ssl.provider}'`);
-                            // eslint-disable-next-line no-new
-                            new Icon(sslTooltip, IconFa.lock);
-                        }
-
-                        // action td -----------------------------------------------------------------------------------
-
-                        const tdAction = new Td(trbody, '');
-                        const btnMenu = new ButtonMenu(tdAction, IconFa.bars, true, ButtonType.borderless);
-
-                        btnMenu.addMenuItem(
-                            'Edit',
-                            async(): Promise<void> => {
-                                this._routeHttpDialog.resetValues();
-                                this._routeHttpDialog.setTitle('Edit Http/Https Route');
-                                this._routeHttpDialog.show();
-                                this._routeHttpDialog.setId(value.id);
-                                this._routeHttpDialog.setDomainName(entry.domainname);
-                                this._routeHttpDialog.setDomainId(entry.id);
-                                this._routeHttpDialog.setIndex(value.index);
-                                this._routeHttpDialog.setListen(`${value.listen_id}`);
-                                this._routeHttpDialog.setSslEnable(value.ssl.enable);
-
-                                const sshListens = await SshAPI.getList();
-
-                                if (sshListens) {
-                                    this._routeHttpDialog.setSshListens(sshListens.list);
-                                }
-
-                                const sslProviders = await SslAPI.getProviders();
-
-                                if (sslProviders) {
-                                    this._routeHttpDialog.setSslProviders(sslProviders.list);
-                                }
-
-                                this._routeHttpDialog.setSslProvider(value.ssl.provider);
-                                this._routeHttpDialog.setSslEmail(value.ssl.email);
-                                this._routeHttpDialog.setLocations(value.locations);
-                                this._routeHttpDialog.setHttp2Enable(value.http2_enable);
-                                this._routeHttpDialog.setXFrameOptions(value.x_frame_options);
-                                this._routeHttpDialog.setWellKnownDisabled(value.wellknown_disabled);
-                            },
-                            IconFa.edit
-                        );
-
-                        btnMenu.addDivider();
-
-                        btnMenu.addMenuItem(
-                            'Delete',
-                            (): void => {
-                                DialogConfirm.confirm(
-                                    'httpDelete',
-                                    ModalDialogType.large,
-                                    'Delete Http Route',
-                                    `Delete this Http Route "${entry.domainname}"?`,
-                                    async(_, dialog) => {
-                                        try {
-                                            if (await RouteAPI.deleteRouteHttp({
-                                                id: value.id
-                                            })) {
-                                                this._toast.fire({
-                                                    icon: 'success',
-                                                    title: 'Stream Http delete success.'
-                                                });
-
-                                                if (await NginxAPI.reload()) {
-                                                    this._toast.fire({
-                                                        icon: 'success',
-                                                        title: 'Nginx server reload config success.'
-                                                    });
-                                                } else {
-                                                    this._toast.fire({
-                                                        icon: 'error',
-                                                        title: 'Nginx server reload config faild, please check your last settings!'
-                                                    });
-                                                }
-                                            }
-                                        } catch ({message}) {
-                                            this._toast.fire({
-                                                icon: 'error',
-                                                title: message
-                                            });
-                                        }
-
-                                        dialog.hide();
-
-                                        if (this._onLoadTable) {
-                                            this._onLoadTable();
-                                        }
-                                    },
-                                    undefined,
-                                    'Delete'
-                                );
-                            },
-                            IconFa.trash
-                        );
                     });
 
                     card.hideLoading();

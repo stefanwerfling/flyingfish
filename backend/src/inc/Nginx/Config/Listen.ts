@@ -37,6 +37,12 @@ export class Listen {
     protected _http2: boolean;
 
     /**
+     * proxy protocol
+     * @protected
+     */
+    protected _proxy_protocol: boolean;
+
+    /**
      * protocol
      * @protected
      */
@@ -54,6 +60,7 @@ export class Listen {
      * @param ip
      * @param ssl
      * @param http2
+     * @param proxy_protocol
      * @param protocol
      * @param default_server
      */
@@ -62,6 +69,7 @@ export class Listen {
         ip: string = '',
         ssl: boolean = false,
         http2: boolean = false,
+        proxy_protocol: boolean = false,
         protocol: ListenProtocol = ListenProtocol.none,
         default_server: boolean = false
     ) {
@@ -69,6 +77,7 @@ export class Listen {
         this._ip = ip;
         this._ssl = ssl;
         this._http2 = http2;
+        this._proxy_protocol = proxy_protocol;
         this._protocol = protocol;
         this._default_server = default_server;
     }
@@ -91,6 +100,10 @@ export class Listen {
 
         if (this._http2) {
             value += ' http2';
+        }
+
+        if (this._proxy_protocol) {
+            value += ' proxy_protocol';
         }
 
         if (this._protocol !== ListenProtocol.none) {

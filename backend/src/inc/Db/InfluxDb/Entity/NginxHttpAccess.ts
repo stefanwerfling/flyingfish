@@ -26,12 +26,14 @@ export class NginxHttpAccess {
         nPoint.tag('ff_http_id', `${log.ff_http_id}`);
         nPoint.timestamp(time.toDate());
         nPoint.tag('host', log.host);
+        nPoint.tag('proxy_protocol_addr', log.proxy_protocol_addr);
         nPoint.tag('forwardedfor', log.forwardedfor);
         nPoint.tag('req', log.req);
         nPoint.tag('method', log.method);
         nPoint.tag('scheme', log.scheme);
         nPoint.tag('uri', log.uri);
-        nPoint.uintField('size', log.size);
+        nPoint.tag('status', log.status);
+        nPoint.uintField('size', parseInt(log.size, 10) ?? 0);
         nPoint.tag('referer', log.referer);
         nPoint.tag('ua', log.ua);
         nPoint.tag('reqtime', log.reqtime);

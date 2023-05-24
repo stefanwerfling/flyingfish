@@ -1,10 +1,12 @@
-import {ListenData} from '../../Api/Listen';
-import {Location} from '../../Api/Route';
+import {ListenCategory, ListenData, ListenTypes} from '../../Api/Listen';
+import {Location, NginxLocationDestinationTypes} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {Ssl as SslAPI, SslProvider} from '../../Api/Ssl';
-import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardLine, CardType, FormGroup,
+import {
+    ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardLine, CardType, FormGroup,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, Icon, IconFa, NavTab, PText, PTextType,
-    StrongText, Tooltip, TooltipInfo, Element, ModalDialog, ModalDialogType} from 'bambooo';
+    StrongText, Tooltip, TooltipInfo, Element, ModalDialog, ModalDialogType, FormRow
+} from 'bambooo';
 import {Lang} from '../../Lang';
 import {LocationCard} from './LocationCard';
 
@@ -163,6 +165,7 @@ export class RouteHttpEditModal extends ModalDialog {
             location.setSshListens(this._sshListens);
             location.setLocation({
                 id: 0,
+                destination_type: NginxLocationDestinationTypes.none,
                 ssh: {},
                 match: '',
                 proxy_pass: '',
@@ -174,7 +177,8 @@ export class RouteHttpEditModal extends ModalDialog {
                 xforwarded_scheme_enable: true,
                 host_enable: true,
                 host_name: '',
-                host_name_port: 0
+                host_name_port: 0,
+                variables: []
             });
 
             this._locationCards.push(location);
@@ -187,13 +191,15 @@ export class RouteHttpEditModal extends ModalDialog {
 
         const bodyACard = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
 
-        const groupHttp2Enable = new FormGroup(bodyACard, 'HTTP2 Enable');
+        const rowHttp2WellKnown = new FormRow(bodyACard);
+
+        const groupHttp2Enable = new FormGroup(rowHttp2WellKnown.createCol(6), 'HTTP2 Enable');
         // eslint-disable-next-line no-new
         new TooltipInfo(groupHttp2Enable.getLabelElement(), Lang.i().l('route_http_http2'));
         this._switchHttp2Enable = new Switch(groupHttp2Enable.getElement(), 'adv_http2_enable');
         this._switchHttp2Enable.setInativ(true);
 
-        const groupWellknown = new FormGroup(bodyACard, 'well-known disabled');
+        const groupWellknown = new FormGroup(rowHttp2WellKnown.createCol(6), 'well-known disabled');
         this._switchWellknownDisabled = new Switch(groupWellknown.getElement(), 'adv_wellknown_disabled');
 
         const groupXFrameOptions = new FormGroup(bodyACard, 'X-Frame-Options');
@@ -375,11 +381,24 @@ export class RouteHttpEditModal extends ModalDialog {
             }
 
             const type = alisten.type === 0 ? 'Stream' : 'HTTP';
+            let style = alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;';
+
+            if (alisten.listen_category) {
+                switch (alisten.listen_category) {
+                    case ListenCategory.default_https:
+                        style = 'background:#28a745;';
+                        break;
+
+                    case ListenCategory.default_http:
+                        style = 'background:#CCCCFF';
+                        break;
+                }
+            }
 
             const option = {
                 key: `${alisten.id}`,
                 value: `${alisten.name} - ${alisten.port} (${type})`,
-                style: alisten.type === 0 ? 'background:#ffc107;' : 'background:#28a745;'
+                style
             };
 
             if (alisten.type === this._type) {

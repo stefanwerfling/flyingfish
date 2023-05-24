@@ -1,18 +1,8 @@
-import {Location} from '../../Api/Route';
+import {Location, NginxLocationDestinationTypes} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup, FormRow,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab} from 'bambooo';
 import {UtilNumber} from '../../Utils/UtilNumber';
-
-/**
- * RouteHttpEditLocationModalDesType
- */
-export enum RouteHttpEditLocationModalDesType {
-    none = '0',
-    proxypass = '1',
-    redirect = '2',
-    ssh = '3'
-}
 
 /**
  * LocationCard
@@ -156,24 +146,36 @@ export class LocationCard {
         this._selectDestinationType = new SelectBottemBorderOnly2(groupDesType);
 
         this._selectDestinationType.addValue({
-            key: '0',
+            key: `${NginxLocationDestinationTypes.none}`,
             value: 'Please select a destination type'
         });
 
         this._selectDestinationType.addValue({
-            key: RouteHttpEditLocationModalDesType.proxypass,
+            key: `${NginxLocationDestinationTypes.proxypass}`,
             value: 'Proxy Pass'
         });
 
         this._selectDestinationType.addValue({
-            key: RouteHttpEditLocationModalDesType.redirect,
+            key: `${NginxLocationDestinationTypes.redirect}`,
             value: 'Redirect'
         });
 
         this._selectDestinationType.addValue({
-            key: RouteHttpEditLocationModalDesType.ssh,
-            value: 'Ssh'
+            key: `${NginxLocationDestinationTypes.ssh}`,
+            value: 'SSH Server (FlyingFish Service)'
         });
+
+        this._selectDestinationType.addValue({
+            key: `${NginxLocationDestinationTypes.dyndns}`,
+            value: 'DynDNS Server (FlyingFish Service)'
+        });
+
+        /*
+         *this._selectDestinationType.addValue({
+         *  key: `${NginxLocationDestinationTypes.vpn}`,
+         *  value: 'VPN Server (FlyingFish Service)'
+         *});
+         */
 
         // proxy pass --------------------------------------------------------------------------------------------------
 
@@ -219,20 +221,22 @@ export class LocationCard {
         // -------------------------------------------------------------------------------------------------------------
 
         this._selectDestinationType.setChangeFn((value) => {
+            const selected = parseInt(value, 10) ?? NginxLocationDestinationTypes.none;
+
             groupProxyPass.hide();
             rowRed.hide();
             rowSsh.hide();
 
-            switch (value) {
-                case RouteHttpEditLocationModalDesType.proxypass:
+            switch (selected) {
+                case NginxLocationDestinationTypes.proxypass:
                     groupProxyPass.show();
                     break;
 
-                case RouteHttpEditLocationModalDesType.redirect:
+                case NginxLocationDestinationTypes.redirect:
                     rowRed.show();
                     break;
 
-                case RouteHttpEditLocationModalDesType.ssh:
+                case NginxLocationDestinationTypes.ssh:
                     rowSsh.show();
                     break;
             }
@@ -291,7 +295,6 @@ export class LocationCard {
         );
 
         removeUpstreamBtn.setOnClickFn(() => {
-            // todo mark as delete
             this.remove();
         });
     }
@@ -315,15 +318,15 @@ export class LocationCard {
      * setDestinationType
      * @param type
      */
-    public setDestinationType(type: RouteHttpEditLocationModalDesType): void {
+    public setDestinationType(type: NginxLocationDestinationTypes): void {
         this._selectDestinationType.setSelectedValue(`${type}`);
     }
 
     /**
      * getDestinationType
      */
-    public getDestinationType(): string {
-        return this._selectDestinationType.getSelectedValue();
+    public getDestinationType(): number {
+        return parseInt(this._selectDestinationType.getSelectedValue(), 10) ?? 0;
     }
 
     /**
@@ -575,20 +578,16 @@ export class LocationCard {
         this.setXForwardedProtoEnable(location.xforwarded_proto_enable);
         this.setXForwardedForEnable(location.xforwarded_for_enable);
         this.setXrealipEnable(location.xrealip_enable);
+        this.setDestinationType(location.destination_type);
 
         if (location.proxy_pass !== '') {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.proxypass);
             this.setProxyPass(location.proxy_pass);
         } else if (location.ssh && location.ssh.port_out) {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.ssh);
             this.setSshSchema(`${location.ssh.schema}`);
             this.setSshListen(`${location.ssh.id}`);
         } else if (location.redirect && (location.redirect.redirect !== '')) {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.redirect);
             this.setRedirectCode(location.redirect.code);
             this.setRedirectPath(location.redirect.redirect);
-        } else {
-            this.setDestinationType(RouteHttpEditLocationModalDesType.none);
         }
     }
 
@@ -598,6 +597,7 @@ export class LocationCard {
     public getLocation(): Location {
         const tlocation: Location = {
             id: this._location!.id,
+            destination_type: this.getDestinationType(),
             match: this.getMatch(),
             proxy_pass: '',
             auth_enable: this.getEnableAuth(),
@@ -608,22 +608,23 @@ export class LocationCard {
             xforwarded_scheme_enable: this.getXForwardedSchemeEnable(),
             xforwarded_proto_enable: this.getXForwardedProtoEnable(),
             xforwarded_for_enable: this.getXForwardedForEnable(),
-            xrealip_enable: this.getXrealipEnable()
+            xrealip_enable: this.getXrealipEnable(),
+            variables: []
         };
 
         switch (this.getDestinationType()) {
-            case RouteHttpEditLocationModalDesType.proxypass:
+            case NginxLocationDestinationTypes.proxypass:
                 tlocation.proxy_pass = this.getProxyPass();
                 break;
 
-            case RouteHttpEditLocationModalDesType.redirect:
+            case NginxLocationDestinationTypes.redirect:
                 tlocation.redirect = {
                     code: this.getRedirectCode(),
                     redirect: this.getRedirectPath()
                 };
                 break;
 
-            case RouteHttpEditLocationModalDesType.ssh:
+            case NginxLocationDestinationTypes.ssh:
                 tlocation.ssh = {
                     schema: this.getSshSchema(),
                     id: this.getSshListen()

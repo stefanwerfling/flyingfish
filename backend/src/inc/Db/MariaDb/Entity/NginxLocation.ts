@@ -1,6 +1,18 @@
 import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
 
 /**
+ * NginxLocationDestinationTypes
+ */
+export enum NginxLocationDestinationTypes {
+    none = 0,
+    proxypass = 1,
+    redirect = 2,
+    ssh = 3,
+    dyndns = 4,
+    vpn = 5
+}
+
+/**
  * NginxLocation
  */
 @Entity({name: 'nginx_location'})
@@ -18,6 +30,12 @@ export class NginxLocation extends BaseEntity {
     @Index()
     @Column()
     public http_id!: number;
+
+    /**
+     * destination type
+     */
+    @Column()
+    public destination_type!: number;
 
     /**
      * redirect code

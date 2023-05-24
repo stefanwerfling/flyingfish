@@ -22,6 +22,18 @@ export enum NginxStreamSshR {
 }
 
 /**
+ * NginxLocationDestinationTypes
+ */
+export enum NginxLocationDestinationTypes {
+    none = 0,
+    proxypass = 1,
+    redirect = 2,
+    ssh = 3,
+    dyndns = 4,
+    vpn = 5
+}
+
+/**
  * Upstream load balancing algorithm
  */
 export enum UpstreamLoadBalancingAlgorithm {
@@ -29,6 +41,16 @@ export enum UpstreamLoadBalancingAlgorithm {
     least_conn = 'least_conn',
     ip_hash = 'ip_hash'
 }
+
+/**
+ * SchemaRouteVariable
+ */
+export const SchemaRouteVariable = Vts.object({
+    name: Vts.string(),
+    value: Vts.string()
+});
+
+export type RouteVariable = ExtractSchemaResultType<typeof SchemaRouteVariable>;
 
 /**
  * UpStream
@@ -80,6 +102,7 @@ export type RouteStream = ExtractSchemaResultType<typeof SchemaRouteStream>;
  */
 export const SchemaLocation = Vts.object({
     id: Vts.number(),
+    destination_type: Vts.number(),
     match: Vts.string(),
     proxy_pass: Vts.string(),
     ssh: Vts.optional(Vts.object({
@@ -99,7 +122,8 @@ export const SchemaLocation = Vts.object({
     xforwarded_scheme_enable: Vts.boolean(),
     xforwarded_proto_enable: Vts.boolean(),
     xforwarded_for_enable: Vts.boolean(),
-    xrealip_enable: Vts.boolean()
+    xrealip_enable: Vts.boolean(),
+    variables: Vts.array(SchemaRouteVariable)
 });
 
 export type Location = ExtractSchemaResultType<typeof SchemaLocation>;
@@ -119,7 +143,8 @@ export const SchemaRouteHttp = Vts.object({
     locations: Vts.array(SchemaLocation),
     http2_enable: Vts.boolean(),
     x_frame_options: Vts.string(),
-    wellknown_disabled: Vts.boolean()
+    wellknown_disabled: Vts.boolean(),
+    variables: Vts.array(SchemaRouteVariable)
 });
 
 export type RouteHttp = ExtractSchemaResultType<typeof SchemaRouteHttp>;

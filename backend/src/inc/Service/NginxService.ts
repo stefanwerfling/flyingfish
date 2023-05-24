@@ -5,7 +5,7 @@ import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
-import {Domain as DomainDB} from '../Db/MariaDb/Entity/Domain.js';
+import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
     ListenTypes,
@@ -25,6 +25,7 @@ import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
 import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../Nginx/NginxLogFormatJson.js';
+import {NginxHTTPVariables} from '../Nginx/NginxVariables.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
 import {Location} from '../Nginx/Config/Location.js';
@@ -204,7 +205,6 @@ export class NginxService {
         // read db -----------------------------------------------------------------------------------------------------
 
         const listenRepository = DBHelper.getRepository(NginxListenDB);
-        const domainRepository = DBHelper.getRepository(DomainDB);
         const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
@@ -228,11 +228,7 @@ export class NginxService {
                 });
 
                 for await (const astream of tstreams) {
-                    const adomain = await domainRepository.findOne({
-                        where: {
-                            id: astream.domain_id
-                        }
-                    });
+                    const adomain = await DomainService.findOne(astream.domain_id);
 
                     if (adomain) {
                         if (!streamMap.has(alisten.listen_port)) {
@@ -297,11 +293,7 @@ export class NginxService {
                 });
 
                 for await (const http of https) {
-                    const adomain = await domainRepository.findOne({
-                        where: {
-                            id: http.domain_id
-                        }
-                    });
+                    const adomain = await DomainService.findOne(http.domain_id);
 
                     if (adomain) {
                         if (!httpMap.has(alisten.listen_port)) {
@@ -570,23 +562,23 @@ export class NginxService {
 
             if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
                 (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                aServer.addListen(new Listen(listenPort));
+                aServer.addListen(new Listen(listenPort, '', false, false, false));
             }
 
             if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
                 (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                aServer.addListen(new Listen(listenPort, '', false, false, ListenProtocol.udp));
+                aServer.addListen(new Listen(listenPort, '', false, false, false, ListenProtocol.udp));
             }
 
             if (streamCollects.listen.enable_ipv6) {
                 if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
                     (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                    aServer.addListen(new Listen(listenPort, '[::]'));
+                    aServer.addListen(new Listen(listenPort, '[::]', false, false, false));
                 }
 
                 if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
                     (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                    aServer.addListen(new Listen(listenPort, '[::]', false, false, ListenProtocol.udp));
+                    aServer.addListen(new Listen(listenPort, '[::]', false, false, false, ListenProtocol.udp));
                 }
             }
 
@@ -599,6 +591,7 @@ export class NginxService {
             }
 
             aServer.addVariable('ssl_preread', 'on');
+            aServer.addVariable('proxy_protocol', 'on');
 
             if (procMap !== null && procMap as NginxMap) {
                 const tprocMap: NginxMap = procMap;
@@ -634,7 +627,7 @@ export class NginxService {
 
                 conf.getHttp().addVariable(
                     `log_format ff_h_accesslogs_${httpSubCollect.http.id}`,
-                    `escape=json '${NginxLogFormatJson.generateAccessHtml(httpSubCollect.http.id)}'`
+                    `escape=json '${NginxLogFormatJson.generateAccessHttp(httpSubCollect.http.id)}'`
                 );
 
                 if (this._syslog && this._syslog.isRunning()) {
@@ -648,7 +641,7 @@ export class NginxService {
 
                 // secure variables ------------------------------------------------------------------------------------
 
-                aServer.addVariable('server_tokens', 'off');
+                aServer.addVariable(NginxHTTPVariables.server_tokens, 'off');
 
                 // ssl use ---------------------------------------------------------------------------------------------
 
@@ -656,9 +649,9 @@ export class NginxService {
                     const sslCert = await Certbot.existCertificate(domainName);
 
                     if (sslCert) {
-                        aServer.addVariable('ssl_protocols', 'TLSv1 TLSv1.1 TLSv1.2');
-                        aServer.addVariable('ssl_prefer_server_ciphers', 'on');
-                        aServer.addVariable('ssl_ciphers', '\'' +
+                        aServer.addVariable(NginxHTTPVariables.ssl_protocols, 'TLSv1 TLSv1.1 TLSv1.2');
+                        aServer.addVariable(NginxHTTPVariables.ssl_prefer_server_ciphers, 'on');
+                        aServer.addVariable(NginxHTTPVariables.ssl_ciphers, '\'' +
                             'ECDHE-ECDSA-AES256-GCM-SHA384:' +
                             'ECDHE-RSA-AES256-GCM-SHA384:' +
                             'ECDHE-ECDSA-CHACHA20-POLY1305:' +
@@ -669,25 +662,25 @@ export class NginxService {
                             'ECDHE-RSA-AES256-SHA384:' +
                             'ECDHE-ECDSA-AES128-SHA256:' +
                             'ECDHE-RSA-AES128-SHA256\'');
-                        aServer.addVariable('ssl_ecdh_curve', 'secp384r1');
+                        aServer.addVariable(NginxHTTPVariables.ssl_ecdh_curve, 'secp384r1');
 
                         const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
 
                         if (dhparam) {
-                            aServer.addVariable('ssl_dhparam', dhparam);
+                            aServer.addVariable(NginxHTTPVariables.ssl_dhparam, dhparam);
                         }
 
-                        aServer.addVariable('ssl_session_timeout', '1d');
-                        aServer.addVariable('ssl_session_cache', 'shared:SSL:50m');
-                        aServer.addVariable('ssl_session_tickets', 'off');
+                        aServer.addVariable(NginxHTTPVariables.ssl_session_timeout, '1d');
+                        aServer.addVariable(NginxHTTPVariables.ssl_session_cache, 'shared:SSL:50m');
+                        aServer.addVariable(NginxHTTPVariables.ssl_session_tickets, 'off');
                         aServer.addVariable('add_header Strict-Transport-Security', '"max-age=63072000; includeSubdomains; preload"');
-                        aServer.addVariable('ssl_stapling', 'on');
-                        aServer.addVariable('ssl_stapling_verify', 'on');
-                        aServer.addVariable('ssl_trusted_certificate', `${sslCert}/chain.pem`);
-                        aServer.addVariable('ssl_certificate', `${sslCert}/fullchain.pem`);
-                        aServer.addVariable('ssl_certificate_key', `${sslCert}/privkey.pem`);
-                        aServer.addVariable('resolver', `${nginxResolver} valid=300s`);
-                        aServer.addVariable('resolver_timeout', '5s');
+                        aServer.addVariable(NginxHTTPVariables.ssl_stapling, 'on');
+                        aServer.addVariable(NginxHTTPVariables.ssl_stapling_verify, 'on');
+                        aServer.addVariable(NginxHTTPVariables.ssl_trusted_certificate, `${sslCert}/chain.pem`);
+                        aServer.addVariable(NginxHTTPVariables.ssl_certificate, `${sslCert}/fullchain.pem`);
+                        aServer.addVariable(NginxHTTPVariables.ssl_certificate_key, `${sslCert}/privkey.pem`);
+                        aServer.addVariable(NginxHTTPVariables.resolver, `${nginxResolver} valid=300s`);
+                        aServer.addVariable(NginxHTTPVariables.resolver_timeout, '5s');
 
                         switch (httpSubCollect.http.x_frame_options) {
                             case ServerXFrameOptions.deny:
@@ -721,7 +714,8 @@ export class NginxService {
                         listenPort,
                         '',
                         ssl_enable,
-                        ssl_enable ? httpSubCollect.http.http2_enable : false
+                        ssl_enable ? httpSubCollect.http.http2_enable : false,
+                        true
                     ));
 
                     if (domainHttps.listen.enable_ipv6) {
@@ -729,7 +723,8 @@ export class NginxService {
                             listenPort,
                             '[::]',
                             ssl_enable,
-                            ssl_enable ? httpSubCollect.http.http2_enable : false
+                            ssl_enable ? httpSubCollect.http.http2_enable : false,
+                            true
                         ));
                     }
 
@@ -891,6 +886,7 @@ export class NginxService {
                 NginxService.DEFAULT_IP_LOCAL,
                 false,
                 false,
+                true,
                 ListenProtocol.none,
                 true
             ));
@@ -921,13 +917,14 @@ export class NginxService {
                 '',
                 false,
                 false,
+                true,
                 ListenProtocol.none,
                 true
             ));
 
             conf.getHttp().addVariable(
                 'log_format ff_h_accesslogs_0',
-                `escape=json '${NginxLogFormatJson.generateAccessHtml(0)}'`
+                `escape=json '${NginxLogFormatJson.generateAccessHttp(0)}'`
             );
 
             if (this._syslog && this._syslog.isRunning()) {
@@ -1016,9 +1013,16 @@ export class NginxService {
                         }
                     }
                 }
-            } catch (e) {
+            } catch (error) {
                 Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnMessage: Exception:');
-                Logger.getLogger().error(JSON.stringify(e, null, 2));
+
+                if (error instanceof Error) {
+                    Logger.getLogger().error(error.message);
+                } else {
+                    console.log(error);
+                }
+
+                Logger.getLogger().error(JSON.stringify(error, null, 2));
             }
         });
 

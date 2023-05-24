@@ -1,4 +1,4 @@
-import {ListenData, ListenTypes} from '../../Api/Listen';
+import {ListenCategory, ListenData, ListenTypes} from '../../Api/Listen';
 import {NginxStreamDestinationType, NginxStreamSshR, UpStream} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
@@ -508,11 +508,24 @@ export class RouteStreamEditModal extends ModalDialog {
             }
 
             const type = alisten.type === ListenTypes.stream ? 'Stream' : 'HTTP';
+            let style = alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;';
+
+            if (alisten.listen_category) {
+                switch (alisten.listen_category) {
+                    case ListenCategory.default_https:
+                        style = 'background:#28a745;';
+                        break;
+
+                    case ListenCategory.default_http:
+                        style = 'background:#CCCCFF';
+                        break;
+                }
+            }
 
             const option = {
                 key: `${alisten.id}`,
                 value: `${alisten.name} - ${alisten.port} (${type})`,
-                style: alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;'
+                style
             };
 
             if (alisten.type === this._type) {

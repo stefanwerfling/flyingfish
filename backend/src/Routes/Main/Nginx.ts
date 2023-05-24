@@ -1,11 +1,6 @@
 import {Router} from 'express';
-import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
-import {NginxService} from '../../inc/Service/NginxService.js';
-
-/**
- * NginxReloadResponse
- */
-export type NginxReloadResponse = DefaultReturn;
+import {DefaultRoute} from 'flyingfish_core';
+import {Reload} from './Nginx/Reload.js';
 
 /**
  * Nginx
@@ -20,17 +15,6 @@ export class Nginx extends DefaultRoute {
     }
 
     /**
-     * reload
-     */
-    public async reload(): Promise<NginxReloadResponse> {
-        await NginxService.getInstance().reload();
-
-        return {
-            statusCode: StatusCodes.OK
-        };
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {
@@ -38,7 +22,7 @@ export class Nginx extends DefaultRoute {
             '/json/nginx/reload',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await this.reload());
+                    res.status(200).json(await Reload.reload());
                 }
             }
         );

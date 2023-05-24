@@ -10,6 +10,7 @@ import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from './inc/Db/MariaDb
 import {IpListMaintainer as IpListMaintainerDB} from './inc/Db/MariaDb/Entity/IpListMaintainer.js';
 import {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js';
 import {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
+import {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
@@ -127,6 +128,7 @@ import exitHook from 'async-exit-hook';
                 NginxStreamDB,
                 NginxUpstreamDB,
                 NginxHttpDB,
+                NginxHttpVariableDB,
                 NginxLocationDB,
                 IpListMaintainerDB,
                 IpLocationDB,

@@ -1,25 +1,6 @@
 import {Router} from 'express';
-import {DefaultReturn, DefaultRoute, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../inc/Db/MariaDb/DBHelper.js';
-import {SshPort as SshPortDB} from '../../inc/Db/MariaDb/Entity/SshPort.js';
-
-/**
- * SshPortEntry
- */
-export const SchemaSshPortEntry = Vts.object({
-    id: Vts.number(),
-    port: Vts.number()
-});
-
-export type SshPortEntry = ExtractSchemaResultType<typeof SchemaSshPortEntry>;
-
-/**
- * SshPortListResponse
- */
-export type SshPortListResponse = DefaultReturn & {
-    list: SshPortEntry[];
-};
+import {DefaultRoute} from 'flyingfish_core';
+import {List} from './Ssh/List.js';
 
 /**
  * Ssh
@@ -34,30 +15,6 @@ export class Ssh extends DefaultRoute {
     }
 
     /**
-     * getList
-     */
-    public async getList(): Promise<SshPortListResponse> {
-        const list: SshPortEntry[] = [];
-
-        const sshPortRepository = DBHelper.getRepository(SshPortDB);
-        const sshports = await sshPortRepository.find();
-
-        if (sshports) {
-            for (const asshport of sshports) {
-                list.push({
-                    id: asshport.id,
-                    port: asshport.port
-                });
-            }
-        }
-
-        return {
-            statusCode: StatusCodes.OK,
-            list: list
-        };
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {
@@ -65,7 +22,7 @@ export class Ssh extends DefaultRoute {
             '/json/ssh/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await this.getList());
+                    res.status(200).json(await List.getList());
                 }
             }
         );
