@@ -693,23 +693,25 @@ export class Routes extends BasePage {
                         const sdTdD = new Td(trbody, '');
 
                         if (value.locations.length > 0) {
-                            const aLocation = value.locations[0];
+                            for (const aLocation of value.locations) {
+                                if (aLocation.ssh && aLocation.ssh.port_out) {
+                                    // eslint-disable-next-line no-new
+                                    new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                                } else if (aLocation.redirect && (aLocation.redirect.redirect !== '')) {
+                                    // eslint-disable-next-line no-new
+                                    new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
+                                } else {
+                                    let match = aLocation.match;
 
-                            if (aLocation.ssh && aLocation.ssh.port_out) {
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
-                            } else if (aLocation.redirect && (aLocation.redirect.redirect !== '')) {
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
-                            } else {
-                                let andMore = '';
+                                    if (match === '') {
+                                        match = '/';
+                                    }
 
-                                if (value.locations.length > 1) {
-                                    andMore = ', ...';
+                                    // eslint-disable-next-line no-new
+                                    new Badge(sdTdD, `${match} &#8594; ${aLocation.proxy_pass}`, BadgeType.info);
                                 }
 
-                                // eslint-disable-next-line no-new
-                                new Badge(sdTdD, `${aLocation.proxy_pass}${andMore}`, BadgeType.info);
+                                sdTdD.append('<br>');
                             }
                         } else {
                             sdTdD.addValue('None');
