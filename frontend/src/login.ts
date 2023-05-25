@@ -1,11 +1,15 @@
 import {Lang} from './inc/Lang';
 import {Login} from './inc/Api/Login';
 
+/**
+ * Main function for ready document
+ */
 (async(): Promise<void> => {
-    Lang.i('Lang_DE');
-    jQuery('#login_title').html(Lang.i().l('login_title'));
+    Lang.i('Lang_EN');
 
     jQuery(async() => {
+        jQuery('#login_title').html(Lang.i().l('login_title'));
+
         const fnLogin = async(): Promise<void> => {
             const email = jQuery('#input_email').val() as string;
             const password = jQuery('#input_password').val() as string;
