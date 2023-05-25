@@ -2,7 +2,7 @@
   "compileOnSave": true,
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "module": "commonjs",
+    "module": "NodeNext",
     "target": "ES2022",
     "strict": true,
     "baseUrl": "./",

@@ -29,6 +29,7 @@ services:
     volumes:
       - flyingfishInfluxdbData:/var/lib/influxdb2
     environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
       - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
@@ -52,19 +53,23 @@ services:
       dockerfile: Dockerfile.nginxsrc
     container_name: flyingfish_service
     volumes:
-#      - ./nginx:/opt/app/nginx:rw
+      - ./nginx:/opt/app/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw
-#      - ./backend/dist:/opt/app/dist
-#      - ./backend/node_modules:/opt/app/node_modules
-#      - ./backend/package.json:/opt/app/package.json
-#      - ./frontend/assets:/opt/app/frontend/assets
-#      - ./frontend/dist:/opt/app/frontend/dist
-#      - ./frontend/src:/opt/app/frontend/src
+      - ./backend/dist:/opt/app/dist
+      - ./backend/node_modules:/opt/app/node_modules
+      - ./backend/package.json:/opt/app/package.json
+      - ./frontend/assets:/opt/app/frontend/assets
+      - ./frontend/dist:/opt/app/frontend/dist
+      - ./frontend/src:/opt/app/frontend/src
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
       FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+      FLYINGFISH_DB_INFLUX_URL: "${INFLUXDB_URL}"
+      FLYINGFISH_DB_INFLUX_TOKEN: "${INFLUXDB_ADMIN_TOKEN}"
+      FLYINGFISH_DB_INFLUX_ORG: "${INFLUXDB_ORG}"
+      FLYINGFISH_DB_INFLUX_BUCKET: "${INFLUXDB_BUCKET}"
       FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
@@ -77,12 +82,12 @@ services:
       - "${HTTPSERVER_PORT}:${HTTPSERVER_PORT}"
       - "1900:1900"
       - "10901:10901"
-#      - "9229:9229"
-#    command:
-#      - node
-#      - "--inspect-brk=0.0.0.0:9229"
-#      - "dist/main.js"
-#      - "--envargs=1"
+      - "9229:9229"
+    command:
+      - node
+      - "--inspect-brk=0.0.0.0:9229"
+      - "dist/main.js"
+      - "--envargs=1"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
@@ -115,31 +120,31 @@ services:
     depends_on:
       - flyingfish
 
-  iptable:
-    image: flyingfish_iptable:v1.0
-    build:
-      context: ./iptable/
-    container_name: flyingfish_iptable
-    volumes:
-      - ./iptable/dist:/opt/app/dist
-      - ./iptable/node_modules:/opt/app/node_modules
-      - ./iptable/package.json:/opt/app/package.json
-    command:
-      - node
-      - "--inspect-brk=0.0.0.0:9229"
-      - "dist/main.js"
-      - "--reciverurl=https://10.103.0.3:3000/iptable/list"
-      - "--secret=${IPTABLE_SECURE_TOKEN}"
-    network_mode: host
-    cap_add:
-      - ALL
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      - flyingfish
+#  iptable:
+#    image: flyingfish_iptable:v1.0
+#    build:
+#      context: ./iptable/
+#    container_name: flyingfish_iptable
+#    volumes:
+#      - ./iptable/dist:/opt/app/dist
+#      - ./iptable/node_modules:/opt/app/node_modules
+#      - ./iptable/package.json:/opt/app/package.json
+#    command:
+#      - node
+#      - "--inspect-brk=0.0.0.0:9229"
+#      - "dist/main.js"
+#      - "--reciverurl=https://10.103.0.3:3000/iptable/list"
+#      - "--secret=${IPTABLE_SECURE_TOKEN}"
+#    network_mode: host
+#    cap_add:
+#      - ALL
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "500k"
+#        max-file: "50"
+#    depends_on:
+#      - flyingfish
 
   sshremote:
     image: flyingfish_ssh:v1.0
@@ -174,7 +179,8 @@ services:
   vpnserver:
     image: flyingfish_vpn:v1.0
     build:
-      context: ./vpn/
+      context: ./
+      dockerfile: ./vpn/Dockerfile
     container_name: flyingfish_vpn
     volumes:
       - ./vpn/dist:/opt/app/dist
