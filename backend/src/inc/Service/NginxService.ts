@@ -615,7 +615,10 @@ export class NginxService {
             }
 
             aServer.addVariable('ssl_preread', 'on');
-            aServer.addVariable('proxy_protocol', 'on');
+
+            if (streamCollects.listen.proxy_protocol) {
+                aServer.addVariable('proxy_protocol', 'on');
+            }
 
             if (procMap !== null && procMap as NginxMap) {
                 const tprocMap: NginxMap = procMap;

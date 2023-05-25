@@ -63,6 +63,7 @@ export class DBSetup {
         l443.listen_category = ListenCategory.default_stream_ssl;
         l443.description = 'Stream/SSL Listener Extern';
         l443.fixlisten = true;
+        l443.proxy_protocol = true;
 
         l443 = await DBHelper.getDataSource().manager.save(l443);
 
@@ -74,6 +75,7 @@ export class DBSetup {
         l80.listen_category = ListenCategory.default_stream_nonessl;
         l80.description = 'Stream Listener Extern';
         l80.fixlisten = true;
+        l80.proxy_protocol = true;
 
         l80 = await DBHelper.getDataSource().manager.save(l80);
 
