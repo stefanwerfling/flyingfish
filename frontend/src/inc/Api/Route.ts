@@ -42,6 +42,10 @@ export enum UpstreamLoadBalancingAlgorithm {
     ip_hash = 'ip_hash'
 }
 
+export enum NginxHTTPVariables {
+    client_max_body_size = 'client_max_body_size'
+}
+
 /**
  * SchemaRouteVariable
  */

@@ -237,7 +237,7 @@ export class Routes extends BasePage {
                         http2_enable: this._routeHttpDialog.getHttp2Enable(),
                         x_frame_options: this._routeHttpDialog.getXFrameOptions(),
                         wellknown_disabled: this._routeHttpDialog.getWellKnwonDisabled(),
-                        variables: []
+                        variables: this._routeHttpDialog.getVariables()
                     }
                 };
 
@@ -265,7 +265,7 @@ export class Routes extends BasePage {
                         });
                     }
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -764,6 +764,7 @@ export class Routes extends BasePage {
                                     this._routeHttpDialog.setHttp2Enable(value.http2_enable);
                                     this._routeHttpDialog.setXFrameOptions(value.x_frame_options);
                                     this._routeHttpDialog.setWellKnownDisabled(value.wellknown_disabled);
+                                    this._routeHttpDialog.setVariables(value.variables);
                                 },
                                 IconFa.edit
                             );

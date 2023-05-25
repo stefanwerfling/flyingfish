@@ -5,7 +5,6 @@ import {Delete as DeleteStream, SchemaRouteStreamDelete} from './Route/Stream/De
 import {List} from './Route/List.js';
 import {Save as SaveHttp, SchemaRouteHttpSave} from './Route/Http/Save.js';
 import {Save as SaveStream, SchemaRouteStreamSave} from './Route/Stream/Save.js';
-import {SettingDefaults} from './Route/SettingDefaults.js';
 
 /**
  * Route
@@ -28,15 +27,6 @@ export class Route extends DefaultRoute {
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
                     res.status(200).json(await List.getRoutes());
-                }
-            }
-        );
-
-        this._routes.get(
-            '/json/route/setting/defaults',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await SettingDefaults.getSettingDefaults());
                 }
             }
         );

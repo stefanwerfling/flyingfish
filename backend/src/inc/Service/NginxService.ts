@@ -8,6 +8,10 @@ import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Ent
 import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
+    NginxHttpVariable as NginxHttpVariableDB,
+    NginxHttpVariableContextType
+} from '../Db/MariaDb/Entity/NginxHttpVariable.js';
+import {
     ListenTypes,
     ListenProtocol as ListenProtocolDB,
     NginxListen as NginxListenDB,
@@ -50,6 +54,7 @@ type HttpLocationCollect = {
  */
 type HttpSubCollect = {
     http: NginxHttpDB;
+    variables: NginxHttpVariableDB[];
     locations: HttpLocationCollect[];
 };
 
@@ -208,6 +213,7 @@ export class NginxService {
         const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
+        const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
         const sshportRepository = DBHelper.getRepository(SshPortDB);
 
@@ -306,8 +312,11 @@ export class NginxService {
                         const mapDomainHttp = httpMap.get(alisten.listen_port);
                         const httpCollection: HttpSubCollect = {
                             http: http,
-                            locations: []
+                            locations: [],
+                            variables: []
                         };
+
+                        // locations -----------------------------------------------------------------------------------
 
                         const locations = await locationRepository.find({
                             where: {
@@ -340,6 +349,21 @@ export class NginxService {
 
                             httpCollection.locations = locationCollects;
                         }
+
+                        // variables -----------------------------------------------------------------------------------
+
+                        const variables = await httpVariableRepository.find({
+                            where: {
+                                http_id: http.id,
+                                context_type: NginxHttpVariableContextType.server
+                            }
+                        });
+
+                        if (variables) {
+                            httpCollection.variables = variables;
+                        }
+
+                        // ---------------------------------------------------------------------------------------------
 
                         mapDomainHttp!.domains.set(adomain.domainname, httpCollection);
 
@@ -642,6 +666,18 @@ export class NginxService {
                 // secure variables ------------------------------------------------------------------------------------
 
                 aServer.addVariable(NginxHTTPVariables.server_tokens, 'off');
+
+                // variables -------------------------------------------------------------------------------------------
+
+                for (const aVariable of httpSubCollect.variables) {
+                    if (aVariable.var_value !== '') {
+                        switch (aVariable.var_name) {
+                            case NginxHTTPVariables.client_max_body_size:
+                                aServer.addVariable(NginxHTTPVariables.client_max_body_size, `${parseInt(aVariable.var_value, 10) ?? 1}m`);
+                                break;
+                        }
+                    }
+                }
 
                 // ssl use ---------------------------------------------------------------------------------------------
 

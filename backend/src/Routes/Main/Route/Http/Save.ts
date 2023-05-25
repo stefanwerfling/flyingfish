@@ -1,5 +1,10 @@
 import {DefaultReturn, StatusCodes} from 'flyingfish_core';
 import {ExtractSchemaResultType, Vts} from 'vts';
+import {
+    NginxHttpVariable as NginxHttpVariableDB,
+    NginxHttpVariableContextType
+} from '../../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
+import {NginxHTTPVariables} from '../../../../inc/Nginx/NginxVariables.js';
 import {SchemaRouteHttp} from './../List.js';
 import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
 import {NginxHttp as NginxHttpDB} from '../../../../inc/Db/MariaDb/Entity/NginxHttp.js';
@@ -19,6 +24,13 @@ export type RouteHttpSave = ExtractSchemaResultType<typeof SchemaRouteHttpSave>;
  * RouteHttpSaveResponse
  */
 export type RouteHttpSaveResponse = DefaultReturn;
+
+/**
+ * AllowedRouteVariableServer
+ */
+export const AllowedRouteVariableServer = [
+    NginxHTTPVariables.client_max_body_size
+];
 
 /**
  * SaveHttp
@@ -42,6 +54,7 @@ export class Save {
         // ---------------------------------------------------------------------------------------------------------
 
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
+        const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
         let aHttp: NginxHttpDB|null = null;
@@ -90,7 +103,34 @@ export class Save {
 
         aHttp = await DBHelper.getDataSource().manager.save(aHttp);
 
-        // remove location -----------------------------------------------------------------------------------------
+        // save variables ----------------------------------------------------------------------------------------------
+
+        for await (const variable of data.http.variables) {
+            if (AllowedRouteVariableServer.indexOf(variable.name) === -1) {
+                continue;
+            }
+
+            let variableDb = await httpVariableRepository.findOne({
+                where: {
+                    http_id: aHttp.id,
+                    var_name: variable.name,
+                    context_type: NginxHttpVariableContextType.server
+                }
+            });
+
+            if (!variableDb) {
+                variableDb = new NginxHttpVariableDB();
+                variableDb.http_id = aHttp.id;
+                variableDb.var_name = variable.name;
+                variableDb.context_type = NginxHttpVariableContextType.server;
+            }
+
+            variableDb.var_value = variable.value;
+
+            await DBHelper.getDataSource().manager.save(variableDb);
+        }
+
+        // remove location ---------------------------------------------------------------------------------------------
 
         const oldLocations = await locationRepository.find({
             where: {

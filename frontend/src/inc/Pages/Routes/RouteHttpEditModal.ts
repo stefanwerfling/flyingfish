@@ -1,5 +1,10 @@
 import {ListenCategory, ListenData, ListenTypes} from '../../Api/Listen';
-import {Location, NginxLocationDestinationTypes} from '../../Api/Route';
+import {
+    Location,
+    NginxHTTPVariables,
+    NginxLocationDestinationTypes,
+    RouteVariable
+} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {Ssl as SslAPI, SslProvider} from '../../Api/Ssl';
 import {
@@ -129,6 +134,12 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _switchWellknownDisabled: Switch;
 
     /**
+     * input variable client_max_body_size
+     * @protected
+     */
+    protected _inputVariableCmbs: InputBottemBorderOnly2;
+
+    /**
      * click save fn
      * @protected
      */
@@ -218,6 +229,10 @@ export class RouteHttpEditModal extends ModalDialog {
             key: 'DENY',
             value: 'DENY'
         });
+
+        const groupVariableCmbs = new FormGroup(bodyACard, 'Client max body size (MB)');
+        this._inputVariableCmbs = new InputBottemBorderOnly2(groupVariableCmbs, InputType.number);
+        this._inputVariableCmbs.setPlaceholder('1');
 
         // tab details -------------------------------------------------------------------------------------------------
 
@@ -467,6 +482,34 @@ export class RouteHttpEditModal extends ModalDialog {
     }
 
     /**
+     * setVariables
+     * @param variables
+     */
+    public setVariables(variables: RouteVariable[]): void {
+        for (const aVariable of variables) {
+            switch (aVariable.name) {
+                case NginxHTTPVariables.client_max_body_size:
+                    this._inputVariableCmbs.setValue(aVariable.value);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * getVariables
+     */
+    public getVariables(): RouteVariable[] {
+        const variables: RouteVariable[] = [];
+
+        variables.push({
+            name: NginxHTTPVariables.client_max_body_size,
+            value: this._inputVariableCmbs.getValue()
+        });
+
+        return variables;
+    }
+
+    /**
      * setSshListens
      * @param listens
      */
@@ -597,6 +640,7 @@ export class RouteHttpEditModal extends ModalDialog {
         this._switchHttp2Enable.setInativ(true);
         this.setHttp2Enable(false);
         this.setXFrameOptions('');
+        this._inputVariableCmbs.setValue('');
 
         this._locationCards.forEach((element, index) => {
             element.remove();
