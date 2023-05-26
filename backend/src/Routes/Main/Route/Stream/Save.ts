@@ -425,6 +425,7 @@ export class Save {
                 aNewUpstream.destination_address = aUpstream.address;
                 aNewUpstream.destination_port = aUpstream.port;
                 aNewUpstream.index = index;
+                aNewUpstream.proxy_protocol_out = aUpstream.proxy_protocol_out;
 
                 await DBHelper.getDataSource().manager.save(aNewUpstream);
 

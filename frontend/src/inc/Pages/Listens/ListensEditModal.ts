@@ -67,6 +67,18 @@ export class ListensEditModal extends ModalDialog {
     protected _selectAddressCheckType: SelectBottemBorderOnly2;
 
     /**
+     * switch proxy protocol
+     * @protected
+     */
+    protected _switchProxyProtocol: Switch;
+
+    /**
+     * switch proxy protocol in
+     * @protected
+     */
+    protected _switchProxyProtocolIn: Switch;
+
+    /**
      * switch disable
      * @protected
      */
@@ -133,14 +145,16 @@ export class ListensEditModal extends ModalDialog {
         this._inputDescription.setPlaceholder('A description ...');
 
         const rowOptions = new FormRow(bodyCard);
-        const groupIP6 = new FormGroup(rowOptions.createCol(6), 'IP6');
+        const groupIP6 = new FormGroup(rowOptions.createCol(6), 'IP6 enable');
         this._switchIp6 = new Switch(groupIP6, 'ip6');
 
+        bodyCard.append('<hr>');
+
         const rowOptionsAc = new FormRow(bodyCard);
-        const groupAc = new FormGroup(rowOptionsAc.createCol(6), 'Address check');
+        const groupAc = new FormGroup(rowOptionsAc.createCol(6), 'IP access');
         this._switchAddressCheck = new Switch(groupAc, 'address_check');
 
-        const groupAcType = new FormGroup(rowOptionsAc.createCol(6), 'Address check type');
+        const groupAcType = new FormGroup(rowOptionsAc.createCol(6), 'Access type');
         this._selectAddressCheckType = new SelectBottemBorderOnly2(groupAcType);
         this._selectAddressCheckType.addValue({
             key: `${ListenAddressCheckType.black}`,
@@ -151,6 +165,17 @@ export class ListensEditModal extends ModalDialog {
             key: `${ListenAddressCheckType.white}`,
             value: 'Whitelist'
         });
+
+        bodyCard.append('<hr>');
+
+        const rowProxy = new FormRow(bodyCard);
+        const groupProxy = new FormGroup(rowProxy.createCol(6), 'Proxy protocol enable');
+        this._switchProxyProtocol = new Switch(groupProxy, 'proxy_protocol');
+
+        const groupProxyIn = new FormGroup(rowProxy.createCol(6), 'Proxy protocol incoming enable');
+        this._switchProxyProtocolIn = new Switch(groupProxyIn, 'proxy_protocol_in');
+
+        bodyCard.append('<hr>');
 
         const groupDisable = new FormGroup(bodyCard, 'Disable this listen');
         this._switchDisable = new Switch(groupDisable, 'disablelisten');
@@ -301,11 +326,33 @@ export class ListensEditModal extends ModalDialog {
     }
 
     /**
-     * setDisable
-     * @param disable
+     * setProxyProtocol
+     * @param enable
      */
-    public setDisable(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+    public setProxyProtocol(enable: boolean): void {
+        this._switchProxyProtocol.setEnable(enable);
+    }
+
+    /**
+     * getProxyProtocol
+     */
+    public getProxyProtocol(): boolean {
+        return this._switchProxyProtocol.isEnable();
+    }
+
+    /**
+     * setProxyProtocolIn
+     * @param enable
+     */
+    public setProxyProtocolIn(enable: boolean): void {
+        this._switchProxyProtocolIn.setEnable(enable);
+    }
+
+    /**
+     * getProxyProtocolIn
+     */
+    public getProxyProtocolIn(): boolean {
+        return this._switchProxyProtocolIn.isEnable();
     }
 
     /**
@@ -313,6 +360,14 @@ export class ListensEditModal extends ModalDialog {
      */
     public getDisable(): boolean {
         return this._switchDisable.isEnable();
+    }
+
+    /**
+     * setDisable
+     * @param disable
+     */
+    public setDisable(disable: boolean): void {
+        this._switchDisable.setEnable(disable);
     }
 
     /**
@@ -329,6 +384,8 @@ export class ListensEditModal extends ModalDialog {
         this.setAddressCheck(false);
         this.setAddressCheckType(ListenAddressCheckType.black);
         this.setDisable(false);
+        this.setProxyProtocol(false);
+        this.setProxyProtocolIn(false);
     }
 
     /**

@@ -73,7 +73,9 @@ export class Listens extends BasePage {
                     enable_ipv6: this._listenDialog.getIp6(),
                     check_address: this._listenDialog.getAddressCheck(),
                     check_address_type: this._listenDialog.getAddressCheckType(),
-                    disable: this._listenDialog.getDisable()
+                    disable: this._listenDialog.getDisable(),
+                    proxy_protocol: this._listenDialog.getProxyProtocol(),
+                    proxy_protocol_in: this._listenDialog.getProxyProtocolIn()
                 };
 
                 if (await ListenAPI.saveListen(listen)) {
@@ -100,7 +102,7 @@ export class Listens extends BasePage {
                         });
                     }
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -143,7 +145,7 @@ export class Listens extends BasePage {
         new Th(trhead, 'Disable');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, '');
+        new Th(trhead, 'Action');
 
         /**
          * onLoadList
@@ -190,7 +192,19 @@ export class Listens extends BasePage {
 
                     if (entry.enable_ipv6) {
                         // eslint-disable-next-line no-new
-                        new Badge(optionTd, 'IP6', BadgeType.secondary);
+                        new Badge(optionTd, 'IP6', BadgeType.color_cream_blue);
+                        optionTd.append('&nbsp;');
+                    }
+
+                    if (entry.proxy_protocol) {
+                        // eslint-disable-next-line no-new
+                        new Badge(optionTd, 'Proxy proctocol', BadgeType.color_cream_yellow);
+                        optionTd.append('&nbsp;');
+                    }
+
+                    if (entry.proxy_protocol_in) {
+                        // eslint-disable-next-line no-new
+                        new Badge(optionTd, 'Proxy proctocol IN', BadgeType.color_cream_yellow);
                         optionTd.append('&nbsp;');
                     }
 
@@ -199,8 +213,8 @@ export class Listens extends BasePage {
                         new Badge(
                             optionTd,
                             // eslint-disable-next-line no-negated-condition
-                            `Address check (${entry.check_address_type !== ListenAddressCheckType.white ? 'black' : 'white'})`,
-                            BadgeType.secondary
+                            `IP access - (${entry.check_address_type !== ListenAddressCheckType.white ? 'black' : 'white'})`,
+                            BadgeType.color_cream_purpel
                         );
                         optionTd.append('&nbsp;');
                     }
@@ -232,6 +246,8 @@ export class Listens extends BasePage {
                             this._listenDialog.setAddressCheck(entry.check_address);
                             this._listenDialog.setAddressCheckType(entry.check_address_type);
                             this._listenDialog.setDisable(entry.disable);
+                            this._listenDialog.setProxyProtocol(entry.proxy_protocol);
+                            this._listenDialog.setProxyProtocolIn(entry.proxy_protocol_in);
                             this._listenDialog.show();
                         },
                         IconFa.edit

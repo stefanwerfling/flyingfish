@@ -88,6 +88,8 @@ export class Save {
         aListen.enable_address_check = data.check_address;
         aListen.address_check_type = data.check_address_type;
         aListen.disable = data.disable;
+        aListen.proxy_protocol = data.proxy_protocol;
+        aListen.proxy_protocol_in = data.proxy_protocol_in;
 
         await DBHelper.getDataSource().manager.save(aListen);
 

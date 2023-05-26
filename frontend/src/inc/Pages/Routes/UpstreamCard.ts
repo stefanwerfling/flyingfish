@@ -1,6 +1,8 @@
 import {UpStream} from '../../Api/Route';
-import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup,
-    InputBottemBorderOnly2, InputType} from 'bambooo';
+import {
+    ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup,
+    InputBottemBorderOnly2, InputType, Switch
+} from 'bambooo';
 
 /**
  * UpstreamCard
@@ -32,6 +34,12 @@ export class UpstreamCard {
     protected _inputPort: InputBottemBorderOnly2;
 
     /**
+     * switch proxy protocol out
+     * @protected
+     */
+    protected _switchProxyProtocolOut: Switch;
+
+    /**
      * constructor
      * @param card
      * @param upstream
@@ -48,6 +56,9 @@ export class UpstreamCard {
         const groupPort = new FormGroup(this._card, 'Port');
         this._inputPort = new InputBottemBorderOnly2(groupPort, undefined, InputType.number);
 
+        const groupProxyProtocolOut = new FormGroup(this._card, 'Proxy protocol out');
+        this._switchProxyProtocolOut = new Switch(groupProxyProtocolOut, 'proxy_protocol_out');
+
         const removeUpstreamBtn = new ButtonDefault(
             this._card.getToolsElement(),
             '',
@@ -63,6 +74,7 @@ export class UpstreamCard {
 
         this.setAddress(upstream.address);
         this.setPort(`${upstream.port}`);
+        this.setProxyProtocolOut(upstream.proxy_protocol_out);
     }
 
     /**
@@ -96,6 +108,21 @@ export class UpstreamCard {
     }
 
     /**
+     * setProxyProtocolOut
+     * @param enable
+     */
+    public setProxyProtocolOut(enable: boolean): void {
+        this._switchProxyProtocolOut.setEnable(enable);
+    }
+
+    /**
+     * getProxyProtocolOut
+     */
+    public getProxyProtocolOut(): boolean {
+        return this._switchProxyProtocolOut.isEnable();
+    }
+
+    /**
      * remove
      */
     public remove(): void {
@@ -108,6 +135,8 @@ export class UpstreamCard {
     public getUpstream(): UpStream {
         this._upstream.port = parseInt(this.getPort(), 10);
         this._upstream.address = this.getAddress();
+        this._upstream.proxy_protocol_out = this.getProxyProtocolOut();
+
         return this._upstream;
     }
 

@@ -66,4 +66,14 @@ export class NginxUpstream extends BaseEntity {
     })
     public fail_timeout!: number;
 
+    /**
+     * proxy protocol out
+     */
+    @Index()
+    @Column({
+        type: 'bool',
+        default: false
+    })
+    public proxy_protocol_out!: boolean;
+
 }

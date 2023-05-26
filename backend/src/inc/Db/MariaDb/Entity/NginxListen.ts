@@ -161,11 +161,24 @@ export class NginxListen extends BaseEntity {
     })
     public disable!: boolean;
 
+    /**
+     * activate proxy protocol
+     */
     @Index()
     @Column({
         type: 'bool',
         default: false
     })
     public proxy_protocol!: boolean;
+
+    /**
+     * activate proxy protocol incoming
+     */
+    @Index()
+    @Column({
+        type: 'bool',
+        default: false
+    })
+    public proxy_protocol_in!: boolean;
 
 }

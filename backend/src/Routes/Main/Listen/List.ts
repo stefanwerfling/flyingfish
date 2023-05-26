@@ -19,7 +19,9 @@ export const SchemaListenData = Vts.object({
     description: Vts.string(),
     fix: Vts.optional(Vts.boolean()),
     disable: Vts.boolean(),
-    listen_category: Vts.optional(Vts.number())
+    listen_category: Vts.optional(Vts.number()),
+    proxy_protocol: Vts.boolean(),
+    proxy_protocol_in: Vts.boolean()
 });
 
 export type ListenData = ExtractSchemaResultType<typeof SchemaListenData>;
@@ -60,7 +62,9 @@ export class List {
                     description: listen.description,
                     fix: listen.fixlisten,
                     disable: listen.disable,
-                    listen_category: listen.listen_category
+                    listen_category: listen.listen_category,
+                    proxy_protocol: listen.proxy_protocol,
+                    proxy_protocol_in: listen.proxy_protocol_in
                 });
             }
         }

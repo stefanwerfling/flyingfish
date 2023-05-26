@@ -30,7 +30,8 @@ export type RouteVariable = ExtractSchemaResultType<typeof SchemaRouteVariable>;
 export const SchemaUpStream = Vts.object({
     id: Vts.number(),
     address: Vts.string(),
-    port: Vts.number()
+    port: Vts.number(),
+    proxy_protocol_out: Vts.boolean()
 });
 
 /**
@@ -209,7 +210,8 @@ export class List {
                             streamEntry.upstreams.push({
                                 id: aupstream.id,
                                 address: aupstream.destination_address,
-                                port: aupstream.destination_port
+                                port: aupstream.destination_port,
+                                proxy_protocol_out: aupstream.proxy_protocol_out
                             });
                         }
 

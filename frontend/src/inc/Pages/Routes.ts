@@ -440,6 +440,13 @@ export class Routes extends BasePage {
                             // eslint-disable-next-line no-new
                             new Badge(sdTd, `${listen.name} (${listen.port})`,
                                 listen.type === 0 ? BadgeType.warning : BadgeType.success);
+
+                            if (listen.proxy_protocol) {
+                                sdTd.append('&nbsp;');
+
+                                // eslint-disable-next-line no-new
+                                new Badge(sdTd, 'P', BadgeType.color_cream_yellow);
+                            }
                         }
 
                         // eslint-disable-next-line no-new
@@ -472,6 +479,13 @@ export class Routes extends BasePage {
                                     // eslint-disable-next-line no-new
                                     new Badge(sdTdD,
                                         `${dlisten.name} (${dlisten.port})`, badgeType);
+
+                                    if (dlisten.proxy_protocol_in) {
+                                        sdTdD.append('&nbsp;');
+
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, 'P&darr;', BadgeType.color_cream_yellow);
+                                    }
                                 } else {
                                     // eslint-disable-next-line no-new
                                     new Badge(sdTdD,
@@ -494,31 +508,34 @@ export class Routes extends BasePage {
                                 break;
 
                             case NginxStreamDestinationType.upstream:
-                                if (value.upstreams.length === 0) {
-                                    sdTdD.addValue('None');
+                                if (value.upstreams.length > 0) {
+                                    for (const tupstream of value.upstreams) {
+                                        let badType = BadgeType.warning;
+
+                                        if (tupstream.address === '127.0.0.1') {
+                                            badType = BadgeType.success;
+                                        }
+
+                                        if (tupstream.port === dnsserverport) {
+                                            badType = BadgeType.color_cream_rorange;
+                                        }
+
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD,
+                                            `${tupstream.address}:${tupstream.port} (${value.alias_name})`,
+                                            badType);
+
+                                        if (tupstream.proxy_protocol_out) {
+                                            sdTdD.append('&nbsp;');
+
+                                            // eslint-disable-next-line no-new
+                                            new Badge(sdTdD, 'P', BadgeType.color_cream_yellow);
+                                        }
+
+                                        sdTdD.append('<br>');
+                                    }
                                 } else {
-                                    const firstUpstream = value.upstreams[0];
-
-                                    let badType = BadgeType.warning;
-
-                                    if (firstUpstream.address === '127.0.0.1') {
-                                        badType = BadgeType.success;
-                                    }
-
-                                    if (firstUpstream.port === dnsserverport) {
-                                        badType = BadgeType.color_cream_rorange;
-                                    }
-
-                                    let andMore = '';
-
-                                    if (value.upstreams.length > 1) {
-                                        andMore = ', ...';
-                                    }
-
-                                    // eslint-disable-next-line no-new
-                                    new Badge(sdTdD,
-                                        `${firstUpstream.address}:${firstUpstream.port}${andMore} (${value.alias_name})`,
-                                        badType);
+                                    sdTdD.addValue('None');
                                 }
                                 break;
 
@@ -685,6 +702,13 @@ export class Routes extends BasePage {
 
                             // eslint-disable-next-line no-new
                             new Badge(sdTd, `${listen.name} (${listen.port})`, badgeType);
+
+                            if (listen.proxy_protocol) {
+                                sdTd.append('&nbsp;');
+
+                                // eslint-disable-next-line no-new
+                                new Badge(sdTd, 'P', BadgeType.color_cream_yellow);
+                            }
                         }
 
                         // eslint-disable-next-line no-new

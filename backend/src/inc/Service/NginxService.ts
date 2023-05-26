@@ -5,6 +5,7 @@ import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
+import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
@@ -12,10 +13,10 @@ import {
     NginxHttpVariableContextType
 } from '../Db/MariaDb/Entity/NginxHttpVariable.js';
 import {
-    ListenTypes,
+    ListenCategory,
     ListenProtocol as ListenProtocolDB,
-    NginxListen as NginxListenDB,
-    ListenCategory
+    ListenTypes,
+    NginxListen as NginxListenDB
 } from '../Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation.js';
 import {
@@ -25,19 +26,18 @@ import {
 } from '../Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream.js';
 import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
-import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../Nginx/NginxLogFormatJson.js';
-import {NginxHTTPVariables} from '../Nginx/NginxVariables.js';
-import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
 import {Location} from '../Nginx/Config/Location.js';
 import {Map as NginxMap} from '../Nginx/Config/Map.js';
 import {Server as NginxConfServer, ServerXFrameOptions} from '../Nginx/Config/Server.js';
 import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream.js';
+import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../Nginx/NginxLogFormatJson.js';
 import {NginxServer} from '../Nginx/NginxServer.js';
+import {NginxHTTPVariables} from '../Nginx/NginxVariables.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
+import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {Settings} from '../Settings/Settings.js';
 import {SysLogServer} from '../SysLogServer/SysLogServer.js';
 
@@ -99,6 +99,8 @@ export class NginxService {
     public static readonly DEFAULT_DOMAIN_NAME = '_';
     public static readonly DEFAULT_IP_LOCAL = '127.0.0.1';
     public static readonly DEFAULT_IP_PUBLIC = '0.0.0.0';
+    public static readonly DEFAULT_IP6_PUBLIC = '[::]';
+    public static readonly PORT_PROXY_UPSTREAM_BEGIN = 20000;
 
     /**
      * ngnix service instance
@@ -122,6 +124,12 @@ export class NginxService {
      * @private
      */
     private _syslog: SysLogServer | null = null;
+
+    /**
+     * _proxyUpstreamServer
+     * @private
+     */
+    private _proxyUpstreamServer = NginxService.PORT_PROXY_UPSTREAM_BEGIN;
 
     /**
      * _loadConfig
@@ -389,6 +397,9 @@ export class NginxService {
             let defaultMapDomain: string|null = null;
             let procMap: NginxMap|null = null;
 
+            const proxyProtocolEnable = streamCollects.listen.proxy_protocol;
+            const proxyProtocolInEnable = streamCollects.listen.proxy_protocol_in;
+
             for (const domainName of streamCollects.domains.keys()) {
                 const streamCollect = streamCollects.domains.get(domainName);
 
@@ -435,9 +446,51 @@ export class NginxService {
                         case NginxStreamDestinationType.upstream:
                             if (streamCollect.upstreams.length > 0) {
                                 for (const tupstream of streamCollect.upstreams) {
+                                    let destination_address = tupstream.destination_address;
+                                    let destination_port = tupstream.destination_port;
+
+                                    if (tupstream.proxy_protocol_out) {
+                                        const aServer = new NginxConfServer();
+
+                                        if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
+                                            (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+                                            aServer.addListen(
+                                                new Listen(
+                                                    this._proxyUpstreamServer,
+                                                    NginxService.DEFAULT_IP_LOCAL,
+                                                    false,
+                                                    false,
+                                                    true
+                                                )
+                                            );
+                                        }
+
+                                        if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
+                                            (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
+                                            aServer.addListen(
+                                                new Listen(
+                                                    this._proxyUpstreamServer,
+                                                    NginxService.DEFAULT_IP_LOCAL,
+                                                    false,
+                                                    false,
+                                                    true,
+                                                    ListenProtocol.udp
+                                                )
+                                            );
+                                        }
+
+                                        aServer.addVariable('proxy_pass', `${tupstream.destination_address}:${tupstream.destination_port}`);
+
+                                        conf.getStream().addServer(aServer);
+
+                                        destination_address = NginxService.DEFAULT_IP_LOCAL;
+                                        destination_port = this._proxyUpstreamServer;
+                                        this._proxyUpstreamServer++;
+                                    }
+
                                     upStream.addServer({
-                                        address: tupstream.destination_address,
-                                        port: tupstream.destination_port,
+                                        address: destination_address,
+                                        port: destination_port,
                                         weight: tupstream.weight,
                                         max_fails: tupstream.max_fails,
                                         fail_timeout: tupstream.fail_timeout
@@ -586,23 +639,57 @@ export class NginxService {
 
             if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
                 (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                aServer.addListen(new Listen(listenPort, '', false, false, false));
+                aServer.addListen(
+                    new Listen(
+                        listenPort,
+                        '',
+                        false,
+                        false,
+                        proxyProtocolInEnable
+                    )
+                );
             }
 
             if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
                 (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                aServer.addListen(new Listen(listenPort, '', false, false, false, ListenProtocol.udp));
+                aServer.addListen(
+                    new Listen(
+                        listenPort,
+                        '',
+                        false,
+                        false,
+                        proxyProtocolInEnable,
+                        ListenProtocol.udp
+                    )
+                );
             }
 
             if (streamCollects.listen.enable_ipv6) {
                 if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
                     (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                    aServer.addListen(new Listen(listenPort, '[::]', false, false, false));
+                    aServer.addListen(
+                        new Listen(
+                            listenPort,
+                            NginxService.DEFAULT_IP6_PUBLIC,
+                            false,
+                            false,
+                            proxyProtocolInEnable
+                        )
+                    );
                 }
 
                 if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
                     (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                    aServer.addListen(new Listen(listenPort, '[::]', false, false, false, ListenProtocol.udp));
+                    aServer.addListen(
+                        new Listen(
+                            listenPort,
+                            NginxService.DEFAULT_IP6_PUBLIC,
+                            false,
+                            false,
+                            proxyProtocolInEnable,
+                            ListenProtocol.udp
+                        )
+                    );
                 }
             }
 
@@ -616,7 +703,7 @@ export class NginxService {
 
             aServer.addVariable('ssl_preread', 'on');
 
-            if (streamCollects.listen.proxy_protocol) {
+            if (proxyProtocolEnable) {
                 aServer.addVariable('proxy_protocol', 'on');
             }
 
@@ -631,6 +718,8 @@ export class NginxService {
 
             conf.getStream().addServer(aServer);
         }
+
+        // -------------------------------------------------------------------------------------------------------------
 
         for await (const listenPort of httpMap.keys()) {
             const domainHttps = httpMap.get(listenPort);
@@ -647,6 +736,7 @@ export class NginxService {
                 }
 
                 const ssl_enable = httpSubCollect.http.ssl_enable;
+                const proxyProtocolInEnable = domainHttps.listen.proxy_protocol_in;
 
                 const aServer = new NginxConfServer();
 
@@ -754,16 +844,16 @@ export class NginxService {
                         '',
                         ssl_enable,
                         ssl_enable ? httpSubCollect.http.http2_enable : false,
-                        true
+                        proxyProtocolInEnable
                     ));
 
                     if (domainHttps.listen.enable_ipv6) {
                         aServer.addListen(new Listen(
                             listenPort,
-                            '[::]',
+                            NginxService.DEFAULT_IP6_PUBLIC,
                             ssl_enable,
                             ssl_enable ? httpSubCollect.http.http2_enable : false,
-                            true
+                            proxyProtocolInEnable
                         ));
                     }
 
@@ -925,7 +1015,7 @@ export class NginxService {
                 NginxService.DEFAULT_IP_LOCAL,
                 false,
                 false,
-                true,
+                false,
                 ListenProtocol.none,
                 true
             ));
@@ -956,7 +1046,7 @@ export class NginxService {
                 '',
                 false,
                 false,
-                true,
+                defaultListen.proxy_protocol_in,
                 ListenProtocol.none,
                 true
             ));

@@ -62,7 +62,8 @@ export type RouteVariable = ExtractSchemaResultType<typeof SchemaRouteVariable>;
 export const SchemaUpStream = Vts.object({
     id: Vts.number(),
     address: Vts.string(),
-    port: Vts.number()
+    port: Vts.number(),
+    proxy_protocol_out: Vts.boolean()
 });
 
 export type UpStream = ExtractSchemaResultType<typeof SchemaUpStream>;

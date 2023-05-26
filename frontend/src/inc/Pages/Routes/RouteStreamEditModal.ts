@@ -219,6 +219,7 @@ export class RouteStreamEditModal extends ModalDialog {
             this._upstreamCards.push(new UpstreamCard(this._upstreamCard, {
                 port: 80,
                 address: '192.168.178.1',
+                proxy_protocol_out: false,
                 id: 0
             }));
         });
