@@ -105,7 +105,7 @@ But it's better you run the installation with the instructions in Docker-Compose
     </tr>
     <tr>
         <td>
-			<img src="doc/screenshots/proxy_protocol_route_list.png" alt="Listen list" width="360px" />
+			<img src="doc/screenshots/listens.png" alt="Listen list" width="360px" />
         </td>
         <td>
             <img src="doc/screenshots/listens_edit.png" alt="Listen edit" width="360px" />
@@ -140,7 +140,7 @@ But it's better you run the installation with the instructions in Docker-Compose
 			<img src="doc/screenshots/dyndns_client.png" alt="DynDns client list" width="360px" />
 		</td>
 		<td>
-			<img src="doc/screenshots/routes.png" alt="Route list" width="360px" />
+			<img src="doc/screenshots/proxy_protocol_route_list.png" alt="Route list" width="360px" />
 		</td>
 	</tr>
 	<tr>
