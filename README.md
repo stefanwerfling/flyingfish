@@ -81,11 +81,11 @@ But it's better you run the installation with the instructions in Docker-Compose
 
 ### Docker images (latest)
 * stefanwerfling/flyingfish:latest
-* stefanwerfling/flyingfish:v1.0.17
+* stefanwerfling/flyingfish:v1.0.17_2
 * stefanwerfling/flyingfish_ssh:latest
-* stefanwerfling/flyingfish_ssh:v1.0.17
+* stefanwerfling/flyingfish_ssh:v1.0.17_2
 * stefanwerfling/flyingfish_himip:latest
-* stefanwerfling/flyingfish_himip:v1.0.17
+* stefanwerfling/flyingfish_himip:v1.0.17_2
 
 # Index
 1. [Project Description](doc/description.md)
