@@ -97,58 +97,58 @@ But it's better you run the installation with the instructions in Docker-Compose
 <table>
     <tr>
         <td> 
-            <img src="doc/screenshots/login.png" alt="1" width="360px" />
+            <img src="doc/screenshots/login.png" alt="Login page" width="360px" />
         </td>
         <td>
-			&nbsp;
+			<img src="doc/screenshots/dashboard.png" alt="Dashboard" width="360px" />&nbsp;
         </td>
     </tr>
     <tr>
         <td>
-			<img src="doc/screenshots/listens.png" alt="1" width="360px" />
+			<img src="doc/screenshots/listens.png" alt="Listen list" width="360px" />
         </td>
         <td>
-            <img src="doc/screenshots/listens_edit.png" alt="1" width="360px" />
+            <img src="doc/screenshots/listens_edit.png" alt="Listen edit" width="360px" />
         </td>
     </tr>
 	<tr>
 		<td>
-			<img src="doc/screenshots/ip_access.png" alt="1" width="360px" />
+			<img src="doc/screenshots/ip_access.png" alt="IP access blacklist" width="360px" />
 		</td>
 		<td>
-			<img src="doc/screenshots/gateway.png" alt="1" width="360px" />
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<img src="doc/screenshots/upnp-nat.png" alt="1" width="360px" />
-		</td>
-		<td>
-			<img src="doc/screenshots/upnp-nat_edit.png" alt="1" width="360px" />
+			<img src="doc/screenshots/gateway.png" alt="Gatewaylist" width="360px" />
 		</td>
 	</tr>
 	<tr>
 		<td>
-			<img src="doc/screenshots/domains.png" alt="1" width="360px" />
+			<img src="doc/screenshots/upnp-nat.png" alt="Upnpnat list" width="360px" />
 		</td>
 		<td>
-			<img src="doc/screenshots/domains_record.png" alt="1" width="360px" />
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<img src="doc/screenshots/dyndns_client.png" alt="1" width="360px" />
-		</td>
-		<td>
-			<img src="doc/screenshots/routes.png" alt="1" width="360px" />
+			<img src="doc/screenshots/upnp-nat_edit.png" alt="Upnpnat edit" width="360px" />
 		</td>
 	</tr>
 	<tr>
 		<td>
-			<img src="doc/screenshots/routes_stream_edit.png" alt="1" width="360px" />
+			<img src="doc/screenshots/domains.png" alt="Domain list" width="360px" />
 		</td>
 		<td>
-			<img src="doc/screenshots/routes_http_edit_ssl.png" alt="1" width="360px" />
+			<img src="doc/screenshots/domains_record.png" alt="Domain record edit" width="360px" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<img src="doc/screenshots/dyndns_client.png" alt="DynDns client list" width="360px" />
+		</td>
+		<td>
+			<img src="doc/screenshots/routes.png" alt="Route list" width="360px" />
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<img src="doc/screenshots/routes_stream_edit.png" alt="Route edit" width="360px" />
+		</td>
+		<td>
+			<img src="doc/screenshots/routes_http_edit_ssl.png" alt="Certificate - letsencrypt" width="360px" />
 		</td>
 	</tr>
 </table>
