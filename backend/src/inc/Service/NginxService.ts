@@ -132,6 +132,91 @@ export class NginxService {
     private _proxyUpstreamServer = NginxService.PORT_PROXY_UPSTREAM_BEGIN;
 
     /**
+     * _addServerListens
+     * @param server
+     * @param listenProtocol
+     * @param port
+     * @param ip
+     * @param ip6
+     * @param ssl
+     * @param http2
+     * @param proxy_protocol
+     * @param enable_ip6
+     * @private
+     */
+    private _addServerListens(
+        server: NginxConfServer,
+        listenProtocol: ListenProtocolDB,
+        port: number,
+        ip: string,
+        ip6: string,
+        ssl: boolean,
+        http2: boolean,
+        proxy_protocol: boolean,
+        enable_ip6: boolean
+    ): void {
+        if ((listenProtocol === ListenProtocolDB.tcp) ||
+            (listenProtocol === ListenProtocolDB.tcp_udp)
+        ) {
+            server.addListen(
+                new Listen(
+                    port,
+                    ip,
+                    ssl,
+                    http2,
+                    proxy_protocol
+                )
+            );
+        }
+
+        if ((listenProtocol === ListenProtocolDB.udp) ||
+            (listenProtocol === ListenProtocolDB.tcp_udp)
+        ) {
+            server.addListen(
+                new Listen(
+                    port,
+                    ip,
+                    ssl,
+                    http2,
+                    proxy_protocol,
+                    ListenProtocol.udp
+                )
+            );
+        }
+
+        if (enable_ip6) {
+            if ((listenProtocol === ListenProtocolDB.tcp) ||
+                (listenProtocol === ListenProtocolDB.tcp_udp)
+            ) {
+                server.addListen(
+                    new Listen(
+                        port,
+                        ip6,
+                        ssl,
+                        http2,
+                        proxy_protocol
+                    )
+                );
+            }
+
+            if ((listenProtocol === ListenProtocolDB.udp) ||
+                (listenProtocol === ListenProtocolDB.tcp_udp)
+            ) {
+                server.addListen(
+                    new Listen(
+                        port,
+                        ip6,
+                        ssl,
+                        http2,
+                        proxy_protocol,
+                        ListenProtocol.udp
+                    )
+                );
+            }
+        }
+    }
+
+    /**
      * _loadConfig
      * @private
      */
@@ -452,32 +537,17 @@ export class NginxService {
                                     if (tupstream.proxy_protocol_out) {
                                         const aServer = new NginxConfServer();
 
-                                        if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
-                                            (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                                            aServer.addListen(
-                                                new Listen(
-                                                    this._proxyUpstreamServer,
-                                                    NginxService.DEFAULT_IP_LOCAL,
-                                                    false,
-                                                    false,
-                                                    true
-                                                )
-                                            );
-                                        }
-
-                                        if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
-                                            (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                                            aServer.addListen(
-                                                new Listen(
-                                                    this._proxyUpstreamServer,
-                                                    NginxService.DEFAULT_IP_LOCAL,
-                                                    false,
-                                                    false,
-                                                    true,
-                                                    ListenProtocol.udp
-                                                )
-                                            );
-                                        }
+                                        this._addServerListens(
+                                            aServer,
+                                            streamCollects.listen.listen_protocol,
+                                            this._proxyUpstreamServer,
+                                            NginxService.DEFAULT_IP_LOCAL,
+                                            NginxService.DEFAULT_IP6_PUBLIC,
+                                            false,
+                                            false,
+                                            true,
+                                            streamCollects.listen.enable_ipv6
+                                        );
 
                                         aServer.addVariable('proxy_pass', `${tupstream.destination_address}:${tupstream.destination_port}`);
 
@@ -519,10 +589,39 @@ export class NginxService {
                                     procMap.addVariable('"TLSv1.0"', varName);
                                     procMap.addVariable('default', upstreamName);
 
+                                    // eslint-disable-next-line no-case-declarations
+                                    let destination_address_in = Config.getInstance().get()!.sshserver!.ip!;
+                                    // eslint-disable-next-line no-case-declarations
+                                    let destination_port_in = 22;
+
+                                    if (streamCollects.listen.listen_protocol) {
+                                        const aServer = new NginxConfServer();
+
+                                        this._addServerListens(
+                                            aServer,
+                                            streamCollects.listen.listen_protocol,
+                                            this._proxyUpstreamServer,
+                                            NginxService.DEFAULT_IP_LOCAL,
+                                            NginxService.DEFAULT_IP6_PUBLIC,
+                                            false,
+                                            false,
+                                            true,
+                                            streamCollects.listen.enable_ipv6
+                                        );
+
+                                        aServer.addVariable('proxy_pass', `${destination_address_in}:${destination_port_in}`);
+
+                                        conf.getStream().addServer(aServer);
+
+                                        destination_address_in = NginxService.DEFAULT_IP_LOCAL;
+                                        destination_port_in = this._proxyUpstreamServer;
+                                        this._proxyUpstreamServer++;
+                                    }
+
                                     // fill default ssh server
                                     upStream.addServer({
-                                        address: Config.getInstance().get()?.sshserver?.ip!,
-                                        port: 22,
+                                        address: destination_address_in,
+                                        port: destination_port_in,
                                         weight: 0,
                                         max_fails: 0,
                                         fail_timeout: 0
@@ -532,10 +631,40 @@ export class NginxService {
                                 // ssh r out ---------------------------------------------------------------------------
                                 case NginxStreamSshR.out:
                                     if (streamCollect.sshport) {
+
+                                        // eslint-disable-next-line no-case-declarations
+                                        let destination_address_out = Config.getInstance().get()!.sshserver!.ip!;
+                                        // eslint-disable-next-line no-case-declarations
+                                        let destination_port_out = streamCollect.sshport.port;
+
+                                        if (streamCollects.listen.listen_protocol) {
+                                            const aServer = new NginxConfServer();
+
+                                            this._addServerListens(
+                                                aServer,
+                                                streamCollects.listen.listen_protocol,
+                                                this._proxyUpstreamServer,
+                                                NginxService.DEFAULT_IP_LOCAL,
+                                                NginxService.DEFAULT_IP6_PUBLIC,
+                                                false,
+                                                false,
+                                                true,
+                                                streamCollects.listen.enable_ipv6
+                                            );
+
+                                            aServer.addVariable('proxy_pass', `${destination_address_out}:${destination_port_out}`);
+
+                                            conf.getStream().addServer(aServer);
+
+                                            destination_address_out = NginxService.DEFAULT_IP_LOCAL;
+                                            destination_port_out = this._proxyUpstreamServer;
+                                            this._proxyUpstreamServer++;
+                                        }
+
                                         // fill default ssh server
                                         upStream.addServer({
-                                            address: Config.getInstance().get()?.sshserver?.ip!,
-                                            port: streamCollect.sshport.port,
+                                            address: destination_address_out,
+                                            port: destination_port_out,
                                             weight: 0,
                                             max_fails: 0,
                                             fail_timeout: 0
@@ -567,10 +696,39 @@ export class NginxService {
                                 procMap.addVariable('"TLSv1.0"', varName);
                                 procMap.addVariable('default', upstreamName);
 
+                                // eslint-disable-next-line no-case-declarations
+                                let destination_address_l = Config.getInstance().get()!.sshserver!.ip!;
+                                // eslint-disable-next-line no-case-declarations
+                                let destination_port_l = 22;
+
+                                if (streamCollects.listen.listen_protocol) {
+                                    const aServer = new NginxConfServer();
+
+                                    this._addServerListens(
+                                        aServer,
+                                        streamCollects.listen.listen_protocol,
+                                        this._proxyUpstreamServer,
+                                        NginxService.DEFAULT_IP_LOCAL,
+                                        NginxService.DEFAULT_IP6_PUBLIC,
+                                        false,
+                                        false,
+                                        true,
+                                        streamCollects.listen.enable_ipv6
+                                    );
+
+                                    aServer.addVariable('proxy_pass', `${destination_address_l}:${destination_port_l}`);
+
+                                    conf.getStream().addServer(aServer);
+
+                                    destination_address_l = NginxService.DEFAULT_IP_LOCAL;
+                                    destination_port_l = this._proxyUpstreamServer;
+                                    this._proxyUpstreamServer++;
+                                }
+
                                 // fill default ssh server
                                 upStream.addServer({
-                                    address: Config.getInstance().get()?.sshserver?.ip!,
-                                    port: 22,
+                                    address: destination_address_l,
+                                    port: destination_port_l,
                                     weight: 0,
                                     max_fails: 0,
                                     fail_timeout: 0
@@ -637,61 +795,18 @@ export class NginxService {
                 );
             }
 
-            if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
-                (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                aServer.addListen(
-                    new Listen(
-                        listenPort,
-                        '',
-                        false,
-                        false,
-                        proxyProtocolInEnable
-                    )
-                );
-            }
-
-            if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
-                (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                aServer.addListen(
-                    new Listen(
-                        listenPort,
-                        '',
-                        false,
-                        false,
-                        proxyProtocolInEnable,
-                        ListenProtocol.udp
-                    )
-                );
-            }
-
-            if (streamCollects.listen.enable_ipv6) {
-                if ((streamCollects.listen.listen_protocol === ListenProtocolDB.tcp) ||
-                    (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                    aServer.addListen(
-                        new Listen(
-                            listenPort,
-                            NginxService.DEFAULT_IP6_PUBLIC,
-                            false,
-                            false,
-                            proxyProtocolInEnable
-                        )
-                    );
-                }
-
-                if ((streamCollects.listen.listen_protocol === ListenProtocolDB.udp) ||
-                    (streamCollects.listen.listen_protocol === ListenProtocolDB.tcp_udp)) {
-                    aServer.addListen(
-                        new Listen(
-                            listenPort,
-                            NginxService.DEFAULT_IP6_PUBLIC,
-                            false,
-                            false,
-                            proxyProtocolInEnable,
-                            ListenProtocol.udp
-                        )
-                    );
-                }
-            }
+            // add listens
+            this._addServerListens(
+                aServer,
+                streamCollects.listen.listen_protocol,
+                listenPort,
+                '',
+                NginxService.DEFAULT_IP6_PUBLIC,
+                false,
+                false,
+                proxyProtocolInEnable,
+                streamCollects.listen.enable_ipv6
+            );
 
             if (streamCollects.listen.enable_address_check) {
                 aServer.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
