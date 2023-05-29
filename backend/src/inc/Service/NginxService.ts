@@ -468,6 +468,56 @@ export class NginxService {
 
         // fill config -------------------------------------------------------------------------------------------------
 
+        // add default intern ssh server -------------------------------------------------------------------------------
+        const varNameSshIntern = 'ffus_internsshserver';
+
+        const tSshInternUpstream = new Upstream(varNameSshIntern);
+        tSshInternUpstream.addServer({
+            address: Config.getInstance().get()!.sshserver!.ip!,
+            port: 22,
+            weight: 0,
+            max_fails: 0,
+            fail_timeout: 0
+        });
+
+        conf.getStream().addUpstream(tSshInternUpstream);
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        const varNameSshInternProxy = 'ffus_internsshserver_proxy';
+
+        const aServerProxy = new NginxConfServer();
+
+        this._addServerListens(
+            aServerProxy,
+            ListenProtocolDB.tcp,
+            this._proxyUpstreamServer,
+            NginxService.DEFAULT_IP_LOCAL,
+            NginxService.DEFAULT_IP6_PUBLIC,
+            false,
+            false,
+            true,
+            false
+        );
+
+        aServerProxy.addVariable('proxy_pass', `${Config.getInstance().get()!.sshserver!.ip!}:${22}`);
+
+        const tSshInternUpstreamProxy = new Upstream(varNameSshInternProxy);
+        tSshInternUpstreamProxy.addServer({
+            address: NginxService.DEFAULT_IP_LOCAL,
+            port: this._proxyUpstreamServer,
+            weight: 0,
+            max_fails: 0,
+            fail_timeout: 0
+        });
+
+        conf.getStream().addUpstream(tSshInternUpstreamProxy);
+
+        this._proxyUpstreamServer++;
+        conf.getStream().addServer(aServerProxy);
+
+        // fill upstreams ----------------------------------------------------------------------------------------------
+
         const tupstreams: string[] = [];
 
         for (const listenPort of streamMap.keys()) {
@@ -579,7 +629,12 @@ export class NginxService {
 
                                 // ssh r in ----------------------------------------------------------------------------
                                 case NginxStreamSshR.in:
-                                    upstreamName = 'ffus_internsshserver';
+                                    upstreamName = varNameSshIntern;
+
+                                    if (streamCollects.listen.proxy_protocol) {
+                                        upstreamName = varNameSshInternProxy;
+                                    }
+
                                     upStream.setStreamName(upstreamName);
 
                                     procMap = new NginxMap('$ssl_preread_protocol', `$ffstreamProc${listenPort}`);
@@ -588,44 +643,6 @@ export class NginxService {
                                     procMap.addVariable('"TLSv1.1"', varName);
                                     procMap.addVariable('"TLSv1.0"', varName);
                                     procMap.addVariable('default', upstreamName);
-
-                                    // eslint-disable-next-line no-case-declarations
-                                    let destination_address_in = Config.getInstance().get()!.sshserver!.ip!;
-                                    // eslint-disable-next-line no-case-declarations
-                                    let destination_port_in = 22;
-
-                                    if (streamCollects.listen.listen_protocol) {
-                                        const aServer = new NginxConfServer();
-
-                                        this._addServerListens(
-                                            aServer,
-                                            streamCollects.listen.listen_protocol,
-                                            this._proxyUpstreamServer,
-                                            NginxService.DEFAULT_IP_LOCAL,
-                                            NginxService.DEFAULT_IP6_PUBLIC,
-                                            false,
-                                            false,
-                                            true,
-                                            streamCollects.listen.enable_ipv6
-                                        );
-
-                                        aServer.addVariable('proxy_pass', `${destination_address_in}:${destination_port_in}`);
-
-                                        conf.getStream().addServer(aServer);
-
-                                        destination_address_in = NginxService.DEFAULT_IP_LOCAL;
-                                        destination_port_in = this._proxyUpstreamServer;
-                                        this._proxyUpstreamServer++;
-                                    }
-
-                                    // fill default ssh server
-                                    upStream.addServer({
-                                        address: destination_address_in,
-                                        port: destination_port_in,
-                                        weight: 0,
-                                        max_fails: 0,
-                                        fail_timeout: 0
-                                    });
                                     break;
 
                                 // ssh r out ---------------------------------------------------------------------------
@@ -637,7 +654,7 @@ export class NginxService {
                                         // eslint-disable-next-line no-case-declarations
                                         let destination_port_out = streamCollect.sshport.port;
 
-                                        if (streamCollects.listen.listen_protocol) {
+                                        if (streamCollects.listen.proxy_protocol) {
                                             const aServer = new NginxConfServer();
 
                                             this._addServerListens(
@@ -686,7 +703,12 @@ export class NginxService {
                         // ssh l ---------------------------------------------------------------------------------------
                         case NginxStreamDestinationType.ssh_l:
                             if (streamCollect.sshport) {
-                                upstreamName = 'ffus_internsshserver';
+                                upstreamName = varNameSshIntern;
+
+                                if (streamCollects.listen.proxy_protocol) {
+                                    upstreamName = varNameSshInternProxy;
+                                }
+
                                 upStream.setStreamName(upstreamName);
 
                                 procMap = new NginxMap('$ssl_preread_protocol', `$ffstreamProc${listenPort}`);
@@ -695,44 +717,6 @@ export class NginxService {
                                 procMap.addVariable('"TLSv1.1"', varName);
                                 procMap.addVariable('"TLSv1.0"', varName);
                                 procMap.addVariable('default', upstreamName);
-
-                                // eslint-disable-next-line no-case-declarations
-                                let destination_address_l = Config.getInstance().get()!.sshserver!.ip!;
-                                // eslint-disable-next-line no-case-declarations
-                                let destination_port_l = 22;
-
-                                if (streamCollects.listen.listen_protocol) {
-                                    const aServer = new NginxConfServer();
-
-                                    this._addServerListens(
-                                        aServer,
-                                        streamCollects.listen.listen_protocol,
-                                        this._proxyUpstreamServer,
-                                        NginxService.DEFAULT_IP_LOCAL,
-                                        NginxService.DEFAULT_IP6_PUBLIC,
-                                        false,
-                                        false,
-                                        true,
-                                        streamCollects.listen.enable_ipv6
-                                    );
-
-                                    aServer.addVariable('proxy_pass', `${destination_address_l}:${destination_port_l}`);
-
-                                    conf.getStream().addServer(aServer);
-
-                                    destination_address_l = NginxService.DEFAULT_IP_LOCAL;
-                                    destination_port_l = this._proxyUpstreamServer;
-                                    this._proxyUpstreamServer++;
-                                }
-
-                                // fill default ssh server
-                                upStream.addServer({
-                                    address: destination_address_l,
-                                    port: destination_port_l,
-                                    weight: 0,
-                                    max_fails: 0,
-                                    fail_timeout: 0
-                                });
                             } else {
                                 Logger.getLogger().error(
                                     `NginxService::_loadConfig: Ssh (l) entry is empty by domain: ${domainName}, streamid: ${tstream.id}`
@@ -755,15 +739,15 @@ export class NginxService {
                             );
                     }
 
-                    if (upStream.countServer() === 0) {
-                        Logger.getLogger().warn(
-                            `NginxService::_loadConfig: upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`
-                        );
-
-                        continue;
-                    }
-
                     if (!conf.getStream().hashUpstream(upStream.getStreamName())) {
+                        if (upStream.countServer() === 0) {
+                            Logger.getLogger().warn(
+                                `NginxService::_loadConfig: upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`
+                            );
+
+                            continue;
+                        }
+
                         conf.getStream().addUpstream(upStream);
                     }
                 }
