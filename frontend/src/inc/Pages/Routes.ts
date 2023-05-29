@@ -204,7 +204,7 @@ export class Routes extends BasePage {
                         });
                     }
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -656,7 +656,7 @@ export class Routes extends BasePage {
                                                             });
                                                         }
                                                     }
-                                                } catch ({message}) {
+                                                } catch (message) {
                                                     this._toast.fire({
                                                         icon: 'error',
                                                         title: message
@@ -828,7 +828,7 @@ export class Routes extends BasePage {
                                                         });
                                                     }
                                                 }
-                                            } catch ({message}) {
+                                            } catch (message) {
                                                 this._toast.fire({
                                                     icon: 'error',
                                                     title: message
