@@ -115,6 +115,8 @@ export class DashboardMapIp extends Element {
      * @param list
      */
     public setMarks(list: DashboardMapIpMark[]): void {
+        this._source.clear();
+
         for (const data of list) {
             const geom = new Point(fromLonLat([parseFloat(data.longitude), parseFloat(data.latitude)]));
             const feature = new Feature(geom);
