@@ -2,7 +2,7 @@
   "name": "flyingfish_vpn",
   "version": "1.0.0",
   "description": "A part of flyingfish for vpn",
-  "main": "main.js",
+  "main": "dist/main.js",
   "type": "module",
   "scripts": {
     "npm-check-updates": "npm-check-updates",
@@ -42,7 +42,7 @@
     "express-session": "^1.17.3",
     "got": "^12.5.3",
     "node-schedule": "^2.1.0",
-    "tuntap2": "git+https://github.com/stefanwerfling/node-tuntap2.git",
+    "tuntap2": "git+https://github.com/stefanwerfling/node-tuntap2.git#ESModule",
     "uuid": "^8.3.2",
     "ws": "^8.12.1",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",

@@ -177,13 +177,13 @@ services:
       - mariadb
 
   vpnserver:
-    image: flyingfish_vpn:v1.0
+    image: flyingfish_vpn:v1.2
     build:
       context: ./
       dockerfile: ./vpn/Dockerfile
     container_name: flyingfish_vpn
-    volumes:
-      - ./vpn/dist:/opt/app/dist
+#    volumes:
+#      - ./vpn/dist:/opt/app/dist
     privileged: true
     network_mode: host
     logging:
