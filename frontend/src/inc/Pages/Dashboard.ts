@@ -63,25 +63,64 @@ export class Dashboard extends BasePage {
     public async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
 
+        const row = new ContentRow(content);
+        const col1 = new ContentCol(row, ContentColSize.col12ColSm6ColMd3);
+
+        // public ip
+        const pubIpBox = new InfoBox(col1, InfoBoxBg.none);
+        pubIpBox.setIcon(IconFa.ethernet, InfoBoxBg.success);
+        pubIpBox.getTextElement().append('Public IP');
+
+        const col2 = new ContentCol(row, ContentColSize.col12ColSm6ColMd3);
+
+        // gateway ip
+        const gatewayIpBox = new InfoBox(col2, InfoBoxBg.none);
+        gatewayIpBox.setIcon(IconFa.ethernet, InfoBoxBg.info);
+        gatewayIpBox.getTextElement().append('Gateway IP');
+
+        const col3 = new ContentCol(row, ContentColSize.col12ColSm6ColMd3);
+
+        // host ip
+        const hostIpBox = new InfoBox(col3, InfoBoxBg.none);
+        hostIpBox.setIcon(IconFa.ethernet, InfoBoxBg.warning);
+        hostIpBox.getTextElement().append('Host IP');
+
+        // ip access map -------------------------------------------------------------------------------------------
+
+        const rowMap = new ContentRow(content);
+        const cardMap = new Card(new ContentCol(rowMap, ContentColSize.colMd8));
+        cardMap.setTitle('IP Map/Blacklist');
+
+        // @ts-ignore
+        const dmip = new DashboardMapIp(cardMap);
+
+        const mapContentInfo = new ContentCol(rowMap, ContentColSize.colMd4);
+        const infoBoxBlocks = new InfoBox(mapContentInfo, InfoBoxBg.none);
+        infoBoxBlocks.setIcon(IconFa.ban, InfoBoxBg.light);
+        infoBoxBlocks.getTextElement().append('Blocks');
+
+        const infoBoxPubIpBlacklist = new InfoBox(mapContentInfo, InfoBoxBg.none);
+        infoBoxPubIpBlacklist.setIcon(IconFa.ethernet, InfoBoxBg.success);
+        infoBoxPubIpBlacklist.getTextElement().append('Public IP blacklist check');
+
+        // eslint-disable-next-line no-new
+        new TooltipInfo(infoBoxPubIpBlacklist.getTextElement(), Lang.i().l('dahsboard_ip_blacklisted'));
+
+
+        // init tooltips
+        Tooltip.init();
+
         /**
          * onLoadList
          */
         this._onLoadTable = async(): Promise<void> => {
-            content.empty();
-
             const dashboardInfo = await DashboardApi.getInfo();
 
-            // ip infos ------------------------------------------------------------------------------------------------
-
-            const row = new ContentRow(content);
-            const col1 = new ContentCol(row, ContentColSize.col12ColSm6ColMd3);
-
-            // public ip
-            const pubIpBox = new InfoBox(col1, InfoBoxBg.none);
-            pubIpBox.setIcon(IconFa.ethernet, InfoBoxBg.success);
-            pubIpBox.getTextElement().append('Public IP');
+            // public ip -----------------------------------------------------------------------------------------------
 
             if (dashboardInfo !== null && dashboardInfo.public_ip !== null) {
+                pubIpBox.getNumberElement().empty();
+
                 const btnPubIp = new ButtonMenu(
                     pubIpBox.getNumberElement(),
                     null,
@@ -104,14 +143,11 @@ export class Dashboard extends BasePage {
                 }, IconFa.copy);
             }
 
-            const col2 = new ContentCol(row, ContentColSize.col12ColSm6ColMd3);
-
-            // gateway ip
-            const gatewayIpBox = new InfoBox(col2, InfoBoxBg.none);
-            gatewayIpBox.setIcon(IconFa.ethernet, InfoBoxBg.info);
-            gatewayIpBox.getTextElement().append('Gateway IP');
+            // gateway ip ----------------------------------------------------------------------------------------------
 
             if (dashboardInfo !== null && dashboardInfo.host !== null) {
+                gatewayIpBox.getNumberElement().empty();
+
                 const btnGateway = new ButtonMenu(
                     gatewayIpBox.getNumberElement(),
                     null,
@@ -134,14 +170,11 @@ export class Dashboard extends BasePage {
                 }, IconFa.copy);
             }
 
-            const col3 = new ContentCol(row, ContentColSize.col12ColSm6ColMd3);
-
-            // host ip
-            const hostIpBox = new InfoBox(col3, InfoBoxBg.none);
-            hostIpBox.setIcon(IconFa.ethernet, InfoBoxBg.warning);
-            hostIpBox.getTextElement().append('Host IP');
+            // host ip -------------------------------------------------------------------------------------------------
 
             if (dashboardInfo !== null && dashboardInfo.host !== null) {
+                hostIpBox.getNumberElement().empty();
+
                 const btnHostIp = new ButtonMenu(
                     hostIpBox.getNumberElement(),
                     null,
@@ -164,14 +197,7 @@ export class Dashboard extends BasePage {
                 }, IconFa.copy);
             }
 
-            // ip access map -------------------------------------------------------------------------------------------
-
-            const rowMap = new ContentRow(content);
-            const cardMap = new Card(new ContentCol(rowMap, ContentColSize.colMd8));
-            cardMap.setTitle('IP Map/Blacklist');
-
-            // @ts-ignore
-            const dmip = new DashboardMapIp(cardMap);
+            // ip infos ------------------------------------------------------------------------------------------------
 
             const blockMarkList: DashboardMapIpMark[] = [];
 
@@ -186,30 +212,21 @@ export class Dashboard extends BasePage {
 
             dmip.setMarks(blockMarkList);
 
-            const mapContentInfo = new ContentCol(rowMap, ContentColSize.colMd4);
-            const infoBoxBlocks = new InfoBox(mapContentInfo, InfoBoxBg.none);
-            infoBoxBlocks.setIcon(IconFa.ban, InfoBoxBg.light);
-            infoBoxBlocks.getTextElement().append('Blocks');
+            // ip blocks -----------------------------------------------------------------------------------------------
 
             const ipblockCounts = dashboardInfo ? dashboardInfo.ipblock_count : 0;
 
-            infoBoxBlocks.getNumberElement().append(ipblockCounts);
+            infoBoxBlocks.getNumberElement().empty().append(ipblockCounts);
 
-            const infoBoxPubIpBlacklist = new InfoBox(mapContentInfo, InfoBoxBg.none);
-            infoBoxPubIpBlacklist.setIcon(IconFa.ethernet, InfoBoxBg.success);
-            infoBoxPubIpBlacklist.getTextElement().append('Public IP blacklist check');
-
-            // eslint-disable-next-line no-new
-            new TooltipInfo(infoBoxPubIpBlacklist.getTextElement(), Lang.i().l('dahsboard_ip_blacklisted'));
+            // ip checks -----------------------------------------------------------------------------------------------
 
             if (dashboardInfo) {
+                infoBoxPubIpBlacklist.getNumberElement().empty();
+
                 // eslint-disable-next-line no-new
                 new Circle(infoBoxPubIpBlacklist.getNumberElement(), dashboardInfo.public_ip_blacklisted ? CircleColor.red : CircleColor.green);
                 infoBoxPubIpBlacklist.getNumberElement().append(`&nbsp;${dashboardInfo.public_ip_blacklisted ? 'IP is blacklisted' : 'IP is not blacklisted'}`);
             }
-
-            // init tooltips
-            Tooltip.init();
         };
 
         // load table
