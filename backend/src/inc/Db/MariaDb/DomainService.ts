@@ -110,8 +110,7 @@ export class DomainService {
 
     /**
      * updateChildrenToNewParent
-     * @param oldParent
-     * @param newParent
+     * @param domain
      */
     public static async updateChildrenToNewParent(domain: Domain): Promise<void> {
         if (domain.parent_id === 0) {
