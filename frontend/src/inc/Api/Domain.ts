@@ -26,7 +26,8 @@ export const SchemaDomainData = Vts.object({
     fix: Vts.boolean(),
     recordless: Vts.boolean(),
     records: Vts.array(SchemaDomainRecord),
-    disable: Vts.boolean()
+    disable: Vts.boolean(),
+    parent_id: Vts.number()
 });
 
 export type DomainData = ExtractSchemaResultType<typeof SchemaDomainData>;

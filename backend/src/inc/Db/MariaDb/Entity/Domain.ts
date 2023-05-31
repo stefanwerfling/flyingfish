@@ -48,4 +48,10 @@ export class Domain extends BaseEntity {
     })
     public disable!: boolean;
 
+    @Index()
+    @Column({
+        default: 0
+    })
+    public parent_id!: number;
+
 }

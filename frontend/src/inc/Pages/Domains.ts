@@ -1,9 +1,31 @@
+import {
+    Badge,
+    BadgeType,
+    Button,
+    ButtonClass,
+    ButtonDefault,
+    ButtonMenu,
+    ButtonType,
+    Card,
+    CardBodyType,
+    CardLine,
+    CardType,
+    ContentCol,
+    ContentColSize,
+    ContentDisable,
+    ContentRow,
+    DialogConfirm,
+    IconFa,
+    LeftNavbarLink,
+    ModalDialogType,
+    Table,
+    Td,
+    Th,
+    Tr
+} from 'bambooo';
 import moment from 'moment';
 import {Domain as DomainAPI, DomainData} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {Badge, BadgeType, ButtonClass, ButtonDefault, Card, CardBodyType, CardLine, CardType, ContentCol,
-    ContentColSize, ContentDisable, ContentRow, DialogConfirm, ButtonType, ButtonMenu, IconFa, Table, Td, Th,
-    Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';
 import {DomainEditModal} from './Domains/DomainEditModal';
 import {DomainRecordEditModal} from './Domains/DomainRecordEditModal';
@@ -75,7 +97,8 @@ export class Domains extends BasePage {
                     // ignored fields
                     fix: false,
                     recordless: false,
-                    records: []
+                    records: [],
+                    parent_id: 0
                 };
 
                 if (await DomainAPI.saveDomain(domain)) {
@@ -174,301 +197,183 @@ export class Domains extends BasePage {
 
             const domains = await DomainAPI.getDomains();
 
+            // map domains by parent -----------------------------------------------------------------------------------
+
+            const domainMap = new Map<number, DomainData[]>();
+
             if (domains && domains.list) {
                 for (const domain of domains.list) {
-                    if (domain.name === '_') {
-                        // eslint-disable-next-line no-continue
-                        continue;
+                    if (!domainMap.has(domain.parent_id)) {
+                        domainMap.set(domain.parent_id, []);
                     }
 
-                    const row1 = new ContentRow(content);
-                    const card = new Card(
-                        new ContentCol(row1, ContentColSize.col12),
-                        CardBodyType.table,
-                        CardType.primary,
-                        CardLine.outline
-                    );
+                    const domainCollection = domainMap.get(domain.parent_id);
+                    domainCollection.push(domain);
 
-                    jQuery('<span>Domainname/Zone:&nbsp;</span>').appendTo(card.getTitleElement());
+                    domainMap.set(domain.parent_id, domainCollection);
+                }
+            }
 
-                    const btnOpenUrl = new ButtonMenu(
-                        card.getTitleElement(),
-                        null,
-                        true,
-                        ButtonType.borderless
-                    );
+            // ---------------------------------------------------------------------------------------------------------
 
-                    if (domain.fix) {
-                        // eslint-disable-next-line no-new
-                        new Badge(btnOpenUrl, `${domain.name}`, BadgeType.danger);
-                    } else {
-                        // eslint-disable-next-line no-new
-                        new Badge(btnOpenUrl, `${domain.name}`, BadgeType.secondary);
-                    }
+            const loadDomain = (parentId: number, parentElement: any): void => {
+                const collection = domainMap.get(parentId);
 
-                    btnOpenUrl.addMenuItem(`http://${domain.name}`, () => {
-                        window.open(`http://${domain.name}`, '_blank');
-                    }, IconFa.external_link);
+                if (collection && collection.length > 0) {
+                    for (const domain of collection) {
+                        if (domain.name === '_') {
+                            // eslint-disable-next-line no-continue
+                            continue;
+                        }
 
-                    btnOpenUrl.addMenuItem(`https://${domain.name}`, () => {
-                        window.open(`https://${domain.name}`, '_blank');
-                    }, IconFa.external_link);
+                        let appendElement = parentElement;
 
-                    btnOpenUrl.addDivider();
+                        if (domain.parent_id !== 0) {
+                            const rowParent = new ContentRow(parentElement);
 
-                    btnOpenUrl.addMenuItem('Copy to clipboard', () => {
-                        navigator.clipboard.writeText(domain.name);
+                            const colParent = new ContentCol(rowParent, ContentColSize.col12);
+                            appendElement = colParent.getElement();
+                        }
 
-                        this._toast.fire({
-                            icon: 'success',
-                            title: 'Domainname copy to clipboard'
-                        });
-
-                    }, IconFa.copy);
-
-                    const funcEdit = (): void => {
-                        this._domainDialog.setTitle('Domain Edit');
-                        this._domainDialog.resetValues();
-                        this._domainDialog.setId(domain.id);
-                        this._domainDialog.setName(domain.name);
-                        this._domainDialog.setDisable(domain.disable);
-                        this._domainDialog.show();
-                    };
-
-                    if (domain.disable) {
-                        const cdisable = new ContentDisable(card.getMainElement());
-                        const button = new ButtonDefault(cdisable, 'Edit');
-                        button.setOnClickFn(funcEdit);
-                    }
-
-                    const btnMenu = new ButtonMenu(
-                        card.getToolsElement(),
-                        IconFa.bars,
-                        true,
-                        ButtonType.borderless
-                    );
-
-                    if (!domain.fix) {
-                        btnMenu.addMenuItem(
-                            'Edit',
-                            funcEdit,
-                            IconFa.edit
+                        const card = new Card(
+                            appendElement,
+                            CardBodyType.none,
+                            CardType.primary,
+                            CardLine.outline
                         );
-                    }
 
-                    if (!domain.recordless) {
-                        btnMenu.addMenuItem(
-                            'Add Record',
-                            (): void => {
-                                this._domainRecordDialog.resetValues();
-                                this._domainRecordDialog.setTitle('Domain Record Add');
-                                this._domainRecordDialog.setDomainId(domain.id);
-                                this._domainRecordDialog.setDomainName(domain.name);
-                                this._domainRecordDialog.show();
-                            },
-                            IconFa.add
+                        card.getMainElement().addClass('collapsed-card');
+
+                        // eslint-disable-next-line no-new
+                        new Button(card.getTitleElement(), ButtonType.cardCollapse);
+
+                        // jQuery('<span>Domainname/Zone:&nbsp;</span>').appendTo(card.getTitleElement());
+
+                        const btnOpenUrl = new ButtonMenu(
+                            card.getTitleElement(),
+                            null,
+                            false,
+                            ButtonType.borderless
                         );
-                    }
 
-                    if (!domain.fix) {
-                        btnMenu.addDivider();
-                        btnMenu.addMenuItem(
-                            'Delete',
-                            (): void => {
-                                DialogConfirm.confirm(
-                                    'dcDeleteDomain',
-                                    ModalDialogType.large,
-                                    'Delete Domain',
-                                    'Are you sure to delete the domain? All data on the domain will also be deleted!',
-                                    async(_, dialog) => {
-                                        try {
-                                            if (await DomainAPI.deleteDomain(domain)) {
-                                                this._toast.fire({
-                                                    icon: 'success',
-                                                    title: 'Domain delete success.'
-                                                });
+                        if (domain.fix) {
+                            // eslint-disable-next-line no-new
+                            new Badge(btnOpenUrl, `${domain.name}`, BadgeType.danger);
+                        } else {
+                            // eslint-disable-next-line no-new
+                            new Badge(btnOpenUrl, `${domain.name}`, BadgeType.secondary);
+                        }
 
-                                                if (await NginxAPI.reload()) {
-                                                    this._toast.fire({
-                                                        icon: 'success',
-                                                        title: 'Nginx server reload config success.'
-                                                    });
-                                                } else {
-                                                    this._toast.fire({
-                                                        icon: 'error',
-                                                        title: 'Nginx server reload config faild, please check your last settings!'
-                                                    });
-                                                }
-                                            }
-                                        } catch ({message}) {
-                                            this._toast.fire({
-                                                icon: 'error',
-                                                title: message
-                                            });
-                                        }
+                        btnOpenUrl.addMenuItem(`http://${domain.name}`, () => {
+                            window.open(`http://${domain.name}`, '_blank');
+                        }, IconFa.external_link);
 
-                                        dialog.hide();
+                        btnOpenUrl.addMenuItem(`https://${domain.name}`, () => {
+                            window.open(`https://${domain.name}`, '_blank');
+                        }, IconFa.external_link);
 
-                                        if (this._onLoadTable) {
-                                            this._onLoadTable();
-                                        }
-                                    },
-                                    undefined,
-                                    'Delete',
-                                    ButtonClass.danger
-                                );
-                            },
-                            IconFa.trash
+                        btnOpenUrl.addDivider();
+
+                        btnOpenUrl.addMenuItem('Copy to clipboard', () => {
+                            navigator.clipboard.writeText(domain.name);
+
+                            this._toast.fire({
+                                icon: 'success',
+                                title: 'Domainname copy to clipboard'
+                            });
+
+                        }, IconFa.copy);
+
+                        const funcEdit = (): void => {
+                            this._domainDialog.setTitle('Domain Edit');
+                            this._domainDialog.resetValues();
+                            this._domainDialog.setId(domain.id);
+                            this._domainDialog.setName(domain.name);
+                            this._domainDialog.setDisable(domain.disable);
+                            this._domainDialog.show();
+                        };
+
+                        if (domain.disable) {
+                            const cdisable = new ContentDisable(card.getMainElement());
+                            const button = new ButtonDefault(cdisable, 'Edit');
+                            button.setOnClickFn(funcEdit);
+                        }
+
+                        const childrenDomains = domainMap.get(domain.id);
+                        let childrenDomainCounts = 0;
+
+                        if (childrenDomains) {
+                            childrenDomainCounts = childrenDomains.length;
+                        }
+
+                        // eslint-disable-next-line no-new
+                        new Badge(card.getToolsElement(), `${childrenDomainCounts}`, BadgeType.primary);
+
+                        card.getToolsElement().append('&nbsp;');
+
+                        // eslint-disable-next-line no-new
+                        new Badge(card.getToolsElement(), `${domain.records.length}`, BadgeType.success);
+
+                        card.getToolsElement().append('&nbsp;');
+
+                        const btnMenu = new ButtonMenu(
+                            card.getToolsElement(),
+                            IconFa.bars,
+                            true,
+                            ButtonType.borderless
                         );
-                    }
 
-                    if (domain.records.length > 0) {
-                        card.showLoading();
-
-                        // record table
-                        const rtable = new Table(card.getElement());
-                        const rtrhead = new Tr(rtable.getThead());
-
-                        // eslint-disable-next-line no-new
-                        new Th(rtrhead, 'Type');
-
-                        // eslint-disable-next-line no-new
-                        new Th(rtrhead, 'Class');
-
-                        // eslint-disable-next-line no-new
-                        new Th(rtrhead, 'TTL');
-
-                        // eslint-disable-next-line no-new
-                        new Th(rtrhead, 'Value');
-
-                        // eslint-disable-next-line no-new
-                        new Th(rtrhead, 'Last Update');
-
-                        // eslint-disable-next-line no-new
-                        new Th(rtrhead, '');
-
-                        for (const record of domain.records) {
-                            const rtrbody = new Tr(rtable.getTbody());
-
-                            const typeTd = new Td(rtrbody, '');
-                            let bageType = BadgeType.secondary;
-                            let typeName = 'unknow';
-
-                            switch (record.type) {
-                                case 1:
-                                    bageType = BadgeType.color_cream_red;
-                                    typeName = 'A';
-                                    break;
-
-                                case 2:
-                                    bageType = BadgeType.color_cream_blue;
-                                    typeName = 'NS';
-                                    break;
-
-                                case 5:
-                                    bageType = BadgeType.color_cream_green;
-                                    typeName = 'CNAME';
-                                    break;
-
-                                case 15:
-                                    bageType = BadgeType.color_cream_yellow;
-                                    typeName = 'MX';
-                                    break;
-
-                                case 16:
-                                    bageType = BadgeType.color_cream_purpel;
-                                    typeName = 'TXT';
-                                    break;
-
-                                case 17:
-                                    bageType = BadgeType.color_cream_rorange;
-                                    typeName = 'AAAA';
-                                    break;
-                            }
-
-                            // eslint-disable-next-line no-new
-                            new Badge(typeTd.getElement(), `${typeName}`, bageType);
-
-                            let className = '';
-
-                            switch (record.class) {
-                                case 1:
-                                    className = 'IN';
-                                    break;
-
-                                case 2:
-                                    className = 'CS';
-                                    break;
-
-                                case 3:
-                                    className = 'CH';
-                                    break;
-
-                                case 4:
-                                    className = 'HS';
-                                    break;
-
-                                default:
-                                    className = 'ANY';
-                            }
-
-                            // eslint-disable-next-line no-new
-                            new Td(rtrbody, `${className}`);
-
-                            // eslint-disable-next-line no-new
-                            new Td(rtrbody, `${record.ttl}`);
-
-                            // eslint-disable-next-line no-new
-                            new Td(rtrbody, `${record.value}`);
-
-                            const date = moment(record.last_update * 1000);
-
-                            // eslint-disable-next-line no-new
-                            new Td(rtrbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
-
-                            const tdRAction = new Td(rtrbody, '');
-                            const btnRMenu = new ButtonMenu(
-                                tdRAction.getElement(),
-                                IconFa.bars,
-                                true,
-                                ButtonType.borderless
-                            );
-
-                            btnRMenu.addMenuItem(
+                        if (!domain.fix) {
+                            btnMenu.addMenuItem(
                                 'Edit',
-                                (): void => {
-                                    this._domainRecordDialog.resetValues();
-                                    this._domainRecordDialog.setTitle('Domain Record Edit');
-                                    this._domainRecordDialog.setId(record.id);
-                                    this._domainRecordDialog.setDomainId(domain.id);
-                                    this._domainRecordDialog.setDomainName(domain.name);
-                                    this._domainRecordDialog.setType(`${record.type}`);
-                                    this._domainRecordDialog.setClass(`${record.class}`);
-                                    this._domainRecordDialog.setTTL(`${record.ttl}`);
-                                    this._domainRecordDialog.setValue(record.value);
-                                    this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
-                                    this._domainRecordDialog.show();
-                                },
+                                funcEdit,
                                 IconFa.edit
                             );
+                        }
 
-                            btnRMenu.addDivider();
+                        if (!domain.recordless) {
+                            btnMenu.addMenuItem(
+                                'Add Record',
+                                (): void => {
+                                    this._domainRecordDialog.resetValues();
+                                    this._domainRecordDialog.setTitle('Domain Record Add');
+                                    this._domainRecordDialog.setDomainId(domain.id);
+                                    this._domainRecordDialog.setDomainName(domain.name);
+                                    this._domainRecordDialog.show();
+                                },
+                                IconFa.add
+                            );
+                        }
 
-                            btnRMenu.addMenuItem(
+                        if (!domain.fix) {
+                            btnMenu.addDivider();
+                            btnMenu.addMenuItem(
                                 'Delete',
                                 (): void => {
                                     DialogConfirm.confirm(
-                                        'dcDeleteRecord',
+                                        'dcDeleteDomain',
                                         ModalDialogType.large,
-                                        'Delete Record',
-                                        'Are you sure you want to delete the record?',
+                                        'Delete Domain',
+                                        'Are you sure to delete the domain? All data on the domain will also be deleted!',
                                         async(_, dialog) => {
                                             try {
-                                                if (await DomainAPI.deleteDomainRecord(record)) {
+                                                if (await DomainAPI.deleteDomain(domain)) {
                                                     this._toast.fire({
                                                         icon: 'success',
-                                                        title: 'Domain record delete success.'
+                                                        title: 'Domain delete success.'
                                                     });
+
+                                                    if (await NginxAPI.reload()) {
+                                                        this._toast.fire({
+                                                            icon: 'success',
+                                                            title: 'Nginx server reload config success.'
+                                                        });
+                                                    } else {
+                                                        this._toast.fire({
+                                                            icon: 'error',
+                                                            title: 'Nginx server reload config faild, please check your last settings!'
+                                                        });
+                                                    }
                                                 }
                                             } catch ({message}) {
                                                 this._toast.fire({
@@ -492,13 +397,194 @@ export class Domains extends BasePage {
                             );
                         }
 
-                        card.hideLoading();
-                    } else {
-                        card.getElement().addClass('text-center');
-                        jQuery('<div>None Records set.</div>').appendTo(card.getElement());
+                        if (domain.records.length > 0) {
+                            card.showLoading();
+
+                            // record table
+                            const rtable = new Table(card.getElement());
+                            const rtrhead = new Tr(rtable.getThead());
+
+                            // eslint-disable-next-line no-new
+                            new Th(rtrhead, 'Type');
+
+                            // eslint-disable-next-line no-new
+                            new Th(rtrhead, 'Class');
+
+                            // eslint-disable-next-line no-new
+                            new Th(rtrhead, 'TTL');
+
+                            // eslint-disable-next-line no-new
+                            new Th(rtrhead, 'Value');
+
+                            // eslint-disable-next-line no-new
+                            new Th(rtrhead, 'Last Update');
+
+                            // eslint-disable-next-line no-new
+                            new Th(rtrhead, '');
+
+                            for (const record of domain.records) {
+                                const rtrbody = new Tr(rtable.getTbody());
+
+                                const typeTd = new Td(rtrbody, '');
+                                let bageType = BadgeType.secondary;
+                                let typeName = 'unknow';
+
+                                switch (record.type) {
+                                    case 1:
+                                        bageType = BadgeType.color_cream_red;
+                                        typeName = 'A';
+                                        break;
+
+                                    case 2:
+                                        bageType = BadgeType.color_cream_blue;
+                                        typeName = 'NS';
+                                        break;
+
+                                    case 5:
+                                        bageType = BadgeType.color_cream_green;
+                                        typeName = 'CNAME';
+                                        break;
+
+                                    case 15:
+                                        bageType = BadgeType.color_cream_yellow;
+                                        typeName = 'MX';
+                                        break;
+
+                                    case 16:
+                                        bageType = BadgeType.color_cream_purpel;
+                                        typeName = 'TXT';
+                                        break;
+
+                                    case 17:
+                                        bageType = BadgeType.color_cream_rorange;
+                                        typeName = 'AAAA';
+                                        break;
+                                }
+
+                                // eslint-disable-next-line no-new
+                                new Badge(typeTd.getElement(), `${typeName}`, bageType);
+
+                                let className = '';
+
+                                switch (record.class) {
+                                    case 1:
+                                        className = 'IN';
+                                        break;
+
+                                    case 2:
+                                        className = 'CS';
+                                        break;
+
+                                    case 3:
+                                        className = 'CH';
+                                        break;
+
+                                    case 4:
+                                        className = 'HS';
+                                        break;
+
+                                    default:
+                                        className = 'ANY';
+                                }
+
+                                // eslint-disable-next-line no-new
+                                new Td(rtrbody, `${className}`);
+
+                                // eslint-disable-next-line no-new
+                                new Td(rtrbody, `${record.ttl}`);
+
+                                // eslint-disable-next-line no-new
+                                new Td(rtrbody, `${record.value}`);
+
+                                const date = moment(record.last_update * 1000);
+
+                                // eslint-disable-next-line no-new
+                                new Td(rtrbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
+
+                                const tdRAction = new Td(rtrbody, '');
+                                const btnRMenu = new ButtonMenu(
+                                    tdRAction.getElement(),
+                                    IconFa.bars,
+                                    true,
+                                    ButtonType.borderless
+                                );
+
+                                btnRMenu.addMenuItem(
+                                    'Edit',
+                                    (): void => {
+                                        this._domainRecordDialog.resetValues();
+                                        this._domainRecordDialog.setTitle('Domain Record Edit');
+                                        this._domainRecordDialog.setId(record.id);
+                                        this._domainRecordDialog.setDomainId(domain.id);
+                                        this._domainRecordDialog.setDomainName(domain.name);
+                                        this._domainRecordDialog.setType(`${record.type}`);
+                                        this._domainRecordDialog.setClass(`${record.class}`);
+                                        this._domainRecordDialog.setTTL(`${record.ttl}`);
+                                        this._domainRecordDialog.setValue(record.value);
+                                        this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
+                                        this._domainRecordDialog.show();
+                                    },
+                                    IconFa.edit
+                                );
+
+                                btnRMenu.addDivider();
+
+                                btnRMenu.addMenuItem(
+                                    'Delete',
+                                    (): void => {
+                                        DialogConfirm.confirm(
+                                            'dcDeleteRecord',
+                                            ModalDialogType.large,
+                                            'Delete Record',
+                                            'Are you sure you want to delete the record?',
+                                            async(_, dialog) => {
+                                                try {
+                                                    if (await DomainAPI.deleteDomainRecord(record)) {
+                                                        this._toast.fire({
+                                                            icon: 'success',
+                                                            title: 'Domain record delete success.'
+                                                        });
+                                                    }
+                                                } catch ({message}) {
+                                                    this._toast.fire({
+                                                        icon: 'error',
+                                                        title: message
+                                                    });
+                                                }
+
+                                                dialog.hide();
+
+                                                if (this._onLoadTable) {
+                                                    this._onLoadTable();
+                                                }
+                                            },
+                                            undefined,
+                                            'Delete',
+                                            ButtonClass.danger
+                                        );
+                                    },
+                                    IconFa.trash
+                                );
+                            }
+
+                            card.hideLoading();
+                        } else {
+                            card.getElement().addClass('text-center');
+                            jQuery('<div>None Records set.</div>').appendTo(card.getElement());
+                        }
+
+                        card.getElement().append('<br>');
+
+                        loadDomain(domain.id, card.getElement());
                     }
                 }
-            }
+            };
+
+            // ---------------------------------------------------------------------------------------------------------
+
+            const row1 = new ContentRow(content);
+            loadDomain(0, new ContentCol(row1, ContentColSize.col12));
+
         };
 
         // load table

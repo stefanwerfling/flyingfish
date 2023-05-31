@@ -46,8 +46,13 @@ export class Save {
 
         aDomain.domainname = data.name;
         aDomain.disable = data.disable;
+        aDomain.parent_id = await DomainService.findParentId(data.name);
 
-        await DomainService.save(aDomain);
+        aDomain = await DomainService.save(aDomain);
+
+        if (aDomain.parent_id !== 0) {
+            await DomainService.updateChildrenToNewParent(aDomain);
+        }
 
         return {
             statusCode: StatusCodes.OK

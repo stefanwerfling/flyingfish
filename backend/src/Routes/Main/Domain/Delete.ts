@@ -59,7 +59,7 @@ export class Delete {
             if ((countStreams > 0) || (countHttps > 0)) {
                 return {
                     statusCode: StatusCodes.INTERNAL_ERROR,
-                    msg: `domain in use, can not delete by id: ${data.id}`
+                    msg: `domain in use, can not delete by id: ${domain.id}`
                 };
             }
 
@@ -67,9 +67,17 @@ export class Delete {
                 domain_id: data.id
             });
 
-            const result = await DomainService.remove(data.id);
+            const result = await DomainService.remove(domain.id);
 
             if (result) {
+                if (domain.parent_id !== 0) {
+                    const parent = await DomainService.findOne(domain.parent_id);
+
+                    if (parent) {
+                        await DomainService.updateChildrenToNewParent(parent);
+                    }
+                }
+
                 return {
                     statusCode: StatusCodes.OK
                 };

@@ -73,4 +73,77 @@ export class DomainService {
         return DomainService.getRepository().save(domain);
     }
 
+    /**
+     * findParentId
+     * @param domainname
+     */
+    public static async findParentId(domainname: string): Promise<number> {
+        const parts = domainname.split('.');
+
+        if (parts.length <= 1) {
+            return 0;
+        }
+
+        parts.shift();
+        const parentDomainname = parts.join('.');
+
+        const domain = await DomainService.findByName(parentDomainname);
+
+        if (domain) {
+            return domain.id;
+        }
+
+        return DomainService.findParentId(parentDomainname);
+    }
+
+    /**
+     * getChildrenById
+     * @param id
+     */
+    public static async getChildrenById(id: number): Promise<Domain[]> {
+        return DomainService.getRepository().find({
+            where: {
+                parent_id: id
+            }
+        });
+    }
+
+    /**
+     * updateChildrenToNewParent
+     * @param oldParent
+     * @param newParent
+     */
+    public static async updateChildrenToNewParent(domain: Domain): Promise<void> {
+        if (domain.parent_id === 0) {
+            return;
+        }
+
+        const domainNameParts = domain.domainname.split('.').reverse();
+        const childrens = await DomainService.getChildrenById(domain.parent_id);
+
+        for await (const aChildren of childrens) {
+            if (aChildren.id === domain.id) {
+                continue;
+            }
+
+            const cDomainNameParts = aChildren.domainname.split('.').reverse();
+
+            if (cDomainNameParts.length > domainNameParts.length) {
+                let isSubDomain = true;
+
+                for (let i = 0; i < domainNameParts.length; i++) {
+                    if (domainNameParts[i] !== cDomainNameParts[i]) {
+                        isSubDomain = false;
+                        break;
+                    }
+                }
+
+                if (isSubDomain) {
+                    aChildren.parent_id = domain.id;
+                    await DomainService.save(aChildren);
+                }
+            }
+        }
+    }
+
 }
