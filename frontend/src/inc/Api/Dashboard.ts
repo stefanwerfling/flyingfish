@@ -19,6 +19,7 @@ export type HimHIPData = ExtractSchemaResultType<typeof SchemaHimHIPData>;
  * DashboardInfoIpBlock
  */
 export const SchemaDashboardInfoIpBlock = Vts.object({
+    id: Vts.number(),
     ip: Vts.string(),
     info: Vts.string(),
     last_block: Vts.number(),
@@ -42,6 +43,23 @@ export const SchemaDashboardInfoResponse = SchemaDefaultReturn.extend({
 export type DashboardInfoResponse = ExtractSchemaResultType<typeof SchemaDashboardInfoResponse>;
 
 /**
+ * SchemaIpBlacklistCheck
+ */
+export const SchemaIpBlacklistCheck = Vts.object({
+    rbl: Vts.string(),
+    listed: Vts.boolean()
+});
+
+/**
+ * SchemaPublicIPBlacklistCheckResponse
+ */
+export const SchemaPublicIPBlacklistCheckResponse = SchemaDefaultReturn.extend({
+    rbl: Vts.array(SchemaIpBlacklistCheck)
+});
+
+export type PublicIPBlacklistCheckResponse = ExtractSchemaResultType<typeof SchemaPublicIPBlacklistCheckResponse>;
+
+/**
  * Dashboard
  */
 export class Dashboard {
@@ -51,6 +69,13 @@ export class Dashboard {
      */
     public static async getInfo(): Promise<DashboardInfoResponse> {
         return NetFetch.getData('/json/dashboard/info', SchemaDashboardInfoResponse);
+    }
+
+    /**
+     * publicIpBlacklistCheck
+     */
+    public static async publicIpBlacklistCheck(): Promise<PublicIPBlacklistCheckResponse> {
+        return NetFetch.getData('/json/dashboard/publicipblacklistcheck', SchemaPublicIPBlacklistCheckResponse);
     }
 
 }

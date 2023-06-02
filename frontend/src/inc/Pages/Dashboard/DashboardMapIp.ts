@@ -1,4 +1,4 @@
-import {View, Map, Feature} from 'ol';
+import {View, Map, Feature, Overlay} from 'ol';
 import {Point} from 'ol/geom';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
@@ -9,7 +9,7 @@ import {unByKey} from 'ol/Observable.js';
 import {getVectorContext} from 'ol/render.js';
 import {easeOut} from 'ol/easing.js';
 import {Element} from 'bambooo';
-import {Circle as CircleStyle, Stroke, Style} from 'ol/style';
+import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
 
 /**
  * DashboardMapIpMark
@@ -17,6 +17,8 @@ import {Circle as CircleStyle, Stroke, Style} from 'ol/style';
 export type DashboardMapIpMark = {
     latitude: string;
     longitude: string;
+    id: number;
+    content: string;
 };
 
 /**
@@ -31,6 +33,12 @@ export class DashboardMapIp extends Element {
     protected _map: Map;
 
     /**
+     * tooltip popup
+     * @protected
+     */
+    protected _tooltip_popup: any;
+
+    /**
      * map source
      * @protected
      */
@@ -43,8 +51,18 @@ export class DashboardMapIp extends Element {
     public constructor(elementObject: any) {
         super();
 
+        const telement = this._getAnyElement(elementObject);
+
+        telement.css({
+            height: '400px'
+        });
+
+        this._tooltip_popup = jQuery('<div id="popup"></div>').appendTo(telement);
+
         const tileLayer = new TileLayer({
-            source: new OSM()
+            source: new OSM({
+                wrapX: false
+            })
         });
 
         this._source = new VectorSource({
@@ -55,21 +73,73 @@ export class DashboardMapIp extends Element {
             source: this._source
         });
 
-        const telement = this._getAnyElement(elementObject);
-
-        telement.css({
-            height: '400px'
-        });
-
         this._map = new Map({
             layers: [tileLayer, vector],
             target: telement[0],
             view: new View({
-                center: [0, 0],
-                zoom: 1,
+                center: fromLonLat([11.030, 47.739]),
+                zoom: 2.2,
                 multiWorld: true
             })
         });
+
+        // tooltip -----------------------------------------------------------------------------------------------------
+
+        const overlayTooltip = new Overlay({
+            element: this._tooltip_popup[0],
+            offset: [10, 0],
+            positioning: 'bottom-left'
+        });
+
+        this._map.addOverlay(overlayTooltip);
+
+        let popover: any|undefined;
+
+        const disposePopover = (): void => {
+            if (popover) {
+                popover.popover('dispose');
+                popover = undefined;
+            }
+        };
+
+        this._map.on('click', (evt) => {
+            const feature = this._map.forEachFeatureAtPixel(evt.pixel, (inFeature) => {
+                return inFeature;
+            });
+
+            disposePopover();
+
+            if (!feature) {
+                return;
+            }
+
+            overlayTooltip.setPosition(evt.coordinate);
+            popover = this._tooltip_popup.popover({
+                html: true,
+                content: () => {
+                    return feature.get('content');
+                }
+            });
+
+            popover.popover('show');
+        });
+
+        this._map.on('pointermove', (evt) => {
+            const pixel = this._map.getEventPixel(evt.originalEvent);
+            const hit = this._map.hasFeatureAtPixel(pixel);
+            const target = this._map.getTarget();
+
+            if (target) {
+                // @ts-ignore
+                if ('style' in target) {
+                    target.style.cursor = hit ? 'pointer' : '';
+                }
+            }
+        });
+
+        this._map.on('movestart', disposePopover);
+
+        // -------------------------------------------------------------------------------------------------------------
 
         const duration = 3000;
         const map = this._map;
@@ -120,6 +190,21 @@ export class DashboardMapIp extends Element {
         for (const data of list) {
             const geom = new Point(fromLonLat([parseFloat(data.longitude), parseFloat(data.latitude)]));
             const feature = new Feature(geom);
+
+            feature.set('content', data.content);
+            feature.setStyle(new Style({
+                image: new CircleStyle({
+                    radius: 5,
+                    stroke: new Stroke({
+                        color: '#ffffff',
+                        width: 1
+                    }),
+                    fill: new Fill({
+                        color: 'red'
+                    })
+                })
+            }));
+
             this._source.addFeature(feature);
         }
     }

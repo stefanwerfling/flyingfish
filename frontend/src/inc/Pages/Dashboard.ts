@@ -16,9 +16,11 @@ import {
     LeftNavbarLink,
     SwitchTimer, Tooltip, TooltipInfo
 } from 'bambooo';
+import moment from 'moment/moment';
 import {Dashboard as DashboardApi} from '../Api/Dashboard';
 import {Lang} from '../Lang';
 import {BasePage} from './BasePage';
+import {DashboardIpBlacklistModal} from './Dashboard/DashboardIpBlacklistModal';
 import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp';
 
 /**
@@ -39,12 +41,22 @@ export class Dashboard extends BasePage {
     protected _updateSwitch: SwitchTimer;
 
     /**
+     * ip blacklist dialog
+     * @protected
+     */
+    protected _ipBlacklistDialog: DashboardIpBlacklistModal;
+
+    /**
      * constructor
      */
     public constructor() {
         super();
 
         this.setTitle('Dashboard');
+
+        this._ipBlacklistDialog = new DashboardIpBlacklistModal(
+            this._wrapper.getContentWrapper().getContent()
+        );
 
         const switchNav = new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), '', null);
         this._updateSwitch = new SwitchTimer(
@@ -203,9 +215,16 @@ export class Dashboard extends BasePage {
 
             if (dashboardInfo) {
                 for (const block of dashboardInfo.ipblocks) {
+                    const lastblock = moment(block.last_block * 1000);
+
                     blockMarkList.push({
+                        id: block.id,
                         latitude: block.latitude,
-                        longitude: block.longitude
+                        longitude: block.longitude,
+                        content:
+                            `<b>IP:</b>&nbsp;${block.ip}<br>` +
+                            `<b>Last block:</b>&nbsp;${lastblock.format('YYYY-MM-DD HH:mm:ss')}<br>` +
+                            `<b>Info:</b><br>${block.info}`
                     });
                 }
             }
@@ -221,11 +240,21 @@ export class Dashboard extends BasePage {
             // ip checks -----------------------------------------------------------------------------------------------
 
             if (dashboardInfo) {
-                infoBoxPubIpBlacklist.getNumberElement().empty();
+                const tInfoBoxIpBlackListNumElem = infoBoxPubIpBlacklist.getNumberElement();
+
+                tInfoBoxIpBlackListNumElem.empty();
 
                 // eslint-disable-next-line no-new
-                new Circle(infoBoxPubIpBlacklist.getNumberElement(), dashboardInfo.public_ip_blacklisted ? CircleColor.red : CircleColor.green);
-                infoBoxPubIpBlacklist.getNumberElement().append(`&nbsp;${dashboardInfo.public_ip_blacklisted ? 'IP is blacklisted' : 'IP is not blacklisted'}`);
+                new Circle(tInfoBoxIpBlackListNumElem, dashboardInfo.public_ip_blacklisted ? CircleColor.red : CircleColor.green);
+                tInfoBoxIpBlackListNumElem.append(`&nbsp;${dashboardInfo.public_ip_blacklisted ? 'IP is blacklisted' : 'IP is not blacklisted'}`);
+                tInfoBoxIpBlackListNumElem.append('&nbsp;<i class="fas fa-arrow-circle-right"></i>');
+                tInfoBoxIpBlackListNumElem.css({
+                    cursor: 'pointer'
+                });
+
+                tInfoBoxIpBlackListNumElem.on('click', () => {
+                    this._ipBlacklistDialog.show();
+                });
             }
         };
 

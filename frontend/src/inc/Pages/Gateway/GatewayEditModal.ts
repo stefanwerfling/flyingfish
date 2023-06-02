@@ -114,8 +114,8 @@ export class GatewayEditModal extends ModalDialog {
         this._inputColor = new InputBottemBorderOnly2(groupColor, 'color', InputType.colorpicker);
 
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
+        this.addButtonClose();
+        const btnSave = this.addButtonSave().empty().append('Save changes');
 
         btnSave.on('click', (): void => {
             if (this._onSaveClick !== null) {

@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import {DefaultRoute, Session, StatusCodes} from 'flyingfish_core';
 import {DashboardInfoResponse, Info} from './Dashboard/Info.js';
+import {PublicIPBlacklistCheck, PublicIPBlacklistCheckResponse} from './Dashboard/PublicIPBlacklistCheck.js';
 
 /**
  * Dashboard
@@ -32,6 +33,19 @@ export class Dashboard extends DefaultRoute {
                         ipblock_count: 0,
                         statusCode: StatusCodes.UNAUTHORIZED
                     } as DashboardInfoResponse);
+                }
+            }
+        );
+
+        this._routes.get(
+            '/json/dashboard/publicipblacklistcheck',
+            async(req, res) => {
+                if (Session.isUserLogin(req.session)) {
+                    res.status(200).json(await PublicIPBlacklistCheck.check());
+                } else {
+                    res.status(200).json({
+                        statusCode: StatusCodes.UNAUTHORIZED
+                    } as PublicIPBlacklistCheckResponse);
                 }
             }
         );

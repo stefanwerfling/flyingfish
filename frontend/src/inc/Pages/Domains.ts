@@ -125,7 +125,7 @@ export class Domains extends BasePage {
                         });
                     }
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -174,7 +174,7 @@ export class Domains extends BasePage {
                         title: 'Domain record save success.'
                     });
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -375,7 +375,7 @@ export class Domains extends BasePage {
                                                         });
                                                     }
                                                 }
-                                            } catch ({message}) {
+                                            } catch (message) {
                                                 this._toast.fire({
                                                     icon: 'error',
                                                     title: message
@@ -545,7 +545,7 @@ export class Domains extends BasePage {
                                                             title: 'Domain record delete success.'
                                                         });
                                                     }
-                                                } catch ({message}) {
+                                                } catch (message) {
                                                     this._toast.fire({
                                                         icon: 'error',
                                                         title: message

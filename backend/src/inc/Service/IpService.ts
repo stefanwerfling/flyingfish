@@ -60,8 +60,9 @@ export class IpService {
                     Logger.getLogger().error(`IpService::check: IP found in Blacklist: ${result.rbl}`);
 
                     isFound = true;
-                    IpService.foundOnRBL.push(result);
                 }
+
+                IpService.foundOnRBL.push(result);
             }
 
             if (isFound) {

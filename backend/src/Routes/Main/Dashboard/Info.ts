@@ -10,6 +10,7 @@ import {IpService} from '../../../inc/Service/IpService.js';
  * DashboardInfoIpBlock
  */
 export type DashboardInfoIpBlock = {
+    id: number;
     ip: string;
     info: string;
     last_block: number;
@@ -74,8 +75,9 @@ export class Info {
 
                 if (tlocation) {
                     ipblocks.push({
+                        id: entry.id,
                         ip: entry.ip,
-                        info: '',
+                        info: `${tlocation.org}<br>${tlocation.city} - ${tlocation.postal_code}<br>${tlocation.country}`,
                         last_block: entry.last_block,
                         latitude: tlocation.latitude,
                         longitude: tlocation.longitude
