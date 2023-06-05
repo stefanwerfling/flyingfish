@@ -105,7 +105,7 @@ gulp.task('clone-bambooo', (cb) => {
 });
 
 gulp.task('build-bambooo', (cb) => {
-    exec('cd node_modules/bambooo && npm install && npm run build', (err, stdout, stderr) => {
+    exec('cd node_modules/bambooo && rm -rf ./dist && npm install && npm run build', (err, stdout, stderr) => {
         console.log(stdout);
         console.log(stderr);
         cb(err);

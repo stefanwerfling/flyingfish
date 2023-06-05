@@ -60,6 +60,22 @@ export const SchemaPublicIPBlacklistCheckResponse = SchemaDefaultReturn.extend({
 export type PublicIPBlacklistCheckResponse = ExtractSchemaResultType<typeof SchemaPublicIPBlacklistCheckResponse>;
 
 /**
+ * SchemaStreamRequestPoint
+ */
+export const SchemaStreamRequestPoint = Vts.object({
+    counts: Vts.number(),
+    time: Vts.string()
+});
+
+export type StreamRequestPoint = ExtractSchemaResultType<typeof SchemaStreamRequestPoint>;
+
+export const SchemaStreamRequestsResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaStreamRequestPoint)
+});
+
+export type StreamRequestsResponse = ExtractSchemaResultType<typeof SchemaStreamRequestsResponse>;
+
+/**
  * Dashboard
  */
 export class Dashboard {
@@ -76,6 +92,13 @@ export class Dashboard {
      */
     public static async publicIpBlacklistCheck(): Promise<PublicIPBlacklistCheckResponse> {
         return NetFetch.getData('/json/dashboard/publicipblacklistcheck', SchemaPublicIPBlacklistCheckResponse);
+    }
+
+    /**
+     * streamRequestList
+     */
+    public static async streamRequestList(): Promise<StreamRequestsResponse> {
+        return NetFetch.getData('/json/dashboard/streamrequests', SchemaStreamRequestsResponse);
     }
 
 }

@@ -46,7 +46,7 @@ export class Info {
         const ipblocks: DashboardInfoIpBlock[] = [];
         let ipblock_count = 0;
 
-        const limit = 40;
+        const limit = 100;
 
         const result = await ipBlacklistRepository
         .createQueryBuilder('countipblocks')

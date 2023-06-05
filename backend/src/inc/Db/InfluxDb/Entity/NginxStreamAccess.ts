@@ -5,6 +5,14 @@ import {InfluxDbHelper} from '../InfluxDbHelper.js';
 import moment from 'moment';
 
 /**
+ * NginxStreamAccessRequestCount
+ */
+export type NginxStreamAccessRequestCount = {
+    counts: number;
+    time: string;
+};
+
+/**
  * NginxStreamAccess
  */
 export class NginxStreamAccess {
@@ -66,16 +74,26 @@ export class NginxStreamAccess {
      * @param beginDays
      * @param intervalMins
      */
-    public static async getRangeLastRequestCounts(beginDays: number = 1, intervalMins = 1): Promise<{ [p: string]: any; }[]> {
+    public static async getRangeLastRequestCounts(beginDays: number = 1, intervalMins = 1): Promise<NginxStreamAccessRequestCount[]> {
         const fluxQuery =
             flux`from(bucket: "${InfluxDbHelper.getBucket()}")
             |> range(start: -${beginDays}d, stop: now())
             |> filter(fn: (r) => r["_measurement"] == "${NginxStreamAccess._mName}")
-            |> filter(fn: (r) => r["_field"] == "value")
-            |> aggregateWindow(every: ${intervalMins}m, fn:mean, createEmpty: false)`;
+            |> window(period: ${intervalMins}m, createEmpty: false)
+            |> group(columns: ["_start"])
+            |> count()`;
+
+        const list: NginxStreamAccessRequestCount[] = [];
 
         try {
-            return InfluxDbHelper.readPoints(fluxQuery);
+            const points = await InfluxDbHelper.readPoints(fluxQuery);
+
+            for (const point of points) {
+                list.push({
+                    counts: point._value,
+                    time: point._start
+                });
+            }
         } catch (e: any) {
             let message = 'unknown';
 
@@ -88,7 +106,7 @@ export class NginxStreamAccess {
             Logger.getLogger().error(`NginxStreamAccess::getRangeLastRequestCounts: request error: ${message}`);
         }
 
-        return [];
+        return list;
     }
 
 }

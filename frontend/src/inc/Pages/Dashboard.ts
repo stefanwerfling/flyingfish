@@ -22,6 +22,7 @@ import {Lang} from '../Lang';
 import {BasePage} from './BasePage';
 import {DashboardIpBlacklistModal} from './Dashboard/DashboardIpBlacklistModal';
 import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp';
+import {LineChartRequests} from './Dashboard/LineChartRequests';
 
 /**
  * Dashboard
@@ -45,6 +46,12 @@ export class Dashboard extends BasePage {
      * @protected
      */
     protected _ipBlacklistDialog: DashboardIpBlacklistModal;
+
+    /**
+     * line chart requests
+     * @protected
+     */
+    protected _lineChartRequests: LineChartRequests;
 
     /**
      * constructor
@@ -97,7 +104,14 @@ export class Dashboard extends BasePage {
         hostIpBox.setIcon(IconFa.ethernet, InfoBoxBg.warning);
         hostIpBox.getTextElement().append('Host IP');
 
-        // ip access map -------------------------------------------------------------------------------------------
+        // requests ----------------------------------------------------------------------------------------------------
+
+        const rowRequests = new ContentRow(content);
+        const cardRequests = new Card(new ContentCol(rowRequests, ContentColSize.col12));
+        cardRequests.setTitle('Stream requests');
+        this._lineChartRequests = new LineChartRequests(cardRequests);
+
+        // ip access map -----------------------------------------------------------------------------------------------
 
         const rowMap = new ContentRow(content);
         const cardMap = new Card(new ContentCol(rowMap, ContentColSize.colMd8));
@@ -127,6 +141,15 @@ export class Dashboard extends BasePage {
          */
         this._onLoadTable = async(): Promise<void> => {
             const dashboardInfo = await DashboardApi.getInfo();
+            const streamRequests = await DashboardApi.streamRequestList();
+
+            const streamRequestsPoints: any[] = [];
+
+            for (const streamRequestPoint of streamRequests.list) {
+                streamRequestsPoints.push(streamRequestPoint.counts);
+            }
+
+            this._lineChartRequests.updateData(streamRequestsPoints);
 
             // public ip -----------------------------------------------------------------------------------------------
 
