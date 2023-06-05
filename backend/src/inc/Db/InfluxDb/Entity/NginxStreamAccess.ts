@@ -1,4 +1,4 @@
-import {Point} from '@influxdata/influxdb-client';
+import {flux, Point} from '@influxdata/influxdb-client';
 import {Logger} from 'flyingfish_core';
 import {JsonLogAccessStream} from '../../../Nginx/NginxLogFormatJson.js';
 import {InfluxDbHelper} from '../InfluxDbHelper.js';
@@ -59,6 +59,36 @@ export class NginxStreamAccess {
         nPoint.tag('upstream_connect_time', log.upstream_connect_time);
 
         InfluxDbHelper.addPoint(nPoint);
+    }
+
+    /**
+     * getRangeLastRequestCounts
+     * @param beginDays
+     * @param intervalMins
+     */
+    public static async getRangeLastRequestCounts(beginDays: number = 1, intervalMins = 1): Promise<{ [p: string]: any; }[]> {
+        const fluxQuery =
+            flux`from(bucket: "${InfluxDbHelper.getBucket()}")
+            |> range(start: -${beginDays}d, stop: now())
+            |> filter(fn: (r) => r["_measurement"] == "${NginxStreamAccess._mName}")
+            |> filter(fn: (r) => r["_field"] == "value")
+            |> aggregateWindow(every: ${intervalMins}m, fn:mean, createEmpty: false)`;
+
+        try {
+            return InfluxDbHelper.readPoints(fluxQuery);
+        } catch (e: any) {
+            let message = 'unknown';
+
+            if (typeof e === 'string') {
+                message = e;
+            } else if (e instanceof Error) {
+                message = e.message;
+            }
+
+            Logger.getLogger().error(`NginxStreamAccess::getRangeLastRequestCounts: request error: ${message}`);
+        }
+
+        return [];
     }
 
 }
