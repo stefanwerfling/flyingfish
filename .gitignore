@@ -35,6 +35,11 @@
 /sshserver/dist
 /sshserver/package-lock.json
 
+/ddnsserver/node_modules
+/ddnsserver/dist
+/ddnsserver/package-lock.json
+
+
 /build/node_modules
 /build/package-lock.json
 
