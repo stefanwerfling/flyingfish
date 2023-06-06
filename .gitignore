@@ -18,6 +18,10 @@
 /nginxtest
 /letsencrypt
 
+/schemas/node_modules
+/schemas/package-lock.json
+/schemas/dist
+
 /core/node_modules
 /core/package-lock.json
 /core/dist
