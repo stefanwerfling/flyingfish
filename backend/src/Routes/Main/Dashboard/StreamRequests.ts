@@ -25,7 +25,7 @@ export class StreamRequests {
      * getList
      */
     public static async getList(): Promise<StreamRequestResponse> {
-        const points = await NginxStreamAccess.getRangeLastRequestCounts(20);
+        const points = await NginxStreamAccess.getRangeLastRequestCounts(1);
 
         const requestPoint: StreamRequestPoint[] = [];
 
