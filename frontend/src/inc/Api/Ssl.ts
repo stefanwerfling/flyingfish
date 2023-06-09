@@ -1,6 +1,6 @@
+import {SchemaDefaultReturn} from 'flyingfish_schemas';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
-import {SchemaDefaultReturn} from './Types/DefaultReturn';
 
 /**
  * SslProvider

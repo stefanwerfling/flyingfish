@@ -1,6 +1,7 @@
+import {DynDnsClientData} from 'flyingfish_schemas';
 import moment from 'moment';
 import {Domain} from '../Api/Domain';
-import {DynDnsClient as DynDnsClientAPI, DynDnsClientData} from '../Api/DynDnsClient';
+import {DynDnsClient as DynDnsClientAPI} from '../Api/DynDnsClient';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {Badge, BadgeType, ButtonClass, Card, Circle, CircleColor, ContentCol, ContentColSize, ContentRow,
     DialogConfirm, ButtonType, ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';

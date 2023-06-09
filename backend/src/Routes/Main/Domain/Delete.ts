@@ -1,24 +1,9 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DomainDelete, DomainDeleteResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
 import {DomainRecord as DomainRecordDB} from '../../../inc/Db/MariaDb/Entity/DomainRecord.js';
-
-/**
- * SchemaDomainDelete
- */
-export const SchemaDomainDelete = Vts.object({
-    id: Vts.number()
-});
-
-export type DomainDelete = ExtractSchemaResultType<typeof SchemaDomainDelete>;
-
-/**
- * DomainDeleteResponse
- */
-export type DomainDeleteResponse = DefaultReturn;
 
 /**
  * Delete

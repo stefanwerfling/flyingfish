@@ -1,7 +1,8 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {Delete, SchemaGatewayIdentifierDelete} from './GatewayIdentifier/Delete.js';
-import {List, SchemaGatewayIdentifierEntry} from './GatewayIdentifier/List.js';
+import {SchemaGatewayIdentifierDelete, SchemaGatewayIdentifierEntry} from 'flyingfish_schemas';
+import {Delete} from './GatewayIdentifier/Delete.js';
+import {List} from './GatewayIdentifier/List.js';
 import {Save} from './GatewayIdentifier/Save.js';
 
 /**

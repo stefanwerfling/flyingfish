@@ -1,32 +1,7 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {IpAccessWhiteList, IpAccessWhiteListResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
-import {IpAccessLocation, UtilsLocation} from '../UtilsLocation.js';
+import {UtilsLocation} from '../UtilsLocation.js';
 import {IpWhitelist as IpWhitelistDB} from '../../../../inc/Db/MariaDb/Entity/IpWhitelist.js';
-
-/**
- * IpAccessWhiteList
- */
-export const SchemaIpAccessWhiteList = Vts.object({
-    id: Vts.number(),
-    ip: Vts.string(),
-    last_update: Vts.number(),
-    disable: Vts.boolean(),
-    last_access: Vts.number(),
-    count_access: Vts.number(),
-    ip_location_id: Vts.optional(Vts.number()),
-    description: Vts.string()
-});
-
-export type IpAccessWhiteList = ExtractSchemaResultType<typeof SchemaIpAccessWhiteList>;
-
-/**
- * IpAccessWhiteListResponse
- */
-export type IpAccessWhiteListResponse = DefaultReturn & {
-    list?: IpAccessWhiteList[];
-    locations?: IpAccessLocation[];
-};
 
 /**
  * List

@@ -1,21 +1,6 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DefaultReturn, GatewayIdentifierDelete, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
-
-/**
- * GatewayIdentifierDelete
- */
-export const SchemaGatewayIdentifierDelete = Vts.object({
-    id: Vts.number()
-});
-
-export type GatewayIdentifierDelete = ExtractSchemaResultType<typeof SchemaGatewayIdentifierDelete>;
-
-/**
- * GatewayIdentifierDeleteResponse
- */
-export type GatewayIdentifierDeleteResponse = DefaultReturn;
 
 /**
  * Delete
@@ -26,7 +11,7 @@ export class Delete {
      * delete
      * @param data
      */
-    public static async delete(data: GatewayIdentifierDelete): Promise<GatewayIdentifierDeleteResponse> {
+    public static async delete(data: GatewayIdentifierDelete): Promise<DefaultReturn> {
         const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
 
         const result = await giRepository.delete({

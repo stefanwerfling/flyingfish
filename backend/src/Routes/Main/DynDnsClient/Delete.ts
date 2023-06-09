@@ -1,17 +1,7 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DefaultReturn, DynDnsClientDelete, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {DynDnsClient as DynDnsClientDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
-
-/**
- * DynDnsClientDelete
- */
-export const SchemaDynDnsClientDelete = Vts.object({
-    id: Vts.number()
-});
-
-export type DynDnsClientDelete = ExtractSchemaResultType<typeof SchemaDynDnsClientDelete>;
 
 /**
  * Delete

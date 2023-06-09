@@ -1,7 +1,8 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {Delete, SchemaDynDnsClientDelete} from './DynDnsClient/Delete.js';
-import {List, SchemaDynDnsClientData} from './DynDnsClient/List.js';
+import {SchemaDynDnsClientData, SchemaDynDnsClientDelete} from 'flyingfish_schemas';
+import {Delete} from './DynDnsClient/Delete.js';
+import {List} from './DynDnsClient/List.js';
 import {Providers} from './DynDnsClient/Providers.js';
 import {Save} from './DynDnsClient/Save.js';
 

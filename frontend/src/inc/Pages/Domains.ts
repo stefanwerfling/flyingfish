@@ -23,8 +23,9 @@ import {
     Th,
     Tr
 } from 'bambooo';
+import {DomainData} from 'flyingfish_schemas';
 import moment from 'moment';
-import {Domain as DomainAPI, DomainData} from '../Api/Domain';
+import {Domain as DomainAPI} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {BasePage} from './BasePage';
 import {DomainEditModal} from './Domains/DomainEditModal';

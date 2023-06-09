@@ -2,7 +2,7 @@
   "name": "flyingfish_sshserver",
   "version": "1.0.0",
   "description": "Flyingfish SSH-Server",
-  "main": "main.js",
+  "main": "dist/main.js",
   "type": "module",
   "scripts": {
     "npm-check-updates": "npm-check-updates",
@@ -30,6 +30,7 @@
     "bcrypt": "^5.0.1",
     "delay": "^5.0.0",
     "flyingfish_core": "file:../core",
+    "flyingfish_schemas": "file:../schemas",
     "mysql": "^2.18.1",
     "ssh2": "^1.13.0",
     "typeorm": "^0.3.16",

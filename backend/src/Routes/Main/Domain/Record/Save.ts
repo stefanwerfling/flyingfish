@@ -1,24 +1,7 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DomainRecordSave, DomainRecordSaveResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
 import {DomainRecord as DomainRecordDB} from '../../../../inc/Db/MariaDb/Entity/DomainRecord.js';
 import {HowIsMyPublicIpService} from '../../../../inc/Service/HowIsMyPublicIpService.js';
-import {SchemaDomainRecord} from '../List.js';
-
-/**
- * DomainRecordSave
- */
-export const SchemaDomainRecordSave = Vts.object({
-    domain_id: Vts.number(),
-    record: SchemaDomainRecord
-});
-
-export type DomainRecordSave = ExtractSchemaResultType<typeof SchemaDomainRecordSave>;
-
-/**
- * DomainRecordSaveResponse
- */
-export type DomainRecordSaveResponse = DefaultReturn;
 
 /**
  * Save

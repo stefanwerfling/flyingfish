@@ -1,4 +1,4 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {UserEntry} from './List.js';
 import {Not} from 'typeorm';
 import * as bcrypt from 'bcrypt';

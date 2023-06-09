@@ -1,4 +1,4 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';

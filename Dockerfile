@@ -40,6 +40,7 @@ RUN mkdir -p /var/lib/flyingfish
 
 WORKDIR /opt/app
 
+COPY core ./../core
 COPY backend/dist ./dist
 COPY backend/node_modules ./node_modules
 COPY backend/package.json ./package.json

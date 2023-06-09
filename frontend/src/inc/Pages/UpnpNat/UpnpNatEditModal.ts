@@ -1,4 +1,4 @@
-import {GatewayIdentifierEntry} from '../../Api/GatewayIdentifier';
+import {GatewayIdentifierEntry} from 'flyingfish_schemas';
 import {ListenData, ListenTypes} from '../../Api/Listen';
 import {UpnpNat} from '../../Api/UpnpNat';
 import {DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorderOnly2, InputType,

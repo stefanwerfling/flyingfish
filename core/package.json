@@ -36,6 +36,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "flyingfish_schemas": "file:../schemas",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1"

@@ -18,6 +18,7 @@
     "@types/jquery": "^3.5.16",
     "admin-lte": "^3.2.0",
     "bambooo": "git+https://github.com/stefanwerfling/bambooo.git",
+    "flyingfish_schemas": "file:../schemas",
     "ionicons-css": "^5.2.2",
     "jquery": "^3.6.4",
     "jquery-ui-dist": "^1.13.2",

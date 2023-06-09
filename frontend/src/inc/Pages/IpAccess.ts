@@ -1,12 +1,13 @@
-import moment from 'moment';
 import {
-    BlacklistCategory,
-    IpAccess as IpAccessAPI,
     IpAccessBlackListImportSaveRequest,
     IpAccessBlackListOwn,
     IpAccessLocation,
-    IpAccessMaintainer,
-    IpAccessWhiteSaveRequest
+    IpAccessMaintainer, IpAccessWhiteSaveRequest
+} from 'flyingfish_schemas';
+import moment from 'moment';
+import {
+    BlacklistCategory,
+    IpAccess as IpAccessAPI
 } from '../Api/IpAccess';
 import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, Button, ButtonType,
     ButtonMenu, Icon, IconFa, NavTab, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';

@@ -1,43 +1,10 @@
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {
+    GatewayIdentifierDelete,
+    GatewayIdentifierEntry,
+    SchemaDefaultReturn,
+    SchemaGatewayIdentifierListResponse
+} from 'flyingfish_schemas';
 import {NetFetch} from '../Net/NetFetch';
-import {SchemaDefaultReturn} from './Types/DefaultReturn';
-
-/**
- * GatewayIdentifierEntry
- */
-export const SchemaGatewayIdentifierEntry = Vts.object({
-    id: Vts.number(),
-    networkname: Vts.string(),
-    mac_address: Vts.string(),
-    address: Vts.string(),
-    color: Vts.string()
-});
-
-export type GatewayIdentifierEntry = ExtractSchemaResultType<typeof SchemaGatewayIdentifierEntry>;
-
-/**
- * GatewayIdentifierListResponse
- */
-export const SchemaGatewayIdentifierListResponse = SchemaDefaultReturn.extend({
-    data: Vts.optional(Vts.array(SchemaGatewayIdentifierEntry))
-});
-
-export type GatewayIdentifierListResponse = ExtractSchemaResultType<typeof SchemaGatewayIdentifierListResponse>;
-
-/**
- * GatewayIdentifierSaveResponse
- */
-export const SchemaGatewayIdentifierSaveResponse = SchemaDefaultReturn;
-export type GatewayIdentifierSaveResponse = ExtractSchemaResultType<typeof SchemaGatewayIdentifierSaveResponse>;
-
-/**
- * GatewayIdentifierDelete
- */
-export const SchemaGatewayIdentifierDelete = Vts.object({
-    id: Vts.number()
-});
-
-export type GatewayIdentifierDelete = ExtractSchemaResultType<typeof SchemaGatewayIdentifierDelete>;
 
 /**
  * GatewayIdentifier

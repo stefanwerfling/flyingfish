@@ -1,12 +1,5 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {DynDnsClientProviderListResponse, StatusCodes} from 'flyingfish_schemas';
 import {DynDnsProviders} from '../../../inc/Provider/DynDnsProviders.js';
-
-/**
- * DynDnsClientProviderListResponse
- */
-export type DynDnsClientProviderListResponse = DefaultReturn & {
-    list: DynDnsProviders[];
-};
 
 /**
  * Providers

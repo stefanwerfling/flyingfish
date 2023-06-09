@@ -1,4 +1,4 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {SettingsList} from './List.js';
 import {Settings as GlobalSettings} from '../../../inc/Settings/Settings.js';
 

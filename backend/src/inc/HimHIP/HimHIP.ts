@@ -1,13 +1,4 @@
-/**
- * HimHIPData
- */
-export type HimHIPData = {
-    gatewaymac: string;
-    network: string;
-    gateway: string;
-    interface: string;
-    hostip: string;
-};
+import {HimHIPData} from 'flyingfish_schemas';
 
 /**
  * HimHIP - how is my host ip

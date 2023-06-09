@@ -1,4 +1,5 @@
-import {GatewayIdentifier as GatewayIdentifierAPI, GatewayIdentifierEntry} from '../Api/GatewayIdentifier';
+import {GatewayIdentifierEntry} from 'flyingfish_schemas';
+import {GatewayIdentifier as GatewayIdentifierAPI} from '../Api/GatewayIdentifier';
 import {UpnpNat} from '../Api/UpnpNat';
 import {Badge, BadgeType, Card, Circle, CircleColor, ContentCol, ContentColSize, DialogConfirm, ButtonType,
     ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';

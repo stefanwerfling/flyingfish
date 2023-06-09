@@ -1,75 +1,8 @@
-import {readFileSync} from 'fs';
+import {BackendConfigOptions, SchemaBackendConfigOptions} from 'flyingfish_schemas';
 import path from 'path';
 import * as process from 'process';
 import {v4 as uuid} from 'uuid';
-import {ExtractSchemaResultType, SchemaErrors, Vts} from 'vts';
-import {Config as ConfigCore, SchemaConfigOptions as SchemaConfigOptionsCore} from 'flyingfish_core';
-
-/**
- * ConfigOptions
- */
-export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
-    db: Vts.object({
-        mysql: Vts.object({
-            host: Vts.string(),
-            port: Vts.number(),
-            username: Vts.string(),
-            password: Vts.string(),
-            database: Vts.string()
-        }),
-        influx: Vts.optional(Vts.object({
-            url: Vts.string(),
-            token: Vts.string(),
-            org: Vts.string(),
-            bucket: Vts.string(),
-            username: Vts.string(),
-            password: Vts.string()
-        }))
-    }),
-    httpserver: Vts.object({
-        port: Vts.optional(Vts.number()),
-        publicdir: Vts.string(),
-        session: Vts.optional(Vts.object({
-            secret: Vts.optional(Vts.string()),
-            cookie_path: Vts.optional(Vts.string()),
-            cookie_max_age: Vts.optional(Vts.number())
-        })),
-        sslpath: Vts.optional(Vts.string())
-    }),
-    nginx: Vts.optional(Vts.object({
-        config: Vts.string(),
-        prefix: Vts.string(),
-        dhparamfile: Vts.optional(Vts.string()),
-        module_mode_dyn: Vts.optional(Vts.boolean()),
-        secret: Vts.optional(Vts.string())
-    })),
-    sshserver: Vts.optional(Vts.object({
-        ip: Vts.string()
-    })),
-    docker: Vts.optional(Vts.object({
-        inside: Vts.boolean(),
-        gateway: Vts.optional(Vts.string())
-    })),
-    upnpnat: Vts.optional(Vts.object({
-        enable: Vts.boolean()
-    })),
-    dyndnsclient: Vts.optional(Vts.object({
-        enable: Vts.boolean()
-    })),
-    dnsserver: Vts.optional(Vts.object({
-        port: Vts.optional(Vts.number())
-    })),
-    himpip: Vts.optional(Vts.object({
-        provider: Vts.string()
-    })),
-    himhip: Vts.optional(Vts.object({
-        use: Vts.boolean(),
-        secret: Vts.string()
-    })),
-    flyingfish_libpath: Vts.optional(Vts.string())
-});
-
-export type ConfigOptions = ExtractSchemaResultType<typeof SchemaConfigOptions>;
+import {Config as ConfigCore} from 'flyingfish_core';
 
 export enum ENV_DUTY {
     DB_MYSQL_USERNAME = 'FLYINGFISH_DB_MYSQL_USERNAME',
@@ -102,15 +35,12 @@ export enum ENV_OPTIONAL {
 /**
  * Config
  */
-export class Config extends ConfigCore<ConfigOptions> {
+export class Config extends ConfigCore<BackendConfigOptions> {
 
     /**
      * DEFAULTS
      */
-    public static readonly DEFAULT_CONFIG_FILE = 'config.json';
     public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
-    public static readonly DEFAULT_DB_MYSQL_HOST = '10.103.0.2';
-    public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
     public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
     public static readonly DEFAULT_HTTPSERVER_PUBLICDIR = 'frontend';
     public static readonly DEFAULT_DNSSERVER_PORT = 5333;
@@ -126,306 +56,282 @@ export class Config extends ConfigCore<ConfigOptions> {
      */
     public static getInstance(): Config {
         if (!ConfigCore._instance) {
-            ConfigCore._instance = new Config();
+            ConfigCore._instance = new Config(SchemaBackendConfigOptions);
         }
 
         return ConfigCore._instance as Config;
     }
 
     /**
-     * load
-     * @param configFile
-     * @param useEnv
+     * _loadEnv
+     * @param aConfig
+     * @protected
      */
-    public async load(
-        configFile: string | null = null,
-        useEnv: boolean = false
-    ): Promise<ConfigOptions | null> {
-        let config: ConfigOptions | null = null;
-        let ffPath = Config.DEFAULT_FF_DIR;
+    protected _loadEnv(aConfig: BackendConfigOptions | null): BackendConfigOptions | null {
+        let config = aConfig;
 
-        if (configFile) {
-            try {
-                const rawdata = readFileSync(configFile, {
-                    // @ts-ignore
-                    encoding: 'utf-8'
-                });
-
-                console.log(`Config::load: Load json-file: ${configFile}`);
-
-                const fileConfig = JSON.parse(rawdata);
-                const errors: SchemaErrors = [];
-
-                if (!SchemaConfigOptions.validate(fileConfig, errors)) {
-                    console.log('Config::load: Config file error:');
-                    console.log(JSON.stringify(errors, null, 2));
-
-                    return null;
-                }
-
-                config = fileConfig;
-            } catch (err) {
-                console.error(err);
-                return null;
-            }
-        }
-
-        // -------------------------------------------------------------------------------------------------------------
-
-        // env can overwrite config file
-        if (useEnv) {
-            // defaults ------------------------------------------------------------------------------------------------
-            if (config) {
-                if (process.env[ENV_DUTY.DB_MYSQL_USERNAME]) {
-                    config.db.mysql.username = process.env[ENV_DUTY.DB_MYSQL_USERNAME];
-                }
-
-                if (process.env[ENV_DUTY.DB_MYSQL_PASSWORD]) {
-                    config.db.mysql.password = process.env[ENV_DUTY.DB_MYSQL_PASSWORD];
-                }
-
-                if (process.env[ENV_DUTY.DB_MYSQL_DATABASE]) {
-                    config.db.mysql.database = process.env[ENV_DUTY.DB_MYSQL_DATABASE];
-                }
-            } else {
-                for (const env of Object.values(ENV_DUTY)) {
-                    if (!process.env[env]) {
-                        console.log(`Config::load: Env Variable "${env}" not found!`);
-                        return null;
-                    }
-                }
-
-                const dbMysqlUsername = process.env[ENV_DUTY.DB_MYSQL_USERNAME]!;
-                const dbMysqlPassword = process.env[ENV_DUTY.DB_MYSQL_PASSWORD]!;
-                const dbMysqlDatabase = process.env[ENV_DUTY.DB_MYSQL_DATABASE]!;
-
-                config = {
-                    db: {
-                        mysql: {
-                            host: Config.DEFAULT_DB_MYSQL_HOST,
-                            port: Config.DEFAULT_DB_MYSQL_PORT,
-                            username: dbMysqlUsername,
-                            password: dbMysqlPassword,
-                            database: dbMysqlDatabase
-                        }
-                    },
-                    httpserver: {
-                        port: Config.DEFAULT_HTTPSERVER_PORT,
-                        publicdir: Config.DEFAULT_HTTPSERVER_PUBLICDIR
-                    },
-                    nginx: {
-                        config: Config.DEFAULT_NGINX_CONFIG,
-                        prefix: Config.DEFAULT_NGINX_PREFIX
-                    },
-                    himhip: {
-                        use: Config.DEFAULT_HIMHIP_USE,
-                        secret: Config.DEFAULT_HIMHIP_SECRET
-                    }
-                };
-            }
-
-            // optional ------------------------------------------------------------------------------------------------
-
-            // db mysql ------------------------------------------------------------------------------------------------
-
-            if (process.env[ENV_OPTIONAL.DB_MYSQL_HOST]) {
-                config.db.mysql.host = process.env[ENV_OPTIONAL.DB_MYSQL_HOST];
-            }
-
-            if (process.env[ENV_OPTIONAL.DB_MYSQL_PORT]) {
-                config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
-                    Config.DEFAULT_DB_MYSQL_PORT;
-            }
-
-            // db influx -----------------------------------------------------------------------------------------------
-
-            const influxEnvList = [
-                ENV_OPTIONAL.DB_INFLUX_URL,
-                ENV_OPTIONAL.DB_INFLUX_TOKEN,
-                ENV_OPTIONAL.DB_INFLUX_ORG,
-                ENV_OPTIONAL.DB_INFLUX_BUCKET
-            ];
-
-            for (const entry of influxEnvList) {
-                if (process.env[entry]) {
-                    config.db.influx = {
-                        url: '',
-                        password: '',
-                        username: '',
-                        org: '',
-                        bucket: '',
-                        token: ''
-                    };
-                    break;
-                }
-            }
-
-            if (config.db.influx) {
-                if (process.env[ENV_OPTIONAL.DB_INFLUX_URL]) {
-                    config.db.influx.url = process.env[ENV_OPTIONAL.DB_INFLUX_URL];
-                }
-
-                if (process.env[ENV_OPTIONAL.DB_INFLUX_TOKEN]) {
-                    config.db.influx.token = process.env[ENV_OPTIONAL.DB_INFLUX_TOKEN];
-                }
-
-                if (process.env[ENV_OPTIONAL.DB_INFLUX_ORG]) {
-                    config.db.influx.org = process.env[ENV_OPTIONAL.DB_INFLUX_ORG];
-                }
-
-                if (process.env[ENV_OPTIONAL.DB_INFLUX_BUCKET]) {
-                    config.db.influx.bucket = process.env[ENV_OPTIONAL.DB_INFLUX_BUCKET];
-                }
-            }
-
-            // httpserver ----------------------------------------------------------------------------------------------
-
-            if (process.env[ENV_OPTIONAL.HTTPSERVER_PORT]) {
-                config.httpserver.port = parseInt(process.env[ENV_OPTIONAL.HTTPSERVER_PORT]!, 10) ||
-                    Config.DEFAULT_HTTPSERVER_PORT;
-            }
-
-            if (process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR]) {
-                config.httpserver.publicdir = process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR];
-            }
-
-            // dnsserver -----------------------------------------------------------------------------------------------
-
-            if (process.env[ENV_OPTIONAL.DNSSERVER_PORT]) {
-                config.dnsserver = {
-                    port: parseInt(process.env[ENV_OPTIONAL.DNSSERVER_PORT]!, 10) || Config.DEFAULT_DNSSERVER_PORT
-                };
-            }
-
-            // nginx ---------------------------------------------------------------------------------------------------
-
-            if (!config.nginx) {
-                config.nginx = {
-                    config: Config.DEFAULT_NGINX_CONFIG,
-                    prefix: Config.DEFAULT_NGINX_PREFIX
-                };
-            }
-
-            if (process.env[ENV_OPTIONAL.NGINX_CONFIG]) {
-                config.nginx.config = process.env[ENV_OPTIONAL.NGINX_CONFIG];
-            }
-
-            if (process.env[ENV_OPTIONAL.NGINX_PREFIX]) {
-                config.nginx.prefix = process.env[ENV_OPTIONAL.NGINX_PREFIX];
-            }
-
-            if (process.env[ENV_OPTIONAL.NGINX_MODULE_MODE_DYN]) {
-                config.nginx.module_mode_dyn = process.env[ENV_OPTIONAL.NGINX_MODULE_MODE_DYN] === '1';
-            }
-
-            if (process.env[ENV_OPTIONAL.NGINX_SECRET]) {
-                config.nginx.secret = process.env[ENV_OPTIONAL.NGINX_SECRET];
-            }
-
-            // sshserver -----------------------------------------------------------------------------------------------
-
-            if (process.env[ENV_OPTIONAL.SSHSERVER_IP]) {
-                config.sshserver = {
-                    ip: process.env[ENV_OPTIONAL.SSHSERVER_IP]
-                };
-            }
-
-            // docker --------------------------------------------------------------------------------------------------
-
-            if (process.env[ENV_OPTIONAL.DOCKER_INSIDE]) {
-                config.docker = {
-                    inside: process.env[ENV_OPTIONAL.DOCKER_INSIDE] === '1',
-                    gateway: Config.DEFAULT_DOCKER_GATEWAY
-                };
-            }
-
-            if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
-                config.logging = {
-                    level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
-                };
-            }
-
-            // himhip --------------------------------------------------------------------------------------------------
-
-            if (!config.himhip) {
-                config.himhip = {
-                    use: Config.DEFAULT_HIMHIP_USE,
-                    secret: Config.DEFAULT_HIMHIP_SECRET
-                };
-            }
-
-            if (process.env[ENV_OPTIONAL.HIMHIP_USE]) {
-                config.himhip.use = process.env[ENV_OPTIONAL.HIMHIP_USE] === '1';
-            }
-
-            if (process.env[ENV_OPTIONAL.HIMHIP_SECRET]) {
-                config.himhip.secret = process.env[ENV_OPTIONAL.HIMHIP_SECRET];
-            }
-
-            // ff ------------------------------------------------------------------------------------------------------
-
-            if (process.env[ENV_OPTIONAL.FF_LIBPATH]) {
-                config.flyingfish_libpath = process.env[ENV_OPTIONAL.FF_LIBPATH];
-            }
-        }
-
-        // -------------------------------------------------------------------------------------------------------------
+        // defaults ------------------------------------------------------------------------------------------------
 
         if (config) {
-            if (config.flyingfish_libpath) {
-                ffPath = config.flyingfish_libpath;
-            } else {
-                config.flyingfish_libpath = ffPath;
+            if (process.env[ENV_DUTY.DB_MYSQL_USERNAME]) {
+                config.db.mysql.username = process.env[ENV_DUTY.DB_MYSQL_USERNAME];
             }
 
-            if (!config.httpserver.sslpath) {
-                config.httpserver.sslpath = path.join(ffPath, 'ssl');
+            if (process.env[ENV_DUTY.DB_MYSQL_PASSWORD]) {
+                config.db.mysql.password = process.env[ENV_DUTY.DB_MYSQL_PASSWORD];
             }
 
-            // default dhparam
-            if (config.nginx) {
-                config.nginx.dhparamfile = path.join(ffPath, 'nginx', 'dhparam.pem');
-
-                if (!config.nginx.secret) {
-                    config.nginx.secret = uuid().replaceAll('-', '');
+            if (process.env[ENV_DUTY.DB_MYSQL_DATABASE]) {
+                config.db.mysql.database = process.env[ENV_DUTY.DB_MYSQL_DATABASE];
+            }
+        } else {
+            for (const env of Object.values(ENV_DUTY)) {
+                if (!process.env[env]) {
+                    console.log(`Config::load: Env Variable "${env}" not found!`);
+                    return null;
                 }
             }
 
-            if (!config.dnsserver) {
-                config.dnsserver = {
-                    port: Config.DEFAULT_DNSSERVER_PORT
-                };
-            }
+            const dbMysqlUsername = process.env[ENV_DUTY.DB_MYSQL_USERNAME]!;
+            const dbMysqlPassword = process.env[ENV_DUTY.DB_MYSQL_PASSWORD]!;
+            const dbMysqlDatabase = process.env[ENV_DUTY.DB_MYSQL_DATABASE]!;
 
-            if (!config.sshserver) {
-                config.sshserver = {
-                    ip: Config.DEFAULT_SSHSERVER_IP
-                };
-            }
+            config = {
+                db: {
+                    mysql: {
+                        host: Config.DEFAULT_DB_MYSQL_HOST,
+                        port: Config.DEFAULT_DB_MYSQL_PORT,
+                        username: dbMysqlUsername,
+                        password: dbMysqlPassword,
+                        database: dbMysqlDatabase
+                    }
+                },
+                httpserver: {
+                    port: Config.DEFAULT_HTTPSERVER_PORT,
+                    publicdir: Config.DEFAULT_HTTPSERVER_PUBLICDIR
+                },
+                nginx: {
+                    config: Config.DEFAULT_NGINX_CONFIG,
+                    prefix: Config.DEFAULT_NGINX_PREFIX
+                },
+                himhip: {
+                    use: Config.DEFAULT_HIMHIP_USE,
+                    secret: Config.DEFAULT_HIMHIP_SECRET
+                }
+            };
+        }
 
-            // upnpnat enable
-            if (!config.upnpnat) {
-                config.upnpnat = {
-                    enable: true
-                };
-            }
+        // optional ------------------------------------------------------------------------------------------------
 
-            // dyndnsclient enable
-            if (!config.dyndnsclient) {
-                config.dyndnsclient = {
-                    enable: true
-                };
-            }
+        // db mysql ------------------------------------------------------------------------------------------------
 
-            // himpip provider
-            if (!config.himpip) {
-                config.himpip = {
-                    provider: 'ipify'
+        if (process.env[ENV_OPTIONAL.DB_MYSQL_HOST]) {
+            config.db.mysql.host = process.env[ENV_OPTIONAL.DB_MYSQL_HOST];
+        }
+
+        if (process.env[ENV_OPTIONAL.DB_MYSQL_PORT]) {
+            config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
+                Config.DEFAULT_DB_MYSQL_PORT;
+        }
+
+        // db influx -----------------------------------------------------------------------------------------------
+
+        const influxEnvList = [
+            ENV_OPTIONAL.DB_INFLUX_URL,
+            ENV_OPTIONAL.DB_INFLUX_TOKEN,
+            ENV_OPTIONAL.DB_INFLUX_ORG,
+            ENV_OPTIONAL.DB_INFLUX_BUCKET
+        ];
+
+        for (const entry of influxEnvList) {
+            if (process.env[entry]) {
+                config.db.influx = {
+                    url: '',
+                    password: '',
+                    username: '',
+                    org: '',
+                    bucket: '',
+                    token: ''
                 };
+                break;
             }
         }
 
-        this.set(config!);
+        if (config.db.influx) {
+            if (process.env[ENV_OPTIONAL.DB_INFLUX_URL]) {
+                config.db.influx.url = process.env[ENV_OPTIONAL.DB_INFLUX_URL];
+            }
+
+            if (process.env[ENV_OPTIONAL.DB_INFLUX_TOKEN]) {
+                config.db.influx.token = process.env[ENV_OPTIONAL.DB_INFLUX_TOKEN];
+            }
+
+            if (process.env[ENV_OPTIONAL.DB_INFLUX_ORG]) {
+                config.db.influx.org = process.env[ENV_OPTIONAL.DB_INFLUX_ORG];
+            }
+
+            if (process.env[ENV_OPTIONAL.DB_INFLUX_BUCKET]) {
+                config.db.influx.bucket = process.env[ENV_OPTIONAL.DB_INFLUX_BUCKET];
+            }
+        }
+
+        // httpserver ----------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.HTTPSERVER_PORT]) {
+            config.httpserver.port = parseInt(process.env[ENV_OPTIONAL.HTTPSERVER_PORT]!, 10) ||
+                Config.DEFAULT_HTTPSERVER_PORT;
+        }
+
+        if (process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR]) {
+            config.httpserver.publicdir = process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR];
+        }
+
+        // dnsserver -----------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.DNSSERVER_PORT]) {
+            config.dnsserver = {
+                port: parseInt(process.env[ENV_OPTIONAL.DNSSERVER_PORT]!, 10) || Config.DEFAULT_DNSSERVER_PORT
+            };
+        }
+
+        // nginx ---------------------------------------------------------------------------------------------------
+
+        if (!config.nginx) {
+            config.nginx = {
+                config: Config.DEFAULT_NGINX_CONFIG,
+                prefix: Config.DEFAULT_NGINX_PREFIX
+            };
+        }
+
+        if (process.env[ENV_OPTIONAL.NGINX_CONFIG]) {
+            config.nginx.config = process.env[ENV_OPTIONAL.NGINX_CONFIG];
+        }
+
+        if (process.env[ENV_OPTIONAL.NGINX_PREFIX]) {
+            config.nginx.prefix = process.env[ENV_OPTIONAL.NGINX_PREFIX];
+        }
+
+        if (process.env[ENV_OPTIONAL.NGINX_MODULE_MODE_DYN]) {
+            config.nginx.module_mode_dyn = process.env[ENV_OPTIONAL.NGINX_MODULE_MODE_DYN] === '1';
+        }
+
+        if (process.env[ENV_OPTIONAL.NGINX_SECRET]) {
+            config.nginx.secret = process.env[ENV_OPTIONAL.NGINX_SECRET];
+        }
+
+        // sshserver -----------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.SSHSERVER_IP]) {
+            config.sshserver = {
+                ip: process.env[ENV_OPTIONAL.SSHSERVER_IP]
+            };
+        }
+
+        // docker --------------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.DOCKER_INSIDE]) {
+            config.docker = {
+                inside: process.env[ENV_OPTIONAL.DOCKER_INSIDE] === '1',
+                gateway: Config.DEFAULT_DOCKER_GATEWAY
+            };
+        }
+
+        if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
+            config.logging = {
+                level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
+            };
+        }
+
+        // himhip --------------------------------------------------------------------------------------------------
+
+        if (!config.himhip) {
+            config.himhip = {
+                use: Config.DEFAULT_HIMHIP_USE,
+                secret: Config.DEFAULT_HIMHIP_SECRET
+            };
+        }
+
+        if (process.env[ENV_OPTIONAL.HIMHIP_USE]) {
+            config.himhip.use = process.env[ENV_OPTIONAL.HIMHIP_USE] === '1';
+        }
+
+        if (process.env[ENV_OPTIONAL.HIMHIP_SECRET]) {
+            config.himhip.secret = process.env[ENV_OPTIONAL.HIMHIP_SECRET];
+        }
+
+        // ff ------------------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.FF_LIBPATH]) {
+            config.flyingfish_libpath = process.env[ENV_OPTIONAL.FF_LIBPATH];
+        }
+
+        return config;
+    }
+
+    /**
+     * _setDefaults
+     * @param config
+     * @protected
+     */
+    protected _setDefaults(config: BackendConfigOptions | null): BackendConfigOptions | null {
+        if (config === null) {
+            return null;
+        }
+
+        let ffPath = Config.DEFAULT_FF_DIR;
+
+        if (config.flyingfish_libpath) {
+            ffPath = config.flyingfish_libpath;
+        } else {
+            config.flyingfish_libpath = ffPath;
+        }
+
+        if (!config.httpserver.sslpath) {
+            config.httpserver.sslpath = path.join(ffPath, 'ssl');
+        }
+
+        // default dhparam
+        if (config.nginx) {
+            config.nginx.dhparamfile = path.join(ffPath, 'nginx', 'dhparam.pem');
+
+            if (!config.nginx.secret) {
+                config.nginx.secret = uuid().replaceAll('-', '');
+            }
+        }
+
+        if (!config.dnsserver) {
+            config.dnsserver = {
+                port: Config.DEFAULT_DNSSERVER_PORT
+            };
+        }
+
+        if (!config.sshserver) {
+            config.sshserver = {
+                ip: Config.DEFAULT_SSHSERVER_IP
+            };
+        }
+
+        // upnpnat enable
+        if (!config.upnpnat) {
+            config.upnpnat = {
+                enable: true
+            };
+        }
+
+        // dyndnsclient enable
+        if (!config.dyndnsclient) {
+            config.dyndnsclient = {
+                enable: true
+            };
+        }
+
+        // himpip provider
+        if (!config.himpip) {
+            config.himpip = {
+                provider: 'ipify'
+            };
+        }
+
         return config;
     }
 

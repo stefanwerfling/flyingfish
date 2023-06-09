@@ -1,14 +1,19 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
+import {
+    SchemaIpAccessBlackDeleteRequest,
+    SchemaIpAccessBlackListImportSaveRequest,
+    SchemaIpAccessBlackListOwnSaveRequest, SchemaIpAccessWhiteDeleteRequest, SchemaIpAccessWhiteSaveRequest
+} from 'flyingfish_schemas';
 import {List as ListBlacklistImport} from './IpAccess/Blacklist/Import/List.js';
-import {Save as SaveBlacklistImport, SchemaIpAccessBlackListImportSaveRequest} from './IpAccess/Blacklist/Import/Save.js';
-import {Delete as DeleteBlackListOwn, SchemaIpAccessBlackDeleteRequest} from './IpAccess/Blacklist/Own/Delete.js';
+import {Save as SaveBlacklistImport} from './IpAccess/Blacklist/Import/Save.js';
+import {Delete as DeleteBlackListOwn} from './IpAccess/Blacklist/Own/Delete.js';
 import {List as ListBlacklistOwn} from './IpAccess/Blacklist/Own/List.js';
-import {Save as SaveBlacklistOwn, SchemaIpAccessBlackListOwnSaveRequest} from './IpAccess/Blacklist/Own/Save.js';
+import {Save as SaveBlacklistOwn} from './IpAccess/Blacklist/Own/Save.js';
 import {List as ListMantainer} from './IpAccess/Maintainer/List.js';
-import {Delete as DeleteWhitelist, SchemaIpAccessWhiteDeleteRequest} from './IpAccess/Whitelist/Delete.js';
+import {Delete as DeleteWhitelist} from './IpAccess/Whitelist/Delete.js';
 import {List as ListWhitelist} from './IpAccess/Whitelist/List.js';
-import {Save as SaveWhitelist, SchemaIpAccessWhiteSaveRequest} from './IpAccess/Whitelist/Save.js';
+import {Save as SaveWhitelist} from './IpAccess/Whitelist/Save.js';
 
 /**
  * IpAccess

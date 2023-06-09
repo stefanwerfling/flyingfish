@@ -1,4 +1,4 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {SslProviders, SslProvider} from '../../../inc/Provider/SslProviders.js';
 
 /**

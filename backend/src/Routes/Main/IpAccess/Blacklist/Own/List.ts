@@ -1,32 +1,11 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {
+    IpAccessBlackListOwn,
+    IpAccessBlackListOwnsResponse,
+    StatusCodes
+} from 'flyingfish_schemas';
 import {DBHelper} from '../../../../../inc/Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
-import {IpAccessLocation, UtilsLocation} from '../../UtilsLocation.js';
-
-/**
- * IpAccessBlackListOwn
- */
-export const SchemaIpAccessBlackListOwn = Vts.object({
-    id: Vts.number(),
-    ip: Vts.string(),
-    last_update: Vts.number(),
-    disable: Vts.boolean(),
-    last_block: Vts.number(),
-    count_block: Vts.number(),
-    ip_location_id: Vts.optional(Vts.number()),
-    description: Vts.string()
-});
-
-export type IpAccessBlackListOwn = ExtractSchemaResultType<typeof SchemaIpAccessBlackListOwn>;
-
-/**
- * IpAccessBlackListOwnsResponse
- */
-export type IpAccessBlackListOwnsResponse = DefaultReturn & {
-    list?: IpAccessBlackListOwn[];
-    locations?: IpAccessLocation[];
-};
+import {UtilsLocation} from '../../UtilsLocation.js';
 
 /**
  * List

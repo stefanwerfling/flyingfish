@@ -1,21 +1,7 @@
-import {Vts} from 'vts';
 import winston, {Logger as WinstonLogger} from 'winston';
 import TransportStream from 'winston-transport';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import {Config} from '../Config/Config.js';
-
-/**
- * Schema logger config
- */
-export const SchemaLoggerConfig = Vts.object({
-    dirname: Vts.optional(Vts.string()),
-    filename: Vts.optional(Vts.string()),
-    zippedArchive: Vts.optional(Vts.boolean()),
-    maxSize: Vts.optional(Vts.string()),
-    maxFiles: Vts.optional(Vts.string()),
-    enableConsole: Vts.optional(Vts.boolean()),
-    level: Vts.optional(Vts.string())
-});
 
 /**
  * Logger

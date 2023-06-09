@@ -1,45 +1,7 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DomainData, DomainRecord, DomainResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {DomainRecord as DomainRecordDB} from '../../../inc/Db/MariaDb/Entity/DomainRecord.js';
-
-/**
- * DomainRecord
- */
-export const SchemaDomainRecord = Vts.object({
-    id: Vts.number(),
-    type: Vts.number(),
-    class: Vts.number(),
-    ttl: Vts.number(),
-    value: Vts.string(),
-    update_by_dnsclient: Vts.boolean(),
-    last_update: Vts.number()
-});
-
-export type DomainRecord = ExtractSchemaResultType<typeof SchemaDomainRecord>;
-
-/**
- * DomainData
- */
-export const SchemaDomainData = Vts.object({
-    id: Vts.number(),
-    name: Vts.string(),
-    fix: Vts.boolean(),
-    recordless: Vts.boolean(),
-    records: Vts.array(SchemaDomainRecord),
-    disable: Vts.boolean(),
-    parent_id: Vts.number()
-});
-
-export type DomainData = ExtractSchemaResultType<typeof SchemaDomainData>;
-
-/**
- * DomainResponse
- */
-export type DomainResponse = DefaultReturn & {
-    list?: DomainData[];
-};
 
 /**
  * List

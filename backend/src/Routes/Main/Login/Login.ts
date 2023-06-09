@@ -1,4 +1,5 @@
-import {DefaultReturn, Logger, SessionUserData, StatusCodes} from 'flyingfish_core';
+import {Logger, SessionUserData} from 'flyingfish_core';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {Request} from 'express';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';

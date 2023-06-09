@@ -9,7 +9,7 @@ import {HimHIP} from './inc/HimHIP.js';
  * Main
  */
 (async(): Promise<void> => {
-    const config = await Config.getInstance().load(Args.get(SchemaFlyingFishArgs));
+    const config = await Config.getInstance().load2(Args.get(SchemaFlyingFishArgs));
 
     if (config === null) {
         console.log('Configloader is return empty config, please check your arguments or envirements');

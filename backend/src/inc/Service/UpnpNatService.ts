@@ -144,6 +144,16 @@ export class UpnpNatService {
                                 } catch (ex) {
                                     Logger.getLogger().info(`UpnpNatService::update: Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
 
+                                    let message = 'unknown';
+
+                                    if (typeof ex === 'string') {
+                                        message = ex;
+                                    } else if (ex instanceof Error) {
+                                        message = ex.message;
+                                    }
+
+                                    Logger.getLogger().info(`UpnpNatService::update: error: ${message}`);
+
                                     await this._setNatPortStatus(NatStatus.error, anat.id);
                                 }
                             } else {

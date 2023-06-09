@@ -1,13 +1,5 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {IpBlacklistCheck} from '../../../inc/Analysis/Ip/IpBlacklist.js';
+import {PublicIPBlacklistCheckResponse, StatusCodes} from 'flyingfish_schemas';
 import {IpService} from '../../../inc/Service/IpService.js';
-
-/**
- * PublicIPBlacklistCheckResponse
- */
-export type PublicIPBlacklistCheckResponse = DefaultReturn & {
-    rbl: IpBlacklistCheck[];
-};
 
 /**
  * PublicIPBlacklistCheck

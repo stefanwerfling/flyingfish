@@ -1,5 +1,6 @@
-import {DefaultReturn, Logger, StatusCodes} from 'flyingfish_core';
+import {Logger} from 'flyingfish_core';
 import {Request} from 'express';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 
 /**
  * LoginLogoutResponse

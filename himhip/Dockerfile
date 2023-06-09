@@ -5,10 +5,24 @@ RUN apt-get upgrade -y
 RUN apt-get install -y iproute2
 RUN apt-get install -y net-tools
 
+RUN mkdir -p /opt/schemas
 RUN mkdir -p /opt/core
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/dist
 RUN mkdir -p /opt/app/node_modules
+
+# Copy/Install Schemas ----------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/schemas
+
+COPY ./schemas/ ./
+
+RUN rm -R node_modules | true
+RUN rm -R dist | true
+RUN rm package-lock.json | true
+
+RUN npm install
+RUN npm run build
 
 # Copy/Install Core ----------------------------------------------------------------------------------------------------
 

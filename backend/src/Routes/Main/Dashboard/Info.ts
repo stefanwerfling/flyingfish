@@ -1,33 +1,10 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {DashboardInfoIpBlock, DashboardInfoResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {IpLocation as IpLocationDB} from '../../../inc/Db/MariaDb/Entity/IpLocation.js';
-import {HimHIP, HimHIPData} from '../../../inc/HimHIP/HimHIP.js';
+import {HimHIP} from '../../../inc/HimHIP/HimHIP.js';
 import {HowIsMyPublicIpService} from '../../../inc/Service/HowIsMyPublicIpService.js';
 import {IpService} from '../../../inc/Service/IpService.js';
-
-/**
- * DashboardInfoIpBlock
- */
-export type DashboardInfoIpBlock = {
-    id: number;
-    ip: string;
-    info: string;
-    last_block: number;
-    latitude: string;
-    longitude: string;
-};
-
-/**
- * DashboardInfoResponse
- */
-export type DashboardInfoResponse = DefaultReturn & {
-    public_ip: string|null;
-    public_ip_blacklisted: boolean;
-    host: HimHIPData|null;
-    ipblocks: DashboardInfoIpBlock[];
-    ipblock_count: number;
-};
 
 /**
  * Info

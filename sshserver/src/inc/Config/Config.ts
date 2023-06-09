@@ -1,27 +1,9 @@
+import {ConfigOptionsSshServer, SchemaConfigOptionsSshServer} from 'flyingfish_schemas';
 import {readFileSync} from 'fs';
 import path from 'path';
 import process from 'process';
-import {ExtractSchemaResultType, SchemaErrors, Vts} from 'vts';
-import {Config as ConfigCore, SchemaConfigOptions as SchemaConfigOptionsCore} from 'flyingfish_core';
-
-/**
- * ConfigOptions
- */
-export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
-    db: Vts.object({
-        mysql: Vts.object({
-            host: Vts.string(),
-            port: Vts.number(),
-            username: Vts.string(),
-            password: Vts.string(),
-            database: Vts.string()
-        })
-    }),
-    flyingfish_libpath: Vts.optional(Vts.string()),
-    flyingfish_sshpath: Vts.optional(Vts.string())
-});
-
-export type ConfigOptions = ExtractSchemaResultType<typeof SchemaConfigOptions>;
+import {SchemaErrors} from 'vts';
+import {Config as ConfigCore} from 'flyingfish_core';
 
 export enum ENV_DUTY {
     DB_MYSQL_USERNAME = 'FLYINGFISH_DB_MYSQL_USERNAME',
@@ -38,141 +20,112 @@ export enum ENV_OPTIONAL {
 /**
  * Config
  */
-export class Config extends ConfigCore<ConfigOptions> {
+export class Config extends ConfigCore<ConfigOptionsSshServer> {
 
-    public static readonly DEFAULT_CONFIG_FILE = 'config.json';
     public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
     public static readonly DEFAULT_SSH_DIR = 'ssh';
-    public static readonly DEFAULT_DB_MYSQL_HOST = '10.103.0.2';
-    public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
 
     /**
      * getInstance
      */
     public static getInstance(): Config {
         if (!ConfigCore._instance) {
-            ConfigCore._instance = new Config();
+            ConfigCore._instance = new Config(SchemaConfigOptionsSshServer);
         }
 
         return ConfigCore._instance as Config;
     }
 
     /**
-     * load
-     * @param configFile
-     * @param useEnv
+     * _loadEnv
+     * @param aConfig
+     * @protected
      */
-    public async load(
-        configFile: string | null = null,
-        useEnv: boolean = false
-    ): Promise<ConfigOptions | null> {
-        let config: ConfigOptions | null = null;
-        let ffPath = Config.DEFAULT_FF_DIR;
+    protected _loadEnv(aConfig: ConfigOptionsSshServer | null): ConfigOptionsSshServer | null {
+        let config = aConfig;
 
-        if (configFile) {
-            try {
-                const rawdata = readFileSync(configFile, {
-                    // @ts-ignore
-                    encoding: 'utf-8'
-                });
+        // defaults ------------------------------------------------------------------------------------------------
+        if (config) {
+            if (process.env[ENV_DUTY.DB_MYSQL_USERNAME]) {
+                config.db.mysql.username = process.env[ENV_DUTY.DB_MYSQL_USERNAME];
+            }
 
-                console.log(`Config::load: Load json-file: ${configFile}`);
+            if (process.env[ENV_DUTY.DB_MYSQL_PASSWORD]) {
+                config.db.mysql.password = process.env[ENV_DUTY.DB_MYSQL_PASSWORD];
+            }
 
-                const fileConfig = JSON.parse(rawdata) as ConfigOptions;
-                const errors: SchemaErrors = [];
-
-                if (!SchemaConfigOptions.validate(fileConfig, errors)) {
-                    console.log('Config::load: Config file error:');
-                    console.log(errors);
-
+            if (process.env[ENV_DUTY.DB_MYSQL_DATABASE]) {
+                config.db.mysql.database = process.env[ENV_DUTY.DB_MYSQL_DATABASE];
+            }
+        } else {
+            for (const env of Object.values(ENV_DUTY)) {
+                if (!process.env[env]) {
+                    console.log(`Config::load: Env Variable "${env}" not found!`);
                     return null;
                 }
-
-                config = fileConfig;
-            } catch (err) {
-                console.error(err);
-                return null;
             }
-        }
 
-        // -------------------------------------------------------------------------------------------------------------
+            const dbMysqlUsername = process.env[ENV_DUTY.DB_MYSQL_USERNAME]!;
+            const dbMysqlPassword = process.env[ENV_DUTY.DB_MYSQL_PASSWORD]!;
+            const dbMysqlDatabase = process.env[ENV_DUTY.DB_MYSQL_DATABASE]!;
 
-        // env can overwrite config file
-        if (useEnv) {
-
-            // defaults ------------------------------------------------------------------------------------------------
-            if (config) {
-                if (process.env[ENV_DUTY.DB_MYSQL_USERNAME]) {
-                    config.db.mysql.username = process.env[ENV_DUTY.DB_MYSQL_USERNAME];
-                }
-
-                if (process.env[ENV_DUTY.DB_MYSQL_PASSWORD]) {
-                    config.db.mysql.password = process.env[ENV_DUTY.DB_MYSQL_PASSWORD];
-                }
-
-                if (process.env[ENV_DUTY.DB_MYSQL_DATABASE]) {
-                    config.db.mysql.database = process.env[ENV_DUTY.DB_MYSQL_DATABASE];
-                }
-            } else {
-                for (const env of Object.values(ENV_DUTY)) {
-                    if (!process.env[env]) {
-                        console.log(`Config::load: Env Variable "${env}" not found!`);
-                        return null;
+            config = {
+                db: {
+                    mysql: {
+                        host: Config.DEFAULT_DB_MYSQL_HOST,
+                        port: Config.DEFAULT_DB_MYSQL_PORT,
+                        username: dbMysqlUsername,
+                        password: dbMysqlPassword,
+                        database: dbMysqlDatabase
                     }
                 }
-
-                const dbMysqlUsername = process.env[ENV_DUTY.DB_MYSQL_USERNAME]!;
-                const dbMysqlPassword = process.env[ENV_DUTY.DB_MYSQL_PASSWORD]!;
-                const dbMysqlDatabase = process.env[ENV_DUTY.DB_MYSQL_DATABASE]!;
-
-                config = {
-                    db: {
-                        mysql: {
-                            host: Config.DEFAULT_DB_MYSQL_HOST,
-                            port: Config.DEFAULT_DB_MYSQL_PORT,
-                            username: dbMysqlUsername,
-                            password: dbMysqlPassword,
-                            database: dbMysqlDatabase
-                        }
-                    }
-                };
-            }
-
-            // optional ------------------------------------------------------------------------------------------------
-
-            // db mysql ------------------------------------------------------------------------------------------------
-
-            if (process.env[ENV_OPTIONAL.DB_MYSQL_HOST]) {
-                config.db.mysql.host = process.env[ENV_OPTIONAL.DB_MYSQL_HOST];
-            }
-
-            if (process.env[ENV_OPTIONAL.DB_MYSQL_PORT]) {
-                config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
-                    Config.DEFAULT_DB_MYSQL_PORT;
-            }
-
-            if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
-                config.logging = {
-                    level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
-                };
-            }
+            };
         }
 
-        // -------------------------------------------------------------------------------------------------------------
+        // optional ------------------------------------------------------------------------------------------------
 
-        if (config) {
-            if (config.flyingfish_libpath) {
-                ffPath = config.flyingfish_libpath;
-            } else {
-                config.flyingfish_libpath = ffPath;
-            }
+        // db mysql ------------------------------------------------------------------------------------------------
 
-            if (!config.flyingfish_sshpath) {
-                config.flyingfish_sshpath = path.join(ffPath, Config.DEFAULT_SSH_DIR);
-            }
+        if (process.env[ENV_OPTIONAL.DB_MYSQL_HOST]) {
+            config.db.mysql.host = process.env[ENV_OPTIONAL.DB_MYSQL_HOST];
         }
 
-        this.set(config!);
+        if (process.env[ENV_OPTIONAL.DB_MYSQL_PORT]) {
+            config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
+                Config.DEFAULT_DB_MYSQL_PORT;
+        }
+
+        if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
+            config.logging = {
+                level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
+            };
+        }
+
+        return config;
+    }
+
+    /**
+     * _setDefaults
+     * @param config
+     * @protected
+     */
+    protected _setDefaults(config: ConfigOptionsSshServer | null): ConfigOptionsSshServer | null {
+        if (config === null) {
+            return null;
+        }
+
+        let ffPath = Config.DEFAULT_FF_DIR;
+
+        if (config.flyingfish_libpath) {
+            ffPath = config.flyingfish_libpath;
+        } else {
+            config.flyingfish_libpath = ffPath;
+        }
+
+        if (!config.flyingfish_sshpath) {
+            config.flyingfish_sshpath = path.join(ffPath, Config.DEFAULT_SSH_DIR);
+        }
+
         return config;
     }
 

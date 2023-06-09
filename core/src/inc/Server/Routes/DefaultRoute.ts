@@ -1,8 +1,7 @@
 import {Request, Response, Router} from 'express';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {Schema, SchemaErrors} from 'vts';
 import {Session} from '../Session.js';
-import {DefaultReturn} from './DefaultReturn.js';
-import {StatusCodes} from './StatusCodes.js';
 
 /**
  * DefaultRoute

@@ -1,21 +1,6 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {IpAccessBlackDeleteRequest, IpAccessBlackDeleteResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../../../inc/Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
-
-/**
- * IpAccessBlackDeleteRequest
- */
-export const SchemaIpAccessBlackDeleteRequest = Vts.object({
-    id: Vts.number()
-});
-
-export type IpAccessBlackDeleteRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackDeleteRequest>;
-
-/**
- * IpAccessBlackDeleteResponse
- */
-export type IpAccessBlackDeleteResponse = DefaultReturn;
 
 /**
  * Delete

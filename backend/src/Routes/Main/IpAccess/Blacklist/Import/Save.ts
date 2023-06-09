@@ -1,22 +1,6 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {IpAccessBlackListImportSaveRequest, IpAccessBlackListImportSaveResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../../../inc/Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
-
-/**
- * IpAccessBlackListImportSaveRequest
- */
-export const SchemaIpAccessBlackListImportSaveRequest = Vts.object({
-    id: Vts.number(),
-    disable: Vts.boolean()
-});
-
-export type IpAccessBlackListImportSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessBlackListImportSaveRequest>;
-
-/**
- * IpAccessBlackListImportSaveResponse
- */
-export type IpAccessBlackListImportSaveResponse = DefaultReturn;
 
 /**
  * Save

@@ -1,12 +1,15 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {StatusCodes} from '../Status/StatusCodes';
+import {StatusCodes} from './StatusCodes.js';
 
 /**
- * DefaultReturn
+ * SchemaDefaultReturn
  */
 export const SchemaDefaultReturn = Vts.object({
     statusCode: Vts.or([Vts.number(), Vts.enum(StatusCodes)]),
     msg: Vts.optional(Vts.string())
 });
 
+/**
+ * DefaultReturn
+ */
 export type DefaultReturn = ExtractSchemaResultType<typeof SchemaDefaultReturn>;

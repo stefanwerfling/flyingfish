@@ -1,26 +1,6 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {IpAccessMaintainer, IpAccessMaintainerResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
 import {IpListMaintainer as IpListMaintainerDB} from '../../../../inc/Db/MariaDb/Entity/IpListMaintainer.js';
-
-/**
- * IpAccessMaintainer
- */
-export const SchemaIpAccessMaintainer = Vts.object({
-    id: Vts.number(),
-    maintainer_name: Vts.string(),
-    maintainer_url: Vts.string(),
-    list_source_url: Vts.string()
-});
-
-export type IpAccessMaintainer = ExtractSchemaResultType<typeof SchemaIpAccessMaintainer>;
-
-/**
- * IpAccessMaintainerResponse
- */
-export type IpAccessMaintainerResponse = DefaultReturn & {
-    list?: IpAccessMaintainer[];
-};
 
 /**
  * List

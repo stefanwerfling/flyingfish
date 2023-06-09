@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {Not} from 'typeorm';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';

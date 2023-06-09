@@ -1,27 +1,6 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {GatewayIdentifierEntry, GatewayIdentifierListResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
-
-/**
- * GatewayIdentifierEntry
- */
-export const SchemaGatewayIdentifierEntry = Vts.object({
-    id: Vts.number(),
-    networkname: Vts.string(),
-    mac_address: Vts.string(),
-    address: Vts.string(),
-    color: Vts.string()
-});
-
-export type GatewayIdentifierEntry = ExtractSchemaResultType<typeof SchemaGatewayIdentifierEntry>;
-
-/**
- * GatewayIdentifierListResponse
- */
-export type GatewayIdentifierListResponse = DefaultReturn & {
-    data?: GatewayIdentifierEntry[];
-};
 
 /**
  * List

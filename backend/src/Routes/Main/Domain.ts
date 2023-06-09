@@ -1,9 +1,15 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {List, SchemaDomainData} from './Domain/List.js';
-import {Delete as DomainDelete, SchemaDomainDelete} from './Domain/Delete.js';
-import {Delete as DomainRecordDelete, SchemaDomainRecordDelete} from './Domain/Record/Delete.js';
-import {Save as DomainRecordSave, SchemaDomainRecordSave} from './Domain/Record/Save.js';
+import {
+    SchemaDomainData,
+    SchemaDomainDelete,
+    SchemaDomainRecordDelete,
+    SchemaDomainRecordSave
+} from 'flyingfish_schemas';
+import {List} from './Domain/List.js';
+import {Delete as DomainDelete} from './Domain/Delete.js';
+import {Delete as DomainRecordDelete} from './Domain/Record/Delete.js';
+import {Save as DomainRecordSave} from './Domain/Record/Save.js';
 import {Save as DomainSave} from './Domain/Save.js';
 
 /**

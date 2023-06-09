@@ -1,4 +1,5 @@
-import {DefaultReturn, Logger, StatusCodes} from 'flyingfish_core';
+import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
+import {Logger} from 'flyingfish_core';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {NginxListen as NginxListenDB} from '../../../inc/Db/MariaDb/Entity/NginxListen.js';
 import {ListenData} from './List.js';

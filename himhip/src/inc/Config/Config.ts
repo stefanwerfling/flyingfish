@@ -1,20 +1,11 @@
 import process from 'process';
-import {ExtractSchemaResultType, Vts} from 'vts';
 import {FlyingFishArgs} from '../Env/Args.js';
-import {Config as ConfigCore, SchemaConfigOptions as SchemaConfigOptionsCore} from 'flyingfish_core';
+import {Config as ConfigCore} from 'flyingfish_core';
+import {
+    ConfigOptionsHimHip,
+    SchemaConfigOptionsHimHip
+} from 'flyingfish_schemas';
 
-/**
- * ConfigOptions
- */
-export const SchemaConfigOptions = SchemaConfigOptionsCore.extend({
-    secret: Vts.string(),
-    url_path: Vts.string(),
-    server_host: Vts.string(),
-    server_port: Vts.number(),
-    server_protocol: Vts.string()
-});
-
-export type ConfigOptions = ExtractSchemaResultType<typeof SchemaConfigOptions>;
 
 /**
  * env duty
@@ -37,7 +28,7 @@ export enum ENV_OPTIONAL {
 /**
  * Config
  */
-export class Config extends ConfigCore<ConfigOptions> {
+export class Config extends ConfigCore<ConfigOptionsHimHip> {
 
     public static readonly DEFAULT_URL_PATH = '/himhip/update';
     public static readonly DEFAULT_SERVER_HOST = '10.103.0.3';
@@ -49,7 +40,7 @@ export class Config extends ConfigCore<ConfigOptions> {
      */
     public static getInstance(): Config {
         if (!ConfigCore._instance) {
-            ConfigCore._instance = new Config();
+            ConfigCore._instance = new Config(SchemaConfigOptionsHimHip);
         }
 
         return ConfigCore._instance as Config;
@@ -59,8 +50,8 @@ export class Config extends ConfigCore<ConfigOptions> {
      * load
      * @param args
      */
-    public async load(args: FlyingFishArgs): Promise<ConfigOptions | null> {
-        const config: ConfigOptions = {
+    public async load2(args: FlyingFishArgs): Promise<ConfigOptionsHimHip | null> {
+        const config: ConfigOptionsHimHip = {
             secret: '',
             url_path: Config.DEFAULT_URL_PATH,
             server_host: Config.DEFAULT_SERVER_HOST,

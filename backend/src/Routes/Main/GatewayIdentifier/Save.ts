@@ -1,12 +1,6 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_core';
+import {GatewayIdentifierEntry, GatewayIdentifierSaveResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
-import {GatewayIdentifierEntry} from './List.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
-
-/**
- * GatewayIdentifierSaveResponse
- */
-export type GatewayIdentifierSaveResponse = DefaultReturn;
 
 /**
  * Save

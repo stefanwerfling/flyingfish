@@ -1,4 +1,5 @@
 import {Args, Logger} from 'flyingfish_core';
+import {SchemaFlyingFishArgsSshServer} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
@@ -6,13 +7,12 @@ import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 import {MariaDbHelper} from './inc/Db/MariaDb/MariaDbHelper.js';
 import {SshServer} from './inc/Ssh/SshServer.js';
-import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 
 /**
  * Main
  */
 (async(): Promise<void> => {
-    const argv = Args.get(SchemaFlyingFishArgs);
+    const argv = Args.get(SchemaFlyingFishArgsSshServer);
     let configfile = null;
 
     if (argv.config) {

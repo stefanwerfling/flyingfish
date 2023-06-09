@@ -1,24 +1,7 @@
-import {DateHelper, DefaultReturn, StatusCodes} from 'flyingfish_core';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DateHelper} from 'flyingfish_core';
+import {IpAccessWhiteSaveRequest, IpAccessWhiteSaveResponse, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
 import {IpWhitelist as IpWhitelistDB} from '../../../../inc/Db/MariaDb/Entity/IpWhitelist.js';
-
-/**
- * IpAccessWhiteSaveRequest
- */
-export const SchemaIpAccessWhiteSaveRequest = Vts.object({
-    id: Vts.number(),
-    ip: Vts.string(),
-    disable: Vts.boolean(),
-    description: Vts.string()
-});
-
-export type IpAccessWhiteSaveRequest = ExtractSchemaResultType<typeof SchemaIpAccessWhiteSaveRequest>;
-
-/**
- * IpAccessWhiteSaveResponse
- */
-export type IpAccessWhiteSaveResponse = DefaultReturn;
 
 /**
  * Save

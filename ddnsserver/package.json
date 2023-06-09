@@ -1,0 +1,38 @@
+{
+  "name": "flyingfish_ddnsserver",
+  "version": "1.0.0",
+  "description": "Dynamisches DNS Server, is a part of FlyingFish",
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "npm-check-updates": "npm-check-updates",
+    "tsc": "tsc",
+    "build": "npm run tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stefanwerfling/flyingfish.git/ddnsserver"
+  },
+  "keywords": [],
+  "author": "Stefan Werfling",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/stefanwerfling/flyingfish/issues"
+  },
+  "homepage": "https://github.com/stefanwerfling/flyingfish#readme",
+  "devDependencies": {
+    "@types/node": "^18.16.13",
+    "@typescript-eslint/eslint-plugin": "^5.59.6",
+    "@typescript-eslint/parser": "^5.59.6",
+    "eslint": "^8.41.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "flyingfish_core": "file:../core",
+    "flyingfish_schemas": "file:../schemas",
+    "mysql": "^2.18.1",
+    "typeorm": "^0.3.16",
+    "vts": "git+https://github.com/OpenSourcePKG/vts.git"
+  }
+}
