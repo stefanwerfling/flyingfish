@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {Not} from 'typeorm';
 import {ExtractSchemaResultType, Vts} from 'vts';
@@ -10,8 +10,6 @@ import {
     NginxStreamSshR
 } from '../../../../inc/Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
-import {SshPort as SshPortDB} from '../../../../inc/Db/MariaDb/Entity/SshPort.js';
-import {SshUser as SshUserDB} from '../../../../inc/Db/MariaDb/Entity/SshUser.js';
 import {RouteStreamSSH, SchemaRouteStream} from './../List.js';
 
 /**

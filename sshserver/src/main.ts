@@ -1,10 +1,8 @@
-import {Args, DBHelper, Logger} from 'flyingfish_core';
+import {Args, DBHelper, Logger, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {SchemaFlyingFishArgsSshServer} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
-import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
-import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 import {SshServer} from './inc/Ssh/SshServer.js';
 
 /**

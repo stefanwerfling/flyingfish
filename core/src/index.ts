@@ -3,6 +3,8 @@ export {Config} from './inc/Config/Config.js';
 export {Logger} from './inc/Logger/Logger.js';
 
 export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
+export {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
+export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 
 export {Session, SessionData, SessionUserData} from './inc/Server/Session.js';
 export {DefaultRoute} from './inc/Server/Routes/DefaultRoute.js';

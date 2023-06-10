@@ -1,4 +1,4 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {Config} from '../../../inc/Config/Config.js';
@@ -10,8 +10,6 @@ import {
 } from '../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {NginxLocation as NginxLocationDB} from '../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 import {NginxUpstream as NginxUpstreamDB} from '../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
-import {SshPort as SshPortDB} from '../../../inc/Db/MariaDb/Entity/SshPort.js';
-import {SshUser as SshUserDB} from '../../../inc/Db/MariaDb/Entity/SshUser.js';
 import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
 
 /**

@@ -1,8 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, Logger} from 'flyingfish_core';
+import {DBHelper, Logger, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {AuthContext, ClientInfo, Connection, ServerChannel, Session, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
-import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
-import {SshUser as SshUserDB} from '../Db/MariaDb/Entity/SshUser.js';
 import {ISshClientForward} from './SshClientForward.js';
 import {SshClientForwardL} from './SshClientForwardL.js';
 import {SshClientForwardR} from './SshClientForwardR.js';

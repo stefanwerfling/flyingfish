@@ -1,4 +1,4 @@
-import {DBHelper, Logger} from 'flyingfish_core';
+import {DBHelper, Logger, SshPortDB} from 'flyingfish_core';
 import fs from 'fs';
 import * as Path from 'path';
 import {SchemaErrors} from 'vts';
@@ -24,7 +24,6 @@ import {
     NginxStreamSshR
 } from '../Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream.js';
-import {SshPort as SshPortDB} from '../Db/MariaDb/Entity/SshPort.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';

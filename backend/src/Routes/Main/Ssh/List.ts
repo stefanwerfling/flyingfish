@@ -1,7 +1,6 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, SshPortDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {SshPort as SshPortDB} from '../../../inc/Db/MariaDb/Entity/SshPort.js';
 
 /**
  * SshPortEntry

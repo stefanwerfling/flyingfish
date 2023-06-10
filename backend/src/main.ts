@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {Args, DBHelper, Logger} from 'flyingfish_core';
+import {Args, DBHelper, Logger, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
 import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
@@ -51,8 +51,6 @@ import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
 import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
-import {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
-import {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 import {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
 import {NginxServer} from './inc/Nginx/NginxServer.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
