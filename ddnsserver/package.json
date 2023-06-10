@@ -21,6 +21,9 @@
   },
   "homepage": "https://github.com/stefanwerfling/flyingfish#readme",
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.3",
+    "@types/express": "^4.17.17",
+    "@types/express-session": "^1.17.7",
     "@types/node": "^18.16.13",
     "@typescript-eslint/eslint-plugin": "^5.59.6",
     "@typescript-eslint/parser": "^5.59.6",
@@ -29,10 +32,17 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "express-session": "^1.17.3",
+    "cookie-parser": "^1.4.6",
+    "helmet": "^6.2.0",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
     "mysql": "^2.18.1",
     "typeorm": "^0.3.16",
-    "vts": "git+https://github.com/OpenSourcePKG/vts.git"
+    "vts": "git+https://github.com/OpenSourcePKG/vts.git",
+    "winston": "^3.8.2",
+    "winston-daily-rotate-file": "^4.7.1"
   }
 }
