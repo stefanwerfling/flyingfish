@@ -1,8 +1,8 @@
+import {DBHelper} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {UserEntry} from './List.js';
 import {Not} from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
 
 /**

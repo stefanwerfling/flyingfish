@@ -40,7 +40,6 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     /**
      * DEFAULTS
      */
-    public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
     public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
     public static readonly DEFAULT_HTTPSERVER_PUBLICDIR = 'frontend';
     public static readonly DEFAULT_DNSSERVER_PORT = 5333;

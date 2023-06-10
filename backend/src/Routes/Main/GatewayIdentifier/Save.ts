@@ -1,5 +1,5 @@
+import {DBHelper} from 'flyingfish_core';
 import {GatewayIdentifierEntry, GatewayIdentifierSaveResponse, StatusCodes} from 'flyingfish_schemas';
-import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from '../../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 
 /**

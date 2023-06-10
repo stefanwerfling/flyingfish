@@ -1,7 +1,6 @@
 import DNS from 'dns2';
-import {DateHelper, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
 import {DynDnsClient as DynDnsClientDB} from '../Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../Db/MariaDb/Entity/DynDnsClientDomain.js';

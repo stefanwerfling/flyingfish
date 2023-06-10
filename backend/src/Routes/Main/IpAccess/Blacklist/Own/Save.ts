@@ -1,6 +1,5 @@
-import {DateHelper} from 'flyingfish_core';
+import {DateHelper, DBHelper} from 'flyingfish_core';
 import {IpAccessBlackListOwnSaveRequest, IpAccessBlackListOwnSaveResponse, StatusCodes} from 'flyingfish_schemas';
-import {DBHelper} from '../../../../../inc/Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 
 /**

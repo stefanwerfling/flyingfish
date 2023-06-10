@@ -1,5 +1,5 @@
+import {DBHelper} from 'flyingfish_core';
 import {DomainData, DomainRecord, DomainResponse, StatusCodes} from 'flyingfish_schemas';
-import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {DomainRecord as DomainRecordDB} from '../../../inc/Db/MariaDb/Entity/DomainRecord.js';
 

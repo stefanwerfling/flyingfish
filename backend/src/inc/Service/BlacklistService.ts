@@ -1,6 +1,5 @@
-import {DateHelper, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../Db/MariaDb/Entity/IpBlacklist.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../Db/MariaDb/Entity/IpBlacklistMaintainer.js';

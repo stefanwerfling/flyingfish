@@ -1,8 +1,8 @@
 import * as bcrypt from 'bcrypt';
+import {DBHelper} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {Not} from 'typeorm';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
 import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 import {
     NginxStream as NginxStreamDB,

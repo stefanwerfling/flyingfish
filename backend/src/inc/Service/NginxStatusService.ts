@@ -1,6 +1,6 @@
+import {DBHelper} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
 import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 
 /**
  * NginxStatusService

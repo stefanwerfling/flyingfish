@@ -1,5 +1,5 @@
+import {DBHelper} from 'flyingfish_core';
 import {IpAccessLocation} from 'flyingfish_schemas';
-import {DBHelper} from '../../../inc/Db/MariaDb/DBHelper.js';
 import {IpLocation as IpLocationDB} from '../../../inc/Db/MariaDb/Entity/IpLocation.js';
 import {In} from 'typeorm';
 

@@ -1,6 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import {Logger} from 'flyingfish_core';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
+import {DBHelper, Logger} from 'flyingfish_core';
 import {CredentialSchemes} from './Credential.js';
 import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential.js';
 import {CredentialUser as CredentialUserDB} from '../Db/MariaDb/Entity/CredentialUser.js';

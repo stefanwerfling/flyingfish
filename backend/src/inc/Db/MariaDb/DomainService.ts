@@ -1,5 +1,5 @@
+import {DBHelper} from 'flyingfish_core';
 import {Repository, DeleteResult} from 'typeorm';
-import {DBHelper} from './DBHelper.js';
 import {Domain} from './Entity/Domain.js';
 
 /**

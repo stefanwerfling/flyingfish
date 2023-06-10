@@ -1,5 +1,5 @@
+import {DBHelper} from 'flyingfish_core';
 import {Settings as SettingsDB} from '../Db/MariaDb/Entity/Settings.js';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 
 /**
  * Settings

@@ -1,6 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import {Logger} from 'flyingfish_core';
-import {DBHelper} from './DBHelper.js';
+import {DBHelper, Logger} from 'flyingfish_core';
 import {DomainService} from './DomainService.js';
 import {Domain as DomainDB} from './Entity/Domain.js';
 import {ListenCategory, ListenProtocol, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen.js';

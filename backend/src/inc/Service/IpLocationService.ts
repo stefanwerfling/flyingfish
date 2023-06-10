@@ -1,7 +1,6 @@
-import {Logger} from 'flyingfish_core';
+import {DBHelper, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
 import {MoreThan} from 'typeorm';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {IpBlacklist as IpBlacklistDB} from '../Db/MariaDb/Entity/IpBlacklist.js';
 import {IpLocation as IpLocationDB} from '../Db/MariaDb/Entity/IpLocation.js';
 import {IpWhitelist as IpWhitelistDB} from '../Db/MariaDb/Entity/IpWhitelist.js';

@@ -1,11 +1,10 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
-import {Logger} from 'flyingfish_core';
+import {DBHelper, Logger} from 'flyingfish_core';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {DomainRecord as DomainRecordDB} from '../Db/MariaDb/Entity/DomainRecord.js';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
 import {DnsAnswerNS} from './RecordType/NS.js';
 import {DnsAnswerTlSA, SchemaRecordSettingsTlSA, TLSACertificateUsage} from './RecordType/TLSA.js';

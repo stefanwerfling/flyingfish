@@ -1,8 +1,6 @@
 import {ConfigOptionsSshServer, SchemaConfigOptionsSshServer} from 'flyingfish_schemas';
-import {readFileSync} from 'fs';
 import path from 'path';
 import process from 'process';
-import {SchemaErrors} from 'vts';
 import {Config as ConfigCore} from 'flyingfish_core';
 
 export enum ENV_DUTY {
@@ -22,7 +20,9 @@ export enum ENV_OPTIONAL {
  */
 export class Config extends ConfigCore<ConfigOptionsSshServer> {
 
-    public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
+    /**
+     * DEFAULTS
+     */
     public static readonly DEFAULT_SSH_DIR = 'ssh';
 
     /**

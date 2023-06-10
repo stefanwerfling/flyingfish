@@ -1,5 +1,5 @@
+import {DBHelper} from 'flyingfish_core';
 import {IpAccessBlackListImport, IpAccessBlackListImportsResponse, StatusCodes} from 'flyingfish_schemas';
-import {DBHelper} from '../../../../../inc/Db/MariaDb/DBHelper.js';
 import {UtilsLocation} from '../../UtilsLocation.js';
 import {IpBlacklist as IpBlacklistDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklistCategory.js';

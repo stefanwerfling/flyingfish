@@ -1,6 +1,6 @@
+import {DBHelper} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {ExtractSchemaResultType, Vts} from 'vts';
-import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
 import {NginxStream as NginxStreamDB} from '../../../../inc/Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {Save} from './Save.js';

@@ -1,8 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {Args, Logger} from 'flyingfish_core';
+import {Args, DBHelper, Logger} from 'flyingfish_core';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
-import {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';

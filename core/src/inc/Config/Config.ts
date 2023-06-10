@@ -1,5 +1,6 @@
 import {ConfigOptions, SchemaConfigOptions} from 'flyingfish_schemas';
 import {readFileSync} from 'fs';
+import path from 'path';
 import {SchemaErrors} from 'vts';
 import {ObjectSchema} from 'vts/dist/schemas/objectSchema.js';
 
@@ -14,6 +15,7 @@ export class Config<T = ConfigOptions> {
     public static readonly DEFAULT_CONFIG_FILE = 'config.json';
     public static readonly DEFAULT_DB_MYSQL_HOST = '10.103.0.2';
     public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
+    public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
 
     /**
      * instance
@@ -55,7 +57,7 @@ export class Config<T = ConfigOptions> {
 
     /**
      * set
-     * @param config
+     * @param aConfig
      */
     public set(aConfig: T | null): void {
         this._config = aConfig;

@@ -1,5 +1,5 @@
+import {DBHelper} from 'flyingfish_core';
 import {IpAccessWhiteDeleteRequest, IpAccessWhiteDeleteResponse, StatusCodes} from 'flyingfish_schemas';
-import {DBHelper} from '../../../../inc/Db/MariaDb/DBHelper.js';
 import {IpWhitelist as IpWhitelistDB} from '../../../../inc/Db/MariaDb/Entity/IpWhitelist.js';
 
 /**

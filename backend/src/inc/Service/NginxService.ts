@@ -1,11 +1,10 @@
-import {Logger} from 'flyingfish_core';
+import {DBHelper, Logger} from 'flyingfish_core';
 import fs from 'fs';
 import * as Path from 'path';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
-import {DBHelper} from '../Db/MariaDb/DBHelper.js';
 import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
