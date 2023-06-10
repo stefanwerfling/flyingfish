@@ -6,6 +6,12 @@ export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 
 export {Session, SessionData, SessionUserData} from './inc/Server/Session.js';
 export {DefaultRoute} from './inc/Server/Routes/DefaultRoute.js';
+export {
+    BaseHttpServerOptionCrypt,
+    BaseHttpServerOptionSession,
+    BaseHttpServerOptions,
+    BaseHttpServer
+} from './inc/Server/BaseHttpServer.js';
 
 export {DateHelper} from './inc/Utils/DateHelper.js';
 export {FileHelper} from './inc/Utils/FileHelper.js';

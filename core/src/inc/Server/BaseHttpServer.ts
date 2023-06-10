@@ -1,0 +1,210 @@
+import fs from 'fs';
+import https from 'https';
+import Path from 'path';
+import {Logger} from '../Logger/Logger.js';
+import {DefaultRoute} from './Routes/DefaultRoute.js';
+import express, {Application, NextFunction, Request, Response} from 'express';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+
+/**
+ * BaseHttpServerOptionCrypt
+ */
+export type BaseHttpServerOptionCrypt = {
+    sslPath: string;
+    key: string;
+    crt: string;
+};
+
+/**
+ * BaseHttpServerOptionSession
+ */
+export type BaseHttpServerOptionSession = {
+    max_age: number;
+    ssl_path: string;
+    cookie_path: string;
+    secret: string;
+};
+
+/**
+ * BaseHttpServerOptions
+ */
+export type BaseHttpServerOptions = {
+    realm: string;
+    port?: number;
+    routes?: DefaultRoute[];
+    session: BaseHttpServerOptionSession;
+    publicDir?: string;
+    crypt?: BaseHttpServerOptionCrypt;
+};
+
+/**
+ * BaseHttpServer
+ */
+export class BaseHttpServer {
+
+    /**
+     * server default port
+     * @private
+     */
+    protected readonly _port: number = 3000;
+
+    /**
+     * server object
+     * @private
+     */
+    protected readonly _server: Application;
+
+    /**
+     * realm
+     * @private
+     */
+    protected readonly _realm: string;
+
+    /**
+     * session
+     * @protected
+     */
+    protected readonly _session: BaseHttpServerOptionSession;
+
+    /**
+     * use crypt
+     * @private
+     */
+    protected readonly _crypt?: BaseHttpServerOptionCrypt;
+
+    /**
+     * constructor
+     * @param serverInit
+     */
+    public constructor(serverInit: BaseHttpServerOptions) {
+        if (serverInit.port) {
+            this._port = serverInit.port;
+        }
+
+        this._realm = serverInit.realm;
+        this._session = serverInit.session;
+
+        this._server = express();
+        this._initServer();
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        if (serverInit.routes) {
+            this._routes(serverInit.routes);
+        }
+
+        if (serverInit.publicDir) {
+            this._assets(serverInit.publicDir);
+        }
+
+        if (serverInit.crypt) {
+            this._crypt = serverInit.crypt;
+        }
+
+        // add error handling
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        this._server.use((error: Error, request: Request, response: Response, _next: NextFunction) => {
+            response.status(500);
+            Logger.getLogger().error(error.stack);
+        });
+    }
+
+    /**
+     * _initServer
+     * @protected
+     */
+    protected _initServer(): void {
+        this._server.use(bodyParser.urlencoded({extended: true}));
+        this._server.use(bodyParser.json());
+        this._server.use(cookieParser());
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._server.use(
+            session({
+                secret: this._session.secret,
+                proxy: true,
+                resave: true,
+                saveUninitialized: true,
+                store: new session.MemoryStore(),
+                cookie: {
+                    path: this._session.cookie_path,
+                    secure: this._session.ssl_path !== '',
+                    maxAge: this._session.max_age
+                }
+            })
+        );
+    }
+
+    /**
+     * _routes
+     * @param routes
+     * @private
+     */
+    private _routes(routes: DefaultRoute[]): void {
+        routes.forEach((route) => {
+            this._server.use(route.getExpressRouter());
+        });
+    }
+
+    /**
+     * _assets
+     * @param publicDir
+     * @private
+     */
+    private _assets(publicDir: string | null): void {
+        if (publicDir !== null) {
+            this._server.use(express.static(publicDir));
+        }
+    }
+
+    /**
+     * _checkKeyFile
+     * @param keyFile
+     * @protected
+     */
+    protected async _checkKeyFile(keyFile: string): Promise<boolean> {
+        if (fs.existsSync(keyFile)) {
+            Logger.getLogger().silly(`BaseHttpServer::listen: express certs found in path: ${this._crypt?.sslPath}`);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * listen
+     */
+    public async listen(): Promise<void> {
+        const app = this._server;
+
+        if (this._crypt) {
+            fs.mkdirSync(this._crypt.sslPath, {recursive: true});
+
+            const keyFile = Path.join(this._crypt.sslPath, this._crypt.key);
+            const crtFile = Path.join(this._crypt.sslPath, this._crypt.crt);
+
+            if (await this._checkKeyFile(keyFile)) {
+                const privateKey = fs.readFileSync(keyFile);
+                const crt = fs.readFileSync(crtFile);
+
+                https.createServer({
+                    key: privateKey,
+                    cert: crt
+                }, app).listen(this._port, () => {
+                    Logger.getLogger().info(`BaseHttpServer::listen: ${this._realm} listening on the https://localhost:${this._port}`);
+                });
+            } else {
+                Logger.getLogger().error('BaseHttpServer::listen: Key and Certificate not found for http server!');
+            }
+        } else {
+            app.listen(this._port, () => {
+                Logger.getLogger().info(`BaseHttpServer::listen: ${this._realm} listening on the http://localhost:${this._port}`);
+            });
+        }
+    }
+
+}

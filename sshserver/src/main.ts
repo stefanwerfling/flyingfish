@@ -81,7 +81,6 @@ import {SshServer} from './inc/Ssh/SshServer.js';
             migrationsRun: true,
             synchronize: true
         });
-
     } catch (error) {
         Logger.getLogger().error('Error while connecting to the database', error);
         return;

@@ -19,6 +19,7 @@ import {IpLocationService} from './inc/Service/IpLocationService.js';
 import {IpService} from './inc/Service/IpService.js';
 import {NginxStatusService} from './inc/Service/NginxStatusService.js';
 import {SslCertService} from './inc/Service/SslCertService.js';
+import {FlyingFishSsl} from './inc/Utils/FlyingFishSsl.js';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
 import {Dashboard as DashboardController} from './Routes/Main/Dashboard.js';
 import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier.js';
@@ -209,6 +210,7 @@ import exitHook from 'async-exit-hook';
     // -----------------------------------------------------------------------------------------------------------------
 
     const mServer = new HttpServer({
+        realm: 'FlyingFish',
         port: aport,
         session: {
             secret: session_secret,
@@ -238,7 +240,11 @@ import exitHook from 'async-exit-hook';
             new HimHipUpdateController()
         ],
         publicDir: public_dir,
-        sslPath: ssl_path
+        crypt: {
+            sslPath: ssl_path,
+            key: FlyingFishSsl.FILE_KEYPEM,
+            crt: FlyingFishSsl.FILE_CRT
+        }
     });
 
     // listen, start express server
