@@ -1,1 +1,3 @@
 theme: jekyll-theme-minimal
+title: FlyingFish
+description: A reverse proxy manager with its own DNS server, own SSH server, DynDNS, UPNP support, LetsEncrypt and much more
