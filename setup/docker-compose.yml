@@ -1,0 +1,144 @@
+version: '3.1'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: flyingfish_db
+    environment:
+      MARIADB_AUTO_UPGRADE: '1'
+      MARIADB_INITDB_SKIP_TZINFO: '1'
+      MYSQL_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: "${MARIADB_DATABASE}"
+    volumes:
+      - flyingfishDbData:/var/lib/mysql
+    ports:
+      - 127.0.0.1:3306:3306
+    networks:
+      flyingfishNet:
+          ipv4_address: 10.103.0.2
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
+  influxdb:
+    image: influxdb:latest
+    container_name: flyingfish_influxdb
+    volumes:
+      - flyingfishInfluxdbData:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+    ports:
+      - "127.0.0.1:8086:8086"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
+  flyingfish:
+    image: stefanwerfling/flingfish:latest
+    container_name: flyingfish_service
+    volumes:
+      - flyingfishLetsencrypt:/etc/letsencrypt:rw
+      - flyingfish:/var/lib/flyingfish:rw
+    environment:
+      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
+      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+      FLYINGFISH_DB_INFLUX_URL: "${INFLUXDB_URL}"
+      FLYINGFISH_DB_INFLUX_TOKEN: "${INFLUXDB_ADMIN_TOKEN}"
+      FLYINGFISH_DB_INFLUX_ORG: "${INFLUXDB_ORG}"
+      FLYINGFISH_DB_INFLUX_BUCKET: "${INFLUXDB_BUCKET}"
+      FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
+      FLYINGFISH_HIMHIP_SECRET: "${HIMHIP_SECRET}"
+    ports:
+      - "443:443"
+      - "80:80"
+      - "5333:53/udp"
+      - "5333:53/tcp"
+      - "${HTTPSERVER_PORT}:${HTTPSERVER_PORT}"
+      - "1900:1900"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
+  himhip:
+    image: stefanwerfling/flyingfish_himip:latest
+    container_name: flyingfish_himhip
+    environment:
+      FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
+      FLYINGFISH_SERVER_PORT: "${HTTPSERVER_PORT}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+    network_mode: host
+    cap_add:
+      - ALL
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - flyingfish
+
+  sshremote:
+    image: stefanwerfling/flyingfish_ssh:latest
+    container_name: flyingfish_ssh
+    volumes:
+      - flyingfishSsh:/opt/app/ssh:rw
+    environment:
+      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
+      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+      FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+    ports:
+      - "2222:22"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.4
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
+volumes:
+  flyingfishDbData:
+    driver: local
+  flyingfishInfluxdbData:
+    driver: local
+  flyingfish:
+    driver: local
+  flyingfishLetsencrypt:
+    driver: local
+  flyingfishSsh:
+    driver: local
+    
+networks:
+  flyingfishNet:
+    driver: bridge
+    ipam:
+      config:
+        -  subnet: 10.103.0.0/16
