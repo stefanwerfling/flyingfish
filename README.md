@@ -15,3 +15,7 @@ description: >-
 ## On the topic
 
 <table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td><strong>About the project</strong></td><td>Development and structure of the project and information about the individual components</td><td></td><td><a href="index/about-the-project.md">about-the-project.md</a></td></tr><tr><td><strong>Installation</strong></td><td>Installation of Docker and coniguration of the possible settings and usage examples</td><td></td><td></td></tr><tr><td><strong>Dev</strong></td><td>Documentation of project, code, API and much more</td><td></td><td></td></tr></tbody></table>
+
+## Screenshots
+
+<table data-card-size="large" data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-cover data-type="files"></th></tr></thead><tbody><tr><td><strong>Login</strong></td><td>Accessible via the internal network</td><td></td><td><a href=".gitbook/assets/login.png">login.png</a></td></tr><tr><td><strong>Dashboard</strong></td><td>Overview of IP, blacklist and traffik</td><td></td><td><a href=".gitbook/assets/dashboard_v1.0.21.png">dashboard_v1.0.21.png</a></td></tr><tr><td><strong>Listen</strong></td><td>Lists which ports nginx is listening on for connections</td><td></td><td><a href=".gitbook/assets/listens.png">listens.png</a></td></tr></tbody></table>
