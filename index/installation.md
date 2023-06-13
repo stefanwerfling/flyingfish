@@ -39,7 +39,7 @@ Now start docker compose.
 docker compose up -d
 ```
 
-Now you can log in via the web interface with the standard root user. Please change the passord immediately.
+You can log in via the web interface with the standard root user. Please change the password immediately.
 
 * **URL:** https://\<ip>:3000/
 * **Username:** admin@flyingfish.org
