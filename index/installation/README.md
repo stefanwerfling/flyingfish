@@ -1,0 +1,13 @@
+# Installation
+
+## Info
+
+The [quick installation](quick-setup.md) is enough for easy use. For detailed settings read the documentation for the Docker containers.
+
+<figure><img src="../../.gitbook/assets/14e387d8-0acd-4f59-b980-fbcf050667c5.jpeg" alt=""><figcaption></figcaption></figure>
+
+## On the topic
+
+<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td><strong>Quick setup</strong></td><td>Fast installation without previous knowledge</td><td></td><td><a href="quick-setup.md">quick-setup.md</a></td></tr><tr><td><strong>Quick update</strong></td><td>Quick update to the new version</td><td></td><td><a href="quick-update.md">quick-update.md</a></td></tr><tr><td><strong>FAQ</strong></td><td>Frequently asked questions, encountered problems or notes</td><td></td><td><a href="faq.md">faq.md</a></td></tr></tbody></table>
+
+##
