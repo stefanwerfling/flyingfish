@@ -56,12 +56,6 @@ But it's better you run the installation with the instructions in Docker-Compose
 * stefanwerfling/flyingfish_himip:latest
 * stefanwerfling/flyingfish_himip:v1.0.21
 
-# Index
-1. [Project Description](doc/description.md)
-2. [First installation](doc/firstinstall.md)
-3. [For devs](doc/dev.md)
-4. [FAQ](doc/faq.md)
-
 #### Screenshots
 <table>
     <tr>
