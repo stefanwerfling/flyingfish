@@ -1,21 +1,6 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DefaultReturn, StatusCodes, UserDeleteRequest} from 'flyingfish_schemas';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
-
-/**
- * UserDeleteRequest
- */
-export const SchemaUserDeleteRequest = Vts.object({
-    id: Vts.number()
-});
-
-export type UserDeleteRequest = ExtractSchemaResultType<typeof SchemaUserDeleteRequest>;
-
-/**
- * UserDeleteResponse
- */
-export type UserDeleteResponse = DefaultReturn;
 
 /**
  * Delete
@@ -26,7 +11,7 @@ export class Delete {
      * deleteUser
      * @param data
      */
-    public static async deleteUser(data: UserDeleteRequest): Promise<UserDeleteResponse> {
+    public static async deleteUser(data: UserDeleteRequest): Promise<DefaultReturn> {
         const userRepository = DBHelper.getDataSource().getRepository(UserDB);
 
         // check is the last user ----------------------------------------------------------------------------------

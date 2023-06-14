@@ -1,37 +1,7 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {StatusCodes} from 'flyingfish_schemas';
+import {UpnpNatPort, UpnpNatResponse} from 'flyingfish_schemas/dist/Backend/Routes/UpnpNat/List.js';
 import {NatPort as NatPortDB} from '../../../inc/Db/MariaDb/Entity/NatPort.js';
-
-/**
- * UpnpNatPort
- */
-export const SchemaUpnpNatPort = Vts.object({
-    id: Vts.number(),
-    postion: Vts.number(),
-    public_port: Vts.number(),
-    gateway_identifier_id: Vts.number(),
-    gateway_address: Vts.string(),
-    private_port: Vts.number(),
-    client_address: Vts.string(),
-    use_himhip_host_address: Vts.boolean(),
-    ttl: Vts.number(),
-    protocol: Vts.string(),
-    last_ttl_update: Vts.number(),
-    listen_id: Vts.number(),
-    description: Vts.string(),
-    last_status: Vts.number(),
-    last_update: Vts.number()
-});
-
-export type UpnpNatPort = ExtractSchemaResultType<typeof SchemaUpnpNatPort>;
-
-/**
- * UpnpNatResponse
- */
-export type UpnpNatResponse = DefaultReturn & {
-    data: UpnpNatPort[];
-};
 
 /**
  * List

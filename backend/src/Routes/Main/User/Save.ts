@@ -1,14 +1,8 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {UserEntry} from './List.js';
+import {DefaultReturn, StatusCodes, UserEntry} from 'flyingfish_schemas';
 import {Not} from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
-
-/**
- * UserSaveResponse
- */
-export type UserSaveResponse = DefaultReturn;
 
 /**
  * Save
@@ -19,7 +13,7 @@ export class Save {
      * saveUser
      * @param data
      */
-    public static async saveUser(data: UserEntry): Promise<UserSaveResponse> {
+    public static async saveUser(data: UserEntry): Promise<DefaultReturn> {
         const userRepository = DBHelper.getDataSource().getRepository(UserDB);
 
         // check is the last user ----------------------------------------------------------------------------------

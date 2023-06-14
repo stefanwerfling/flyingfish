@@ -1,11 +1,10 @@
-import {ListenData, Location, RouteVariable} from 'flyingfish_schemas';
+import {ListenData, Location, RouteVariable, SshPortEntry, SslProvider} from 'flyingfish_schemas';
 import {ListenCategory, ListenTypes} from '../../Api/Listen';
 import {
     NginxHTTPVariables,
     NginxLocationDestinationTypes
 } from '../../Api/Route';
-import {SshPortEntry} from '../../Api/Ssh';
-import {Ssl as SslAPI, SslProvider} from '../../Api/Ssl';
+import {Ssl as SslAPI} from '../../Api/Ssl';
 import {
     ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardLine, CardType, FormGroup,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, Icon, IconFa, NavTab, PText, PTextType,

@@ -54,4 +54,11 @@ import {Config} from './inc/Config/Config.js';
     Logger.getLogger().info('Start FlyingFish DDNS Server ...');
 
     // -----------------------------------------------------------------------------------------------------------------
+
+    try {
+
+    } catch (error) {
+        Logger.getLogger().error('Error while connecting to the database', error);
+        return;
+    }
 })();

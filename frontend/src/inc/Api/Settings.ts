@@ -1,31 +1,5 @@
-import {SchemaDefaultReturn} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {SchemaDefaultReturn, SchemaSettingsResponse, SettingsList} from 'flyingfish_schemas';
 import {NetFetch} from '../Net/NetFetch';
-
-/**
- * SettingsList
- */
-export const SchemaSettingsList = Vts.object({
-    nginx: Vts.object({
-        worker_connections: Vts.string(),
-        resolver: Vts.string()
-    }),
-    blacklist: Vts.object({
-        importer: Vts.string(),
-        iplocate: Vts.string()
-    })
-});
-
-export type SettingsList = ExtractSchemaResultType<typeof SchemaSettingsList>;
-
-/**
- * SettingsResponse
- */
-export const SchemaSettingsResponse = SchemaDefaultReturn.extend({
-    list: Vts.optional(SchemaSettingsList)
-});
-
-export type SettingsResponse = ExtractSchemaResultType<typeof SchemaSettingsResponse>;
 
 /**
  * Settings

@@ -1,13 +1,6 @@
+import {SslProvider} from 'flyingfish_schemas';
 import {ISsl} from './ISsl.js';
 import {Certbot} from './Letsencrypt/Certbot.js';
-
-/**
- * SslProvider
- */
-export type SslProvider = {
-    name: string;
-    title: string;
-};
 
 /**
  * SslProviders

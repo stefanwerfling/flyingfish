@@ -1,5 +1,6 @@
+import {SettingsList} from 'flyingfish_schemas';
 import {Nginx as NginxAPI} from '../Api/Nginx';
-import {Settings as SettingsAPI, SettingsList} from '../Api/Settings';
+import {Settings as SettingsAPI} from '../Api/Settings';
 import {Card, ContentCol, ContentColSize, ContentRow, FormGroup, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2} from 'bambooo';
 import {BasePage} from './BasePage';
 

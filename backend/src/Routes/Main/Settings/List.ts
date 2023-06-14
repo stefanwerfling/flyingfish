@@ -1,29 +1,5 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {SettingsList, SettingsResponse, StatusCodes} from 'flyingfish_schemas';
 import {Settings as GlobalSettings} from '../../../inc/Settings/Settings.js';
-
-/**
- * SettingsList
- */
-export const SchemaSettingsList = Vts.object({
-    nginx: Vts.object({
-        worker_connections: Vts.string(),
-        resolver: Vts.string()
-    }),
-    blacklist: Vts.object({
-        importer: Vts.string(),
-        iplocate: Vts.string()
-    })
-});
-
-export type SettingsList = ExtractSchemaResultType<typeof SchemaSettingsList>;
-
-/**
- * SettingsResponse
- */
-export type SettingsResponse = DefaultReturn & {
-    list?: SettingsList;
-};
 
 /**
  * List

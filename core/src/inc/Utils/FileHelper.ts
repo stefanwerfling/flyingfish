@@ -33,11 +33,11 @@ export class FileHelper {
      * @param file
      */
     public static async fileExist(file: string): Promise<boolean> {
-        if ((await stat(file)).isFile()) {
-            return true;
+        try {
+            return (await stat(file)).isFile();
+        } catch (e) {
+            return false;
         }
-
-        return false;
     }
 
 }

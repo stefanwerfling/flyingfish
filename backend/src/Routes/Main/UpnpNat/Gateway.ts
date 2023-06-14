@@ -1,24 +1,5 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {StatusCodes, UpnpNatCurrentGatwayInfoResponse} from 'flyingfish_schemas';
 import {HimHIP} from '../../../inc/HimHIP/HimHIP.js';
-
-/**
- * UpnpNatGatwayInfo
- */
-export const SchemaUpnpNatGatwayInfo = Vts.object({
-    gatway_address: Vts.string(),
-    gatwaymac_address: Vts.string(),
-    client_address: Vts.string()
-});
-
-export type UpnpNatGatwayInfo = ExtractSchemaResultType<typeof SchemaUpnpNatGatwayInfo>;
-
-/**
- * UpnpNatCurrentGatwayInfoResponse
- */
-export type UpnpNatCurrentGatwayInfoResponse = DefaultReturn & {
-    data?: UpnpNatGatwayInfo;
-};
 
 /**
  * Gateway

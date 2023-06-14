@@ -1,4 +1,5 @@
-import {User as UserAPI, UserEntry} from '../Api/User';
+import {UserEntry} from 'flyingfish_schemas';
+import {User as UserAPI} from '../Api/User';
 import {ButtonClass, Card, ContentCol, ContentColSize, DialogConfirm, ButtonType, ButtonMenu, IconFa, Table,
     Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage';

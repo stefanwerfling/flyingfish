@@ -1,23 +1,5 @@
 import {DBHelper, SshPortDB} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
-
-/**
- * SshPortEntry
- */
-export const SchemaSshPortEntry = Vts.object({
-    id: Vts.number(),
-    port: Vts.number()
-});
-
-export type SshPortEntry = ExtractSchemaResultType<typeof SchemaSshPortEntry>;
-
-/**
- * SshPortListResponse
- */
-export type SshPortListResponse = DefaultReturn & {
-    list: SshPortEntry[];
-};
+import {SshPortEntry, SshPortListResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
  * List

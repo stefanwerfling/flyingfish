@@ -34,6 +34,7 @@ export class CertificateHelper {
     /**
      * generateKeyPair
      * @param modulusLength
+     * @param type
      */
     public static async generateKeyPair(
         modulusLength: number = 4096,

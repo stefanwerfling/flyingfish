@@ -1,12 +1,5 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {SslProviders, SslProvider} from '../../../inc/Provider/SslProviders.js';
-
-/**
- * SslProvidersResponse
- */
-export type SslProvidersResponse = DefaultReturn & {
-    list: SslProvider[];
-};
+import {SslProvidersResponse, StatusCodes} from 'flyingfish_schemas';
+import {SslProviders} from '../../../inc/Provider/SslProviders.js';
 
 /**
  * Providers

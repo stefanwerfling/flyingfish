@@ -1,38 +1,10 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {SslDetailsRequest, SslDetailsResponse, StatusCodes} from 'flyingfish_schemas';
 import Path from 'path';
 import {Certificate} from '../../../inc/Cert/Certificate.js';
 import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {Certbot} from '../../../inc/Provider/Letsencrypt/Certbot.js';
-
-/**
- * SslDetailsRequest
- */
-export const SchemaSslDetailsRequest = Vts.object({
-    httpid: Vts.number()
-});
-
-export type SslDetailsRequest = ExtractSchemaResultType<typeof SchemaSslDetailsRequest>;
-
-/**
- * SslDetails
- */
-export const SchemaSslDetails = Vts.object({
-    serialNumber: Vts.string(),
-    dateNotBefore: Vts.string(),
-    dateNotAfter: Vts.string()
-});
-
-export type SslDetails = ExtractSchemaResultType<typeof SchemaSslDetails>;
-
-/**
- * SslDetailsResponse
- */
-export type SslDetailsResponse = DefaultReturn & {
-    details?: SslDetails;
-};
 
 /**
  * Details

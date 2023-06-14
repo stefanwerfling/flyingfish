@@ -1,22 +1,16 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {Delete, SchemaUpnpNatDeleteRequest} from './UpnpNat/Delete.js';
+import {SchemaUpnpNatDeleteRequest, SchemaUpnpNatSaveRequest} from 'flyingfish_schemas';
+import {Delete} from './UpnpNat/Delete.js';
 import {Gateway} from './UpnpNat/Gateway.js';
 import {List} from './UpnpNat/List.js';
 import {OpenPort} from './UpnpNat/OpenPort.js';
-import {Save, SchemaUpnpNatSaveRequest} from './UpnpNat/Save.js';
+import {Save} from './UpnpNat/Save.js';
 
 /**
  * UpnpNat
  */
 export class UpnpNat extends DefaultRoute {
-
-    /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
 
     /**
      * getExpressRouter

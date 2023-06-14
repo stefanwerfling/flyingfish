@@ -1,28 +1,6 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {StatusCodes, UserEntry, UserListResponse} from 'flyingfish_schemas';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
-
-/**
- * UserEntry
- */
-export const SchemaUserEntry = Vts.object({
-    id: Vts.number(),
-    username: Vts.string(),
-    password: Vts.optional(Vts.string()),
-    password_repeat: Vts.optional(Vts.string()),
-    email: Vts.string(),
-    disable: Vts.boolean()
-});
-
-export type UserEntry = ExtractSchemaResultType<typeof SchemaUserEntry>;
-
-/**
- * UserListResponse
- */
-export type UserListResponse = DefaultReturn & {
-    list: UserEntry[];
-};
 
 /**
  * List

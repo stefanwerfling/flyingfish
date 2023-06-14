@@ -1,23 +1,5 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
-import {SchemaUpnpNatCacheMapping, UpnpNatCache} from '../../../inc/Cache/UpnpNatCache.js';
-
-/**
- * UpnpNatDevice
- */
-export const SchemaUpnpNatDevice = Vts.object({
-    deviceId: Vts.string(),
-    mappings: Vts.array(SchemaUpnpNatCacheMapping)
-});
-
-export type UpnpNatDevice = ExtractSchemaResultType<typeof SchemaUpnpNatDevice>;
-
-/**
- * UpnpNatOpenPortResponse
- */
-export type UpnpNatOpenPortResponse = DefaultReturn & {
-    data: UpnpNatDevice[];
-};
+import {StatusCodes, UpnpNatDevice, UpnpNatOpenPortResponse} from 'flyingfish_schemas';
+import {UpnpNatCache} from '../../../inc/Cache/UpnpNatCache.js';
 
 /**
  * OpenPort

@@ -1,27 +1,6 @@
+import {UpnpNatCacheMapping} from 'flyingfish_schemas';
 import NodeCache from 'node-cache';
-import {ExtractSchemaResultType, Vts} from 'vts';
 import {Mapping} from '../Net/Upnp/UpnpNatClient.js';
-
-/**
- * UpnpNatCacheMapping
- */
-export const SchemaUpnpNatCacheMapping = Vts.object({
-    public: Vts.object({
-        host: Vts.string(),
-        port: Vts.number()
-    }),
-    private: Vts.object({
-        host: Vts.string(),
-        port: Vts.number()
-    }),
-    protocol: Vts.string(),
-    enabled: Vts.boolean(),
-    description: Vts.optional(Vts.string()),
-    ttl: Vts.number(),
-    local: Vts.boolean()
-});
-
-export type UpnpNatCacheMapping = ExtractSchemaResultType<typeof SchemaUpnpNatCacheMapping>;
 
 /**
  * UpnpNatCache
@@ -109,7 +88,8 @@ export class UpnpNatCache {
             list.push({
                 public: {
                     host: map.public.host,
-                    port: map.public.port
+                    port: map.public.port,
+                    gateway: map.public.gateway
                 },
                 private: {
                     host: map.private.host,
@@ -117,7 +97,7 @@ export class UpnpNatCache {
                 },
                 protocol: map.protocol,
                 enabled: map.enabled,
-                description: map.description,
+                description: `${map.description}`,
                 ttl: map.ttl,
                 local: map.local
             });

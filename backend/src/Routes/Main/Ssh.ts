@@ -8,13 +8,6 @@ import {List} from './Ssh/List.js';
 export class Ssh extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

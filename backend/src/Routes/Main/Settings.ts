@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {List, SchemaSettingsList} from './Settings/List.js';
+import {SchemaSettingsList} from 'flyingfish_schemas';
+import {List} from './Settings/List.js';
 import {Save} from './Settings/Save.js';
 
 /**

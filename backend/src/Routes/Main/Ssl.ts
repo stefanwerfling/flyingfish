@@ -1,19 +1,13 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {Details, SchemaSslDetailsRequest} from './Ssl/Details.js';
+import {SchemaSslDetailsRequest} from 'flyingfish_schemas';
+import {Details} from './Ssl/Details.js';
 import {Providers} from './Ssl/Providers.js';
 
 /**
  * Certificate
  */
 export class Ssl extends DefaultRoute {
-
-    /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
 
     /**
      * getExpressRouter

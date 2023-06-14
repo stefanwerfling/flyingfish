@@ -1,18 +1,6 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {SchemaUpnpNatPort, UpnpNatPort} from './List.js';
+import {DefaultReturn, StatusCodes, UpnpNatSaveRequest} from 'flyingfish_schemas';
 import {NatPort as NatPortDB} from '../../../inc/Db/MariaDb/Entity/NatPort.js';
-
-/**
- * UpnpNatSaveRequest
- */
-export const SchemaUpnpNatSaveRequest = SchemaUpnpNatPort;
-export type UpnpNatSaveRequest = UpnpNatPort;
-
-/**
- * UpnpNatSaveResponse
- */
-export type UpnpNatSaveResponse = DefaultReturn;
 
 /**
  * Save
@@ -23,7 +11,7 @@ export class Save {
      * save
      * @param data
      */
-    public static async save(data: UpnpNatSaveRequest): Promise<UpnpNatSaveResponse> {
+    public static async save(data: UpnpNatSaveRequest): Promise<DefaultReturn> {
         const natportRepository = DBHelper.getRepository(NatPortDB);
 
         let aNatPort: NatPortDB|null = null;

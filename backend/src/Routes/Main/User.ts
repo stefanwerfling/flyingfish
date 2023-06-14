@@ -1,21 +1,15 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {Delete, SchemaUserDeleteRequest} from './User/Delete.js';
+import {SchemaUserDeleteRequest, SchemaUserEntry} from 'flyingfish_schemas';
+import {Delete} from './User/Delete.js';
 import {Info} from './User/Info.js';
-import {List, SchemaUserEntry} from './User/List.js';
+import {List} from './User/List.js';
 import {Save} from './User/Save.js';
 
 /**
  * User
  */
 export class User extends DefaultRoute {
-
-    /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
 
     /**
      * getExpressRouter

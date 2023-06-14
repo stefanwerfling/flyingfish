@@ -1,7 +1,6 @@
-import {ListenData, UpStream} from 'flyingfish_schemas';
+import {ListenData, SshPortEntry, UpStream} from 'flyingfish_schemas';
 import {ListenCategory, ListenTypes} from '../../Api/Listen';
 import {NginxStreamDestinationType, NginxStreamSshR} from '../../Api/Route';
-import {SshPortEntry} from '../../Api/Ssh';
 import {BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, Tooltip, TooltipInfo, Element,
     ModalDialog, ModalDialogType} from 'bambooo';
