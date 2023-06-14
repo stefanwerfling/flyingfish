@@ -6,7 +6,7 @@ description: >-
 
 # FlyingFish
 
-<figure><img src=".gitbook/assets/logo.png" alt="" width="128"><figcaption></figcaption></figure>
+<figure><img src=".gitbook/assets/logo.png" alt="" width="256"><figcaption></figcaption></figure>
 
 ## Make your services available easily, quickly and securely
 
