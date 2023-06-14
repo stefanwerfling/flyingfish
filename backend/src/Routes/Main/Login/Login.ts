@@ -1,24 +1,8 @@
 import {DBHelper, Logger, SessionUserData} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DefaultReturn, LoginRequest, StatusCodes} from 'flyingfish_schemas';
 import {Request} from 'express';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
 import * as bcrypt from 'bcrypt';
-
-/**
- * LoginRequest
- */
-export const SchemaLoginRequest = Vts.object({
-    email: Vts.string(),
-    password: Vts.string()
-});
-
-export type LoginRequest = ExtractSchemaResultType<typeof SchemaLoginRequest>;
-
-/**
- * LoginResponse
- */
-export type LoginResponse = DefaultReturn;
 
 /**
  * Login
@@ -30,7 +14,7 @@ export class Login {
      * @param req
      * @param login
      */
-    public static async login(req: Request, login: LoginRequest): Promise<LoginResponse> {
+    public static async login(req: Request, login: LoginRequest): Promise<DefaultReturn> {
         const userRepository = DBHelper.getDataSource().getRepository(UserDB);
 
         const user = await userRepository.findOne({

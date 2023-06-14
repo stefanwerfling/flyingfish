@@ -1,6 +1,14 @@
 import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {
+    Location,
+    RouteData,
+    RouteHttp,
+    RoutesResponse,
+    RouteSshPort,
+    RouteStream,
+    RouteVariable,
+    StatusCodes
+} from 'flyingfish_schemas';
 import {Config} from '../../../inc/Config/Config.js';
 import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
@@ -11,142 +19,6 @@ import {
 import {NginxLocation as NginxLocationDB} from '../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 import {NginxUpstream as NginxUpstreamDB} from '../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
-
-/**
- * SchemaRouteVariable
- */
-export const SchemaRouteVariable = Vts.object({
-    name: Vts.string(),
-    value: Vts.string()
-});
-
-export type RouteVariable = ExtractSchemaResultType<typeof SchemaRouteVariable>;
-
-/**
- * UpStream
- */
-export const SchemaUpStream = Vts.object({
-    id: Vts.number(),
-    address: Vts.string(),
-    port: Vts.number(),
-    proxy_protocol_out: Vts.boolean()
-});
-
-/**
- * RouteStreamSSH
- */
-export const SchemaRouteStreamSSH = Vts.object({
-    id: Vts.number(),
-    port: Vts.number(),
-    user_id: Vts.number(),
-    username: Vts.string(),
-    password: Vts.string(),
-    destinationAddress: Vts.string()
-});
-
-export type RouteStreamSSH = ExtractSchemaResultType<typeof SchemaRouteStreamSSH>;
-
-/**
- * RouteStream
- */
-export const SchemaRouteStream = Vts.object({
-    id: Vts.number(),
-    listen_id: Vts.number(),
-    destination_type: Vts.number(),
-    destination_listen_id: Vts.number(),
-    alias_name: Vts.string(),
-    index: Vts.number(),
-    isdefault: Vts.boolean(),
-    use_as_default: Vts.boolean(),
-    load_balancing_algorithm: Vts.string(),
-    ssh_r_type: Vts.number(),
-    ssh: Vts.optional(SchemaRouteStreamSSH),
-    upstreams: Vts.array(SchemaUpStream)
-});
-
-export type RouteStream = ExtractSchemaResultType<typeof SchemaRouteStream>;
-
-/**
- * Location
- */
-export const SchemaLocation = Vts.object({
-    id: Vts.number(),
-    destination_type: Vts.number(),
-    match: Vts.string(),
-    proxy_pass: Vts.string(),
-    ssh: Vts.optional(Vts.object({
-        id: Vts.optional(Vts.number()),
-        port_out: Vts.optional(Vts.number()),
-        schema: Vts.optional(Vts.string())
-    })),
-    redirect: Vts.optional(Vts.object({
-        code: Vts.number(),
-        redirect: Vts.string()
-    })),
-    auth_enable: Vts.boolean(),
-    websocket_enable: Vts.boolean(),
-    host_enable: Vts.boolean(),
-    host_name: Vts.string(),
-    host_name_port: Vts.number(),
-    xforwarded_scheme_enable: Vts.boolean(),
-    xforwarded_proto_enable: Vts.boolean(),
-    xforwarded_for_enable: Vts.boolean(),
-    xrealip_enable: Vts.boolean(),
-    variables: Vts.array(SchemaRouteVariable)
-});
-
-export type Location = ExtractSchemaResultType<typeof SchemaLocation>;
-
-/**
- * RouteHttp
- */
-export const SchemaRouteHttp = Vts.object({
-    id: Vts.number(),
-    listen_id: Vts.number(),
-    index: Vts.number(),
-    ssl: Vts.object({
-        enable: Vts.boolean(),
-        provider: Vts.string(),
-        email: Vts.string()
-    }),
-    locations: Vts.array(SchemaLocation),
-    http2_enable: Vts.boolean(),
-    x_frame_options: Vts.string(),
-    wellknown_disabled: Vts.boolean(),
-    variables: Vts.array(SchemaRouteVariable)
-});
-
-export type RouteHttp = ExtractSchemaResultType<typeof SchemaRouteHttp>;
-
-/**
- * HostData
- */
-export type RouteData = {
-    id: number;
-    domainname: string;
-    domainfix: boolean;
-    streams: RouteStream[];
-    https: RouteHttp[];
-};
-
-/**
- * RouteSshPort
- */
-export type RouteSshPort = {
-    id: number;
-    port: number;
-};
-
-/**
- * RoutesResponse
- */
-export type RoutesResponse = DefaultReturn & {
-    list: RouteData[];
-    defaults?: {
-        dnsserverport: number;
-        sshports: RouteSshPort[];
-    };
-};
 
 /**
  * List

@@ -1,5 +1,6 @@
-import {ListenCategory, ListenData, ListenTypes} from '../../Api/Listen';
-import {NginxStreamDestinationType, NginxStreamSshR, UpStream} from '../../Api/Route';
+import {ListenData, UpStream} from 'flyingfish_schemas';
+import {ListenCategory, ListenTypes} from '../../Api/Listen';
+import {NginxStreamDestinationType, NginxStreamSshR} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, Tooltip, TooltipInfo, Element,

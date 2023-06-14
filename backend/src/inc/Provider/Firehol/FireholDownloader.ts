@@ -27,8 +27,8 @@ export class FireholDownloader {
     public async load(): Promise<string> {
         const fileName = `${this._tmpDir}master.zip`;
 
-        if (fs.existsSync(fileName)) {
-            if (FileHelper.isOlderHours(fileName, 24)) {
+        if (await FileHelper.fileExist(fileName)) {
+            if (await FileHelper.isOlderHours(fileName, 24)) {
                 fs.unlinkSync(fileName);
             }
         }

@@ -1,8 +1,8 @@
-import {UpStream} from '../../Api/Route';
 import {
     ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup,
     InputBottemBorderOnly2, InputType, Switch
 } from 'bambooo';
+import {UpStream} from 'flyingfish_schemas';
 
 /**
  * UpstreamCard

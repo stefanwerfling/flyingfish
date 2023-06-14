@@ -1,5 +1,5 @@
-import {DBHelper, Logger, SshPortDB} from 'flyingfish_core';
-import fs from 'fs';
+import {DBHelper, FileHelper, Logger, SshPortDB} from 'flyingfish_core';
+import fs from 'fs/promises';
 import * as Path from 'path';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
@@ -971,7 +971,7 @@ export class NginxService {
 
                     // locations ---------------------------------------------------------------------------------------
 
-                    for (const locationCollect of httpSubCollect.locations) {
+                    for await (const locationCollect of httpSubCollect.locations) {
                         const entry = locationCollect.location;
                         let match = entry.match;
 
@@ -1012,8 +1012,8 @@ export class NginxService {
 
                             const dummyHtpasswd = '/opt/app/nginx/htpasswd';
 
-                            if (!fs.existsSync(dummyHtpasswd)) {
-                                fs.writeFileSync(dummyHtpasswd, '');
+                            if (!await FileHelper.fileExist(dummyHtpasswd)) {
+                                await fs.writeFile(dummyHtpasswd, '');
                             }
 
                             location.addVariable('satisfy', 'any');
@@ -1262,12 +1262,12 @@ export class NginxService {
         const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
 
         if (dhparam) {
-            if (fs.existsSync(dhparam)) {
+            if (await FileHelper.fileExist(dhparam)) {
                 Logger.getLogger().info('NginxService::start: Dhparam found.');
             } else {
                 Logger.getLogger().info('NginxService::start: Create Dhparam ...');
 
-                fs.mkdirSync(Path.dirname(dhparam), {recursive: true});
+                await fs.mkdir(Path.dirname(dhparam), {recursive: true});
 
                 if (await OpenSSL.createDhparam(dhparam, 4096) === null) {
                     Logger.getLogger().warn('NginxService::start: Can not create Dhparam!');

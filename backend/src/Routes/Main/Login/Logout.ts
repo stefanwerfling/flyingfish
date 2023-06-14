@@ -3,11 +3,6 @@ import {Request} from 'express';
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 
 /**
- * LoginLogoutResponse
- */
-export type LoginLogoutResponse = DefaultReturn;
-
-/**
  * Logout
  */
 export class Logout {
@@ -16,7 +11,7 @@ export class Logout {
      * logout
      * @param req
      */
-    public static async logout(req: Request): Promise<LoginLogoutResponse> {
+    public static async logout(req: Request): Promise<DefaultReturn> {
         // @ts-ignore
         req.session.user.userid = 0;
         // @ts-ignore

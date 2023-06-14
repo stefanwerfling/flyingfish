@@ -1,6 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import {BaseHttpServer, Logger, Session} from 'flyingfish_core';
-import fs from 'fs';
+import {BaseHttpServer, FileHelper, Logger, Session} from 'flyingfish_core';
 import helmet from 'helmet';
 import {Config} from '../Config/Config.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
@@ -92,7 +91,7 @@ export class HttpServer extends BaseHttpServer {
      * @protected
      */
     protected async _checkKeyFile(keyFile: string): Promise<boolean> {
-        if (fs.existsSync(keyFile)) {
+        if (await FileHelper.fileExist(keyFile)) {
             Logger.getLogger().silly(`HttpServer::listen: express certs found in path: ${this._crypt?.sslPath}`);
         } else {
             Logger.getLogger().silly(`HttpServer::listen: create certs for express by path: ${this._crypt?.sslPath}`);

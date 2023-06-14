@@ -21,14 +21,13 @@ import {
     Tooltip,
     Tr
 } from 'bambooo';
-import {Listen as ListenAPI, ListenCategory, ListenData} from '../Api/Listen';
+import {ListenData, RouteHttpSave, RouteStreamSave} from 'flyingfish_schemas';
+import {Listen as ListenAPI, ListenCategory} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {
     NginxStreamDestinationType,
     NginxStreamSshR,
-    Route as RouteAPI,
-    RouteHttpSave,
-    RouteStreamSave
+    Route as RouteAPI
 } from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';

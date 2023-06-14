@@ -1,9 +1,8 @@
-import {ListenCategory, ListenData, ListenTypes} from '../../Api/Listen';
+import {ListenData, Location, RouteVariable} from 'flyingfish_schemas';
+import {ListenCategory, ListenTypes} from '../../Api/Listen';
 import {
-    Location,
     NginxHTTPVariables,
-    NginxLocationDestinationTypes,
-    RouteVariable
+    NginxLocationDestinationTypes
 } from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {Ssl as SslAPI, SslProvider} from '../../Api/Ssl';

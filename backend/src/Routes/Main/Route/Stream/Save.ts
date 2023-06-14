@@ -1,8 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
+import {DefaultReturn, RouteStreamSave, RouteStreamSSH, StatusCodes} from 'flyingfish_schemas';
 import {Not} from 'typeorm';
-import {ExtractSchemaResultType, Vts} from 'vts';
 import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 import {
     NginxStream as NginxStreamDB,
@@ -10,22 +9,6 @@ import {
     NginxStreamSshR
 } from '../../../../inc/Db/MariaDb/Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from '../../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
-import {RouteStreamSSH, SchemaRouteStream} from './../List.js';
-
-/**
- * RouteStreamSave
- */
-export const SchemaRouteStreamSave = Vts.object({
-    domainid: Vts.number(),
-    stream: SchemaRouteStream
-});
-
-export type RouteStreamSave = ExtractSchemaResultType<typeof SchemaRouteStreamSave>;
-
-/**
- * RouteStreamSaveResponse
- */
-export type RouteStreamSaveResponse = DefaultReturn;
 
 /**
  * SaveStream
@@ -228,7 +211,7 @@ export class Save {
      * saveStreamRoute
      * @param data
      */
-    public static async saveStreamRoute(data: RouteStreamSave): Promise<RouteStreamSaveResponse> {
+    public static async saveStreamRoute(data: RouteStreamSave): Promise<DefaultReturn> {
         // check is listen select ----------------------------------------------------------------------------------
 
         if (data.stream.listen_id === 0) {

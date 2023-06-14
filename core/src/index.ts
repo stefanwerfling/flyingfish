@@ -2,6 +2,13 @@ export {Args} from './inc/Env/Args.js';
 export {Config} from './inc/Config/Config.js';
 export {Logger} from './inc/Logger/Logger.js';
 
+export {
+    CertificateHelperKeyType,
+    CertificateHelperAttr,
+    CertificateHelperKeyPair,
+    CertificateHelper
+} from './inc/Crypto/CertificateHelper.js';
+
 export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 export {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';

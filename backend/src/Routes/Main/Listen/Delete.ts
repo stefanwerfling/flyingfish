@@ -1,23 +1,8 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DefaultReturn, ListenDelete, StatusCodes} from 'flyingfish_schemas';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from '../../../inc/Db/MariaDb/Entity/NginxListen.js';
 import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
-
-/**
- * ListenDelete
- */
-export const SchemaListenDelete = Vts.object({
-    id: Vts.number()
-});
-
-export type ListenDelete = ExtractSchemaResultType<typeof SchemaListenDelete>;
-
-/**
- * ListenDeleteResponse
- */
-export type ListenDeleteResponse = DefaultReturn;
 
 /**
  * Delete
@@ -28,7 +13,7 @@ export class Delete {
      * deleteListen
      * @param data
      */
-    public static async deleteListen(data: ListenDelete): Promise<ListenDeleteResponse> {
+    public static async deleteListen(data: ListenDelete): Promise<DefaultReturn> {
         const listenRepository = DBHelper.getRepository(NginxListenDB);
         const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);

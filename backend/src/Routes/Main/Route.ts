@@ -1,22 +1,21 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {Delete as DeleteHttp, SchemaRouteHttpDelete} from './Route/Http/Delete.js';
-import {Delete as DeleteStream, SchemaRouteStreamDelete} from './Route/Stream/Delete.js';
+import {
+    SchemaRouteHttpDelete,
+    SchemaRouteHttpSave,
+    SchemaRouteStreamDelete,
+    SchemaRouteStreamSave
+} from 'flyingfish_schemas';
+import {Delete as DeleteHttp} from './Route/Http/Delete.js';
+import {Delete as DeleteStream} from './Route/Stream/Delete.js';
 import {List} from './Route/List.js';
-import {Save as SaveHttp, SchemaRouteHttpSave} from './Route/Http/Save.js';
-import {Save as SaveStream, SchemaRouteStreamSave} from './Route/Stream/Save.js';
+import {Save as SaveHttp} from './Route/Http/Save.js';
+import {Save as SaveStream} from './Route/Stream/Save.js';
 
 /**
  * Route
  */
 export class Route extends DefaultRoute {
-
-    /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
 
     /**
      * getExpressRouter

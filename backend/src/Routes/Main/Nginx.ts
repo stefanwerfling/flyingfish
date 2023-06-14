@@ -8,13 +8,6 @@ import {Reload} from './Nginx/Reload.js';
 export class Nginx extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

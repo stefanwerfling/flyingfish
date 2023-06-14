@@ -1,22 +1,7 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DefaultReturn, RouteHttpDelete, StatusCodes} from 'flyingfish_schemas';
 import {NginxHttp as NginxHttpDB} from '../../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
-
-/**
- * RouteHttpDelete
- */
-export const SchemaRouteHttpDelete = Vts.object({
-    id: Vts.number()
-});
-
-export type RouteHttpDelete = ExtractSchemaResultType<typeof SchemaRouteHttpDelete>;
-
-/**
- * RouteHttpDeleteResponse
- */
-export type RouteHttpDeleteResponse = DefaultReturn;
 
 /**
  * DeleteHttp
@@ -27,7 +12,7 @@ export class Delete {
      * deleteHttpRoute
      * @param data
      */
-    public static async deleteHttpRoute(data: RouteHttpDelete): Promise<RouteHttpDeleteResponse> {
+    public static async deleteHttpRoute(data: RouteHttpDelete): Promise<DefaultReturn> {
         if (data.id === 0) {
             return {
                 statusCode: StatusCodes.INTERNAL_ERROR,

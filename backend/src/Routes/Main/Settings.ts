@@ -9,13 +9,6 @@ import {Save} from './Settings/Save.js';
 export class Settings extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

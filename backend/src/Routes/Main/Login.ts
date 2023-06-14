@@ -1,15 +1,8 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {Login as LoginLogin, SchemaLoginRequest} from './Login/Login.js';
+import {IsLogin, SchemaLoginRequest, StatusCodes} from 'flyingfish_schemas';
+import {Login as LoginLogin} from './Login/Login.js';
 import {Logout} from './Login/Logout.js';
-
-/**
- * LoginIsLoginResponse
- */
-export type LoginIsLoginResponse = DefaultReturn & {
-    status: boolean;
-};
 
 /**
  * Login
@@ -27,12 +20,12 @@ export class Login extends DefaultRoute {
                     res.status(200).json({
                         statusCode: StatusCodes.OK,
                         status: true
-                    } as LoginIsLoginResponse);
+                    } as IsLogin);
                 } else {
                     res.status(200).json({
                         statusCode: StatusCodes.OK,
                         status: false
-                    } as LoginIsLoginResponse);
+                    } as IsLogin);
                 }
             }
         );

@@ -1,5 +1,5 @@
 import {spawn} from 'child_process';
-import {DateHelper, Logger} from 'flyingfish_core';
+import {DateHelper, FileHelper, Logger} from 'flyingfish_core';
 import {stat, mkdir} from 'fs/promises';
 import path from 'path';
 import {ISsl} from '../ISsl.js';
@@ -132,7 +132,7 @@ export class Certbot implements ISsl {
         const domainDir = path.join('/etc/letsencrypt/live', domainName);
 
         if ((await stat(domainDir)).isDirectory()) {
-            if ((await stat(path.join(domainDir, 'cert.pem'))).isFile()) {
+            if (await FileHelper.fileExist(path.join(domainDir, 'cert.pem'))) {
                 return domainDir;
             }
         }

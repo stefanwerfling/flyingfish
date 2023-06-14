@@ -18,7 +18,7 @@ export class FlyingFishSsl {
      * @param sslLibPath
      */
     public static async createExpressCerts(sslLibPath: string): Promise<void> {
-        const cnf = OpenSslCnf.createTmpCnf({
+        const cnf = await OpenSslCnf.createTmpCnf({
             req: {
                 distinguished_name: 'req_distinguished_name',
                 x509_extensions: 'v3_req',

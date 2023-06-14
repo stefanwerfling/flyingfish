@@ -1,29 +1,12 @@
 import {DBHelper} from 'flyingfish_core';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {DefaultReturn, RouteHttpSave, StatusCodes} from 'flyingfish_schemas';
 import {
     NginxHttpVariable as NginxHttpVariableDB,
     NginxHttpVariableContextType
 } from '../../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {NginxHTTPVariables} from '../../../../inc/Nginx/NginxVariables.js';
-import {SchemaRouteHttp} from './../List.js';
 import {NginxHttp as NginxHttpDB} from '../../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
-
-/**
- * RouteHttpSave
- */
-export const SchemaRouteHttpSave = Vts.object({
-    domainid: Vts.number(),
-    http: SchemaRouteHttp
-});
-
-export type RouteHttpSave = ExtractSchemaResultType<typeof SchemaRouteHttpSave>;
-
-/**
- * RouteHttpSaveResponse
- */
-export type RouteHttpSaveResponse = DefaultReturn;
 
 /**
  * AllowedRouteVariableServer
@@ -41,7 +24,7 @@ export class Save {
      * saveHttpRoute
      * @param data
      */
-    public static async saveHttpRoute(data: RouteHttpSave): Promise<RouteHttpSaveResponse> {
+    public static async saveHttpRoute(data: RouteHttpSave): Promise<DefaultReturn> {
         // check is listen select ----------------------------------------------------------------------------------
 
         if (data.http.listen_id === 0) {

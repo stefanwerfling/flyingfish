@@ -1,20 +1,14 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {Delete, SchemaListenDelete} from './Listen/Delete.js';
-import {List, SchemaListenData} from './Listen/List.js';
+import {SchemaListenData, SchemaListenDelete} from 'flyingfish_schemas';
+import {Delete} from './Listen/Delete.js';
+import {List} from './Listen/List.js';
 import {Save} from './Listen/Save.js';
 
 /**
  * Listen
  */
 export class Listen extends DefaultRoute {
-
-    /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
 
     /**
      * getExpressRouter

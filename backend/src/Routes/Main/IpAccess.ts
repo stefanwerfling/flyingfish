@@ -21,13 +21,6 @@ import {Save as SaveWhitelist} from './IpAccess/Whitelist/Save.js';
 export class IpAccess extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

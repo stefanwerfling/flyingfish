@@ -1,6 +1,6 @@
 import {spawn} from 'child_process';
-import {Logger} from 'flyingfish_core';
-import fs from 'fs';
+import {CertificateHelper, CertificateHelperKeyType, FileHelper, Logger} from 'flyingfish_core';
+import fs from 'fs/promises';
 
 /**
  * SshKeygenCrypt
@@ -43,7 +43,34 @@ export class SshKeygen {
             process.on('close', resolve);
         });
 
-        return fs.existsSync(file);
+        return FileHelper.fileExist(file);
+    }
+
+    /**
+     * create2
+     * @param file
+     * @param passphrase
+     * @param crypt
+     */
+    public static async create2(
+        file: string,
+        passphrase: string = '',
+        crypt: SshKeygenCrypt = SshKeygenCrypt.rsa
+    ): Promise<boolean> {
+        const keys = await CertificateHelper.generateSshKeyPair(
+            4096,
+            crypt === SshKeygenCrypt.rsa ? CertificateHelperKeyType.rsa : CertificateHelperKeyType.dsa,
+            passphrase
+        );
+
+        try {
+            await fs.writeFile(file, keys.private);
+        } catch (err) {
+            Logger.getLogger().error('SshKeygen::create2: ssh key file can not create!');
+            return false;
+        }
+
+        return FileHelper.fileExist(file);
     }
 
 }

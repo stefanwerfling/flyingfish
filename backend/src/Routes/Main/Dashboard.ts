@@ -11,13 +11,6 @@ import {StreamRequests} from './Dashboard/StreamRequests.js';
 export class Dashboard extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

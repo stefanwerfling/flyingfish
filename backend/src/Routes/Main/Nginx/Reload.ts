@@ -2,11 +2,6 @@ import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {NginxService} from '../../../inc/Service/NginxService.js';
 
 /**
- * NginxReloadResponse
- */
-export type NginxReloadResponse = DefaultReturn;
-
-/**
  * Reload
  */
 export class Reload {
@@ -14,7 +9,7 @@ export class Reload {
     /**
      * reload
      */
-    public static async reload(): Promise<NginxReloadResponse> {
+    public static async reload(): Promise<DefaultReturn> {
         await NginxService.getInstance().reload();
 
         return {

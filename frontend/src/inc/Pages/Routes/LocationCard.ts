@@ -1,4 +1,5 @@
-import {Location, NginxLocationDestinationTypes} from '../../Api/Route';
+import {Location} from 'flyingfish_schemas';
+import {NginxLocationDestinationTypes} from '../../Api/Route';
 import {SshPortEntry} from '../../Api/Ssh';
 import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup, FormRow,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab} from 'bambooo';

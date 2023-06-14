@@ -11,13 +11,6 @@ import {Save} from './GatewayIdentifier/Save.js';
 export class GatewayIdentifier extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

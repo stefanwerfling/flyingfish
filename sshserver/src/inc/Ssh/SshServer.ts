@@ -35,7 +35,7 @@ export class SshServer {
             if (!fs.existsSync(hostKeyRsaFile)) {
                 Logger.getLogger().info(`SshServer::getInstance: Keyfile not found, create new: ${hostKeyRsaFile}`);
 
-                if (!await SshKeygen.create(hostKeyRsaFile)) {
+                if (!await SshKeygen.create2(hostKeyRsaFile)) {
                     Logger.getLogger().error('SshServer::getInstance: Keyfile can not create!');
 
                     throw new Error(`SshServer::getInstance: Keyfile can not create! ${hostKeyRsaFile}`);

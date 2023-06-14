@@ -12,13 +12,6 @@ import {Save} from './DynDnsClient/Save.js';
 export class DynDnsClient extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

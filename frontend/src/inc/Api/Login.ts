@@ -1,15 +1,5 @@
-import {SchemaDefaultReturn} from 'flyingfish_schemas';
-import {ExtractSchemaResultType, Vts} from 'vts';
+import {LoginRequest, SchemaDefaultReturn, SchemaIsLogin} from 'flyingfish_schemas';
 import {NetFetch} from '../Net/NetFetch';
-
-/**
- * IsLogin
- */
-export const SchemaIsLogin = SchemaDefaultReturn.extend({
-    status: Vts.boolean()
-});
-
-export type IsLogin = ExtractSchemaResultType<typeof SchemaIsLogin>;
 
 /**
  * Login
@@ -25,7 +15,7 @@ export class Login {
         await NetFetch.postData('/json/login', {
             email: _email,
             password: _password
-        }, SchemaDefaultReturn);
+        } as LoginRequest, SchemaDefaultReturn);
 
         return true;
     }

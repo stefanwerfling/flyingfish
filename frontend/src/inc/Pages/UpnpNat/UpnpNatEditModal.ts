@@ -1,5 +1,5 @@
-import {GatewayIdentifierEntry} from 'flyingfish_schemas';
-import {ListenData, ListenTypes} from '../../Api/Listen';
+import {GatewayIdentifierEntry, ListenData} from 'flyingfish_schemas';
+import {ListenTypes} from '../../Api/Listen';
 import {UpnpNat} from '../../Api/UpnpNat';
 import {DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorderOnly2, InputType,
     SelectBottemBorderOnly2, Switch, Icon, IconFa, Element, ModalDialog, ModalDialogType} from 'bambooo';

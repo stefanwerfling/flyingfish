@@ -1,4 +1,5 @@
-import fs from 'fs';
+import {FileHelper} from 'flyingfish_core';
+import fs from 'fs/promises';
 
 /**
  * OpenSslCnfMap
@@ -23,7 +24,7 @@ export class OpenSslCnf {
      * createTmpCnf
      * @param config
      */
-    public static createTmpCnf(config: OpenSslCnfSection): string|null {
+    public static async createTmpCnf(config: OpenSslCnfSection): Promise<string | null> {
         const random = Math.random().toString(36).slice(2, 7);
         const filename = `/tmp/${random}.cnf`;
 
@@ -45,9 +46,9 @@ export class OpenSslCnf {
             }
         }
 
-        fs.writeFileSync(filename, buffer);
+        await fs.writeFile(filename, buffer);
 
-        if (fs.existsSync(filename)) {
+        if (await FileHelper.fileExist(filename)) {
             return filename;
         }
 

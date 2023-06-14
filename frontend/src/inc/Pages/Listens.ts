@@ -1,4 +1,5 @@
-import {Listen as ListenAPI, ListenAddressCheckType, ListenData, ListenTypes} from '../Api/Listen';
+import {ListenData} from 'flyingfish_schemas';
+import {Listen as ListenAPI, ListenAddressCheckType, ListenTypes} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, ButtonType,
     ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';

@@ -1,12 +1,6 @@
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
+import {DefaultReturn, ListenData, StatusCodes} from 'flyingfish_schemas';
 import {DBHelper, Logger} from 'flyingfish_core';
 import {NginxListen as NginxListenDB} from '../../../inc/Db/MariaDb/Entity/NginxListen.js';
-import {ListenData} from './List.js';
-
-/**
- * ListenSaveResponse
- */
-export type ListenSaveResponse = DefaultReturn;
 
 /**
  * Save
@@ -23,7 +17,7 @@ export class Save {
      * saveListen
      * @param data
      */
-    public static async saveListen(data: ListenData): Promise<ListenSaveResponse> {
+    public static async saveListen(data: ListenData): Promise<DefaultReturn> {
         const listenRepository = DBHelper.getRepository(NginxListenDB);
 
         let aListen: NginxListenDB|null = null;

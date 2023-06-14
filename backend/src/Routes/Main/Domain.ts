@@ -18,13 +18,6 @@ import {Save as DomainSave} from './Domain/Save.js';
 export class Domain extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * getExpressRouter
      */
     public getExpressRouter(): Router {

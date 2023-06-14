@@ -160,6 +160,48 @@ export {
     IpAccessWhiteSaveResponse
 } from './Backend/Routes/IpAccess/Whitelist/Save.js';
 
+export {SchemaListenDelete, ListenDelete} from './Backend/Routes/Listen/Delete.js';
+export {SchemaListenData, ListenData, SchemaListenResponse, ListenResponse} from './Backend/Routes/Listen/List.js';
+
+export {SchemaLoginRequest, LoginRequest, SchemaIsLogin, IsLogin} from './Backend/Routes/Login/Login.js';
+
+export {
+    SchemaRouteVariable,
+    RouteVariable,
+    SchemaUpStream,
+    UpStream,
+    SchemaRouteStreamSSH,
+    RouteStreamSSH,
+    SchemaRouteStream,
+    RouteStream,
+    SchemaLocation,
+    Location,
+    SchemaRouteHttp,
+    RouteHttp,
+    SchemaRouteData,
+    RouteData,
+    SchemaRouteSshPort,
+    RouteSshPort,
+    SchemaRoutesResponse,
+    RoutesResponse
+} from './Backend/Routes/Route/List.js';
+export {
+    SchemaRouteHttpDelete,
+    RouteHttpDelete
+} from './Backend/Routes/Route/Http/Delete.js';
+export {
+    SchemaRouteHttpSave,
+    RouteHttpSave
+} from './Backend/Routes/Route/Http/Save.js';
+export {
+    SchemaRouteStreamDelete,
+    RouteStreamDelete
+} from './Backend/Routes/Route/Stream/Delete.js';
+export {
+    SchemaRouteStreamSave,
+    RouteStreamSave
+} from './Backend/Routes/Route/Stream/Save.js';
+
 // HimHip
 export {SchemaConfigOptionsHimHip, ConfigOptionsHimHip} from './HimHip/Config/Config.js';
 

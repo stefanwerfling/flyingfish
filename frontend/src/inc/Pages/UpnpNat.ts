@@ -1,7 +1,7 @@
-import {GatewayIdentifierEntry} from 'flyingfish_schemas';
+import {GatewayIdentifierEntry, ListenData} from 'flyingfish_schemas';
 import moment from 'moment';
 import {GatewayIdentifier as GatewayIdentifierAPI} from '../Api/GatewayIdentifier';
-import {Listen as ListenAPI, ListenData} from '../Api/Listen';
+import {Listen as ListenAPI} from '../Api/Listen';
 import {NatStatus, UpnpNat as UpnpNatAPI, UpnpNatSaveRequest} from '../Api/UpnpNat';
 import {Badge, BadgeType, Card, Circle, CircleColor, ContentCol, ContentColSize, DialogConfirm, ButtonType,
     ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';

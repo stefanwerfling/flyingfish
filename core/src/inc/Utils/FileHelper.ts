@@ -1,4 +1,4 @@
-import fs from 'fs';
+import {stat} from 'fs/promises';
 
 /**
  * FileHelper
@@ -10,11 +10,14 @@ export class FileHelper {
      * @param filename
      * @param durationHours
      */
-    public static isOlderHours(filename: string, durationHours: number): boolean {
+    public static async isOlderHours(
+        filename: string,
+        durationHours: number
+    ): Promise<boolean> {
         let stats;
 
         try {
-            stats = fs.statSync(filename);
+            stats = await stat(filename);
         } catch (e) {
             return true;
         }
@@ -23,6 +26,18 @@ export class FileHelper {
         const currentDate = new Date();
 
         return (currentDate.getTime() - fileDate.getTime()) > (durationHours * 60 * 60 * 1000);
+    }
+
+    /**
+     * fileExist
+     * @param file
+     */
+    public static async fileExist(file: string): Promise<boolean> {
+        if ((await stat(file)).isFile()) {
+            return true;
+        }
+
+        return false;
     }
 
 }
