@@ -9,5 +9,5 @@
     * [FAQ](index/installation/faq.md)
   * [Configurations](index/configurations.md)
   * [Developer](index/developer/README.md)
-    * [Ideas and requests/bugs](index/developer/ideas-and-requests-bugs.md)
+    * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
   * [Screenshots](index/index.md)
