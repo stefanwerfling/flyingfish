@@ -1,5 +1,6 @@
 import {ExtractSchemaResultType} from 'vts';
-import {SchemaConfigDbOptions, SchemaConfigOptions} from '../../Core/Config/Config.js';
+import {SchemaConfigOptions} from '../../Core/Config/Config.js';
+import {SchemaConfigDbOptions} from '../../Core/Config/ConfigDb.js';
 
 /**
  * SchemaDdnsServerConfigOptions

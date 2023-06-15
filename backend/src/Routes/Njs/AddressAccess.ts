@@ -10,13 +10,6 @@ import {ListenAddressCheckType, NginxListen as NginxListenDB} from '../../inc/Db
 export class AddressAccess extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * access
      * @param response
      * @param listen_id

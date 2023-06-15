@@ -1,17 +1,9 @@
-import {ConfigOptionsSshServer, SchemaConfigOptionsSshServer} from 'flyingfish_schemas';
+import {ConfigOptionsSshServer, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaConfigOptionsSshServer} from 'flyingfish_schemas';
 import path from 'path';
 import process from 'process';
 import {Config as ConfigCore} from 'flyingfish_core';
 
-export enum ENV_DUTY {
-    DB_MYSQL_USERNAME = 'FLYINGFISH_DB_MYSQL_USERNAME',
-    DB_MYSQL_PASSWORD = 'FLYINGFISH_DB_MYSQL_PASSWORD',
-    DB_MYSQL_DATABASE = 'FLYINGFISH_DB_MYSQL_DATABASE'
-}
-
 export enum ENV_OPTIONAL {
-    DB_MYSQL_HOST = 'FLYINGFISH_DB_MYSQL_HOST',
-    DB_MYSQL_PORT = 'FLYINGFISH_DB_MYSQL_PORT',
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL'
 }
 
@@ -46,28 +38,28 @@ export class Config extends ConfigCore<ConfigOptionsSshServer> {
 
         // defaults ------------------------------------------------------------------------------------------------
         if (config) {
-            if (process.env[ENV_DUTY.DB_MYSQL_USERNAME]) {
-                config.db.mysql.username = process.env[ENV_DUTY.DB_MYSQL_USERNAME];
+            if (process.env[ENV_DUTY_DB.DB_MYSQL_USERNAME]) {
+                config.db.mysql.username = process.env[ENV_DUTY_DB.DB_MYSQL_USERNAME];
             }
 
-            if (process.env[ENV_DUTY.DB_MYSQL_PASSWORD]) {
-                config.db.mysql.password = process.env[ENV_DUTY.DB_MYSQL_PASSWORD];
+            if (process.env[ENV_DUTY_DB.DB_MYSQL_PASSWORD]) {
+                config.db.mysql.password = process.env[ENV_DUTY_DB.DB_MYSQL_PASSWORD];
             }
 
-            if (process.env[ENV_DUTY.DB_MYSQL_DATABASE]) {
-                config.db.mysql.database = process.env[ENV_DUTY.DB_MYSQL_DATABASE];
+            if (process.env[ENV_DUTY_DB.DB_MYSQL_DATABASE]) {
+                config.db.mysql.database = process.env[ENV_DUTY_DB.DB_MYSQL_DATABASE];
             }
         } else {
-            for (const env of Object.values(ENV_DUTY)) {
+            for (const env of Object.values(ENV_DUTY_DB)) {
                 if (!process.env[env]) {
                     console.log(`Config::load: Env Variable "${env}" not found!`);
                     return null;
                 }
             }
 
-            const dbMysqlUsername = process.env[ENV_DUTY.DB_MYSQL_USERNAME]!;
-            const dbMysqlPassword = process.env[ENV_DUTY.DB_MYSQL_PASSWORD]!;
-            const dbMysqlDatabase = process.env[ENV_DUTY.DB_MYSQL_DATABASE]!;
+            const dbMysqlUsername = process.env[ENV_DUTY_DB.DB_MYSQL_USERNAME]!;
+            const dbMysqlPassword = process.env[ENV_DUTY_DB.DB_MYSQL_PASSWORD]!;
+            const dbMysqlDatabase = process.env[ENV_DUTY_DB.DB_MYSQL_DATABASE]!;
 
             config = {
                 db: {
@@ -86,12 +78,12 @@ export class Config extends ConfigCore<ConfigOptionsSshServer> {
 
         // db mysql ------------------------------------------------------------------------------------------------
 
-        if (process.env[ENV_OPTIONAL.DB_MYSQL_HOST]) {
-            config.db.mysql.host = process.env[ENV_OPTIONAL.DB_MYSQL_HOST];
+        if (process.env[ENV_OPTIONAL_DB.DB_MYSQL_HOST]) {
+            config.db.mysql.host = process.env[ENV_OPTIONAL_DB.DB_MYSQL_HOST];
         }
 
-        if (process.env[ENV_OPTIONAL.DB_MYSQL_PORT]) {
-            config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL.DB_MYSQL_PORT]!, 10) ||
+        if (process.env[ENV_OPTIONAL_DB.DB_MYSQL_PORT]) {
+            config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL_DB.DB_MYSQL_PORT]!, 10) ||
                 Config.DEFAULT_DB_MYSQL_PORT;
         }
 

@@ -9,13 +9,6 @@ import {BasicAuthParser} from '../../inc/Server/BasicAuthParser.js';
 export class AuthBasic extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * check
      * @param response
      * @param location_id

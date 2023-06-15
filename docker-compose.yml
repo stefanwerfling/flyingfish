@@ -176,6 +176,31 @@ services:
     depends_on:
       - mariadb
 
+  ddnsserver:
+    image: flyingfish_ddns:v1.0
+    build:
+      context: ./
+      dockerfile: ./ddnsserver/Dockerfile
+    container_name: flyingfish_ddns
+    volumes:
+      - ./ddnsserver/dist:/opt/app/dist
+      - ./ddnsserver/node_modules:/opt/app/node_modules
+      - ./ddnsserver/package.json:/opt/app/package.json
+    environment:
+      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
+      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.6
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
   vpnserver:
     image: flyingfish_vpn:v1.2
     build:

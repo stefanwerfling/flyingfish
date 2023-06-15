@@ -9,13 +9,6 @@ import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
 export class Update extends DefaultRoute {
 
     /**
-     * constructor
-     */
-    public constructor() {
-        super();
-    }
-
-    /**
      * update
      * @param response
      * @param hSecret
