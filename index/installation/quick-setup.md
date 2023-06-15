@@ -8,8 +8,9 @@ First create a project folder on Debian, example:
 sudo su
 ```
 
-<pre class="language-sh"><code class="lang-sh"><strong>mkdir /opt/flyingfish
-</strong></code></pre>
+```sh
+mkdir /opt/flyingfish
+```
 
 Now download the env and docker compose file:
 

@@ -6,5 +6,6 @@
     * [Quick setup](index/installation/quick-setup.md)
     * [Quick update](index/installation/quick-update.md)
     * [FAQ](index/installation/faq.md)
-  * [Dev](index/dev.md)
+  * [Configurations](index/configurations.md)
+  * [Developer](index/developer.md)
   * [Screenshots](index/index.md)

@@ -20,9 +20,7 @@ docker compose rm
 
 Now compare the .env file with the one in GitHub to see if there are new variables, but I will point this out explicitly in the release.
 
-{% embed url="https://github.com/stefanwerfling/flyingfish/blob/main/setup/.env" %}
-.env file on GitHub.
-{% endembed %}
+{% @github-files/github-code-block url="https://github.com/stefanwerfling/flyingfish/blob/main/setup/.env" %}
 
 Delete the old docker-compose.yml and re-download it.
 
