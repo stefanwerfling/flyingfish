@@ -18,7 +18,7 @@ docker compose stop
 docker compose rm
 ```
 
-Now compare the .env file with the one in GitHub to see if there are new variables, but I will point this out explicitly in the release.
+Now compare the .env file with the one in GitHub to see if there are new variables, but I will point this out explicitly in the [release](https://github.com/stefanwerfling/flyingfish/releases).
 
 {% @github-files/github-code-block url="https://github.com/stefanwerfling/flyingfish/blob/main/setup/.env" %}
 
