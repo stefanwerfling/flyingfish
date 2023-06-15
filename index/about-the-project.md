@@ -1,6 +1,6 @@
 # About the project
 
-Emergence
+## Emergence
 
 I only got to know the Nginx server after Apache. And was pleasantly surprised by the configuration. Some time ago I dealt with the topic of splitting several domains with destinations via the VPN via a bundled server. I found a domain mapping/splitting in the Nginx newer version. From another widely used project ([Nginx proxy manager](https://nginxproxymanager.com/), which is a very good project) I use a lot the creation of certificates (Lets encrypt). I started the project and have a lot to learn myself, to incorporate my own ideas and extensions. It is another building block for other projects that I am making available to others.
 
