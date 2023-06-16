@@ -1,6 +1,6 @@
 ---
 description: >-
-  FlyingFish is a reverse proxy manager with its own DNS server, own SSH server,
+  FlyingFish is a reverse proxy manager with own WebUI, DNS server, SSH server,
   DynDNS, UPNP support, Lets Encrypt and much more.
 ---
 
