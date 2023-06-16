@@ -26,13 +26,13 @@ curl https://raw.githubusercontent.com/stefanwerfling/flyingfish/main/setup/.env
 curl https://raw.githubusercontent.com/stefanwerfling/flyingfish/main/setup/docker-compose.yml -o docker-compose.yml
 ```
 
-Now edit the .env file and set all important variables.
+Now edit the [.env file and set all important variables](long-setup.md#env).
 
 ```sh
 nano .env
 ```
 
-Now start docker compose.
+Start docker compose.
 
 ```sh
 docker compose up -d

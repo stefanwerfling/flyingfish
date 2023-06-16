@@ -6,6 +6,7 @@
     * [Quick setup](index/installation/quick-setup.md)
     * [Quick update](index/installation/quick-update.md)
     * [Create Backup](index/installation/create-backup.md)
+    * [Long setup](index/installation/long-setup.md)
     * [FAQ](index/installation/faq.md)
   * [Configurations](index/configurations/README.md)
     * [Listen](index/configurations/listen.md)
