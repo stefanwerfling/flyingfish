@@ -1,6 +1,6 @@
 # Quick setup
 
-The instructions assume that Docker is installed in the current version.
+The instructions assume that Docker is installed in the current version. You can find the [Docker installation here](https://docs.docker.com/engine/install/debian/).
 
 First create a project folder on Debian, example:
 
