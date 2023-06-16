@@ -25,10 +25,10 @@ With a frontend, it simplifies setup and management. Each route can be edited wi
 
 In the classic sense, FlyingFish is a nginx manager. But the way the nginx server is combined with other services is different! The FlyingFish is structured in part service, which automates many processes through an internal database or API communication.
 
-[Read the Documentation](https://none-12.gitbook.io/flyingfish/)
+[Read the Documentation](https://flying-fish.gitbook.io/)
 
 ## Quick setup
-[Read the Documentation quick setup](https://none-12.gitbook.io/flyingfish/index/installation#quick-setup)
+[Read the Documentation quick setup](https://flying-fish.gitbook.io/flyingfish/index/installation#quick-setup)
 
 ## Docker Hub
 
