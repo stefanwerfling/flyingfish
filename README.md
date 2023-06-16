@@ -18,8 +18,7 @@
 
 # Flyingfish
 
-Flyingfish is a reverse proxy manager with its own DNS server, own SSH server, DynDNS, UPNP support, LetsEncrypt and much more.
-With a frontend, it simplifies setup and management. Each route can be edited with extensive settings.
+FlyingFish is a reverse proxy manager with own WebUI, DNS server, SSH server, DynDNS, UPNP support, Lets Encrypt and much more.
 
 ## Make your services available easily, quickly and securely.
 
