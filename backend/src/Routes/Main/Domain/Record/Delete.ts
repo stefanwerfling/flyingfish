@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, DomainRecordDB} from 'flyingfish_core';
 import {DomainRecordDelete, DomainRecordDeleteResponse, StatusCodes} from 'flyingfish_schemas';
-import {DomainRecord as DomainRecordDB} from '../../../../inc/Db/MariaDb/Entity/DomainRecord.js';
 
 /**
  * Delete

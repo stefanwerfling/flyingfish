@@ -1,6 +1,5 @@
+import {DomainDB, DomainService} from 'flyingfish_core';
 import {DomainData, DomainSaveResponse, StatusCodes} from 'flyingfish_schemas';
-import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
-import {Domain as DomainDB} from '../../../inc/Db/MariaDb/Entity/Domain.js';
 
 /**
  * Save

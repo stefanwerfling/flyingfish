@@ -1,7 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import {BaseHttpServer, Session} from 'flyingfish_core';
 import helmet from 'helmet';
-import basicAuth from 'express-basic-auth';
 
 // we need for declare Express Request Session
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -49,10 +48,6 @@ export class HttpServer extends BaseHttpServer {
             legacyHeaders: false,
             max: async(request) => {
                 if (request.baseUrl.indexOf('/') === 0) {
-                    if (Session.isUserLogin(request.session)) {
-                        return 0;
-                    }
-
                     return 100;
                 }
 
@@ -61,15 +56,6 @@ export class HttpServer extends BaseHttpServer {
         });
 
         this._server.use(limiter);
-
-        this._server.use(basicAuth({
-            realm: 'FlyingFish DDNS Server',
-            authorizeAsync: true,
-            authorizer: (username, password, callback) => {
-                // TODO
-                return callback(null, false);
-            }
-        }));
     }
 
 }

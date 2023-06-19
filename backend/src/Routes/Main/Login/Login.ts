@@ -1,4 +1,4 @@
-import {DBHelper, Logger, SessionUserData} from 'flyingfish_core';
+import {DBHelper, Logger} from 'flyingfish_core';
 import {DefaultReturn, LoginRequest, StatusCodes} from 'flyingfish_schemas';
 import {Request} from 'express';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
@@ -23,22 +23,18 @@ export class Login {
             }
         });
 
-        // @ts-ignore
         req.session.user = {
             isLogin: false,
             userid: 0
-        } as SessionUserData;
+        };
 
         if (user) {
             const bresult = await bcrypt.compare(login.password, user.password);
 
             if (bresult) {
-                // @ts-ignore
                 req.session.user.userid = user.id;
-                // @ts-ignore
                 req.session.user.isLogin = true;
 
-                // @ts-ignore
                 Logger.getLogger().info(`Login success by session: ${req.session.id}`);
 
                 return {

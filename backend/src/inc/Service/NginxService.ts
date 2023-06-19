@@ -1,11 +1,10 @@
-import {DBHelper, FileHelper, Logger, SshPortDB} from 'flyingfish_core';
+import {DBHelper, DomainService, FileHelper, Logger, SshPortDB} from 'flyingfish_core';
 import fs from 'fs/promises';
 import * as Path from 'path';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
-import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
     NginxHttpVariable as NginxHttpVariableDB,
@@ -17,7 +16,7 @@ import {
     ListenTypes,
     NginxListen as NginxListenDB
 } from '../Db/MariaDb/Entity/NginxListen.js';
-import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation.js';
+import {NginxLocation as NginxLocationDB, NginxLocationDestinationTypes} from '../Db/MariaDb/Entity/NginxLocation.js';
 import {
     NginxStream as NginxStreamDB,
     NginxStreamDestinationType,
@@ -986,21 +985,6 @@ export class NginxService {
                         // Mitigate httpoxy attack
                         location.addVariable('proxy_set_header Proxy', '""');
 
-                        // redirect ------------------------------------------------------------------------------------
-
-                        if (entry.redirect !== '') {
-                            let redirectCode = 301;
-
-                            if (entry.redirect_code > 0) {
-                                redirectCode = entry.redirect_code;
-                            }
-
-                            location.addVariable(`return ${redirectCode}`, entry.redirect);
-                            aServer.addLocation(location);
-
-                            continue;
-                        }
-
                         // auth use ------------------------------------------------------------------------------------
 
                         if (entry.auth_enable) {
@@ -1064,20 +1048,59 @@ export class NginxService {
                             location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
                         }
 
-                        if (locationCollect.sshport_out) {
-                            // location.addVariable('proxy_ssl_server_name', 'on');
+                        // set destination -----------------------------------------------------------------------------
 
-                            // location.addVariable('proxy_ssl_protocols', 'SSLv2 SSLv3 TLSv1.2 TLSv1.3');
+                        let redirectCode: number;
 
-                            location.addVariable('proxy_http_version', '1.1');
-                            location.addVariable('proxy_ignore_client_abort', 'on');
+                        switch (entry.destination_type) {
+                            case NginxLocationDestinationTypes.none:
+                                continue;
 
-                            location.addVariable(
-                                'proxy_pass',
-                                `${entry.sshport_schema}://${Config.getInstance().get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
-                            );
-                        } else if (entry.proxy_pass) {
-                            location.addVariable('proxy_pass', entry.proxy_pass);
+                            // redirect --------------------------------------------------------------------------------
+                            case NginxLocationDestinationTypes.redirect:
+                                redirectCode = 301;
+
+                                if (entry.redirect_code > 0) {
+                                    redirectCode = entry.redirect_code;
+                                }
+
+                                location.addVariable(`return ${redirectCode}`, entry.redirect);
+                                aServer.addLocation(location);
+
+                                continue;
+
+                            case NginxLocationDestinationTypes.ssh:
+                                if (locationCollect.sshport_out) {
+                                    // location.addVariable('proxy_ssl_server_name', 'on');
+
+                                    // location.addVariable('proxy_ssl_protocols', 'SSLv2 SSLv3 TLSv1.2 TLSv1.3');
+
+                                    location.addVariable('proxy_http_version', '1.1');
+                                    location.addVariable('proxy_ignore_client_abort', 'on');
+
+                                    location.addVariable(
+                                        'proxy_pass',
+                                        `${entry.sshport_schema}://${Config.getInstance().get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
+                                    );
+                                } else if (entry.proxy_pass) {
+                                    location.addVariable('proxy_pass', entry.proxy_pass);
+                                }
+                                break;
+
+                            case NginxLocationDestinationTypes.proxypass:
+                                location.addVariable('proxy_pass', entry.proxy_pass);
+                                break;
+
+                            case NginxLocationDestinationTypes.dyndns:
+                                if (Config.getInstance().get()?.dyndnsserver && Config.getInstance().get()?.dyndnsserver?.enable) {
+                                    location.addVariable(
+                                        'proxy_pass',
+                                        `${Config.getInstance().get()?.dyndnsserver?.schema}://${Config.getInstance().get()?.dyndnsserver?.ip}:${Config.getInstance().get()?.dyndnsserver?.port}`
+                                    );
+                                } else {
+                                    Logger.getLogger().warn(`NginxService::_loadConfig: DynDnsServer setting not enabled., domain: '${domainName}'`);
+                                }
+                                break;
                         }
 
                         // websocket use -------------------------------------------------------------------------------

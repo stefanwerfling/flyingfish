@@ -1,4 +1,4 @@
-import {stat} from 'fs/promises';
+import {mkdir, stat} from 'fs/promises';
 
 /**
  * FileHelper
@@ -38,6 +38,35 @@ export class FileHelper {
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * directoryExist
+     * @param director
+     */
+    public static async directoryExist(director: string): Promise<boolean> {
+        try {
+            return (await stat(director)).isDirectory();
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * mkdir
+     * @param director
+     * @param recursive
+     */
+    public static async mkdir(director: string, recursive: boolean = false): Promise<boolean> {
+        try {
+            await mkdir(director, {
+                recursive: recursive
+            });
+        } catch (e) {
+            return false;
+        }
+
+        return true;
     }
 
 }

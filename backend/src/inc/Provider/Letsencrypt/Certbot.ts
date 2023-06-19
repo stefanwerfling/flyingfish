@@ -1,6 +1,5 @@
 import {spawn} from 'child_process';
 import {DateHelper, FileHelper, Logger} from 'flyingfish_core';
-import {stat, mkdir} from 'fs/promises';
 import path from 'path';
 import {ISsl} from '../ISsl.js';
 
@@ -65,9 +64,9 @@ export class Certbot implements ISsl {
      * @param keysize
      */
     public async create(domain: string, email: string, keysize: number = 4096): Promise<boolean> {
-        await mkdir(this._publicWwwDirectory, {
-            recursive: true
-        });
+        if (!await FileHelper.mkdir(this._publicWwwDirectory, true)) {
+            return false;
+        }
 
         const process = spawn(this._command,
             [
@@ -131,7 +130,7 @@ export class Certbot implements ISsl {
     public static async existCertificate(domainName: string): Promise<string|null> {
         const domainDir = path.join('/etc/letsencrypt/live', domainName);
 
-        if ((await stat(domainDir)).isDirectory()) {
+        if (await FileHelper.directoryExist(domainDir)) {
             if (await FileHelper.fileExist(path.join(domainDir, 'cert.pem'))) {
                 return domainDir;
             }

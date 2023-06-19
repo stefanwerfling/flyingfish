@@ -1,9 +1,8 @@
-import {DateHelper, DBHelper, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, DomainService, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
 import Path from 'path';
 import {MoreThan} from 'typeorm';
 import {Certificate} from '../Cert/Certificate.js';
-import {DomainService} from '../Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {NginxService} from './NginxService.js';

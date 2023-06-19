@@ -1,11 +1,10 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, DomainService} from 'flyingfish_core';
 import {
     DynDnsClientData,
     DynDnsClientDomain,
     DynDnsClientListResponse,
     StatusCodes
 } from 'flyingfish_schemas';
-import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {DynDnsClient as DynDnsClientDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {DynDnsProviders} from '../../../inc/Provider/DynDnsProviders.js';

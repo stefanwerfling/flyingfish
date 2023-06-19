@@ -10,10 +10,16 @@ export {
 } from './inc/Crypto/CertificateHelper.js';
 
 export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
+export {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain.js';
+export {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
+export {DynDnsServerDomain as DynDnsServerDomainDB} from './inc/Db/MariaDb/Entity/DynDnsServerDomain.js';
 export {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 
-export {Session, SessionData, SessionUserData} from './inc/Server/Session.js';
+export {DomainService} from './inc/Db/MariaDb/DomainService.js';
+export {DynDnsServerUserService} from './inc/Db/MariaDb/DynDnsServerUserService.js';
+
+export {Session, SessionUserData} from './inc/Server/Session.js';
 export {DefaultRoute} from './inc/Server/Routes/DefaultRoute.js';
 export {
     BaseHttpServerOptionCrypt,

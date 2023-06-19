@@ -1,8 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {Args, DBHelper, Logger, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {Args, DBHelper, DomainDB, DomainRecordDB, Logger, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
-import {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from './inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
@@ -46,7 +45,6 @@ import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClie
 import {DynDnsClientDomain as DynDnsClientDomainDB} from './inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
-import {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain.js';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';

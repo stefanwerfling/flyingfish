@@ -1,4 +1,4 @@
-import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {DBHelper, DomainService, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {
     Location,
     RouteData,
@@ -10,7 +10,6 @@ import {
     StatusCodes
 } from 'flyingfish_schemas';
 import {Config} from '../../../inc/Config/Config.js';
-import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {
     NginxHttpVariable as NginxHttpVariableDB,

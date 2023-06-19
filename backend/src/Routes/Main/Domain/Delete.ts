@@ -1,9 +1,7 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, DomainRecordDB, DomainService} from 'flyingfish_core';
 import {DomainDelete, DomainDeleteResponse, StatusCodes} from 'flyingfish_schemas';
-import {DomainService} from '../../../inc/Db/MariaDb/DomainService.js';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
-import {DomainRecord as DomainRecordDB} from '../../../inc/Db/MariaDb/Entity/DomainRecord.js';
 
 /**
  * Delete

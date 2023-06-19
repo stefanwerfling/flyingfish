@@ -4,10 +4,6 @@ import helmet from 'helmet';
 import {Config} from '../Config/Config.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
 
-// we need for declare Express Request Session
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import session from 'express-session';
-
 /**
  * Server
  */
