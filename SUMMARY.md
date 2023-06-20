@@ -9,6 +9,7 @@
     * [Long setup](index/installation/long-setup.md)
     * [FAQ](index/installation/faq.md)
   * [Configurations](index/configurations/README.md)
+    * [Which user type am I](index/configurations/which-user-type-am-i.md)
     * [Listen](index/configurations/listen.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
