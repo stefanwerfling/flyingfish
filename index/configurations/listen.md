@@ -1,6 +1,14 @@
+---
+description: >-
+  At the beginning of the installation there are standard ports that listen for
+  a connection.
+---
+
 # Listen
 
-At the beginning of the installation there are standard ports that listen for a connection. The ports specified here come from the web interface and are used by nginx intern docker container.
+<figure><img src="../../.gitbook/assets/7a5efz_nginx.jpg" alt="" width="333"><figcaption></figcaption></figure>
+
+The ports specified here come from the web interface and are used by nginx intern docker container.
 
 | Port         | Description               |
 | ------------ | ------------------------- |
