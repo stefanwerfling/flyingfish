@@ -12,7 +12,7 @@ All important data is stored in the Docker volumes.
 | flyingfish\_flyingfishLetsencrypt  | Data from backend with Lets Encrypt certificates |
 | flyingfish\_flyingfishDbData       | Database files from Mariadb server               |
 | flyingfish\_flyingfishInfluxdbData | Database files from Influxdb server              |
-| flyingfish\_flyingfishSsh          | Data from SSH jumb server                        |
+| flyingfish\_flyingfishSsh          | Data from SSH jump server                        |
 
 Install the following shell script to create a backup of the volume.
 

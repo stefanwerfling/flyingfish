@@ -22,23 +22,29 @@ The Env file contains the environment variables for the individual containers an
 
 {% @github-files/github-code-block url="https://github.com/stefanwerfling/flyingfish/blob/main/setup/.env" %}
 
-| Env-Name                | Description                                                                                                                       |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| MARIADB\_ROOT\_USERNAME | The main user of mariadb, by default `root` is used.                                                                              |
-| MARIADB\_ROOT\_PASSWORD | The password user of mariadb, enter a sufficiently secure one here.                                                               |
-| MARIADB\_DATABASE       | Default database name is `flyingfish`.                                                                                            |
-| INFLUXDB\_URL           | Address to influxdb, this can be a separate installation. With the standard installation, the address is `http://10.103.0.5:8086` |
-| INFLUXDB\_USERNAME      | Influxdb username.                                                                                                                |
-| INFLUXDB\_PASSWORD      | The password user of influxdb, enter a sufficiently secure one here.                                                              |
-| INFLUXDB\_ORG           |                                                                                                                                   |
-| INFLUXDB\_BUCKET        |                                                                                                                                   |
-| INFLUXDB\_ADMIN\_TOKEN  |                                                                                                                                   |
-| HTTPSERVER\_PORT        |                                                                                                                                   |
-| LOGGING\_LEVEL          |                                                                                                                                   |
-| HIMHIP\_USE             |                                                                                                                                   |
-| HIMHIP\_SECRET          |                                                                                                                                   |
+| Env-Name                | Description                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| MARIADB\_ROOT\_USERNAME | The main user of mariadb, by default `root` is used.                                                                                                                                                                                                                                                                                                                     |
+| MARIADB\_ROOT\_PASSWORD | The password user of MariaDB, enter a sufficiently secure one here.                                                                                                                                                                                                                                                                                                      |
+| MARIADB\_DATABASE       | Default database name is `flyingfish`.                                                                                                                                                                                                                                                                                                                                   |
+| INFLUXDB\_URL           | Address to influxdb, this can be a separate installation. With the standard installation, the address is `http://10.103.0.5:8086`                                                                                                                                                                                                                                        |
+| INFLUXDB\_USERNAME      | InfluxDB username.                                                                                                                                                                                                                                                                                                                                                       |
+| INFLUXDB\_PASSWORD      | The password user of influxdb, enter a sufficiently secure one here.                                                                                                                                                                                                                                                                                                     |
+| INFLUXDB\_ORG           | An Influxdb organisation name.                                                                                                                                                                                                                                                                                                                                           |
+| INFLUXDB\_BUCKET        | An Influxdb bucket name.                                                                                                                                                                                                                                                                                                                                                 |
+| INFLUXDB\_ADMIN\_TOKEN  | The InfluxDB admin token for the communication, enter a sufficiently secure token (char/number chain).                                                                                                                                                                                                                                                                   |
+| HTTPSERVER\_PORT        | Intern HTTPS FlyingFish web interface listen port. Default is port `3000`.                                                                                                                                                                                                                                                                                               |
+| LOGGING\_LEVEL          | <p>Which logging to use: </p><ul><li><code>error</code>: Write Log with all Error</li><li><code>warn</code>: Write Log with all Error and Warnings</li><li><code>info</code>: Write Log with all Error and Warnings and information</li><li><code>silly</code>: Write Log with all lots of prints by application</li></ul><p>Current standard is <code>silly</code>.</p> |
+| HIMHIP\_USE             | <p>Enables the use of the service <em>how is my host ip</em></p><ul><li><code>1</code> enable</li><li><code>0</code> disable</li></ul><p>Standard is disable.</p>                                                                                                                                                                                                        |
+| HIMHIP\_SECRET          | <p>The secret so that the service can communicate with the FlyingFish backend.<br>Choose a 10-15 character string with characters and numbers for the secret.</p>                                                                                                                                                                                                        |
 
 ## Docker compose
+
+The current docker compose file is maintained in the [GitHub under the "setup" ](https://github.com/stefanwerfling/flyingfish/tree/main/setup)folder for productive use.&#x20;
+
+{% hint style="info" %}
+Please do not use the docker compose file from the main folder. As this is used for the development of FlyingFish.
+{% endhint %}
 
 
 
