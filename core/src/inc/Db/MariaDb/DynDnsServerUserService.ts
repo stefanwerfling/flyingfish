@@ -46,7 +46,6 @@ export class DynDnsServerUserService {
     /**
      * findByName
      * @param name
-     * @param disable
      */
     public static findByName(name: string): Promise<DynDnsServerUser | null> {
         return DynDnsServerUserService.getRepository().findOne({

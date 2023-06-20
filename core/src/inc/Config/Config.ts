@@ -7,7 +7,7 @@ import {ObjectSchema} from 'vts/dist/schemas/objectSchema.js';
 /**
  * Config
  */
-export class Config<T = ConfigOptions> {
+export class Config<T extends ConfigOptions> {
 
     /**
      * DEFAULTS
@@ -21,7 +21,7 @@ export class Config<T = ConfigOptions> {
      * instance
      * @protected
      */
-    protected static _instance: Config;
+    protected static _instance: Config<ConfigOptions>;
 
     /**
      *
@@ -32,7 +32,7 @@ export class Config<T = ConfigOptions> {
     /**
      * getInstance
      */
-    public static getInstance(): Config {
+    public static getInstance(): Config<ConfigOptions> {
         if (!Config._instance) {
             Config._instance = new Config(SchemaConfigOptions);
         }
