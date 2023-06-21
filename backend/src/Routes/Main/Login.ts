@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {IsLogin, SchemaLoginRequest, SchemaRequestData, SessionData, StatusCodes} from 'flyingfish_schemas';
+import {IsLogin, SchemaLoginRequest, SchemaRequestData, StatusCodes} from 'flyingfish_schemas';
 import {Login as LoginLogin} from './Login/Login.js';
 import {Logout} from './Login/Logout.js';
 

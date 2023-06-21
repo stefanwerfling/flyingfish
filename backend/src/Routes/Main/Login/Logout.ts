@@ -8,7 +8,7 @@ export class Logout {
 
     /**
      * logout
-     * @param req
+     * @param session
      */
     public static async logout(session: SessionData): Promise<DefaultReturn> {
         if (session.user) {

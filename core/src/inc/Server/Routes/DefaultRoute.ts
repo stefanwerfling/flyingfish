@@ -1,4 +1,4 @@
-import {Request, Response, Router} from 'express';
+import {Response, Router} from 'express';
 import {DefaultReturn, RequestData, SchemaRequestData, StatusCodes} from 'flyingfish_schemas';
 import {Schema, SchemaErrors} from 'vts';
 import {Session} from '../Session.js';

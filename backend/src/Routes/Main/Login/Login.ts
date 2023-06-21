@@ -10,7 +10,7 @@ export class Login {
 
     /**
      * login
-     * @param req
+     * @param session
      * @param login
      */
     public static async login(session: SessionData, login: LoginRequest): Promise<DefaultReturn> {

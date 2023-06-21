@@ -7,7 +7,7 @@ export class Session {
 
     /**
      * isUserLogin
-     * @param userSession
+     * @param session
      */
     public static isUserLogin(session: SessionData): boolean {
         if (session.user) {
