@@ -1,5 +1,5 @@
 import {Request, Response, Router} from 'express';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
+import {DefaultReturn, RequestData, SchemaRequestData, StatusCodes} from 'flyingfish_schemas';
 import {Schema, SchemaErrors} from 'vts';
 import {Session} from '../Session.js';
 
@@ -33,6 +33,7 @@ export class DefaultRoute {
         res: Response
     ): data is T {
         const errors: SchemaErrors = [];
+
         if (!schema.validate(data, errors)) {
             res.status(200).json({
                 statusCode: StatusCodes.INTERNAL_ERROR,
@@ -41,6 +42,7 @@ export class DefaultRoute {
 
             return false;
         }
+
         return true;
     }
 
@@ -51,13 +53,14 @@ export class DefaultRoute {
      * @param sendAutoResoonse
      */
     public isUserLogin(
-        req: Request,
+        req: unknown,
         res: Response,
         sendAutoResoonse: boolean = true
-    ): boolean {
-        // @ts-ignore
-        if (Session.isUserLogin(req.session)) {
-            return true;
+    ): req is RequestData {
+        if (SchemaRequestData.validate(req, [])) {
+            if (Session.isUserLogin(req.session)) {
+                return true;
+            }
         }
 
         if (sendAutoResoonse) {

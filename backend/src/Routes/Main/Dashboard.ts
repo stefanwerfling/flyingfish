@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {DefaultRoute, Session} from 'flyingfish_core';
+import {DefaultRoute} from 'flyingfish_core';
 import {DashboardInfoResponse, DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {Info} from './Dashboard/Info.js';
 import {PublicIPBlacklistCheck} from './Dashboard/PublicIPBlacklistCheck.js';
@@ -17,7 +17,7 @@ export class Dashboard extends DefaultRoute {
         this._routes.get(
             '/json/dashboard/info',
             async(req, res) => {
-                if (Session.isUserLogin(req.session)) {
+                if (this.isUserLogin(req, res)) {
                     res.status(200).json(await Info.getInfo());
                 } else {
                     res.status(200).json({
@@ -35,7 +35,7 @@ export class Dashboard extends DefaultRoute {
         this._routes.get(
             '/json/dashboard/publicipblacklistcheck',
             async(req, res) => {
-                if (Session.isUserLogin(req.session)) {
+                if (this.isUserLogin(req, res)) {
                     res.status(200).json(await PublicIPBlacklistCheck.check());
                 } else {
                     res.status(200).json({
@@ -48,7 +48,7 @@ export class Dashboard extends DefaultRoute {
         this._routes.get(
             '/json/dashboard/streamrequests',
             async(req, res) => {
-                if (Session.isUserLogin(req.session)) {
+                if (this.isUserLogin(req, res)) {
                     res.status(200).json(await StreamRequests.getList());
                 } else {
                     res.status(200).json({

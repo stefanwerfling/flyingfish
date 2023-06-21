@@ -16,6 +16,7 @@ export {
 
 export {StatusCodes} from './Core/Server/Routes/StatusCodes.js';
 export {SchemaDefaultReturn, DefaultReturn} from './Core/Server/Routes/DefaultReturn.js';
+export {SchemaSessionUserData, SessionUserData, SchemaSessionData, SessionData, SchemaRequestData, RequestData} from './Core/Server/RequestSession.js';
 
 // Backend
 export {

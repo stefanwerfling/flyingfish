@@ -1,18 +1,4 @@
-import session from 'express-session';
-
-declare module 'express-session' {
-    interface SessionData {
-        user?: SessionUserData;
-    }
-}
-
-/**
- * SessionUserData
- */
-export type SessionUserData = {
-    isLogin: boolean;
-    userid: number;
-};
+import {SessionData} from 'flyingfish_schemas';
 
 /**
  * Session
@@ -23,8 +9,12 @@ export class Session {
      * isUserLogin
      * @param userSession
      */
-    public static isUserLogin(userSession: session.SessionData): boolean {
-        return (userSession.user !== undefined) && userSession.user.isLogin;
+    public static isUserLogin(session: SessionData): boolean {
+        if (session.user) {
+            return session.user.isLogin;
+        }
+
+        return false;
     }
 
 }

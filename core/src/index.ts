@@ -19,7 +19,7 @@ export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 export {DomainService} from './inc/Db/MariaDb/DomainService.js';
 export {DynDnsServerUserService} from './inc/Db/MariaDb/DynDnsServerUserService.js';
 
-export {Session, SessionUserData} from './inc/Server/Session.js';
+export {Session} from './inc/Server/Session.js';
 export {DefaultRoute} from './inc/Server/Routes/DefaultRoute.js';
 export {
     BaseHttpServerOptionCrypt,

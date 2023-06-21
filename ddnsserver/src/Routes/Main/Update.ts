@@ -1,15 +1,16 @@
 import {Request, Response, Router} from 'express';
 import basicAuth from 'express-basic-auth';
 import {DefaultRoute, DynDnsServerUserService} from 'flyingfish_core';
+import {SchemaRequestData, SessionData} from 'flyingfish_schemas';
 
 /**
  * Update
  */
 export class Update extends DefaultRoute {
 
-    public static async setNicUpdate(req: Request, response: Response): Promise<void> {
-        if (!req.session.user) {
-            req.session.user = {
+    public static async setNicUpdate(req: Request, session: SessionData, response: Response): Promise<void> {
+        if (!session.user) {
+            session.user = {
                 isLogin: false,
                 userid: 0
             };
@@ -21,14 +22,18 @@ export class Update extends DefaultRoute {
             const ddnsUser = await DynDnsServerUserService.findByName(req.auth.user);
 
             if (ddnsUser) {
-                req.session.user.isLogin = true;
-                req.session.user.userid = ddnsUser.id;
+                if (session.user) {
+                    session.user.isLogin = true;
+                    session.user.userid = ddnsUser.id;
+                }
             }
         }
     }
 
     /**
      * setUpdate
+     * @param req
+     * @param response
      */
     public static async setUpdate(req: Request, response: Response): Promise<void> {
     }
@@ -63,7 +68,9 @@ export class Update extends DefaultRoute {
                 req,
                 res
             ) => {
-                Update.setNicUpdate(req, res);
+                if (this.isSchemaValidate(SchemaRequestData, req, res)) {
+                    Update.setNicUpdate(req, req.session, res);
+                }
             }
         );
 

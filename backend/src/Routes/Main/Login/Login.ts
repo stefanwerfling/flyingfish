@@ -1,6 +1,5 @@
 import {DBHelper, Logger} from 'flyingfish_core';
-import {DefaultReturn, LoginRequest, StatusCodes} from 'flyingfish_schemas';
-import {Request} from 'express';
+import {DefaultReturn, LoginRequest, SessionData, StatusCodes} from 'flyingfish_schemas';
 import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
 import * as bcrypt from 'bcrypt';
 
@@ -14,7 +13,7 @@ export class Login {
      * @param req
      * @param login
      */
-    public static async login(req: Request, login: LoginRequest): Promise<DefaultReturn> {
+    public static async login(session: SessionData, login: LoginRequest): Promise<DefaultReturn> {
         const userRepository = DBHelper.getDataSource().getRepository(UserDB);
 
         const user = await userRepository.findOne({
@@ -23,7 +22,7 @@ export class Login {
             }
         });
 
-        req.session.user = {
+        session.user = {
             isLogin: false,
             userid: 0
         };
@@ -32,10 +31,10 @@ export class Login {
             const bresult = await bcrypt.compare(login.password, user.password);
 
             if (bresult) {
-                req.session.user.userid = user.id;
-                req.session.user.isLogin = true;
+                session.user.userid = user.id;
+                session.user.isLogin = true;
 
-                Logger.getLogger().info(`Login success by session: ${req.session.id}`);
+                Logger.getLogger().info(`Login success by session: ${session.id}`);
 
                 return {
                     statusCode: StatusCodes.OK

@@ -1,6 +1,5 @@
 import {Logger} from 'flyingfish_core';
-import {Request} from 'express';
-import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
+import {DefaultReturn, SessionData, StatusCodes} from 'flyingfish_schemas';
 
 /**
  * Logout
@@ -11,14 +10,13 @@ export class Logout {
      * logout
      * @param req
      */
-    public static async logout(req: Request): Promise<DefaultReturn> {
-        // @ts-ignore
-        req.session.user.userid = 0;
-        // @ts-ignore
-        req.session.user.isLogin = false;
+    public static async logout(session: SessionData): Promise<DefaultReturn> {
+        if (session.user) {
+            session.user.userid = 0;
+            session.user.isLogin = false;
+        }
 
-        // @ts-ignore
-        Logger.getLogger().info(`Logout success by session: ${req.session.id}`);
+        Logger.getLogger().info(`Logout success by session: ${session.id}`);
 
         return {
             statusCode: StatusCodes.OK

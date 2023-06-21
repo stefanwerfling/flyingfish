@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {IsLogin, SchemaLoginRequest, StatusCodes} from 'flyingfish_schemas';
+import {IsLogin, SchemaLoginRequest, SchemaRequestData, SessionData, StatusCodes} from 'flyingfish_schemas';
 import {Login as LoginLogin} from './Login/Login.js';
 import {Logout} from './Login/Logout.js';
 
@@ -33,8 +33,8 @@ export class Login extends DefaultRoute {
         this._routes.post(
             '/json/login',
             async(req, res) => {
-                if (this.isSchemaValidate(SchemaLoginRequest, req.body, res)) {
-                    res.status(200).json(await LoginLogin.login(req, req.body));
+                if (this.isSchemaValidate(SchemaRequestData, req, res) && this.isSchemaValidate(SchemaLoginRequest, req.body, res)) {
+                    res.status(200).json(await LoginLogin.login(req.session, req.body));
                 }
             }
         );
@@ -42,8 +42,8 @@ export class Login extends DefaultRoute {
         this._routes.get(
             '/json/logout',
             async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Logout.logout(req));
+                if (this.isSchemaValidate(SchemaRequestData, req, res) && this.isUserLogin(req, res)) {
+                    res.status(200).json(await Logout.logout(req.session));
                 }
             }
         );
