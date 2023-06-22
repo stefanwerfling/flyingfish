@@ -1,4 +1,4 @@
-# Quick setup
+# Quick Setup
 
 The instructions assume that Docker is installed in the current version. You can find the [Docker installation here](https://docs.docker.com/engine/install/debian/).
 
@@ -26,7 +26,7 @@ curl https://raw.githubusercontent.com/stefanwerfling/flyingfish/main/setup/.env
 curl https://raw.githubusercontent.com/stefanwerfling/flyingfish/main/setup/docker-compose.yml -o docker-compose.yml
 ```
 
-Now edit the [.env file and set all important variables](long-setup.md#env).
+Now edit the [.env file and set all important variables](long-setup/env.md).
 
 ```sh
 nano .env
