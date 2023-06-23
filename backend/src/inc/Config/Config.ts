@@ -15,6 +15,10 @@ export enum ENV_OPTIONAL {
     NGINX_PREFIX = 'FLYINGFISH_NGINX_PREFIX',
     NGINX_MODULE_MODE_DYN = 'FLYINGFISH_NGINX_MODULE_MODE_DYN',
     NGINX_SECRET = 'FLYINGFISH_NGINX_SECRET',
+    DYNDNSSERVER_PORT = 'FLYINGFISH_DYNDNSSERVER_PORT',
+    DYNDNSSERVER_IP = 'FLYINGFISH_DYNDNSSERVER_IP',
+    DYNDNSSERVER_SCHEMA = 'FLYINGFISH_DYNDNSSERVER_SCHEMA',
+    DYNDNSSERVER_ENABLE = 'FLYINGFISH_DYNDNSSERVER_ENABLE',
     SSHSERVER_IP = 'FLYINGFISH_SSHSERVER_IP',
     DOCKER_INSIDE = 'FLYINGFISH_DOCKER_INSIDE',
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
@@ -36,6 +40,10 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     public static readonly DEFAULT_DNSSERVER_PORT = 5333;
     public static readonly DEFAULT_NGINX_CONFIG = path.join('/', 'opt', 'app', 'nginx', 'nginx.conf');
     public static readonly DEFAULT_NGINX_PREFIX = path.join('/', 'opt', 'app', 'nginx');
+    public static readonly DEFAULT_DYNDNSSERVER_PORT = 3000;
+    public static readonly DEFAULT_DYNDNSSERVER_IP = '10.103.0.6';
+    public static readonly DEFAULT_DYNDNSSERVER_SCHEMA = 'https';
+    public static readonly DEFAULT_DYNDNSSERVER_ENABLE = false;
     public static readonly DEFAULT_SSHSERVER_IP = '10.103.0.4';
     public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
     public static readonly DEFAULT_HIMHIP_USE = true;
@@ -209,7 +217,34 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             config.nginx.secret = process.env[ENV_OPTIONAL.NGINX_SECRET];
         }
 
-        // sshserver -----------------------------------------------------------------------------------------------
+        // dyndnsserver ------------------------------------------------------------------------------------------------
+
+        if (!config.dyndnsserver) {
+            config.dyndnsserver = {
+                port: Config.DEFAULT_DYNDNSSERVER_PORT,
+                ip: Config.DEFAULT_DYNDNSSERVER_IP,
+                schema: Config.DEFAULT_DYNDNSSERVER_SCHEMA,
+                enable: Config.DEFAULT_DYNDNSSERVER_ENABLE
+            };
+        }
+
+        if (process.env[ENV_OPTIONAL.DYNDNSSERVER_PORT]) {
+            config.dyndnsserver.port = parseInt(process.env[ENV_OPTIONAL.DYNDNSSERVER_PORT]!, 10) || Config.DEFAULT_DYNDNSSERVER_PORT;
+        }
+
+        if (process.env[ENV_OPTIONAL.DYNDNSSERVER_IP]) {
+            config.dyndnsserver.ip = process.env[ENV_OPTIONAL.DYNDNSSERVER_IP];
+        }
+
+        if (process.env[ENV_OPTIONAL.DYNDNSSERVER_SCHEMA]) {
+            config.dyndnsserver.schema = process.env[ENV_OPTIONAL.DYNDNSSERVER_SCHEMA];
+        }
+
+        if (process.env[ENV_OPTIONAL.DYNDNSSERVER_ENABLE]) {
+            config.dyndnsserver.enable = process.env[ENV_OPTIONAL.DYNDNSSERVER_ENABLE] === '1';
+        }
+
+        // sshserver ---------------------------------------------------------------------------------------------------
 
         if (process.env[ENV_OPTIONAL.SSHSERVER_IP]) {
             config.sshserver = {
@@ -217,7 +252,7 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             };
         }
 
-        // docker --------------------------------------------------------------------------------------------------
+        // docker ------------------------------------------------------------------------------------------------------
 
         if (process.env[ENV_OPTIONAL.DOCKER_INSIDE]) {
             config.docker = {

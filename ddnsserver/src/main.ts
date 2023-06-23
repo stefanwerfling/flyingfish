@@ -1,10 +1,19 @@
-import {Args, DBHelper, Logger} from 'flyingfish_core';
+import {
+    Args,
+    DBHelper,
+    DomainDB,
+    DomainRecordDB,
+    DynDnsServerDomainDB,
+    DynDnsServerUserDB,
+    Logger
+} from 'flyingfish_core';
 import {SchemaFlyingFishArgsDdnsServer} from 'flyingfish_schemas';
 import fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
 import {v4 as uuid} from 'uuid';
+import {Update as UpdateController} from './Routes/Main/Update.js';
 
 /**
  * Main
@@ -66,7 +75,10 @@ import {v4 as uuid} from 'uuid';
             password: tConfig.db.mysql.password,
             database: tConfig.db.mysql.database,
             entities: [
-
+                DomainDB,
+                DomainRecordDB,
+                DynDnsServerDomainDB,
+                DynDnsServerUserDB
             ],
             migrations: [
             ],
@@ -98,7 +110,7 @@ import {v4 as uuid} from 'uuid';
             max_age: session_cookie_max_age
         },
         routes: [
-
+            new UpdateController()
         ]
     });
 

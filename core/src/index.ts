@@ -13,6 +13,7 @@ export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 export {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain.js';
 export {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
 export {DynDnsServerDomain as DynDnsServerDomainDB} from './inc/Db/MariaDb/Entity/DynDnsServerDomain.js';
+export {DynDnsServerUser as DynDnsServerUserDB} from './inc/Db/MariaDb/Entity/DynDnsServerUser.js';
 export {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 

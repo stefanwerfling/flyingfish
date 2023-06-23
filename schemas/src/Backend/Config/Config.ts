@@ -40,7 +40,7 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
     dyndnsserver: Vts.optional(Vts.object({
         enable: Vts.boolean(),
         ip: Vts.string(),
-        port: Vts.string(),
+        port: Vts.number(),
         schema: Vts.string()
     })),
     dnsserver: Vts.optional(Vts.object({

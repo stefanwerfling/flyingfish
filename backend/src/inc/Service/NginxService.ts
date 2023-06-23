@@ -1101,6 +1101,10 @@ export class NginxService {
                                     Logger.getLogger().warn(`NginxService::_loadConfig: DynDnsServer setting not enabled., domain: '${domainName}'`);
                                 }
                                 break;
+
+                            case NginxLocationDestinationTypes.vpn:
+                                Logger.getLogger().info('soon in development');
+                                break;
                         }
 
                         // websocket use -------------------------------------------------------------------------------
