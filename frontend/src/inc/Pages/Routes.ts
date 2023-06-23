@@ -25,6 +25,7 @@ import {ListenData, RouteHttpSave, RouteStreamSave} from 'flyingfish_schemas';
 import {Listen as ListenAPI, ListenCategory} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {
+    NginxLocationDestinationTypes,
     NginxStreamDestinationType,
     NginxStreamSshR,
     Route as RouteAPI
@@ -717,21 +718,37 @@ export class Routes extends BasePage {
 
                         if (value.locations.length > 0) {
                             for (const aLocation of value.locations) {
-                                if (aLocation.ssh && aLocation.ssh.port_out) {
-                                    // eslint-disable-next-line no-new
-                                    new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
-                                } else if (aLocation.redirect && (aLocation.redirect.redirect !== '')) {
-                                    // eslint-disable-next-line no-new
-                                    new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
-                                } else {
-                                    let match = aLocation.match;
+                                let match = aLocation.match;
 
-                                    if (match === '') {
-                                        match = '/';
-                                    }
+                                switch (aLocation.destination_type) {
+                                    case NginxLocationDestinationTypes.proxypass:
+                                        if (match === '') {
+                                            match = '/';
+                                        }
 
-                                    // eslint-disable-next-line no-new
-                                    new Badge(sdTdD, `${match} &#8594; ${aLocation.proxy_pass}`, BadgeType.info);
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, `${match} &#8594; ${aLocation.proxy_pass}`, BadgeType.info);
+                                        break;
+
+                                    case NginxLocationDestinationTypes.redirect:
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
+                                        break;
+
+                                    case NginxLocationDestinationTypes.ssh:
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                                        break;
+
+                                    case NginxLocationDestinationTypes.dyndns:
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, 'DynDNS Server (FylingFish Service)', BadgeType.light);
+                                        break;
+
+                                    case NginxLocationDestinationTypes.none:
+                                    default:
+                                        // eslint-disable-next-line no-new
+                                        new Badge(sdTdD, `#${aLocation.id} location has no valid target`, BadgeType.danger);
                                 }
 
                                 sdTdD.append('<br>');
