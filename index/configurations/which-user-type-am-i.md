@@ -12,6 +12,14 @@ description: >-
 
 It is usually the case that if there is a server behind the router, the router has to open the ports. This router can get a dynamic IP from the provider or has a fixed IP. According to what we find, some things still need to be done.
 
+<figure><img src="../../.gitbook/assets/servicetype1.png" alt=""><figcaption><p>Enable only one service without reverse proxy.</p></figcaption></figure>
+
+Without a reverse proxy, only one of the services can be shared on the internet. The others can no longer use the ports on the router.
+
+It may be possible to install multiple services on one host. But it can mean a huge effort. Or the dependencies of the system or software do not allow installing multiple services on one host. There can be many reasons. In general, separating the service on several hosts is the better solution.
+
+<figure><img src="../../.gitbook/assets/servicetype1_rp.png" alt=""><figcaption><p>With FlyingFish (reverse proxy) separation for each service.</p></figcaption></figure>
+
 ### **Release ports** to the FlyingFish
 
 * **with UpnpNat**, you have to check whether upnpnat is activated on the router, for example a Fritzbox can be determined which computer is allowed to do this.
