@@ -742,7 +742,7 @@ export class Routes extends BasePage {
 
                                     case NginxLocationDestinationTypes.dyndns:
                                         // eslint-disable-next-line no-new
-                                        new Badge(sdTdD, 'DynDNS Server (FylingFish Service)', BadgeType.light);
+                                        new Badge(sdTdD, 'DynDNS Server (FlyingFish Service)', BadgeType.light);
                                         break;
 
                                     case NginxLocationDestinationTypes.none:
