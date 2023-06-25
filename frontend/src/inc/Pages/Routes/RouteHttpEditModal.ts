@@ -1,4 +1,5 @@
 import {ListenData, Location, RouteVariable, SshPortEntry, SslProvider} from 'flyingfish_schemas';
+import moment from 'moment';
 import {ListenCategory, ListenTypes} from '../../Api/Listen';
 import {
     NginxHTTPVariables,
@@ -8,7 +9,7 @@ import {Ssl as SslAPI} from '../../Api/Ssl';
 import {
     ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardLine, CardType, FormGroup,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, Icon, IconFa, NavTab, PText, PTextType,
-    StrongText, Tooltip, TooltipInfo, Element, ModalDialog, ModalDialogType, FormRow
+    StrongText, Tooltip, TooltipInfo, Element, ModalDialog, ModalDialogType, FormRow, Table, Tr, Td
 } from 'bambooo';
 import {Lang} from '../../Lang';
 import {LocationCard} from './LocationCard';
@@ -287,10 +288,49 @@ export class RouteHttpEditModal extends ModalDialog {
                     const certDetails = await SslAPI.getCertDetails(this._id);
 
                     if (certDetails) {
-                        // serial number
+                        // Issuer --------------------------------------------------------------------------------------
+                        const strongIssuer = new StrongText(this._sslCertDetails);
+                        // eslint-disable-next-line no-new
+                        new Icon(strongIssuer, IconFa.certificate);
+                        strongIssuer.getElement().append('&nbsp;Issuer');
+
+                        const tableIssuer = new Table(this._sslCertDetails);
+
+                        for (const issuerData of certDetails.issuer) {
+                            const tTrIssuer = new Tr(tableIssuer);
+
+                            // eslint-disable-next-line no-new
+                            new Td(tTrIssuer, `<b>${issuerData.key}</b>`);
+                            // eslint-disable-next-line no-new
+                            new Td(tTrIssuer, `${issuerData.value}`);
+                        }
+
+                        this._sslCertDetails.getElement().append('<hr>');
+
+                        // subject -------------------------------------------------------------------------------------
+
+                        const strongSubject = new StrongText(this._sslCertDetails);
+                        // eslint-disable-next-line no-new
+                        new Icon(strongSubject, IconFa.certificate);
+                        strongSubject.getElement().append('&nbsp;Subject');
+
+                        const tableSubject = new Table(this._sslCertDetails);
+
+                        for (const subjectData of certDetails.subject) {
+                            const tTrSubject = new Tr(tableSubject);
+
+                            // eslint-disable-next-line no-new
+                            new Td(tTrSubject, `<b>${subjectData.key}</b>`);
+                            // eslint-disable-next-line no-new
+                            new Td(tTrSubject, `${subjectData.value}`);
+                        }
+
+                        this._sslCertDetails.getElement().append('<hr>');
+
+                        // serial number -------------------------------------------------------------------------------
                         const strongSerial = new StrongText(this._sslCertDetails);
                         // eslint-disable-next-line no-new
-                        new Icon(strongSerial, IconFa.info);
+                        new Icon(strongSerial, IconFa.lock);
                         strongSerial.getElement().append('&nbsp;Serial');
 
                         const pSerial = new PText(this._sslCertDetails, PTextType.muted);
@@ -298,18 +338,39 @@ export class RouteHttpEditModal extends ModalDialog {
 
                         this._sslCertDetails.getElement().append('<hr>');
 
-                        // issued to
+                        // signatureAlgo -------------------------------------------------------------------------------
 
-                        // issued by
+                        const strongSigAlgo = new StrongText(this._sslCertDetails);
+                        // eslint-disable-next-line no-new
+                        new Icon(strongSigAlgo, IconFa.lock);
+                        strongSigAlgo.getElement().append('&nbsp;Signature Algorithm');
 
-                        // valid from
+                        const pSigAlg = new PText(this._sslCertDetails, PTextType.muted);
+                        pSigAlg.getElement().append(certDetails.signatureAlgorithm);
+
+                        this._sslCertDetails.getElement().append('<hr>');
+
+                        // valid from/to -------------------------------------------------------------------------------
                         const strongDate = new StrongText(this._sslCertDetails);
                         // eslint-disable-next-line no-new
-                        new Icon(strongDate, IconFa.info);
+                        new Icon(strongDate, IconFa.calendar);
                         strongDate.getElement().append('&nbsp;Validate');
 
-                        const pvalidate = new PText(this._sslCertDetails, PTextType.muted);
-                        pvalidate.getElement().append(`<b>from</b> ${certDetails.dateNotBefore} <b>to</b> ${certDetails.dateNotAfter}`);
+                        const certFromDate = moment(certDetails.dateNotBefore);
+                        const certToDate = moment(certDetails.dateNotAfter);
+
+                        const tableValidate = new Table(this._sslCertDetails);
+                        const trFrom = new Tr(tableValidate);
+                        // eslint-disable-next-line no-new
+                        new Td(trFrom, '<b>from</b>');
+                        // eslint-disable-next-line no-new
+                        new Td(trFrom, `${certFromDate.format('YYYY-MM-DD HH:mm:ss')}`);
+
+                        const trTo = new Tr(tableValidate);
+                        // eslint-disable-next-line no-new
+                        new Td(trTo, '<b>to</b>');
+                        // eslint-disable-next-line no-new
+                        new Td(trTo, `${certToDate.format('YYYY-MM-DD HH:mm:ss')}`);
 
                         this._sslCertDetails.getElement().append('<hr>');
                     }

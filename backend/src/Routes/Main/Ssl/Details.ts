@@ -1,5 +1,5 @@
 import {DBHelper, DomainService} from 'flyingfish_core';
-import {SslDetailsRequest, SslDetailsResponse, StatusCodes} from 'flyingfish_schemas';
+import {SslDetailInfoData, SslDetailsRequest, SslDetailsResponse, StatusCodes} from 'flyingfish_schemas';
 import Path from 'path';
 import {Certificate} from '../../../inc/Cert/Certificate.js';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
@@ -39,12 +39,36 @@ export class Details {
                 if (sslCert) {
                     const cert = new Certificate(Path.join(sslCert, 'cert.pem'));
 
+                    const issuerEntries: SslDetailInfoData[] = [];
+                    const issuer = cert.getIssuer();
+
+                    issuer.forEach((value, key) => {
+                        issuerEntries.push({
+                            key: key,
+                            value: value
+                        });
+                    });
+
+                    const subjectEntries: SslDetailInfoData[] = [];
+                    const subject = cert.getSubject();
+
+                    subject.forEach((value, key) => {
+                        subjectEntries.push({
+                            key: key,
+                            value: value
+                        });
+                    });
+
                     return {
                         statusCode: StatusCodes.OK,
                         details: {
+                            issuer: issuerEntries,
+                            subject: subjectEntries,
                             serialNumber: cert.getSerialNumber().toString(),
                             dateNotBefore: cert.getDateNotBefore().toLocaleString(),
-                            dateNotAfter: cert.getDateNotAfter().toLocaleString()
+                            dateNotAfter: cert.getDateNotAfter().toLocaleString(),
+                            signatureAlgorithm: cert.getSignatureAlgorithm(),
+                            extensions: cert.getExtensions()
                         }
                     };
                 }

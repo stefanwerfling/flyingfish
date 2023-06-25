@@ -12,7 +12,6 @@ import {
     CardType,
     ContentCol,
     ContentColSize,
-    ContentDisable,
     ContentRow,
     DialogConfirm,
     IconFa,
@@ -262,7 +261,7 @@ export class Domains extends BasePage {
                             new Badge(btnOpenUrl, `${domain.name}`, BadgeType.danger);
                         } else {
                             // eslint-disable-next-line no-new
-                            new Badge(btnOpenUrl, `${domain.name}`, BadgeType.secondary);
+                            new Badge(btnOpenUrl, `${domain.name}`, domain.disable ? BadgeType.secondary : BadgeType.primary);
                         }
 
                         btnOpenUrl.addMenuItem(`http://${domain.name}`, () => {
@@ -295,10 +294,13 @@ export class Domains extends BasePage {
                         };
 
                         if (domain.disable) {
-                            const cdisable = new ContentDisable(card.getMainElement());
-                            const button = new ButtonDefault(cdisable, 'Edit');
+                            card.getTitleElement().append('&nbsp;&nbsp;');
+
+                            const button = new ButtonDefault(card.getTitleElement(), 'Reactivate');
                             button.setOnClickFn(funcEdit);
                         }
+
+                        // ---------------------------------------------------------------------------------------------
 
                         const childrenDomains = domainMap.get(domain.id);
                         let childrenDomainCounts = 0;
@@ -503,69 +505,75 @@ export class Domains extends BasePage {
                                 new Td(rtrbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
 
                                 const tdRAction = new Td(rtrbody, '');
-                                const btnRMenu = new ButtonMenu(
-                                    tdRAction.getElement(),
-                                    IconFa.bars,
-                                    true,
-                                    ButtonType.borderless
-                                );
 
-                                btnRMenu.addMenuItem(
-                                    'Edit',
-                                    (): void => {
-                                        this._domainRecordDialog.resetValues();
-                                        this._domainRecordDialog.setTitle('Domain Record Edit');
-                                        this._domainRecordDialog.setId(record.id);
-                                        this._domainRecordDialog.setDomainId(domain.id);
-                                        this._domainRecordDialog.setDomainName(domain.name);
-                                        this._domainRecordDialog.setType(`${record.type}`);
-                                        this._domainRecordDialog.setClass(`${record.class}`);
-                                        this._domainRecordDialog.setTTL(`${record.ttl}`);
-                                        this._domainRecordDialog.setValue(record.value);
-                                        this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
-                                        this._domainRecordDialog.show();
-                                    },
-                                    IconFa.edit
-                                );
+                                if (!domain.disable) {
+                                    const btnRMenu = new ButtonMenu(
+                                        tdRAction.getElement(),
+                                        IconFa.bars,
+                                        true,
+                                        ButtonType.borderless
+                                    );
 
-                                btnRMenu.addDivider();
+                                    btnRMenu.addMenuItem(
+                                        'Edit',
+                                        (): void => {
+                                            this._domainRecordDialog.resetValues();
+                                            this._domainRecordDialog.setTitle('Domain Record Edit');
+                                            this._domainRecordDialog.setId(record.id);
+                                            this._domainRecordDialog.setDomainId(domain.id);
+                                            this._domainRecordDialog.setDomainName(domain.name);
+                                            this._domainRecordDialog.setType(`${record.type}`);
+                                            this._domainRecordDialog.setClass(`${record.class}`);
+                                            this._domainRecordDialog.setTTL(`${record.ttl}`);
+                                            this._domainRecordDialog.setValue(record.value);
+                                            this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
+                                            this._domainRecordDialog.show();
+                                        },
+                                        IconFa.edit
+                                    );
 
-                                btnRMenu.addMenuItem(
-                                    'Delete',
-                                    (): void => {
-                                        DialogConfirm.confirm(
-                                            'dcDeleteRecord',
-                                            ModalDialogType.large,
-                                            'Delete Record',
-                                            'Are you sure you want to delete the record?',
-                                            async(_, dialog) => {
-                                                try {
-                                                    if (await DomainAPI.deleteDomainRecord(record)) {
+                                    btnRMenu.addDivider();
+
+                                    btnRMenu.addMenuItem(
+                                        'Delete',
+                                        (): void => {
+                                            DialogConfirm.confirm(
+                                                'dcDeleteRecord',
+                                                ModalDialogType.large,
+                                                'Delete Record',
+                                                'Are you sure you want to delete the record?',
+                                                async(
+                                                    _,
+                                                    dialog
+                                                ) => {
+                                                    try {
+                                                        if (await DomainAPI.deleteDomainRecord(record)) {
+                                                            this._toast.fire({
+                                                                icon: 'success',
+                                                                title: 'Domain record delete success.'
+                                                            });
+                                                        }
+                                                    } catch (message) {
                                                         this._toast.fire({
-                                                            icon: 'success',
-                                                            title: 'Domain record delete success.'
+                                                            icon: 'error',
+                                                            title: message
                                                         });
                                                     }
-                                                } catch (message) {
-                                                    this._toast.fire({
-                                                        icon: 'error',
-                                                        title: message
-                                                    });
-                                                }
 
-                                                dialog.hide();
+                                                    dialog.hide();
 
-                                                if (this._onLoadTable) {
-                                                    this._onLoadTable();
-                                                }
-                                            },
-                                            undefined,
-                                            'Delete',
-                                            ButtonClass.danger
-                                        );
-                                    },
-                                    IconFa.trash
-                                );
+                                                    if (this._onLoadTable) {
+                                                        this._onLoadTable();
+                                                    }
+                                                },
+                                                undefined,
+                                                'Delete',
+                                                ButtonClass.danger
+                                            );
+                                        },
+                                        IconFa.trash
+                                    );
+                                }
                             }
 
                             card.hideLoading();

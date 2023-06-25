@@ -1,14 +1,4 @@
-/**
- * DnsGlobalServer
- */
-export type DnsGlobalServer = {
-    ip: string;
-    location: string;
-    country: string;
-    provider: string;
-    latitude: string;
-    longitude: string;
-};
+import {DnsGlobalServer} from 'flyingfish_schemas';
 
 /**
  * DnsGlobal

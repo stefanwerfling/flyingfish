@@ -26,6 +26,7 @@ export {
 export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
 export {SchemaSslProvider, SslProvider} from './Backend/Provider/SslProviders.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
+export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';
 export {
     SchemaDashboardInfoIpBlock,
     DashboardInfoIpBlock,
@@ -225,6 +226,8 @@ export {
 } from './Backend/Routes/Ssh/List.js';
 
 export {
+    SchemaSslDetailInfoData,
+    SslDetailInfoData,
     SchemaSslDetailsRequest,
     SslDetailsRequest,
     SchemaSslDetails,
