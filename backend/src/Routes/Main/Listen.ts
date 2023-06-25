@@ -14,7 +14,7 @@ export class Listen extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/listen/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -23,7 +23,7 @@ export class Listen extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/listen/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -34,7 +34,7 @@ export class Listen extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/listen/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

@@ -1,7 +1,18 @@
-import {Response, Router} from 'express';
+import {Request, Response, Router} from 'express';
 import {DefaultReturn, RequestData, SchemaRequestData, StatusCodes} from 'flyingfish_schemas';
 import {Schema, SchemaErrors} from 'vts';
+import {Logger} from '../../Logger/Logger.js';
 import {Session} from '../Session.js';
+
+/**
+ * DefaultRouteHandlerGet
+ */
+export type DefaultRouteHandlerGet = (request: Request, response: Response) => void;
+
+/**
+ * DefaultRouteHandlerPost
+ */
+export type DefaultRouteHandlerPost = (request: Request, response: Response) => void;
 
 /**
  * DefaultRoute
@@ -77,6 +88,46 @@ export class DefaultRoute {
      */
     public getExpressRouter(): Router {
         return this._routes;
+    }
+
+    /**
+     * _get
+     * @param path
+     * @param handler
+     * @protected
+     */
+    protected _get(path: string, handler: DefaultRouteHandlerGet): void {
+        try {
+            this._routes.get(path, async(req, res) => {
+                try {
+                    handler(req, res);
+                } catch (ie) {
+                    Logger.getLogger().error(`DefaultRoute::_get: Exception intern, path can not call: ${path}`);
+                }
+            });
+        } catch (e) {
+            Logger.getLogger().error(`DefaultRoute::_get: Exception extern, path can not call: ${path}`);
+        }
+    }
+
+    /**
+     * _post
+     * @param path
+     * @param handler
+     * @protected
+     */
+    protected _post(path: string, handler: DefaultRouteHandlerPost): void {
+        try {
+            this._routes.post(path, async(req, res) => {
+                try {
+                    handler(req, res);
+                } catch (ie) {
+                    Logger.getLogger().error(`DefaultRoute::_post: Exception intern, path can not call: ${path}`);
+                }
+            });
+        } catch (e) {
+            Logger.getLogger().error(`DefaultRoute::_post: Exception extern, path can not call: ${path}`);
+        }
     }
 
 }

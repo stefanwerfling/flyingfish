@@ -11,7 +11,7 @@ export class Nginx extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/nginx/reload',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

@@ -16,7 +16,7 @@ export class UpnpNat extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/upnpnat/openportlist',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -25,7 +25,7 @@ export class UpnpNat extends DefaultRoute {
             }
         );
 
-        this._routes.get(
+        this._get(
             '/json/upnpnat/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -34,7 +34,7 @@ export class UpnpNat extends DefaultRoute {
             }
         );
 
-        this._routes.get(
+        this._get(
             '/json/upnpnat/current_gateway_info',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -43,7 +43,7 @@ export class UpnpNat extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/upnpnat/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -54,7 +54,7 @@ export class UpnpNat extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/upnpnat/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

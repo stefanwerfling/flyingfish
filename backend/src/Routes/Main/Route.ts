@@ -21,7 +21,7 @@ export class Route extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/route/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -30,7 +30,7 @@ export class Route extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/route/stream/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -41,7 +41,7 @@ export class Route extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/route/stream/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -52,7 +52,7 @@ export class Route extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/route/http/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -63,7 +63,7 @@ export class Route extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/route/http/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

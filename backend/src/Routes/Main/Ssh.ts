@@ -11,7 +11,7 @@ export class Ssh extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/ssh/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

@@ -58,7 +58,7 @@ export class AuthBasic extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/njs/auth_basic',
             async(req, res) => {
                 await this.check(

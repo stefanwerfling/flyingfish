@@ -13,7 +13,7 @@ export class Login extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/islogin',
             async(req, res) => {
                 if (this.isUserLogin(req, res, false)) {
@@ -30,7 +30,7 @@ export class Login extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/login',
             async(req, res) => {
                 if (this.isSchemaValidate(SchemaRequestData, req, res) && this.isSchemaValidate(SchemaLoginRequest, req.body, res)) {
@@ -39,7 +39,7 @@ export class Login extends DefaultRoute {
             }
         );
 
-        this._routes.get(
+        this._get(
             '/json/logout',
             async(req, res) => {
                 if (this.isSchemaValidate(SchemaRequestData, req, res) && this.isUserLogin(req, res)) {

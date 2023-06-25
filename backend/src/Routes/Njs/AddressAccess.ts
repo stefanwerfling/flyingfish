@@ -215,7 +215,7 @@ export class AddressAccess extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/njs/address_access',
             async(req, res) => {
                 await this.access(

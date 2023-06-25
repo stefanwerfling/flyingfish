@@ -14,7 +14,7 @@ export class GatewayIdentifier extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/gatewayidentifier/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -23,7 +23,7 @@ export class GatewayIdentifier extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/gatewayidentifier/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -34,7 +34,7 @@ export class GatewayIdentifier extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/gatewayidentifier/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

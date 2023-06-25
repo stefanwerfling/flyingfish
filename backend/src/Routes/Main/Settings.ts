@@ -13,7 +13,7 @@ export class Settings extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/settings/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -22,7 +22,7 @@ export class Settings extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/settings/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

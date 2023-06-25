@@ -52,7 +52,7 @@ export class Update extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/himhip/update',
             async(req, res) => {
                 await this.update(

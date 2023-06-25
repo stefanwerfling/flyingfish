@@ -13,7 +13,7 @@ export class Ssl extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/ssl/provider/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -22,7 +22,7 @@ export class Ssl extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/ssl/cert/details',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

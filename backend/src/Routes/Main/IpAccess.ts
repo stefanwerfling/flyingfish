@@ -24,7 +24,7 @@ export class IpAccess extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/ipaccess/maintainer/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -33,7 +33,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.get(
+        this._get(
             '/json/ipaccess/blacklist/imports',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -42,7 +42,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/ipaccess/blacklist/import/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -53,7 +53,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.get(
+        this._get(
             '/json/ipaccess/blacklist/owns',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -62,7 +62,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/ipaccess/blacklist/own/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -73,7 +73,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/ipaccess/blacklist/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -84,7 +84,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.get(
+        this._get(
             '/json/ipaccess/whitelist',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -93,7 +93,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/ipaccess/whitelist/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -104,7 +104,7 @@ export class IpAccess extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/ipaccess/whitelist/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

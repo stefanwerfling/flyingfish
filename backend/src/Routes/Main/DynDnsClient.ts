@@ -15,7 +15,7 @@ export class DynDnsClient extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/dyndnsclient/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -24,7 +24,7 @@ export class DynDnsClient extends DefaultRoute {
             }
         );
 
-        this._routes.get(
+        this._get(
             '/json/dyndnsclient/provider/list',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -33,7 +33,7 @@ export class DynDnsClient extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/dyndnsclient/save',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
@@ -44,7 +44,7 @@ export class DynDnsClient extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/dyndnsclient/delete',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {

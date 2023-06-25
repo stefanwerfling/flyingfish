@@ -21,7 +21,7 @@ export class Domain extends DefaultRoute {
      * getExpressRouter
      */
     public getExpressRouter(): Router {
-        this._routes.get(
+        this._get(
             '/json/domain/list',
             async(
                 req,
@@ -33,7 +33,7 @@ export class Domain extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/domain/save',
             async(
                 req,
@@ -47,7 +47,7 @@ export class Domain extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/domain/delete',
             async(
                 req,
@@ -61,7 +61,7 @@ export class Domain extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/domain/record/save',
             async(
                 req,
@@ -75,7 +75,7 @@ export class Domain extends DefaultRoute {
             }
         );
 
-        this._routes.post(
+        this._post(
             '/json/domain/record/delete',
             async(
                 req,
