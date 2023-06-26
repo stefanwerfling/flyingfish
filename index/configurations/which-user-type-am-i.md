@@ -20,11 +20,27 @@ It may be possible to install multiple services on one host. But it can mean a h
 
 <figure><img src="../../.gitbook/assets/servicetype1_rp.png" alt=""><figcaption><p>With FlyingFish (reverse proxy) separation for each service.</p></figcaption></figure>
 
-### **Release ports** to the FlyingFish
+### **Ports** forwarding to the FlyingFish
 
-* **with UpnpNat**, you have to check whether upnpnat is activated on the router, for example a Fritzbox can be determined which computer is allowed to do this.
+The ports can be forwarded with a router in the following ways:
+
 * **ports Fixed** setting on the router
+* **with** UPnP-Nat, you have to check whether UPnP-Nat is activated on the router, for example a "Fritz box" can be determined which computer is allowed to do this.
 
-###
+
 
 ## Type 2, server is online
+
+An online server can itself provide multiple services in virtualization, containers or a second server. With a fixed IP, all ports (if a firewall exists, this must be configured) should be directly addressable on the Internet.
+
+<figure><img src="../../.gitbook/assets/servicetype2.png" alt=""><figcaption><p>Only one container can be released on the ports.</p></figcaption></figure>
+
+A typical setup could be with Docker on the server. FlyingFish would start here as another container.
+
+<figure><img src="../../.gitbook/assets/servicetype2_rp.png" alt=""><figcaption><p>With FlyingFish (reverse proxy) separation for each container.</p></figcaption></figure>
+
+## Summary
+
+If Type 1 was often used in small companies or privately, Type 2 can also be used to manage servers online. The difference is the way the ports are accessed. This should give a small overview of how FlyingFish can be used. This use of FlyingFish is of course somewhat broken down and can of course also be used in complicated structures. For this reason, FlyingFish was also created to be able to set and control everything with a simple web interface. If you are unsure what structure you are building, sketching like the diagrams above can help.
+
+If you have any questions, you are always welcome to  [create an issue](https://github.com/stefanwerfling/flyingfish/issues) on GitHub.
