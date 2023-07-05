@@ -963,7 +963,11 @@ export class NginxService {
                         acme.addVariable('auth_basic', 'off');
                         acme.addVariable('auth_request', 'off');
                         acme.addVariable('default_type', '"text/plain"');
-                        acme.addVariable('alias', '/opt/app/nginx/html/.well-known/acme-challenge/');
+                        acme.addVariable('alias',
+                            Path.join(
+                                NginxServer.getInstance().getWellKnownPath(),
+                                'acme-challenge/'
+                            ));
 
                         aServer.addLocation(acme);
                     }
@@ -1204,12 +1208,12 @@ export class NginxService {
             locWellKnown.addVariable('auth_basic', 'off');
             locWellKnown.addVariable('auth_request', 'off');
             locWellKnown.addVariable('default_type', '"text/plain"');
-            locWellKnown.addVariable('alias', '/opt/app/nginx/html/.well-known');
+            locWellKnown.addVariable('alias', NginxServer.getInstance().getWellKnownPath());
 
             dServer.addLocation(locWellKnown);
 
             const loc404 = new Location('/404.html');
-            loc404.addVariable('root', '/opt/app/nginx/pages');
+            loc404.addVariable('root', NginxServer.getInstance().getPagesPath());
             loc404.addVariable('internal', '');
             dServer.addLocation(loc404);
 

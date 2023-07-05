@@ -1,6 +1,7 @@
 import {ChildProcess, exec, spawn} from 'child_process';
 import {Logger} from 'flyingfish_core';
 import * as fs from 'fs';
+import path from 'path';
 import {NginxConfig} from './NginxConfig.js';
 
 /**
@@ -17,6 +18,11 @@ export type NginxServerOptions = {
 export class NginxServer {
 
     /**
+     * Prefix default path
+     */
+    public static NGINX_PREFIX_PATH = '/opt/app/nginx';
+
+    /**
      * ngnix server instance
      * @private
      */
@@ -31,7 +37,7 @@ export class NginxServer {
             // default for my docker images
             let toptions: NginxServerOptions = {
                 config: '/opt/app/nginx/nginx.conf',
-                prefix: '/opt/app/nginx'
+                prefix: NginxServer.NGINX_PREFIX_PATH
             };
 
             if (options !== null) {
@@ -217,6 +223,24 @@ export class NginxServer {
         const out = exec(`${this._command} -t`);
 
         return out.exitCode === 0;
+    }
+
+    /**
+     * getWellKnownPath
+     */
+    public getWellKnownPath(): string {
+        const prefix = this._options.prefix || NginxServer.NGINX_PREFIX_PATH;
+
+        return path.join(prefix, 'html/.well-known');
+    }
+
+    /**
+     * getPagesPath
+     */
+    public getPagesPath(): string {
+        const prefix = this._options.prefix || NginxServer.NGINX_PREFIX_PATH;
+
+        return path.join(prefix, 'pages');
     }
 
 }

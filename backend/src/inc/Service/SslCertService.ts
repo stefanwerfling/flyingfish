@@ -1,9 +1,14 @@
-import {DateHelper, DBHelper, DomainService, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, DomainService, FileHelper, Logger} from 'flyingfish_core';
+import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
+import fs from 'fs/promises';
+import got from 'got';
 import {Job, scheduleJob} from 'node-schedule';
 import Path from 'path';
-import {MoreThan} from 'typeorm';
+import {v4 as uuid} from 'uuid';
+import {SchemaErrors} from 'vts';
 import {Certificate} from '../Cert/Certificate.js';
 import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
+import {NginxServer} from '../Nginx/NginxServer.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {NginxService} from './NginxService.js';
 
@@ -11,8 +16,6 @@ import {NginxService} from './NginxService.js';
  * SslCertService
  */
 export class SslCertService {
-
-    public static readonly CERT_CREATE_TRY = 3;
 
     /**
      * Ssl cert service instance
@@ -38,40 +41,65 @@ export class SslCertService {
     protected _schedulerUpdate: Job|null = null;
 
     /**
-     * scheduler reset job
-     * @protected
-     */
-    protected _schedulerReset: Job|null = null;
-
-    /**
      * in process
      * @protected
      */
     protected _inProcess: boolean = false;
 
     /**
-     * resetTry
+     * _requestDomainCheckReachability
+     * @param domain
+     * @protected
      */
-    public async resetTry(): Promise<void> {
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
-        const https = await httpRepository.find({
-            where: {
-                cert_create_attempts: MoreThan(SslCertService.CERT_CREATE_TRY)
-            }
+    protected async _requestDomainCheckReachability(domain: string): Promise<boolean> {
+        const wellKnownFf = Path.join(NginxServer.getInstance().getWellKnownPath(), 'flyingfish');
+
+        if (!await FileHelper.directoryExist(wellKnownFf)) {
+            await FileHelper.mkdir(wellKnownFf, true);
+        }
+
+        const checkFile = Path.join(wellKnownFf, 'check.json');
+
+        if (await FileHelper.fileExist(checkFile)) {
+            await fs.unlink(checkFile);
+        }
+
+        const data: DomainCheckReachability = {
+            secureKey: uuid(),
+            domain: domain
+        };
+
+        await fs.writeFile(checkFile, JSON.stringify(data));
+
+        const response = await got({
+            url: `http://${domain}/.well-known/flyingfish/check.json`,
+            responseType: 'json',
+            dnsCache: false
         });
 
-        if (https) {
-            for await (const http of https) {
-                await httpRepository
-                .createQueryBuilder()
-                .update()
-                .set({
-                    cert_create_attempts: 0
-                })
-                .where('id = :id', {id: http.id})
-                .execute();
-            }
+        if (await FileHelper.fileExist(checkFile)) {
+            await fs.unlink(checkFile);
         }
+
+        if (response.body) {
+            const errors: SchemaErrors = [];
+
+            if (SchemaDomainCheckReachability.validate(response.body, errors)) {
+                if (response.body.domain === data.domain && response.body.secureKey === data.secureKey) {
+                    return true;
+                }
+
+                Logger.getLogger().error('SslCertService::_requestDomainCheckReachability: Domain check result false!');
+            } else {
+                Logger.getLogger().error('SslCertService::_requestDomainCheckReachability: Domain check schema is not validate!');
+            }
+        } else {
+            Logger.getLogger().error(
+                'SslCertService::_requestDomainCheckReachability: Can not request well-known flyingfish check!'
+            );
+        }
+
+        return false;
     }
 
     /**
@@ -96,13 +124,39 @@ export class SslCertService {
 
                     if (domain) {
                         if (domain.disable) {
-                            Logger.getLogger().silly(`SslCertService::update: domain disable for http: ${http.id}`);
+                            Logger.getLogger().silly(`SslCertService::update: domain is disable for http: ${http.id}`);
                             continue;
                         }
 
-                        if (http.cert_create_attempts >= SslCertService.CERT_CREATE_TRY) {
-                            Logger.getLogger().info(`SslCertService::update: to max try for domain: ${domain.domainname}`);
+                        // ---------------------------------------------------------------------------------------------
+
+                        try {
+                            if (!await this._requestDomainCheckReachability(domain.domainname)) {
+                                Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain is not reachability, http: ${http.id}`);
+                                continue;
+                            }
+                        } catch (e) {
+                            Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain check is except, http: ${http.id}`);
                             continue;
+                        }
+
+                        // ---------------------------------------------------------------------------------------------
+
+                        if (certbot.isOverLimitAndInTime(http.cert_create_attempts, http.cert_last_request)) {
+                            Logger.getLogger().info(`SslCertService::update: too many attempts for cert request, waiting for domain: ${domain.domainname}`);
+                            continue;
+                        } else if (certbot.isOverLimitAndTime(http.cert_create_attempts, http.cert_last_request)) {
+                            Logger.getLogger().info(`SslCertService::update: time over, rest attempts for cert request for domain: ${domain.domainname}`);
+
+                            await httpRepository
+                            .createQueryBuilder()
+                            .update()
+                            .set({
+                                cert_create_attempts: 0,
+                                cert_last_request: DateHelper.getCurrentDbTime()
+                            })
+                            .where('id = :id', {id: http.id})
+                            .execute();
                         }
 
                         if (http.cert_email === '') {
@@ -123,8 +177,6 @@ export class SslCertService {
                                     Logger.getLogger().error(`SslCertService::update: certificate is faild to create for domain: ${domain.domainname}`);
                                     isCreateFailed = true;
                                 }
-                            } else if (certbot.isOverLimit(http.cert_create_attempts, http.cert_last_request)) {
-                                Logger.getLogger().info(`SslCertService::update: too many attempts for cert request, waiting for domain: ${domain.domainname}`);
                             } else {
                                 const cert = new Certificate(Path.join(sslCert, 'cert.pem'));
 
@@ -141,6 +193,8 @@ export class SslCertService {
                                     isCreateFailed = true;
                                 }
                             }
+
+                            // -----------------------------------------------------------------------------------------
 
                             if (isCreateFailed) {
                                 await httpRepository
@@ -191,10 +245,6 @@ export class SslCertService {
 
             await this.update();
         });
-
-        this._schedulerReset = scheduleJob('*/15 * * * *', async() => {
-            await this.resetTry();
-        });
     }
 
     /**
@@ -203,10 +253,6 @@ export class SslCertService {
     public async stop(): Promise<void> {
         if (this._schedulerUpdate !== null) {
             this._schedulerUpdate.cancel();
-        }
-
-        if (this._schedulerReset !== null) {
-            this._schedulerReset.cancel();
         }
     }
 

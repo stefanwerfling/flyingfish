@@ -66,7 +66,7 @@ export class Info {
         // -------------------------------------------------------------------------------------------------------------
 
         return {
-            public_ip: await HowIsMyPublicIpService.getInstance().getCurrentIp(),
+            public_ip: await HowIsMyPublicIpService.getInstance().getCurrentIp(false),
             public_ip_blacklisted: IpService.isBlacklisted,
             host: HimHIP.getData(),
             ipblocks: ipblocks,

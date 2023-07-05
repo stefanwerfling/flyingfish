@@ -283,6 +283,8 @@ export {
     UserListResponse
 } from './Backend/Routes/User/List.js';
 
+export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';
+
 // HimHip
 export {SchemaConfigOptionsHimHip, ConfigOptionsHimHip} from './HimHip/Config/Config.js';
 

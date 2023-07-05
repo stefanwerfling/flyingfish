@@ -40,10 +40,13 @@ export class HowIsMyPublicIpService {
 
     /**
      * getCurrentIp
+     * @param determine
      */
-    public async getCurrentIp(): Promise<string | null> {
+    public async getCurrentIp(determine: boolean = true): Promise<string | null> {
         if (this._currentIp === null) {
-            await this.determined();
+            if (determine) {
+                await this.determined();
+            }
         }
 
         return this._currentIp;
