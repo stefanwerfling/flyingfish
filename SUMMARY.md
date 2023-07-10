@@ -15,6 +15,7 @@
   * [Configurations](index/configurations/README.md)
     * [Which user type am I](index/configurations/which-user-type-am-i.md)
     * [Listen](index/configurations/listen.md)
+    * [IP Access](index/configurations/ip-access.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
   * [Screenshots](index/index.md)
