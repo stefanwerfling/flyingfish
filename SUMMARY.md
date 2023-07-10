@@ -10,6 +10,7 @@
       * [Env](index/installation/long-setup/env.md)
       * [Docker compose](index/installation/long-setup/docker-compose/README.md)
         * [Ports](index/installation/long-setup/docker-compose/ports.md)
+        * [Network](index/installation/long-setup/docker-compose/network.md)
     * [FAQ](index/installation/faq.md)
   * [Configurations](index/configurations/README.md)
     * [Which user type am I](index/configurations/which-user-type-am-i.md)

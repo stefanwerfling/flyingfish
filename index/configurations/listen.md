@@ -14,7 +14,7 @@ The ports specified here come from the web interface and are used by nginx inter
 | ------------ | ------------------------- |
 | 80 (TCP)     | HTTP Protocol             |
 | 443 (TCP)    | HTTPS/SSH/SSL Protocols\* |
-| 53 (TCP/UDP) | DNS                       |
+| 53 (TCP/UDP) | DNS Protocol              |
 
 These ports are internal to nginx of type "Stream".
 

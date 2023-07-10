@@ -14,5 +14,5 @@ description: How the following ports are forwarded from the host to the containe
 
 #### Container flyingfish\_service
 
-
+<table><thead><tr><th width="166">Port</th><th>Description</th></tr></thead><tbody><tr><td>443</td><td>The HTTPS/SSL port, this is used in the standard installation for the nginx.</td></tr><tr><td>80</td><td>The HTTP port, this is used in the standard installation for the nginx.</td></tr><tr><td>5333</td><td>This sport is actually port 53 (TCP/UDP) for the DNS server. But it is used as an alternative 5333 so that there is no collision from the host system.</td></tr><tr><td>3000</td><td>Flying Fish Server HTTPS port to reach the front end. Can be set on the <a href="../env.md">HTTP_SERVER_PORT</a> variable.</td></tr><tr><td>1900</td><td></td></tr></tbody></table>
 
