@@ -8,7 +8,7 @@ description: >-
 
 <figure><img src="../../.gitbook/assets/74698887.jpg" alt="" width="200"><figcaption><p>In what way is your cup full?</p></figcaption></figure>
 
-In my development phase, I noticed that I received many requests from my ISP on my dynamic IP. After checking what kind of requests were, I wanted to stop them. Many of these requests are bots from giant companies scouring the web. But also many hackers who do not make valid requests but try to break into the server.
+In my development phase, I noticed that I received many requests on my dynamic IP (from my ISP). After checking what kind of requests were, I wanted to stop them. Many of these requests are bots from giant companies scouring the web. But so many hackers who do not make valid requests but try to break into the server.
 
 ## Whitelist
 
