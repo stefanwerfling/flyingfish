@@ -1,3 +1,4 @@
+import {Ets} from 'ets';
 import {DateHelper, DBHelper, DomainService, FileHelper, Logger} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
 import fs from 'fs/promises';
@@ -55,12 +56,15 @@ export class SslCertService {
         const wellKnownFf = Path.join(NginxServer.getInstance().getWellKnownPath(), 'flyingfish');
 
         if (!await FileHelper.directoryExist(wellKnownFf)) {
+            Logger.getLogger().silly(`SslCertService::_requestDomainCheckReachability: create wellknown directory by domain: ${domain}`);
+
             await FileHelper.mkdir(wellKnownFf, true);
         }
 
         const checkFile = Path.join(wellKnownFf, 'check.json');
 
         if (await FileHelper.fileExist(checkFile)) {
+            Logger.getLogger().silly(`SslCertService::_requestDomainCheckReachability: delete old checkfile: ${checkFile} by domain: ${domain}`);
             await fs.unlink(checkFile);
         }
 
@@ -71,6 +75,11 @@ export class SslCertService {
 
         await fs.writeFile(checkFile, JSON.stringify(data));
 
+        if (!await FileHelper.fileExist(checkFile)) {
+            Logger.getLogger().error(`SslCertService::_requestDomainCheckReachability: check file can not create: ${checkFile} by domain: ${domain}`);
+            return false;
+        }
+
         const response = await got({
             url: `http://${domain}/.well-known/flyingfish/check.json`,
             responseType: 'json',
@@ -78,6 +87,7 @@ export class SslCertService {
         });
 
         if (await FileHelper.fileExist(checkFile)) {
+            Logger.getLogger().silly(`SslCertService::_requestDomainCheckReachability: delete checkfile: ${checkFile} by domain: ${domain}`);
             await fs.unlink(checkFile);
         }
 
@@ -86,6 +96,7 @@ export class SslCertService {
 
             if (SchemaDomainCheckReachability.validate(response.body, errors)) {
                 if (response.body.domain === data.domain && response.body.secureKey === data.secureKey) {
+                    Logger.getLogger().silly('SslCertService::_requestDomainCheckReachability: domain and securekey check result true.');
                     return true;
                 }
 
@@ -130,18 +141,6 @@ export class SslCertService {
 
                         // ---------------------------------------------------------------------------------------------
 
-                        try {
-                            if (!await this._requestDomainCheckReachability(domain.domainname)) {
-                                Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain is not reachability, http: ${http.id}`);
-                                continue;
-                            }
-                        } catch (e) {
-                            Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain check is except, http: ${http.id}`);
-                            continue;
-                        }
-
-                        // ---------------------------------------------------------------------------------------------
-
                         if (certbot.isOverLimitAndInTime(http.cert_create_attempts, http.cert_last_request)) {
                             Logger.getLogger().info(`SslCertService::update: too many attempts for cert request, waiting for domain: ${domain.domainname}`);
                             continue;
@@ -159,6 +158,8 @@ export class SslCertService {
                             .execute();
                         }
 
+                        // ---------------------------------------------------------------------------------------------
+
                         if (http.cert_email === '') {
                             Logger.getLogger().info(`SslCertService::update: missing email address for domain: ${domain.domainname}`);
                         } else {
@@ -168,6 +169,20 @@ export class SslCertService {
                             let isCreate = false;
 
                             if (sslCert === null) {
+                                // -------------------------------------------------------------------------------------
+
+                                try {
+                                    if (!await this._requestDomainCheckReachability(domain.domainname)) {
+                                        Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain is not reachability, http: ${http.id}`);
+                                        continue;
+                                    }
+                                } catch (e) {
+                                    Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' (http: ${http.id}), domain check is except: ${Ets.formate(e, true, true)}`);
+                                    continue;
+                                }
+
+                                // -------------------------------------------------------------------------------------
+
                                 if (await certbot.create(domain.domainname, http.cert_email)) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is created for domain: ${domain.domainname}`);
 
@@ -182,15 +197,31 @@ export class SslCertService {
 
                                 if (cert.isValidate()) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is up to date for domain: ${domain.domainname}`);
-                                } else if (await certbot.create(domain.domainname, http.cert_email)) {
-                                    Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
-
-                                    isCreate = true;
-                                    reloadNginx = true;
                                 } else {
-                                    Logger.getLogger().error(`SslCertService::update: certificate is faild to renew for domain: ${domain.domainname}`);
+                                    // ---------------------------------------------------------------------------------
 
-                                    isCreateFailed = true;
+                                    try {
+                                        if (!await this._requestDomainCheckReachability(domain.domainname)) {
+                                            Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain is not reachability, http: ${http.id}`);
+                                            continue;
+                                        }
+                                    } catch (e) {
+                                        Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' (http: ${http.id}), domain check is except: ${Ets.formate(e, true, true)}`);
+                                        continue;
+                                    }
+
+                                    // ---------------------------------------------------------------------------------
+
+                                    if (await certbot.create(domain.domainname, http.cert_email)) {
+                                        Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
+
+                                        isCreate = true;
+                                        reloadNginx = true;
+                                    } else {
+                                        Logger.getLogger().error(`SslCertService::update: certificate is faild to renew for domain: ${domain.domainname}`);
+
+                                        isCreateFailed = true;
+                                    }
                                 }
                             }
 

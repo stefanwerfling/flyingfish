@@ -958,15 +958,15 @@ export class NginxService {
                     // well-known --------------------------------------------------------------------------------------
 
                     if (!ssl_enable && !httpSubCollect.http.wellknown_disabled) {
-                        // add as default, when add a redirect, then acme not work
-                        const acme = new Location('/.well-known/acme-challenge/');
+                        // add as default, when add a redirect, then sample acme not work
+                        const acme = new Location('/.well-known/');
                         acme.addVariable('auth_basic', 'off');
                         acme.addVariable('auth_request', 'off');
                         acme.addVariable('default_type', '"text/plain"');
                         acme.addVariable('alias',
                             Path.join(
                                 NginxServer.getInstance().getWellKnownPath(),
-                                'acme-challenge/'
+                                '/'
                             ));
 
                         aServer.addLocation(acme);
@@ -1073,6 +1073,7 @@ export class NginxService {
 
                                 continue;
 
+                            // ssh -------------------------------------------------------------------------------------
                             case NginxLocationDestinationTypes.ssh:
                                 if (locationCollect.sshport_out) {
                                     // location.addVariable('proxy_ssl_server_name', 'on');
@@ -1091,10 +1092,12 @@ export class NginxService {
                                 }
                                 break;
 
+                            // proxypass -------------------------------------------------------------------------------
                             case NginxLocationDestinationTypes.proxypass:
                                 location.addVariable('proxy_pass', entry.proxy_pass);
                                 break;
 
+                            // dyndns ----------------------------------------------------------------------------------
                             case NginxLocationDestinationTypes.dyndns:
                                 if (Config.getInstance().get()?.dyndnsserver && Config.getInstance().get()?.dyndnsserver?.enable) {
                                     location.addVariable(
@@ -1106,6 +1109,7 @@ export class NginxService {
                                 }
                                 break;
 
+                            // vpn -------------------------------------------------------------------------------------
                             case NginxLocationDestinationTypes.vpn:
                                 Logger.getLogger().info('soon in development');
                                 break;
@@ -1203,12 +1207,12 @@ export class NginxService {
                 uri: '/404.html'
             });
 
-            const locWellKnown = new Location('/.well-known');
+            const locWellKnown = new Location('/.well-known/');
 
             locWellKnown.addVariable('auth_basic', 'off');
             locWellKnown.addVariable('auth_request', 'off');
             locWellKnown.addVariable('default_type', '"text/plain"');
-            locWellKnown.addVariable('alias', NginxServer.getInstance().getWellKnownPath());
+            locWellKnown.addVariable('alias', Path.join(NginxServer.getInstance().getWellKnownPath(), '/'));
 
             dServer.addLocation(locWellKnown);
 

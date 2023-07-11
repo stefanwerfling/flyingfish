@@ -67,6 +67,7 @@
     "tough-cookie": "^4.1.2",
     "typeorm": "^0.3.16",
     "uuid": "^9.0.0",
+    "ets": "git+https://github.com/OpenSourcePKG/ets.git",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1"
