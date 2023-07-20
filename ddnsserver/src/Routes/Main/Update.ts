@@ -66,7 +66,7 @@ export class Update extends DefaultRoute {
                             granted = true;
                         }
                     } else {
-                        Logger.getLogger().warn(`Update::nic-update: basic auth - user not found!`);
+                        Logger.getLogger().warn(`Update::nic-update: basic auth - user not found - name: ${credentials.name}`);
                     }
                 }
 

@@ -36,7 +36,7 @@ export const SchemaDynDnsClientData = Vts.object({
 export type DynDnsClientData = ExtractSchemaResultType<typeof SchemaDynDnsClientData>;
 
 /**
- * DynDnsClientListResponse
+ * SchemaDynDnsClientListResponse
  */
 export const SchemaDynDnsClientListResponse = SchemaDefaultReturn.extend({
     list: Vts.array(SchemaDynDnsClientData)

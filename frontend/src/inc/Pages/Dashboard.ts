@@ -18,7 +18,9 @@ import {
 } from 'bambooo';
 import moment from 'moment/moment';
 import {Dashboard as DashboardApi} from '../Api/Dashboard';
+import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {Lang} from '../Lang';
+import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
 import {DashboardIpBlacklistModal} from './Dashboard/DashboardIpBlacklistModal';
 import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp';
@@ -285,7 +287,13 @@ export class Dashboard extends BasePage {
         await this._onLoadTable();
 
         this._updateSwitch.setTimeoutFn(async() => {
-            await this._onLoadTable();
+            try {
+                await this._onLoadTable();
+            } catch (e) {
+                if (e instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
+                }
+            }
         });
     }
 
@@ -293,6 +301,8 @@ export class Dashboard extends BasePage {
      * unloadContent
      */
     public unloadContent(): void {
+        super.unloadContent();
+
         this._updateSwitch.setEnable(false);
     }
 

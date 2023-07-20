@@ -96,6 +96,15 @@ export {
 } from './Backend/Routes/DynDnsClient/Providers.js';
 
 export {
+    SchemaDynDnsServerUser,
+    DynDnsServerUser,
+    SchemaDynDnsServerData,
+    DynDnsServerData,
+    SchemaDynDnsServerListResponse,
+    DynDnsServerListResponse
+} from './Backend/Routes/DynDnsServer/List.js';
+
+export {
     SchemaGatewayIdentifierEntry,
     GatewayIdentifierEntry,
     SchemaGatewayIdentifierListResponse,

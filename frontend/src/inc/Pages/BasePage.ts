@@ -3,6 +3,7 @@ import {Wrapper, LeftNavbarPushmenu} from 'bambooo';
 /**
  * loadPageFn
  */
+// eslint-disable-next-line no-use-before-define
 export type loadPageFn = (apage: BasePage) => void;
 
 /**

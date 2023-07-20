@@ -9,6 +9,7 @@ import {BasePage} from './inc/Pages/BasePage';
 import {Dashboard as DashboardPage} from './inc/Pages/Dashboard';
 import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {DynDnsClients} from './inc/Pages/DynDnsClients';
+import {DynDnsServer} from './inc/Pages/DynDnsServer';
 import {IpAccess} from './inc/Pages/IpAccess';
 import {Listens as ListensPage} from './inc/Pages/Listens';
 import {Routes as RoutesPage} from './inc/Pages/Routes';
@@ -148,18 +149,15 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                         onClick: (): void => {
                             loadPage(new DynDnsClients());
                         }
+                    },
+                    {
+                        title: 'DynDns Server',
+                        name: 'dyndnsserver',
+                        icon: 'fa-solid fa-server',
+                        onClick: (): void => {
+                            loadPage(new DynDnsServer());
+                        }
                     }
-
-                    /*
-                     *{
-                     *  title: 'DynDns Server',
-                     *  name: 'dyndnsserver',
-                     *  icon: 'fa-solid fa-server',
-                     *  onClick: (): void => {
-                     *      loadPage(new DynDnsClients())
-                     *  }
-                     *}
-                     */
                 ]
             },
             {

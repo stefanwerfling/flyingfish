@@ -36,6 +36,7 @@ import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat.js';
 import {User as UserController} from './Routes/Main/User.js';
 import {AddressAccess as NjsAddressAccessController} from './Routes/Njs/AddressAccess.js';
 import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
+import {DynDnsServer as DynDnsServerController} from './Routes/Main/DynDnsServer.js';
 import {Config} from './inc/Config/Config.js';
 import {v4 as uuid} from 'uuid';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
@@ -219,6 +220,7 @@ import exitHook from 'async-exit-hook';
             new UserController(),
             new DomainController(),
             new DynDnsClientController(),
+            new DynDnsServerController(),
             new RouteController(),
             new ListenController(),
             new UpnpNatController(),
