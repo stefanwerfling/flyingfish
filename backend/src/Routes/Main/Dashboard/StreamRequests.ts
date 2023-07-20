@@ -1,5 +1,4 @@
 import {StatusCodes, StreamRequestPoint, StreamRequestsResponse} from 'flyingfish_schemas';
-import {Logger} from 'flyingfish_core';
 import {NginxStreamAccess} from '../../../inc/Db/InfluxDb/Entity/NginxStreamAccess.js';
 
 /**
@@ -16,8 +15,6 @@ export class StreamRequests {
         const requestPoint: StreamRequestPoint[] = [];
 
         for (const point of points) {
-            Logger.getLogger().info(point);
-
             requestPoint.push({
                 counts: point.counts,
                 time: point.time
