@@ -2,6 +2,9 @@ FROM node:18-bullseye
 
 ENV FLYINGFISH_NGINX_MODULE_MODE_DYN "0"
 
+ARG NGINX_VERSION=1.22.1
+ARG HEADERS_MORE_VERSION=v0.34
+
 RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y dublin-traceroute
@@ -23,6 +26,11 @@ RUN cd ~ && \
     cd ~/njs && \
     ./configure && \
     make
+
+RUN cd ~ && \
+     git clone --depth 1 -b $HEADERS_MORE_VERSION --single-branch https://github.com/openresty/headers-more-nginx-module.git \
+     && cd ~/headers-more-nginx-module \
+     && git submodule update --init
 
 RUN cd ~/nginx-1.22.1 && \
     ./configure \
@@ -51,6 +59,7 @@ RUN cd ~/nginx-1.22.1 && \
     --with-http_v2_module \
     --with-http_secure_link_module \
     --add-module=../njs/nginx \
+    --add-module=../headers-more-nginx-module/ \
     --with-mail \
     --with-mail_ssl_module \
     --with-stream \

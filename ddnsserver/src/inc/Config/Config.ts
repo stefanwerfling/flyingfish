@@ -1,11 +1,21 @@
 import {Config as ConfigCore} from 'flyingfish_core';
 import {DdnsServerConfigOptions, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaDdnsServerConfigOptions} from 'flyingfish_schemas';
+import path from 'path';
 import process from 'process';
+
+/**
+ * ENV_OPTIONAL
+ */
+export enum ENV_OPTIONAL {
+    LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL'
+}
 
 /**
  * Config
  */
 export class Config extends ConfigCore<DdnsServerConfigOptions> {
+
+    public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
 
     /**
      * getInstance
@@ -61,6 +71,9 @@ export class Config extends ConfigCore<DdnsServerConfigOptions> {
                         password: dbMysqlPassword,
                         database: dbMysqlDatabase
                     }
+                },
+                httpserver: {
+                    port: Config.DEFAULT_HTTPSERVER_PORT
                 }
             };
         }
@@ -76,6 +89,39 @@ export class Config extends ConfigCore<DdnsServerConfigOptions> {
         if (process.env[ENV_OPTIONAL_DB.DB_MYSQL_PORT]) {
             config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL_DB.DB_MYSQL_PORT]!, 10) ||
                 Config.DEFAULT_DB_MYSQL_PORT;
+        }
+
+        // Logging -----------------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
+            config.logging = {
+                level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
+            };
+        }
+
+        return config;
+    }
+
+    /**
+     * _setDefaults
+     * @param config
+     * @protected
+     */
+    protected _setDefaults(config: DdnsServerConfigOptions | null): DdnsServerConfigOptions | null {
+        if (config === null) {
+            return null;
+        }
+
+        let ffPath = Config.DEFAULT_FF_DIR;
+
+        if (config.flyingfish_libpath) {
+            ffPath = config.flyingfish_libpath;
+        } else {
+            config.flyingfish_libpath = ffPath;
+        }
+
+        if (!config.httpserver.sslpath) {
+            config.httpserver.sslpath = path.join(ffPath, 'ssl');
         }
 
         return config;

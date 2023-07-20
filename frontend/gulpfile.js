@@ -62,9 +62,9 @@ gulp.task('copy-data', async() => {
 
     &&
 
-    await download('https://cablemap.info/cablemap.info.aspx').pipe(gulp.dest(assetsPath))
+    // await download('https://cablemap.info/cablemap.info.aspx').pipe(gulp.dest(assetsPath))
 
-    &&
+    // &&
 
     await downloadGoogleFont();
 });

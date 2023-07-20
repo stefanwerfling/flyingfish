@@ -1,7 +1,7 @@
 import {Request, Response, Router} from 'express';
-import basicAuth from 'express-basic-auth';
-import {DefaultRoute, DynDnsServerUserService} from 'flyingfish_core';
+import {DefaultRoute, DynDnsServerUserService, Logger} from 'flyingfish_core';
 import {SchemaRequestData, SessionData} from 'flyingfish_schemas';
+import auth from 'basic-auth';
 
 /**
  * Update
@@ -44,32 +44,39 @@ export class Update extends DefaultRoute {
     public getExpressRouter(): Router {
         this._routes.get(
             '/nic/update',
-            basicAuth({
-                realm: 'FlyingFish DDNS Server',
-                authorizeAsync: true,
-                authorizer: async(
-                    username,
-                    password,
-                    callback
-                ) => {
-                    const ddnsUser = await DynDnsServerUserService.findByName(username);
-
-                    if (ddnsUser) {
-                        if (ddnsUser.password === password) {
-
-                            return callback(null, true);
-                        }
-                    }
-
-                    return callback(null, false);
-                }
-            }),
             async(
                 req,
                 res
             ) => {
-                if (this.isSchemaValidate(SchemaRequestData, req, res)) {
-                    Update.setNicUpdate(req, req.session, res);
+                Logger.getLogger().silly(`Update::nic-update: heders.authorization: ${req.headers.authorization}`);
+
+                const credentials = auth(req);
+
+                let granted = false;
+
+                if (credentials) {
+                    Logger.getLogger().silly(`Update::nic-update: basic auth - name: ${credentials.name}`);
+
+                    const ddnsUser = await DynDnsServerUserService.findByName(credentials.name);
+
+                    if (ddnsUser) {
+                        Logger.getLogger().silly(`Update::nic-update: basic auth - user found: ${ddnsUser.id}`);
+
+                        if (ddnsUser.password === credentials.pass) {
+                            granted = true;
+                        }
+                    } else {
+                        Logger.getLogger().warn(`Update::nic-update: basic auth - user not found!`);
+                    }
+                }
+
+                if (granted) {
+                    if (this.isSchemaValidate(SchemaRequestData, req, res)) {
+                        Update.setNicUpdate(req, req.session, res);
+                    }
+                } else {
+                    res.set('WWW-Authenticate', 'Basic realm="401"');
+                    res.status(401).send('Authentication required.');
                 }
             }
         );

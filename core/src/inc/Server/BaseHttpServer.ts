@@ -87,6 +87,11 @@ export class BaseHttpServer {
         this._session = serverInit.session;
 
         this._server = express();
+        this._server.use((req, res, next) => {
+            Logger.getLogger().silly(`BaseHttpServer::request: Url: ${req.url} Protocol: ${req.protocol} Method: ${req.method}`);
+            next();
+        });
+
         this._initServer();
 
         // -------------------------------------------------------------------------------------------------------------

@@ -42,7 +42,7 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     public static readonly DEFAULT_NGINX_PREFIX = path.join('/', 'opt', 'app', 'nginx');
     public static readonly DEFAULT_DYNDNSSERVER_PORT = 3000;
     public static readonly DEFAULT_DYNDNSSERVER_IP = '10.103.0.6';
-    public static readonly DEFAULT_DYNDNSSERVER_SCHEMA = 'https';
+    public static readonly DEFAULT_DYNDNSSERVER_SCHEMA = 'http';
     public static readonly DEFAULT_DYNDNSSERVER_ENABLE = false;
     public static readonly DEFAULT_SSHSERVER_IP = '10.103.0.4';
     public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
@@ -261,13 +261,15 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             };
         }
 
+        // Logging -----------------------------------------------------------------------------------------------------
+
         if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
             config.logging = {
                 level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
             };
         }
 
-        // himhip --------------------------------------------------------------------------------------------------
+        // himhip ------------------------------------------------------------------------------------------------------
 
         if (!config.himhip) {
             config.himhip = {

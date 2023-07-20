@@ -1104,6 +1104,9 @@ export class NginxService {
                                         'proxy_pass',
                                         `${Config.getInstance().get()?.dyndnsserver?.schema}://${Config.getInstance().get()?.dyndnsserver?.ip}:${Config.getInstance().get()?.dyndnsserver?.port}`
                                     );
+
+                                    location.addVariable('more_set_input_headers \'Authorization:', '$http_authorization\'');
+                                    location.addVariable('more_set_headers -s 401 \'WWW-Authenticate:', 'Basic realm="FlyingFish DynDNS-Server"\'');
                                 } else {
                                     Logger.getLogger().warn(`NginxService::_loadConfig: DynDnsServer setting not enabled., domain: '${domainName}'`);
                                 }

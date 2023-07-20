@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import {BaseHttpServer, Session} from 'flyingfish_core';
+import {BaseHttpServer, FileHelper, Logger} from 'flyingfish_core';
 import helmet from 'helmet';
 
 // we need for declare Express Request Session
