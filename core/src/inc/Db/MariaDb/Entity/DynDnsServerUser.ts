@@ -28,4 +28,12 @@ export class DynDnsServerUser extends BaseEntity {
     @Column()
     public password!: string;
 
+    /**
+     * last update
+     */
+    @Column({
+        default: 0
+    })
+    public last_update!: number;
+
 }
