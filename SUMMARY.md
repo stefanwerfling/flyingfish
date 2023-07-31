@@ -18,4 +18,5 @@
     * [IP Access](index/configurations/ip-access.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
+    * [Object name rules](index/developer/object-name-rules.md)
   * [Screenshots](index/index.md)
