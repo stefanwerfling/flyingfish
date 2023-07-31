@@ -4,4 +4,4 @@
 
 ## On the topic
 
-<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td><strong>Ideas, requests and Bugs</strong></td><td>what you can do</td><td></td><td><a href="ideas-requests-and-bugs.md">ideas-requests-and-bugs.md</a></td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td><strong>Ideas, requests and Bugs</strong></td><td>what you can do</td><td></td><td><a href="ideas-requests-and-bugs.md">ideas-requests-and-bugs.md</a></td></tr><tr><td><strong>Object name rules</strong></td><td>Coding name rules for object </td><td></td><td><a href="object-name-rules.md">object-name-rules.md</a></td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
