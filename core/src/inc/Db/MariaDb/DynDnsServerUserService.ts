@@ -1,54 +1,33 @@
-import {Repository} from 'typeorm';
-import {DBHelper} from './DBHelper.js';
+import {DBService} from './DBService.js';
 import {DynDnsServerUser} from './Entity/DynDnsServerUser.js';
 
 /**
  * DynDnsServerUserService
  */
-export class DynDnsServerUserService {
+export class DynDnsServerUserService extends DBService<DynDnsServerUser> {
 
     /**
-     * repository for dyndns server user
-     * @private
+     * register name
      */
-    private static _repository: Repository<DynDnsServerUser>|null = null;
+    public static REGISTER_NAME = 'dyndns_server_user';
 
     /**
-     * getRepository
+     * getInstance
      */
-    public static getRepository(): Repository<DynDnsServerUser> {
-        if (DynDnsServerUserService._repository === null) {
-            DynDnsServerUserService._repository = DBHelper.getRepository(DynDnsServerUser);
-        }
-
-        return DynDnsServerUserService._repository;
-    }
-
-    /**
-     * findAll
-     */
-    public static findAll(): Promise<DynDnsServerUser[]> {
-        return DynDnsServerUserService.getRepository().find();
-    }
-
-    /**
-     * findOne
-     * @param id
-     */
-    public static findOne(id: number): Promise<DynDnsServerUser | null> {
-        return DynDnsServerUserService.getRepository().findOne({
-            where: {
-                id: id
-            }
-        });
+    public static getInstance(): DynDnsServerUserService {
+        return DBService.getSingleInstance(
+            DynDnsServerUserService,
+            DynDnsServerUser,
+            DynDnsServerUserService.REGISTER_NAME
+        );
     }
 
     /**
      * findByName
      * @param name
      */
-    public static findByName(name: string): Promise<DynDnsServerUser | null> {
-        return DynDnsServerUserService.getRepository().findOne({
+    public findByName(name: string): Promise<DynDnsServerUser | null> {
+        return this._repository.findOne({
             where: {
                 username: name
             }

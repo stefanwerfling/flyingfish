@@ -1,4 +1,4 @@
-import {DBHelper, DomainService} from 'flyingfish_core';
+import {DBHelper, DomainServiceDB} from 'flyingfish_core';
 import {SslDetailInfoData, SslDetailsRequest, SslDetailsResponse, StatusCodes} from 'flyingfish_schemas';
 import Path from 'path';
 import {Certificate} from '../../../inc/Cert/Certificate.js';
@@ -31,7 +31,7 @@ export class Details {
                 };
             }
 
-            const domain = await DomainService.findOne(http.domain_id);
+            const domain = await DomainServiceDB.getInstance().findOne(http.domain_id);
 
             if (domain) {
                 const sslCert = await Certbot.existCertificate(domain.domainname);

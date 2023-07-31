@@ -17,7 +17,7 @@ export abstract class DBService<T extends DBBaseEntityId> {
      * repository for T
      * @private
      */
-    private readonly _repository: Repository<T>;
+    protected readonly _repository: Repository<T>;
 
     /**
      * getSingleInstance
@@ -53,9 +53,16 @@ export abstract class DBService<T extends DBBaseEntityId> {
     }
 
     /**
+     * countAll
+     */
+    public async countAll(): Promise<number> {
+        return this._repository.count();
+    }
+
+    /**
      * findAll
      */
-    public findAll(): Promise<T[]> {
+    public async findAll(): Promise<T[]> {
         return this._repository.find();
     }
 

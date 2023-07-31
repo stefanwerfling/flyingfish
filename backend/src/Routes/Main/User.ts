@@ -19,7 +19,7 @@ export class User extends DefaultRoute {
             '/json/user/info',
             async(req, res) => {
                 if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Info.getUserInfo(req));
+                    res.status(200).json(await Info.getUserInfo(req.session));
                 }
             }
         );

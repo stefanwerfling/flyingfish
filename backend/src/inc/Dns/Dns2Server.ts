@@ -1,6 +1,6 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
-import {DBHelper, DomainRecordDB, DomainService, Logger} from 'flyingfish_core';
+import {DBHelper, DomainRecordDB, DomainServiceDB, Logger} from 'flyingfish_core';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
@@ -55,7 +55,7 @@ export class Dns2Server {
                     Logger.getLogger().info(`Dns2Server::request: ${request.header.id}`, request.questions[0]);
                     Logger.getLogger().info(`Dns2Server::request: Remote-Info ${rinfo.address}:${rinfo.port}`);
 
-                    const domain = await DomainService.findByName(questionExt.name);
+                    const domain = await DomainServiceDB.getInstance().findByName(questionExt.name);
 
                     if (domain) {
                         const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);

@@ -1,4 +1,4 @@
-import {DBHelper, DomainRecordDB, DomainService} from 'flyingfish_core';
+import {DBHelper, DomainRecordDB, DomainServiceDB} from 'flyingfish_core';
 import {DomainDelete, DomainDeleteResponse, StatusCodes} from 'flyingfish_schemas';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
@@ -17,7 +17,7 @@ export class Delete {
         const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
-        const domain = await DomainService.findOne(data.id);
+        const domain = await DomainServiceDB.getInstance().findOne(data.id);
 
         if (domain) {
             if (domain.fixdomain) {
@@ -50,14 +50,14 @@ export class Delete {
                 domain_id: data.id
             });
 
-            const result = await DomainService.remove(domain.id);
+            const result = await DomainServiceDB.getInstance().remove(domain.id);
 
             if (result) {
                 if (domain.parent_id !== 0) {
-                    const parent = await DomainService.findOne(domain.parent_id);
+                    const parent = await DomainServiceDB.getInstance().findOne(domain.parent_id);
 
                     if (parent) {
-                        await DomainService.updateChildrenToNewParent(parent);
+                        await DomainServiceDB.getInstance().updateChildrenToNewParent(parent);
                     }
                 }
 

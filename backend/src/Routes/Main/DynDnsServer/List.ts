@@ -1,4 +1,4 @@
-import {DynDnsServerUserService} from 'flyingfish_core';
+import {DynDnsServerUserServiceDB} from 'flyingfish_core';
 import {DynDnsServerData, DynDnsServerListResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -6,8 +6,11 @@ import {DynDnsServerData, DynDnsServerListResponse, StatusCodes} from 'flyingfis
  */
 export class List {
 
+    /**
+     * getList
+     */
     public static async getList(): Promise<DynDnsServerListResponse> {
-        const users = await DynDnsServerUserService.findAll();
+        const users = await DynDnsServerUserServiceDB.getInstance().findAll();
 
         const list: DynDnsServerData[] = [];
 

@@ -1,4 +1,4 @@
-import {DBHelper, DomainService, FileHelper, Logger, SshPortDB} from 'flyingfish_core';
+import {DBHelper, DomainServiceDB, FileHelper, Logger, SshPortDB} from 'flyingfish_core';
 import fs from 'fs/promises';
 import * as Path from 'path';
 import {SchemaErrors} from 'vts';
@@ -324,7 +324,7 @@ export class NginxService {
                 });
 
                 for await (const astream of tstreams) {
-                    const adomain = await DomainService.findOne(astream.domain_id);
+                    const adomain = await DomainServiceDB.getInstance().findOne(astream.domain_id);
 
                     if (adomain) {
                         if (!streamMap.has(alisten.listen_port)) {
@@ -389,7 +389,7 @@ export class NginxService {
                 });
 
                 for await (const http of https) {
-                    const adomain = await DomainService.findOne(http.domain_id);
+                    const adomain = await DomainServiceDB.getInstance().findOne(http.domain_id);
 
                     if (adomain) {
                         if (!httpMap.has(alisten.listen_port)) {

@@ -1,5 +1,5 @@
 import {Request, Response, Router} from 'express';
-import {DefaultRoute, DynDnsServerUserService, Logger} from 'flyingfish_core';
+import {DefaultRoute, DynDnsServerUserServiceDB, Logger} from 'flyingfish_core';
 import {SchemaRequestData, SessionData} from 'flyingfish_schemas';
 import auth from 'basic-auth';
 
@@ -19,7 +19,7 @@ export class Update extends DefaultRoute {
         // @ts-ignore
         if (req.auth) {
             // @ts-ignore
-            const ddnsUser = await DynDnsServerUserService.findByName(req.auth.user);
+            const ddnsUser = await DynDnsServerUserServiceDB.findByName(req.auth.user);
 
             if (ddnsUser) {
                 if (session.user) {
@@ -57,7 +57,7 @@ export class Update extends DefaultRoute {
                 if (credentials) {
                     Logger.getLogger().silly(`Update::nic-update: basic auth - name: ${credentials.name}`);
 
-                    const ddnsUser = await DynDnsServerUserService.findByName(credentials.name);
+                    const ddnsUser = await DynDnsServerUserServiceDB.getInstance().findByName(credentials.name);
 
                     if (ddnsUser) {
                         Logger.getLogger().silly(`Update::nic-update: basic auth - user found: ${ddnsUser.id}`);

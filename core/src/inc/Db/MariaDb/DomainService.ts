@@ -1,46 +1,25 @@
-import {Repository, DeleteResult} from 'typeorm';
-import {DBHelper} from './DBHelper.js';
+import {DBService} from './DBService.js';
 import {Domain} from './Entity/Domain.js';
 
 /**
  * DomainService
  */
-export class DomainService {
+export class DomainService extends DBService<Domain> {
 
     /**
-     * repository for domain
-     * @private
+     * register name
      */
-    private static _repository: Repository<Domain>|null = null;
+    public static REGISTER_NAME = 'domain';
 
     /**
-     * getRepository
+     * getInstance
      */
-    public static getRepository(): Repository<Domain> {
-        if (DomainService._repository === null) {
-            DomainService._repository = DBHelper.getRepository(Domain);
-        }
-
-        return DomainService._repository;
-    }
-
-    /**
-     * findAll
-     */
-    public static findAll(): Promise<Domain[]> {
-        return DomainService.getRepository().find();
-    }
-
-    /**
-     * findOne
-     * @param id
-     */
-    public static findOne(id: number): Promise<Domain | null> {
-        return DomainService.getRepository().findOne({
-            where: {
-                id: id
-            }
-        });
+    public static getInstance(): DomainService {
+        return DBService.getSingleInstance(
+            DomainService,
+            Domain,
+            DomainService.REGISTER_NAME
+        );
     }
 
     /**
@@ -48,8 +27,8 @@ export class DomainService {
      * @param name
      * @param disable
      */
-    public static findByName(name: string, disable: boolean = false): Promise<Domain | null> {
-        return DomainService.getRepository().findOne({
+    public findByName(name: string, disable: boolean = false): Promise<Domain | null> {
+        return this._repository.findOne({
             where: {
                 domainname: name,
                 disable: disable
@@ -58,26 +37,10 @@ export class DomainService {
     }
 
     /**
-     * remove
-     * @param id
-     */
-    public static async remove(id: number): Promise<DeleteResult> {
-        return DomainService.getRepository().delete(id);
-    }
-
-    /**
-     * save
-     * @param domain
-     */
-    public static async save(domain: Domain): Promise<Domain> {
-        return DomainService.getRepository().save(domain);
-    }
-
-    /**
      * findParentId
      * @param domainname
      */
-    public static async findParentId(domainname: string): Promise<number> {
+    public async findParentId(domainname: string): Promise<number> {
         const parts = domainname.split('.');
 
         if (parts.length <= 1) {
@@ -87,21 +50,21 @@ export class DomainService {
         parts.shift();
         const parentDomainname = parts.join('.');
 
-        const domain = await DomainService.findByName(parentDomainname);
+        const domain = await this.findByName(parentDomainname);
 
         if (domain) {
             return domain.id;
         }
 
-        return DomainService.findParentId(parentDomainname);
+        return this.findParentId(parentDomainname);
     }
 
     /**
      * getChildrenById
      * @param id
      */
-    public static async getChildrenById(id: number): Promise<Domain[]> {
-        return DomainService.getRepository().find({
+    public async getChildrenById(id: number): Promise<Domain[]> {
+        return this._repository.find({
             where: {
                 parent_id: id
             }
@@ -112,13 +75,13 @@ export class DomainService {
      * updateChildrenToNewParent
      * @param domain
      */
-    public static async updateChildrenToNewParent(domain: Domain): Promise<void> {
+    public async updateChildrenToNewParent(domain: Domain): Promise<void> {
         if (domain.parent_id === 0) {
             return;
         }
 
         const domainNameParts = domain.domainname.split('.').reverse();
-        const childrens = await DomainService.getChildrenById(domain.parent_id);
+        const childrens = await this.getChildrenById(domain.parent_id);
 
         for await (const aChildren of childrens) {
             if (aChildren.id === domain.id) {
@@ -139,7 +102,7 @@ export class DomainService {
 
                 if (isSubDomain) {
                     aChildren.parent_id = domain.id;
-                    await DomainService.save(aChildren);
+                    await this.save(aChildren);
                 }
             }
         }

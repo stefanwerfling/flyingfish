@@ -1,9 +1,8 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, DomainDB, DomainService, Logger} from 'flyingfish_core';
+import {DBHelper, DomainDB, DomainServiceDB, Logger, UserDB, UserServiceDB} from 'flyingfish_core';
 import {ListenCategory, ListenProtocol, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen.js';
 import {NginxStream as NginxStreamDB, NginxStreamDestinationType} from './Entity/NginxStream.js';
 import {NginxUpstream as NginxUpstreamDB} from './Entity/NginxUpstream.js';
-import {User as UserDB} from './Entity/User.js';
 
 /**
  * DBSetup
@@ -16,8 +15,8 @@ export class DBSetup {
      * firstInit
      */
     public static async firstInit(): Promise<void> {
-        const userRepository = DBHelper.getRepository(UserDB);
-        const userCount = await userRepository.count();
+        const us = UserServiceDB.getInstance();
+        const userCount = await us.countAll();
 
         if (userCount === 0) {
             const nUser = new UserDB();
@@ -27,7 +26,7 @@ export class DBSetup {
             nUser.disable = false;
 
             // save user to db
-            await DBHelper.getDataSource().manager.save(nUser);
+            await us.save(nUser);
 
             Logger.getLogger().info('Admin user create for first init.');
         }
@@ -119,7 +118,7 @@ export class DBSetup {
         defaultDomain.fixdomain = true;
         defaultDomain.recordless = true;
 
-        defaultDomain = await DomainService.save(defaultDomain);
+        defaultDomain = await DomainServiceDB.getInstance().save(defaultDomain);
 
         // add streams _ --------------------------------------------------------------------------------------------
 

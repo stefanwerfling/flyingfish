@@ -1,5 +1,5 @@
 import {Ets} from 'ets';
-import {DateHelper, DBHelper, DomainService, FileHelper, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, DomainServiceDB, FileHelper, Logger} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import got from 'got';
@@ -131,7 +131,7 @@ export class SslCertService {
                 if (http.ssl_enable) {
                     Logger.getLogger().silly(`SslCertService::update: ssl enable http: ${http.id}`);
 
-                    const domain = await DomainService.findOne(http.domain_id);
+                    const domain = await DomainServiceDB.getInstance().findOne(http.domain_id);
 
                     if (domain) {
                         if (domain.disable) {

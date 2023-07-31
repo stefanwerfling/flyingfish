@@ -1,4 +1,4 @@
-import {DBHelper, DomainService, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {DBHelper, DomainServiceDB, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {
     Location,
     RouteData,
@@ -38,7 +38,7 @@ export class List {
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
         const sshportRepository = DBHelper.getRepository(SshPortDB);
         const sshuserRepository = DBHelper.getRepository(SshUserDB);
-        const domains = await DomainService.findAll();
+        const domains = await DomainServiceDB.getInstance().findAll();
 
         if (domains) {
             for await (const adomain of domains) {

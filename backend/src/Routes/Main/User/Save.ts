@@ -1,8 +1,6 @@
-import {DBHelper} from 'flyingfish_core';
+import {UserDB, UserServiceDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes, UserEntry} from 'flyingfish_schemas';
-import {Not} from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
 
 /**
  * Save
@@ -14,14 +12,12 @@ export class Save {
      * @param data
      */
     public static async saveUser(data: UserEntry): Promise<DefaultReturn> {
-        const userRepository = DBHelper.getDataSource().getRepository(UserDB);
+        const us = UserServiceDB.getInstance();
 
         // check is the last user ----------------------------------------------------------------------------------
 
         if (data.disable) {
-            const cUsers = await userRepository.countBy({
-                disable: false
-            });
+            const cUsers = await us.countDisable(false);
 
             if (cUsers < 2) {
                 return {
@@ -33,12 +29,9 @@ export class Save {
 
         // check username ------------------------------------------------------------------------------------------
 
-        const cUsername = await userRepository.countBy({
-            username: data.username,
-            id: Not(data.id)
-        });
+        const existUsername = await us.existUsername(data.username, data.id);
 
-        if (cUsername > 0) {
+        if (existUsername) {
             return {
                 statusCode: StatusCodes.INTERNAL_ERROR,
                 msg: 'Username already in use!'
@@ -47,12 +40,9 @@ export class Save {
 
         // check email ---------------------------------------------------------------------------------------------
 
-        const cEmail = await userRepository.countBy({
-            email: data.email,
-            id: Not(data.id)
-        });
+        const existEmail = await us.existEmail(data.email, data.id);
 
-        if (cEmail > 0) {
+        if (existEmail) {
             return {
                 statusCode: StatusCodes.INTERNAL_ERROR,
                 msg: 'EMail already in use!'
@@ -64,11 +54,7 @@ export class Save {
         let aUser: UserDB|null = null;
 
         if (data.id !== 0) {
-            aUser = await userRepository.findOne({
-                where: {
-                    id: data.id
-                }
-            });
+            aUser = await us.findOne(data.id);
         }
 
         if (aUser === null) {
@@ -97,7 +83,7 @@ export class Save {
         aUser.email = data.email;
         aUser.disable = data.disable;
 
-        await DBHelper.getDataSource().manager.save(aUser);
+        await us.save(aUser);
 
         return {
             statusCode: StatusCodes.OK

@@ -1,4 +1,4 @@
-import {DomainDB, DomainService} from 'flyingfish_core';
+import {DomainDB, DomainServiceDB} from 'flyingfish_core';
 import {DomainData, DomainSaveResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -14,7 +14,7 @@ export class Save {
         let aDomain: DomainDB | null = null;
 
         if (data.id !== 0) {
-            const tDomain = await DomainService.findOne(data.id);
+            const tDomain = await DomainServiceDB.getInstance().findOne(data.id);
 
             if (tDomain) {
                 if (tDomain.fixdomain) {
@@ -39,12 +39,12 @@ export class Save {
 
         aDomain.domainname = data.name;
         aDomain.disable = data.disable;
-        aDomain.parent_id = await DomainService.findParentId(data.name);
+        aDomain.parent_id = await DomainServiceDB.getInstance().findParentId(data.name);
 
-        aDomain = await DomainService.save(aDomain);
+        aDomain = await DomainServiceDB.getInstance().save(aDomain);
 
         if (aDomain.parent_id !== 0) {
-            await DomainService.updateChildrenToNewParent(aDomain);
+            await DomainServiceDB.getInstance().updateChildrenToNewParent(aDomain);
         }
 
         return {

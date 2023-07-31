@@ -1,4 +1,4 @@
-import {DBHelper, DomainService} from 'flyingfish_core';
+import {DBHelper, DomainServiceDB} from 'flyingfish_core';
 import {
     DynDnsClientData,
     DynDnsClientDomain,
@@ -45,7 +45,7 @@ export class List {
 
                 if (domainList) {
                     for await (const domain of domainList) {
-                        const tdomain = await DomainService.findOne(domain.domain_id);
+                        const tdomain = await DomainServiceDB.getInstance().findOne(domain.domain_id);
 
                         if (tdomain) {
                             domains.push({

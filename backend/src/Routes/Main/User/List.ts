@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {UserServiceDB} from 'flyingfish_core';
 import {StatusCodes, UserEntry, UserListResponse} from 'flyingfish_schemas';
-import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
 
 /**
  * List
@@ -11,9 +10,7 @@ export class List {
      * getUserList
      */
     public static async getUserList(): Promise<UserListResponse> {
-        const userRepository = DBHelper.getDataSource().getRepository(UserDB);
-
-        const entries = await userRepository.find();
+        const entries = await UserServiceDB.getInstance().findAll();
 
         const userList: UserEntry[] = [];
 

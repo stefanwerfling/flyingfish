@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {UserServiceDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes, UserDeleteRequest} from 'flyingfish_schemas';
-import {User as UserDB} from '../../../inc/Db/MariaDb/Entity/User.js';
 
 /**
  * Delete
@@ -12,13 +11,9 @@ export class Delete {
      * @param data
      */
     public static async deleteUser(data: UserDeleteRequest): Promise<DefaultReturn> {
-        const userRepository = DBHelper.getDataSource().getRepository(UserDB);
-
         // check is the last user ----------------------------------------------------------------------------------
 
-        const cUsers = await userRepository.countBy({
-            disable: false
-        });
+        const cUsers = await UserServiceDB.getInstance().countDisable(false);
 
         if (cUsers < 2) {
             return {
@@ -29,9 +24,7 @@ export class Delete {
 
         // delete --------------------------------------------------------------------------------------------------
 
-        const result = await userRepository.delete({
-            id: data.id
-        });
+        const result = await UserServiceDB.getInstance().remove(data.id);
 
         if (result) {
             return {
