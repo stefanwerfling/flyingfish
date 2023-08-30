@@ -14,6 +14,7 @@
     * [FAQ](index/installation/faq.md)
   * [Configurations](index/configurations/README.md)
     * [Which user type am I](index/configurations/which-user-type-am-i.md)
+    * [Port forwarding](index/configurations/port-forwarding.md)
     * [Listen](index/configurations/listen.md)
     * [IP Access](index/configurations/ip-access.md)
     * [Domains](index/configurations/domains.md)

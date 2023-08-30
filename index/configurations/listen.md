@@ -16,7 +16,7 @@ The ports specified here come from the web interface and are used by nginx inter
 | 443 (TCP)    | HTTPS/SSH/SSL Protocols\* |
 | 53 (TCP/UDP) | DNS Protocol              |
 
-These ports are internal to nginx of type "Stream".
+These ports are internal to nginx of type "Stream". You can see a port overview again in [port forwarding](port-forwarding.md).
 
 <figure><img src="../../.gitbook/assets/listen_ports.png" alt=""><figcaption><p>Standard listen ports by setup</p></figcaption></figure>
 
