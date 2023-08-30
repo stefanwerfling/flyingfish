@@ -11,4 +11,6 @@ description: >-
 
 ## On the topic
 
-<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td><strong>Which user type am I</strong></td><td>Clarification of the use of FlyingFish</td><td></td><td><a href="which-user-type-am-i.md">which-user-type-am-i.md</a></td></tr><tr><td><strong>Listen</strong></td><td>Connections from the internet to the service</td><td></td><td><a href="listen.md">listen.md</a></td></tr><tr><td><strong>IP Access</strong></td><td>IP access management White-/Black-list</td><td></td><td><a href="ip-access.md">ip-access.md</a></td></tr></tbody></table>
+The following order should be followed when configuring Flyingfish for the first time:
+
+<table data-view="cards"><thead><tr><th></th><th></th><th></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td><ol><li><strong>Which user type am I</strong></li></ol></td><td>Clarification of the use of FlyingFish</td><td></td><td><a href="which-user-type-am-i.md">which-user-type-am-i.md</a></td></tr><tr><td><ol start="2"><li><strong>Listen</strong></li></ol></td><td>Connections from the internet to the service</td><td></td><td><a href="listen.md">listen.md</a></td></tr><tr><td><ol start="3"><li><strong>IP Access</strong></li></ol></td><td>IP access management White-/Black-list</td><td></td><td><a href="ip-access.md">ip-access.md</a></td></tr></tbody></table>
