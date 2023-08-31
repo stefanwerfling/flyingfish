@@ -58,3 +58,18 @@ After the initial installation, you can view the automatically installed listene
 Save causes an immediate reload of nginx. Existing connections are kept as if running the command: nginx -s reload
 {% endhint %}
 
+## Listen flow
+
+The following graphic should help to understand the list process:
+
+<figure><img src="../../.gitbook/assets/portflow.png" alt=""><figcaption><p>Portsflow</p></figcaption></figure>
+
+<mark style="background-color:yellow;">Port 5333, 80, 443 Listening</mark> on the network from the host (as a bridge, port forwarding to the Docker container). &#x20;
+
+There the Nginx first <mark style="background-color:orange;">"</mark>[<mark style="background-color:orange;">IP access check"</mark>](ip-access.md) whether the IPs have access rights. Then the streams (TCP/UDP) are <mark style="background-color:orange;">split into their protocol</mark> (SSL/HTTP/etc.) and <mark style="background-color:orange;">split into</mark> [<mark style="background-color:orange;">domains</mark>](domains.md) for forwarded to a destination. Should not specify an external destination. The internal ports for the <mark style="background-color:green;">HTTP and HTTPS server</mark> are specified as standard. They perform a <mark style="background-color:green;">"proxy reserve"</mark> and request a route too <mark style="background-color:blue;">internal or external HTTP/HTTPS server</mark>.&#x20;
+
+
+
+{% hint style="info" %}
+The internal ports are only accessible in the Docker network and are securely shielded from the public network. It must pass stream ports 5333, 80, 443 via a query.
+{% endhint %}
