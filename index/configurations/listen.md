@@ -28,7 +28,7 @@ If you only use the standard ports for your services, you do not need to enter a
 
 <div align="center" data-full-width="true">
 
-<figure><img src="../../.gitbook/assets/listen_add.png" alt="" width="563"><figcaption><p>Add Listen</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/listen_add.png" alt=""><figcaption><p>Add Listen</p></figcaption></figure>
 
 </div>
 
