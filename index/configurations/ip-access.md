@@ -14,6 +14,16 @@ In my development phase, I noticed that I received many requests on my dynamic I
 
 IP addresses from the whitelist are allowed to connect. All other addresses that are not noted will be blocked.
 
+
+
+<figure><img src="../../.gitbook/assets/ipaccess_whitelist.png" alt=""><figcaption><p>Whitelist</p></figcaption></figure>
+
+You can switch to the whitelist with a tab. In a list you see all IPs that are whitelisted. In the second column you can see when and how often a query was started from this IP.
+
+{% hint style="info" %}
+Only IPs that are whitelisted can make a request. All other IPs are automatically blacklisted.
+{% endhint %}
+
 ## Blacklist
 
 IP addresses that are in the blacklist will be blocked. What is special about the blacklist is that it is compared with a public blacklist every 24 hours.

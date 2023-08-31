@@ -73,3 +73,5 @@ There the Nginx first <mark style="background-color:orange;">"</mark>[<mark styl
 {% hint style="info" %}
 The internal ports are only accessible in the Docker network and are securely shielded from the public network. It must pass stream ports 5333, 80, 443 via a query.
 {% endhint %}
+
+<figure><img src="../../.gitbook/assets/whataflow (1).png" alt=""><figcaption><p>Listen flow!</p></figcaption></figure>
