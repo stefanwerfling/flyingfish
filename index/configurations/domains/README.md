@@ -45,3 +45,5 @@ Choose the domain you want to add a record from.
 
 
 
+<figure><img src="../../../.gitbook/assets/welcome-to-my-xssoep.jpg" alt=""><figcaption></figcaption></figure>
+
