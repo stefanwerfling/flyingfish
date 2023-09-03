@@ -19,6 +19,7 @@
     * [IP Access](index/configurations/ip-access.md)
     * [Domains](index/configurations/domains/README.md)
       * [Own DNS Server](index/configurations/domains/own-dns-server.md)
+      * [Discussions Subdomains](index/configurations/domains/discussions-subdomains.md)
     * [Routes](index/configurations/routes.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
