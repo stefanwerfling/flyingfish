@@ -4,9 +4,9 @@ description: Setting a route from the listen to the target.
 
 # Routes
 
-A route is a path from the input ([Listen](listen.md)) to the destination. The destination can be of different types, stream, HTTP/HTTPS, SSH, use.
+A route is a path from the input ([Listen](listen/)) to the destination. The destination can be of different types, stream, HTTP/HTTPS, SSH, use.
 
-With the help of the [graphic from Listen](listen.md#listen-flow) I would like to show the area controlled by the route again:
+With the help of the [graphic from Listen](listen/#listen-flow) I would like to show the area controlled by the route again:
 
 <figure><img src="../../.gitbook/assets/routes_listenflow.png" alt=""><figcaption><p>Listen and Routes</p></figcaption></figure>
 
@@ -26,4 +26,9 @@ Existing connections are kept as if running the command: nginx -s reload
 The default routes cannot be edited or deleted.
 {% endhint %}
 
-3. Each domain entered in [Domains](domains/) is displayed under Routes. One or more routes from one or more [Listen](listen.md) to a destination can now be entered.
+3. Each domain entered in [Domains](domains/) is displayed under Routes. One or more routes from one or more [Listen](listen/) to a destination can now be entered.
+
+
+
+## Default Routes
+
