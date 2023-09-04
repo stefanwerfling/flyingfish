@@ -32,7 +32,7 @@ In the diagram you can see how the flow works:
 From now on we can manage all sub domains and example.com ourselves with our own records.
 {% endhint %}
 
-<figure><img src="../../../.gitbook/assets/28pmaay4f9391.jpg" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/the-matrix-morpheus-dns.png" alt=""><figcaption></figcaption></figure>
 
 ## Practice
 

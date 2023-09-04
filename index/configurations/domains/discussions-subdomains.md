@@ -22,3 +22,6 @@ I could now create a subdomain under a Nextcloud is running. First of all, it wo
 
 It's one thing when we present something important, something for the public. I would totally understand Google along the way. But we can't do without it in the future either.
 
+
+
+<figure><img src="../../../.gitbook/assets/28pmaay4f9391.jpg" alt=""><figcaption></figcaption></figure>
