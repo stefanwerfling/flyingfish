@@ -39,11 +39,11 @@ Add a list, a dialog follows that also appears when editing.
 <figure><img src="../../../.gitbook/assets/listen_add2.png" alt=""><figcaption></figcaption></figure>
 
 1. **Name:** Name your list, so you always recognize it in the UI.
-2. **Type:** Type of listening from Nginx proxy. Stream or HTTP/HTTPS, the difference is how the connection is handled.
+2. **Type:** Type of listening from Nginx proxy. <mark style="background-color:orange;">Stream</mark> or <mark style="background-color:green;">HTTP/HTTPS</mark>, the difference is how the connection is handled.
 3. **Protocol:** Which protocol should be used, UDP can also be used in addition to TCP for a stream.
 4. **Port:** Which port the listening is listening on.
 5. **Description:** Here you can describe in more detail what the listener is used for.
-6. **IP6 enable:** Additionally enables listening on an IP6 address <mark style="background-color:orange;">(untested yet, but enables it in the nginx config)</mark>.
+6. **IP6 enable:** Additionally enables listening on an IP6 address <mark style="color:red;">(untested yet, but enables it in the nginx config)</mark>.
 7. **IP access:** Enables checking of the IP address against a list (blacklist/whitelist).
 8. **Access type:** Which list to use for the IP check. The lists can be maintained under [IP Access](../ip-access.md).
 9. **Proxy protocol enable:** Activates the use of the [proxy protocol](proxy-protocol.md). From now on all packets are provided with the [proxy protocol](proxy-protocol.md) header. <mark style="background-color:blue;">This setting is important for internal HTTP/HTTPS processing.</mark> Only in this way does the route get the correct IP of the inquiring request for further checks or logging.

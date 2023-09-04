@@ -21,14 +21,19 @@ Existing connections are kept as if running the command: nginx -s reload
 {% endhint %}
 
 2. The first thing to see in the Routes list are the default routes. If no route is specified, the default routes always apply.
+3. Each domain entered in [Domains](domains/) is displayed under Routes. One or more routes from one or more [Listen](listen/) to a destination can now be entered.
+
+## Default Routes
+
+
+
+<figure><img src="../../.gitbook/assets/routes_defaults.png" alt=""><figcaption></figcaption></figure>
+
+The default Routes are installed at the beginning of the [setup](../installation/). These routes are the default path if no domain or protocol split takes effect beforehand.
 
 {% hint style="info" %}
 The default routes cannot be edited or deleted.
 {% endhint %}
 
-3. Each domain entered in [Domains](domains/) is displayed under Routes. One or more routes from one or more [Listen](listen/) to a destination can now be entered.
-
-
-
-## Default Routes
-
+1. The listen stream on port 53 points to FlyingFish's internal DNS server (this lists on port 5333 so that nginx can get port 53). If set for [listening](listen/), the [IP access blacklist/whitelist](ip-access.md) takes effect.
+2.
