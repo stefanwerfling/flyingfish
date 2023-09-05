@@ -88,7 +88,7 @@ If no P with an arrow appears at the destination, the [Proxy protocol](listen/pr
 2. Deletes the upstream entry.
 3. **Address**: Destination IP address to which the requests are forwarded.
 4. **Port**: Specification of which port the destination has.
-5. **Proxy protocol out**: Activation removes the [Proxy protocol](listen/proxy-protocol.md) header. In the routes list it is indicated with "<mark style="background-color:yellow;">P</mark>" down arrow.
+5. **Proxy protocol out**: Activation removes the [Proxy protocol](listen/proxy-protocol.md) header. In the routes list it is indicated with "<mark style="background-color:yellow;">P</mark>".
 6. The second upstream added as an example. If upstream 1 with IP 192.168.178.1 cannot be reached, upstream 2 with IP 192.168.178.2 is used.
 
 <figure><img src="../../.gitbook/assets/routes_add_stream_upstream_list.png" alt=""><figcaption><p>I have activated the upstream 192.168.178.1 proxy protocol out.</p></figcaption></figure>
