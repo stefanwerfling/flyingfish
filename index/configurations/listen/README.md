@@ -55,6 +55,12 @@ After the initial installation, you can view the automatically installed listene
 
 
 {% hint style="info" %}
+Imagine the Type 2 zones, the <mark style="background-color:orange;">Stream</mark> represents the external zone with the color orange and the <mark style="background-color:green;">HTTP/HTTPs</mark> with the color green the internal zone.
+
+The Internal Zone can only be accessed from the External Stream Zone.
+{% endhint %}
+
+{% hint style="info" %}
 Save causes an immediate reload of nginx. Existing connections are kept as if running the command: nginx -s reload
 {% endhint %}
 
