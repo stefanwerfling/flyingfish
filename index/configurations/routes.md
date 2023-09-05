@@ -68,3 +68,39 @@ If no P with an arrow appears at the destination, the [Proxy protocol](listen/pr
 4. **Index**: The index indicates the order in which our routes are sorted. 0 would come first, with all higher numbers following downwards. This may be necessary if a route has a higher priority. If there is no priority, this field can be left empty.
 5. **Alias-Name (Intern)**: A name used internally in the Nginx config. The name helps when checking the config. But can be left empty because it is generated automatically.
 6. **Destination-Type**: The type of target changes depending on the selection above the tab (under 1.) with further settings.
+
+
+
+### Stream Destination-Type
+
+<figure><img src="../../.gitbook/assets/routes_add_stream_types.png" alt=""><figcaption></figcaption></figure>
+
+#### <mark style="background-color:orange;">IP/Host direct (Stream)</mark>
+
+<figure><img src="../../.gitbook/assets/routes_add_stream_upstream.png" alt=""><figcaption></figcaption></figure>
+
+1. IP/Host direct (Stream) adds a new tab where upstreams can be added.
+2. An upstream can be added here.
+
+<figure><img src="../../.gitbook/assets/routes_add_stream_upstream_add.png" alt=""><figcaption><p>Stream Dialog with upstreams</p></figcaption></figure>
+
+1. **#**: ID of the upstream, purely informative
+2. Deletes the upstream entry.
+3. **Address**: Destination IP address to which the requests are forwarded.
+4. **Port**: Specification of which port the destination has.
+5. **Proxy protocol out**: Activation removes the [Proxy protocol](listen/proxy-protocol.md) header. In the routes list it is indicated with "<mark style="background-color:yellow;">P</mark>" down arrow.
+6. The second upstream added as an example. If upstream 1 with IP 192.168.178.1 cannot be reached, upstream 2 with IP 192.168.178.2 is used.
+
+<figure><img src="../../.gitbook/assets/routes_add_stream_upstream_list.png" alt=""><figcaption><p>I have activated the upstream 192.168.178.1 proxy protocol out.</p></figcaption></figure>
+
+#### <mark style="background-color:green;">Intern Listen</mark>
+
+<figure><img src="../../.gitbook/assets/routes_add_stream_listen_add.png" alt=""><figcaption></figcaption></figure>
+
+1. The destination type <mark style="background-color:green;">Intern Listen (Http/Https)</mark> adds the Listen tab.
+2. The [Listen](listen/) for Internal are now available for selection.
+
+{% hint style="info" %}
+It only makes sense to set this internal listen in the stream if you have added a new custom internal listen (Http/Https) service under [Listen](listen/), deviating from the already supplied 10443 port or 10080 port. If you remember, there are [default routes](routes.md#default-routes) that take the path from the stream to HTTP/HTTPs from port 443 and 80. Therefore, you do not have to specify this path yourself!
+{% endhint %}
+
