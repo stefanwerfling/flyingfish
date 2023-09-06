@@ -1,9 +1,11 @@
+import {Ets} from 'ets';
 import fs, {readFileSync} from 'fs';
 import path from 'path';
 import {SchemaErrors} from 'vts';
 import {Logger} from '../Logger/Logger.js';
 import {Plugin} from './Plugin.js';
 import {PluginDefinition, SchemaPluginDefinition} from './PluginDefinition.js';
+import {IPluginEvent} from './IPluginEvent.js';
 
 /**
  * PluginInformation
@@ -19,10 +21,22 @@ export type PluginInformation = {
 export class PluginManager {
 
     /**
+     * plugin manager instance
+     * @protected
+     */
+    protected static _instance: PluginManager|null = null;
+
+    /**
      * app path for node_modules
      * @protected
      */
     protected _appPath: string;
+
+    /**
+     * service name (name of the system in which the plugin works)
+     * @protected
+     */
+    protected _serviceName: string;
 
     /**
      * plugins
@@ -31,15 +45,45 @@ export class PluginManager {
     protected _plugins: Plugin[] = [];
 
     /**
+     * events
+     * @protected
+     */
+    protected _events: IPluginEvent[] = [];
+
+    public static getInstance(): PluginManager {
+        if (PluginManager._instance === null) {
+            throw new Error('PluginManager::getInstance: instance is empty, please init first plugin manager!');
+        }
+
+        return PluginManager._instance;
+    }
+
+    /**
      * constructor
+     * @param serviceName
      * @param appPath
      */
-    public constructor(appPath?: string) {
+    public constructor(serviceName: string, appPath?: string) {
         if (appPath) {
             this._appPath = appPath;
         }
 
         this._appPath = path.join(path.resolve());
+        this._serviceName = serviceName;
+        PluginManager._instance = this;
+    }
+
+    /**
+     * start
+     */
+    public async start(): Promise<void> {
+        const pluginInfos = this.scan();
+
+        for await (const pluginInfo of pluginInfos) {
+            Logger.getLogger().silly(`PluginManager::start: found plugin: ${pluginInfo.definition.name} (${pluginInfo.definition.version})`);
+
+            await this.load(pluginInfo);
+        }
     }
 
     /**
@@ -60,7 +104,11 @@ export class PluginManager {
 
             if (fs.existsSync(packageJsonPath)) {
                 try {
-                    const rawdata = readFileSync(path.join(packageJsonPath, 'package.json'), {
+                    const packageFile = path.join(packageJsonPath, 'package.json');
+
+                    // console.log(`PluginManager::scan: read: ${packageFile}`);
+
+                    const rawdata = readFileSync(packageFile, {
                         // @ts-ignore
                         encoding: 'utf-8'
                     });
@@ -103,20 +151,76 @@ export class PluginManager {
                 throw new Error(`plugin main not found: ${pluginMain}`);
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const oPlugin = require(pluginMain);
-            const object = new oPlugin(plugin) as Plugin;
+            Logger.getLogger().silly(`PluginManager::load: file plugin: ${pluginMain} (${plugin.definition.name})`);
+
+            const oPlugin = await import(pluginMain);
+
+            console.log(oPlugin);
+
+            const object = new oPlugin.default(plugin, this) as Plugin;
 
             if (object) {
+                object.onEnable();
+
                 Logger.getLogger().info(`PluginManager::load: Plugin is loaded ${plugin.definition.name}`);
                 this._plugins.push(object);
             }
         } catch (e) {
-            Logger.getLogger().warn(`PluginManager::load: can not load plugin: ${plugin.definition.name}`);
+            Logger.getLogger().error(`PluginManager::load: can not load plugin: ${plugin.definition.name}`);
+            Logger.getLogger().error(Ets.formate(e, true));
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * getPlugins
+     */
+    public getPlugins(): Plugin[] {
+        return this._plugins;
+    }
+
+    /**
+     * getPlugin
+     * @param name
+     */
+    public getPlugin(name: string): Plugin|null {
+        const plugin = this._plugins.find((e) => e.getName() === name);
+
+        if (plugin) {
+            return plugin;
+        }
+
+        return null;
+    }
+
+    /**
+     * registerEvents
+     * @param listner
+     * @param plugin
+     */
+    public registerEvents(listner: IPluginEvent, plugin: Plugin): void {
+        if (this._plugins.find((e) => e.getName() === plugin.getName())) {
+            this._events.push(listner);
+        }
+    }
+
+    /**
+     * getAllEvents
+     * @param aInterface
+     */
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    public getAllEvents<T extends IPluginEvent>(aClass: Function): T[] {
+        const events: T[] = [];
+
+        for (const aEvent of this._events) {
+            if (aEvent instanceof aClass) {
+                events.push(aEvent as T);
+            }
+        }
+
+        return events;
     }
 
 }

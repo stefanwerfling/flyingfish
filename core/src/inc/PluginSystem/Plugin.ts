@@ -1,4 +1,5 @@
 import {PluginDefinition} from './PluginDefinition.js';
+import {PluginManager} from './PluginManager.js';
 
 /**
  * Plugin
@@ -12,11 +13,26 @@ export abstract class Plugin {
     protected _info: PluginDefinition;
 
     /**
+     * plugin manager
+     * @private
+     */
+    private _pluginManager: PluginManager;
+
+    /**
      * constructor
      * @param info
      */
-    public constructor(info: PluginDefinition) {
+    public constructor(info: PluginDefinition, pm: PluginManager) {
         this._info = info;
+        this._pluginManager = pm;
+    }
+
+    /**
+     * getPluginManager
+     * @protected
+     */
+    protected getPluginManager(): PluginManager {
+        return this._pluginManager;
     }
 
     /**

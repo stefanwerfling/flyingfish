@@ -1,4 +1,4 @@
-import {DynDnsServerUserServiceDB} from 'flyingfish_core';
+import {DynDnsServerDomainServiceDB, DynDnsServerUserServiceDB} from 'flyingfish_core';
 import {DynDnsServerData, DynDnsServerListResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -15,8 +15,14 @@ export class List {
         const list: DynDnsServerData[] = [];
 
         if (users) {
-            for (const user of users) {
-                const domains: number[] = [];
+            for await (const user of users) {
+                const domainList: number[] = [];
+
+                const domains = await DynDnsServerDomainServiceDB.getInstance().findByUser(user.id);
+
+                for (const domain of domains) {
+                    domainList.push(domain.domain_id);
+                }
 
                 list.push({
                     user: {
@@ -25,7 +31,7 @@ export class List {
                         password: user.password,
                         last_update: user.last_update
                     },
-                    domain_ids: domains
+                    domain_ids: domainList
                 });
             }
         }

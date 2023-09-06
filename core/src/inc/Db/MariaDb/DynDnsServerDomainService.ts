@@ -22,4 +22,16 @@ export class DynDnsServerDomainService extends DBService<DynDnsServerDomain> {
         );
     }
 
+    /**
+     * findByUser
+     * @param userid
+     */
+    public async findByUser(userid: number): Promise<DynDnsServerDomain[]> {
+        return this._repository.find({
+            where: {
+                user_id: userid
+            }
+        });
+    }
+
 }

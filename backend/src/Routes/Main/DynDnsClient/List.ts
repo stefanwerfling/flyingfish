@@ -1,11 +1,10 @@
-import {DBHelper, DomainServiceDB} from 'flyingfish_core';
+import {DBHelper, DomainServiceDB, DynDnsClientServiceDB} from 'flyingfish_core';
 import {
     DynDnsClientData,
     DynDnsClientDomain,
     DynDnsClientListResponse,
     StatusCodes
 } from 'flyingfish_schemas';
-import {DynDnsClient as DynDnsClientDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {DynDnsProviders} from '../../../inc/Provider/DynDnsProviders.js';
 
@@ -18,11 +17,10 @@ export class List {
      * getList
      */
     public static async getList(): Promise<DynDnsClientListResponse> {
-        const dyndnsclientRepository = DBHelper.getRepository(DynDnsClientDB);
         const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
 
         const list: DynDnsClientData[] = [];
-        const clients = await dyndnsclientRepository.find();
+        const clients = await DynDnsClientServiceDB.getInstance().findAll();
 
         if (clients) {
             for await (const client of clients) {

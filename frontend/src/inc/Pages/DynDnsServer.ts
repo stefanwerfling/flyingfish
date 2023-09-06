@@ -1,5 +1,17 @@
-import {Card, ContentCol, ContentColSize, ContentRow, IconFa, LeftNavbarLink, Table, Th, Tr} from 'bambooo';
+import {
+    Card,
+    ContentCol,
+    ContentColSize,
+    ContentRow,
+    IconFa,
+    LeftNavbarLink,
+    Table,
+    Td,
+    Th,
+    Tr
+} from 'bambooo';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
+import {DynDnsServer as DynDnsServerAPI} from '../Api/DynDnsServer';
 import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
 
@@ -25,7 +37,7 @@ export class DynDnsServer extends BasePage {
         // -------------------------------------------------------------------------------------------------------------
 
         // eslint-disable-next-line no-new
-        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add User', async() => {
+        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Account', async() => {
             /*this._dynDnsClientDialog.resetValues();
             this._dynDnsClientDialog.setTitle('DynDns Client Add');
             this._dynDnsClientDialog.show();*/
@@ -52,10 +64,10 @@ export class DynDnsServer extends BasePage {
         new Th(trhead, 'Id');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Domains');
+        new Th(trhead, 'Username');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Username');
+        new Th(trhead, 'Domains');
 
         // eslint-disable-next-line no-new
         new Th(trhead, 'Last-Update');
@@ -71,7 +83,34 @@ export class DynDnsServer extends BasePage {
             table.getTbody().empty();
 
             try {
-                console.log('test');
+                const users = await DynDnsServerAPI.getUsers();
+
+                if (users.list) {
+                    card.setTitle(`Accounts (${users.list.length})`);
+
+                    for (const user of users.list) {
+                        const trbody = new Tr(table.getTbody());
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `#${user.user.id}`);
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `#${user.user.username}`);
+
+                        const domainsTd = new Td(trbody, '');
+                        domainsTd.setCss({
+                            'white-space': 'normal'
+                        });
+
+                        // for (const domain of user.domain_ids) {
+                        // eslint-disable-next-line no-new
+                        /*
+                         * new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
+                         * domainsTd.append('&nbsp;');
+                         * }
+                         */
+                    }
+                }
             } catch (error) {
                 if (error instanceof UnauthorizedError) {
                     UtilRedirect.toLogin();

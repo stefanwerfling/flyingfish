@@ -1,7 +1,6 @@
 import DNS from 'dns2';
-import {DateHelper, DBHelper, DomainRecordDB, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, DomainRecordDB, DynDnsClientServiceDB, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {DynDnsClient as DynDnsClientDB} from '../Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {DynDnsProviders} from '../Provider/DynDnsProviders.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
@@ -41,11 +40,10 @@ export class DynDnsService {
     public async updateDns(): Promise<void> {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
 
-        const dyndnsclientRepository = DBHelper.getRepository(DynDnsClientDB);
         const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
         const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
-        const clients = await dyndnsclientRepository.find();
+        const clients = await DynDnsClientServiceDB.getInstance().findAll();
 
         for await (const client of clients) {
             const provider = DynDnsProviders.getProvider(client.provider);
@@ -58,15 +56,7 @@ export class DynDnsService {
             const providerResult = await provider.update(client.username, client.password, '');
 
             // update last update time
-            await dyndnsclientRepository
-            .createQueryBuilder()
-            .update()
-            .set({
-                last_status: providerResult.status,
-                last_update: DateHelper.getCurrentDbTime()
-            })
-            .where('id = :id', {id: client.id})
-            .execute();
+            await DynDnsClientServiceDB.getInstance().updateStatus(client.id, providerResult.status);
 
             if (providerResult.result) {
                 Logger.getLogger().info(`DynDnsService::updateDns: Domain ip update by provider(${provider?.getName()})`);

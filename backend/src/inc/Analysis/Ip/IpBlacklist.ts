@@ -28,7 +28,7 @@ export class IpBlacklist {
         'dnsbl-2.uceprotect.net',
         'dnsbl.anticaptcha.net',
         'dnsbl.inps.de',
-        // 'dnsbl.spfbl.net',
+        // 'dnsbl.spfbl.net',   // https://spfbl.net/en/dnsbl/ check ip back
         'duinv.aupads.org',
         'dyna.spamrats.com',
         'http.dnsbl.sorbs.net',

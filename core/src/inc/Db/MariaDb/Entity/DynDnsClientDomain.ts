@@ -1,16 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * DynDnsClientDomain
  */
 @Entity({name: 'dyndns_client_domain'})
-export class DynDnsClientDomain extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class DynDnsClientDomain extends DBBaseEntityId {
 
     /**
      * dyndns client id

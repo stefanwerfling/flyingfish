@@ -1,6 +1,11 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {Args, DBHelper, DomainDB, DomainRecordDB, Logger, SshPortDB, SshUserDB, UserDB} from 'flyingfish_core';
+import {
+    Args,
+    DBHelper, DBEntitiesLoader,
+    Logger, PluginManager
+} from 'flyingfish_core';
+import {EntitySchema, MixedList} from 'typeorm';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
 import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
@@ -40,9 +45,6 @@ import {DynDnsServer as DynDnsServerController} from './Routes/Main/DynDnsServer
 import {Config} from './inc/Config/Config.js';
 import {v4 as uuid} from 'uuid';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
-import {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential.js';
-import {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser.js';
-import {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from './inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
@@ -62,6 +64,8 @@ import exitHook from 'async-exit-hook';
  * Main
  */
 (async(): Promise<void> => {
+    // load config -----------------------------------------------------------------------------------------------------
+
     const argv = Args.get(SchemaFlyingFishArgs);
     let configfile = null;
 
@@ -102,13 +106,37 @@ import exitHook from 'async-exit-hook';
 
     // init logger
     Logger.getLogger();
-
     Logger.getLogger().info('Start FlyingFish Service ...');
+
+    // load plugins ----------------------------------------------------------------------------------------------------
+
+    const pm = new PluginManager('backend', path.resolve());
+    await pm.start();
 
     // -----------------------------------------------------------------------------------------------------------------
 
     try {
         // MariaDb -----------------------------------------------------------------------------------------------------
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        const entities: MixedList<Function | string | EntitySchema> = await DBEntitiesLoader.loadEntities() as [];
+
+        entities.push(NginxListenDB);
+        entities.push(NginxStreamDB);
+        entities.push(NginxUpstreamDB);
+        entities.push(NginxHttpDB);
+        entities.push(NginxHttpVariableDB);
+        entities.push(NginxLocationDB);
+        entities.push(IpListMaintainerDB);
+        entities.push(IpLocationDB);
+        entities.push(IpBlacklistDB);
+        entities.push(IpBlacklistCategoryDB);
+        entities.push(IpBlacklistMaintainerDB);
+        entities.push(IpWhitelistDB);
+        entities.push(DynDnsClientDomainDB);
+        entities.push(NatPortDB);
+        entities.push(GatewayIdentifierDB);
+        entities.push(SettingsDB);
+
         await DBHelper.init({
             type: 'mysql',
             host: tConfig.db.mysql.host,
@@ -116,34 +144,8 @@ import exitHook from 'async-exit-hook';
             username: tConfig.db.mysql.username,
             password: tConfig.db.mysql.password,
             database: tConfig.db.mysql.database,
-            entities: [
-                UserDB,
-                NginxListenDB,
-                DomainDB,
-                DomainRecordDB,
-                NginxStreamDB,
-                NginxUpstreamDB,
-                NginxHttpDB,
-                NginxHttpVariableDB,
-                NginxLocationDB,
-                IpListMaintainerDB,
-                IpLocationDB,
-                IpBlacklistDB,
-                IpBlacklistCategoryDB,
-                IpBlacklistMaintainerDB,
-                IpWhitelistDB,
-                DynDnsClientDB,
-                DynDnsClientDomainDB,
-                SshPortDB,
-                SshUserDB,
-                NatPortDB,
-                CredentialDB,
-                CredentialUserDB,
-                GatewayIdentifierDB,
-                SettingsDB
-            ],
-            migrations: [
-            ],
+            entities: entities,
+            migrations: [],
             migrationsRun: true,
             synchronize: true
         });

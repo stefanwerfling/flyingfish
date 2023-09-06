@@ -1,4 +1,4 @@
-import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential.js';
+import {CredentialDB} from 'flyingfish_core';
 import {CredentialDatabase} from './CredentialDatabase.js';
 import {ICredential} from './ICredential.js';
 

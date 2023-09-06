@@ -1,16 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * CredentialUser
  */
 @Entity({name: 'credential_user'})
-export class CredentialUser extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class CredentialUser extends DBBaseEntityId {
 
     /**
      * credential id

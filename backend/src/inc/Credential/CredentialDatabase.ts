@@ -1,8 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, Logger} from 'flyingfish_core';
+import {CredentialDB, CredentialUserServiceDB, Logger} from 'flyingfish_core';
 import {CredentialSchemes} from './Credential.js';
-import {Credential as CredentialDB} from '../Db/MariaDb/Entity/Credential.js';
-import {CredentialUser as CredentialUserDB} from '../Db/MariaDb/Entity/CredentialUser.js';
 import {ICredential, ICredentialAuthBasic} from './ICredential.js';
 
 /**
@@ -35,14 +33,7 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
      * auth
      */
     public async authBasic(username: string, password: string): Promise<boolean> {
-        const credentialUserRepository = DBHelper.getRepository(CredentialUserDB);
-        const user = await credentialUserRepository.findOne({
-            where: {
-                credential_id: this._credentialId,
-                username: username,
-                disabled: false
-            }
-        });
+        const user = await CredentialUserServiceDB.getInstance().findUser(this._credentialId, username, false);
 
         if (user) {
             Logger.getLogger().info(`CredentialDatabase->authBasic user found: ${username}`);

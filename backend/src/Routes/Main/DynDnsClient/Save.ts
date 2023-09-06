@@ -1,6 +1,6 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, DynDnsClientDB} from 'flyingfish_core';
+import {DynDnsClientService} from 'flyingfish_core/dist/inc/Db/MariaDb/DynDnsClientService.js';
 import {DefaultReturn, DynDnsClientData, StatusCodes} from 'flyingfish_schemas';
-import {DynDnsClient as DynDnsClientDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClient.js';
 import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 
 /**
@@ -13,17 +13,12 @@ export class Save {
      * @param data
      */
     public static async saveClient(data: DynDnsClientData): Promise<DefaultReturn> {
-        const dyndnsclientRepository = DBHelper.getRepository(DynDnsClientDB);
         const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
 
         let client: DynDnsClientDB|null = null;
 
         if (data.id > 0) {
-            const tclient = await dyndnsclientRepository.findOne({
-                where: {
-                    id: data.id
-                }
-            });
+            const tclient = await DynDnsClientService.getInstance().findOne(data.id);
 
             if (tclient) {
                 client = tclient;

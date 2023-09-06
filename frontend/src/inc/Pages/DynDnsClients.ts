@@ -268,7 +268,7 @@ export class DynDnsClients extends BasePage {
                                                     title: 'DynDns Client delete success.'
                                                 });
                                             }
-                                        } catch ({message}) {
+                                        } catch (message) {
                                             this._toast.fire({
                                                 icon: 'error',
                                                 title: message

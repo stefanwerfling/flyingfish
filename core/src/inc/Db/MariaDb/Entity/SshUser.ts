@@ -1,16 +1,11 @@
-import {Entity, PrimaryGeneratedColumn, Column, BaseEntity, Index} from 'typeorm';
+import {Entity, Column, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * User Entity
  */
 @Entity({name: 'ssh_user'})
-export class SshUser extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class SshUser extends DBBaseEntityId {
 
     /**
      * username

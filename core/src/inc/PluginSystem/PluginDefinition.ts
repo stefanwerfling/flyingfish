@@ -1,7 +1,7 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
 
 /**
- * PluginDefinition
+ * SchemaPluginDefinition
  */
 export const SchemaPluginDefinition = Vts.object({
     name: Vts.string(),
@@ -12,4 +12,7 @@ export const SchemaPluginDefinition = Vts.object({
     main: Vts.string()
 });
 
+/**
+ * PluginDefinition
+ */
 export type PluginDefinition = ExtractSchemaResultType<typeof SchemaPluginDefinition>;

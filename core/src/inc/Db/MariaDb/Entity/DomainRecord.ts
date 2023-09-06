@@ -1,16 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * Domain record Entity
  */
 @Entity({name: 'domain_record'})
-export class DomainRecord extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class DomainRecord extends DBBaseEntityId {
 
     /**
      * domain id
