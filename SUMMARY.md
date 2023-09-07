@@ -22,6 +22,8 @@
       * [Own DNS Server](index/configurations/domains/own-dns-server.md)
       * [Discussions Subdomains](index/configurations/domains/discussions-subdomains.md)
     * [Routes](index/configurations/routes.md)
+  * [Examples](index/examples/README.md)
+    * [Backup Server, SSH to Nas](index/examples/backup-server-ssh-to-nas.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
     * [Service Structure](index/developer/service-structure.md)
