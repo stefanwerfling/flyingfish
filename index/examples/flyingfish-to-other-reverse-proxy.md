@@ -96,4 +96,25 @@ This last setting is very important. This is the only way the other reverse prox
 
 **Now we've done it!**
 
+## Suggestion for improvement
+
+It would be better if the reverse proxy expects the proxy protocol header. Then this would have the original ip from the client who is beginning.
+
+If the company were to implement this suggestion, we would proceed as follows:
+
+1. We deactivate the “Proxy protocole out” on the <mark style="background-color:orange;">stream route for HTTPS</mark>.
+2. The reverse proxy from the company is used in the example. nginx config included the following:
+
+```nginx
+http {
+    #...
+    server {
+        listen 443  ssl proxy_protocol;
+        #...
+    }
+}
+```
+
+"<mark style="color:red;">proxy\_protocol</mark>" is appended after the “<mark style="color:red;">listen</mark> <mark style="color:blue;">443</mark> <mark style="color:red;">ssl</mark>”.
+
 <figure><img src="../../.gitbook/assets/1-main1.webp" alt=""><figcaption></figcaption></figure>
