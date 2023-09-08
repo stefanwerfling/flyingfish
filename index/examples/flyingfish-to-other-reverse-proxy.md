@@ -62,9 +62,37 @@ We now need 2 routes:
 
 ### 2. HTTP Route
 
+We now create an HTTP route:
+
+<figure><img src="../../.gitbook/assets/example_other_rproxy6.png" alt=""><figcaption></figcaption></figure>
+
+We choose the internal HTTP Listen as input. Next we set the “Location”.
 
 
 
+<figure><img src="../../.gitbook/assets/example_other_rproxy7.png" alt=""><figcaption></figcaption></figure>
+
+1. The match is the URL target on HTTP, we set this to all "/".
+2. The “Destination Type” is a “Proxy Pass”.
+3. As a “proxy pass” the target will now specify the IP with port as URL.
+
+Now we set further settings under “Advanced”:
+
+
+
+<figure><img src="../../.gitbook/assets/example_other_rproxy8.png" alt=""><figcaption></figcaption></figure>
+
+It is now activated that the headers are passed from the client to the host (the reverse proxy).
+
+Finally, we set the final settings for the route to “Advanced”:
+
+<figure><img src="../../.gitbook/assets/example_other_rproxy9.png" alt=""><figcaption></figcaption></figure>
+
+We deactivate the well-known location on the FlyingFish. This location is now passed on to the reverse proxy.
+
+{% hint style="info" %}
+This last setting is very important. This is the only way the other reverse proxy can issue its own certificates.
+{% endhint %}
 
 **Now we've done it!**
 
