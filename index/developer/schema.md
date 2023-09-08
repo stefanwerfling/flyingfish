@@ -20,7 +20,7 @@ All these schemas are collected in the "schemas" library. These are used in seve
 
 ```typescript
 /**
- * DomainRecord
+ * SchemaDomainRecord
  */
 export const SchemaDomainRecord = Vts.object({
     id: Vts.number(),
