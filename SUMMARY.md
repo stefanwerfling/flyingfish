@@ -2,6 +2,7 @@
 
 * [FlyingFish](README.md)
   * [About the project](index/about-the-project.md)
+  * [Screenshots](index/index.md)
   * [Installation](index/installation/README.md)
     * [Quick Setup](index/installation/quick-setup.md)
     * [Quick Update](index/installation/quick-update.md)
@@ -30,4 +31,3 @@
     * [Service Structure](index/developer/service-structure.md)
     * [Schema](index/developer/schema.md)
     * [Object name rules](index/developer/object-name-rules.md)
-  * [Screenshots](index/index.md)
