@@ -19,3 +19,7 @@ As can be seen in the diagram, the stream still receives the original IP from th
 With the <mark style="background-color:orange;">Proxy protocol</mark>, the <mark style="background-color:green;">reverse proxy</mark> receives the original IP with the package extension of the <mark style="background-color:orange;">Proxy protocol header</mark> and can pass it on to the <mark style="background-color:blue;">web server</mark>.
 
 You can read more about it at [Exploring the proxy protocol](https://seriousben.com/posts/2020-02-exploring-the-proxy-protocol/).
+
+
+
+<figure><img src="../../../.gitbook/assets/proxy_protocol_meme.png" alt=""><figcaption><p>Okay, a bit exaggerated ...</p></figcaption></figure>
