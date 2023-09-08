@@ -56,7 +56,7 @@ If no P with an arrow appears at the destination, the [Proxy protocol](listen/pr
 <figure><img src="../../.gitbook/assets/routes_add.png" alt=""><figcaption><p>Routes list, example domains</p></figcaption></figure>
 
 1. If the two domains <mark style="background-color:purple;">example.com</mark> and <mark style="background-color:purple;">sub1.example.com</mark> are created under [Domains](domains/), we can now see them in Routes.
-2. Adding a <mark style="background-color:orange;">Stream</mark> or <mark style="background-color:green;">HTTP/HTTP</mark>s route can be clicked in the context menu on the right, per domain. A domain can have multiple <mark style="background-color:green;">Stream</mark>s or <mark style="background-color:green;">HTTP/HTTP</mark>s routes.
+2. Adding a <mark style="background-color:orange;">Stream</mark> or <mark style="background-color:green;">HTTP/HTTP</mark>s route can be clicked in the context menu on the right, per domain. A domain can have multiple <mark style="background-color:orange;">Streams</mark> or <mark style="background-color:green;">HTTP/HTTP</mark>s routes.
 
 ## Add Stream
 
