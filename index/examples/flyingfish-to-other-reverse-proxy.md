@@ -117,4 +117,23 @@ http {
 
 "<mark style="color:red;">proxy\_protocol</mark>" is appended after the “<mark style="color:red;">listen</mark> <mark style="color:blue;">443</mark> <mark style="color:red;">ssl</mark>”.
 
+### Advantages:
+
+* The client's IP is correct in the nginx logs.
+* Services behind the nginx get the correct IP in the header. Example PHP:
+
+```php
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    $ip = $_SERVER['HTTP_CLIENT_IP'];
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+} else {
+    $ip = $_SERVER['REMOTE_ADDR'];
+}
+```
+
+
+
+
+
 <figure><img src="../../.gitbook/assets/1-main1.webp" alt=""><figcaption></figcaption></figure>
