@@ -44,7 +44,7 @@ export class List {
                     last_block: entry.last_block,
                     count_block: entry.count_block,
                     ip_location_id: entry.ip_location_id,
-                    description: entry.description
+                    description: entry.description ?? ''
                 });
             }
         }

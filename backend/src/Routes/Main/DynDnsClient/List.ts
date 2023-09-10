@@ -1,24 +1,22 @@
-import {DBHelper, DomainServiceDB, DynDnsClientServiceDB} from 'flyingfish_core';
+import {DomainServiceDB, DynDnsClientServiceDB, DynDnsClientDomainServiceDB} from 'flyingfish_core';
 import {
     DynDnsClientData,
     DynDnsClientDomain,
     DynDnsClientListResponse,
     StatusCodes
 } from 'flyingfish_schemas';
-import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {DynDnsProviders} from '../../../inc/Provider/DynDnsProviders.js';
 
 /**
- * List
+ * List Route for DynDnsClient.
  */
 export class List {
 
     /**
-     * getList
+     * Return a list to UI with clients' information.
+     * @returns {DynDnsClientListResponse}
      */
     public static async getList(): Promise<DynDnsClientListResponse> {
-        const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
-
         const list: DynDnsClientData[] = [];
         const clients = await DynDnsClientServiceDB.getInstance().findAll();
 
@@ -35,11 +33,7 @@ export class List {
 
                 const domains: DynDnsClientDomain[] = [];
 
-                const domainList = await dyndnsclientDomainRepository.find({
-                    where: {
-                        dyndnsclient_id: client.id
-                    }
-                });
+                const domainList = await DynDnsClientDomainServiceDB.getInstance().findAllByClientId(client.id);
 
                 if (domainList) {
                     for await (const domain of domainList) {

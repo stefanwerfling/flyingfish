@@ -1,0 +1,28 @@
+{
+  "name": "flyingfish",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stefanwerfling/flyingfish.git/"
+  },
+  "bugs": {
+    "url": "https://github.com/stefanwerfling/flyingfish/issues"
+  },
+  "homepage": "https://github.com/stefanwerfling/flyingfish#readme",
+  "keywords": [
+    "flyingfish"
+  ],
+  "author": "Stefan Werfling",
+  "license": "GPL-3.0-or-later",
+  "workspaces": [
+    "schemas",
+    "core",
+    "backend",
+    "himhip",
+    "sshserver",
+    "frontend",
+    "ddnsserver",
+    "demoplugin",
+    "vpn"
+  ]
+}

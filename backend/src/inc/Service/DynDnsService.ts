@@ -1,7 +1,13 @@
 import DNS from 'dns2';
-import {DateHelper, DBHelper, DomainRecordDB, DynDnsClientServiceDB, Logger} from 'flyingfish_core';
+import {
+    DateHelper,
+    DBHelper,
+    DomainRecordDB,
+    DynDnsClientDomainServiceDB,
+    DynDnsClientServiceDB,
+    Logger
+} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {DynDnsClientDomain as DynDnsClientDomainDB} from '../Db/MariaDb/Entity/DynDnsClientDomain.js';
 import {DynDnsProviders} from '../Provider/DynDnsProviders.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 
@@ -40,7 +46,6 @@ export class DynDnsService {
     public async updateDns(): Promise<void> {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
 
-        const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
         const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
         const clients = await DynDnsClientServiceDB.getInstance().findAll();
@@ -62,11 +67,7 @@ export class DynDnsService {
                 Logger.getLogger().info(`DynDnsService::updateDns: Domain ip update by provider(${provider?.getName()})`);
 
                 if (client.update_domain) {
-                    const dyndnsdomains = await dyndnsclientDomainRepository.find({
-                        where: {
-                            dyndnsclient_id: client.id
-                        }
-                    });
+                    const dyndnsdomains = await DynDnsClientDomainServiceDB.getInstance().findAllByClientId(client.id);
 
                     if (dyndnsdomains) {
                         for await (const dyndnsdomain of dyndnsdomains) {

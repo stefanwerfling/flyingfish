@@ -82,8 +82,17 @@ export class IpBlacklist extends BaseEntity {
      */
     @Column({
         type: 'text',
-        default: ''
+        nullable: true,
+        default: null,
+        transformer: {
+            to: (n) => {
+                return n === '' ? null : n;
+            },
+            from: (n) => {
+                return n;
+            }
+        }
     })
-    public description!: string;
+    public description!: string | null;
 
 }

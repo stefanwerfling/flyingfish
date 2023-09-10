@@ -32,6 +32,7 @@ export {CredentialService as CredentialServiceDB} from './inc/Db/MariaDb/Credent
 export {CredentialUserService as CredentialUserServiceDB} from './inc/Db/MariaDb/CredentialUserService.js';
 export {DomainService as DomainServiceDB} from './inc/Db/MariaDb/DomainService.js';
 export {DynDnsClientService as DynDnsClientServiceDB} from './inc/Db/MariaDb/DynDnsClientService.js';
+export {DynDnsClientDomainService as DynDnsClientDomainServiceDB} from './inc/Db/MariaDb/DynDnsClientDomainService.js';
 export {DynDnsServerUserService as DynDnsServerUserServiceDB} from './inc/Db/MariaDb/DynDnsServerUserService.js';
 export {DynDnsServerDomainService as DynDnsServerDomainServiceDB} from './inc/Db/MariaDb/DynDnsServerDomainService.js';
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/UserService.js';

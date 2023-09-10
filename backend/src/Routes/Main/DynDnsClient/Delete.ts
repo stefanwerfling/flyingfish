@@ -1,28 +1,23 @@
-import {DBHelper} from 'flyingfish_core';
-import {DynDnsClientService} from 'flyingfish_core/dist/inc/Db/MariaDb/DynDnsClientService.js';
+import {DynDnsClientDomainServiceDB, DynDnsClientServiceDB} from 'flyingfish_core';
 import {DefaultReturn, DynDnsClientDelete, StatusCodes} from 'flyingfish_schemas';
-import {DynDnsClientDomain as DynDnsClientDomainDB} from '../../../inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 
 /**
- * Delete
+ * Delete Route for DynDnsClient.
  */
 export class Delete {
 
     /**
-     * deleteClient
-     * @param data
+     * Delete a client and all links to a domain.
+     * @param {DynDnsClientDelete} data - Delete information from UI.
+     * @returns {DefaultReturn} Default return data for UI.
      */
     public static async deleteClient(data: DynDnsClientDelete): Promise<DefaultReturn> {
-        const dyndnsclientDomainRepository = DBHelper.getRepository(DynDnsClientDomainDB);
-
-        const tclient = await DynDnsClientService.getInstance().findOne(data.id);
+        const tclient = await DynDnsClientServiceDB.getInstance().findOne(data.id);
 
         if (tclient) {
-            await dyndnsclientDomainRepository.delete({
-                dyndnsclient_id: tclient.id
-            });
+            await DynDnsClientDomainServiceDB.getInstance().removeByClientId(tclient.id);
 
-            const result = await DynDnsClientService.getInstance().remove(tclient.id);
+            const result = await DynDnsClientServiceDB.getInstance().remove(tclient.id);
 
             if (result) {
                 return {

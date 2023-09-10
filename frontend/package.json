@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
+    "npm-check-updates": "npm-check-updates",
     "gulp-copy-data": "gulp copy-data",
     "gulp-setup-bambooo": "gulp setup-bambooo",
     "gulp-clone-bambooo": "gulp clone-bambooo",
@@ -30,7 +31,7 @@
     "@popperjs/core": "^2.11.7",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
-    "bootstrap": "^5.2.3",
+    "bootstrap": "^4.6.2",
     "bootstrap-switch": "^3.4.0",
     "dotenv": "^8.2.0",
     "eslint": "^8.38.0",

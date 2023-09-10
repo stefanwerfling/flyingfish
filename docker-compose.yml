@@ -203,23 +203,23 @@ services:
     depends_on:
       - mariadb
 
-  vpnserver:
-    image: flyingfish_vpn:v1.2
-    build:
-      context: ./
-      dockerfile: ./vpn/Dockerfile
-    container_name: flyingfish_vpn
+#  vpnserver:
+#    image: flyingfish_vpn:v1.2
+#    build:
+#      context: ./
+#      dockerfile: ./vpn/Dockerfile
+#    container_name: flyingfish_vpn
 #    volumes:
 #      - ./vpn/dist:/opt/app/dist
-    privileged: true
-    network_mode: host
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      - mariadb
+#    privileged: true
+#    network_mode: host
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "500k"
+#        max-file: "50"
+#    depends_on:
+#      - mariadb
 
 #  onionhat:
 #    image: flyingfish_onionhat:v1.0
