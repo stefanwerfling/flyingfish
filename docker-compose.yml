@@ -156,10 +156,12 @@ services:
       dockerfile: ./sshserver/Dockerfile
     container_name: flyingfish_ssh
     volumes:
-      - flyingfishSsh:/opt/app/ssh:rw
-      - ./sshserver/dist:/opt/app/dist
-      - ./sshserver/node_modules:/opt/app/node_modules
-      - ./sshserver/package.json:/opt/app/package.json
+      - flyingfishSsh:/opt/flyingfish/ssh:rw
+      - ./sshserver/dist:/opt/flyingfish/sshserver/dist
+      - ./sshserver/node_modules:/opt/flyingfish/sshserver/node_modules
+      - ./sshserver/package.json:/opt/flyingfish/sshserver/package.json
+      - ./node_modules:/opt/flyingfish/node_modules
+      - ./package.json:/opt/flyingfish/package.json
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
