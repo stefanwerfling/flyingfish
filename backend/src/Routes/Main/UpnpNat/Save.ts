@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {NatPortDB, NatPortServiceDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes, UpnpNatSaveRequest} from 'flyingfish_schemas';
-import {NatPort as NatPortDB} from '../../../inc/Db/MariaDb/Entity/NatPort.js';
 
 /**
  * Save
@@ -12,16 +11,10 @@ export class Save {
      * @param data
      */
     public static async save(data: UpnpNatSaveRequest): Promise<DefaultReturn> {
-        const natportRepository = DBHelper.getRepository(NatPortDB);
-
         let aNatPort: NatPortDB|null = null;
 
         if (data.id !== 0) {
-            const tNatPort = await natportRepository.findOne({
-                where: {
-                    id: data.id
-                }
-            });
+            const tNatPort = await NatPortServiceDB.getInstance().findOne(data.id);
 
             if (tNatPort) {
                 aNatPort = tNatPort;
@@ -43,7 +36,7 @@ export class Save {
         aNatPort.listen_id = data.listen_id;
         aNatPort.description = data.description;
 
-        const result = await DBHelper.getDataSource().manager.save(aNatPort);
+        const result = await NatPortServiceDB.getInstance().save(aNatPort);
 
         if (result) {
             return {

@@ -1,8 +1,8 @@
-import {DateHelper, DBHelper, GatewayIdentifierServiceDB, Logger} from 'flyingfish_core';
+import {DBHelper, GatewayIdentifierServiceDB, Logger, NatPortServiceDB} from 'flyingfish_core';
+import {NatStatus} from 'flyingfish_schemas';
 import {Job, scheduleJob} from 'node-schedule';
 import Ping from 'ping';
 import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
-import {NatPort as NatPortDB, NatStatus} from '../Db/MariaDb/Entity/NatPort.js';
 import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
 import {HimHIP} from '../HimHIP/HimHIP.js';
 import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient.js';
@@ -25,16 +25,7 @@ export class UpnpNatService {
      * @protected
      */
     protected async _setNatPortStatus(status: NatStatus, natId: number): Promise<void> {
-        const natportRepository = DBHelper.getRepository(NatPortDB);
-
-        await natportRepository.createQueryBuilder()
-        .update()
-        .set({
-            last_status: status,
-            last_update: DateHelper.getCurrentDbTime()
-        })
-        .where('id = :id', {id: natId})
-        .execute();
+        await NatPortServiceDB.getInstance().updateStatus(natId, status);
     }
 
     /**
@@ -44,19 +35,12 @@ export class UpnpNatService {
         try {
             UpnpNatCache.getInstance().reset();
 
-            const natportRepository = DBHelper.getRepository(NatPortDB);
             const listenRepository = DBHelper.getRepository(NginxListenDB);
             const himhip = HimHIP.getData();
 
             // reset all status ----------------------------------------------------------------------------------------
 
-            await natportRepository.createQueryBuilder()
-            .update()
-            .set({
-                last_status: NatStatus.inactive,
-                last_update: DateHelper.getCurrentDbTime()
-            })
-            .execute();
+            await NatPortServiceDB.getInstance().resetAllStatus();
 
             // map -----------------------------------------------------------------------------------------------------
 
@@ -64,11 +48,7 @@ export class UpnpNatService {
                 const gatewayId = await GatewayIdentifierServiceDB.getInstance().findByMac(himhip.gatewaymac);
 
                 if (gatewayId) {
-                    const nats = await natportRepository.find({
-                        where: {
-                            gateway_identifier_id: gatewayId.id
-                        }
-                    });
+                    const nats = await NatPortServiceDB.getInstance().findAllByGatewayIdentifier(gatewayId.id);
 
                     if (nats) {
                         for await (const anat of nats) {

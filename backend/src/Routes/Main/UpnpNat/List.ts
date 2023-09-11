@@ -1,7 +1,6 @@
-import {DBHelper} from 'flyingfish_core';
+import {NatPortServiceDB} from 'flyingfish_core';
 import {StatusCodes} from 'flyingfish_schemas';
 import {UpnpNatPort, UpnpNatResponse} from 'flyingfish_schemas/dist/Backend/Routes/UpnpNat/List.js';
-import {NatPort as NatPortDB} from '../../../inc/Db/MariaDb/Entity/NatPort.js';
 
 /**
  * List
@@ -12,10 +11,8 @@ export class List {
      * getList
      */
     public static async getList(): Promise<UpnpNatResponse> {
-        const natportRepository = DBHelper.getRepository(NatPortDB);
-
         const list: UpnpNatPort[] = [];
-        const entries = await natportRepository.find();
+        const entries = await NatPortServiceDB.getInstance().findAll();
 
         for (const entry of entries) {
             list.push({

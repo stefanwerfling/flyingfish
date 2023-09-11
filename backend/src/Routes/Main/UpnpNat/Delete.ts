@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, NatPortServiceDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes, UpnpNatDeleteRequest} from 'flyingfish_schemas';
-import {NatPort as NatPortDB} from '../../../inc/Db/MariaDb/Entity/NatPort.js';
 
 /**
  * Delete
@@ -12,11 +11,7 @@ export class Delete {
      * @param data
      */
     public static async delete(data: UpnpNatDeleteRequest): Promise<DefaultReturn> {
-        const natportRepository = DBHelper.getRepository(NatPortDB);
-
-        const result = await natportRepository.delete({
-            id: data.id
-        });
+        const result = await NatPortServiceDB.getInstance().remove(data.id);
 
         if (result) {
             return {

@@ -45,7 +45,6 @@ import {Config} from './inc/Config/Config.js';
 import {v4 as uuid} from 'uuid';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
 import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
-import {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
@@ -130,7 +129,6 @@ import exitHook from 'async-exit-hook';
         entities.push(IpBlacklistCategoryDB);
         entities.push(IpBlacklistMaintainerDB);
         entities.push(IpWhitelistDB);
-        entities.push(NatPortDB);
         entities.push(SettingsDB);
 
         await DBHelper.init({

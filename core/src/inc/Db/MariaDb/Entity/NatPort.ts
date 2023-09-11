@@ -1,25 +1,9 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {NatStatus} from 'flyingfish_schemas';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
-/**
- * NatStatuts
- */
-export enum NatStatus {
-    inactive,
-    ok,
-    error
-}
-
-/**
- * Nat port Entity
- */
 @Entity({name: 'nat_port'})
-export class NatPort extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class NatPort extends DBBaseEntityId {
 
     /**
      * postion
