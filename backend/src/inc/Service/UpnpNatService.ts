@@ -1,8 +1,7 @@
-import {DateHelper, DBHelper, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, GatewayIdentifierServiceDB, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
 import Ping from 'ping';
 import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
-import {GatewayIdentifier as GatewayIdentifierDB} from '../Db/MariaDb/Entity/GatewayIdentifier.js';
 import {NatPort as NatPortDB, NatStatus} from '../Db/MariaDb/Entity/NatPort.js';
 import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
 import {HimHIP} from '../HimHIP/HimHIP.js';
@@ -45,7 +44,6 @@ export class UpnpNatService {
         try {
             UpnpNatCache.getInstance().reset();
 
-            const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
             const natportRepository = DBHelper.getRepository(NatPortDB);
             const listenRepository = DBHelper.getRepository(NginxListenDB);
             const himhip = HimHIP.getData();
@@ -63,11 +61,7 @@ export class UpnpNatService {
             // map -----------------------------------------------------------------------------------------------------
 
             if (himhip) {
-                const gatewayId = await giRepository.findOne({
-                    where: {
-                        mac_address: himhip.gatewaymac
-                    }
-                });
+                const gatewayId = await GatewayIdentifierServiceDB.getInstance().findByMac(himhip.gatewaymac);
 
                 if (gatewayId) {
                     const nats = await natportRepository.find({

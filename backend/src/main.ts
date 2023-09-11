@@ -7,7 +7,6 @@ import {
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
-import {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from './inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer as IpListMaintainerDB} from './inc/Db/MariaDb/Entity/IpListMaintainer.js';
@@ -132,7 +131,6 @@ import exitHook from 'async-exit-hook';
         entities.push(IpBlacklistMaintainerDB);
         entities.push(IpWhitelistDB);
         entities.push(NatPortDB);
-        entities.push(GatewayIdentifierDB);
         entities.push(SettingsDB);
 
         await DBHelper.init({

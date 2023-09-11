@@ -1,22 +1,17 @@
-import {DBHelper} from 'flyingfish_core';
+import {GatewayIdentifierServiceDB} from 'flyingfish_core';
 import {DefaultReturn, GatewayIdentifierDelete, StatusCodes} from 'flyingfish_schemas';
-import {GatewayIdentifier as GatewayIdentifierDB} from '../../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 
 /**
- * Delete
+ * Delete Route for Gateway identifier.
  */
 export class Delete {
 
     /**
-     * delete
-     * @param data
+     * Delete a Gateway identifier.
+     * @param {GatewayIdentifierDelete} data - Delete data information from UI.
      */
     public static async delete(data: GatewayIdentifierDelete): Promise<DefaultReturn> {
-        const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
-
-        const result = await giRepository.delete({
-            id: data.id
-        });
+        const result = await GatewayIdentifierServiceDB.getInstance().remove(data.id);
 
         if (result) {
             return {

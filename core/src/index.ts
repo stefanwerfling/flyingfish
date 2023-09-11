@@ -24,6 +24,7 @@ export {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClie
 export {DynDnsClientDomain as DynDnsClientDomainDB} from './inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 export {DynDnsServerDomain as DynDnsServerDomainDB} from './inc/Db/MariaDb/Entity/DynDnsServerDomain.js';
 export {DynDnsServerUser as DynDnsServerUserDB} from './inc/Db/MariaDb/Entity/DynDnsServerUser.js';
+export {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 export {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 export {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
@@ -35,6 +36,7 @@ export {DynDnsClientService as DynDnsClientServiceDB} from './inc/Db/MariaDb/Dyn
 export {DynDnsClientDomainService as DynDnsClientDomainServiceDB} from './inc/Db/MariaDb/DynDnsClientDomainService.js';
 export {DynDnsServerUserService as DynDnsServerUserServiceDB} from './inc/Db/MariaDb/DynDnsServerUserService.js';
 export {DynDnsServerDomainService as DynDnsServerDomainServiceDB} from './inc/Db/MariaDb/DynDnsServerDomainService.js';
+export {GatewayIdentifierService as GatewayIdentifierServiceDB} from './inc/Db/MariaDb/GatewayIdentifierService.js';
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/UserService.js';
 
 export {Session} from './inc/Server/Session.js';

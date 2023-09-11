@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {GatewayIdentifierServiceDB} from 'flyingfish_core';
 import {GatewayIdentifierEntry, GatewayIdentifierListResponse, StatusCodes} from 'flyingfish_schemas';
-import {GatewayIdentifier as GatewayIdentifierDB} from '../../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 
 /**
  * List
@@ -11,10 +10,8 @@ export class List {
      * getList
      */
     public static async getList(): Promise<GatewayIdentifierListResponse> {
-        const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
-
         const list: GatewayIdentifierEntry[] = [];
-        const entries = await giRepository.find();
+        const entries = await GatewayIdentifierServiceDB.getInstance().findAll();
 
         for (const entry of entries) {
             list.push({

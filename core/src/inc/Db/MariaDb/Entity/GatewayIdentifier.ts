@@ -1,16 +1,11 @@
-import {BaseEntity, Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
- * Gateway Identifier Entity
+ * Gateway identifier table.
  */
 @Entity({name: 'gateway_identifier'})
-export class GatewayIdentifier extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class GatewayIdentifier extends DBBaseEntityId {
 
     /**
      * networkname

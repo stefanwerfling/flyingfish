@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {GatewayIdentifierDB, GatewayIdentifierServiceDB} from 'flyingfish_core';
 import {GatewayIdentifierEntry, GatewayIdentifierSaveResponse, StatusCodes} from 'flyingfish_schemas';
-import {GatewayIdentifier as GatewayIdentifierDB} from '../../../inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 
 /**
  * Save
@@ -12,16 +11,10 @@ export class Save {
      * @param data
      */
     public static async save(data: GatewayIdentifierEntry): Promise<GatewayIdentifierSaveResponse> {
-        const giRepository = DBHelper.getRepository(GatewayIdentifierDB);
-
         let aGateway: GatewayIdentifierDB|null = null;
 
         if (data.id !== 0) {
-            const tgi = await giRepository.findOne({
-                where: {
-                    id: data.id
-                }
-            });
+            const tgi = await GatewayIdentifierServiceDB.getInstance().findOne(data.id);
 
             if (tgi) {
                 aGateway = tgi;
@@ -37,7 +30,7 @@ export class Save {
         aGateway.networkname = data.networkname;
         aGateway.color = data.color;
 
-        const result = await DBHelper.getDataSource().manager.save(aGateway);
+        const result = await GatewayIdentifierServiceDB.getInstance().save(aGateway);
 
         if (result) {
             return {
