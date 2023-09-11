@@ -96,7 +96,7 @@ export class Ssdp implements ISsdp {
      * source port
      * @private
      */
-    private sourcePort = this.options?.sourcePort || 0;
+    private sourcePort = 0;
 
     /**
      * bound
@@ -157,6 +157,9 @@ export class Ssdp implements ISsdp {
      * @param options
      */
     public constructor(private options?: { sourcePort?: number; }) {
+        if (options?.sourcePort) {
+            this.sourcePort = options?.sourcePort;
+        }
         // Create sockets on all external interfaces
         const interfaces = os.networkInterfaces();
 

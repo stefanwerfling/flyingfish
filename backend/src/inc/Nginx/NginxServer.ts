@@ -20,7 +20,7 @@ export class NginxServer {
     /**
      * Prefix default path
      */
-    public static NGINX_PREFIX_PATH = '/opt/app/nginx';
+    public static NGINX_PREFIX_PATH = '/opt/flyingfish/nginx';
 
     /**
      * ngnix server instance
@@ -36,7 +36,7 @@ export class NginxServer {
         if (NginxServer._instance === null) {
             // default for my docker images
             let toptions: NginxServerOptions = {
-                config: '/opt/app/nginx/nginx.conf',
+                config: '/opt/flyingfish/nginx/nginx.conf',
                 prefix: NginxServer.NGINX_PREFIX_PATH
             };
 

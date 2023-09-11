@@ -53,15 +53,17 @@ services:
       dockerfile: Dockerfile.nginxsrc
     container_name: flyingfish_service
     volumes:
-      - ./nginx:/opt/app/nginx:rw
+      - ./nginx:/opt/flyingfish/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw
-      - ./backend/dist:/opt/app/dist
-      - ./backend/node_modules:/opt/app/node_modules
-      - ./backend/package.json:/opt/app/package.json
-      - ./frontend/assets:/opt/app/frontend/assets
-      - ./frontend/dist:/opt/app/frontend/dist
-      - ./frontend/src:/opt/app/frontend/src
+      - ./backend/dist:/opt/flyingfish/backend/dist
+      - ./backend/node_modules:/opt/flyingfish/backend/node_modules
+      - ./backend/package.json:/opt/flyingfish/backend/package.json
+      - ./frontend/assets:/opt/flyingfish/frontend/assets
+      - ./frontend/dist:/opt/flyingfish/frontend/dist
+      - ./frontend/src:/opt/flyingfish/frontend/src
+      - ./node_modules:/opt/flyingfish/node_modules
+      - ./package.json:/opt/flyingfish/package.json
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -87,7 +89,7 @@ services:
     command:
       - node
       - "--inspect-brk=0.0.0.0:9229"
-      - "dist/main.js"
+      - "backend/dist/main.js"
       - "--envargs=1"
     networks:
       flyingfishNet:

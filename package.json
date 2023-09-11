@@ -22,7 +22,9 @@
     "sshserver",
     "frontend",
     "ddnsserver",
-    "demoplugin",
-    "vpn"
-  ]
+    "demoplugin"
+  ],
+  "scripts": {
+    "npm-check-updates": "npm-check-updates"
+  }
 }

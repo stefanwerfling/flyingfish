@@ -75,19 +75,19 @@ RUN pip3 install certbot-nginx
 RUN mkdir /etc/letsencrypt
 
 # Init App dirs --------------------------------------------------------------------------------------------------------
-
-RUN mkdir -p /opt/schemas
-RUN mkdir -p /opt/core
-RUN mkdir -p /opt/app
-RUN mkdir -p /opt/app/frontend
-RUN mkdir -p /opt/app/nginx
-RUN mkdir -p /opt/app/nginx/html
+RUN mkdir -p /opt/flyingfish
+RUN mkdir -p /opt/flyingfish/schemas
+RUN mkdir -p /opt/flyingfish/core
+RUN mkdir -p /opt/flyingfish/backend
+RUN mkdir -p /opt/flyingfish/frontend
+RUN mkdir -p /opt/flyingfish/nginx
+RUN mkdir -p /opt/flyingfish/nginx/html
 RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
 
 # Copy/Install Schemas ----------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/schemas
+WORKDIR /opt/flyingfish/schemas
 
 COPY ./schemas/ ./
 
@@ -100,7 +100,7 @@ RUN npm run build
 
 # Copy/Install Core ----------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/core
+WORKDIR /opt/flyingfish/core
 
 COPY ./core/ ./
 
@@ -113,7 +113,7 @@ RUN npm run build
 
 # Copy/Install DemoPlugin ----------------------------------------------------------------------------------------------
 
-WORKDIR /opt/demoplugin
+WORKDIR /opt/flyingfish/demoplugin
 
 COPY ./demoplugin/ ./
 
@@ -126,7 +126,7 @@ RUN npm run build
 
 # Copy/Install Backend -------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/app
+WORKDIR /opt/flyingfish/backend
 
 COPY backend ./
 
@@ -139,7 +139,7 @@ RUN npm run build
 
 # Copy/Install Frontend ------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/app/frontend
+WORKDIR /opt/flyingfish/frontend
 
 COPY frontend ./
 RUN rm -R ./node_modules | true
@@ -153,7 +153,7 @@ RUN npm run gulp-build-webpack
 
 # Copy/Install nginx ---------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/app/nginx
+WORKDIR /opt/flyingfish/nginx
 
 COPY nginx ./
 RUN rm -R ./node_modules | true
@@ -167,17 +167,17 @@ RUN rm ./nginx.pid | true
 RUN rm ./dhparam.pem | true
 RUN rm nginx.conf | true
 
-RUN mkdir /opt/app/nginx/servers
-RUN mkdir /opt/app/nginx/servers/proxy_temp
-RUN chmod 700 /opt/app/nginx/servers/proxy_temp
-RUN mkdir /opt/app/nginx/logs
-RUN chmod 755 /opt/app/nginx/logs
+RUN mkdir /opt/flyingfish/nginx/servers
+RUN mkdir /opt/flyingfish/nginx/servers/proxy_temp
+RUN chmod 700 /opt/flyingfish/nginx/servers/proxy_temp
+RUN mkdir /opt/flyingfish/nginx/logs
+RUN chmod 755 /opt/flyingfish/nginx/logs
 
 RUN npm install
 
 # add supervisor -------------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/app
+WORKDIR /opt/flyingfish
 
 RUN npm install supervisor -g
 
@@ -189,6 +189,6 @@ EXPOSE 3000
 
 # start main app -------------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/app
+WORKDIR /opt/flyingfish
 
-CMD [ "node",  "dist/main.js", "--envargs=1"]
+CMD [ "node",  "backend/dist/main.js", "--envargs=1"]

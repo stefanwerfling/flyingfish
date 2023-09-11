@@ -47,8 +47,8 @@ export class FireholDownloader {
             await pipeline(dlStream, fwStream);
 
             Logger.getLogger().info(`FireholDownloader::load: File downloaded to ${fileName}`);
-        } catch ({message}) {
-            console.error(`FireholDownloader::load: Something went wrong. ${message}`);
+        } catch (e) {
+            console.error(`FireholDownloader::load: Something went wrong. ${e}`);
         }
 
         return fileName;

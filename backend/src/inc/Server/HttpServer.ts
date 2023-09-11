@@ -48,33 +48,39 @@ export class HttpServer extends BaseHttpServer {
             windowMs: 15 * 60 * 1000,
             standardHeaders: true,
             legacyHeaders: false,
-            max: async(request) => {
-                if (request.baseUrl.indexOf('/json/') === 0) {
+            skip: async(request) => {
+                if (request.url.indexOf('/json/') === 0) {
                     if (SchemaRequestData.validate(request, []) && Session.isUserLogin(request.session)) {
-                        return 0;
+                        return true;
                     }
-
-                    return 100;
-                } else if (request.baseUrl.indexOf('/njs/') === 0) {
+                } else if (request.url.indexOf('/njs/') === 0) {
                     const secret = request.header('secret') ?? '';
                     const ssecret = Config.getInstance().get()!.nginx!.secret ?? '';
 
                     if (secret === ssecret) {
-                        return 0;
+                        return true;
                     }
-
-                    return -1;
-                } else if (request.baseUrl.indexOf('/himhip/') === 0) {
+                } else if (request.url.indexOf('/himhip/') === 0) {
                     const secret = request.header('secret') ?? '';
                     const ssecret = Config.getInstance().get()!.himhip!.secret ?? '';
 
                     if (secret === ssecret) {
-                        return 0;
+                        return true;
                     }
+                }
 
+                return false;
+            },
+            max: async(request) => {
+                if (request.url.indexOf('/json/') === 0) {
+                    return 100;
+                } else if (request.url.indexOf('/njs/') === 0) {
+                    return -1;
+                } else if (request.url.indexOf('/himhip/') === 0) {
                     return -1;
                 }
 
+                // File access for html/js/img etc. allow ever.
                 return 0;
             }
         });

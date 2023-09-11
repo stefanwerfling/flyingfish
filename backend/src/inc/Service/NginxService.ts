@@ -1,6 +1,6 @@
 import {DBHelper, DomainServiceDB, FileHelper, Logger, SshPortDB} from 'flyingfish_core';
 import fs from 'fs/promises';
-import * as Path from 'path';
+import path from 'path';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
@@ -82,7 +82,7 @@ type StreamCollect = {
 };
 
 /**
- * NginxService
+ * The service for nginx config generation.
  */
 export class NginxService {
 
@@ -100,13 +100,14 @@ export class NginxService {
     public static readonly PORT_PROXY_UPSTREAM_BEGIN = 20000;
 
     /**
-     * ngnix service instance
-     * @private
+     * Ngnix service instance.
+     * @member {NginxService|null} Instance of service.
      */
     private static _instance: NginxService|null = null;
 
     /**
-     * getInstance
+     * Return an instance of nginx service.
+     * @returns {NginxService}
      */
     public static getInstance(): NginxService {
         if (NginxService._instance === null) {
@@ -117,29 +118,28 @@ export class NginxService {
     }
 
     /**
-     * nginx private syslog server for logs controll
-     * @private
+     * Nginx private syslog server for logs controll.
+     * @member {SysLogServer|null}
      */
-    private _syslog: SysLogServer | null = null;
+    private _syslog: SysLogServer|null = null;
 
     /**
-     * _proxyUpstreamServer
-     * @private
+     * Proxy upstream server counter. With port start from {NginxService.PORT_PROXY_UPSTREAM_BEGIN}.
+     * @member {number}
      */
     private _proxyUpstreamServer = NginxService.PORT_PROXY_UPSTREAM_BEGIN;
 
     /**
-     * _addServerListens
-     * @param server
-     * @param listenProtocol
-     * @param port
-     * @param ip
-     * @param ip6
-     * @param ssl
-     * @param http2
-     * @param proxy_protocol
-     * @param enable_ip6
-     * @private
+     * Intern helper methode for generate listen config.
+     * @param {NginxConfServer} server - Nginx server config object.
+     * @param {ListenProtocolDB} listenProtocol - Listen protocol type.
+     * @param {number} port - Port number.
+     * @param {string} ip - IP address.
+     * @param {string} ip6 - IPv6 address.
+     * @param {boolean} ssl - Use SSL for listen.
+     * @param {boolean} http2 - Use http2 for listen.
+     * @param {boolean} proxy_protocol - Use proxy protocol for listen.
+     * @param {boolean} enable_ip6 - Enable IPv6 support.
      */
     private _addServerListens(
         server: NginxConfServer,
@@ -214,8 +214,7 @@ export class NginxService {
     }
 
     /**
-     * _loadConfig
-     * @private
+     * Load settings and generate nginx config to file.
      */
     private async _loadConfig(): Promise<void> {
         const conf = NginxServer.getInstance().getConf();
@@ -258,7 +257,10 @@ export class NginxService {
 
         // nginx stream variables --------------------------------------------------------------------------------------
 
-        conf.getStream().addVariable('js_import mainstream from', '/opt/app/nginx/dist/mainstream.js');
+        conf.getStream().addVariable(
+            'js_import mainstream from',
+            path.join(Config.getInstance().get()!.nginx!.prefix, 'dist/mainstream.js')
+        );
 
         const nginxResolver = await Settings.getSetting(
             Settings.NGINX_RESOLVER,
@@ -269,13 +271,21 @@ export class NginxService {
 
         // nginx http variables ----------------------------------------------------------------------------------------
 
-        conf.getHttp().addVariable('js_import mainhttp from', '/opt/app/nginx/dist/mainhttp.js');
+        conf.getHttp().addVariable(
+            'js_import mainhttp from',
+            path.join(Config.getInstance().get()!.nginx!.prefix, 'dist/mainhttp.js')
+        );
+
         conf.getHttp().addVariable('default_type', 'application/octet-stream');
         conf.getHttp().addVariable('sendfile', 'on');
         conf.getHttp().addVariable('server_tokens', 'off');
         conf.getHttp().addVariable('tcp_nopush', 'on');
         conf.getHttp().addVariable('tcp_nodelay', 'on');
-        conf.getHttp().addVariable('client_body_temp_path', '/opt/app/nginx/body 1 2');
+        conf.getHttp().addVariable(
+            'client_body_temp_path',
+            `${path.join(Config.getInstance().get()!.nginx!.prefix, 'body')} 1 2`
+        );
+
         conf.getHttp().addVariable('keepalive_timeout', '90s');
         conf.getHttp().addVariable('proxy_connect_timeout', '90s');
         conf.getHttp().addVariable('proxy_send_timeout', '90s');
@@ -921,13 +931,16 @@ export class NginxService {
                         aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
                         aServer.addVariable('add_header X-Robots-Tag', 'none');
 
-                        // check is host and server name right
+                        // check the host and server name right
                         const domainIf = new If('$host != $server_name');
                         domainIf.addVariable('return', '444');
 
                         aServer.addContext(domainIf);
                     } else {
-                        Logger.getLogger().warn(`NginxService::_loadConfig: Certificat for Domain '${domainName}' not found and ignore settings.`);
+                        Logger.getLogger().warn(
+                            `NginxService::_loadConfig: Certificat for Domain '${domainName}' not found and ignore settings.`
+                        );
+
                         continue;
                     }
                 }
@@ -958,13 +971,13 @@ export class NginxService {
                     // well-known --------------------------------------------------------------------------------------
 
                     if (!ssl_enable && !httpSubCollect.http.wellknown_disabled) {
-                        // add as default, when add a redirect, then sample acme not work
+                        // add as default, when add a redirect; then sample acme not works
                         const acme = new Location('/.well-known/');
                         acme.addVariable('auth_basic', 'off');
                         acme.addVariable('auth_request', 'off');
                         acme.addVariable('default_type', '"text/plain"');
                         acme.addVariable('alias',
-                            Path.join(
+                            path.join(
                                 NginxServer.getInstance().getWellKnownPath(),
                                 '/'
                             ));
@@ -998,7 +1011,7 @@ export class NginxService {
                                 releam = entry.auth_relam;
                             }
 
-                            const dummyHtpasswd = '/opt/app/nginx/htpasswd';
+                            const dummyHtpasswd = path.join(Config.getInstance().get()!.nginx!.prefix, 'htpasswd');
 
                             if (!await FileHelper.fileExist(dummyHtpasswd)) {
                                 await fs.writeFile(dummyHtpasswd, '');
@@ -1215,7 +1228,7 @@ export class NginxService {
             locWellKnown.addVariable('auth_basic', 'off');
             locWellKnown.addVariable('auth_request', 'off');
             locWellKnown.addVariable('default_type', '"text/plain"');
-            locWellKnown.addVariable('alias', Path.join(NginxServer.getInstance().getWellKnownPath(), '/'));
+            locWellKnown.addVariable('alias', path.join(NginxServer.getInstance().getWellKnownPath(), '/'));
 
             dServer.addLocation(locWellKnown);
 
@@ -1239,12 +1252,12 @@ export class NginxService {
                 `${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`);
         });
 
-        this._syslog.setOnError((sysLogServer, err) => {
+        this._syslog.setOnError((_sysLogServer, err) => {
             Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnError: ');
             Logger.getLogger().error(err);
         });
 
-        this._syslog.setOnMessage((sysLogServer, msg) => {
+        this._syslog.setOnMessage((_sysLogServer, msg) => {
             Logger.getLogger().silly(`NginxService::_startSysLog::SysLogServer::setOnMessage: ${msg.toString()}`);
 
             const parts = msg.toString().split(`${NginxService.SYSLOG_TAG}: `);
@@ -1305,7 +1318,7 @@ export class NginxService {
             } else {
                 Logger.getLogger().info('NginxService::start: Create Dhparam ...');
 
-                await fs.mkdir(Path.dirname(dhparam), {recursive: true});
+                await fs.mkdir(path.dirname(dhparam), {recursive: true});
 
                 if (await OpenSSL.createDhparam(dhparam, 4096) === null) {
                     Logger.getLogger().warn('NginxService::start: Can not create Dhparam!');

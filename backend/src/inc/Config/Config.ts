@@ -38,8 +38,8 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
     public static readonly DEFAULT_HTTPSERVER_PUBLICDIR = 'frontend';
     public static readonly DEFAULT_DNSSERVER_PORT = 5333;
-    public static readonly DEFAULT_NGINX_CONFIG = path.join('/', 'opt', 'app', 'nginx', 'nginx.conf');
-    public static readonly DEFAULT_NGINX_PREFIX = path.join('/', 'opt', 'app', 'nginx');
+    public static readonly DEFAULT_NGINX_CONFIG = path.join('/', 'opt', 'flyingfish', 'nginx', 'nginx.conf');
+    public static readonly DEFAULT_NGINX_PREFIX = path.join('/', 'opt', 'flyingfish', 'nginx');
     public static readonly DEFAULT_DYNDNSSERVER_PORT = 3000;
     public static readonly DEFAULT_DYNDNSSERVER_IP = '10.103.0.6';
     public static readonly DEFAULT_DYNDNSSERVER_SCHEMA = 'http';
