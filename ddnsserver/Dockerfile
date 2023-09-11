@@ -4,18 +4,18 @@ RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y openssh-client
 
-RUN mkdir -p /opt/schemas
-RUN mkdir -p /opt/core
-RUN mkdir -p /opt/app
-RUN mkdir -p /opt/app/dist
-RUN mkdir -p /opt/app/node_modules
+RUN mkdir -p /opt/flyingfish
+RUN mkdir -p /opt/flyingfish/schemas
+RUN mkdir -p /opt/flyingfish/core
+RUN mkdir -p /opt/flyingfish/ddnsserver
+RUN mkdir -p /opt/flyingfish/ddnsserver/dist
+RUN mkdir -p /opt/flyingfish/ddnsserver/node_modules
 RUN mkdir -p /var/lib/flyingfish
-RUN mkdir -p /var/lib/flyingfish/ssh
 
 
 # Copy/Install Schemas ----------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/schemas
+WORKDIR /opt/flyingfish/schemas
 
 COPY ./schemas/ ./
 
@@ -28,7 +28,7 @@ RUN npm run build
 
 # Copy/Install Core ----------------------------------------------------------------------------------------------------
 
-WORKDIR /opt/core
+WORKDIR /opt/flyingfish/core
 
 COPY ./core/ ./
 
@@ -41,7 +41,7 @@ RUN npm run build
 
 # Copy/Install ddnsserver ----------------------------------------------------------------------------------------------
 
-WORKDIR /opt/app
+WORKDIR /opt/flyingfish/ddnsserver
 
 COPY ./ddnsserver ./
 
@@ -56,4 +56,6 @@ RUN npm install supervisor -g
 
 EXPOSE 22
 
-CMD [ "node",  "dist/main.js", "--envargs=1"]
+WORKDIR /opt/flyingfish
+
+CMD [ "node",  "ddnsserver/dist/main.js", "--envargs=1"]

@@ -188,9 +188,11 @@ services:
       dockerfile: ./ddnsserver/Dockerfile
     container_name: flyingfish_ddns
     volumes:
-      - ./ddnsserver/dist:/opt/app/dist
-      - ./ddnsserver/node_modules:/opt/app/node_modules
-      - ./ddnsserver/package.json:/opt/app/package.json
+      - ./ddnsserver/dist:/opt/flyingfish/ddnsserver/dist
+      - ./ddnsserver/node_modules:/opt/flyingfish/ddnsserver/node_modules
+      - ./ddnsserver/package.json:/opt/flyingfish/ddnsserver/package.json
+      - ./node_modules:/opt/flyingfish/node_modules
+      - ./package.json:/opt/flyingfish/package.json
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
