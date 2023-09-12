@@ -28,6 +28,7 @@
     * [Backup Server, SSH to Nas](index/examples/backup-server-ssh-to-nas.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
+    * [Under the hood](index/developer/under-the-hood.md)
     * [Service Structure](index/developer/service-structure.md)
     * [Schema](index/developer/schema.md)
     * [Object name rules](index/developer/object-name-rules.md)
