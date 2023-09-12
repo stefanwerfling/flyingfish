@@ -50,7 +50,7 @@ services:
     image: flyingfish:v1.2
     build:
       context: ./
-      dockerfile: Dockerfile.nginxsrc
+      dockerfile: Dockerfile
     container_name: flyingfish_service
     volumes:
       - ./nginx:/opt/flyingfish/nginx:rw

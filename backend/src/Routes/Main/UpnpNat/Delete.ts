@@ -1,4 +1,4 @@
-import {DBHelper, NatPortServiceDB} from 'flyingfish_core';
+import {NatPortServiceDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes, UpnpNatDeleteRequest} from 'flyingfish_schemas';
 
 /**
