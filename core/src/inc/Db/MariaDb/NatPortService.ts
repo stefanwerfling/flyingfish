@@ -14,7 +14,7 @@ export class NatPortService extends DBService<NatPort> {
     public static REGISTER_NAME = 'nat_port';
 
     /**
-     * Return an intance from nat port server.
+     * Return an intance from nat port service.
      * @returns {NatPortService}
      */
     public static getInstance(): NatPortService {

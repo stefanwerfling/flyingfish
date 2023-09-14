@@ -6,7 +6,7 @@ import {SchemaDefaultReturn} from '../../../../../Core/Server/Routes/DefaultRetu
  */
 export const SchemaIpAccessBlackListImportSaveRequest = Vts.object({
     id: Vts.number(),
-    disable: Vts.boolean()
+    disabled: Vts.boolean()
 });
 
 /**

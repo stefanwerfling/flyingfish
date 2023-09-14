@@ -1,6 +1,6 @@
 import {
     IpAccessBlackListImportSaveRequest,
-    IpAccessBlackListOwn,
+    IpAccessBlackListOwnSaveRequest,
     IpAccessLocation,
     IpAccessMaintainer, IpAccessWhiteSaveRequest
 } from 'flyingfish_schemas';
@@ -91,7 +91,7 @@ export class IpAccess extends BasePage {
             if (tid && tid > 0) {
                 const entrie: IpAccessBlackListImportSaveRequest = {
                     id: tid,
-                    disable: this._importBlacklistDialog.getDisable()
+                    disabled: this._importBlacklistDialog.getDisabled()
                 };
 
                 if (await IpAccessAPI.saveBlackListImport(entrie)) {
@@ -126,15 +126,11 @@ export class IpAccess extends BasePage {
             }
 
             try {
-                const entry: IpAccessBlackListOwn = {
+                const entry: IpAccessBlackListOwnSaveRequest = {
                     id: tid,
                     ip: this._ownBlacklistDialog.getIp(),
-                    disable: this._ownBlacklistDialog.getDisable(),
-                    description: this._ownBlacklistDialog.getDescription(),
-                    ip_location_id: 0,
-                    count_block: 0,
-                    last_block: 0,
-                    last_update: 0
+                    disabled: this._ownBlacklistDialog.getDisable(),
+                    description: this._ownBlacklistDialog.getDescription()
                 };
 
                 if (await IpAccessAPI.saveBlackListOwn(entry)) {
@@ -468,7 +464,7 @@ export class IpAccess extends BasePage {
                     new Td(trbodyO, `${lastUpdate.format('YYYY-MM-DD HH:mm:ss')}`);
 
                     // eslint-disable-next-line no-new
-                    new Td(trbodyO, `${bentry.disable ? 'yes' : 'no'}`);
+                    new Td(trbodyO, `${bentry.disabled ? 'yes' : 'no'}`);
 
                     const tdAction = new Td(trbodyO, '');
 
@@ -486,7 +482,7 @@ export class IpAccess extends BasePage {
                             this._ownBlacklistDialog.resetValues();
                             this._ownBlacklistDialog.setId(bentry.id);
                             this._ownBlacklistDialog.setIp(bentry.ip);
-                            this._ownBlacklistDialog.setDisable(bentry.disable);
+                            this._ownBlacklistDialog.setDisabled(bentry.disabled);
                             this._ownBlacklistDialog.setDescription(bentry.description);
                             this._ownBlacklistDialog.show();
                         },
@@ -644,7 +640,7 @@ export class IpAccess extends BasePage {
                     new Td(trbodyB, `${lastUpdate.format('YYYY-MM-DD HH:mm:ss')}`);
 
                     // eslint-disable-next-line no-new
-                    new Td(trbodyB, `${bentry.disable ? 'yes' : 'no'}`);
+                    new Td(trbodyB, `${bentry.disabled ? 'yes' : 'no'}`);
 
                     const tdAction = new Td(trbodyB, '');
 
@@ -657,7 +653,7 @@ export class IpAccess extends BasePage {
                         this._importBlacklistDialog.setTitle('Blacklist Import Edit');
                         this._importBlacklistDialog.resetValues();
                         this._importBlacklistDialog.setId(bentry.id);
-                        this._importBlacklistDialog.setDisable(bentry.disable);
+                        this._importBlacklistDialog.setDisabled(bentry.disabled);
                         this._importBlacklistDialog.show();
                     });
                 }

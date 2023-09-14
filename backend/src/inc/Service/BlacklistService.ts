@@ -1,6 +1,5 @@
-import {DateHelper, DBHelper, Logger} from 'flyingfish_core';
+import {DateHelper, DBHelper, IpBlacklistDB, IpBlacklistServiceDB, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {IpBlacklist as IpBlacklistDB} from '../Db/MariaDb/Entity/IpBlacklist.js';
 import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer as IpListMaintainerDB} from '../Db/MariaDb/Entity/IpListMaintainer.js';
@@ -72,7 +71,6 @@ export class BlacklistService {
         await fh.loadList();
 
         const ipListMaintainerRepository = DBHelper.getRepository(IpListMaintainerDB);
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
         const ipBlacklistCategoryRepository = DBHelper.getRepository(IpBlacklistCategoryDB);
         const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
 
@@ -107,17 +105,13 @@ export class BlacklistService {
             // add ips -------------------------------------------------------------------------------------------------
 
             for await (const ipSet of ipSetParser.getIps()) {
-                let ipBlacklistEntry = await ipBlacklistRepository.findOne({
-                    where: {
-                        ip: ipSet.ip
-                    }
-                });
+                let ipBlacklistEntry = await IpBlacklistServiceDB.getInstance().findByIp(ipSet.ip);
 
                 if (!ipBlacklistEntry) {
                     const blackEntry = new IpBlacklistDB();
                     blackEntry.ip = ipSet.ip;
                     blackEntry.is_imported = true;
-                    blackEntry.disable = false;
+                    blackEntry.disabled = false;
 
                     ipBlacklistEntry = await DBHelper.getDataSource().manager.save(blackEntry);
                 }
@@ -167,7 +161,7 @@ export class BlacklistService {
 
                     ipBlacklistEntry!.last_update = DateHelper.getCurrentDbTime();
 
-                    await DBHelper.getDataSource().manager.save(ipBlacklistEntry);
+                    await IpBlacklistServiceDB.getInstance().save(ipBlacklistEntry);
                 }
             }
         }

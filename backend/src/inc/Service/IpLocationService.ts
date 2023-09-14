@@ -1,7 +1,5 @@
-import {DBHelper, Logger} from 'flyingfish_core';
+import {DBHelper, IpBlacklistServiceDB, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {MoreThan} from 'typeorm';
-import {IpBlacklist as IpBlacklistDB} from '../Db/MariaDb/Entity/IpBlacklist.js';
 import {IpLocation as IpLocationDB} from '../Db/MariaDb/Entity/IpLocation.js';
 import {IpWhitelist as IpWhitelistDB} from '../Db/MariaDb/Entity/IpWhitelist.js';
 import {IpLocateIo} from '../Provider/IpLocate/IpLocateIo.js';
@@ -95,14 +93,7 @@ export class IpLocationService {
 
         // check blacklist ---------------------------------------------------------------------------------------------
 
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-
-        const listB = await ipBlacklistRepository.find({
-            where: {
-                count_block: MoreThan(0),
-                ip_location_id: 0
-            }
-        });
+        const listB = await IpBlacklistServiceDB.getInstance().findAllLastBlock(true);
 
         if (listB) {
             for await (const entry of listB) {

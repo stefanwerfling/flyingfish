@@ -7,7 +7,7 @@ import {SchemaDefaultReturn} from '../../../../../Core/Server/Routes/DefaultRetu
 export const SchemaIpAccessBlackListOwnSaveRequest = Vts.object({
     id: Vts.number(),
     ip: Vts.string(),
-    disable: Vts.boolean(),
+    disabled: Vts.boolean(),
     description: Vts.string()
 });
 

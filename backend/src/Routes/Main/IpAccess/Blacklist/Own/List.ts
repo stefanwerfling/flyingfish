@@ -1,10 +1,9 @@
-import {DBHelper} from 'flyingfish_core';
+import {IpBlacklistServiceDB} from 'flyingfish_core';
 import {
     IpAccessBlackListOwn,
     IpAccessBlackListOwnsResponse,
     StatusCodes
 } from 'flyingfish_schemas';
-import {IpBlacklist as IpBlacklistDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {UtilsLocation} from '../../UtilsLocation.js';
 
 /**
@@ -16,16 +15,7 @@ export class List {
      * getBlackListOwns
      */
     public static async getBlackListOwns(): Promise<IpAccessBlackListOwnsResponse> {
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-
-        const entries = await ipBlacklistRepository.find({
-            where: {
-                is_imported: false
-            },
-            order: {
-                last_block: 'DESC'
-            }
-        });
+        const entries = await IpBlacklistServiceDB.getInstance().findAllOwn('DESC');
 
         const list: IpAccessBlackListOwn[] = [];
         const locationIds: number[] = [];
@@ -39,7 +29,7 @@ export class List {
                 list.push({
                     id: entry.id,
                     ip: entry.ip,
-                    disable: entry.disable,
+                    disabled: entry.disabled,
                     last_update: entry.last_update,
                     last_block: entry.last_block,
                     count_block: entry.count_block,

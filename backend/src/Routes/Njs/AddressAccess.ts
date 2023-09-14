@@ -1,6 +1,5 @@
 import {Response, Router} from 'express';
-import {DateHelper, DBHelper, DefaultRoute, Logger} from 'flyingfish_core';
-import {IpBlacklist as IpBlacklistDB} from '../../inc/Db/MariaDb/Entity/IpBlacklist.js';
+import {DateHelper, DBHelper, DefaultRoute, IpBlacklistServiceDB, Logger} from 'flyingfish_core';
 import {IpWhitelist as IpWhitelistDB} from '../../inc/Db/MariaDb/Entity/IpWhitelist.js';
 import {ListenAddressCheckType, NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
 
@@ -53,13 +52,7 @@ export class AddressAccess extends DefaultRoute {
      * @protected
      */
     protected async _globalCheckBlacklist(realip_remote_addr: string): Promise<boolean> {
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-        const address = await ipBlacklistRepository.findOne({
-            where: {
-                ip: realip_remote_addr,
-                disable: false
-            }
-        });
+        const address = await IpBlacklistServiceDB.getInstance().findByIp(realip_remote_addr, false);
 
         if (!address) {
             Logger.getLogger().info(`AddressAccess::_globalCheckBlacklist: Address(${realip_remote_addr}) not found in blacklist.`);
@@ -68,7 +61,7 @@ export class AddressAccess extends DefaultRoute {
         }
 
         // update and not await
-        AddressAccess._updateBlacklistBlock(address.id, address.count_block + 1).then();
+        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).then();
 
         Logger.getLogger().info(`AddressAccess::_globalCheckBlacklist: Address(${realip_remote_addr}) found in blacklist!`);
 
@@ -118,14 +111,7 @@ export class AddressAccess extends DefaultRoute {
      * @protected
      */
     protected async _listCheckBlackList(listenId: number, realip_remote_addr: string): Promise<boolean> {
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-
-        const address = await ipBlacklistRepository.findOne({
-            where: {
-                ip: realip_remote_addr,
-                disable: false
-            }
-        });
+        const address = await IpBlacklistServiceDB.getInstance().findByIp(realip_remote_addr, false);
 
         if (!address) {
             Logger.getLogger().info(`AddressAccess::_listCheckBlackList: Address(${realip_remote_addr}) not found in blacklist.`);
@@ -136,29 +122,9 @@ export class AddressAccess extends DefaultRoute {
         Logger.getLogger().info(`AddressAccess::_listCheckBlackList: Address(${realip_remote_addr}) found in blacklist!`);
 
         // update and not await
-        AddressAccess._updateBlacklistBlock(address.id, address.count_block + 1).then();
+        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).then();
 
         return false;
-    }
-
-    /**
-     * _updateBlacklistBlock
-     * @param ipBlacklistId
-     * @param newBlockCount
-     * @protected
-     */
-    protected static async _updateBlacklistBlock(ipBlacklistId: number, newBlockCount: number): Promise<void> {
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-
-        await ipBlacklistRepository
-        .createQueryBuilder()
-        .update()
-        .set({
-            last_block: DateHelper.getCurrentDbTime(),
-            count_block: newBlockCount
-        })
-        .where('id = :id', {id: ipBlacklistId})
-        .execute();
     }
 
     /**

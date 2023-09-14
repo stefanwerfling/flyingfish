@@ -17,10 +17,10 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
     protected _id: number|null = null;
 
     /**
-     * switch disable
+     * switch disabled
      * @protected
      */
-    protected _switchDisable: Switch;
+    protected _switchDisabled: Switch;
 
     /**
      * click save fn
@@ -38,8 +38,8 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
         const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
         const form = new Form(bodyCard);
 
-        const groupDisable = new FormGroup(form, 'Disable this ip block');
-        this._switchDisable = new Switch(groupDisable, 'ipimportblockdisable');
+        const groupDisabled = new FormGroup(form, 'Disabled this ip block');
+        this._switchDisabled = new Switch(groupDisabled, 'ipimportblockdisable');
 
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
@@ -67,18 +67,18 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
     }
 
     /**
-     * setDisable
-     * @param disable
+     * setDisabled
+     * @param disabled
      */
-    public setDisable(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+    public setDisabled(disabled: boolean): void {
+        this._switchDisabled.setEnable(disabled);
     }
 
     /**
-     * getDisable
+     * getDisabled
      */
-    public getDisable(): boolean {
-        return this._switchDisable.isEnable();
+    public getDisabled(): boolean {
+        return this._switchDisabled.isEnable();
     }
 
     /**
@@ -86,7 +86,7 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
      */
     public resetValues(): void {
         this.setId(null);
-        this.setDisable(false);
+        this.setDisabled(false);
     }
 
     /**

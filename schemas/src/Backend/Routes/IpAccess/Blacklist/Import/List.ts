@@ -9,7 +9,7 @@ export const SchemaIpAccessBlackListImport = Vts.object({
     id: Vts.number(),
     ip: Vts.string(),
     last_update: Vts.number(),
-    disable: Vts.boolean(),
+    disabled: Vts.boolean(),
     last_block: Vts.number(),
     count_block: Vts.number(),
     categorys: Vts.array(Vts.number()),

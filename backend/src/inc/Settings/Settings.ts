@@ -1,5 +1,4 @@
-import {DBHelper} from 'flyingfish_core';
-import {Settings as SettingsDB} from '../Db/MariaDb/Entity/Settings.js';
+import {SettingsDB, SettingServiceDB} from 'flyingfish_core';
 
 /**
  * Settings
@@ -29,13 +28,7 @@ export class Settings {
      * @param vdefault
      */
     public static async getSetting(name: string, vdefault: string): Promise<string> {
-        const settingsRepository = DBHelper.getRepository(SettingsDB);
-
-        const setting = await settingsRepository.findOne({
-            where: {
-                name: name
-            }
-        });
+        const setting = await SettingServiceDB.getInstance().findByName(name);
 
         if (setting) {
             return setting.value;
@@ -50,13 +43,7 @@ export class Settings {
      * @param value
      */
     public static async setSetting(name: string, value: string): Promise<void> {
-        const settingsRepository = DBHelper.getRepository(SettingsDB);
-
-        let setting = await settingsRepository.findOne({
-            where: {
-                name: name
-            }
-        });
+        let setting = await SettingServiceDB.getInstance().findByName(name);
 
         if (!setting) {
             setting = new SettingsDB();
@@ -65,7 +52,7 @@ export class Settings {
 
         setting.value = value;
 
-        await DBHelper.getDataSource().manager.save(setting);
+        await await SettingServiceDB.getInstance().save(setting);
     }
 
 }

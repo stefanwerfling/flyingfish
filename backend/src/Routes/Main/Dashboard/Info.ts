@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, IpBlacklistServiceDB} from 'flyingfish_core';
 import {DashboardInfoIpBlock, DashboardInfoResponse, StatusCodes} from 'flyingfish_schemas';
-import {IpBlacklist as IpBlacklistDB} from '../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {IpLocation as IpLocationDB} from '../../../inc/Db/MariaDb/Entity/IpLocation.js';
 import {HimHIP} from '../../../inc/HimHIP/HimHIP.js';
 import {HowIsMyPublicIpService} from '../../../inc/Service/HowIsMyPublicIpService.js';
@@ -15,32 +14,16 @@ export class Info {
      * getInfo
      */
     public static async getInfo(): Promise<DashboardInfoResponse> {
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
         const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
 
         // ip blocks ---------------------------------------------------------------------------------------------------
 
         const ipblocks: DashboardInfoIpBlock[] = [];
-        let ipblock_count = 0;
+        const ipblock_count = await IpBlacklistServiceDB.getInstance().countBlocks();
 
         const limit = 100;
 
-        const result = await ipBlacklistRepository
-        .createQueryBuilder('countipblocks')
-        .select('SUM(countipblocks.count_block)', 'total_count_blocks')
-        .addSelect('COUNT(*)', 'count')
-        .getRawOne();
-
-        if (result) {
-            ipblock_count = parseInt(result.total_count_blocks, 10) ?? 0;
-        }
-
-        const entries = await ipBlacklistRepository.find({
-            take: limit,
-            order: {
-                last_block: 'DESC'
-            }
-        });
+        const entries = await IpBlacklistServiceDB.getInstance().findAllSorted(limit, 'DESC');
 
         if (entries) {
             for await (const entry of entries) {

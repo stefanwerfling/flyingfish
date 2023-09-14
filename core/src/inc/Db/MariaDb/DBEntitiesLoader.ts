@@ -8,7 +8,9 @@ import {DynDnsClientDomain} from './Entity/DynDnsClientDomain.js';
 import {DynDnsServerDomain} from './Entity/DynDnsServerDomain.js';
 import {DynDnsServerUser} from './Entity/DynDnsServerUser.js';
 import {GatewayIdentifier} from './Entity/GatewayIdentifier.js';
+import {IpBlacklist} from './Entity/IpBlacklist.js';
 import {NatPort} from './Entity/NatPort.js';
+import {Settings} from './Entity/Settings.js';
 import {SshPort} from './Entity/SshPort.js';
 import {SshUser} from './Entity/SshUser.js';
 import {User} from './Entity/User.js';
@@ -36,7 +38,9 @@ export class DBEntitiesLoader {
             DynDnsServerDomain,
             DynDnsServerUser,
             GatewayIdentifier,
+            IpBlacklist,
             NatPort,
+            Settings,
             SshPort,
             SshUser,
             User

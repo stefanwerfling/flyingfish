@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {IpBlacklistServiceDB} from 'flyingfish_core';
 import {IpAccessBlackListImportSaveRequest, IpAccessBlackListImportSaveResponse, StatusCodes} from 'flyingfish_schemas';
-import {IpBlacklist as IpBlacklistDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklist.js';
 
 /**
  * Save
@@ -12,19 +11,12 @@ export class Save {
      * @param request
      */
     public static async saveBlackListImport(request: IpAccessBlackListImportSaveRequest): Promise<IpAccessBlackListImportSaveResponse> {
-        const ipBlacklistRepository = DBHelper.getRepository(IpBlacklistDB);
-
-        const entrie = await ipBlacklistRepository.findOne({
-            where: {
-                id: request.id,
-                is_imported: true
-            }
-        });
+        const entrie = await IpBlacklistServiceDB.getInstance().findImported(request.id);
 
         if (entrie) {
-            entrie.disable = request.disable;
+            entrie.disabled = request.disabled;
 
-            await DBHelper.getDataSource().manager.save(entrie);
+            await IpBlacklistServiceDB.getInstance().save(entrie);
 
             return {
                 statusCode: StatusCodes.OK

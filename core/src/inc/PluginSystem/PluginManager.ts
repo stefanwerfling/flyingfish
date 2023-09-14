@@ -16,7 +16,7 @@ export type PluginInformation = {
 };
 
 /**
- * PluginManager
+ * Plugin manager controll the plugin loading and event registering.
  */
 export class PluginManager {
 
@@ -39,17 +39,21 @@ export class PluginManager {
     protected _serviceName: string;
 
     /**
-     * plugins
-     * @protected
+     * Plugin loading list.
+     * @member {Plugin[]}
      */
     protected _plugins: Plugin[] = [];
 
     /**
      * events
-     * @protected
+     * @
      */
     protected _events: IPluginEvent[] = [];
 
+    /**
+     * Retrung a plugin manager instance or throw error by wrong initalition.
+     * @returns {PluginManager}
+     */
     public static getInstance(): PluginManager {
         if (PluginManager._instance === null) {
             throw new Error('PluginManager::getInstance: instance is empty, please init first plugin manager!');
@@ -60,8 +64,8 @@ export class PluginManager {
 
     /**
      * constructor
-     * @param serviceName
-     * @param appPath
+     * @param {string} serviceName - Service name, name who start the plugin manager.
+     * @param {string} appPath - Path to modules directory.
      */
     public constructor(serviceName: string, appPath?: string) {
         if (appPath) {
@@ -74,7 +78,7 @@ export class PluginManager {
     }
 
     /**
-     * start
+     * Start all loaded plugins.
      */
     public async start(): Promise<void> {
         const pluginInfos = this.scan();
@@ -87,7 +91,8 @@ export class PluginManager {
     }
 
     /**
-     * scan
+     * Scan all modules for plugin information.
+     * @returns {PluginInformation[]}
      */
     public scan(): PluginInformation[] {
         const nodeModulesPath = path.join(this._appPath, 'node_modules');
@@ -140,8 +145,9 @@ export class PluginManager {
     }
 
     /**
-     * load
-     * @param plugin
+     * Load plugin to plugin-managaer by plugin information.
+     * @param {PluginInformation} plugin - Plugin information.
+     * @returns {boolean} Return true when is loaded.
      */
     public async load(plugin: PluginInformation): Promise<boolean> {
         try {
@@ -175,15 +181,17 @@ export class PluginManager {
     }
 
     /**
-     * getPlugins
+     * Return all plugins.
+     * @returns {Plugin[]}
      */
     public getPlugins(): Plugin[] {
         return this._plugins;
     }
 
     /**
-     * getPlugin
-     * @param name
+     * Return a plugin by plugin-name.
+     * @param {string} name - Name of a plugin.
+     * @returns {Plugin|null}
      */
     public getPlugin(name: string): Plugin|null {
         const plugin = this._plugins.find((e) => e.getName() === name);
@@ -196,9 +204,9 @@ export class PluginManager {
     }
 
     /**
-     * registerEvents
-     * @param listner
-     * @param plugin
+     * Register an event, called from plugin.
+     * @param {IPluginEvent} listner - Listner event object.
+     * @param {Plugin} plugin - A plugin instance.
      */
     public registerEvents(listner: IPluginEvent, plugin: Plugin): void {
         if (this._plugins.find((e) => e.getName() === plugin.getName())) {

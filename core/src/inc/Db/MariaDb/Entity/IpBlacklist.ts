@@ -1,16 +1,8 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
-/**
- * ip blacklist Entity
- */
 @Entity({name: 'ip_blacklist'})
-export class IpBlacklist extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class IpBlacklist extends DBBaseEntityId {
 
     /**
      * ip
@@ -41,14 +33,14 @@ export class IpBlacklist extends BaseEntity {
     public is_imported!: boolean;
 
     /**
-     * disable the listen
+     * disabled the listen
      */
     @Index()
     @Column({
         type: 'bool',
         default: false
     })
-    public disable!: boolean;
+    public disabled!: boolean;
 
     /**
      * last block

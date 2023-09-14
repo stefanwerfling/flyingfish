@@ -14,7 +14,6 @@ import {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js'
 import {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
 import {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
-import {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
@@ -44,7 +43,6 @@ import {DynDnsServer as DynDnsServerController} from './Routes/Main/DynDnsServer
 import {Config} from './inc/Config/Config.js';
 import {v4 as uuid} from 'uuid';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
-import {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
@@ -125,11 +123,9 @@ import exitHook from 'async-exit-hook';
         entities.push(NginxLocationDB);
         entities.push(IpListMaintainerDB);
         entities.push(IpLocationDB);
-        entities.push(IpBlacklistDB);
         entities.push(IpBlacklistCategoryDB);
         entities.push(IpBlacklistMaintainerDB);
         entities.push(IpWhitelistDB);
-        entities.push(SettingsDB);
 
         await DBHelper.init({
             type: 'mysql',

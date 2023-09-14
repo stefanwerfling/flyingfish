@@ -1,16 +1,8 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
+import {Column, Entity, Index} from 'typeorm';
 
-/**
- * Settings
- */
-@Entity({name: 'settings'})
-export class Settings extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+@Entity({name: 'nat_port'})
+export class Settings extends DBBaseEntityId {
 
     /**
      * name
