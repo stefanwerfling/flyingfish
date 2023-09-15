@@ -24,6 +24,7 @@
       * [Discussions Subdomains](index/configurations/domains/discussions-subdomains.md)
     * [Routes](index/configurations/routes.md)
   * [Examples](index/examples/README.md)
+    * [SSH hidden on HTTPS](index/examples/ssh-hidden-on-https.md)
     * [FlyingFish to other reverse proxy](index/examples/flyingfish-to-other-reverse-proxy.md)
     * [Backup Server, SSH to Nas](index/examples/backup-server-ssh-to-nas.md)
   * [Developer](index/developer/README.md)
