@@ -1,7 +1,17 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, DomainDB, DomainServiceDB, Logger, NginxUpstreamDB, UserDB, UserServiceDB, NginxUpstreamServiceDB} from 'flyingfish_core';
+import {
+    DBHelper,
+    DomainDB,
+    DomainServiceDB,
+    Logger,
+    NginxUpstreamDB,
+    UserDB,
+    UserServiceDB,
+    NginxUpstreamServiceDB,
+    NginxStreamDB, NginxStreamServiceDB
+} from 'flyingfish_core';
+import {NginxStreamDestinationType} from 'flyingfish_schemas';
 import {ListenCategory, ListenProtocol, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen.js';
-import {NginxStream as NginxStreamDB, NginxStreamDestinationType} from './Entity/NginxStream.js';
 
 /**
  * DBSetup
@@ -129,7 +139,7 @@ export class DBSetup {
         sTo5333.index = 9999;
         sTo5333.destination_type = NginxStreamDestinationType.upstream;
 
-        sTo5333 = await DBHelper.getDataSource().manager.save(sTo5333);
+        sTo5333 = await NginxStreamServiceDB.getInstance().save(sTo5333);
 
         const sTo5333Up = new NginxUpstreamDB();
         sTo5333Up.stream_id = sTo5333.id;
@@ -147,7 +157,7 @@ export class DBSetup {
         sTo10443.destination_type = NginxStreamDestinationType.listen;
         sTo10443.destination_listen_id = l10443.id;
 
-        await DBHelper.getDataSource().manager.save(sTo10443);
+        await NginxStreamServiceDB.getInstance().save(sTo10443);
 
         const sTo10080 = new NginxStreamDB();
         sTo10080.domain_id = defaultDomain.id;
@@ -158,7 +168,7 @@ export class DBSetup {
         sTo10080.destination_type = NginxStreamDestinationType.listen;
         sTo10080.destination_listen_id = l10080.id;
 
-        await DBHelper.getDataSource().manager.save(sTo10080);
+        await NginxStreamServiceDB.getInstance().save(sTo10080);
     }
 
 }

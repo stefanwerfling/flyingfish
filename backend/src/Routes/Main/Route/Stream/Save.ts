@@ -1,13 +1,20 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, NginxUpstreamDB, NginxUpstreamServiceDB, SshPortDB, SshUserDB} from 'flyingfish_core';
-import {DefaultReturn, RouteStreamSave, RouteStreamSSH, StatusCodes} from 'flyingfish_schemas';
-import {Not} from 'typeorm';
-import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 import {
-    NginxStream as NginxStreamDB,
-    NginxStreamDestinationType,
-    NginxStreamSshR
-} from '../../../../inc/Db/MariaDb/Entity/NginxStream.js';
+    DBHelper, NginxStreamDB,
+    NginxStreamServiceDB,
+    NginxUpstreamDB,
+    NginxUpstreamServiceDB,
+    SshPortDB,
+    SshUserDB
+} from 'flyingfish_core';
+import {
+    DefaultReturn,
+    NginxStreamDestinationType, NginxStreamSshR,
+    RouteStreamSave,
+    RouteStreamSSH,
+    StatusCodes
+} from 'flyingfish_schemas';
+import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 
 /**
  * SaveStream
@@ -65,20 +72,17 @@ export class Save {
      * @protected
      */
     public static async removeOldSshPort(sshportId: number): Promise<boolean> {
-        const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const sshportRepository = DBHelper.getRepository(SshPortDB);
         const sshuserRepository = DBHelper.getRepository(SshUserDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
         // first check in used -----------------------------------------------------------------------------------------
 
-        const usedCountStreamROut = await streamRepository.count({
-            where: {
-                destination_type: NginxStreamDestinationType.ssh_r,
-                ssh_r_type: NginxStreamSshR.out,
-                sshport_id: sshportId
-            }
-        });
+        const usedCountStreamROut = await NginxStreamServiceDB.getInstance().countStreamOut(
+            NginxStreamDestinationType.ssh_r,
+            NginxStreamSshR.out,
+            sshportId
+        );
 
         const outUsedCountLoc = await locationRepository.count({
             where: {
@@ -222,13 +226,11 @@ export class Save {
 
         // check is stream listen and domain already exist ---------------------------------------------------------
 
-        const streamRepository = DBHelper.getRepository(NginxStreamDB);
-
-        const caStream = await streamRepository.countBy({
-            listen_id: data.stream.listen_id,
-            domain_id: data.domainid,
-            id: Not(data.stream.id)
-        });
+        const caStream = await NginxStreamServiceDB.getInstance().countStreamBy(
+            data.stream.listen_id,
+            data.domainid,
+            data.stream.id
+        );
 
         if (caStream > 0) {
             return {
@@ -242,11 +244,7 @@ export class Save {
         let aStream: NginxStreamDB|null = null;
 
         if (data.stream.id !== 0) {
-            const tStream = await streamRepository.findOne({
-                where: {
-                    id: data.stream.id
-                }
-            });
+            const tStream = await NginxStreamServiceDB.getInstance().findOne(data.stream.id);
 
             if (tStream) {
                 if (tStream.isdefault) {
@@ -350,7 +348,7 @@ export class Save {
             }
         }
 
-        aStream = await DBHelper.getDataSource().manager.save(aStream);
+        aStream = await NginxStreamServiceDB.getInstance().save(aStream);
 
         if (aStream.destination_listen_id > 0) {
             // clear old upstreams

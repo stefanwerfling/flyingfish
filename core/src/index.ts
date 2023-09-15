@@ -27,6 +27,7 @@ export {DynDnsServerUser as DynDnsServerUserDB} from './inc/Db/MariaDb/Entity/Dy
 export {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 export {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
+export {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
 export {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
 export {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
 export {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
@@ -43,6 +44,7 @@ export {DynDnsServerDomainService as DynDnsServerDomainServiceDB} from './inc/Db
 export {GatewayIdentifierService as GatewayIdentifierServiceDB} from './inc/Db/MariaDb/GatewayIdentifierService.js';
 export {IpBlacklistService as IpBlacklistServiceDB} from './inc/Db/MariaDb/IpBlacklistService.js';
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/NatPortService.js';
+export {NginxStreamService as NginxStreamServiceDB} from './inc/Db/MariaDb/NginxStreamService.js';
 export {NginxUpstreamService as NginxUpstreamServiceDB} from './inc/Db/MariaDb/NginxUpstreamService.js';
 export {SettingService as SettingServiceDB} from './inc/Db/MariaDb/SettingService.js';
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/UserService.js';

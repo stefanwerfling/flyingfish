@@ -1,36 +1,9 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
-import {UpstreamLoadBalancingAlgorithm} from '../../../Nginx/Config/Upstream.js';
+import {NginxStreamDestinationType, NginxStreamSshR} from 'flyingfish_schemas';
+import {Entity, Column, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
-/**
- * NginxStreamDestinationType
- */
-export enum NginxStreamDestinationType {
-    upstream,
-    listen,
-    ssh_l,
-    ssh_r
-}
-
-/**
- * NginxStreamSshR
- */
-export enum NginxStreamSshR {
-    none,
-    in,
-    out
-}
-
-/**
- * Nginx Stream Entity
- */
 @Entity({name: 'nginx_stream'})
-export class NginxStream extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class NginxStream extends DBBaseEntityId {
 
     /**
      * domain id
@@ -78,7 +51,7 @@ export class NginxStream extends BaseEntity {
     @Column({
         type: 'varchar',
         length: 128,
-        default: UpstreamLoadBalancingAlgorithm.none
+        default: 'none'
     })
     public load_balancing_algorithm!: string;
 

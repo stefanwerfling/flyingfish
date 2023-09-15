@@ -1,4 +1,11 @@
-import {DBHelper, DomainServiceDB, NginxUpstreamServiceDB, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {
+    DBHelper,
+    DomainServiceDB,
+    NginxStreamServiceDB,
+    NginxUpstreamServiceDB,
+    SshPortDB,
+    SshUserDB
+} from 'flyingfish_core';
 import {
     Location,
     RouteData,
@@ -16,7 +23,6 @@ import {
     NginxHttpVariableContextType
 } from '../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {NginxLocation as NginxLocationDB} from '../../../inc/Db/MariaDb/Entity/NginxLocation.js';
-import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
 
 /**
  * List
@@ -30,7 +36,6 @@ export class List {
         const list: RouteData[] = [];
         const sshportList: RouteSshPort[] = [];
 
-        const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
@@ -45,11 +50,7 @@ export class List {
 
                 // stream ------------------------------------------------------------------------------------------
 
-                const streams = await streamRepository.find({
-                    where: {
-                        domain_id: adomain.id
-                    }
-                });
+                const streams = await NginxStreamServiceDB.getInstance().findAllByDomain(adomain.id);
 
                 if (streams) {
                     for await (const tstream of streams) {

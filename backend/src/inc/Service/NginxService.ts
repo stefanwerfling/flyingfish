@@ -2,11 +2,12 @@ import {
     DBHelper,
     DomainServiceDB,
     FileHelper,
-    Logger,
+    Logger, NginxStreamDB, NginxStreamServiceDB,
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
     SshPortDB
 } from 'flyingfish_core';
+import {NginxStreamDestinationType, NginxStreamSshR} from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import path from 'path';
 import {SchemaErrors} from 'vts';
@@ -25,11 +26,6 @@ import {
     NginxListen as NginxListenDB
 } from '../Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB, NginxLocationDestinationTypes} from '../Db/MariaDb/Entity/NginxLocation.js';
-import {
-    NginxStream as NginxStreamDB,
-    NginxStreamDestinationType,
-    NginxStreamSshR
-} from '../Db/MariaDb/Entity/NginxStream.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
@@ -317,7 +313,6 @@ export class NginxService {
         // read db -----------------------------------------------------------------------------------------------------
 
         const listenRepository = DBHelper.getRepository(NginxListenDB);
-        const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
@@ -333,11 +328,7 @@ export class NginxService {
             // read streams by db --------------------------------------------------------------------------------------
 
             if (alisten.listen_type === ListenTypes.stream) {
-                const tstreams = await streamRepository.find({
-                    where: {
-                        listen_id: alisten.id
-                    }
-                });
+                const tstreams = await NginxStreamServiceDB.getInstance().findAllByListen(alisten.id);
 
                 for await (const astream of tstreams) {
                     const adomain = await DomainServiceDB.getInstance().findOne(astream.domain_id);

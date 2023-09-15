@@ -295,6 +295,7 @@ export {
 export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';
 
 export {NatStatus} from './Backend/NatPort/NatStatus.js';
+export {NginxStreamDestinationType, NginxStreamSshR} from './Backend/Nginx/NginxStream.js';
 
 // HimHip
 export {SchemaConfigOptionsHimHip, ConfigOptionsHimHip} from './HimHip/Config/Config.js';

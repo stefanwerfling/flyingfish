@@ -1,8 +1,7 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, NginxStreamServiceDB} from 'flyingfish_core';
 import {DefaultReturn, ListenDelete, StatusCodes} from 'flyingfish_schemas';
 import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from '../../../inc/Db/MariaDb/Entity/NginxListen.js';
-import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
 
 /**
  * Delete
@@ -15,7 +14,6 @@ export class Delete {
      */
     public static async deleteListen(data: ListenDelete): Promise<DefaultReturn> {
         const listenRepository = DBHelper.getRepository(NginxListenDB);
-        const streamRepository = DBHelper.getRepository(NginxStreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
         const tListen = await listenRepository.findOne({
@@ -32,11 +30,7 @@ export class Delete {
                 };
             }
 
-            const countStream = await streamRepository.count({
-                where: {
-                    listen_id: tListen.id
-                }
-            });
+            const countStream = await NginxStreamServiceDB.getInstance().countByListen(tListen.id);
 
             const countHttp = await httpRepository.count({
                 where: {

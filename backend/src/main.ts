@@ -45,7 +45,6 @@ import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
 import {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
 import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
-import {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
 import {NginxServer} from './inc/Nginx/NginxServer.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
 import {DynDnsService} from './inc/Service/DynDnsService.js';
@@ -115,7 +114,6 @@ import exitHook from 'async-exit-hook';
         const entities: MixedList<Function | string | EntitySchema> = await DBEntitiesLoader.loadEntities() as [];
 
         entities.push(NginxListenDB);
-        entities.push(NginxStreamDB);
         entities.push(NginxHttpDB);
         entities.push(NginxHttpVariableDB);
         entities.push(NginxLocationDB);
