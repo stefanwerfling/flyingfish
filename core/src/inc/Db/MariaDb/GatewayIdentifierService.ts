@@ -12,7 +12,7 @@ export class GatewayIdentifierService extends DBService<GatewayIdentifier> {
     public static REGISTER_NAME = 'gateway_identifier';
 
     /**
-     * Return an intance from gateway identifier server.
+     * Return an intance from gateway identifier service.
      * @returns {GatewayIdentifierService}
      */
     public static getInstance(): GatewayIdentifierService {

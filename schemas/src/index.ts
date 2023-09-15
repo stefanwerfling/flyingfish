@@ -297,6 +297,8 @@ export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/
 export {NatStatus} from './Backend/NatPort/NatStatus.js';
 export {NginxStreamDestinationType, NginxStreamSshR} from './Backend/Nginx/NginxStream.js';
 
+export {BlacklistCategory} from './Backend/IpAccess/BlacklistCategory.js';
+
 // HimHip
 export {SchemaConfigOptionsHimHip, ConfigOptionsHimHip} from './HimHip/Config/Config.js';
 

@@ -1,4 +1,4 @@
-import {BlacklistCategory} from '../Db/MariaDb/Entity/IpBlacklistCategory.js';
+import {BlacklistCategory} from 'flyingfish_schemas';
 
 export type IpSetMeta = {
     maintainer?: string;

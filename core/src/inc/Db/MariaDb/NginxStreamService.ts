@@ -59,7 +59,7 @@ export class NginxStreamService extends DBService<NginxStream> {
 
     /**
      * Count all streams by listen ID.
-     * @param {number} listenId - Listen ID form listen table.
+     * @param {number} listenId - Listen ID from listen table.
      * @returns {number}
      */
     public async countByListen(listenId: number): Promise<number> {
@@ -72,7 +72,7 @@ export class NginxStreamService extends DBService<NginxStream> {
 
     /**
      * Find all streams by listen ID.
-     * @param {number} listenId - Listen ID form listen table.
+     * @param {number} listenId - Listen ID from listen table.
      * @returns {NginxStream[]}
      */
     public async findAllByListen(listenId: number): Promise<NginxStream[]> {
@@ -85,7 +85,7 @@ export class NginxStreamService extends DBService<NginxStream> {
 
     /**
      * Count all streams by domain ID.
-     * @param {number} domainId - Domain ID form domain table.
+     * @param {number} domainId - Domain ID from domain table.
      * @returns {number}
      */
     public async countByDomain(domainId: number): Promise<number> {
@@ -98,7 +98,7 @@ export class NginxStreamService extends DBService<NginxStream> {
 
     /**
      * Find all streams by domain ID.
-     * @param {number} domainId - Domain ID form domain table.
+     * @param {number} domainId - Domain ID from domain table.
      * @returns {NginxStream[]}
      */
     public async findAllByDomain(domainId: number): Promise<NginxStream[]> {

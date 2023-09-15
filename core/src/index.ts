@@ -26,6 +26,7 @@ export {DynDnsServerDomain as DynDnsServerDomainDB} from './inc/Db/MariaDb/Entit
 export {DynDnsServerUser as DynDnsServerUserDB} from './inc/Db/MariaDb/Entity/DynDnsServerUser.js';
 export {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 export {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
+export {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
 export {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
 export {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
@@ -43,6 +44,7 @@ export {DynDnsServerUserService as DynDnsServerUserServiceDB} from './inc/Db/Mar
 export {DynDnsServerDomainService as DynDnsServerDomainServiceDB} from './inc/Db/MariaDb/DynDnsServerDomainService.js';
 export {GatewayIdentifierService as GatewayIdentifierServiceDB} from './inc/Db/MariaDb/GatewayIdentifierService.js';
 export {IpBlacklistService as IpBlacklistServiceDB} from './inc/Db/MariaDb/IpBlacklistService.js';
+export {IpBlacklistCategoryService as IpBlacklistCategoryServiceDB} from './inc/Db/MariaDb/IpBlacklistCategoryService.js';
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/NatPortService.js';
 export {NginxStreamService as NginxStreamServiceDB} from './inc/Db/MariaDb/NginxStreamService.js';
 export {NginxUpstreamService as NginxUpstreamServiceDB} from './inc/Db/MariaDb/NginxUpstreamService.js';

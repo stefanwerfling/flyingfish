@@ -7,7 +7,6 @@ import {
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
-import {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from './inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer as IpListMaintainerDB} from './inc/Db/MariaDb/Entity/IpListMaintainer.js';
 import {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js';
@@ -119,7 +118,6 @@ import exitHook from 'async-exit-hook';
         entities.push(NginxLocationDB);
         entities.push(IpListMaintainerDB);
         entities.push(IpLocationDB);
-        entities.push(IpBlacklistCategoryDB);
         entities.push(IpBlacklistMaintainerDB);
         entities.push(IpWhitelistDB);
 

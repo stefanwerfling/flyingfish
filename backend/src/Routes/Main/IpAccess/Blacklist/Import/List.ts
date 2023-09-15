@@ -1,7 +1,6 @@
-import {DBHelper, IpBlacklistServiceDB} from 'flyingfish_core';
+import {DBHelper, IpBlacklistCategoryServiceDB, IpBlacklistServiceDB} from 'flyingfish_core';
 import {IpAccessBlackListImport, IpAccessBlackListImportsResponse, StatusCodes} from 'flyingfish_schemas';
 import {UtilsLocation} from '../../UtilsLocation.js';
-import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 
 /**
@@ -15,7 +14,6 @@ export class List {
     public static async getBlackListImports(): Promise<IpAccessBlackListImportsResponse> {
         const limit = 20;
 
-        const ipBlacklistCategoryRepository = DBHelper.getRepository(IpBlacklistCategoryDB);
         const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
 
         const entries = await IpBlacklistServiceDB.getInstance().findAllImported(limit, 'DESC');
@@ -28,11 +26,7 @@ export class List {
                 const categorys: number[] = [];
                 const maintainers: number[] = [];
 
-                const cats = await ipBlacklistCategoryRepository.find({
-                    where: {
-                        ip_id: entry.id
-                    }
-                });
+                const cats = await IpBlacklistCategoryServiceDB.getInstance().findAllByIp(entry.id);
 
                 if (cats) {
                     for (const cat of cats) {

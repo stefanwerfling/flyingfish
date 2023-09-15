@@ -1,6 +1,12 @@
-import {DateHelper, DBHelper, IpBlacklistDB, IpBlacklistServiceDB, Logger} from 'flyingfish_core';
+import {
+    DateHelper,
+    DBHelper, IpBlacklistCategoryDB,
+    IpBlacklistCategoryServiceDB,
+    IpBlacklistDB,
+    IpBlacklistServiceDB,
+    Logger
+} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {IpBlacklistCategory as IpBlacklistCategoryDB} from '../Db/MariaDb/Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer as IpListMaintainerDB} from '../Db/MariaDb/Entity/IpListMaintainer.js';
 import {Firehol} from '../Provider/Firehol/Firehol.js';
@@ -71,7 +77,6 @@ export class BlacklistService {
         await fh.loadList();
 
         const ipListMaintainerRepository = DBHelper.getRepository(IpListMaintainerDB);
-        const ipBlacklistCategoryRepository = DBHelper.getRepository(IpBlacklistCategoryDB);
         const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
 
         const ipSetParsers = fh.getIpSets().values();
@@ -121,12 +126,7 @@ export class BlacklistService {
                     // check have category -----------------------------------------------------------------------------
 
                     if (catenum) {
-                        const blackCate = await ipBlacklistCategoryRepository.findOne({
-                            where: {
-                                ip_id: ipBlacklistEntry.id,
-                                cat_num: catenum
-                            }
-                        });
+                        const blackCate = await IpBlacklistCategoryServiceDB.getInstance().findByIpAndCatnum(ipBlacklistEntry.id, catenum);
 
                         if (!blackCate) {
                             const nBlackCate = new IpBlacklistCategoryDB();
