@@ -10,6 +10,7 @@ import {DynDnsServerUser} from './Entity/DynDnsServerUser.js';
 import {GatewayIdentifier} from './Entity/GatewayIdentifier.js';
 import {IpBlacklist} from './Entity/IpBlacklist.js';
 import {NatPort} from './Entity/NatPort.js';
+import {NginxUpstream} from './Entity/NginxUpstream.js';
 import {Settings} from './Entity/Settings.js';
 import {SshPort} from './Entity/SshPort.js';
 import {SshUser} from './Entity/SshUser.js';
@@ -40,6 +41,7 @@ export class DBEntitiesLoader {
             GatewayIdentifier,
             IpBlacklist,
             NatPort,
+            NginxUpstream,
             Settings,
             SshPort,
             SshUser,

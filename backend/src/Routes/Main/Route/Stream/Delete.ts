@@ -1,7 +1,6 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, NginxUpstreamServiceDB} from 'flyingfish_core';
 import {DefaultReturn, RouteStreamDelete, StatusCodes} from 'flyingfish_schemas';
 import {NginxStream as NginxStreamDB} from '../../../../inc/Db/MariaDb/Entity/NginxStream.js';
-import {NginxUpstream as NginxUpstreamDB} from '../../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {Save} from './Save.js';
 
 /**
@@ -22,7 +21,6 @@ export class Delete {
         }
 
         const streamRepository = DBHelper.getRepository(NginxStreamDB);
-        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
 
         const stream = await streamRepository.findOne({
             where: {
@@ -49,9 +47,7 @@ export class Delete {
 
             // delete upstreams ------------------------------------------------------------------------------------
 
-            await upstreamRepository.delete({
-                stream_id: stream.id
-            });
+            await NginxUpstreamServiceDB.getInstance().removeAllStreams(stream.id);
 
             // delete stream ---------------------------------------------------------------------------------------
 

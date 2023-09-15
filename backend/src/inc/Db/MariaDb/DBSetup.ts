@@ -1,8 +1,7 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, DomainDB, DomainServiceDB, Logger, UserDB, UserServiceDB} from 'flyingfish_core';
+import {DBHelper, DomainDB, DomainServiceDB, Logger, NginxUpstreamDB, UserDB, UserServiceDB, NginxUpstreamServiceDB} from 'flyingfish_core';
 import {ListenCategory, ListenProtocol, ListenTypes, NginxListen as NginxListenDB} from './Entity/NginxListen.js';
 import {NginxStream as NginxStreamDB, NginxStreamDestinationType} from './Entity/NginxStream.js';
-import {NginxUpstream as NginxUpstreamDB} from './Entity/NginxUpstream.js';
 
 /**
  * DBSetup
@@ -137,7 +136,7 @@ export class DBSetup {
         sTo5333Up.destination_address = '127.0.0.1';
         sTo5333Up.destination_port = 5333;
 
-        await DBHelper.getDataSource().manager.save(sTo5333Up);
+        await NginxUpstreamServiceDB.getInstance().save(sTo5333Up);
 
         const sTo10443 = new NginxStreamDB();
         sTo10443.domain_id = defaultDomain.id;

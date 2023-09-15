@@ -1,16 +1,8 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
+import {Column, Entity, Index} from 'typeorm';
 
-/**
- * Nginx Stream Entity
- */
 @Entity({name: 'nginx_upstream'})
-export class NginxUpstream extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class NginxUpstream extends DBBaseEntityId {
 
     /**
      * stream id

@@ -1,4 +1,4 @@
-import {DBHelper, DomainServiceDB, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {DBHelper, DomainServiceDB, NginxUpstreamServiceDB, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {
     Location,
     RouteData,
@@ -16,7 +16,6 @@ import {
     NginxHttpVariableContextType
 } from '../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {NginxLocation as NginxLocationDB} from '../../../inc/Db/MariaDb/Entity/NginxLocation.js';
-import {NginxUpstream as NginxUpstreamDB} from '../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 import {NginxStream as NginxStreamDB} from '../../../inc/Db/MariaDb/Entity/NginxStream.js';
 
 /**
@@ -32,7 +31,6 @@ export class List {
         const sshportList: RouteSshPort[] = [];
 
         const streamRepository = DBHelper.getRepository(NginxStreamDB);
-        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
@@ -69,11 +67,7 @@ export class List {
                             upstreams: []
                         };
 
-                        const upstreams = await upstreamRepository.find({
-                            where: {
-                                stream_id: tstream.id
-                            }
-                        });
+                        const upstreams = await NginxUpstreamServiceDB.getInstance().findAllStreams(tstream.id);
 
                         for (const aupstream of upstreams) {
                             streamEntry.upstreams.push({
@@ -118,7 +112,7 @@ export class List {
                     }
                 }
 
-                // http --------------------------------------------------------------------------------------------
+                // http ------------------------------------------------------------------------------------------------
 
                 const https = await httpRepository.find({
                     where: {
@@ -208,10 +202,11 @@ export class List {
                                 });
 
                                 if (sshport) {
-                                    location.ssh = {};
-                                    location.ssh.id = sshport.id;
-                                    location.ssh.port_out = sshport.port;
-                                    location.ssh.schema = alocation.sshport_schema;
+                                    location.ssh = {
+                                        id: sshport.id,
+                                        port_out: sshport.port,
+                                        schema: alocation.sshport_schema
+                                    };
                                 }
                             }
 
@@ -239,7 +234,7 @@ export class List {
             }
         }
 
-        // load defaults -------------------------------------------------------------------------------------------
+        // load defaults -----------------------------------------------------------------------------------------------
 
         const sshports = await sshportRepository.find();
 

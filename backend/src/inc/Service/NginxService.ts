@@ -1,4 +1,12 @@
-import {DBHelper, DomainServiceDB, FileHelper, Logger, SshPortDB} from 'flyingfish_core';
+import {
+    DBHelper,
+    DomainServiceDB,
+    FileHelper,
+    Logger,
+    NginxUpstreamDB,
+    NginxUpstreamServiceDB,
+    SshPortDB
+} from 'flyingfish_core';
 import fs from 'fs/promises';
 import path from 'path';
 import {SchemaErrors} from 'vts';
@@ -22,7 +30,6 @@ import {
     NginxStreamDestinationType,
     NginxStreamSshR
 } from '../Db/MariaDb/Entity/NginxStream.js';
-import {NginxUpstream as NginxUpstreamDB} from '../Db/MariaDb/Entity/NginxUpstream.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
@@ -311,7 +318,6 @@ export class NginxService {
 
         const listenRepository = DBHelper.getRepository(NginxListenDB);
         const streamRepository = DBHelper.getRepository(NginxStreamDB);
-        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
         const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
@@ -350,11 +356,7 @@ export class NginxService {
                             upstreams: []
                         };
 
-                        const upstreams = await upstreamRepository.find({
-                            where: {
-                                stream_id: astream.id
-                            }
-                        });
+                        const upstreams = await NginxUpstreamServiceDB.getInstance().findAllStreams(astream.id);
 
                         if (upstreams) {
                             streamCollection.upstreams = upstreams;

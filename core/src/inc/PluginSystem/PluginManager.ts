@@ -33,8 +33,8 @@ export class PluginManager {
     protected _appPath: string;
 
     /**
-     * service name (name of the system in which the plugin works)
-     * @protected
+     * Service name from service instance (name of the system in which the plugin works).
+     * @member {string}
      */
     protected _serviceName: string;
 
@@ -46,7 +46,7 @@ export class PluginManager {
 
     /**
      * events
-     * @
+     * @member {IPluginEvent[]}
      */
     protected _events: IPluginEvent[] = [];
 
@@ -63,9 +63,8 @@ export class PluginManager {
     }
 
     /**
-     * constructor
-     * @param {string} serviceName - Service name, name who start the plugin manager.
-     * @param {string} appPath - Path to modules directory.
+     * @param {string} serviceName - Service name, name who starts the plugin manager.
+     * @param {string} appPath - Path-to-modules directory.
      */
     public constructor(serviceName: string, appPath?: string) {
         if (appPath) {
@@ -216,7 +215,7 @@ export class PluginManager {
 
     /**
      * getAllEvents
-     * @param aInterface
+     * @param {extends IPluginEvent} aInterface
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     public getAllEvents<T extends IPluginEvent>(aClass: Function): T[] {

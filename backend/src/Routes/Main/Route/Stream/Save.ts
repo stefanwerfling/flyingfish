@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {DBHelper, NginxUpstreamDB, NginxUpstreamServiceDB, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {DefaultReturn, RouteStreamSave, RouteStreamSSH, StatusCodes} from 'flyingfish_schemas';
 import {Not} from 'typeorm';
 import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
@@ -8,7 +8,6 @@ import {
     NginxStreamDestinationType,
     NginxStreamSshR
 } from '../../../../inc/Db/MariaDb/Entity/NginxStream.js';
-import {NginxUpstream as NginxUpstreamDB} from '../../../../inc/Db/MariaDb/Entity/NginxUpstream.js';
 
 /**
  * SaveStream
@@ -240,8 +239,6 @@ export class Save {
 
         // ---------------------------------------------------------------------------------------------------------
 
-        const upstreamRepository = DBHelper.getRepository(NginxUpstreamDB);
-
         let aStream: NginxStreamDB|null = null;
 
         if (data.stream.id !== 0) {
@@ -357,25 +354,17 @@ export class Save {
 
         if (aStream.destination_listen_id > 0) {
             // clear old upstreams
-            await upstreamRepository.delete({
-                stream_id: aStream.id
-            });
+            await NginxUpstreamServiceDB.getInstance().removeAllStreams(aStream.id);
         } else if (data.stream.upstreams.length > 0) {
             // remove delete upstreams -----------------------------------------------------------------------------
-            const tupstreams = await upstreamRepository.find({
-                where: {
-                    stream_id: aStream.id
-                }
-            });
+            const tupstreams = await NginxUpstreamServiceDB.getInstance().findAllStreams(aStream.id);
 
             if (tupstreams) {
                 const checkUpstreamExistence = (upstreamId: number): boolean => data.stream.upstreams.some(({id}) => id === upstreamId);
 
                 for await (const oldUpstream of tupstreams) {
                     if (!checkUpstreamExistence(oldUpstream.id)) {
-                        await upstreamRepository.delete({
-                            id: oldUpstream.id
-                        });
+                        await NginxUpstreamServiceDB.getInstance().remove(oldUpstream.id);
                     }
                 }
             }
@@ -387,11 +376,7 @@ export class Save {
                 let aNewUpstream: NginxUpstreamDB|null = null;
 
                 if (aUpstream.id > 0) {
-                    const tUpstream = await upstreamRepository.findOne({
-                        where: {
-                            id: aUpstream.id
-                        }
-                    });
+                    const tUpstream = await NginxUpstreamServiceDB.getInstance().findOne(aUpstream.id);
 
                     if (tUpstream) {
                         aNewUpstream = tUpstream;
@@ -408,7 +393,7 @@ export class Save {
                 aNewUpstream.index = index;
                 aNewUpstream.proxy_protocol_out = aUpstream.proxy_protocol_out;
 
-                await DBHelper.getDataSource().manager.save(aNewUpstream);
+                await NginxUpstreamServiceDB.getInstance().save(aNewUpstream);
 
                 index++;
             }
