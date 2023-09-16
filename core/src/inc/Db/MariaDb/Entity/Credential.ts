@@ -1,6 +1,7 @@
-import {Column, Index} from 'typeorm';
+import {Column, Index, Entity} from 'typeorm';
 import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
+@Entity({name: 'credential'})
 export class Credential extends DBBaseEntityId {
 
     /**

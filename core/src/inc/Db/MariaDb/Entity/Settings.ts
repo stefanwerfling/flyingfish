@@ -1,7 +1,7 @@
 import {DBBaseEntityId} from '../DBBaseEntityId.js';
 import {Column, Entity, Index} from 'typeorm';
 
-@Entity({name: 'nat_port'})
+@Entity({name: 'settings'})
 export class Settings extends DBBaseEntityId {
 
     /**
