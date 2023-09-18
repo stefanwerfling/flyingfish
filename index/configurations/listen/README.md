@@ -45,7 +45,7 @@ Add a list, a dialog follows that also appears when editing.
 5. **Description:** Here you can describe in more detail what the listener is used for.
 6. **IP6 enable:** Additionally enables listening on an IP6 address <mark style="color:red;">(untested yet, but enables it in the nginx config)</mark>.
 7. **IP access:** Enables checking of the IP address against a list (blacklist/whitelist).
-8. **Access type:** Which list to use for the IP check. The lists can be maintained under [IP Access](../ip-access.md).
+8. **Access type:** Which list to use for the IP check. The lists can be maintained under [IP Access](ip-access.md).
 9. **Proxy protocol enable:** Activates the use of the [proxy protocol](proxy-protocol.md). From now on all packets are provided with the [proxy protocol](proxy-protocol.md) header. <mark style="background-color:blue;">This setting is important for internal HTTP/HTTPS processing.</mark> Only in this way does the route get the correct IP of the inquiring request for further checks or logging.
 10. **Proxy protocol incoming enable:** Enables expecting a packet with a proxy header. Should the FlyingFish sit behind another proxy server with a [proxy protocol](proxy-protocol.md).
 11. **Disable this listen:** Disables listening, settings are skipped during nginx config build. <mark style="background-color:blue;">All dependent routes are also skipped.</mark>
@@ -72,7 +72,7 @@ The following graphic should help to understand the list process:
 
 <mark style="background-color:yellow;">Port 5333, 80, 443 Listening</mark> on the network from the host (as a bridge, port forwarding to the Docker container). &#x20;
 
-There, the Nginx first uses <mark style="background-color:orange;">"</mark>[<mark style="background-color:orange;">IP access"</mark>](../ip-access.md) to check whether the IPs have access rights. Then the streams (TCP/UDP) are <mark style="background-color:orange;">split into their protocol</mark> (SSL/HTTP/etc.) and <mark style="background-color:orange;">split into</mark> [<mark style="background-color:orange;">domains</mark>](../domains/) for forwarded to a destination. Should not specify an external destination, then use the internal ports for the <mark style="background-color:green;">HTTP (10080) and HTTPS (10443) server</mark> are specified as standard. They perform a <mark style="background-color:green;">"proxy reserve"</mark> and request a route too <mark style="background-color:blue;">internal or external HTTP/HTTPS server</mark>.&#x20;
+There, the Nginx first uses <mark style="background-color:orange;">"</mark>[<mark style="background-color:orange;">IP access"</mark>](ip-access.md) to check whether the IPs have access rights. Then the streams (TCP/UDP) are <mark style="background-color:orange;">split into their protocol</mark> (SSL/HTTP/etc.) and <mark style="background-color:orange;">split into</mark> [<mark style="background-color:orange;">domains</mark>](../domains/) for forwarded to a destination. Should not specify an external destination, then use the internal ports for the <mark style="background-color:green;">HTTP (10080) and HTTPS (10443) server</mark> are specified as standard. They perform a <mark style="background-color:green;">"proxy reserve"</mark> and request a route too <mark style="background-color:blue;">internal or external HTTP/HTTPS server</mark>.&#x20;
 
 
 

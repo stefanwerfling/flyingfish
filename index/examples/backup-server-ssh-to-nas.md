@@ -27,7 +27,7 @@ There are many brute force attempts on the SSH port. The port was immediately fo
 
 Beat me, but I use the Nginx, more precisely my FlyingFish! Having full control over who even connects is a great feeling. It's like your own front door, only the people you expect come in there. Not everyone goes through and stands in front of the safe and tries the combination.
 
-I now use my own "[Listen](../configurations/listen/)", [Whitelist](../configurations/ip-access.md#whitelist) and a [route](../configurations/routes.md) with "[Stream](../configurations/routes.md#add-stream)" for this.
+I now use my own "[Listen](../configurations/listen/)", [Whitelist](../configurations/listen/ip-access.md#whitelist) and a [route](../configurations/routes.md) with "[Stream](../configurations/routes.md#add-stream)" for this.
 
 {% hint style="info" %}
 Now some routers can definitely do this. The difference, however, is that FlyingFish also logs this, and we can see the connections (counts, etc.).
@@ -90,7 +90,7 @@ In the UI I have now created the "[Listen](../configurations/listen/)":
 
 Here you can see again that port 2242 is being used and that the whitelist for the IP check has been activated.
 
-In the next step I create the allowed IP in the [Whitelist](../configurations/ip-access.md#whitelist):
+In the next step I create the allowed IP in the [Whitelist](../configurations/listen/ip-access.md#whitelist):
 
 <figure><img src="../../.gitbook/assets/example_backup_nas4.png" alt=""><figcaption></figcaption></figure>
 
