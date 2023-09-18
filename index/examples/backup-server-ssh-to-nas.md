@@ -118,7 +118,7 @@ For this special stream connection from my own "[Listen](../configurations/liste
 Last but not least we activate the <mark style="background-color:red;">default route</mark>, which uses the stream as default.
 
 {% hint style="info" %}
-Don't forget the [port forwarding](../configurations/port-forwarding.md) from the router to the FlyingFish! Just add the port 2242 this points to FlyingFish 2242 port.
+Don't forget the [port forwarding](../configurations/listen/port-forwarding.md) from the router to the FlyingFish! Just add the port 2242 this points to FlyingFish 2242 port.
 {% endhint %}
 
 

@@ -24,7 +24,7 @@ It may be possible to install multiple services on one host. But it can mean a h
 
 The ports can be forwarded with a router in the following ways:
 
-* [**ports Fixed** setting on the router](port-forwarding.md)
+* [**ports Fixed** setting on the router](listen/port-forwarding.md)
 * **with** UPnP-Nat, you have to check whether UPnP-Nat is activated on the router, for example a "Fritz box" can be determined which computer is allowed to do this.
 
 
