@@ -32,9 +32,24 @@ In the diagram you can see how the flow works:
 From now on we can manage all sub domains and example.com ourselves with our own records.
 {% endhint %}
 
-<figure><img src="../../../.gitbook/assets/the-matrix-morpheus-dns.png" alt=""><figcaption></figcaption></figure>
-
 ## Practice
 
 I myself use the provider "Selfhost" which I can recommend for this setup.
 
+## Test your DNS Server
+
+First you should check whether the server is accessible in the network. According to the standard installation, the DNS port is 5333. This is simply specified in the app.
+
+```sh
+dig @<host-ip-flyingfish> -p5333 <mydomain>
+```
+
+If everything is set up as above with the "NS" record and port forwarding from the router is set up, we can start the query without IP and port:
+
+```sh
+dig <mydomain>
+```
+
+
+
+<figure><img src="../../../.gitbook/assets/the-matrix-morpheus-dns.png" alt=""><figcaption></figcaption></figure>
