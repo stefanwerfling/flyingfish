@@ -23,6 +23,10 @@ Existing connections are kept as if running the command: nginx -s reload
 2. The first thing to see in the Routes list are the default routes. If no route is specified, the default routes always apply.
 3. Each domain entered in [Domains](domains/) is displayed under Routes. One or more routes from one or more [Listen](listen/) to a destination can now be entered.
 
+
+
+<figure><img src="../../.gitbook/assets/7zwwhv.jpg" alt=""><figcaption><p>Generate by <a href="https://imgflip.com/i/7zwwhv">https://imgflip.com/i/7zwwhv</a></p></figcaption></figure>
+
 ## Default Routes
 
 
