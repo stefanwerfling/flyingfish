@@ -18,6 +18,11 @@ The ports must be released from your router (in my example from the address 192.
 You have to research online how to set up your router. Since the routers differ from each manufacturer.
 {% endhint %}
 
+{% hint style="info" %}
+Automation with [Upnp-Nat](upnp-nat.md) can automate this process.
+{% endhint %}
+
 **Collection of links for known routers:**
 
 * [FritzBox 7590](https://en.avm.de/service/knowledge-base/dok/FRITZ-Box-7590/34\_Setting-up-port-sharing-in-the-FRITZ-Box/)
+
