@@ -1,7 +1,6 @@
-import {DBHelper} from 'flyingfish_core';
+import {IpWhitelistServiceDB} from 'flyingfish_core';
 import {IpAccessWhiteList, IpAccessWhiteListResponse, StatusCodes} from 'flyingfish_schemas';
 import {UtilsLocation} from '../UtilsLocation.js';
-import {IpWhitelist as IpWhitelistDB} from '../../../../inc/Db/MariaDb/Entity/IpWhitelist.js';
 
 /**
  * List
@@ -12,14 +11,7 @@ export class List {
      * getWhiteList
      */
     public static async getWhiteList(): Promise<IpAccessWhiteListResponse> {
-        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
-
-        const entries = await ipWhitelistRepository.find({
-            order: {
-                last_access: 'DESC'
-            }
-        });
-
+        const entries = await IpWhitelistServiceDB.getInstance().findAllByOrder('DESC');
         const list: IpAccessWhiteList[] = [];
         const locationIds: number[] = [];
 
@@ -32,7 +24,7 @@ export class List {
                 list.push({
                     id: entry.id,
                     ip: entry.ip,
-                    disable: entry.disable,
+                    disabled: entry.disabled,
                     last_update: entry.last_update,
                     last_access: entry.last_access,
                     count_access: entry.count_access,

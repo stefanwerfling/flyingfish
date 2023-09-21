@@ -13,6 +13,7 @@ import {IpBlacklistCategory} from './Entity/IpBlacklistCategory.js';
 import {IpBlacklistMaintainer} from './Entity/IpBlacklistMaintainer.js';
 import {IpListMaintainer} from './Entity/IpListMaintainer.js';
 import {IpLocation} from './Entity/IpLocation.js';
+import {IpWhitelist} from './Entity/IpWhitelist.js';
 import {NatPort} from './Entity/NatPort.js';
 import {NginxStream} from './Entity/NginxStream.js';
 import {NginxUpstream} from './Entity/NginxUpstream.js';
@@ -49,6 +50,7 @@ export class DBEntitiesLoader {
             IpBlacklistMaintainer,
             IpListMaintainer,
             IpLocation,
+            IpWhitelist,
             NatPort,
             NginxStream,
             NginxUpstream,

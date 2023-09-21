@@ -1,16 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * IpWhitelist
  */
 @Entity({name: 'ip_whitelist'})
-export class IpWhitelist extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class IpWhitelist extends DBBaseEntityId {
 
     /**
      * ip
@@ -32,14 +27,14 @@ export class IpWhitelist extends BaseEntity {
     public last_update!: number;
 
     /**
-     * disable the listen
+     * disabled the listen
      */
     @Index()
     @Column({
         type: 'bool',
         default: false
     })
-    public disable!: boolean;
+    public disabled!: boolean;
 
     /**
      * last block

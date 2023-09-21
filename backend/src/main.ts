@@ -7,7 +7,6 @@ import {
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
-import {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
 import {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
@@ -113,7 +112,6 @@ import exitHook from 'async-exit-hook';
         entities.push(NginxHttpDB);
         entities.push(NginxHttpVariableDB);
         entities.push(NginxLocationDB);
-        entities.push(IpWhitelistDB);
 
         await DBHelper.init({
             type: 'mysql',

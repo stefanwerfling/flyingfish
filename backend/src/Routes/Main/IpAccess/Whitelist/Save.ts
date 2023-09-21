@@ -1,6 +1,5 @@
-import {DateHelper, DBHelper} from 'flyingfish_core';
+import {DateHelper, IpWhitelistDB, IpWhitelistServiceDB} from 'flyingfish_core';
 import {IpAccessWhiteSaveRequest, IpAccessWhiteSaveResponse, StatusCodes} from 'flyingfish_schemas';
-import {IpWhitelist as IpWhitelistDB} from '../../../../inc/Db/MariaDb/Entity/IpWhitelist.js';
 
 /**
  * Save
@@ -12,24 +11,18 @@ export class Save {
      * @param data
      */
     public static async saveWhiteList(data: IpAccessWhiteSaveRequest): Promise<IpAccessWhiteSaveResponse> {
-        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
-
-        let entrie = await ipWhitelistRepository.findOne({
-            where: {
-                id: data.id
-            }
-        });
+        let entrie = await IpWhitelistServiceDB.getInstance().findOne(data.id);
 
         if (!entrie) {
             entrie = new IpWhitelistDB();
         }
 
         entrie.ip = data.ip;
-        entrie.disable = data.disable;
+        entrie.disabled = data.disabled;
         entrie.description = data.description;
         entrie.last_update = DateHelper.getCurrentDbTime();
 
-        await DBHelper.getDataSource().manager.save(entrie);
+        await IpWhitelistServiceDB.getInstance().save(entrie);
 
         return {
             statusCode: StatusCodes.OK

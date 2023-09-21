@@ -1,6 +1,11 @@
-import {DBHelper, IpBlacklistServiceDB, IpLocationDB, IpLocationServiceDB, Logger} from 'flyingfish_core';
+import {
+    IpBlacklistServiceDB,
+    IpLocationDB,
+    IpLocationServiceDB,
+    IpWhitelistServiceDB,
+    Logger
+} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {IpWhitelist as IpWhitelistDB} from '../Db/MariaDb/Entity/IpWhitelist.js';
 import {IpLocateIo} from '../Provider/IpLocate/IpLocateIo.js';
 import {Settings as GlobalSettings} from '../Settings/Settings.js';
 
@@ -98,20 +103,14 @@ export class IpLocationService {
                 } else {
                     entry.ip_location_id = ipLocationId;
 
-                    await DBHelper.getDataSource().manager.save(entry);
+                    await IpBlacklistServiceDB.getInstance().save(entry);
                 }
             }
         }
 
         // check whitelist ---------------------------------------------------------------------------------------------
 
-        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
-
-        const listW = await ipWhitelistRepository.find({
-            where: {
-                ip_location_id: 0
-            }
-        });
+        const listW = await IpWhitelistServiceDB.getInstance().findAllByLocation(0);
 
         if (listW) {
             for await (const entry of listW) {
@@ -122,7 +121,7 @@ export class IpLocationService {
                 } else {
                     entry.ip_location_id = ipLocationId;
 
-                    await DBHelper.getDataSource().manager.save(entry);
+                    await IpWhitelistServiceDB.getInstance().save(entry);
                 }
             }
         }

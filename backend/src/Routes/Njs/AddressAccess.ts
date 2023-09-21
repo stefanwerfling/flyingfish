@@ -1,6 +1,5 @@
 import {Response, Router} from 'express';
-import {DateHelper, DBHelper, DefaultRoute, IpBlacklistServiceDB, Logger} from 'flyingfish_core';
-import {IpWhitelist as IpWhitelistDB} from '../../inc/Db/MariaDb/Entity/IpWhitelist.js';
+import {DBHelper, DefaultRoute, IpBlacklistServiceDB, IpWhitelistServiceDB, Logger} from 'flyingfish_core';
 import {ListenAddressCheckType, NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
 
 /**
@@ -134,20 +133,13 @@ export class AddressAccess extends DefaultRoute {
      * @protected
      */
     protected async _listCheckWhiteList(listenId: number, realip_remote_addr: string): Promise<boolean> {
-        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
-
-        const address = await ipWhitelistRepository.findOne({
-            where: {
-                ip: realip_remote_addr,
-                disable: false
-            }
-        });
+        const address = await IpWhitelistServiceDB.getInstance().findByIp(realip_remote_addr, false);
 
         if (address) {
             Logger.getLogger().info(`AddressAccess::_listCheckWhiteList: Address(${realip_remote_addr}) found in whitelist!`);
 
             // update and not await
-            AddressAccess._updateWhiteListAccess(address.id, address.count_access + 1).then();
+            IpWhitelistServiceDB.getInstance().updateAccess(address.id, address.count_access + 1).then();
 
             return true;
         }
@@ -155,26 +147,6 @@ export class AddressAccess extends DefaultRoute {
         Logger.getLogger().info(`AddressAccess::_listCheckWhiteList: Address(${realip_remote_addr}) not found in whitelist.`);
 
         return false;
-    }
-
-    /**
-     * _updateWhiteListAccess
-     * @param ipWhitelistId
-     * @param newAccessCount
-     * @protected
-     */
-    protected static async _updateWhiteListAccess(ipWhitelistId: number, newAccessCount: number): Promise<void> {
-        const ipWhitelistRepository = DBHelper.getRepository(IpWhitelistDB);
-
-        await ipWhitelistRepository
-        .createQueryBuilder()
-        .update()
-        .set({
-            last_access: DateHelper.getCurrentDbTime(),
-            count_access: newAccessCount
-        })
-        .where('id = :id', {id: ipWhitelistId})
-        .execute();
     }
 
     /**
