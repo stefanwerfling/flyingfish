@@ -2,13 +2,11 @@ import {
     DateHelper,
     DBHelper, IpBlacklistCategoryDB,
     IpBlacklistCategoryServiceDB,
-    IpBlacklistDB,
-    IpBlacklistServiceDB,
+    IpBlacklistDB, IpBlacklistMaintainerDB, IpBlacklistMaintainerServiceDB,
+    IpBlacklistServiceDB, IpListMaintainerDB, IpListMaintainerServiceDB,
     Logger
 } from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../Db/MariaDb/Entity/IpBlacklistMaintainer.js';
-import {IpListMaintainer as IpListMaintainerDB} from '../Db/MariaDb/Entity/IpListMaintainer.js';
 import {Firehol} from '../Provider/Firehol/Firehol.js';
 import {Settings as GlobalSettings} from '../Settings/Settings.js';
 
@@ -76,9 +74,6 @@ export class BlacklistService {
         const fh = new Firehol();
         await fh.loadList();
 
-        const ipListMaintainerRepository = DBHelper.getRepository(IpListMaintainerDB);
-        const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
-
         const ipSetParsers = fh.getIpSets().values();
 
         for await (const ipSetParser of ipSetParsers) {
@@ -90,11 +85,8 @@ export class BlacklistService {
             // add maintainer infos ------------------------------------------------------------------------------------
 
             if (meta.maintainer) {
-                ipListMaintainer = await ipListMaintainerRepository.findOne({
-                    where: {
-                        maintainer_name: ipSetParser.getMeta().maintainer
-                    }
-                });
+
+                ipListMaintainer = await IpListMaintainerServiceDB.getInstance().findByMaintainerName(meta.maintainer);
 
                 if (!ipListMaintainer) {
                     const nIpListMaintainer = new IpListMaintainerDB();
@@ -103,7 +95,7 @@ export class BlacklistService {
                     nIpListMaintainer.maintainer_url = meta.maintainer_url ? meta.maintainer_url : '';
                     nIpListMaintainer.list_source_url = meta.list_source_url ? meta.list_source_url : '';
 
-                    ipListMaintainer = await DBHelper.getDataSource().manager.save(nIpListMaintainer);
+                    ipListMaintainer = await IpListMaintainerServiceDB.getInstance().save(nIpListMaintainer);
                 }
             }
 
@@ -141,19 +133,18 @@ export class BlacklistService {
                     // link maintainer ---------------------------------------------------------------------------------
 
                     if (ipListMaintainer) {
-                        const blackMaintainer = await ipBlacklistMaintainerRepository.findOne({
-                            where: {
-                                ip_id: ipBlacklistEntry.id,
-                                ip_maintainer_id: ipListMaintainer.id
-                            }
-                        });
+                        const blackMaintainer =
+                            await IpBlacklistMaintainerServiceDB.getInstance().findByIp(
+                                ipBlacklistEntry.id,
+                                ipListMaintainer.id
+                            );
 
                         if (!blackMaintainer) {
                             const nBlackMaintainer = new IpBlacklistMaintainerDB();
                             nBlackMaintainer.ip_id = ipBlacklistEntry.id;
                             nBlackMaintainer.ip_maintainer_id = ipListMaintainer.id;
 
-                            await DBHelper.getDataSource().manager.save(nBlackMaintainer);
+                            await IpBlacklistMaintainerServiceDB.getInstance().save(nBlackMaintainer);
                         }
                     }
 

@@ -1,6 +1,5 @@
-import {DBHelper, IpBlacklistServiceDB, Logger} from 'flyingfish_core';
+import {DBHelper, IpBlacklistServiceDB, IpLocationDB, IpLocationServiceDB, Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {IpLocation as IpLocationDB} from '../Db/MariaDb/Entity/IpLocation.js';
 import {IpWhitelist as IpWhitelistDB} from '../Db/MariaDb/Entity/IpWhitelist.js';
 import {IpLocateIo} from '../Provider/IpLocate/IpLocateIo.js';
 import {Settings as GlobalSettings} from '../Settings/Settings.js';
@@ -39,12 +38,7 @@ export class IpLocationService {
      * @protected
      */
     protected async _getIpLocation(ip: string): Promise<number | null> {
-        const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
-        const aIpLocation = await ipLocationRepository.findOne({
-            where: {
-                ip: ip
-            }
-        });
+        const aIpLocation = await IpLocationServiceDB.getInstance().findByIp(ip);
 
         if (aIpLocation) {
             return aIpLocation.id;
@@ -69,7 +63,7 @@ export class IpLocationService {
             newIpLocation.org = location.org || '';
             newIpLocation.asn = location.asn || '';
 
-            newIpLocation = await DBHelper.getDataSource().manager.save(newIpLocation);
+            newIpLocation = await IpLocationServiceDB.getInstance().save(newIpLocation);
 
             return newIpLocation.id;
         }

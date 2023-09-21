@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {IpListMaintainerServiceDB} from 'flyingfish_core';
 import {IpAccessMaintainer, IpAccessMaintainerResponse, StatusCodes} from 'flyingfish_schemas';
-import {IpListMaintainer as IpListMaintainerDB} from '../../../../inc/Db/MariaDb/Entity/IpListMaintainer.js';
 
 /**
  * List
@@ -11,8 +10,7 @@ export class List {
      * getMaintainerList
      */
     public static async getMaintainerList(): Promise<IpAccessMaintainerResponse> {
-        const ipListMaintainerRepository = DBHelper.getRepository(IpListMaintainerDB);
-        const maintainers = await ipListMaintainerRepository.find();
+        const maintainers = await IpListMaintainerServiceDB.getInstance().findAll();
 
         const list: IpAccessMaintainer[] = [];
 

@@ -1,16 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * ip list maintainer
  */
 @Entity({name: 'ip_list_maintainer'})
-export class IpListMaintainer extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class IpListMaintainer extends DBBaseEntityId {
 
     /**
      * maintainer name

@@ -1,7 +1,10 @@
-import {DBHelper, IpBlacklistCategoryServiceDB, IpBlacklistServiceDB} from 'flyingfish_core';
+import {
+    IpBlacklistCategoryServiceDB,
+    IpBlacklistMaintainerServiceDB,
+    IpBlacklistServiceDB
+} from 'flyingfish_core';
 import {IpAccessBlackListImport, IpAccessBlackListImportsResponse, StatusCodes} from 'flyingfish_schemas';
 import {UtilsLocation} from '../../UtilsLocation.js';
-import {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from '../../../../../inc/Db/MariaDb/Entity/IpBlacklistMaintainer.js';
 
 /**
  * List
@@ -13,8 +16,6 @@ export class List {
      */
     public static async getBlackListImports(): Promise<IpAccessBlackListImportsResponse> {
         const limit = 20;
-
-        const ipBlacklistMaintainerRepository = DBHelper.getRepository(IpBlacklistMaintainerDB);
 
         const entries = await IpBlacklistServiceDB.getInstance().findAllImported(limit, 'DESC');
 
@@ -34,11 +35,7 @@ export class List {
                     }
                 }
 
-                const maints = await ipBlacklistMaintainerRepository.find({
-                    where: {
-                        ip_id: entry.id
-                    }
-                });
+                const maints = await IpBlacklistMaintainerServiceDB.getInstance().findAllByIp(entry.id);
 
                 if (maints) {
                     for (const maint of maints) {

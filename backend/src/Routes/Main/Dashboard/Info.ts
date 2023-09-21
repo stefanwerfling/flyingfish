@@ -1,6 +1,5 @@
-import {DBHelper, IpBlacklistServiceDB} from 'flyingfish_core';
+import {IpBlacklistServiceDB, IpLocationServiceDB} from 'flyingfish_core';
 import {DashboardInfoIpBlock, DashboardInfoResponse, StatusCodes} from 'flyingfish_schemas';
-import {IpLocation as IpLocationDB} from '../../../inc/Db/MariaDb/Entity/IpLocation.js';
 import {HimHIP} from '../../../inc/HimHIP/HimHIP.js';
 import {HowIsMyPublicIpService} from '../../../inc/Service/HowIsMyPublicIpService.js';
 import {IpService} from '../../../inc/Service/IpService.js';
@@ -14,8 +13,6 @@ export class Info {
      * getInfo
      */
     public static async getInfo(): Promise<DashboardInfoResponse> {
-        const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
-
         // ip blocks ---------------------------------------------------------------------------------------------------
 
         const ipblocks: DashboardInfoIpBlock[] = [];
@@ -27,11 +24,7 @@ export class Info {
 
         if (entries) {
             for await (const entry of entries) {
-                const tlocation = await ipLocationRepository.findOne({
-                    where: {
-                        id: entry.ip_location_id
-                    }
-                });
+                const tlocation = await IpLocationServiceDB.getInstance().findOne(entry.ip_location_id);
 
                 if (tlocation) {
                     ipblocks.push({

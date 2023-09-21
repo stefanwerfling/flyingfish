@@ -11,6 +11,7 @@ export class FireholDownloader {
 
     /**
      * download url
+     * @check https://github.com/lucadp76/blocklist-ipsets
      * @protected
      */
     protected _url = 'https://github.com/firehol/blocklist-ipsets/archive/refs/heads/master.zip';

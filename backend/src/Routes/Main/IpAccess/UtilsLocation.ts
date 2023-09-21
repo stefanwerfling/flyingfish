@@ -1,7 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {IpLocationServiceDB} from 'flyingfish_core';
 import {IpAccessLocation} from 'flyingfish_schemas';
-import {IpLocation as IpLocationDB} from '../../../inc/Db/MariaDb/Entity/IpLocation.js';
-import {In} from 'typeorm';
 
 /**
  * UtilsLocation
@@ -14,15 +12,9 @@ export class UtilsLocation {
      * @protected
      */
     public static async getLocations(locationIds: number[]): Promise<IpAccessLocation[]> {
-        const ipLocationRepository = DBHelper.getRepository(IpLocationDB);
-
         const locations: IpAccessLocation[] = [];
 
-        const tlocations = await ipLocationRepository.find({
-            where: {
-                id: In(locationIds)
-            }
-        });
+        const tlocations = await IpLocationServiceDB.getInstance().findAllByIds(locationIds);
 
         if (tlocations) {
             for (const tlocation of tlocations) {

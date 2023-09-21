@@ -1,16 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * ip blacklist maintainer
  */
 @Entity({name: 'ip_blacklist_maintainer'})
-export class IpBlacklistMaintainer extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class IpBlacklistMaintainer extends DBBaseEntityId {
 
     /**
      * ip id

@@ -29,6 +29,10 @@ In the classic sense, FlyingFish is a nginx manager. But the way the nginx serve
 ## Quick setup
 [Read the Documentation quick setup](https://flying-fish.gitbook.io/flyingfish/index/installation#quick-setup)
 
+## In progress
+
+[Version 1.0.24](https://github.com/stefanwerfling/flyingfish/milestone/1)
+
 ## Docker Hub
 
 
