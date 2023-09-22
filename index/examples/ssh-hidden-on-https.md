@@ -28,9 +28,26 @@ So we have the HTTPS port with 443. If a client comes with a special domain, it 
 
 <figure><img src="../../.gitbook/assets/ssh_hidden_https2.png" alt=""><figcaption><p>SSH server hidden behind HTTPS.</p></figcaption></figure>
 
-TODO
+## Proceed
 
+To begin, we [create a subdomain](../configurations/domains/#add-domain) (the easiest way is to have your [own DNS server](../configurations/domains/own-dns-server.md) running). We will call the new subdomain <mark style="background-color:purple;">ssh1.example.com</mark> as above.
 
+{% hint style="warning" %}
+We won't go into the setting of the record now, the subdomain should resolve the IP correctly (A Record).
+{% endhint %}
+
+Likewise, we now create a [Route](../configurations/routes.md) ([Stream](../configurations/routes.md#add-stream)) for this domain:
+
+<figure><img src="../../.gitbook/assets/ssh_hidden_https3.png" alt=""><figcaption></figcaption></figure>
+
+1. This tab is activated if "External ssh server (Stream)" was selected under 6.
+2. **Domain Name/IP**: Here we can see again under which domain the route is entered.
+3. **Listen**: We select the list for "<mark style="background-color:orange;">Stream SSL EXTERN - 443</mark>", because we want to use the SSL on port 443 for our SSH (hide behind the HTTPS).
+4. **Index**: We leave the index on auto.
+5. **Alias-Name (Intern)**: Any name, I chose "mySSH".
+6. **Destination-Type**: We want the target to be an “External ssh server (Stream)” which activates the “SSH” tab for us.
+
+<figure><img src="../../.gitbook/assets/ssh_hidden_https4.png" alt=""><figcaption></figcaption></figure>
 
 
 
