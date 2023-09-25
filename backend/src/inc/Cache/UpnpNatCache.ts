@@ -1,6 +1,6 @@
 import {UpnpNatCacheMapping} from 'flyingfish_schemas';
 import NodeCache from 'node-cache';
-import {Mapping} from '../Net/Upnp/UpnpNatClient.js';
+import {Mapping} from '../Net/UpnpNat/Mapping/Mapping.js';
 
 /**
  * UpnpNatCache

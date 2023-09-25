@@ -5,7 +5,8 @@ import Ping from 'ping';
 import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
 import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
 import {HimHIP} from '../HimHIP/HimHIP.js';
-import {NewPortMappingOpts, UpnpNatClient} from '../Net/Upnp/UpnpNatClient.js';
+import {UpnpNatClient} from '../Net/UpnpNat/UpnpNatClient.js';
+import {NewPortMappingOpts} from '../Net/UpnpNat/Mapping/NewPortMappingOpts.js';
 
 /**
  * UpnpNatService
