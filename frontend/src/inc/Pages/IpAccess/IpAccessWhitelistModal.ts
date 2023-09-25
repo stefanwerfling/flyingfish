@@ -103,8 +103,8 @@ export class IpAccessWhitelistModal extends ModalDialog {
      * setDisabled
      * @param disabled
      */
-    public setDisabled(disable: boolean): void {
-        this._switchDisabled.setEnable(disable);
+    public setDisabled(disabled: boolean): void {
+        this._switchDisabled.setEnable(disabled);
     }
 
     /**

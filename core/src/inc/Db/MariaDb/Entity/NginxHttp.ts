@@ -1,17 +1,8 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
-import {ServerXFrameOptions} from '../../../Nginx/Config/Server.js';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
-/**
- * NginxHttp
- */
 @Entity({name: 'nginx_http'})
-export class NginxHttp extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class NginxHttp extends DBBaseEntityId {
 
     /**
      * domain id
@@ -95,7 +86,7 @@ export class NginxHttp extends BaseEntity {
      * x-frame-options
      */
     @Column({
-        default: ServerXFrameOptions.deny
+        default: 'DENY'
     })
     public x_frame_options!: string;
 

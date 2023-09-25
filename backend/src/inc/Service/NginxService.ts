@@ -2,7 +2,7 @@ import {
     DBHelper,
     DomainServiceDB,
     FileHelper,
-    Logger, NginxStreamDB, NginxStreamServiceDB,
+    Logger, NginxHttpDB, NginxHttpServiceDB, NginxStreamDB, NginxStreamServiceDB,
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
     SshPortDB
@@ -14,7 +14,6 @@ import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
-import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {
     NginxHttpVariable as NginxHttpVariableDB,
     NginxHttpVariableContextType
@@ -313,7 +312,6 @@ export class NginxService {
         // read db -----------------------------------------------------------------------------------------------------
 
         const listenRepository = DBHelper.getRepository(NginxListenDB);
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
         const sshportRepository = DBHelper.getRepository(SshPortDB);
@@ -385,11 +383,7 @@ export class NginxService {
             } else if (alisten.listen_type === ListenTypes.http) {
                 // read http by db -----------------------------------------------------------------------------
 
-                const https = await httpRepository.find({
-                    where: {
-                        listen_id: alisten.id
-                    }
-                });
+                const https = await NginxHttpServiceDB.getInstance().findAllByListen(alisten.id);
 
                 for await (const http of https) {
                     const adomain = await DomainServiceDB.getInstance().findOne(http.domain_id);

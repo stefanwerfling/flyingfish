@@ -1,11 +1,10 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
 import {DefaultReturn, RouteHttpSave, StatusCodes} from 'flyingfish_schemas';
 import {
     NginxHttpVariable as NginxHttpVariableDB,
     NginxHttpVariableContextType
 } from '../../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {NginxHTTPVariables} from '../../../../inc/Nginx/NginxVariables.js';
-import {NginxHttp as NginxHttpDB} from '../../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 
 /**
@@ -36,30 +35,20 @@ export class Save {
 
         // ---------------------------------------------------------------------------------------------------------
 
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
         let aHttp: NginxHttpDB|null = null;
 
         if (data.http.id > 0) {
-            const tHttp = await httpRepository.findOne({
-                where: {
-                    id: data.http.id
-                }
-            });
+            const tHttp = await NginxHttpServiceDB.getInstance().findOne(data.http.id);
 
             if (tHttp) {
                 aHttp = tHttp;
             }
         }
 
-        const oHttp = await httpRepository.findOne({
-            where: {
-                listen_id: data.http.listen_id,
-                domain_id: data.domainid
-            }
-        });
+        const oHttp = await NginxHttpServiceDB.getInstance().findBy(data.http.listen_id, data.domainid);
 
         if (oHttp) {
             if (!aHttp || aHttp.id !== oHttp.id) {
@@ -84,7 +73,7 @@ export class Save {
         aHttp.x_frame_options = data.http.x_frame_options;
         aHttp.wellknown_disabled = data.http.wellknown_disabled;
 
-        aHttp = await DBHelper.getDataSource().manager.save(aHttp);
+        aHttp = await NginxHttpServiceDB.getInstance().save(aHttp);
 
         // save variables ----------------------------------------------------------------------------------------------
 

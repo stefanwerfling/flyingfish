@@ -1,6 +1,6 @@
 import {
     DBHelper,
-    DomainServiceDB,
+    DomainServiceDB, NginxHttpServiceDB,
     NginxStreamServiceDB,
     NginxUpstreamServiceDB,
     SshPortDB,
@@ -17,7 +17,6 @@ import {
     StatusCodes
 } from 'flyingfish_schemas';
 import {Config} from '../../../inc/Config/Config.js';
-import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {
     NginxHttpVariable as NginxHttpVariableDB,
     NginxHttpVariableContextType
@@ -36,7 +35,6 @@ export class List {
         const list: RouteData[] = [];
         const sshportList: RouteSshPort[] = [];
 
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
         const sshportRepository = DBHelper.getRepository(SshPortDB);
@@ -115,11 +113,7 @@ export class List {
 
                 // http ------------------------------------------------------------------------------------------------
 
-                const https = await httpRepository.find({
-                    where: {
-                        domain_id: adomain.id
-                    }
-                });
+                const https = await NginxHttpServiceDB.getInstance().findAllByDomain(adomain.id);
 
                 if (https) {
                     for await (const thttp of https) {

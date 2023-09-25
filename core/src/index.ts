@@ -32,6 +32,7 @@ export {IpListMaintainer as IpListMaintainerDB} from './inc/Db/MariaDb/Entity/Ip
 export {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js';
 export {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
+export {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 export {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
 export {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
 export {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
@@ -54,6 +55,7 @@ export {IpListMaintainerService as IpListMaintainerServiceDB} from './inc/Db/Mar
 export {IpLocationService as IpLocationServiceDB} from './inc/Db/MariaDb/IpLocationService.js';
 export {IpWhitelistService as IpWhitelistServiceDB} from './inc/Db/MariaDb/IpWhitelistService.js';
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/NatPortService.js';
+export {NginxHttpService as NginxHttpServiceDB} from './inc/Db/MariaDb/NginxHttpService.js';
 export {NginxStreamService as NginxStreamServiceDB} from './inc/Db/MariaDb/NginxStreamService.js';
 export {NginxUpstreamService as NginxUpstreamServiceDB} from './inc/Db/MariaDb/NginxUpstreamService.js';
 export {SettingService as SettingServiceDB} from './inc/Db/MariaDb/SettingService.js';

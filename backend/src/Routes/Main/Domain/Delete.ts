@@ -1,6 +1,5 @@
-import {DBHelper, DomainRecordDB, DomainServiceDB, NginxStreamServiceDB} from 'flyingfish_core';
+import {DBHelper, DomainRecordDB, DomainServiceDB, NginxHttpServiceDB, NginxStreamServiceDB} from 'flyingfish_core';
 import {DomainDelete, DomainDeleteResponse, StatusCodes} from 'flyingfish_schemas';
-import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 
 /**
  * Delete
@@ -13,7 +12,6 @@ export class Delete {
      */
     public static async deleteDomain(data: DomainDelete): Promise<DomainDeleteResponse> {
         const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
 
         const domain = await DomainServiceDB.getInstance().findOne(data.id);
 
@@ -27,11 +25,7 @@ export class Delete {
 
             const countStreams = await NginxStreamServiceDB.getInstance().countByDomain(domain.id);
 
-            const countHttps = await httpRepository.count({
-                where: {
-                    domain_id: domain.id
-                }
-            });
+            const countHttps = await NginxHttpServiceDB.getInstance().countByDomain(domain.id);
 
             if ((countStreams > 0) || (countHttps > 0)) {
                 return {

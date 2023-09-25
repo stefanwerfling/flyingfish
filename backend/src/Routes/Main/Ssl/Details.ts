@@ -1,8 +1,7 @@
-import {DBHelper, DomainServiceDB} from 'flyingfish_core';
+import {DomainServiceDB, NginxHttpServiceDB} from 'flyingfish_core';
 import {SslDetailInfoData, SslDetailsRequest, SslDetailsResponse, StatusCodes} from 'flyingfish_schemas';
 import Path from 'path';
 import {Certificate} from '../../../inc/Cert/Certificate.js';
-import {NginxHttp as NginxHttpDB} from '../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {Certbot} from '../../../inc/Provider/Letsencrypt/Certbot.js';
 
 /**
@@ -15,13 +14,7 @@ export class Details {
      * @param data
      */
     public static async getCertDetails(data: SslDetailsRequest): Promise<SslDetailsResponse> {
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
-
-        const http = await httpRepository.findOne({
-            where: {
-                id: data.httpid
-            }
-        });
+        const http = await NginxHttpServiceDB.getInstance().findOne(data.httpid);
 
         if (http) {
             if (!http.ssl_enable) {

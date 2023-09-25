@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper, NginxHttpServiceDB} from 'flyingfish_core';
 import {DefaultReturn, RouteHttpDelete, StatusCodes} from 'flyingfish_schemas';
-import {NginxHttp as NginxHttpDB} from '../../../../inc/Db/MariaDb/Entity/NginxHttp.js';
 import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 
 /**
@@ -20,23 +19,16 @@ export class Delete {
             };
         }
 
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
         const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
-        const http = await httpRepository.findOne({
-            where: {
-                id: data.id
-            }
-        });
+        const http = await NginxHttpServiceDB.getInstance().findOne(data.id);
 
         if (http) {
             await locationRepository.delete({
                 http_id: http.id
             });
 
-            const result = await httpRepository.delete({
-                id: http.id
-            });
+            const result = await NginxHttpServiceDB.getInstance().remove(http.id);
 
             if (result) {
                 return {

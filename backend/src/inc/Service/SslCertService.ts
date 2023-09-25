@@ -1,5 +1,5 @@
 import {Ets} from 'ets';
-import {DateHelper, DBHelper, DomainServiceDB, FileHelper, Logger} from 'flyingfish_core';
+import {DomainServiceDB, FileHelper, Logger, NginxHttpServiceDB} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import got from 'got';
@@ -8,7 +8,6 @@ import Path from 'path';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
 import {Certificate} from '../Cert/Certificate.js';
-import {NginxHttp as NginxHttpDB} from '../Db/MariaDb/Entity/NginxHttp.js';
 import {NginxServer} from '../Nginx/NginxServer.js';
 import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
 import {NginxService} from './NginxService.js';
@@ -119,9 +118,7 @@ export class SslCertService {
     public async update(): Promise<void> {
         this._inProcess = true;
 
-        const httpRepository = DBHelper.getRepository(NginxHttpDB);
-
-        const https = await httpRepository.find();
+        const https = await NginxHttpServiceDB.getInstance().findAll();
 
         const certbot = new Certbot();
         let reloadNginx = false;
@@ -147,15 +144,7 @@ export class SslCertService {
                         } else if (certbot.isOverLimitAndTime(http.cert_create_attempts, http.cert_last_request)) {
                             Logger.getLogger().info(`SslCertService::update: time over, rest attempts for cert request for domain: ${domain.domainname}`);
 
-                            await httpRepository
-                            .createQueryBuilder()
-                            .update()
-                            .set({
-                                cert_create_attempts: 0,
-                                cert_last_request: DateHelper.getCurrentDbTime()
-                            })
-                            .where('id = :id', {id: http.id})
-                            .execute();
+                            await NginxHttpServiceDB.getInstance().updateLastCertReq(http.id, 0);
                         }
 
                         // ---------------------------------------------------------------------------------------------
@@ -228,25 +217,9 @@ export class SslCertService {
                             // -----------------------------------------------------------------------------------------
 
                             if (isCreateFailed) {
-                                await httpRepository
-                                .createQueryBuilder()
-                                .update()
-                                .set({
-                                    cert_create_attempts: http.cert_create_attempts + 1,
-                                    cert_last_request: DateHelper.getCurrentDbTime()
-                                })
-                                .where('id = :id', {id: http.id})
-                                .execute();
+                                await NginxHttpServiceDB.getInstance().updateLastCertReq(http.id, http.cert_create_attempts + 1);
                             } else if (isCreate) {
-                                await httpRepository
-                                .createQueryBuilder()
-                                .update()
-                                .set({
-                                    cert_create_attempts: 0,
-                                    cert_last_request: DateHelper.getCurrentDbTime()
-                                })
-                                .where('id = :id', {id: http.id})
-                                .execute();
+                                await NginxHttpServiceDB.getInstance().updateLastCertReq(http.id, 0);
                             }
                         }
                     }
