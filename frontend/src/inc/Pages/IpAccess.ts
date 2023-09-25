@@ -166,7 +166,7 @@ export class IpAccess extends BasePage {
                 const entry: IpAccessWhiteSaveRequest = {
                     id: tid,
                     ip: this._whitelistDialog.getIp(),
-                    disable: this._whitelistDialog.getDisable(),
+                    disabled: this._whitelistDialog.getDisabled(),
                     description: this._whitelistDialog.getDescription()
                 };
 
@@ -319,7 +319,7 @@ export class IpAccess extends BasePage {
                     new Td(trbodyW, `${lastUpdate.format('YYYY-MM-DD HH:mm:ss')}`);
 
                     // eslint-disable-next-line no-new
-                    new Td(trbodyW, `${wentry.disable ? 'yes' : 'no'}`);
+                    new Td(trbodyW, `${wentry.disabled ? 'yes' : 'no'}`);
 
                     const tdAction = new Td(trbodyW, '');
 
@@ -337,7 +337,7 @@ export class IpAccess extends BasePage {
                             this._whitelistDialog.resetValues();
                             this._whitelistDialog.setId(wentry.id);
                             this._whitelistDialog.setIp(wentry.ip);
-                            this._whitelistDialog.setDisable(wentry.disable);
+                            this._whitelistDialog.setDisabled(wentry.disabled);
                             this._whitelistDialog.setDescription(wentry.description);
                             this._whitelistDialog.show();
                         },

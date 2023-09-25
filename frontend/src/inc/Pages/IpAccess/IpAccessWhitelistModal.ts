@@ -23,10 +23,10 @@ export class IpAccessWhitelistModal extends ModalDialog {
     protected _inputIp: InputBottemBorderOnly2;
 
     /**
-     * switch disable
+     * switch disabled
      * @protected
      */
-    protected _switchDisable: Switch;
+    protected _switchDisabled: Switch;
 
     /**
      * input description
@@ -53,8 +53,8 @@ export class IpAccessWhitelistModal extends ModalDialog {
         const groupIp = new FormGroup(form, 'IP');
         this._inputIp = new InputBottemBorderOnly2(groupIp, 'ip', InputType.text);
 
-        const groupDisable = new FormGroup(form, 'Disable this ip access');
-        this._switchDisable = new Switch(groupDisable, 'ipownaccessdisable');
+        const groupDisable = new FormGroup(form, 'Disabled this ip access');
+        this._switchDisabled = new Switch(groupDisable, 'ipownaccessdisable');
 
         const groupDescription = new FormGroup(bodyCard, 'Description');
         this._inputDescription = new InputBottemBorderOnly2(groupDescription);
@@ -100,18 +100,18 @@ export class IpAccessWhitelistModal extends ModalDialog {
     }
 
     /**
-     * setDisable
-     * @param disable
+     * setDisabled
+     * @param disabled
      */
-    public setDisable(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+    public setDisabled(disable: boolean): void {
+        this._switchDisabled.setEnable(disable);
     }
 
     /**
-     * getDisable
+     * getDisabled
      */
-    public getDisable(): boolean {
-        return this._switchDisable.isEnable();
+    public getDisabled(): boolean {
+        return this._switchDisabled.isEnable();
     }
 
     /**
@@ -135,7 +135,7 @@ export class IpAccessWhitelistModal extends ModalDialog {
     public resetValues(): void {
         this.setId(null);
         this.setIp('');
-        this.setDisable(false);
+        this.setDisabled(false);
         this.setDescription('');
     }
 
