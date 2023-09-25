@@ -20,7 +20,7 @@
       * [Proxy protocol](index/configurations/listen/proxy-protocol.md)
       * [IP Access](index/configurations/listen/ip-access.md)
       * [Gateway identifiers](index/configurations/listen/gateway-identifiers.md)
-      * [Upnp Nat](index/configurations/listen/upnp-nat.md)
+      * [UPnP Nat](index/configurations/listen/upnp-nat.md)
     * [Domains](index/configurations/domains/README.md)
       * [DynDns Clients](index/configurations/domains/dyndns-clients.md)
       * [Own DNS Server](index/configurations/domains/own-dns-server.md)
