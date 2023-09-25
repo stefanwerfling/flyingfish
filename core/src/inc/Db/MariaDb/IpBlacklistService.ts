@@ -173,7 +173,7 @@ export class IpBlacklistService extends DBService<IpBlacklist> {
         .getRawOne();
 
         if (count) {
-            return parseInt(count, 10) ?? 0;
+            return parseInt(count.total_count_blocks, 10) ?? 0;
         }
 
         return 0;
