@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {
-    DBHelper, NginxStreamDB,
+    DBHelper, NginxLocationServiceDB, NginxStreamDB,
     NginxStreamServiceDB,
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
@@ -14,7 +14,6 @@ import {
     RouteStreamSSH,
     StatusCodes
 } from 'flyingfish_schemas';
-import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 
 /**
  * SaveStream
@@ -74,7 +73,6 @@ export class Save {
     public static async removeOldSshPort(sshportId: number): Promise<boolean> {
         const sshportRepository = DBHelper.getRepository(SshPortDB);
         const sshuserRepository = DBHelper.getRepository(SshUserDB);
-        const locationRepository = DBHelper.getRepository(NginxLocationDB);
 
         // first check in used -----------------------------------------------------------------------------------------
 
@@ -84,11 +82,7 @@ export class Save {
             sshportId
         );
 
-        const outUsedCountLoc = await locationRepository.count({
-            where: {
-                sshport_out_id: sshportId
-            }
-        });
+        const outUsedCountLoc = await NginxLocationServiceDB.getInstance().countAllBySshPortOut(sshportId);
 
         if ((usedCountStreamROut > 0) || (outUsedCountLoc > 0)) {
             return false;

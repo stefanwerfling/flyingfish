@@ -1,6 +1,6 @@
-import {DBHelper} from 'flyingfish_core';
+import {NginxListenServiceDB} from 'flyingfish_core';
+import {NginxListenCategory, NginxListenTypes} from 'flyingfish_schemas';
 import {Job, scheduleJob} from 'node-schedule';
-import {ListenCategory, ListenTypes, NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
 
 /**
  * NginxStatusService
@@ -35,14 +35,10 @@ export class NginxStatusService {
      * @protected
      */
     public async updateStatus(): Promise<void> {
-        const listenRepository = DBHelper.getRepository(NginxListenDB);
-
-        const statusListen = await listenRepository.findOne({
-            where: {
-                listen_type: ListenTypes.http,
-                listen_category: ListenCategory.status
-            }
-        });
+        const statusListen = await NginxListenServiceDB.getInstance().findByType(
+            NginxListenTypes.http,
+            NginxListenCategory.status
+        );
 
         if (statusListen) {
 

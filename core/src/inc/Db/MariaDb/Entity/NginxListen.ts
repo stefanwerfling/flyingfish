@@ -1,55 +1,12 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {NginxListenAddressCheckType, NginxListenCategory, NginxListenProtocol} from 'flyingfish_schemas';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
- * ListenTypes
- */
-export enum ListenTypes {
-    stream,
-    http
-}
-
-/**
- * ListenCategory
- */
-export enum ListenCategory {
-    default_stream_nonessl,
-    default_stream_ssl,
-    default_http,
-    default_https,
-    stream,
-    http,
-    https,
-    status
-}
-
-/**
- * ListenProtocol
- */
-export enum ListenProtocol {
-    tcp,
-    udp,
-    tcp_udp
-}
-
-/**
- * ListenAddressCheckType
- */
-export enum ListenAddressCheckType {
-    black,
-    white
-}
-
-/**
- * Nginx Stream Entity
+ * Nginx listen to the table.
  */
 @Entity({name: 'nginx_listen'})
-export class NginxListen extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class NginxListen extends DBBaseEntityId {
 
     /**
      * listen type
@@ -61,7 +18,7 @@ export class NginxListen extends BaseEntity {
      * listen category
      */
     @Column({
-        default: ListenCategory.default_stream_nonessl
+        default: NginxListenCategory.default_stream_nonessl
     })
     public listen_category!: number;
 
@@ -77,7 +34,7 @@ export class NginxListen extends BaseEntity {
      */
     @Index()
     @Column({
-        default: ListenProtocol.tcp
+        default: NginxListenProtocol.tcp
     })
     public listen_protocol!: number;
 
@@ -129,7 +86,7 @@ export class NginxListen extends BaseEntity {
      * type of use the address check (by blacklist or whitelist)
      */
     @Column({
-        default: ListenAddressCheckType.black
+        default: NginxListenAddressCheckType.black
     })
     public address_check_type!: number;
 

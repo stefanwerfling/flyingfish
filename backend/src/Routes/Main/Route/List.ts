@@ -1,13 +1,13 @@
 import {
     DBHelper,
-    DomainServiceDB, NginxHttpServiceDB,
+    DomainServiceDB, NginxHttpServiceDB, NginxHttpVariableServiceDB, NginxLocationServiceDB,
     NginxStreamServiceDB,
     NginxUpstreamServiceDB,
     SshPortDB,
     SshUserDB
 } from 'flyingfish_core';
 import {
-    Location,
+    Location, NginxHttpVariableContextType,
     RouteData,
     RouteHttp,
     RoutesResponse,
@@ -17,11 +17,6 @@ import {
     StatusCodes
 } from 'flyingfish_schemas';
 import {Config} from '../../../inc/Config/Config.js';
-import {
-    NginxHttpVariable as NginxHttpVariableDB,
-    NginxHttpVariableContextType
-} from '../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
-import {NginxLocation as NginxLocationDB} from '../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 
 /**
  * List
@@ -35,8 +30,6 @@ export class List {
         const list: RouteData[] = [];
         const sshportList: RouteSshPort[] = [];
 
-        const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
-        const locationRepository = DBHelper.getRepository(NginxLocationDB);
         const sshportRepository = DBHelper.getRepository(SshPortDB);
         const sshuserRepository = DBHelper.getRepository(SshUserDB);
         const domains = await DomainServiceDB.getInstance().findAll();
@@ -119,12 +112,10 @@ export class List {
                     for await (const thttp of https) {
                         const variableList: RouteVariable[] = [];
 
-                        const variables = await httpVariableRepository.find({
-                            where: {
-                                http_id: thttp.id,
-                                context_type: NginxHttpVariableContextType.server
-                            }
-                        });
+                        const variables = await NginxHttpVariableServiceDB.getInstance().findAllBy(
+                            thttp.id,
+                            NginxHttpVariableContextType.server
+                        );
 
                         for (const tvar of variables) {
                             variableList.push({
@@ -149,21 +140,15 @@ export class List {
                             variables: variableList
                         };
 
-                        const locations = await locationRepository.find({
-                            where: {
-                                http_id: thttp.id
-                            }
-                        });
+                        const locations = await NginxLocationServiceDB.getInstance().findAllByHttp(thttp.id);
 
                         for await (const alocation of locations) {
                             const lVariableList: RouteVariable[] = [];
 
-                            const lVariables = await httpVariableRepository.find({
-                                where: {
-                                    http_id: thttp.id,
-                                    context_type: NginxHttpVariableContextType.location
-                                }
-                            });
+                            const lVariables = await NginxHttpVariableServiceDB.getInstance().findAllBy(
+                                thttp.id,
+                                NginxHttpVariableContextType.location
+                            );
 
                             for (const tvar of lVariables) {
                                 lVariableList.push({

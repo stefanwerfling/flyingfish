@@ -2,29 +2,29 @@ import {
     DBHelper,
     DomainServiceDB,
     FileHelper,
-    Logger, NginxHttpDB, NginxHttpServiceDB, NginxStreamDB, NginxStreamServiceDB,
+    Logger,
+    NginxHttpDB,
+    NginxHttpServiceDB,
+    NginxHttpVariableDB,
+    NginxHttpVariableServiceDB, NginxListenDB, NginxListenServiceDB, NginxLocationDB, NginxLocationServiceDB,
+    NginxStreamDB,
+    NginxStreamServiceDB,
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
     SshPortDB
 } from 'flyingfish_core';
-import {NginxStreamDestinationType, NginxStreamSshR} from 'flyingfish_schemas';
+import {
+    NginxHttpVariableContextType, NginxListenCategory, NginxListenProtocol,
+    NginxListenTypes, NginxLocationDestinationTypes,
+    NginxStreamDestinationType,
+    NginxStreamSshR
+} from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import path from 'path';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
-import {
-    NginxHttpVariable as NginxHttpVariableDB,
-    NginxHttpVariableContextType
-} from '../Db/MariaDb/Entity/NginxHttpVariable.js';
-import {
-    ListenCategory,
-    ListenProtocol as ListenProtocolDB,
-    ListenTypes,
-    NginxListen as NginxListenDB
-} from '../Db/MariaDb/Entity/NginxListen.js';
-import {NginxLocation as NginxLocationDB, NginxLocationDestinationTypes} from '../Db/MariaDb/Entity/NginxLocation.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
 import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
@@ -145,7 +145,7 @@ export class NginxService {
      */
     private _addServerListens(
         server: NginxConfServer,
-        listenProtocol: ListenProtocolDB,
+        listenProtocol: NginxListenProtocol,
         port: number,
         ip: string,
         ip6: string,
@@ -154,8 +154,8 @@ export class NginxService {
         proxy_protocol: boolean,
         enable_ip6: boolean
     ): void {
-        if ((listenProtocol === ListenProtocolDB.tcp) ||
-            (listenProtocol === ListenProtocolDB.tcp_udp)
+        if ((listenProtocol === NginxListenProtocol.tcp) ||
+            (listenProtocol === NginxListenProtocol.tcp_udp)
         ) {
             server.addListen(
                 new Listen(
@@ -168,8 +168,8 @@ export class NginxService {
             );
         }
 
-        if ((listenProtocol === ListenProtocolDB.udp) ||
-            (listenProtocol === ListenProtocolDB.tcp_udp)
+        if ((listenProtocol === NginxListenProtocol.udp) ||
+            (listenProtocol === NginxListenProtocol.tcp_udp)
         ) {
             server.addListen(
                 new Listen(
@@ -184,8 +184,8 @@ export class NginxService {
         }
 
         if (enable_ip6) {
-            if ((listenProtocol === ListenProtocolDB.tcp) ||
-                (listenProtocol === ListenProtocolDB.tcp_udp)
+            if ((listenProtocol === NginxListenProtocol.tcp) ||
+                (listenProtocol === NginxListenProtocol.tcp_udp)
             ) {
                 server.addListen(
                     new Listen(
@@ -198,8 +198,8 @@ export class NginxService {
                 );
             }
 
-            if ((listenProtocol === ListenProtocolDB.udp) ||
-                (listenProtocol === ListenProtocolDB.tcp_udp)
+            if ((listenProtocol === NginxListenProtocol.udp) ||
+                (listenProtocol === NginxListenProtocol.tcp_udp)
             ) {
                 server.addListen(
                     new Listen(
@@ -311,21 +311,14 @@ export class NginxService {
 
         // read db -----------------------------------------------------------------------------------------------------
 
-        const listenRepository = DBHelper.getRepository(NginxListenDB);
-        const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
-        const locationRepository = DBHelper.getRepository(NginxLocationDB);
         const sshportRepository = DBHelper.getRepository(SshPortDB);
 
-        const listens = await listenRepository.find({
-            where: {
-                disable: false
-            }
-        });
+        const listens = await NginxListenServiceDB.getInstance().findAllBy(false);
 
         for await (const alisten of listens) {
             // read streams by db --------------------------------------------------------------------------------------
 
-            if (alisten.listen_type === ListenTypes.stream) {
+            if (alisten.listen_type === NginxListenTypes.stream) {
                 const tstreams = await NginxStreamServiceDB.getInstance().findAllByListen(alisten.id);
 
                 for await (const astream of tstreams) {
@@ -364,11 +357,7 @@ export class NginxService {
                         }
 
                         if (astream.destination_listen_id > 0) {
-                            const tlisten = await listenRepository.findOne({
-                                where: {
-                                    id: astream.destination_listen_id
-                                }
-                            });
+                            const tlisten = await NginxListenServiceDB.getInstance().findOne(astream.destination_listen_id);
 
                             if (tlisten) {
                                 streamCollection.destination_listen = tlisten;
@@ -380,7 +369,7 @@ export class NginxService {
                         streamMap.set(alisten.listen_port, mapDomainStreams!);
                     }
                 }
-            } else if (alisten.listen_type === ListenTypes.http) {
+            } else if (alisten.listen_type === NginxListenTypes.http) {
                 // read http by db -----------------------------------------------------------------------------
 
                 const https = await NginxHttpServiceDB.getInstance().findAllByListen(alisten.id);
@@ -405,11 +394,7 @@ export class NginxService {
 
                         // locations -----------------------------------------------------------------------------------
 
-                        const locations = await locationRepository.find({
-                            where: {
-                                http_id: http.id
-                            }
-                        });
+                        const locations = await NginxLocationServiceDB.getInstance().findAllByHttp(http.id);
 
                         if (locations) {
                             const locationCollects: HttpLocationCollect[] = [];
@@ -439,12 +424,10 @@ export class NginxService {
 
                         // variables -----------------------------------------------------------------------------------
 
-                        const variables = await httpVariableRepository.find({
-                            where: {
-                                http_id: http.id,
-                                context_type: NginxHttpVariableContextType.server
-                            }
-                        });
+                        const variables = await NginxHttpVariableServiceDB.getInstance().findAllBy(
+                            http.id,
+                            NginxHttpVariableContextType.server
+                        );
 
                         if (variables) {
                             httpCollection.variables = variables;
@@ -484,7 +467,7 @@ export class NginxService {
 
         this._addServerListens(
             aServerProxy,
-            ListenProtocolDB.tcp,
+            NginxListenProtocol.tcp,
             this._proxyUpstreamServer,
             NginxService.DEFAULT_IP_LOCAL,
             NginxService.DEFAULT_IP6_PUBLIC,
@@ -1136,12 +1119,10 @@ export class NginxService {
 
         // set status server -------------------------------------------------------------------------------------------
 
-        const statusListen = await listenRepository.findOne({
-            where: {
-                listen_type: ListenTypes.http,
-                listen_category: ListenCategory.status
-            }
-        });
+        const statusListen = await NginxListenServiceDB.getInstance().findByType(
+            NginxListenTypes.http,
+            NginxListenCategory.status
+        );
 
         if (statusListen) {
             const sServer = new NginxConfServer();
@@ -1167,12 +1148,10 @@ export class NginxService {
 
         // set default server ------------------------------------------------------------------------------------------
 
-        const defaultListen = await listenRepository.findOne({
-            where: {
-                listen_type: ListenTypes.http,
-                listen_category: ListenCategory.default_http
-            }
-        });
+        const defaultListen = await NginxListenServiceDB.getInstance().findByType(
+            NginxListenTypes.http,
+            NginxListenCategory.default_http
+        );
 
         if (defaultListen) {
             const dServer = new NginxConfServer();

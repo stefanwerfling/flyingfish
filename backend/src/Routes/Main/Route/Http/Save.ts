@@ -1,11 +1,11 @@
-import {DBHelper, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
-import {DefaultReturn, RouteHttpSave, StatusCodes} from 'flyingfish_schemas';
 import {
-    NginxHttpVariable as NginxHttpVariableDB,
-    NginxHttpVariableContextType
-} from '../../../../inc/Db/MariaDb/Entity/NginxHttpVariable.js';
+    NginxHttpDB,
+    NginxHttpServiceDB,
+    NginxHttpVariableDB,
+    NginxHttpVariableServiceDB, NginxLocationDB, NginxLocationServiceDB
+} from 'flyingfish_core';
+import {DefaultReturn, NginxHttpVariableContextType, RouteHttpSave, StatusCodes} from 'flyingfish_schemas';
 import {NginxHTTPVariables} from '../../../../inc/Nginx/NginxVariables.js';
-import {NginxLocation as NginxLocationDB} from '../../../../inc/Db/MariaDb/Entity/NginxLocation.js';
 
 /**
  * AllowedRouteVariableServer
@@ -24,7 +24,7 @@ export class Save {
      * @param data
      */
     public static async saveHttpRoute(data: RouteHttpSave): Promise<DefaultReturn> {
-        // check is listen select ----------------------------------------------------------------------------------
+        // check is listen select --------------------------------------------------------------------------------------
 
         if (data.http.listen_id === 0) {
             return {
@@ -33,10 +33,7 @@ export class Save {
             };
         }
 
-        // ---------------------------------------------------------------------------------------------------------
-
-        const httpVariableRepository = DBHelper.getRepository(NginxHttpVariableDB);
-        const locationRepository = DBHelper.getRepository(NginxLocationDB);
+        // -------------------------------------------------------------------------------------------------------------
 
         let aHttp: NginxHttpDB|null = null;
 
@@ -82,13 +79,11 @@ export class Save {
                 continue;
             }
 
-            let variableDb = await httpVariableRepository.findOne({
-                where: {
-                    http_id: aHttp.id,
-                    var_name: variable.name,
-                    context_type: NginxHttpVariableContextType.server
-                }
-            });
+            let variableDb = await NginxHttpVariableServiceDB.getInstance().findOneByName(
+                aHttp.id,
+                variable.name,
+                NginxHttpVariableContextType.server
+            );
 
             if (!variableDb) {
                 variableDb = new NginxHttpVariableDB();
@@ -99,25 +94,19 @@ export class Save {
 
             variableDb.var_value = variable.value;
 
-            await DBHelper.getDataSource().manager.save(variableDb);
+            await NginxHttpVariableServiceDB.getInstance().save(variableDb);
         }
 
         // remove location ---------------------------------------------------------------------------------------------
 
-        const oldLocations = await locationRepository.find({
-            where: {
-                http_id: aHttp.id
-            }
-        });
+        const oldLocations = await NginxLocationServiceDB.getInstance().findAllByHttp(aHttp.id);
 
         if (oldLocations) {
             const checkLocationExistence = (locationId: number): boolean => data.http.locations.some(({id}) => id === locationId);
 
             for await (const oldLocation of oldLocations) {
                 if (!checkLocationExistence(oldLocation.id)) {
-                    await locationRepository.delete({
-                        id: oldLocation.id
-                    });
+                    await NginxLocationServiceDB.getInstance().remove(oldLocation.id);
                 }
             }
         }
@@ -127,11 +116,7 @@ export class Save {
         for await (const aLocation of data.http.locations) {
             let aNewLocation: NginxLocationDB | null = null;
 
-            const tLocation = await locationRepository.findOne({
-                where: {
-                    id: aLocation.id
-                }
-            });
+            const tLocation = await NginxLocationServiceDB.getInstance().findOne(aLocation.id);
 
             if (tLocation) {
                 aNewLocation = tLocation;
@@ -172,7 +157,7 @@ export class Save {
                 aNewLocation.sshport_out_id = aLocation.ssh.id || 0;
             }
 
-            await DBHelper.getDataSource().manager.save(aNewLocation);
+            await NginxLocationServiceDB.getInstance().save(aNewLocation);
         }
 
         return {

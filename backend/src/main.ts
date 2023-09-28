@@ -7,7 +7,6 @@ import {
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
-import {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
@@ -37,8 +36,6 @@ import {DynDnsServer as DynDnsServerController} from './Routes/Main/DynDnsServer
 import {Config} from './inc/Config/Config.js';
 import {v4 as uuid} from 'uuid';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
-import {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
-import {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
 import {NginxServer} from './inc/Nginx/NginxServer.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
 import {DynDnsService} from './inc/Service/DynDnsService.js';
@@ -106,10 +103,6 @@ import exitHook from 'async-exit-hook';
         // MariaDb -----------------------------------------------------------------------------------------------------
         // eslint-disable-next-line @typescript-eslint/ban-types
         const entities: MixedList<Function | string | EntitySchema> = await DBEntitiesLoader.loadEntities() as [];
-
-        entities.push(NginxListenDB);
-        entities.push(NginxHttpVariableDB);
-        entities.push(NginxLocationDB);
 
         await DBHelper.init({
             type: 'mysql',

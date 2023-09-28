@@ -1,6 +1,5 @@
-import {DBHelper} from 'flyingfish_core';
+import {NginxListenServiceDB} from 'flyingfish_core';
 import {ListenData, ListenResponse, StatusCodes} from 'flyingfish_schemas';
-import {NginxListen as NginxListenDB} from '../../../inc/Db/MariaDb/Entity/NginxListen.js';
 
 /**
  * List
@@ -12,9 +11,8 @@ export class List {
      */
     public static async getListens(): Promise<ListenResponse> {
         const list: ListenData[] = [];
-        const listenRepository = DBHelper.getRepository(NginxListenDB);
 
-        const listens = await listenRepository.find();
+        const listens = await NginxListenServiceDB.getInstance().findAll();
 
         if (listens) {
             for (const listen of listens) {

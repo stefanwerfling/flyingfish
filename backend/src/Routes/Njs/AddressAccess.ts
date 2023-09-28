@@ -1,6 +1,12 @@
 import {Response, Router} from 'express';
-import {DBHelper, DefaultRoute, IpBlacklistServiceDB, IpWhitelistServiceDB, Logger} from 'flyingfish_core';
-import {ListenAddressCheckType, NginxListen as NginxListenDB} from '../../inc/Db/MariaDb/Entity/NginxListen.js';
+import {
+    DefaultRoute,
+    IpBlacklistServiceDB,
+    IpWhitelistServiceDB,
+    Logger,
+    NginxListenServiceDB
+} from 'flyingfish_core';
+import {NginxListenAddressCheckType} from 'flyingfish_schemas';
 
 /**
  * AddressAccess
@@ -74,20 +80,14 @@ export class AddressAccess extends DefaultRoute {
      * @protected
      */
     protected async _listCheck(listenId: number, realip_remote_addr: string): Promise<boolean> {
-        const listenRepository = DBHelper.getRepository(NginxListenDB);
-
-        const listen = await listenRepository.findOne({
-            where: {
-                id: listenId
-            }
-        });
+        const listen = await NginxListenServiceDB.getInstance().findOne(listenId);
 
         if (listen) {
             if (listen.enable_address_check) {
                 Logger.getLogger().silly('AddressAccess::_listCheck: Listen address check is enable ...');
 
                 switch (listen.address_check_type) {
-                    case ListenAddressCheckType.white:
+                    case NginxListenAddressCheckType.white:
                         return this._listCheckWhiteList(listen.id, realip_remote_addr);
 
                     default:

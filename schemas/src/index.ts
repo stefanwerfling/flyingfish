@@ -296,6 +296,12 @@ export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/
 
 export {NatStatus} from './Backend/NatPort/NatStatus.js';
 export {NginxStreamDestinationType, NginxStreamSshR} from './Backend/Nginx/NginxStream.js';
+export {NginxHttpVariableContextType} from './Backend/Nginx/NginxHttpVariableContextType.js';
+export {NginxListenAddressCheckType} from './Backend/Nginx/NginxListenAddressCheckType.js';
+export {NginxListenProtocol} from './Backend/Nginx/NginxListenProtocol.js';
+export {NginxListenCategory} from './Backend/Nginx/NginxListenCategory.js';
+export {NginxListenTypes} from './Backend/Nginx/NginxListenTypes.js';
+export {NginxLocationDestinationTypes} from './Backend/Nginx/NginxLocationDestinationTypes.js';
 
 export {BlacklistCategory} from './Backend/IpAccess/BlacklistCategory.js';
 

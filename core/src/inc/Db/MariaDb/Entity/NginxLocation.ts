@@ -1,28 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
-
-/**
- * NginxLocationDestinationTypes
- */
-export enum NginxLocationDestinationTypes {
-    none = 0,
-    proxypass = 1,
-    redirect = 2,
-    ssh = 3,
-    dyndns = 4,
-    vpn = 5
-}
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
  * NginxLocation
  */
 @Entity({name: 'nginx_location'})
-export class NginxLocation extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class NginxLocation extends DBBaseEntityId {
 
     /**
      * http id

@@ -1,5 +1,4 @@
-import {CredentialServiceDB, DBHelper, Logger} from 'flyingfish_core';
-import {NginxLocation as NginxLocationDB} from '../Db/MariaDb/Entity/NginxLocation.js';
+import {CredentialServiceDB, Logger, NginxLocationServiceDB} from 'flyingfish_core';
 import {CredentialProvider} from './CredentialProvider.js';
 import {ICredentialAuthBasic} from './ICredential.js';
 
@@ -30,15 +29,9 @@ export class Credential {
      * @param auth
      */
     public static async authBasic(locationId: string, auth: CredentialSchemeBasic): Promise<boolean> {
-        const locationRepository = DBHelper.getRepository(NginxLocationDB);
-
         const nLocationId = parseInt(locationId, 10) || 0;
 
-        const location = await locationRepository.findOne({
-            where: {
-                id: nLocationId
-            }
-        });
+        const location = await NginxLocationServiceDB.getInstance().findOne(nLocationId);
 
         if (location) {
             Logger.getLogger().silly(`Credential::authBasic: location found by id: ${location.id}`);

@@ -1,9 +1,8 @@
-import {DBHelper, GatewayIdentifierServiceDB, Logger, NatPortServiceDB} from 'flyingfish_core';
+import {GatewayIdentifierServiceDB, Logger, NatPortServiceDB, NginxListenServiceDB} from 'flyingfish_core';
 import {NatStatus} from 'flyingfish_schemas';
 import {Job, scheduleJob} from 'node-schedule';
 import Ping from 'ping';
 import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
-import {NginxListen as NginxListenDB} from '../Db/MariaDb/Entity/NginxListen.js';
 import {HimHIP} from '../HimHIP/HimHIP.js';
 import {UpnpNatClient} from '../Net/UpnpNat/UpnpNatClient.js';
 import {NewPortMappingOpts} from '../Net/UpnpNat/Mapping/NewPortMappingOpts.js';
@@ -36,7 +35,6 @@ export class UpnpNatService {
         try {
             UpnpNatCache.getInstance().reset();
 
-            const listenRepository = DBHelper.getRepository(NginxListenDB);
             const himhip = HimHIP.getData();
 
             // reset all status ----------------------------------------------------------------------------------------
@@ -86,11 +84,7 @@ export class UpnpNatService {
                                     }
 
                                     if (anat.listen_id > 0) {
-                                        const alisten = await listenRepository.findOne({
-                                            where: {
-                                                id: anat.listen_id
-                                            }
-                                        });
+                                        const alisten = await NginxListenServiceDB.getInstance().findOne(anat.listen_id);
 
                                         if (alisten) {
                                             options.private = alisten.listen_port;

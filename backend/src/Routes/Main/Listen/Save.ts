@@ -1,6 +1,5 @@
 import {DefaultReturn, ListenData, StatusCodes} from 'flyingfish_schemas';
-import {DBHelper, Logger} from 'flyingfish_core';
-import {NginxListen as NginxListenDB} from '../../../inc/Db/MariaDb/Entity/NginxListen.js';
+import {Logger, NginxListenDB, NginxListenServiceDB} from 'flyingfish_core';
 
 /**
  * Save
@@ -18,16 +17,10 @@ export class Save {
      * @param data
      */
     public static async saveListen(data: ListenData): Promise<DefaultReturn> {
-        const listenRepository = DBHelper.getRepository(NginxListenDB);
-
         let aListen: NginxListenDB|null = null;
 
         if (data.id !== 0) {
-            const tListen = await listenRepository.findOne({
-                where: {
-                    id: data.id
-                }
-            });
+            const tListen = await NginxListenServiceDB.getInstance().findOne(data.id);
 
             if (tListen) {
                 aListen = tListen;
@@ -59,11 +52,7 @@ export class Save {
         if (aListen.listen_port !== data.port) {
             Logger.getLogger().silly(`Listen::saveListen: Port diff by: DB Port: ${aListen.listen_port} and request: ${data.port}`);
 
-            const count = await listenRepository.count({
-                where: {
-                    listen_port: data.port
-                }
-            });
+            const count = await NginxListenServiceDB.getInstance().countByPort(data.port);
 
             if (count > 0) {
                 return {
@@ -85,7 +74,7 @@ export class Save {
         aListen.proxy_protocol = data.proxy_protocol;
         aListen.proxy_protocol_in = data.proxy_protocol_in;
 
-        await DBHelper.getDataSource().manager.save(aListen);
+        await NginxListenServiceDB.getInstance().save(aListen);
 
         return {
             statusCode: StatusCodes.OK

@@ -33,6 +33,9 @@ export {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js'
 export {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
 export {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
+export {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
+export {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
+export {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
 export {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
 export {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
 export {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
@@ -56,6 +59,9 @@ export {IpLocationService as IpLocationServiceDB} from './inc/Db/MariaDb/IpLocat
 export {IpWhitelistService as IpWhitelistServiceDB} from './inc/Db/MariaDb/IpWhitelistService.js';
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/NatPortService.js';
 export {NginxHttpService as NginxHttpServiceDB} from './inc/Db/MariaDb/NginxHttpService.js';
+export {NginxHttpVariableService as NginxHttpVariableServiceDB} from './inc/Db/MariaDb/NginxHttpVariableService.js';
+export {NginxListenService as NginxListenServiceDB} from './inc/Db/MariaDb/NginxListenService.js';
+export {NginxLocationService as NginxLocationServiceDB} from './inc/Db/MariaDb/NginxLocationService.js';
 export {NginxStreamService as NginxStreamServiceDB} from './inc/Db/MariaDb/NginxStreamService.js';
 export {NginxUpstreamService as NginxUpstreamServiceDB} from './inc/Db/MariaDb/NginxUpstreamService.js';
 export {SettingService as SettingServiceDB} from './inc/Db/MariaDb/SettingService.js';

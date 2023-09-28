@@ -16,6 +16,9 @@ import {IpLocation} from './Entity/IpLocation.js';
 import {IpWhitelist} from './Entity/IpWhitelist.js';
 import {NatPort} from './Entity/NatPort.js';
 import {NginxHttp} from './Entity/NginxHttp.js';
+import {NginxHttpVariable} from './Entity/NginxHttpVariable.js';
+import {NginxListen} from './Entity/NginxListen.js';
+import {NginxLocation} from './Entity/NginxLocation.js';
 import {NginxStream} from './Entity/NginxStream.js';
 import {NginxUpstream} from './Entity/NginxUpstream.js';
 import {Settings} from './Entity/Settings.js';
@@ -54,6 +57,9 @@ export class DBEntitiesLoader {
             IpWhitelist,
             NatPort,
             NginxHttp,
+            NginxHttpVariable,
+            NginxListen,
+            NginxLocation,
             NginxStream,
             NginxUpstream,
             Settings,

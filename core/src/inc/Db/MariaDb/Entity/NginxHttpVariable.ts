@@ -1,25 +1,11 @@
-import {BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, Index} from 'typeorm';
+import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
- * NginxHttpVariableContextType
- */
-export enum NginxHttpVariableContextType {
-    http = 0,
-    server = 1,
-    location = 2
-}
-
-/**
- * NginxHttpVariable
+ * Nginx http variable table.
  */
 @Entity({name: 'nginx_http_variable'})
-export class NginxHttpVariable extends BaseEntity {
-
-    /**
-     * id
-     */
-    @PrimaryGeneratedColumn()
-    public id!: number;
+export class NginxHttpVariable extends DBBaseEntityId {
 
     /**
      * domain id
