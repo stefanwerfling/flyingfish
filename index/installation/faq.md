@@ -12,14 +12,16 @@ docker exec flyingfish_db mysql_upgrade --user=root --password=<password>
 
 #### Nginx NJS Fetch Error
 
-In the current version of njs (nginx-module-njs (1.22.1+0.7.8-1\~bullseye)) is a bug. Use the 'Dockerfile.nginxsrc' for the bugfix, it load and compile the source code by github repository.
+~~In the current version of njs (nginx-module-njs (1.22.1+0.7.8-1\~bullseye)) is a bug. Use the 'Dockerfile.nginxsrc' for the bugfix, it load and compile the source code by github repository.~~
+
+[Fixed on github](https://github.com/stefanwerfling/flyingfish/issues/1).
 
 #### How to check supported nginx modules in docker image?
 
 First you start your docker container. Then go inside:
 
 ```sh
-docker exec -it flyingfish_service /bin/ash
+docker exec -it flyingfish_service /bin/bash
 ```
 
 Now you can check the modules with:
