@@ -49,6 +49,11 @@ Likewise, we now create a [Route](../configurations/routes.md) ([Stream](../conf
 
 <figure><img src="../../.gitbook/assets/ssh_hidden_https4.png" alt=""><figcaption></figcaption></figure>
 
+1. **Listen Port**: The port on which the target SSH server is listed.
+2. **Username**: Username for the FlyingFish SSH Jump Server.
+3. **Password:** Password for the username.
+4. **Destination IP Address**: The IP to the SSH server in your network.
+
 
 
 <figure><img src="../../.gitbook/assets/3kvnwz.jpg" alt=""><figcaption><p>Meme from imgflip.com</p></figcaption></figure>
