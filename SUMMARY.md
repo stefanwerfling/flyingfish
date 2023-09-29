@@ -33,6 +33,6 @@
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
     * [Under the hood](index/developer/under-the-hood.md)
-    * [Service Structure](index/developer/service-structure.md)
+    * [Service structure](index/developer/service-structure.md)
     * [Schema](index/developer/schema.md)
     * [Object name rules](index/developer/object-name-rules.md)
