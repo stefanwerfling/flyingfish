@@ -54,6 +54,35 @@ Likewise, we now create a [Route](../configurations/routes.md) ([Stream](../conf
 3. **Password:** Password for the username.
 4. **Destination IP Address**: The IP to the SSH server in your network.
 
+After saving, we can now establish the connection.
+
+## Connect externally
+
+A user who is now on the Internet and would like to reach the SSH server in his network now gets the SSH port from his SSH server to his PC via the disguised port on 443 and the domain with port forwarding. The internal FylingFish SSH Jump server takes care of port forwarding with its own user management. In the settings you have stored a user with a password that must be used for this connection.
+
+We open a shell console with the following command:
+
+```sh
+ssh -L <port1>:localhost:<port2> <username>@<domain> -p 443
+```
+
+* **port1**: The port that should be used on your computer (this port must be free).
+* **port2**: Any port, actually the SSH server would use this port, but the FlyingFish SSH Jump Server overwrites this port with its own.
+* **username**: The username specified above in the settings.
+* **domain**: The domain on which the stream was set up.
+
+Our finished example would now look like this:
+
+```sh
+ssh -L 2022:localhost:2022 my-test@ssh1.example.com -p 443
+```
+
+We can now connect to the SSH server with another console:
+
+```sh
+ssh aUser@localhost -p 2022
+```
+
 
 
 <figure><img src="../../.gitbook/assets/3kvnwz.jpg" alt=""><figcaption><p>Meme from imgflip.com</p></figcaption></figure>
