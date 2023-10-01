@@ -1,6 +1,6 @@
 import {
     DateHelper,
-    DBHelper, IpBlacklistCategoryDB,
+    IpBlacklistCategoryDB,
     IpBlacklistCategoryServiceDB,
     IpBlacklistDB, IpBlacklistMaintainerDB, IpBlacklistMaintainerServiceDB,
     IpBlacklistServiceDB, IpListMaintainerDB, IpListMaintainerServiceDB,
@@ -110,7 +110,7 @@ export class BlacklistService {
                     blackEntry.is_imported = true;
                     blackEntry.disabled = false;
 
-                    ipBlacklistEntry = await DBHelper.getDataSource().manager.save(blackEntry);
+                    ipBlacklistEntry = await IpBlacklistServiceDB.getInstance().save(blackEntry);
                 }
 
                 if (ipBlacklistEntry) {
@@ -126,7 +126,7 @@ export class BlacklistService {
                             nBlackCate.ip_id = ipBlacklistEntry.id;
                             nBlackCate.cat_num = catenum;
 
-                            await DBHelper.getDataSource().manager.save(nBlackCate);
+                            await IpBlacklistCategoryServiceDB.getInstance().save(nBlackCate);
                         }
                     }
 

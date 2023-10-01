@@ -1,6 +1,6 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
-import {DBHelper, DomainRecordDB, DomainServiceDB, Logger} from 'flyingfish_core';
+import {DomainRecordDB, DomainRecordServiceDB, DomainServiceDB, Logger} from 'flyingfish_core';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
@@ -58,23 +58,12 @@ export class Dns2Server {
                     const domain = await DomainServiceDB.getInstance().findByName(questionExt.name);
 
                     if (domain) {
-                        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
                         let records: DomainRecordDB[];
 
                         if ((questionExt.class !== null) && (questionExt.type !== null)) {
-                            records = await domainRecordRepository.find({
-                                where: {
-                                    domain_id: domain.id,
-                                    dclass: questionExt.class,
-                                    dtype: questionExt.type
-                                }
-                            });
+                            records = await DomainRecordServiceDB.getInstance().findAllBy(domain.id, questionExt.class, questionExt.type);
                         } else {
-                            records = await domainRecordRepository.find({
-                                where: {
-                                    domain_id: domain.id
-                                }
-                            });
+                            records = await DomainRecordServiceDB.getInstance().findAllByDomain(domain.id);
                         }
 
                         for (const record of records) {

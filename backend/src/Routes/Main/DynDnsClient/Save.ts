@@ -1,4 +1,4 @@
-import {DBHelper, DynDnsClientDB, DynDnsClientDomainDB, DynDnsClientDomainServiceDB} from 'flyingfish_core';
+import {DynDnsClientDB, DynDnsClientDomainDB, DynDnsClientDomainServiceDB} from 'flyingfish_core';
 import {DynDnsClientService} from 'flyingfish_core/dist/inc/Db/MariaDb/DynDnsClientService.js';
 import {DefaultReturn, DynDnsClientData, StatusCodes} from 'flyingfish_schemas';
 
@@ -36,7 +36,7 @@ export class Save {
 
         client.update_domain = data.update_domain;
 
-        client = await DBHelper.getDataSource().manager.save(client);
+        client = await DynDnsClientService.getInstance().save(client);
 
         if (client) {
             // domain links --------------------------------------------------------------------------------------------

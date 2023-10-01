@@ -1,21 +1,27 @@
 import {
-    DBHelper,
     DomainServiceDB,
     FileHelper,
     Logger,
     NginxHttpDB,
     NginxHttpServiceDB,
     NginxHttpVariableDB,
-    NginxHttpVariableServiceDB, NginxListenDB, NginxListenServiceDB, NginxLocationDB, NginxLocationServiceDB,
+    NginxHttpVariableServiceDB,
+    NginxListenDB,
+    NginxListenServiceDB,
+    NginxLocationDB,
+    NginxLocationServiceDB,
     NginxStreamDB,
     NginxStreamServiceDB,
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
-    SshPortDB
+    SshPortDB, SshPortServiceDB
 } from 'flyingfish_core';
 import {
-    NginxHttpVariableContextType, NginxListenCategory, NginxListenProtocol,
-    NginxListenTypes, NginxLocationDestinationTypes,
+    NginxHttpVariableContextType,
+    NginxListenCategory,
+    NginxListenProtocol,
+    NginxListenTypes,
+    NginxLocationDestinationTypes,
     NginxStreamDestinationType,
     NginxStreamSshR
 } from 'flyingfish_schemas';
@@ -105,7 +111,7 @@ export class NginxService {
      * Ngnix service instance.
      * @member {NginxService|null} Instance of service.
      */
-    private static _instance: NginxService|null = null;
+    private static _instance: NginxService | null = null;
 
     /**
      * Return an instance of nginx service.
@@ -123,7 +129,7 @@ export class NginxService {
      * Nginx private syslog server for logs controll.
      * @member {SysLogServer|null}
      */
-    private _syslog: SysLogServer|null = null;
+    private _syslog: SysLogServer | null = null;
 
     /**
      * Proxy upstream server counter. With port start from {NginxService.PORT_PROXY_UPSTREAM_BEGIN}.
@@ -134,7 +140,7 @@ export class NginxService {
     /**
      * Intern helper methode for generate listen config.
      * @param {NginxConfServer} server - Nginx server config object.
-     * @param {ListenProtocolDB} listenProtocol - Listen protocol type.
+     * @param {NginxListenProtocol} listenProtocol - Listen protocol type.
      * @param {number} port - Port number.
      * @param {string} ip - IP address.
      * @param {string} ip6 - IPv6 address.
@@ -311,8 +317,6 @@ export class NginxService {
 
         // read db -----------------------------------------------------------------------------------------------------
 
-        const sshportRepository = DBHelper.getRepository(SshPortDB);
-
         const listens = await NginxListenServiceDB.getInstance().findAllBy(false);
 
         for await (const alisten of listens) {
@@ -345,11 +349,7 @@ export class NginxService {
                         }
 
                         if (astream.sshport_id > 0) {
-                            const sshport = await sshportRepository.findOne({
-                                where: {
-                                    id: astream.sshport_id
-                                }
-                            });
+                            const sshport = await SshPortServiceDB.getInstance().findOne(astream.sshport_id);
 
                             if (sshport) {
                                 streamCollection.sshport = sshport;
@@ -405,11 +405,7 @@ export class NginxService {
                                 };
 
                                 if (alocation.sshport_out_id > 0) {
-                                    const sshport = await sshportRepository.findOne({
-                                        where: {
-                                            id: alocation.sshport_out_id
-                                        }
-                                    });
+                                    const sshport = await SshPortServiceDB.getInstance().findOne(alocation.sshport_out_id);
 
                                     if (sshport) {
                                         locationCollect.sshport_out = sshport;
@@ -506,8 +502,8 @@ export class NginxService {
 
             const varName = `$ffstream${listenPort}`;
             const aMap = new NginxMap('$ssl_preread_server_name', varName);
-            let defaultMapDomain: string|null = null;
-            let procMap: NginxMap|null = null;
+            let defaultMapDomain: string | null = null;
+            let procMap: NginxMap | null = null;
 
             const proxyProtocolEnable = streamCollects.listen.proxy_protocol;
             const proxyProtocolInEnable = streamCollects.listen.proxy_protocol_in;
@@ -576,7 +572,10 @@ export class NginxService {
                                             streamCollects.listen.enable_ipv6
                                         );
 
-                                        aServer.addVariable('proxy_pass', `${tupstream.destination_address}:${tupstream.destination_port}`);
+                                        aServer.addVariable(
+                                            'proxy_pass',
+                                            `${tupstream.destination_address}:${tupstream.destination_port}`
+                                        );
 
                                         conf.getStream().addServer(aServer);
 
@@ -646,7 +645,10 @@ export class NginxService {
                                                 streamCollects.listen.enable_ipv6
                                             );
 
-                                            aServer.addVariable('proxy_pass', `${destination_address_out}:${destination_port_out}`);
+                                            aServer.addVariable(
+                                                'proxy_pass',
+                                                `${destination_address_out}:${destination_port_out}`
+                                            );
 
                                             conf.getStream().addServer(aServer);
 
@@ -744,8 +746,10 @@ export class NginxService {
 
             const aServer = new NginxConfServer();
 
-            conf.getStream().addVariable(`log_format ff_s_accesslogs_${streamCollects.listen.id}`,
-                `escape=json '${NginxLogFormatJson.generateAccessStream(streamCollects.listen.id)}'`);
+            conf.getStream().addVariable(
+                `log_format ff_s_accesslogs_${streamCollects.listen.id}`,
+                `escape=json '${NginxLogFormatJson.generateAccessStream(streamCollects.listen.id)}'`
+            );
 
             if (this._syslog && this._syslog.isRunning()) {
                 aServer.addVariable(
@@ -842,7 +846,10 @@ export class NginxService {
                     if (aVariable.var_value !== '') {
                         switch (aVariable.var_name) {
                             case NginxHTTPVariables.client_max_body_size:
-                                aServer.addVariable(NginxHTTPVariables.client_max_body_size, `${parseInt(aVariable.var_value, 10) ?? 1}m`);
+                                aServer.addVariable(
+                                    NginxHTTPVariables.client_max_body_size,
+                                    `${parseInt(aVariable.var_value, 10) ?? 1}m`
+                                );
                                 break;
                         }
                     }
@@ -878,7 +885,10 @@ export class NginxService {
                         aServer.addVariable(NginxHTTPVariables.ssl_session_timeout, '1d');
                         aServer.addVariable(NginxHTTPVariables.ssl_session_cache, 'shared:SSL:50m');
                         aServer.addVariable(NginxHTTPVariables.ssl_session_tickets, 'off');
-                        aServer.addVariable('add_header Strict-Transport-Security', '"max-age=63072000; includeSubdomains; preload"');
+                        aServer.addVariable(
+                            'add_header Strict-Transport-Security',
+                            '"max-age=63072000; includeSubdomains; preload"'
+                        );
                         aServer.addVariable(NginxHTTPVariables.ssl_stapling, 'on');
                         aServer.addVariable(NginxHTTPVariables.ssl_stapling_verify, 'on');
                         aServer.addVariable(NginxHTTPVariables.ssl_trusted_certificate, `${sslCert}/chain.pem`);
@@ -946,11 +956,13 @@ export class NginxService {
                         acme.addVariable('auth_basic', 'off');
                         acme.addVariable('auth_request', 'off');
                         acme.addVariable('default_type', '"text/plain"');
-                        acme.addVariable('alias',
+                        acme.addVariable(
+                            'alias',
                             path.join(
                                 NginxServer.getInstance().getWellKnownPath(),
                                 '/'
-                            ));
+                            )
+                        );
 
                         aServer.addLocation(acme);
                     }
@@ -1082,14 +1094,21 @@ export class NginxService {
 
                             // dyndns ----------------------------------------------------------------------------------
                             case NginxLocationDestinationTypes.dyndns:
-                                if (Config.getInstance().get()?.dyndnsserver && Config.getInstance().get()?.dyndnsserver?.enable) {
+                                if (Config.getInstance().get()?.dyndnsserver &&
+                                    Config.getInstance().get()?.dyndnsserver?.enable) {
                                     location.addVariable(
                                         'proxy_pass',
                                         `${Config.getInstance().get()?.dyndnsserver?.schema}://${Config.getInstance().get()?.dyndnsserver?.ip}:${Config.getInstance().get()?.dyndnsserver?.port}`
                                     );
 
-                                    location.addVariable('more_set_input_headers \'Authorization:', '$http_authorization\'');
-                                    location.addVariable('more_set_headers -s 401 \'WWW-Authenticate:', 'Basic realm="FlyingFish DynDNS-Server"\'');
+                                    location.addVariable(
+                                        'more_set_input_headers \'Authorization:',
+                                        '$http_authorization\''
+                                    );
+                                    location.addVariable(
+                                        'more_set_headers -s 401 \'WWW-Authenticate:',
+                                        'Basic realm="FlyingFish DynDNS-Server"\''
+                                    );
                                 } else {
                                     Logger.getLogger().warn(`NginxService::_loadConfig: DynDnsServer setting not enabled., domain: '${domainName}'`);
                                 }
@@ -1218,12 +1237,18 @@ export class NginxService {
                 `${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`);
         });
 
-        this._syslog.setOnError((_sysLogServer, err) => {
+        this._syslog.setOnError((
+            _sysLogServer,
+            err
+        ) => {
             Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnError: ');
             Logger.getLogger().error(err);
         });
 
-        this._syslog.setOnMessage((_sysLogServer, msg) => {
+        this._syslog.setOnMessage((
+            _sysLogServer,
+            msg
+        ) => {
             Logger.getLogger().silly(`NginxService::_startSysLog::SysLogServer::setOnMessage: ${msg.toString()}`);
 
             const parts = msg.toString().split(`${NginxService.SYSLOG_TAG}: `);

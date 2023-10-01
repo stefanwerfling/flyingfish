@@ -1,11 +1,11 @@
 import * as bcrypt from 'bcrypt';
 import {
-    DBHelper, NginxLocationServiceDB, NginxStreamDB,
+    NginxLocationServiceDB, NginxStreamDB,
     NginxStreamServiceDB,
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
-    SshPortDB,
-    SshUserDB
+    SshPortDB, SshPortServiceDB,
+    SshUserDB, SshUserServiceDB
 } from 'flyingfish_core';
 import {
     DefaultReturn,
@@ -27,13 +27,7 @@ export class Save {
      * @protected
      */
     protected static async _isSshPortUsed(tport: number, sshportid: number): Promise<boolean> {
-        const sshportRepository = DBHelper.getRepository(SshPortDB);
-
-        const sshport = await sshportRepository.findOne({
-            where: {
-                port: tport
-            }
-        });
+        const sshport = await SshPortServiceDB.getInstance().findByPort(tport);
 
         if (sshport) {
             if (sshport.id !== sshportid) {
@@ -50,12 +44,7 @@ export class Save {
      * @protected
      */
     protected static async _getFreePort(tport: number = 10000): Promise<number> {
-        const sshportRepository = DBHelper.getRepository(SshPortDB);
-        const sshport = await sshportRepository.findOne({
-            where: {
-                port: tport
-            }
-        });
+        const sshport = await SshPortServiceDB.getInstance().findByPort(tport);
 
         if (sshport) {
             return Save._getFreePort(tport + 1);
@@ -71,9 +60,6 @@ export class Save {
      * @protected
      */
     public static async removeOldSshPort(sshportId: number): Promise<boolean> {
-        const sshportRepository = DBHelper.getRepository(SshPortDB);
-        const sshuserRepository = DBHelper.getRepository(SshUserDB);
-
         // first check in used -----------------------------------------------------------------------------------------
 
         const usedCountStreamROut = await NginxStreamServiceDB.getInstance().countStreamOut(
@@ -90,22 +76,14 @@ export class Save {
 
         // clean ssh port ----------------------------------------------------------------------------------------------
 
-        const sshport = await sshportRepository.findOne({
-            where: {
-                id: sshportId
-            }
-        });
+        const sshport = await SshPortServiceDB.getInstance().findOne(sshportId);
 
         if (sshport) {
             if (sshport.ssh_user_id > 0) {
-                await sshuserRepository.delete({
-                    id: sshport.ssh_user_id
-                });
+                await SshUserServiceDB.getInstance().remove(sshport.ssh_user_id);
             }
 
-            const result = await sshportRepository.delete({
-                id: sshport.id
-            });
+            const result = await SshPortServiceDB.getInstance().remove(sshport.id);
 
             if (result) {
                 return true;
@@ -126,18 +104,11 @@ export class Save {
             throw Error('Is not a ssh type for save!');
         }
 
-        const sshportRepository = DBHelper.getRepository(SshPortDB);
-        const sshuserRepository = DBHelper.getRepository(SshUserDB);
-
         let sshuser: SshUserDB|null = null;
         let sshport: SshPortDB|null = null;
 
         if (ssh.user_id > 0) {
-            const tsshuser = await sshuserRepository.findOne({
-                where: {
-                    id: ssh.user_id
-                }
-            });
+            const tsshuser = await SshUserServiceDB.getInstance().findOne(ssh.user_id);
 
             if (tsshuser) {
                 sshuser = tsshuser;
@@ -156,15 +127,11 @@ export class Save {
 
         sshuser.disable = false;
 
-        sshuser = await DBHelper.getDataSource().manager.save(sshuser);
+        sshuser = await SshUserServiceDB.getInstance().save(sshuser);
 
         if (sshuser) {
             if (ssh.id > 0) {
-                const tsshport = await sshportRepository.findOne({
-                    where: {
-                        id: ssh.id
-                    }
-                });
+                const tsshport = await SshPortServiceDB.getInstance().findOne(ssh.id);
 
                 if (tsshport) {
                     sshport = tsshport;
@@ -192,7 +159,7 @@ export class Save {
             sshport.ssh_user_id = sshuser.id;
             sshport.destinationAddress = ssh.destinationAddress;
 
-            sshport = await DBHelper.getDataSource().manager.save(sshport);
+            sshport = await SshPortServiceDB.getInstance().save(sshport);
 
             if (sshport) {
                 return sshport.id;

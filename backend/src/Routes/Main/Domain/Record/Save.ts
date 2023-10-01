@@ -1,4 +1,4 @@
-import {DBHelper, DomainRecordDB} from 'flyingfish_core';
+import {DomainRecordDB, DomainRecordServiceDB} from 'flyingfish_core';
 import {DomainRecordSave, DomainRecordSaveResponse, StatusCodes} from 'flyingfish_schemas';
 import {HowIsMyPublicIpService} from '../../../../inc/Service/HowIsMyPublicIpService.js';
 
@@ -12,16 +12,10 @@ export class Save {
      * @param data
      */
     public static async saveDomainRecord(data: DomainRecordSave): Promise<DomainRecordSaveResponse> {
-        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
-
         let aRecord: DomainRecordDB | null = null;
 
         if (data.record.id !== 0) {
-            const tRecord = await domainRecordRepository.findOne({
-                where: {
-                    id: data.record.id
-                }
-            });
+            const tRecord = await DomainRecordServiceDB.getInstance().findOne(data.record.id);
 
             if (tRecord) {
                 aRecord = tRecord;
@@ -48,7 +42,7 @@ export class Save {
             }
         }
 
-        await DBHelper.getDataSource().manager.save(aRecord);
+        await DomainRecordServiceDB.getInstance().save(aRecord);
 
         return {
             statusCode: StatusCodes.OK

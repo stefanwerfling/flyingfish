@@ -46,6 +46,7 @@ export {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
 export {CredentialService as CredentialServiceDB} from './inc/Db/MariaDb/CredentialService.js';
 export {CredentialUserService as CredentialUserServiceDB} from './inc/Db/MariaDb/CredentialUserService.js';
 export {DomainService as DomainServiceDB} from './inc/Db/MariaDb/DomainService.js';
+export {DomainRecordService as DomainRecordServiceDB} from './inc/Db/MariaDb/DomainRecordService.js';
 export {DynDnsClientService as DynDnsClientServiceDB} from './inc/Db/MariaDb/DynDnsClientService.js';
 export {DynDnsClientDomainService as DynDnsClientDomainServiceDB} from './inc/Db/MariaDb/DynDnsClientDomainService.js';
 export {DynDnsServerUserService as DynDnsServerUserServiceDB} from './inc/Db/MariaDb/DynDnsServerUserService.js';
@@ -65,6 +66,8 @@ export {NginxLocationService as NginxLocationServiceDB} from './inc/Db/MariaDb/N
 export {NginxStreamService as NginxStreamServiceDB} from './inc/Db/MariaDb/NginxStreamService.js';
 export {NginxUpstreamService as NginxUpstreamServiceDB} from './inc/Db/MariaDb/NginxUpstreamService.js';
 export {SettingService as SettingServiceDB} from './inc/Db/MariaDb/SettingService.js';
+export {SshPortService as SshPortServiceDB} from './inc/Db/MariaDb/SshPortService.js';
+export {SshUserService as SshUserServiceDB} from './inc/Db/MariaDb/SshUserService.js';
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/UserService.js';
 
 export {Session} from './inc/Server/Session.js';

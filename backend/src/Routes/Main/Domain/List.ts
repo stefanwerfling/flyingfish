@@ -1,4 +1,4 @@
-import {DBHelper, DomainRecordDB, DomainServiceDB} from 'flyingfish_core';
+import {DBHelper, DomainRecordDB, DomainRecordServiceDB, DomainServiceDB} from 'flyingfish_core';
 import {DomainData, DomainRecord, DomainResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -10,19 +10,13 @@ export class List {
      * getDomains
      */
     public static async getDomains(): Promise<DomainResponse> {
-        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
-
         const domainList: DomainData[] = [];
         const domains = await DomainServiceDB.getInstance().findAll();
 
         for await (const domain of domains) {
             const recordList: DomainRecord[] = [];
 
-            const records = await domainRecordRepository.find({
-                where: {
-                    domain_id: domain.id
-                }
-            });
+            const records = await DomainRecordServiceDB.getInstance().findAllByDomain(domain.id);
 
             for (const record of records) {
                 recordList.push({

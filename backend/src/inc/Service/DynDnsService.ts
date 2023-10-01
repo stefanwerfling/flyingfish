@@ -1,8 +1,7 @@
 import DNS from 'dns2';
 import {
     DateHelper,
-    DBHelper,
-    DomainRecordDB,
+    DomainRecordServiceDB,
     DynDnsClientDomainServiceDB,
     DynDnsClientServiceDB,
     Logger
@@ -20,7 +19,7 @@ export class DynDnsService {
      * instance
      * @private
      */
-    private static _instance: DynDnsService|null = null;
+    private static _instance: DynDnsService | null = null;
 
     /**
      * getInstance
@@ -37,7 +36,7 @@ export class DynDnsService {
      * scheduler job
      * @protected
      */
-    protected _scheduler: Job|null = null;
+    protected _scheduler: Job | null = null;
 
     /**
      * updateDns
@@ -45,8 +44,6 @@ export class DynDnsService {
      */
     public async updateDns(): Promise<void> {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
-
-        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
 
         const clients = await DynDnsClientServiceDB.getInstance().findAll();
 
@@ -73,12 +70,10 @@ export class DynDnsService {
                         for await (const dyndnsdomain of dyndnsdomains) {
                             Logger.getLogger().info(`DynDnsService::updateDns: Update domain ip for domain-id: ${dyndnsdomain.domain_id}`);
 
-                            const records = await domainRecordRepository.find({
-                                where: {
-                                    domain_id: dyndnsdomain.domain_id,
-                                    update_by_dnsclient: true
-                                }
-                            });
+                            const records = await DomainRecordServiceDB.getInstance().findAllByDomainUpdateDnsClient(
+                                dyndnsdomain.domain_id,
+                                true
+                            );
 
                             if (records) {
                                 const myIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
@@ -96,7 +91,7 @@ export class DynDnsService {
 
                                         record.last_update = DateHelper.getCurrentDbTime();
 
-                                        await DBHelper.getDataSource().manager.save(record);
+                                        await DomainRecordServiceDB.getInstance().save(record);
 
                                         Logger.getLogger().info(`DynDnsService::updateDns: domain record updated by domain-id: ${dyndnsdomain.domain_id} with ip: ${myIp}`);
                                     }

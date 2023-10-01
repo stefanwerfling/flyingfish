@@ -1,4 +1,4 @@
-import {DBHelper, SshPortDB} from 'flyingfish_core';
+import {SshPortServiceDB} from 'flyingfish_core';
 import {SshPortEntry, SshPortListResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -12,8 +12,7 @@ export class List {
     public static async getList(): Promise<SshPortListResponse> {
         const list: SshPortEntry[] = [];
 
-        const sshPortRepository = DBHelper.getRepository(SshPortDB);
-        const sshports = await sshPortRepository.find();
+        const sshports = await SshPortServiceDB.getInstance().findAll();
 
         if (sshports) {
             for (const asshport of sshports) {

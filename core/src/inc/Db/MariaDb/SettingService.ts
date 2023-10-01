@@ -2,7 +2,7 @@ import {DBService} from './DBService.js';
 import {Settings} from './Entity/Settings.js';
 
 /**
- * Setting service object.
+ * Setting a service object.
  */
 export class SettingService extends DBService<Settings> {
 
@@ -13,7 +13,7 @@ export class SettingService extends DBService<Settings> {
 
     /**
      * Return an intance from settings service.
-     * @returns {NatPortService}
+     * @returns {SettingService}
      */
     public static getInstance(): SettingService {
         return DBService.getSingleInstance(

@@ -1,10 +1,8 @@
 import {
-    DBHelper,
     DomainServiceDB, NginxHttpServiceDB, NginxHttpVariableServiceDB, NginxLocationServiceDB,
     NginxStreamServiceDB,
-    NginxUpstreamServiceDB,
-    SshPortDB,
-    SshUserDB
+    NginxUpstreamServiceDB, SshPortServiceDB,
+    SshUserServiceDB
 } from 'flyingfish_core';
 import {
     Location, NginxHttpVariableContextType,
@@ -30,8 +28,6 @@ export class List {
         const list: RouteData[] = [];
         const sshportList: RouteSshPort[] = [];
 
-        const sshportRepository = DBHelper.getRepository(SshPortDB);
-        const sshuserRepository = DBHelper.getRepository(SshUserDB);
         const domains = await DomainServiceDB.getInstance().findAll();
 
         if (domains) {
@@ -71,11 +67,7 @@ export class List {
                         }
 
                         if (tstream.sshport_id > 0) {
-                            const sshport = await sshportRepository.findOne({
-                                where: {
-                                    id: tstream.sshport_id
-                                }
-                            });
+                            const sshport = await SshPortServiceDB.getInstance().findOne(tstream.sshport_id);
 
                             if (sshport) {
                                 streamEntry.ssh = {
@@ -87,11 +79,7 @@ export class List {
                                     password: ''
                                 };
 
-                                const sshuser = await sshuserRepository.findOne({
-                                    where: {
-                                        id: sshport.ssh_user_id
-                                    }
-                                });
+                                const sshuser = await SshUserServiceDB.getInstance().findOne(sshport.ssh_user_id);
 
                                 if (sshuser) {
                                     streamEntry.ssh.username = sshuser.username;
@@ -175,11 +163,7 @@ export class List {
                             };
 
                             if (alocation.sshport_out_id > 0) {
-                                const sshport = await sshportRepository.findOne({
-                                    where: {
-                                        id: alocation.sshport_out_id
-                                    }
-                                });
+                                const sshport = await SshPortServiceDB.getInstance().findOne(alocation.sshport_out_id);
 
                                 if (sshport) {
                                     location.ssh = {
@@ -216,7 +200,7 @@ export class List {
 
         // load defaults -----------------------------------------------------------------------------------------------
 
-        const sshports = await sshportRepository.find();
+        const sshports = await SshPortServiceDB.getInstance().findAll();
 
         for (const sshport of sshports) {
             sshportList.push({

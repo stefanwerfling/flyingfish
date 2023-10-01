@@ -1,4 +1,4 @@
-import {DBHelper, DomainRecordDB} from 'flyingfish_core';
+import {DomainRecordServiceDB} from 'flyingfish_core';
 import {DomainRecordDelete, DomainRecordDeleteResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -11,18 +11,10 @@ export class Delete {
      * @param data
      */
     public static async deleteDomainRecord(data: DomainRecordDelete): Promise<DomainRecordDeleteResponse> {
-        const domainRecordRepository = DBHelper.getRepository(DomainRecordDB);
-
-        const arecord = await domainRecordRepository.findOne({
-            where: {
-                id: data.id
-            }
-        });
+        const arecord = await DomainRecordServiceDB.getInstance().findOne(data.id);
 
         if (arecord) {
-            const result = await domainRecordRepository.delete({
-                id: data.id
-            });
+            const result = await DomainRecordServiceDB.getInstance().remove(data.id);
 
             if (result) {
                 return {
