@@ -14,7 +14,8 @@ import {
     NginxStreamServiceDB,
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
-    SshPortDB, SshPortServiceDB
+    SshPortDB,
+    SshPortServiceDB
 } from 'flyingfish_core';
 import {
     NginxHttpVariableContextType,
@@ -1040,11 +1041,17 @@ export class NginxService {
                         }
 
                         if (locationCollect.location.xforwarded_for_enable) {
-                            location.addVariable('proxy_set_header X-Forwarded-For', '$remote_addr');
+                            location.addVariable(
+                                'proxy_set_header X-Forwarded-For',
+                                proxyProtocolInEnable ? '$proxy_protocol_addr' : '$remote_addr'
+                            );
                         }
 
                         if (locationCollect.location.xrealip_enable) {
-                            location.addVariable('proxy_set_header X-Real-IP', '$remote_addr');
+                            location.addVariable(
+                                'proxy_set_header X-Real-IP',
+                                proxyProtocolInEnable ? '$proxy_protocol_addr' : '$remote_addr'
+                            );
                         }
 
                         // set destination -----------------------------------------------------------------------------
@@ -1105,6 +1112,7 @@ export class NginxService {
                                         'more_set_input_headers \'Authorization:',
                                         '$http_authorization\''
                                     );
+
                                     location.addVariable(
                                         'more_set_headers -s 401 \'WWW-Authenticate:',
                                         'Basic realm="FlyingFish DynDNS-Server"\''
