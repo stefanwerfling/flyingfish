@@ -9,24 +9,25 @@ import auth from 'basic-auth';
 export class Update extends DefaultRoute {
 
     public static async setNicUpdate(req: Request, session: SessionData, response: Response): Promise<void> {
-        if (!session.user) {
-            session.user = {
-                isLogin: false,
-                userid: 0
-            };
-        }
+        if (session.user && session.user.isLogin) {
+            let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-        // @ts-ignore
-        if (req.auth) {
-            // @ts-ignore
-            const ddnsUser = await DynDnsServerUserServiceDB.findByName(req.auth.user);
-
-            if (ddnsUser) {
-                if (session.user) {
-                    session.user.isLogin = true;
-                    session.user.userid = ddnsUser.id;
-                }
+            if (req.params.ip) {
+                ip = req.params.ip;
+                Logger.getLogger().silly(`Update::setNicUpdate: set ip by param, by user: ${session.user.userid}`);
             }
+
+            Logger.getLogger().silly(`Update::setNicUpdate: use ip: ${ip} by user: ${session.user.userid}`);
+
+            if (req.params.hostname) {
+                const hostname = req.params.hostname;
+
+                Logger.getLogger().silly(`Update::setNicUpdate: check hostname: ${hostname} by user: ${session.user.userid}`);
+            } else {
+                Logger.getLogger().silly(`Update::setNicUpdate: update all hostnames, by user: ${session.user.userid}`);
+            }
+        } else if (session.user) {
+            Logger.getLogger().silly(`Update::setNicUpdate: user is not login: ${session.user.userid}`);
         }
     }
 
@@ -52,6 +53,7 @@ export class Update extends DefaultRoute {
 
                 const credentials = auth(req);
 
+                let userId: number = 0;
                 let granted = false;
 
                 if (credentials) {
@@ -60,10 +62,12 @@ export class Update extends DefaultRoute {
                     const ddnsUser = await DynDnsServerUserServiceDB.getInstance().findByName(credentials.name);
 
                     if (ddnsUser) {
-                        Logger.getLogger().silly(`Update::nic-update: basic auth - user found: ${ddnsUser.id}`);
+                        Logger.getLogger().silly(`Update::nic-update: basic auth - user found by id: ${ddnsUser.id}`);
 
                         if (ddnsUser.password === credentials.pass) {
+                            Logger.getLogger().silly(`Update::nic-update: password accept for user id: ${ddnsUser.id}`);
                             granted = true;
+                            userId = ddnsUser.id;
                         }
                     } else {
                         Logger.getLogger().warn(`Update::nic-update: basic auth - user not found - name: ${credentials.name}`);
@@ -72,6 +76,16 @@ export class Update extends DefaultRoute {
 
                 if (granted) {
                     if (this.isSchemaValidate(SchemaRequestData, req, res)) {
+                        if (!req.session.user) {
+                            req.session.user = {
+                                isLogin: false,
+                                userid: 0
+                            };
+                        }
+
+                        req.session.user.userid = userId;
+                        req.session.user.isLogin = true;
+
                         Update.setNicUpdate(req, req.session, res);
                     }
                 } else {

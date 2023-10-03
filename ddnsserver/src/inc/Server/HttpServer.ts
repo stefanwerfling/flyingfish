@@ -1,10 +1,5 @@
-import rateLimit from 'express-rate-limit';
-import {BaseHttpServer, FileHelper, Logger} from 'flyingfish_core';
+import {BaseHttpServer} from 'flyingfish_core';
 import helmet from 'helmet';
-
-// we need for declare Express Request Session
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import session from 'express-session';
 
 export class HttpServer extends BaseHttpServer {
 
@@ -41,21 +36,6 @@ export class HttpServer extends BaseHttpServer {
                 baseUri: ['\'self\'']
             }
         }));
-
-        const limiter = rateLimit({
-            windowMs: 15 * 60 * 1000,
-            standardHeaders: true,
-            legacyHeaders: false,
-            max: async(request) => {
-                if (request.baseUrl.indexOf('/') === 0) {
-                    return 100;
-                }
-
-                return 0;
-            }
-        });
-
-        this._server.use(limiter);
     }
 
 }
