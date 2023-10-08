@@ -1,4 +1,6 @@
 import {
+    Badge,
+    BadgeType, ButtonMenu, ButtonType,
     Card,
     ContentCol,
     ContentColSize,
@@ -10,10 +12,12 @@ import {
     Th,
     Tr
 } from 'bambooo';
+import moment from 'moment/moment';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {DynDnsServer as DynDnsServerAPI} from '../Api/DynDnsServer';
 import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
+import {DynDnsServerEditModal} from './DynDnsServer/DynDnsServerEditModal';
 
 /**
  * DynDnsServer
@@ -22,9 +26,15 @@ export class DynDnsServer extends BasePage {
 
     /**
      * name
-     * @protected
+     * @member {string}
      */
     protected _name: string = 'dyndnsserver';
+
+    /**
+     * dyn dns client dialog
+     * @member {DynDnsServerEditModal}
+     */
+    protected _dynDnsServerDialog: DynDnsServerEditModal;
 
     /**
      * constructor
@@ -34,13 +44,19 @@ export class DynDnsServer extends BasePage {
 
         this.setTitle('DynDns-Server');
 
+        // dyndnsclient modal ------------------------------------------------------------------------------------------
+
+        this._dynDnsServerDialog = new DynDnsServerEditModal(
+            this._wrapper.getContentWrapper().getContent()
+        );
+
         // -------------------------------------------------------------------------------------------------------------
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Account', async() => {
-            /*this._dynDnsClientDialog.resetValues();
-            this._dynDnsClientDialog.setTitle('DynDns Client Add');
-            this._dynDnsClientDialog.show();*/
+            this._dynDnsServerDialog.resetValues();
+            this._dynDnsServerDialog.setTitle('DynDns Server Add');
+            this._dynDnsServerDialog.show();
             return false;
         }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
@@ -88,27 +104,46 @@ export class DynDnsServer extends BasePage {
                 if (users.list) {
                     card.setTitle(`Accounts (${users.list.length})`);
 
-                    for (const user of users.list) {
+                    for (const entry of users.list) {
                         const trbody = new Tr(table.getTbody());
 
                         // eslint-disable-next-line no-new
-                        new Td(trbody, `#${user.user.id}`);
+                        new Td(trbody, `#${entry.user.id}`);
 
                         // eslint-disable-next-line no-new
-                        new Td(trbody, `#${user.user.username}`);
+                        new Td(trbody, `${entry.user.username}`);
 
                         const domainsTd = new Td(trbody, '');
                         domainsTd.setCss({
                             'white-space': 'normal'
                         });
 
-                        // for (const domain of user.domain_ids) {
+                        for (const domain of entry.domains) {
+                            // eslint-disable-next-line no-new
+                            new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
+                            domainsTd.append('&nbsp;');
+                        }
+
+                        const date = moment(entry.last_update * 1000);
+
                         // eslint-disable-next-line no-new
-                        /*
-                         * new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
-                         * domainsTd.append('&nbsp;');
-                         * }
-                         */
+                        new Td(trbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));
+
+                        const tdRAction = new Td(trbody, '');
+                        const btnRMenu = new ButtonMenu(
+                            tdRAction.getElement(),
+                            IconFa.bars,
+                            true,
+                            ButtonType.borderless
+                        );
+
+                        btnRMenu.addMenuItem(
+                            'Edit',
+                            async(): Promise<void> => {
+
+                            },
+                            IconFa.edit
+                        );
                     }
                 }
             } catch (error) {

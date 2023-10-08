@@ -17,11 +17,25 @@ export const SchemaDynDnsServerUser = Vts.object({
 export type DynDnsServerUser = ExtractSchemaResultType<typeof SchemaDynDnsServerUser>;
 
 /**
+ * SchemaDynDnsServerDomain
+ */
+export const SchemaDynDnsServerDomain = Vts.object({
+    id: Vts.number(),
+    name: Vts.string()
+});
+
+/**
+ * DynDnsServerDomain
+ */
+export type DynDnsServerDomain = ExtractSchemaResultType<typeof SchemaDynDnsServerDomain>;
+
+/**
  * SchemaDynDnsServerData
  */
 export const SchemaDynDnsServerData = Vts.object({
     user: SchemaDynDnsServerUser,
-    domain_ids: Vts.array(Vts.number())
+    domains: Vts.array(SchemaDynDnsServerDomain),
+    last_update: Vts.number()
 });
 
 /**

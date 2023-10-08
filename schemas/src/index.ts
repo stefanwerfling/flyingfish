@@ -98,6 +98,8 @@ export {
 export {
     SchemaDynDnsServerUser,
     DynDnsServerUser,
+    SchemaDynDnsServerDomain,
+    DynDnsServerDomain,
     SchemaDynDnsServerData,
     DynDnsServerData,
     SchemaDynDnsServerListResponse,
