@@ -1,18 +1,19 @@
 import {
     Badge,
-    BadgeType, ButtonMenu, ButtonType,
+    BadgeType, ButtonClass, ButtonMenu, ButtonType,
     Card,
     ContentCol,
     ContentColSize,
-    ContentRow,
+    ContentRow, DialogConfirm,
     IconFa,
-    LeftNavbarLink,
+    LeftNavbarLink, ModalDialogType,
     Table,
     Td,
     Th,
     Tr
 } from 'bambooo';
 import moment from 'moment/moment';
+import {Domain} from '../Api/Domain';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {DynDnsServer as DynDnsServerAPI} from '../Api/DynDnsServer';
 import {UtilRedirect} from '../Utils/UtilRedirect';
@@ -140,9 +141,66 @@ export class DynDnsServer extends BasePage {
                         btnRMenu.addMenuItem(
                             'Edit',
                             async(): Promise<void> => {
+                                this._dynDnsServerDialog.resetValues();
+                                this._dynDnsServerDialog.setTitle('DynDns Server Account Edit');
+                                this._dynDnsServerDialog.show();
 
+                                try {
+                                    const domains = await Domain.getDomains();
+
+                                    if (domains) {
+                                        this._dynDnsServerDialog.setDomains(domains.list);
+                                    }
+                                } catch (e) {
+                                    if (e instanceof UnauthorizedError) {
+                                        UtilRedirect.toLogin();
+                                    }
+                                }
+
+                                this._dynDnsServerDialog.setId(entry.user.id);
+                                this._dynDnsServerDialog.setDomainSelected(entry.domains);
+                                this._dynDnsServerDialog.setUsername(entry.user.username);
                             },
                             IconFa.edit
+                        );
+
+                        btnRMenu.addDivider();
+
+                        btnRMenu.addMenuItem(
+                            'Delete',
+                            (): void => {
+                                DialogConfirm.confirm(
+                                    'dnydnsDeleteServer',
+                                    ModalDialogType.large,
+                                    'Delete accoun',
+                                    'Are you sure you want to delete the account?',
+                                    async(_, dialog) => {
+                                        try {
+                                            if (await DynDnsServerAPI.delete(entry)) {
+                                                this._toast.fire({
+                                                    icon: 'success',
+                                                    title: 'DynDns server account delete success.'
+                                                });
+                                            }
+                                        } catch (message) {
+                                            this._toast.fire({
+                                                icon: 'error',
+                                                title: message
+                                            });
+                                        }
+
+                                        dialog.hide();
+
+                                        if (this._onLoadTable) {
+                                            this._onLoadTable();
+                                        }
+                                    },
+                                    undefined,
+                                    'Delete',
+                                    ButtonClass.danger
+                                );
+                            },
+                            IconFa.trash
                         );
                     }
                 }

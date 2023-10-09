@@ -108,6 +108,8 @@ export class Update extends DefaultRoute {
                 }
             }
 
+            await DynDnsServerUserServiceDB.getInstance().setLastUpdate(session.user.userid);
+
             response.status(200).send('OK');
             return;
         } else if (session.user) {

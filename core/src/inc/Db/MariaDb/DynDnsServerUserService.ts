@@ -1,3 +1,5 @@
+import {UpdateResult} from 'typeorm';
+import {DateHelper} from '../../Utils/DateHelper.js';
 import {DBService} from './DBService.js';
 import {DynDnsServerUser} from './Entity/DynDnsServerUser.js';
 
@@ -23,8 +25,9 @@ export class DynDnsServerUserService extends DBService<DynDnsServerUser> {
     }
 
     /**
-     * findByName
-     * @param name
+     * Find entry by name.
+     * @param {string} name
+     * @returns {DynDnsServerUser | null}
      */
     public findByName(name: string): Promise<DynDnsServerUser | null> {
         return this._repository.findOne({
@@ -32,6 +35,22 @@ export class DynDnsServerUserService extends DBService<DynDnsServerUser> {
                 username: name
             }
         });
+    }
+
+    /**
+     * Set last update for user entry.
+     * @param {number} id
+     * @returns {UpdateResult}
+     */
+    public async setLastUpdate(id: number): Promise<UpdateResult> {
+        return this._repository
+        .createQueryBuilder()
+        .update()
+        .set({
+            last_update: DateHelper.getCurrentDbTime()
+        })
+        .where('id = :id', {id: id})
+        .execute();
     }
 
 }

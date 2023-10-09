@@ -1,4 +1,10 @@
 import {Element, FormGroup, InputBottemBorderOnly2, InputType, ModalDialog, ModalDialogType, Multiple} from 'bambooo';
+import {DomainData, DynDnsServerDomain} from 'flyingfish_schemas';
+
+/**
+ * DynDnsServerEditModalButtonClickFn
+ */
+export type DynDnsServerEditModalButtonClickFn = () => void;
 
 export class DynDnsServerEditModal extends ModalDialog {
 
@@ -27,6 +33,12 @@ export class DynDnsServerEditModal extends ModalDialog {
     protected _multipleDomains: Multiple;
 
     /**
+     * click save fn
+     * @protected
+     */
+    protected _onSaveClick: DynDnsServerEditModalButtonClickFn|null = null;
+
+    /**
      * constructor
      * @param elementObject
      */
@@ -43,7 +55,132 @@ export class DynDnsServerEditModal extends ModalDialog {
 
         const groupDomains = new FormGroup(bodyCard, 'Domains');
         this._multipleDomains = new Multiple(groupDomains);
-        groupDomains.hide();
+
+        // buttons -----------------------------------------------------------------------------------------------------
+
+        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
+        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
+
+        btnSave.on('click', (): void => {
+            if (this._onSaveClick !== null) {
+                this._onSaveClick();
+            }
+        });
+    }
+
+    /**
+     * setDomains
+     * @param domains
+     */
+    public setDomains(domains: DomainData[]): void {
+        this._multipleDomains.clearValues();
+
+        for (const domain of domains) {
+            this._multipleDomains.addValue({
+                key: `${domain.id}`,
+                value: domain.name
+            });
+        }
+    }
+
+    /**
+     * setId
+     * @param id
+     */
+    public setId(id: number): void {
+        if (id > 0) {
+            this._inputPassword.setPlaceholder('Leave password blank if you don\'t want to change the password.');
+        } else {
+            this._inputPassword.setPlaceholder('');
+        }
+
+        this._id = id;
+    }
+
+    /**
+     * getId
+     */
+    public getId(): number|null {
+        return this._id;
+    }
+
+    /**
+     * setDomainSelected
+     * @param domains
+     */
+    public setDomainSelected(domains: DynDnsServerDomain[]): void {
+        const list: string[] = [];
+
+        for (const domain of domains) {
+            list.push(`${domain.id}`);
+        }
+
+        this._multipleDomains.setValue(list);
+    }
+
+    /**
+     * getDomainSelected
+     */
+    public getDomainSelected(): DynDnsServerDomain[] {
+        const list: DynDnsServerDomain[] = [];
+
+        const values = this._multipleDomains.getValue();
+
+        for (const value of values) {
+            list.push({
+                id: parseInt(value, 10),
+                name: ''
+            });
+        }
+
+        return list;
+    }
+
+    /**
+     * setUsername
+     * @param username
+     */
+    public setUsername(username: string): void {
+        this._inputUsername.setValue(username);
+    }
+
+    /**
+     * getUsername
+     */
+    public getUsername(): string {
+        return this._inputUsername.getValue();
+    }
+
+    /**
+     * setPassword
+     * @param password
+     */
+    public setPassword(password: string): void {
+        this._inputPassword.setValue(password);
+    }
+
+    /**
+     * getPassword
+     */
+    public getPassword(): string {
+        return this._inputPassword.getValue();
+    }
+
+    /**
+     * resetValues
+     */
+    public resetValues(): void {
+        this._multipleDomains.setValue([]);
+        this._inputUsername.setValue('');
+        this._inputPassword.setValue('');
+    }
+
+    /**
+     * setOnSave
+     * @param onSave
+     */
+    public setOnSave(onSave: DynDnsServerEditModalButtonClickFn): void {
+        this._onSaveClick = onSave;
     }
 
 }
