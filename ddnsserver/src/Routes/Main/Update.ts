@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import {Request, Response, Router} from 'express';
 import {
     DateHelper,
@@ -152,7 +153,9 @@ export class Update extends DefaultRoute {
                     if (ddnsUser) {
                         Logger.getLogger().silly(`Update::nic-update: basic auth - user found by id: ${ddnsUser.id}`);
 
-                        if (ddnsUser.password === credentials.pass) {
+                        const bresult = await bcrypt.compare(credentials.pass, ddnsUser.password);
+
+                        if (bresult) {
                             Logger.getLogger().silly(`Update::nic-update: password accept for user id: ${ddnsUser.id}`);
                             granted = true;
                             userId = ddnsUser.id;
@@ -174,7 +177,7 @@ export class Update extends DefaultRoute {
                         req.session.user.userid = userId;
                         req.session.user.isLogin = true;
 
-                        Update.setNicUpdate(req, req.session, res);
+                        await Update.setNicUpdate(req, req.session, res);
                     }
                 } else {
                     res.set('WWW-Authenticate', 'Basic realm="401"');

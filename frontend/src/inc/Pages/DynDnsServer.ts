@@ -125,7 +125,7 @@ export class DynDnsServer extends BasePage {
                             domainsTd.append('&nbsp;');
                         }
 
-                        const date = moment(entry.last_update * 1000);
+                        const date = moment(entry.user.last_update * 1000);
 
                         // eslint-disable-next-line no-new
                         new Td(trbody, date.format('<b>YYYY-MM-DD</b> HH:mm:ss'));

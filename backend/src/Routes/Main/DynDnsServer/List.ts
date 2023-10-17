@@ -38,8 +38,7 @@ export class List {
                         password: user.password,
                         last_update: user.last_update
                     },
-                    domains: domainList,
-                    last_update: user.last_update
+                    domains: domainList
                 });
             }
         }

@@ -34,8 +34,7 @@ export type DynDnsServerDomain = ExtractSchemaResultType<typeof SchemaDynDnsServ
  */
 export const SchemaDynDnsServerData = Vts.object({
     user: SchemaDynDnsServerUser,
-    domains: Vts.array(SchemaDynDnsServerDomain),
-    last_update: Vts.number()
+    domains: Vts.array(SchemaDynDnsServerDomain)
 });
 
 /**

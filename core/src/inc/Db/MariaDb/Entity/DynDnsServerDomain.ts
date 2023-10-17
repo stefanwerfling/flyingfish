@@ -4,7 +4,7 @@ import {DBBaseEntityId} from '../DBBaseEntityId.js';
 /**
  * DynDnsServerDomain
  */
-@Entity({name: 'dyndnsserver_domain'})
+@Entity({name: 'dyndns_server_domain'})
 export class DynDnsServerDomain extends DBBaseEntityId {
 
     /**
