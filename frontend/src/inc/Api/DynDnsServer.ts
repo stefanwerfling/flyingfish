@@ -1,12 +1,12 @@
 import {
     DynDnsServerData,
-    DynDnsServerListResponse, SchemaDefaultReturn,
-    SchemaDynDnsServerListResponse
+    DynDnsServerListResponse, DynDnsServerNotInDomainResponse, SchemaDefaultReturn,
+    SchemaDynDnsServerListResponse, SchemaDynDnsServerNotInDomainResponse
 } from 'flyingfish_schemas';
 import {NetFetch} from '../Net/NetFetch';
 
 /**
- * DynDnsServer
+ * Domain list for DynDns Server.
  */
 export class DynDnsServer {
 
@@ -16,6 +16,14 @@ export class DynDnsServer {
      */
     public static async getUsers(): Promise<DynDnsServerListResponse> {
         return NetFetch.getData('/json/dyndnsserver/list', SchemaDynDnsServerListResponse);
+    }
+
+    /**
+     * Return all Domains that not is used for DynDns Server.
+     * @returns {DynDnsServerNotInDomainResponse}
+     */
+    public static async getDomains(): Promise<DynDnsServerNotInDomainResponse> {
+        return NetFetch.getData('/json/dyndnsserver/domain/list', SchemaDynDnsServerNotInDomainResponse);
     }
 
     /**

@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {
-    DynDnsClientDomainServiceDB, DynDnsServerDomainDB,
+    DynDnsServerDomainDB,
     DynDnsServerDomainServiceDB,
     DynDnsServerUserDB,
     DynDnsServerUserServiceDB

@@ -1,5 +1,5 @@
 import {Element, FormGroup, InputBottemBorderOnly2, InputType, ModalDialog, ModalDialogType, Multiple} from 'bambooo';
-import {DomainData, DynDnsServerDomain} from 'flyingfish_schemas';
+import {DynDnsServerDomain, DynDnsServerNotInDomain} from 'flyingfish_schemas';
 
 /**
  * DynDnsServerEditModalButtonClickFn
@@ -72,7 +72,7 @@ export class DynDnsServerEditModal extends ModalDialog {
      * setDomains
      * @param domains
      */
-    public setDomains(domains: DomainData[]): void {
+    public setDomains(domains: DynDnsServerNotInDomain[]): void {
         this._multipleDomains.clearValues();
 
         for (const domain of domains) {
@@ -113,6 +113,10 @@ export class DynDnsServerEditModal extends ModalDialog {
 
         for (const domain of domains) {
             list.push(`${domain.id}`);
+            this._multipleDomains.addValue({
+                key: `${domain.id}`,
+                value: domain.name
+            });
         }
 
         this._multipleDomains.setValue(list);

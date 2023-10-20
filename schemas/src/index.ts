@@ -107,6 +107,13 @@ export {
 } from './Backend/Routes/DynDnsServer/List.js';
 
 export {
+    SchemaDynDnsServerNotInDomain,
+    DynDnsServerNotInDomain,
+    SchemaDynDnsServerNotInDomainResponse,
+    DynDnsServerNotInDomainResponse
+} from './Backend/Routes/DynDnsServer/DomainList.js';
+
+export {
     SchemaGatewayIdentifierEntry,
     GatewayIdentifierEntry,
     SchemaGatewayIdentifierListResponse,

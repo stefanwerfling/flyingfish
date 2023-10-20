@@ -12,8 +12,8 @@ import {
     Th,
     Tr
 } from 'bambooo';
+import {DynDnsServerData} from 'flyingfish_schemas';
 import moment from 'moment/moment';
-import {Domain} from '../Api/Domain';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {DynDnsServer as DynDnsServerAPI} from '../Api/DynDnsServer';
 import {UtilRedirect} from '../Utils/UtilRedirect';
@@ -55,6 +55,18 @@ export class DynDnsServer extends BasePage {
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Account', async() => {
+            try {
+                const domains = await DynDnsServerAPI.getDomains();
+
+                if (domains) {
+                    this._dynDnsServerDialog.setDomains(domains.list);
+                }
+            } catch (e) {
+                if (e instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
+                }
+            }
+
             this._dynDnsServerDialog.resetValues();
             this._dynDnsServerDialog.setTitle('DynDns Server Add');
             this._dynDnsServerDialog.show();
@@ -62,6 +74,50 @@ export class DynDnsServer extends BasePage {
         }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
         this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._dynDnsServerDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._dynDnsServerDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const dyndnsUser: DynDnsServerData = {
+                    user: {
+                        id: tid,
+                        username: this._dynDnsServerDialog.getUsername(),
+                        password: this._dynDnsServerDialog.getPassword(),
+                        last_update: 0
+                    },
+                    domains: this._dynDnsServerDialog.getDomainSelected()
+                };
+
+                if (await DynDnsServerAPI.save(dyndnsUser)) {
+                    this._dynDnsServerDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'DynDns User save success.'
+                    });
+                }
+            } catch (error) {
+                if (error instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
+                }
+
+                this._toast.fire({
+                    icon: 'error',
+                    title: error
+                });
+            }
+        });
     }
 
     /**
@@ -146,7 +202,7 @@ export class DynDnsServer extends BasePage {
                                 this._dynDnsServerDialog.show();
 
                                 try {
-                                    const domains = await Domain.getDomains();
+                                    const domains = await DynDnsServerAPI.getDomains();
 
                                     if (domains) {
                                         this._dynDnsServerDialog.setDomains(domains.list);

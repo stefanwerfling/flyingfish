@@ -87,19 +87,37 @@ export abstract class DBService<T extends DBBaseEntityId> {
     }
 
     /**
-     * remove
-     * @param id
+     * Remove a row (entry) by ID.
+     * @param {number} id - ID from entry.
+     * @returns {DeleteResult}
      */
     public async remove(id: number): Promise<DeleteResult> {
         return this._repository.delete(id);
     }
 
     /**
-     * save
-     * @param T extend DBBaseEntityId
+     * Save an entry object extend from DBBaseEntityId.
+     * @param {T extend DBBaseEntityId} entity
+     * @returns {T}
      */
     public async save(entity: T): Promise<T> {
         return this._repository.save(entity);
+    }
+
+    /**
+     * Get access to repository for cross-query building and more.
+     * @returns {Repository<T>}
+     */
+    public getRepository(): Repository<T> {
+        return this._repository;
+    }
+
+    /**
+     * Return the table name.
+     * @returns {string}
+     */
+    public getTableName(): string {
+        return this._repository.metadata.name;
     }
 
 }
