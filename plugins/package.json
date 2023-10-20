@@ -1,5 +1,5 @@
 {
-  "name": "flyingfish",
+  "name": "flyingfish_plugins",
   "version": "1.0.0",
   "repository": {
     "type": "git",
@@ -15,14 +15,7 @@
   "author": "Stefan Werfling",
   "license": "GPL-3.0-or-later",
   "workspaces": [
-    "schemas",
-    "core",
-    "backend",
-    "himhip",
-    "sshserver",
-    "frontend",
-    "ddnsserver",
-    "plugins"
+    "demoplugin"
   ],
   "scripts": {
     "npm-check-updates": "npm-check-updates"

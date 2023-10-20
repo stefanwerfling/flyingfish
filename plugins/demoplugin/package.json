@@ -19,8 +19,8 @@
   },
   "homepage": "https://github.com/stefanwerfling/flyingfish#readme",
   "dependencies": {
-    "flyingfish_core": "file:../core",
-    "flyingfish_schemas": "file:../schemas",
+    "flyingfish_core": "file:../../core",
+    "flyingfish_schemas": "file:../../schemas",
     "typeorm": "0.3.16"
   },
   "devDependencies": {

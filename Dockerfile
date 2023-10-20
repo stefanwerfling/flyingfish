@@ -83,6 +83,7 @@ RUN mkdir -p /opt/flyingfish/backend
 RUN mkdir -p /opt/flyingfish/frontend
 RUN mkdir -p /opt/flyingfish/nginx
 RUN mkdir -p /opt/flyingfish/nginx/html
+RUN mkdir -p /opt/flyingfish/plugins
 RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
 
@@ -114,9 +115,9 @@ RUN npm run build
 
 # Copy/Install DemoPlugin ----------------------------------------------------------------------------------------------
 
-WORKDIR /opt/flyingfish/demoplugin
+WORKDIR /opt/flyingfish/plugins/demoplugin
 
-COPY ./demoplugin/ ./
+COPY ./plugins/demoplugin/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true

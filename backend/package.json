@@ -55,7 +55,7 @@
     "fast-xml-parser": "^4.2.7",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
-    "flyingfish_demoplugin": "file:../demoplugin",
+    "flyingfish_demoplugin": "file:../plugins/demoplugin",
     "got": "^12.6.1",
     "helmet": "^6.2.0",
     "moment": "^2.29.4",
