@@ -13,7 +13,7 @@ export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
 export {DBBaseEntityUnid} from './inc/Db/MariaDb/DBBaseEntityUnid.js';
 export {DBService} from './inc/Db/MariaDb/DBService.js';
-export {IDBTableLoaderOnLoadEvent} from './inc/Db/MariaDb/IDBTableLoaderOnLoadEvent.js';
+export {ADBTableLoaderOnLoadEvent} from './inc/Db/MariaDb/ADBTableLoaderOnLoadEvent.js';
 export {DBEntitiesLoader} from './inc/Db/MariaDb/DBEntitiesLoader.js';
 
 export {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential.js';
@@ -87,4 +87,6 @@ export {SimpleProcessAwait} from './inc/Utils/SimpleProcessAwait.js';
 export {PluginDefinition, SchemaPluginDefinition} from './inc/PluginSystem/PluginDefinition.js';
 export {Plugin} from './inc/PluginSystem/Plugin.js';
 export {PluginInformation, PluginManager} from './inc/PluginSystem/PluginManager.js';
-export {IPluginEvent} from './inc/PluginSystem/IPluginEvent.js';
+export {APluginEvent} from './inc/PluginSystem/APluginEvent.js';
+
+export {ACertProviderOnLoadEvent} from './inc/Provider/SslCertProvider/ACertProviderOnLoadEvent.js';

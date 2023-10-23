@@ -1,10 +1,10 @@
-import {IDBTableLoaderOnLoadEvent} from 'flyingfish_core';
+import {ADBTableLoaderOnLoadEvent} from 'flyingfish_core';
 import {EntitySchema} from 'typeorm';
 
 /**
  * LoadDb
  */
-export class LoadDb extends IDBTableLoaderOnLoadEvent {
+export class LoadDb extends ADBTableLoaderOnLoadEvent {
 
     /**
      * getName

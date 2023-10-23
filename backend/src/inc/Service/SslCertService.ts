@@ -1,3 +1,4 @@
+import * as console from 'console';
 import {Ets} from 'ets';
 import {DomainServiceDB, FileHelper, Logger, NginxHttpServiceDB} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
@@ -257,6 +258,15 @@ export class SslCertService {
     public async stop(): Promise<void> {
         if (this._schedulerUpdate !== null) {
             this._schedulerUpdate.cancel();
+        }
+    }
+
+    /**
+     * Invoke the update, for example, can call by route save.
+     */
+    public async invokeUpdate(): Promise<void> {
+        if (this._schedulerUpdate !== null) {
+            this._schedulerUpdate.invoke();
         }
     }
 

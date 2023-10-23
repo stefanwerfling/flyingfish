@@ -5,7 +5,7 @@ import {SchemaErrors} from 'vts';
 import {Logger} from '../Logger/Logger.js';
 import {Plugin} from './Plugin.js';
 import {PluginDefinition, SchemaPluginDefinition} from './PluginDefinition.js';
-import {IPluginEvent} from './IPluginEvent.js';
+import {APluginEvent} from './APluginEvent.js';
 
 /**
  * PluginInformation
@@ -46,9 +46,9 @@ export class PluginManager {
 
     /**
      * events
-     * @member {IPluginEvent[]}
+     * @member {APluginEvent[]}
      */
-    protected _events: IPluginEvent[] = [];
+    protected _events: APluginEvent[] = [];
 
     /**
      * Retrung a plugin manager instance or throw error by wrong initalition.
@@ -204,10 +204,10 @@ export class PluginManager {
 
     /**
      * Register an event, called from plugin.
-     * @param {IPluginEvent} listner - Listner event object.
+     * @param {APluginEvent} listner - Listner event object.
      * @param {Plugin} plugin - A plugin instance.
      */
-    public registerEvents(listner: IPluginEvent, plugin: Plugin): void {
+    public registerEvents(listner: APluginEvent, plugin: Plugin): void {
         if (this._plugins.find((e) => e.getName() === plugin.getName())) {
             this._events.push(listner);
         }
@@ -215,10 +215,10 @@ export class PluginManager {
 
     /**
      * getAllEvents
-     * @param {extends IPluginEvent} aInterface
+     * @param aClass
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
-    public getAllEvents<T extends IPluginEvent>(aClass: Function): T[] {
+    public getAllEvents<T extends APluginEvent>(aClass: Function): T[] {
         const events: T[] = [];
 
         for (const aEvent of this._events) {

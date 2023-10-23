@@ -1,5 +1,5 @@
 import {SslProvidersResponse, StatusCodes} from 'flyingfish_schemas';
-import {SslProviders} from '../../../inc/Provider/SslProviders.js';
+import {SslCertProviders} from '../../../inc/Provider/SslCertProvider/SslCertProviders.js';
 
 /**
  * Providers
@@ -12,7 +12,7 @@ export class Providers {
     public static async getProviders(): Promise<SslProvidersResponse> {
         return {
             statusCode: StatusCodes.OK,
-            list: SslProviders.getProviders()
+            list: await SslCertProviders.getProviders()
         };
     }
 

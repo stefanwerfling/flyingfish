@@ -24,7 +24,10 @@ export {
     BackendConfigOptions
 } from './Backend/Config/Config.js';
 export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
-export {SchemaSslProvider, SslProvider} from './Backend/Provider/SslProviders.js';
+export {SchemaSslProvider, SslProvider} from './Backend/Provider/SslCertProviders/SslProviders.js';
+export {ISslCertProvider} from './Backend/Provider/SslCertProviders/ISslCertProvider.js';
+export {SslCertBundel} from './Backend/Provider/SslCertProviders/SslCertBundel.js';
+export {SslCertCreateOptions} from './Backend/Provider/SslCertProviders/SslCertCreateOptions.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
 export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';
 export {

@@ -1,5 +1,5 @@
-import { IDBTableLoaderOnLoadEvent } from 'flyingfish_core';
-export class LoadDb extends IDBTableLoaderOnLoadEvent {
+import { ADBTableLoaderOnLoadEvent } from 'flyingfish_core';
+export class LoadDb extends ADBTableLoaderOnLoadEvent {
     getName() {
         return 'LoadDb';
     }

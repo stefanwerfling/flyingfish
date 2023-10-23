@@ -1,6 +1,6 @@
 import { Plugin } from 'flyingfish_core';
 import { LoadDb } from './LoadDb.js';
-class DemoPlugin extends Plugin {
+export default class DemoPlugin extends Plugin {
     getName() {
         return 'DemoPlugin';
     }
@@ -12,5 +12,4 @@ class DemoPlugin extends Plugin {
         return false;
     }
 }
-export default DemoPlugin;
 //# sourceMappingURL=index.js.map

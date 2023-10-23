@@ -26,7 +26,7 @@ import {SshPort} from './Entity/SshPort.js';
 import {SshUser} from './Entity/SshUser.js';
 import {User} from './Entity/User.js';
 import {EntitySchema, MixedList} from 'typeorm';
-import {IDBTableLoaderOnLoadEvent} from './IDBTableLoaderOnLoadEvent.js';
+import {ADBTableLoaderOnLoadEvent} from './ADBTableLoaderOnLoadEvent.js';
 
 /**
  * DBEntitiesLoader
@@ -71,8 +71,8 @@ export class DBEntitiesLoader {
         // load entities from plugin -----------------------------------------------------------------------------------
 
         const events =
-            PluginManager.getInstance().getAllEvents<IDBTableLoaderOnLoadEvent>(
-                IDBTableLoaderOnLoadEvent
+            PluginManager.getInstance().getAllEvents<ADBTableLoaderOnLoadEvent>(
+                ADBTableLoaderOnLoadEvent
             );
 
         for await (const event of events) {

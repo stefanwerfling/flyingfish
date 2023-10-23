@@ -1,6 +1,6 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaDefaultReturn} from '../../../Core/Server/Routes/DefaultReturn.js';
-import {SchemaSslProvider} from '../../Provider/SslProviders.js';
+import {SchemaSslProvider} from '../../Provider/SslCertProviders/SslProviders.js';
 
 /**
  * SchemaSslProvidersResponse

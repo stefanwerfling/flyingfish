@@ -1,7 +1,7 @@
 /**
- * IPluginEvent
+ * Abstract plugin event.
  */
-export abstract class IPluginEvent {
+export abstract class APluginEvent {
 
     /**
      * getName
