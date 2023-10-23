@@ -63,6 +63,6 @@
 /vpn/dist/
 /vpn/package-lock.json
 
-/demoplugin/node_modules/
 /node_modules/
+/plugins/demoplugin/node_modules/
 /plugins/letsencrypt/node_modules/
