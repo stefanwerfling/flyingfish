@@ -1,4 +1,5 @@
 import {Plugin} from 'flyingfish_core';
+import {Certbot} from './Certbot.js';
 
 export default class LetsEncrypt extends Plugin {
 
@@ -20,7 +21,7 @@ export default class LetsEncrypt extends Plugin {
      * onEnable
      */
     public onEnable(): boolean {
-
+        this.getPluginManager().registerEvents(new Certbot(), this);
         return true;
     }
 

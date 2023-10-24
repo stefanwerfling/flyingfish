@@ -3,6 +3,7 @@ import {SslDetailInfoData, SslDetailsRequest, SslDetailsResponse, StatusCodes} f
 import Path from 'path';
 import {Certificate} from '../../../inc/Cert/Certificate.js';
 import {Certbot} from '../../../inc/Provider/Letsencrypt/Certbot.js';
+import {SslCertProviders} from '../../../inc/Provider/SslCertProvider/SslCertProviders.js';
 
 /**
  * Details
@@ -27,44 +28,58 @@ export class Details {
             const domain = await DomainServiceDB.getInstance().findOne(http.domain_id);
 
             if (domain) {
-                const sslCert = await Certbot.existCertificate(domain.domainname);
+                const provider = await SslCertProviders.getProvider(http.cert_provider);
 
-                if (sslCert) {
-                    const cert = new Certificate(Path.join(sslCert, 'cert.pem'));
+                if (provider) {
+                    const sslBundel = await provider?.getCertificationBundel(domain.domainname);
 
-                    const issuerEntries: SslDetailInfoData[] = [];
-                    const issuer = cert.getIssuer();
+                    if (sslBundel) {
+                        const cert = new Certificate(sslBundel.certPem);
 
-                    issuer.forEach((value, key) => {
-                        issuerEntries.push({
-                            key: key,
-                            value: value
+                        const issuerEntries: SslDetailInfoData[] = [];
+                        const issuer = cert.getIssuer();
+
+                        issuer.forEach((value, key) => {
+                            issuerEntries.push({
+                                key: key,
+                                value: value
+                            });
                         });
-                    });
 
-                    const subjectEntries: SslDetailInfoData[] = [];
-                    const subject = cert.getSubject();
+                        const subjectEntries: SslDetailInfoData[] = [];
+                        const subject = cert.getSubject();
 
-                    subject.forEach((value, key) => {
-                        subjectEntries.push({
-                            key: key,
-                            value: value
+                        subject.forEach((value, key) => {
+                            subjectEntries.push({
+                                key: key,
+                                value: value
+                            });
                         });
-                    });
+
+                        return {
+                            statusCode: StatusCodes.OK,
+                            details: {
+                                issuer: issuerEntries,
+                                subject: subjectEntries,
+                                serialNumber: cert.getSerialNumber().toString(),
+                                dateNotBefore: cert.getDateNotBefore().toLocaleString(),
+                                dateNotAfter: cert.getDateNotAfter().toLocaleString(),
+                                signatureAlgorithm: cert.getSignatureAlgorithm(),
+                                extensions: cert.getExtensions()
+                            }
+                        };
+                    }
 
                     return {
-                        statusCode: StatusCodes.OK,
-                        details: {
-                            issuer: issuerEntries,
-                            subject: subjectEntries,
-                            serialNumber: cert.getSerialNumber().toString(),
-                            dateNotBefore: cert.getDateNotBefore().toLocaleString(),
-                            dateNotAfter: cert.getDateNotAfter().toLocaleString(),
-                            signatureAlgorithm: cert.getSignatureAlgorithm(),
-                            extensions: cert.getExtensions()
-                        }
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: 'Ssl Provider bundel return empty.'
                     };
                 }
+
+                return {
+                    statusCode: StatusCodes.INTERNAL_ERROR,
+                    msg: 'Ssl Provider not found!'
+                };
             }
 
             return {

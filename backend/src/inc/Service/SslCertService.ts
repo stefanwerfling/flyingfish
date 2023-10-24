@@ -1,4 +1,3 @@
-import * as console from 'console';
 import {Ets} from 'ets';
 import {DomainServiceDB, FileHelper, Logger, NginxHttpServiceDB} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
@@ -10,7 +9,7 @@ import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
 import {Certificate} from '../Cert/Certificate.js';
 import {NginxServer} from '../Nginx/NginxServer.js';
-import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
+import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
 import {NginxService} from './NginxService.js';
 
 /**
@@ -121,7 +120,6 @@ export class SslCertService {
 
         const https = await NginxHttpServiceDB.getInstance().findAll();
 
-        const certbot = new Certbot();
         let reloadNginx = false;
 
         if (https) {
@@ -153,37 +151,25 @@ export class SslCertService {
                         if (http.cert_email === '') {
                             Logger.getLogger().info(`SslCertService::update: missing email address for domain: ${domain.domainname}`);
                         } else {
-                            const sslCert = await Certbot.existCertificate(domain.domainname);
+                            const provider = await SslCertProviders.getProvider(http.cert_provider);
+
+                            if (!provider) {
+                                Logger.getLogger().error(`SslCertService::update: provider not found by '${domain.domainname}' domain, http: ${http.id}`);
+                                continue;
+                            }
 
                             let isCreateFailed = false;
                             let isCreate = false;
 
-                            if (sslCert === null) {
-                                // -------------------------------------------------------------------------------------
+                            if (await provider.existCertificate(domain.domainname)) {
+                                const sslBundel = await provider.getCertificationBundel(domain.domainname);
 
-                                try {
-                                    if (!await this._requestDomainCheckReachability(domain.domainname)) {
-                                        Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain is not reachability, http: ${http.id}`);
-                                        continue;
-                                    }
-                                } catch (e) {
-                                    Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' (http: ${http.id}), domain check is except: ${Ets.formate(e, true, true)}`);
+                                if (!sslBundel) {
+                                    Logger.getLogger().error(`SslCertService::update: ssl bundel not found by '${domain.domainname}' domain, http: ${http.id}`);
                                     continue;
                                 }
 
-                                // -------------------------------------------------------------------------------------
-
-                                if (await certbot.create(domain.domainname, http.cert_email)) {
-                                    Logger.getLogger().info(`SslCertService::update: certificate is created for domain: ${domain.domainname}`);
-
-                                    isCreate = true;
-                                    reloadNginx = true;
-                                } else {
-                                    Logger.getLogger().error(`SslCertService::update: certificate is faild to create for domain: ${domain.domainname}`);
-                                    isCreateFailed = true;
-                                }
-                            } else {
-                                const cert = new Certificate(Path.join(sslCert, 'cert.pem'));
+                                const cert = new Certificate(sslBundel.certPem);
 
                                 if (cert.isValidate()) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is up to date for domain: ${domain.domainname}`);
@@ -202,7 +188,10 @@ export class SslCertService {
 
                                     // ---------------------------------------------------------------------------------
 
-                                    if (await certbot.create(domain.domainname, http.cert_email)) {
+                                    if (await provider.createCertificate({
+                                        domainName: domain.domainname,
+                                        email: http.cert_email
+                                    })) {
                                         Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
 
                                         isCreate = true;
@@ -212,6 +201,33 @@ export class SslCertService {
 
                                         isCreateFailed = true;
                                     }
+                                }
+                            } else {
+                                // -------------------------------------------------------------------------------------
+
+                                try {
+                                    if (!await this._requestDomainCheckReachability(domain.domainname)) {
+                                        Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' domain is not reachability, http: ${http.id}`);
+                                        continue;
+                                    }
+                                } catch (e) {
+                                    Logger.getLogger().error(`SslCertService::update: '${domain.domainname}' (http: ${http.id}), domain check is except: ${Ets.formate(e, true, true)}`);
+                                    continue;
+                                }
+
+                                // -------------------------------------------------------------------------------------
+
+                                if (await provider.createCertificate({
+                                    domainName: domain.domainname,
+                                    email: http.cert_email
+                                })) {
+                                    Logger.getLogger().info(`SslCertService::update: certificate is created for domain: ${domain.domainname}`);
+
+                                    isCreate = true;
+                                    reloadNginx = true;
+                                } else {
+                                    Logger.getLogger().error(`SslCertService::update: certificate is faild to create for domain: ${domain.domainname}`);
+                                    isCreateFailed = true;
                                 }
                             }
 

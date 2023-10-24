@@ -1,7 +1,7 @@
 import {FileHelper, Logger} from 'flyingfish_core';
 import {ISslCertProvider, SslCertBundel, SslCertCreateOptions} from 'flyingfish_schemas';
 import path from 'path';
-import {spawn} from "child_process";
+import {spawn} from 'child_process';
 
 /**
  * Lets encrypt certbot object.

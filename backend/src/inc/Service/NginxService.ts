@@ -43,7 +43,7 @@ import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} 
 import {NginxServer} from '../Nginx/NginxServer.js';
 import {NginxHTTPVariables} from '../Nginx/NginxVariables.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
-import {Certbot} from '../Provider/Letsencrypt/Certbot.js';
+import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
 import {Settings} from '../Settings/Settings.js';
 import {SysLogServer} from '../SysLogServer/SysLogServer.js';
 
@@ -859,71 +859,82 @@ export class NginxService {
                 // ssl use ---------------------------------------------------------------------------------------------
 
                 if (ssl_enable) {
-                    const sslCert = await Certbot.existCertificate(domainName);
+                    const provider = await SslCertProviders.getProvider(httpSubCollect.http.cert_provider);
 
-                    if (sslCert) {
-                        aServer.addVariable(NginxHTTPVariables.ssl_protocols, 'TLSv1 TLSv1.1 TLSv1.2');
-                        aServer.addVariable(NginxHTTPVariables.ssl_prefer_server_ciphers, 'on');
-                        aServer.addVariable(NginxHTTPVariables.ssl_ciphers, '\'' +
-                            'ECDHE-ECDSA-AES256-GCM-SHA384:' +
-                            'ECDHE-RSA-AES256-GCM-SHA384:' +
-                            'ECDHE-ECDSA-CHACHA20-POLY1305:' +
-                            'ECDHE-RSA-CHACHA20-POLY1305:' +
-                            'ECDHE-ECDSA-AES128-GCM-SHA256:' +
-                            'ECDHE-RSA-AES128-GCM-SHA256:' +
-                            'ECDHE-ECDSA-AES256-SHA384:' +
-                            'ECDHE-RSA-AES256-SHA384:' +
-                            'ECDHE-ECDSA-AES128-SHA256:' +
-                            'ECDHE-RSA-AES128-SHA256\'');
-                        aServer.addVariable(NginxHTTPVariables.ssl_ecdh_curve, 'secp384r1');
+                    if (provider) {
+                        const sslBundel = await provider.getCertificationBundel(domainName);
 
-                        const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
+                        if (sslBundel) {
+                            aServer.addVariable(NginxHTTPVariables.ssl_protocols, 'TLSv1 TLSv1.1 TLSv1.2');
+                            aServer.addVariable(NginxHTTPVariables.ssl_prefer_server_ciphers, 'on');
+                            aServer.addVariable(NginxHTTPVariables.ssl_ciphers, '\'' +
+                                'ECDHE-ECDSA-AES256-GCM-SHA384:' +
+                                'ECDHE-RSA-AES256-GCM-SHA384:' +
+                                'ECDHE-ECDSA-CHACHA20-POLY1305:' +
+                                'ECDHE-RSA-CHACHA20-POLY1305:' +
+                                'ECDHE-ECDSA-AES128-GCM-SHA256:' +
+                                'ECDHE-RSA-AES128-GCM-SHA256:' +
+                                'ECDHE-ECDSA-AES256-SHA384:' +
+                                'ECDHE-RSA-AES256-SHA384:' +
+                                'ECDHE-ECDSA-AES128-SHA256:' +
+                                'ECDHE-RSA-AES128-SHA256\'');
+                            aServer.addVariable(NginxHTTPVariables.ssl_ecdh_curve, 'secp384r1');
 
-                        if (dhparam) {
-                            aServer.addVariable(NginxHTTPVariables.ssl_dhparam, dhparam);
+                            const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
+
+                            if (dhparam) {
+                                aServer.addVariable(NginxHTTPVariables.ssl_dhparam, dhparam);
+                            }
+
+                            aServer.addVariable(NginxHTTPVariables.ssl_session_timeout, '1d');
+                            aServer.addVariable(NginxHTTPVariables.ssl_session_cache, 'shared:SSL:50m');
+                            aServer.addVariable(NginxHTTPVariables.ssl_session_tickets, 'off');
+                            aServer.addVariable(
+                                'add_header Strict-Transport-Security',
+                                '"max-age=63072000; includeSubdomains; preload"'
+                            );
+                            aServer.addVariable(NginxHTTPVariables.ssl_stapling, 'on');
+                            aServer.addVariable(NginxHTTPVariables.ssl_stapling_verify, 'on');
+                            aServer.addVariable(NginxHTTPVariables.ssl_trusted_certificate, sslBundel.chainPem);
+                            aServer.addVariable(NginxHTTPVariables.ssl_certificate, sslBundel.fullChainPem);
+                            aServer.addVariable(NginxHTTPVariables.ssl_certificate_key, sslBundel.privatKeyPem);
+                            aServer.addVariable(NginxHTTPVariables.resolver, `${nginxResolver} valid=300s`);
+                            aServer.addVariable(NginxHTTPVariables.resolver_timeout, '5s');
+
+                            switch (httpSubCollect.http.x_frame_options) {
+                                case ServerXFrameOptions.deny:
+                                    aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.deny);
+                                    break;
+
+                                case ServerXFrameOptions.sameorigin:
+                                    aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.sameorigin);
+                                    break;
+                            }
+
+                            aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
+                            aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
+                            aServer.addVariable('add_header X-Robots-Tag', 'none');
+
+                            // check the host and server name right
+                            const domainIf = new If('$host != $server_name');
+                            domainIf.addVariable('return', '444');
+
+                            aServer.addContext(domainIf);
+                        } else {
+                            Logger.getLogger().warn(
+                                `NginxService::_loadConfig: Certificate bundel not found for Domain '${domainName}' and ignore settings.`
+                            );
+
+                            continue;
                         }
-
-                        aServer.addVariable(NginxHTTPVariables.ssl_session_timeout, '1d');
-                        aServer.addVariable(NginxHTTPVariables.ssl_session_cache, 'shared:SSL:50m');
-                        aServer.addVariable(NginxHTTPVariables.ssl_session_tickets, 'off');
-                        aServer.addVariable(
-                            'add_header Strict-Transport-Security',
-                            '"max-age=63072000; includeSubdomains; preload"'
-                        );
-                        aServer.addVariable(NginxHTTPVariables.ssl_stapling, 'on');
-                        aServer.addVariable(NginxHTTPVariables.ssl_stapling_verify, 'on');
-                        aServer.addVariable(NginxHTTPVariables.ssl_trusted_certificate, `${sslCert}/chain.pem`);
-                        aServer.addVariable(NginxHTTPVariables.ssl_certificate, `${sslCert}/fullchain.pem`);
-                        aServer.addVariable(NginxHTTPVariables.ssl_certificate_key, `${sslCert}/privkey.pem`);
-                        aServer.addVariable(NginxHTTPVariables.resolver, `${nginxResolver} valid=300s`);
-                        aServer.addVariable(NginxHTTPVariables.resolver_timeout, '5s');
-
-                        switch (httpSubCollect.http.x_frame_options) {
-                            case ServerXFrameOptions.deny:
-                                aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.deny);
-                                break;
-
-                            case ServerXFrameOptions.sameorigin:
-                                aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.sameorigin);
-                                break;
-                        }
-
-                        aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
-                        aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
-                        aServer.addVariable('add_header X-Robots-Tag', 'none');
-
-                        // check the host and server name right
-                        const domainIf = new If('$host != $server_name');
-                        domainIf.addVariable('return', '444');
-
-                        aServer.addContext(domainIf);
                     } else {
                         Logger.getLogger().warn(
-                            `NginxService::_loadConfig: Certificat for Domain '${domainName}' not found and ignore settings.`
+                            `NginxService::_loadConfig: Certificate provider not found for Domain '${domainName}' and ignore settings.`
                         );
 
                         continue;
                     }
+
                 }
 
                 // listen ----------------------------------------------------------------------------------------------
