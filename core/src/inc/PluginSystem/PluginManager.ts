@@ -46,9 +46,9 @@ export class PluginManager {
 
     /**
      * events
-     * @member {APluginEvent[]}
+     * @member {Map<string, APluginEvent[]>}
      */
-    protected _events: APluginEvent[] = [];
+    protected _events: Map<string, APluginEvent[]> = new Map<string, APluginEvent[]>();
 
     /**
      * Retrung a plugin manager instance or throw error by wrong initalition.
@@ -165,10 +165,10 @@ export class PluginManager {
             const object = new oPlugin.default(plugin, this) as Plugin;
 
             if (object) {
+                this._plugins.push(object);
                 object.onEnable();
 
                 Logger.getLogger().info(`PluginManager::load: Plugin is loaded ${plugin.definition.name}`);
-                this._plugins.push(object);
             }
         } catch (e) {
             Logger.getLogger().error(`PluginManager::load: can not load plugin: ${plugin.definition.name}`);
@@ -208,8 +208,18 @@ export class PluginManager {
      * @param {Plugin} plugin - A plugin instance.
      */
     public registerEvents(listner: APluginEvent, plugin: Plugin): void {
-        if (this._plugins.find((e) => e.getName() === plugin.getName())) {
-            this._events.push(listner);
+        const pluginName = plugin.getName();
+
+        if (!this._events.has(pluginName)) {
+            this._events.set(pluginName, []);
+        }
+
+        const events = this._events.get(pluginName);
+
+        if (events) {
+            events.push(listner);
+
+            this._events.set(pluginName, events);
         }
     }
 
@@ -219,15 +229,17 @@ export class PluginManager {
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     public getAllEvents<T extends APluginEvent>(aClass: Function): T[] {
-        const events: T[] = [];
+        const eventList: T[] = [];
 
-        for (const aEvent of this._events) {
-            if (aEvent instanceof aClass) {
-                events.push(aEvent as T);
+        for (const [, events] of this._events) {
+            for (const aEvent of events) {
+                if (aEvent instanceof aClass) {
+                    eventList.push(aEvent as T);
+                }
             }
         }
 
-        return events;
+        return eventList;
     }
 
 }
