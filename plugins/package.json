@@ -15,7 +15,8 @@
   "author": "Stefan Werfling",
   "license": "GPL-3.0-or-later",
   "workspaces": [
-    "demoplugin"
+    "demoplugin",
+    "letsencrypt"
   ],
   "scripts": {
     "npm-check-updates": "npm-check-updates"

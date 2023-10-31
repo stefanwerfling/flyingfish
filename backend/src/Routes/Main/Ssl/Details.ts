@@ -1,8 +1,6 @@
 import {DomainServiceDB, NginxHttpServiceDB} from 'flyingfish_core';
 import {SslDetailInfoData, SslDetailsRequest, SslDetailsResponse, StatusCodes} from 'flyingfish_schemas';
-import Path from 'path';
 import {Certificate} from '../../../inc/Cert/Certificate.js';
-import {Certbot} from '../../../inc/Provider/Letsencrypt/Certbot.js';
 import {SslCertProviders} from '../../../inc/Provider/SslCertProvider/SslCertProviders.js';
 
 /**

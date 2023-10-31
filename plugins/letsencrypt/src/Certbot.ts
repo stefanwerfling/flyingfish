@@ -1,5 +1,5 @@
-import {FileHelper, Logger} from 'flyingfish_core';
-import {ISslCertProvider, SslCertBundel, SslCertCreateOptions} from 'flyingfish_schemas';
+import {DateHelper, FileHelper, Logger} from 'flyingfish_core';
+import {FSslCertProviderOnReset, ISslCertProvider, SslCertBundel, SslCertCreateOptions} from 'flyingfish_schemas';
 import path from 'path';
 import {spawn} from 'child_process';
 
@@ -53,15 +53,31 @@ export class Certbot implements ISslCertProvider {
      * @returns {string}
      */
     public getTitle(): string {
-        return 'LetsEncrypt';
+        return 'LetsEncrypt (HTTP-01)';
     }
 
-    public isReadyForRequest(
+    /**
+     * Is provider ready for the request by last request try.
+     * @param {number} lastRequest - Timestamp from last request for creating certificate.
+     * @param {number} tryCount - Count by try for creating certificate.
+     * @param {FSslCertProviderOnReset} [onResetTryCount] - Function call when reset try counts.
+     * @returns {boolean} By true the request can start.
+     */
+    public async isReadyForRequest(
         lastRequest: number,
-        tryCounst: number
-    ): boolean {
-        // TODO
-        return false;
+        tryCount: number,
+        onResetTryCount?: FSslCertProviderOnReset
+    ): Promise<boolean> {
+        if ((tryCount >= Certbot.LIMIT_REQUESTS) && !DateHelper.isOverAHour(lastRequest, Certbot.LIMIT_TIME_HOUR)) {
+            return false;
+        } else if ((tryCount >= Certbot.LIMIT_REQUESTS) &&
+            DateHelper.isOverAHour(lastRequest, Certbot.LIMIT_TIME_HOUR)) {
+            if (onResetTryCount) {
+                await onResetTryCount();
+            }
+        }
+
+        return true;
     }
 
     /**

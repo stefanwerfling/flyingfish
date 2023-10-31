@@ -136,14 +136,24 @@ export class SslCertService {
                         }
 
                         // ---------------------------------------------------------------------------------------------
+                        const provider = await SslCertProviders.getProvider(http.cert_provider);
 
-                        if (certbot.isOverLimitAndInTime(http.cert_create_attempts, http.cert_last_request)) {
+                        if (!provider) {
+                            Logger.getLogger().error(`SslCertService::update: provider not found by '${domain.domainname}' domain, http: ${http.id}`);
+                            continue;
+                        }
+
+                        if (!await provider.isReadyForRequest(
+                            http.cert_last_request,
+                            http.cert_create_attempts,
+                            async() => {
+                                Logger.getLogger().info(`SslCertService::update: time over, rest attempts for cert request for domain: ${domain.domainname}`);
+
+                                await NginxHttpServiceDB.getInstance().updateLastCertReq(http.id, 0);
+                            }
+                        )) {
                             Logger.getLogger().info(`SslCertService::update: too many attempts for cert request, waiting for domain: ${domain.domainname}`);
                             continue;
-                        } else if (certbot.isOverLimitAndTime(http.cert_create_attempts, http.cert_last_request)) {
-                            Logger.getLogger().info(`SslCertService::update: time over, rest attempts for cert request for domain: ${domain.domainname}`);
-
-                            await NginxHttpServiceDB.getInstance().updateLastCertReq(http.id, 0);
                         }
 
                         // ---------------------------------------------------------------------------------------------
@@ -151,13 +161,6 @@ export class SslCertService {
                         if (http.cert_email === '') {
                             Logger.getLogger().info(`SslCertService::update: missing email address for domain: ${domain.domainname}`);
                         } else {
-                            const provider = await SslCertProviders.getProvider(http.cert_provider);
-
-                            if (!provider) {
-                                Logger.getLogger().error(`SslCertService::update: provider not found by '${domain.domainname}' domain, http: ${http.id}`);
-                                continue;
-                            }
-
                             let isCreateFailed = false;
                             let isCreate = false;
 

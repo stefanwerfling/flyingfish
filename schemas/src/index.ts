@@ -25,6 +25,7 @@ export {
 } from './Backend/Config/Config.js';
 export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
 export {SchemaSslProvider, SslProvider} from './Backend/Provider/SslCertProviders/SslProviders.js';
+export {FSslCertProviderOnReset} from './Backend/Provider/SslCertProviders/FSslCertProviderOnReset.js';
 export {ISslCertProvider} from './Backend/Provider/SslCertProviders/ISslCertProvider.js';
 export {SslCertBundel} from './Backend/Provider/SslCertProviders/SslCertBundel.js';
 export {SslCertCreateOptions} from './Backend/Provider/SslCertProviders/SslCertCreateOptions.js';

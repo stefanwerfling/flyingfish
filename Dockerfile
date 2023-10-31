@@ -115,9 +115,9 @@ RUN npm run build
 
 # Copy/Install DemoPlugin ----------------------------------------------------------------------------------------------
 
-WORKDIR /opt/flyingfish/plugins/demoplugin
+WORKDIR /opt/flyingfish/plugins/letsencrypt
 
-COPY ./plugins/demoplugin/ ./
+COPY ./plugins/letsencrypt/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true

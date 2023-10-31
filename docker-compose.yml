@@ -86,11 +86,6 @@ services:
       - "1900:1900"
       - "10901:10901"
       - "9229:9229"
-    command:
-      - node
-      - "--inspect-brk=0.0.0.0:9229"
-      - "backend/dist/main.js"
-      - "--envargs=1"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
@@ -101,6 +96,11 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+    command:
+      - node
+      - "--inspect-brk=0.0.0.0:9229"
+      - "backend/dist/main.js"
+      - "--envargs=1"
 
   himhip:
     image: flyingfish_himip:v1.0
@@ -198,6 +198,8 @@ services:
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
       FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+#    ports:
+#      - "9229:9229"
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.6
@@ -208,6 +210,11 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+#    command:
+#      - node
+#      - "--inspect-brk=0.0.0.0:9229"
+#      - "ddnsserver/dist/main.js"
+#      - "--envargs=1"
 
 #  vpnserver:
 #    image: flyingfish_vpn:v1.2

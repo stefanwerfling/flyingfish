@@ -1,5 +1,6 @@
+import {FSslCertProviderOnReset} from './FSslCertProviderOnReset.js';
 import {SslCertBundel} from './SslCertBundel.js';
-import {SslCertCreateOptions} from "./SslCertCreateOptions.js";
+import {SslCertCreateOptions} from './SslCertCreateOptions.js';
 
 /**
  * The ssl certificate provider interface.
@@ -20,11 +21,16 @@ export interface ISslCertProvider {
 
     /**
      * Is provider ready for the request by last request try.
-     * @param {number} lastRequest - Timestamp from last request.
-     * @param {number} tryCounst - Count by trys.
+     * @param {number} lastRequest - Timestamp from last request for creating certificate.
+     * @param {number} tryCount - Count by try for creating certificate.
+     * @param {FSslCertProviderOnReset} [onResetTryCount] - Function call when reset try counts.
      * @returns {boolean} By true the request can start.
      */
-    isReadyForRequest(lastRequest: number, tryCounst: number): boolean;
+    isReadyForRequest(
+        lastRequest: number,
+        tryCount: number,
+        onResetTryCount?: FSslCertProviderOnReset
+    ): Promise<boolean>;
 
     /**
      * Exist a certificate by domain name.
