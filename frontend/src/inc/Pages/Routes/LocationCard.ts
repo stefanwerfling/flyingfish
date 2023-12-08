@@ -194,7 +194,7 @@ export class LocationCard {
         this._inputRedirectCode.setValue('301');
 
         const groupRedPath = new FormGroup(rowRed.createCol(8), 'Redirect-Path');
-        this._inputRedirectPath = new InputBottemBorderOnly2(groupRedPath, undefined);
+        this._inputRedirectPath = new InputBottemBorderOnly2(groupRedPath);
         this._inputRedirectPath.setPlaceholder('https://<domain>/path');
 
         // ssh ---------------------------------------------------------------------------------------------------------

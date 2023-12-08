@@ -1,6 +1,7 @@
 import {ListenAddressCheckType, ListenTypes} from '../../Api/Listen';
-import {Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element,
-    ModalDialog, ModalDialogType} from 'bambooo';
+import {Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element, NavTab,
+    ModalDialog, ModalDialogType, Tooltip, TooltipInfo} from 'bambooo';
+import {Lang} from '../../Lang';
 
 /**
  * ListensEditModalButtonClickFn
@@ -17,6 +18,12 @@ export class ListensEditModal extends ModalDialog {
      * @protected
      */
     protected _id: number|null = null;
+
+    /**
+     * nav tab
+     * @protected
+     */
+    protected _navTab: NavTab;
 
     /**
      * input name
@@ -85,6 +92,18 @@ export class ListensEditModal extends ModalDialog {
     protected _switchDisable: Switch;
 
     /**
+     * input stream proxy timeout
+     * @protected
+     */
+    protected _inputStreamProxyTimeout: InputBottemBorderOnly2;
+
+    /**
+     * input stream proxy connect timeout
+     * @protected
+     */
+    protected _inputStreamProxyConnectTimeout: InputBottemBorderOnly2;
+
+    /**
      * click save fn
      * @protected
      */
@@ -97,7 +116,16 @@ export class ListensEditModal extends ModalDialog {
     public constructor(elementObject: Element) {
         super(elementObject, 'listenmodaldialog', ModalDialogType.large);
 
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(this._body);
+        this._navTab = new NavTab(this._body, 'listenstab');
+
+        const tabDetails = this._navTab.addTab('Details', 'listendetails');
+
+        const tabStreamAdvanced = this._navTab.addTab('Advanced', 'listenstreamadvanced');
+        tabStreamAdvanced.tab.hide();
+
+        // details -----------------------------------------------------------------------------------------------------
+
+        const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);
 
         const groupName = new FormGroup(bodyCard, 'Name');
         this._inputName = new InputBottemBorderOnly2(groupName);
@@ -119,6 +147,16 @@ export class ListensEditModal extends ModalDialog {
             style: 'background:#28a745;'
         });
 
+        this._selectType.setChangeFn((value) => {
+            tabStreamAdvanced.tab.hide();
+
+            switch (value) {
+                case `${ListenTypes.stream}`:
+                    tabStreamAdvanced.tab.show();
+                    break;
+            }
+        });
+
         const groupProtocol = new FormGroup(rowTP.createCol(4), 'Protocol');
         this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol);
         this._selectProtocol.addValue({
@@ -137,7 +175,7 @@ export class ListensEditModal extends ModalDialog {
         });
 
         const groupPort = new FormGroup(rowTP.createCol(4), 'Port');
-        this._inputPort = new InputBottemBorderOnly2(groupPort, InputType.number);
+        this._inputPort = new InputBottemBorderOnly2(groupPort, undefined, InputType.number);
         this._inputPort.setPlaceholder('80');
 
         const groupDescription = new FormGroup(bodyCard, 'Description');
@@ -180,6 +218,24 @@ export class ListensEditModal extends ModalDialog {
         const groupDisable = new FormGroup(bodyCard, 'Disable this listen');
         this._switchDisable = new Switch(groupDisable, 'disablelisten');
 
+        // stream advanced ---------------------------------------------------------------------------------------------
+
+        const bodyCardAdv = jQuery('<div class="card-body"/>').appendTo(tabStreamAdvanced.body);
+
+        const groupStreamProxyTimeout = new FormGroup(bodyCardAdv, 'Proxy timeout (value in minutes)');
+        // eslint-disable-next-line no-new
+        new TooltipInfo(groupStreamProxyTimeout.getLabelElement(), Lang.i().l('listen_stream_proxytimeout'));
+        this._inputStreamProxyTimeout = new InputBottemBorderOnly2(groupStreamProxyTimeout, undefined, InputType.number);
+        this._inputStreamProxyTimeout.setPlaceholder('10');
+
+        const groupStreamProxyConnectTimeout = new FormGroup(bodyCardAdv, 'Proxy connect timeout (value in seconds)');
+        // eslint-disable-next-line no-new
+        new TooltipInfo(groupStreamProxyConnectTimeout.getLabelElement(), Lang.i().l('listen_stream_proxyconnectimeout'));
+        this._inputStreamProxyConnectTimeout = new InputBottemBorderOnly2(groupStreamProxyConnectTimeout, undefined, InputType.number);
+        this._inputStreamProxyConnectTimeout.setPlaceholder('60');
+
+        // button ------------------------------------------------------------------------------------------------------
+
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
 
@@ -188,6 +244,9 @@ export class ListensEditModal extends ModalDialog {
                 this._onSaveClick();
             }
         });
+
+        // init tooltips
+        Tooltip.init();
     }
 
     /**
@@ -371,6 +430,38 @@ export class ListensEditModal extends ModalDialog {
     }
 
     /**
+     * Return the stream proxy timeout
+     * @returns {string}
+     */
+    public getStreamProxyTimeout(): string {
+        return this._inputStreamProxyTimeout.getValue();
+    }
+
+    /**
+     * Set the stream proxy timeout
+     * @param {string} value
+     */
+    public setStreamProxyTimeout(value: string): void {
+        this._inputStreamProxyTimeout.setValue(value);
+    }
+
+    /**
+     * Return the stream proxy connect timeout
+     * @returns {string}
+     */
+    public getStreamProxyConnectTimeout(): string {
+        return this._inputStreamProxyConnectTimeout.getValue();
+    }
+
+    /**
+     * Set stream proxy connect timeout
+     * @param {string} value
+     */
+    public setStreamProxyConnectTimeout(value: string): void {
+        this._inputStreamProxyConnectTimeout.setValue(value);
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -386,6 +477,8 @@ export class ListensEditModal extends ModalDialog {
         this.setDisable(false);
         this.setProxyProtocol(false);
         this.setProxyProtocolIn(false);
+        this.setStreamProxyTimeout('');
+        this.setStreamProxyConnectTimeout('');
     }
 
     /**

@@ -13,6 +13,9 @@ export class Lang_EN implements LangDefine {
 
         dahsboard_ip_blacklisted: 'The public ip is checked with rDNS query on common providers. This information is useful if you run an email server.',
 
+        listen_stream_proxytimeout: 'Sets the <i>timeout</i> between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.',
+        listen_stream_proxyconnectimeout: 'Defines a timeout for establishing a connection with a proxied server.',
+
         route_stream_useasdefault: 'Only one default stream can be set per listen. This stream is used on the listen when the domain cannot be determined (e.g. a non-SSL protocol). This entry is only considered if it is not a standard listen.',
         route_stream_loadbalancealg: 'The load balancing algorithm is only used when there is more than one upstream.<br><br><b>Least connection</b>: This algorithm distributes the client\'s request to servers with the least active connections at a particular time. This will ensure that no one server is overworked while other servers have fewer active connections.<br><br><b>IP hash</b>: This algorithm hashes the IP address of the client sending the request with a hashing function and then sends the request to one of the servers for processing. Subsequent requests from the clients IP address are always sent to the same server.',
 

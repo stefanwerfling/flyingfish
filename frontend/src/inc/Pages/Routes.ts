@@ -516,13 +516,16 @@ export class Routes extends BasePage {
                                             badType = BadgeType.success;
                                         }
 
+                                        let title = `${tupstream.address}:${tupstream.port} (${value.alias_name})`;
+
                                         if (tupstream.port === dnsserverport) {
                                             badType = BadgeType.color_cream_rorange;
+                                            title = `DNS INTERN (${tupstream.port})`;
                                         }
 
                                         // eslint-disable-next-line no-new
                                         new Badge(sdTdD,
-                                            `${tupstream.address}:${tupstream.port} (${value.alias_name})`,
+                                            title,
                                             badType);
 
                                         if (tupstream.proxy_protocol_out) {

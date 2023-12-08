@@ -230,7 +230,7 @@ export class RouteHttpEditModal extends ModalDialog {
         });
 
         const groupVariableCmbs = new FormGroup(bodyACard, 'Client max body size (MB)');
-        this._inputVariableCmbs = new InputBottemBorderOnly2(groupVariableCmbs, InputType.number);
+        this._inputVariableCmbs = new InputBottemBorderOnly2(groupVariableCmbs, undefined, InputType.number);
         this._inputVariableCmbs.setPlaceholder('1');
 
         // tab details -------------------------------------------------------------------------------------------------
