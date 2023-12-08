@@ -8,6 +8,7 @@ export {
     CertificateHelperKeyPair,
     CertificateHelper
 } from './inc/Crypto/CertificateHelper.js';
+export {JwkHelper} from './inc/Crypto/JwkHelper.js';
 
 export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
