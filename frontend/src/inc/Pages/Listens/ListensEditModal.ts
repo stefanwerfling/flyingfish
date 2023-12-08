@@ -230,7 +230,7 @@ export class ListensEditModal extends ModalDialog {
 
         const groupStreamProxyConnectTimeout = new FormGroup(bodyCardAdv, 'Proxy connect timeout (value in seconds)');
         // eslint-disable-next-line no-new
-        new TooltipInfo(groupStreamProxyConnectTimeout.getLabelElement(), Lang.i().l('listen_stream_proxyconnectimeout'));
+        new TooltipInfo(groupStreamProxyConnectTimeout.getLabelElement(), Lang.i().l('listen_stream_proxyconnecttimeout'));
         this._inputStreamProxyConnectTimeout = new InputBottemBorderOnly2(groupStreamProxyConnectTimeout, undefined, InputType.number);
         this._inputStreamProxyConnectTimeout.setPlaceholder('60');
 
