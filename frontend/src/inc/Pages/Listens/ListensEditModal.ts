@@ -1,4 +1,5 @@
-import {ListenAddressCheckType, ListenTypes} from '../../Api/Listen';
+import {ListenVariable} from 'flyingfish_schemas';
+import {ListenAddressCheckType, ListenTypes, NginxListenStreamServerVariables} from '../../Api/Listen';
 import {Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element, NavTab,
     ModalDialog, ModalDialogType, Tooltip, TooltipInfo} from 'bambooo';
 import {Lang} from '../../Lang';
@@ -459,6 +460,44 @@ export class ListensEditModal extends ModalDialog {
      */
     public setStreamProxyConnectTimeout(value: string): void {
         this._inputStreamProxyConnectTimeout.setValue(value);
+    }
+
+    /**
+     * Set stream server variables
+     * @param variables
+     */
+    public setStreamServerVariables(variables: ListenVariable[]): void {
+        for (const aVariable of variables) {
+            switch (aVariable.name) {
+                case NginxListenStreamServerVariables.proxy_timeout:
+                    this.setStreamProxyTimeout(aVariable.value);
+                    break;
+
+                case NginxListenStreamServerVariables.proxy_connect_timeout:
+                    this.setStreamProxyConnectTimeout(aVariable.value);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Return the stream server variables
+     * @returns {ListenVariable[]}
+     */
+    public getStreamServerVariables(): ListenVariable[] {
+        const variables: ListenVariable[] = [];
+
+        variables.push({
+            name: NginxListenStreamServerVariables.proxy_timeout,
+            value: this.getStreamProxyTimeout()
+        });
+
+        variables.push({
+            name: NginxListenStreamServerVariables.proxy_connect_timeout,
+            value: this.getStreamProxyConnectTimeout()
+        });
+
+        return variables;
     }
 
     /**

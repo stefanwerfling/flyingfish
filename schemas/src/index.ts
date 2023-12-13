@@ -192,7 +192,7 @@ export {
 } from './Backend/Routes/IpAccess/Whitelist/Save.js';
 
 export {SchemaListenDelete, ListenDelete} from './Backend/Routes/Listen/Delete.js';
-export {SchemaListenData, ListenData, SchemaListenResponse, ListenResponse} from './Backend/Routes/Listen/List.js';
+export {SchemaListenVariable, ListenVariable, SchemaListenData, ListenData, SchemaListenResponse, ListenResponse} from './Backend/Routes/Listen/List.js';
 
 export {SchemaLoginRequest, LoginRequest, SchemaIsLogin, IsLogin} from './Backend/Routes/Login/Login.js';
 
@@ -314,6 +314,7 @@ export {NginxListenAddressCheckType} from './Backend/Nginx/NginxListenAddressChe
 export {NginxListenProtocol} from './Backend/Nginx/NginxListenProtocol.js';
 export {NginxListenCategory} from './Backend/Nginx/NginxListenCategory.js';
 export {NginxListenTypes} from './Backend/Nginx/NginxListenTypes.js';
+export {NginxListenVariableContextType} from './Backend/Nginx/NginxListenVariableContextType.js';
 export {NginxLocationDestinationTypes} from './Backend/Nginx/NginxLocationDestinationTypes.js';
 
 export {BlacklistCategory} from './Backend/IpAccess/BlacklistCategory.js';

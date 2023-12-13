@@ -31,6 +31,15 @@ export enum ListenCategory {
 }
 
 /**
+ * Nginx listen stream server variables
+ */
+export enum NginxListenStreamServerVariables {
+    proxy_timeout = 'proxy_timeout',
+    proxy_connect_timeout = 'proxy_connect_timeout'
+}
+
+
+/**
  * Listen
  */
 export class Listen {

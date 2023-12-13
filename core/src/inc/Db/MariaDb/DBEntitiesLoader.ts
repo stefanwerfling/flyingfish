@@ -18,6 +18,7 @@ import {NatPort} from './Entity/NatPort.js';
 import {NginxHttp} from './Entity/NginxHttp.js';
 import {NginxHttpVariable} from './Entity/NginxHttpVariable.js';
 import {NginxListen} from './Entity/NginxListen.js';
+import {NginxListenVariable} from './Entity/NginxListenVariable.js';
 import {NginxLocation} from './Entity/NginxLocation.js';
 import {NginxStream} from './Entity/NginxStream.js';
 import {NginxUpstream} from './Entity/NginxUpstream.js';
@@ -59,6 +60,7 @@ export class DBEntitiesLoader {
             NginxHttp,
             NginxHttpVariable,
             NginxListen,
+            NginxListenVariable,
             NginxLocation,
             NginxStream,
             NginxUpstream,

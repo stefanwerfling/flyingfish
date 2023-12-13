@@ -2,6 +2,19 @@ import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaDefaultReturn} from '../../../Core/Server/Routes/DefaultReturn.js';
 
 /**
+ * SchemaListenVariable
+ */
+export const SchemaListenVariable = Vts.object({
+    name: Vts.string(),
+    value: Vts.string()
+});
+
+/**
+ * Listen variable
+ */
+export type ListenVariable = ExtractSchemaResultType<typeof SchemaListenVariable>;
+
+/**
  * SchemaListenData
  */
 export const SchemaListenData = Vts.object({
@@ -19,7 +32,8 @@ export const SchemaListenData = Vts.object({
     disable: Vts.boolean(),
     listen_category: Vts.optional(Vts.number()),
     proxy_protocol: Vts.boolean(),
-    proxy_protocol_in: Vts.boolean()
+    proxy_protocol_in: Vts.boolean(),
+    stream_server_variables: Vts.array(SchemaListenVariable)
 });
 
 /**

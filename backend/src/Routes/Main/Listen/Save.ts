@@ -1,5 +1,23 @@
-import {DefaultReturn, ListenData, StatusCodes} from 'flyingfish_schemas';
-import {Logger, NginxListenDB, NginxListenServiceDB} from 'flyingfish_core';
+import {
+    DefaultReturn,
+    ListenData,
+    NginxListenVariableContextType,
+    StatusCodes
+} from 'flyingfish_schemas';
+import {
+    Logger,
+    NginxListenDB,
+    NginxListenServiceDB, NginxListenVariableDB, NginxListenVariableServiceDB
+} from 'flyingfish_core';
+import {NginxStreamServerVariables} from '../../../inc/Nginx/NginxVariables.js';
+
+/**
+ * AllowedRouteVariableServer
+ */
+export const AllowedListenStreamServerVariables = [
+    NginxStreamServerVariables.proxy_timeout,
+    NginxStreamServerVariables.proxy_connect_timeout
+];
 
 /**
  * Save
@@ -74,7 +92,32 @@ export class Save {
         aListen.proxy_protocol = data.proxy_protocol;
         aListen.proxy_protocol_in = data.proxy_protocol_in;
 
-        await NginxListenServiceDB.getInstance().save(aListen);
+        aListen = await NginxListenServiceDB.getInstance().save(aListen);
+
+        // save stream server variables --------------------------------------------------------------------------------
+
+        for await (const variable of data.stream_server_variables) {
+            if (AllowedListenStreamServerVariables.indexOf(variable.name) === -1) {
+                continue;
+            }
+
+            let variableDb = await NginxListenVariableServiceDB.getInstance().findOneByName(
+                aListen.id,
+                variable.name,
+                NginxListenVariableContextType.stream_server
+            );
+
+            if (!variableDb) {
+                variableDb = new NginxListenVariableDB();
+                variableDb.listen_id = aListen.id;
+                variableDb.var_name = variable.name;
+                variableDb.context_type = NginxListenVariableContextType.stream_server;
+            }
+
+            variableDb.var_value = variable.value;
+
+            await NginxListenVariableServiceDB.getInstance().save(variableDb);
+        }
 
         return {
             statusCode: StatusCodes.OK

@@ -76,7 +76,8 @@ export class Listens extends BasePage {
                     check_address_type: this._listenDialog.getAddressCheckType(),
                     disable: this._listenDialog.getDisable(),
                     proxy_protocol: this._listenDialog.getProxyProtocol(),
-                    proxy_protocol_in: this._listenDialog.getProxyProtocolIn()
+                    proxy_protocol_in: this._listenDialog.getProxyProtocolIn(),
+                    stream_server_variables: this._listenDialog.getStreamServerVariables()
                 };
 
                 if (await ListenAPI.saveListen(listen)) {
@@ -249,6 +250,7 @@ export class Listens extends BasePage {
                             this._listenDialog.setDisable(entry.disable);
                             this._listenDialog.setProxyProtocol(entry.proxy_protocol);
                             this._listenDialog.setProxyProtocolIn(entry.proxy_protocol_in);
+                            this._listenDialog.setStreamServerVariables(entry.stream_server_variables);
                             this._listenDialog.show();
                         },
                         IconFa.edit

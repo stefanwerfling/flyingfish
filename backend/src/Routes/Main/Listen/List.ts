@@ -1,5 +1,11 @@
-import {NginxListenServiceDB} from 'flyingfish_core';
-import {ListenData, ListenResponse, StatusCodes} from 'flyingfish_schemas';
+import {NginxListenServiceDB, NginxListenVariableServiceDB} from 'flyingfish_core';
+import {
+    ListenData,
+    ListenResponse,
+    ListenVariable,
+    NginxListenVariableContextType,
+    StatusCodes
+} from 'flyingfish_schemas';
 
 /**
  * List
@@ -15,7 +21,21 @@ export class List {
         const listens = await NginxListenServiceDB.getInstance().findAll();
 
         if (listens) {
-            for (const listen of listens) {
+            for await (const listen of listens) {
+                const variableStreamServerList: ListenVariable[] = [];
+
+                const variables = await NginxListenVariableServiceDB.getInstance().findAllBy(
+                    listen.id,
+                    NginxListenVariableContextType.stream_server
+                );
+
+                for (const tvar of variables) {
+                    variableStreamServerList.push({
+                        name: tvar.var_name,
+                        value: tvar.var_value
+                    });
+                }
+
                 list.push({
                     id: listen.id,
                     type: listen.listen_type,
@@ -31,7 +51,8 @@ export class List {
                     disable: listen.disable,
                     listen_category: listen.listen_category,
                     proxy_protocol: listen.proxy_protocol,
-                    proxy_protocol_in: listen.proxy_protocol_in
+                    proxy_protocol_in: listen.proxy_protocol_in,
+                    stream_server_variables: variableStreamServerList
                 });
             }
         }

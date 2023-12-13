@@ -8,6 +8,7 @@ import {
     NginxHttpVariableServiceDB,
     NginxListenDB,
     NginxListenServiceDB,
+    NginxListenVariableDB,
     NginxLocationDB,
     NginxLocationServiceDB,
     NginxStreamDB,
@@ -17,11 +18,13 @@ import {
     SshPortDB,
     SshPortServiceDB
 } from 'flyingfish_core';
+import {NginxListenVariableService} from 'flyingfish_core/dist/inc/Db/MariaDb/NginxListenVariableService.js';
 import {
     NginxHttpVariableContextType,
     NginxListenCategory,
     NginxListenProtocol,
     NginxListenTypes,
+    NginxListenVariableContextType,
     NginxLocationDestinationTypes,
     NginxStreamDestinationType,
     NginxStreamSshR
@@ -41,7 +44,7 @@ import {Server as NginxConfServer, ServerXFrameOptions} from '../Nginx/Config/Se
 import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream.js';
 import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../Nginx/NginxLogFormatJson.js';
 import {NginxServer} from '../Nginx/NginxServer.js';
-import {NginxHTTPVariables} from '../Nginx/NginxVariables.js';
+import {NginxHTTPVariables, NginxStreamServerVariables} from '../Nginx/NginxVariables.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
 import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
 import {Settings} from '../Settings/Settings.js';
@@ -87,6 +90,7 @@ type StreamSubCollect = {
  */
 type StreamCollect = {
     listen: NginxListenDB;
+    listen_stream_server_variables: NginxListenVariableDB[];
     domains: Map<string, StreamSubCollect>;
 };
 
@@ -333,11 +337,24 @@ export class NginxService {
                         if (!streamMap.has(alisten.listen_port)) {
                             streamMap.set(alisten.listen_port, {
                                 listen: alisten,
+                                listen_stream_server_variables: [],
                                 domains: new Map<string, StreamSubCollect>()
                             });
                         }
 
                         const mapDomainStreams = streamMap.get(alisten.listen_port);
+
+                        // ---------------------------------------------------------------------------------------------
+
+                        const listenStreamServerVariables =
+                            await NginxListenVariableService.getInstance().findAllBy(
+                                alisten.id,
+                                NginxListenVariableContextType.stream_server
+                            );
+
+                        mapDomainStreams!.listen_stream_server_variables = listenStreamServerVariables;
+
+                        // ---------------------------------------------------------------------------------------------
                         const streamCollection: StreamSubCollect = {
                             stream: astream,
                             upstreams: []
@@ -796,6 +813,30 @@ export class NginxService {
             } else {
                 aServer.addVariable('proxy_pass', varName);
             }
+
+            // stream server variables ---------------------------------------------------------------------------------
+
+            for (const aVariable of streamCollects.listen_stream_server_variables) {
+                if (aVariable.var_value !== '') {
+                    switch (aVariable.var_name) {
+                        case NginxStreamServerVariables.proxy_timeout:
+                            aServer.addVariable(
+                                NginxStreamServerVariables.proxy_timeout,
+                                `${parseInt(aVariable.var_value, 10) ?? 10}m`
+                            );
+                            break;
+
+                        case NginxStreamServerVariables.proxy_connect_timeout:
+                            aServer.addVariable(
+                                NginxStreamServerVariables.proxy_connect_timeout,
+                                `${parseInt(aVariable.var_value, 10) ?? 60}s`
+                            );
+                            break;
+                    }
+                }
+            }
+
+            // ---------------------------------------------------------------------------------------------------------
 
             conf.getStream().addServer(aServer);
         }

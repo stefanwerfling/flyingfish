@@ -2,17 +2,17 @@ import {Column, Entity, Index} from 'typeorm';
 import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
- * Nginx http variable table.
+ * Nginx listen variable table.
  */
-@Entity({name: 'nginx_http_variable'})
-export class NginxHttpVariable extends DBBaseEntityId {
+@Entity({name: 'nginx_listen_variable'})
+export class NginxListenVariable extends DBBaseEntityId {
 
     /**
-     * http id
+     * listen id
      */
     @Index()
     @Column()
-    public http_id!: number;
+    public listen_id!: number;
 
     /**
      * context type
