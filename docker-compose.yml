@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
   mariadb:
-    image: mariadb:latest
+    image: mariadb:lts
     container_name: flyingfish_db
     environment:
       MARIADB_AUTO_UPGRADE: '1'
