@@ -1,4 +1,3 @@
-import forge from 'node-forge';
 import * as crypto from 'crypto';
 
 /**
