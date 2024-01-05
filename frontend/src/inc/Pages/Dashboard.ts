@@ -56,6 +56,12 @@ export class Dashboard extends BasePage {
     protected _lineChartRequests: LineChartRequests;
 
     /**
+     * ip blacklist map
+     * @protected
+     */
+    protected _ipBlacklistMap: DashboardMapIp;
+
+    /**
      * constructor
      */
     public constructor() {
@@ -120,7 +126,7 @@ export class Dashboard extends BasePage {
         cardMap.setTitle('IP Map/Blacklist');
 
         // @ts-ignore
-        const dmip = new DashboardMapIp(cardMap);
+        this._ipBlacklistMap = new DashboardMapIp(cardMap);
 
         const mapContentInfo = new ContentCol(rowMap, ContentColSize.colMd4);
         const infoBoxBlocks = new InfoBox(mapContentInfo, InfoBoxBg.none);
@@ -254,7 +260,7 @@ export class Dashboard extends BasePage {
                 }
             }
 
-            dmip.setMarks(blockMarkList);
+            this._ipBlacklistMap.setMarks(blockMarkList);
 
             // ip blocks -----------------------------------------------------------------------------------------------
 
@@ -284,11 +290,11 @@ export class Dashboard extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
 
         this._updateSwitch.setTimeoutFn(async() => {
             try {
-                await this._onLoadTable();
+                this._onLoadTable();
             } catch (e) {
                 if (e instanceof UnauthorizedError) {
                     UtilRedirect.toLogin();
@@ -300,9 +306,9 @@ export class Dashboard extends BasePage {
     /**
      * unloadContent
      */
-    public unloadContent(): void {
+    public async unloadContent(): Promise<void> {
         super.unloadContent();
-
+        await this._ipBlacklistMap.unloadContent();
         this._updateSwitch.setEnable(false);
     }
 

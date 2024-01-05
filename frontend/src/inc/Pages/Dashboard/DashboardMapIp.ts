@@ -44,6 +44,8 @@ export class DashboardMapIp extends Element {
      */
     protected _source: VectorSource;
 
+    protected _popover: any|undefined;
+
     /**
      * constructor
      * @param elementObject
@@ -93,35 +95,26 @@ export class DashboardMapIp extends Element {
 
         this._map.addOverlay(overlayTooltip);
 
-        let popover: any|undefined;
-
-        const disposePopover = (): void => {
-            if (popover) {
-                popover.popover('dispose');
-                popover = undefined;
-            }
-        };
-
         this._map.on('click', (evt) => {
             const feature = this._map.forEachFeatureAtPixel(evt.pixel, (inFeature) => {
                 return inFeature;
             });
 
-            disposePopover();
+            this.disposePopover();
 
             if (!feature) {
                 return;
             }
 
             overlayTooltip.setPosition(evt.coordinate);
-            popover = this._tooltip_popup.popover({
+            this._popover = this._tooltip_popup.popover({
                 html: true,
                 content: () => {
                     return feature.get('content');
                 }
             });
 
-            popover.popover('show');
+            this._popover.popover('show');
         });
 
         this._map.on('pointermove', (evt) => {
@@ -137,7 +130,9 @@ export class DashboardMapIp extends Element {
             }
         });
 
-        this._map.on('movestart', disposePopover);
+        this._map.on('movestart', () => {
+            this.disposePopover();
+        });
 
         // -------------------------------------------------------------------------------------------------------------
 
@@ -206,6 +201,27 @@ export class DashboardMapIp extends Element {
             }));
 
             this._source.addFeature(feature);
+        }
+    }
+
+    public async unloadContent(): Promise<void> {
+        this.disposePopover(true);
+        jQuery('.popover').remove();
+
+        if (this._tooltip_popup) {
+            this._tooltip_popup.remove();
+        }
+    }
+
+    public disposePopover(andRemove: boolean = false): void {
+        if (this._popover) {
+            this._popover.popover('dispose');
+
+            if (andRemove) {
+                this._popover.remove();
+            }
+
+            this._popover = undefined;
         }
     }
 
