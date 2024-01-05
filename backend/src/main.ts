@@ -228,8 +228,8 @@ import exitHook from 'async-exit-hook';
     await NginxService.getInstance().start();
 
     // -----------------------------------------------------------------------------------------------------------------
-    const dnsServer = new Dns2Server();
-    dnsServer.listen();
+
+    Dns2Server.getInstance().listen();
 
     // -----------------------------------------------------------------------------------------------------------------
 

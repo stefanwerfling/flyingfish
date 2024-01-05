@@ -1,5 +1,6 @@
 import {JwkHelper} from 'flyingfish_core';
 import * as crypto from 'crypto';
+import forge from 'node-forge';
 
 /**
  * Directory Json
@@ -58,6 +59,9 @@ type LetsEncryptParsedJwt = {
     signature: string;
 };
 
+/**
+ * DNS challenge
+ */
 type LetsEncryptDnsChallenge = {
     recordName: string;
     recordText: string;
@@ -65,15 +69,58 @@ type LetsEncryptDnsChallenge = {
 };
 
 /**
+ * Order challenge
+ */
+type LetsEncryptOrderChallenge = {
+    nonce: string;
+    authUrl: string;
+};
+
+type LetsEncryptGenerateCsr = {
+    csr: string;
+    pkcs8Key: string;
+};
+
+type LetsEncryptPostOrderFinalize = {
+    nonce: string;
+    orderUrl: string;
+    certUrl?: string;
+};
+
+type LetsEncryptOrder = {
+    nonce: string;
+    status: string;
+    certUrl?: string;
+};
+
+type LetsEncryptPemCertChain = {
+    nonce: string;
+    pemCertChain: string[];
+};
+
+export type LetsEncryptDnsChallengeAndFinalize = {
+    pemCertChain: string[];
+    pkcs8Key: string;
+};
+
+/**
  * ACME Client
  */
 export class Client {
+
+    public static POLL_DELAY = 5000;
 
     /**
      * Endpoint for letsencrypt
      * @protected
      */
     protected _endpoint: string = 'https://acme-v02.api.letsencrypt.org';
+
+    /**
+     * Key size for rsa
+     * @protected
+     */
+    protected _keySize = 2048;
 
     /**
      * Directory Information.
@@ -122,6 +169,10 @@ export class Client {
         }
 
         return false;
+    }
+
+    public getJwk(): crypto.webcrypto.JsonWebKey | undefined {
+        return this._jwk;
     }
 
     private _throwIfErrored(resJson: any): void {
@@ -349,6 +400,13 @@ export class Client {
         return this._arrayBufferToBase64Url(hash);
     }
 
+    /**
+     * calculate the record text
+     * @param {string} token
+     * @param {crypto.webcrypto.JsonWebKey} jwk
+     * @private
+     * @returns {string}
+     */
     private async _calculateRecordText(
         token: string,
         jwk: crypto.webcrypto.JsonWebKey
@@ -363,6 +421,203 @@ export class Client {
         return this._arrayBufferToBase64Url(hash);
     }
 
+    private async _postOrderChallenge(
+        nonce: string,
+        jwk: crypto.webcrypto.JsonWebKey,
+        accountUrl: string,
+        challenge: any
+    ): Promise<LetsEncryptOrderChallenge> {
+        const header = {
+            alg: 'ES256',
+            kid: accountUrl,
+            nonce: nonce,
+            url: challenge.url
+        };
+
+        const payload = {};
+
+        const jwt = await this._jwtFromJson(jwk, header, payload);
+
+        const res = await fetch(challenge.url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/jose+json'},
+            body: JSON.stringify(this._parseJwt(jwt))
+        });
+
+        this._throwIfErrored(await res.json());
+
+        return {
+            nonce: res.headers.get('Replay-Nonce')!,
+            authUrl: res.headers.get('location')!
+        };
+    }
+
+    private async _generateCsr(domainName: string): Promise<LetsEncryptGenerateCsr|null> {
+        const keys = forge.pki.rsa.generateKeyPair(this._keySize);
+
+        const csr = forge.pki.createCertificationRequest();
+
+        csr.publicKey = keys.publicKey;
+        csr.setSubject([{
+            name: 'commonName',
+            value: domainName
+        }]);
+
+        csr.setAttributes([{
+            name: 'extensionRequest',
+            extensions: [{
+                name: 'subjectAltName',
+                altNames: [{
+                    // 2 is DNS types
+                    type: 2,
+                    value: domainName
+                }]
+            }]
+        }]);
+
+        csr.sign(keys.privateKey, forge.md.sha256.create());
+
+        const derBase64Url = forge.pki.certificationRequestToPem(csr)
+        .split(/\r\n|\r|\n/u)
+        .slice(1, -2)
+        .join('')
+        .replace(/\+/gu, '-')
+        .replace(/\//gu, '_')
+        .replace(/[=]+$/gu, '');
+
+        return {
+            csr: derBase64Url,
+            pkcs8Key: forge.pki.privateKeyInfoToPem(
+                forge.pki.wrapRsaPrivateKey(
+                    forge.pki.privateKeyToAsn1(keys.privateKey)
+                )
+            )
+        };
+    }
+
+    private async _postOrderFinalize(
+        nonce: string,
+        jwk: crypto.webcrypto.JsonWebKey,
+        accountUrl: string,
+        order: any,
+        csr: string
+    ): Promise<LetsEncryptPostOrderFinalize> {
+        const header = {
+            alg: 'ES256',
+            kid: accountUrl,
+            nonce: nonce,
+            url: order.finalize
+        };
+
+        const payload = {csr: csr};
+        const jwt = await this._jwtFromJson(jwk, header, payload);
+
+        const res = await fetch(order.finalize, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/jose+json'},
+            body: JSON.stringify(this._parseJwt(jwt))
+        });
+
+        const body = await res.json();
+
+        this._throwIfErrored(body);
+
+        return {
+            nonce: res.headers.get('Replay-Nonce')!,
+            orderUrl: res.headers.get('location')!,
+            certUrl: body.certificate
+        };
+    }
+
+    private async _getOrder(
+        nonce: string,
+        jwk: crypto.webcrypto.JsonWebKey,
+        accountUrl: string,
+        orderUrl: string
+    ): Promise<LetsEncryptOrder> {
+        const header = {
+            alg: 'ES256',
+            kid: accountUrl,
+            nonce: nonce,
+            url: orderUrl
+        };
+
+        const payload = '';
+        const jwt = await this._jwtFromJson(jwk, header, payload);
+
+        const res = await fetch(orderUrl, {
+            // A POST-AS-GET request
+            method: 'POST',
+            headers: { 'Content-Type': 'application/jose+json' },
+            body: JSON.stringify(this._parseJwt(jwt))
+        });
+
+        const order = await res.json();
+
+        return {
+            nonce: res.headers.get('Replay-Nonce')!,
+            status: order.status,
+            certUrl: order.certificate
+        };
+    }
+
+    private _parsePemCertChain(pemCertChain: string): string[] {
+        const parsed: string[] = [];
+        let startIndex = pemCertChain.indexOf('-----BEGIN CERTIFICATE-----');
+        let endIndex;
+
+        while (startIndex !== -1) {
+            endIndex = pemCertChain.indexOf('-----END CERTIFICATE-----', startIndex) + '-----END CERTIFICATE-----'.length;
+            parsed.push(pemCertChain.slice(startIndex, endIndex));
+            startIndex = pemCertChain.indexOf('-----BEGIN CERTIFICATE-----', endIndex);
+        }
+
+        return parsed;
+    }
+
+    private async _getPemCertChain(
+        nonce: string,
+        jwk: crypto.webcrypto.JsonWebKey,
+        accountUrl: string,
+        certUrl: string
+    ): Promise<LetsEncryptPemCertChain> {
+        const header = {
+            alg: 'ES256',
+            kid: accountUrl,
+            nonce: nonce,
+            url: certUrl
+        };
+
+        const payload = '';
+
+        const jwt = await this._jwtFromJson(jwk, header, payload);
+
+        const res = await fetch(certUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/jose+json',
+                'Accept': 'application/pem-certificate-chain'
+            },
+            body: JSON.stringify(this._parseJwt(jwt))
+        });
+
+        if (res.status >= 400) {
+            throw new Error(res.statusText);
+        }
+
+        const pemCertChain = this._parsePemCertChain(await res.text());
+
+        return {
+            nonce: res.headers.get('Replay-Nonce')!,
+            pemCertChain: pemCertChain
+        };
+    }
+
+    /**
+     * Request a DNS challenge
+     * @param {string} domainName
+     * @returns {LetsEncryptDnsChallenge|null}
+     */
     public async requestDnsChallenge(domainName: string): Promise<LetsEncryptDnsChallenge|null> {
         let nonce = await this._getNewNonce(this._directory);
 
@@ -381,6 +636,55 @@ export class Client {
                     recordText: await this._calculateRecordText(challenge.token, this._jwk),
                     order: order.order
                 };
+            }
+        }
+
+        return null;
+    }
+
+    public async submitDnsChallengeAndFinalize(order: any): Promise<LetsEncryptDnsChallengeAndFinalize|null> {
+        let nonce = await this._getNewNonce(this._directory);
+
+        if (nonce) {
+            if (this._jwk && this._accountUrl) {
+                const orderAuth = await this.getOrderAuthorization(nonce, this._jwk, this._accountUrl, order);
+
+                nonce = orderAuth.nonce;
+
+                const challenge = orderAuth.authorization.challenges.filter((c: any) => c.type === 'dns-01')[0];
+
+                const postOrder = await this._postOrderChallenge(nonce, this._jwk, this._accountUrl, challenge);
+
+                nonce = postOrder.nonce;
+
+                const domainName = orderAuth.authorization.identifier.value;
+
+                const gCsr = await this._generateCsr(domainName);
+
+                if (gCsr) {
+                    const pOf = await this._postOrderFinalize(nonce, this._jwk, this._accountUrl, order, gCsr.csr);
+
+                    nonce = pOf.nonce;
+
+                    let certUrl = pOf.certUrl;
+
+                    while (!certUrl) {
+                        // eslint-disable-next-line no-await-in-loop
+                        await new Promise(r => {
+                            setTimeout(r, Client.POLL_DELAY);
+                        });
+
+                        // eslint-disable-next-line no-await-in-loop
+                        ({ nonce, certUrl } = await this._getOrder(nonce, this._jwk, this._accountUrl, pOf.orderUrl));
+                    }
+
+                    const pC = await this._getPemCertChain(nonce, this._jwk, this._accountUrl, certUrl);
+
+                    return {
+                        pemCertChain: pC.pemCertChain,
+                        pkcs8Key: gCsr.pkcs8Key
+                    };
+                }
             }
         }
 

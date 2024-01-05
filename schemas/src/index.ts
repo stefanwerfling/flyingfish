@@ -16,19 +16,29 @@ export {
 
 export {StatusCodes} from './Core/Server/Routes/StatusCodes.js';
 export {SchemaDefaultReturn, DefaultReturn} from './Core/Server/Routes/DefaultReturn.js';
-export {SchemaSessionUserData, SessionUserData, SchemaSessionData, SessionData, SchemaRequestData, RequestData} from './Core/Server/RequestSession.js';
+export {
+    SchemaSessionUserData,
+    SessionUserData,
+    SchemaSessionData,
+    SessionData,
+    SchemaRequestData,
+    RequestData
+} from './Core/Server/RequestSession.js';
 
 // Backend
 export {
     SchemaBackendConfigOptions,
     BackendConfigOptions
 } from './Backend/Config/Config.js';
+export {DnsRecordBase} from './Backend/Dns/DnsRecordBase.js';
+export {IDnsServer} from './Backend/Dns/IDnsServer.js';
 export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
 export {SchemaSslProvider, SslProvider} from './Backend/Provider/SslCertProviders/SslProviders.js';
 export {FSslCertProviderOnReset} from './Backend/Provider/SslCertProviders/FSslCertProviderOnReset.js';
 export {ISslCertProvider} from './Backend/Provider/SslCertProviders/ISslCertProvider.js';
 export {SslCertBundel} from './Backend/Provider/SslCertProviders/SslCertBundel.js';
 export {SslCertCreateOptions} from './Backend/Provider/SslCertProviders/SslCertCreateOptions.js';
+export {SslCertCreateGlobal} from './Backend/Provider/SslCertProviders/SslCertCreateGlobal.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
 export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';
 export {
@@ -192,7 +202,14 @@ export {
 } from './Backend/Routes/IpAccess/Whitelist/Save.js';
 
 export {SchemaListenDelete, ListenDelete} from './Backend/Routes/Listen/Delete.js';
-export {SchemaListenVariable, ListenVariable, SchemaListenData, ListenData, SchemaListenResponse, ListenResponse} from './Backend/Routes/Listen/List.js';
+export {
+    SchemaListenVariable,
+    ListenVariable,
+    SchemaListenData,
+    ListenData,
+    SchemaListenResponse,
+    ListenResponse
+} from './Backend/Routes/Listen/List.js';
 
 export {SchemaLoginRequest, LoginRequest, SchemaIsLogin, IsLogin} from './Backend/Routes/Login/Login.js';
 

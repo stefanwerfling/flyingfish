@@ -8,6 +8,7 @@ import Path from 'path';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
 import {Certificate} from '../Cert/Certificate.js';
+import {Dns2Server} from '../Dns/Dns2Server.js';
 import {NginxServer} from '../Nginx/NginxServer.js';
 import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
 import {NginxService} from './NginxService.js';
@@ -194,6 +195,8 @@ export class SslCertService {
                                     if (await provider.createCertificate({
                                         domainName: domain.domainname,
                                         email: http.cert_email
+                                    }, {
+                                        dnsServer: Dns2Server.getInstance()
                                     })) {
                                         Logger.getLogger().info(`SslCertService::update: certificate is renew for domain: ${domain.domainname}`);
 
@@ -223,6 +226,8 @@ export class SslCertService {
                                 if (await provider.createCertificate({
                                     domainName: domain.domainname,
                                     email: http.cert_email
+                                }, {
+                                    dnsServer: Dns2Server.getInstance()
                                 })) {
                                     Logger.getLogger().info(`SslCertService::update: certificate is created for domain: ${domain.domainname}`);
 

@@ -1,6 +1,8 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
 import {DomainRecordDB, DomainRecordServiceDB, DomainServiceDB, Logger} from 'flyingfish_core';
+import {DnsRecordBase, IDnsServer} from 'flyingfish_schemas';
+import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
@@ -27,13 +29,42 @@ export const TYPE_EXT = {
 /**
  * Dns2Server
  */
-export class Dns2Server {
+export class Dns2Server implements IDnsServer {
+
+    /**
+     * instance
+     * @private
+     */
+    private static _instance: Dns2Server | null = null;
+
+    /**
+     * getInstance
+     */
+    public static getInstance(): Dns2Server {
+        if (Dns2Server._instance === null) {
+            Dns2Server._instance = new Dns2Server();
+        }
+
+        return Dns2Server._instance;
+    }
 
     /**
      * server
      * @protected
      */
     protected _server;
+
+    /**
+     * Temp records for DNS record anwsers
+     * @protected
+     */
+    protected _tempRecords: Map<number, Map<string, DnsRecordBase>> = new Map<number, Map<string, DnsRecordBase>>();
+
+    /**
+     * Temp domains for DNS record anwsers
+     * @protected
+     */
+    protected _tempDomains: Map<string, DnsRecordBase[]> = new Map<string, DnsRecordBase[]>();
 
     /**
      * constructor
@@ -210,6 +241,76 @@ export class Dns2Server {
         });
 
         Logger.getLogger().info(`Dns2Server::listen: Flingfish DNS listening on the TCP/UDP: ${port}`);
+    }
+
+    /**
+     * add a temporary record to a domain
+     * @param {number} domainId
+     * @param {DnsRecordBase} record
+     * @returns {string} temporary identification
+     */
+    public addTempRecord(
+        domainId: number,
+        record: DnsRecordBase
+    ): string {
+        const tmpId = uuid();
+
+        if(!this._tempRecords.has(domainId)) {
+            this._tempRecords.set(domainId, new Map<string, DnsRecordBase>());
+        }
+
+        const records = this._tempRecords.get(domainId)!;
+        records.set(tmpId, record);
+
+        this._tempRecords.set(domainId, records);
+
+        return tmpId;
+    }
+
+    /**
+     * remove all temporary record by domain id
+     * @param {number} domainId
+     * @returns {boolean}
+     */
+    public removeAllTemp(domainId: number): boolean {
+        return this._tempRecords.delete(domainId);
+    }
+
+    /**
+     * remove a temporary record by identification
+     * @param {string} tempId
+     * @returns {boolean}
+     */
+    public removeTempRecord(tempId: string): boolean {
+        for (const [domainId, records] of this._tempRecords) {
+            if (records.has(tempId)) {
+                const isDeleted = records.delete(tempId);
+
+                if (isDeleted) {
+                    this._tempRecords.set(domainId, records);
+                }
+
+                return isDeleted;
+            }
+        }
+
+        return false;
+    }
+
+    public addTempDomain(
+        domainName: string,
+        records: DnsRecordBase[]
+    ): boolean {
+        return false;
+    }
+
+    /**
+     * remove temporary domain
+     * @param {string} domainName
+     * @returns {boolean}
+     */
+    public removeTempDomain(domainName: string): boolean {
+        return this._tempDomains.delete(domainName);
     }
 
 }

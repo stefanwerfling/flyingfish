@@ -1,4 +1,11 @@
-import {FSslCertProviderOnReset, ISslCertProvider, SslCertBundel, SslCertCreateOptions} from 'flyingfish_schemas';
+import {
+    FSslCertProviderOnReset,
+    ISslCertProvider,
+    SslCertBundel,
+    SslCertCreateGlobal,
+    SslCertCreateOptions
+} from 'flyingfish_schemas';
+import {Client} from './Acme/Client.js';
 
 /**
  * Lets encrypt Acme object.
@@ -32,8 +39,35 @@ export class Acme implements ISslCertProvider {
     public async getCertificationBundel(domainName: string): Promise<SslCertBundel | null> {
         throw new Error('Method not implemented.');
     }
-    public async createCertificate(options: SslCertCreateOptions): Promise<boolean> {
-        throw new Error('Method not implemented.');
+
+    public async createCertificate(options: SslCertCreateOptions, global: SslCertCreateGlobal): Promise<boolean> {
+        if(global.dnsServer) {
+            const acmeClient = new Client();
+            await acmeClient.init();
+
+            const acmeRequest = await acmeClient.requestDnsChallenge(options.domainName);
+
+            if (acmeRequest) {
+                const isAdd = global.dnsServer.addTempDomain(acmeRequest.recordName, [{
+                    // TXT record
+                    type: 0x10,
+                    data: acmeRequest.recordText
+                }]);
+
+                if (isAdd) {
+                    const acmeFinalize = await acmeClient.submitDnsChallengeAndFinalize(acmeRequest.order);
+
+                    if (acmeFinalize) {
+
+                    }
+
+                    // clear tmp domain
+                    global.dnsServer.removeTempDomain(acmeRequest.recordName);
+                }
+            }
+        }
+
+        return false;
     }
 
 }

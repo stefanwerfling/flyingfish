@@ -1,5 +1,6 @@
 import {FSslCertProviderOnReset} from './FSslCertProviderOnReset.js';
 import {SslCertBundel} from './SslCertBundel.js';
+import {SslCertCreateGlobal} from './SslCertCreateGlobal.js';
 import {SslCertCreateOptions} from './SslCertCreateOptions.js';
 
 /**
@@ -49,8 +50,9 @@ export interface ISslCertProvider {
     /**
      * Create a certificate by provider.
      * @param {SslCertCreateOptions} options
+     * @param {SslCertCreateGlobal} global
      * @returns {boolean}
      */
-    createCertificate(options: SslCertCreateOptions): Promise<boolean>;
+    createCertificate(options: SslCertCreateOptions, global: SslCertCreateGlobal): Promise<boolean>;
 
 }
