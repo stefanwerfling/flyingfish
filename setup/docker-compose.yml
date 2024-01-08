@@ -47,7 +47,7 @@ services:
         max-file: "50"
 
   flyingfish:
-    image: stefanwerfling/flingfish:latest
+    image: stefanwerfling/flyingfish:latest
     container_name: flyingfish_service
     volumes:
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
