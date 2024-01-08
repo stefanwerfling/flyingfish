@@ -44,7 +44,7 @@ At the beginning, I added the allowed listen port 2242 (line 26) in Docker Compo
 {% code lineNumbers="true" %}
 ```
 flyingfish:
-    image: stefanwerfling/flingfish:latest
+    image: stefanwerfling/flyingfish:latest
     container_name: flyingfish_service
     volumes:
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
