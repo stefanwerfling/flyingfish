@@ -94,8 +94,11 @@ export class Logger {
                 }));
             }
 
+            const { combine, timestamp, json } = winston.format;
+
             Logger._logger = winston.createLogger({
                 level: level,
+                format: combine(timestamp(), json()),
                 transports: transports
             });
 
