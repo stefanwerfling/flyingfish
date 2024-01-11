@@ -16,9 +16,9 @@ import {
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
     SshPortDB,
-    SshPortServiceDB
+    SshPortServiceDB,
+    NginxListenVariableServiceDB
 } from 'flyingfish_core';
-import {NginxListenVariableService} from 'flyingfish_core/dist/inc/Db/MariaDb/NginxListenVariableService.js';
 import {
     NginxHttpVariableContextType,
     NginxListenCategory,
@@ -347,7 +347,7 @@ export class NginxService {
                         // ---------------------------------------------------------------------------------------------
 
                         const listenStreamServerVariables =
-                            await NginxListenVariableService.getInstance().findAllBy(
+                            await NginxListenVariableServiceDB.getInstance().findAllBy(
                                 alisten.id,
                                 NginxListenVariableContextType.stream_server
                             );

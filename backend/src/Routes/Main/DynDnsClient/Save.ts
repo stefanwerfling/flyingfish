@@ -1,5 +1,4 @@
-import {DynDnsClientDB, DynDnsClientDomainDB, DynDnsClientDomainServiceDB} from 'flyingfish_core';
-import {DynDnsClientService} from 'flyingfish_core/dist/inc/Db/MariaDb/DynDnsClientService.js';
+import {DynDnsClientDB, DynDnsClientDomainDB, DynDnsClientDomainServiceDB, DynDnsClientServiceDB} from 'flyingfish_core';
 import {DefaultReturn, DynDnsClientData, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -16,7 +15,7 @@ export class Save {
         let client: DynDnsClientDB|null = null;
 
         if (data.id > 0) {
-            const tclient = await DynDnsClientService.getInstance().findOne(data.id);
+            const tclient = await DynDnsClientServiceDB.getInstance().findOne(data.id);
 
             if (tclient) {
                 client = tclient;
@@ -36,7 +35,7 @@ export class Save {
 
         client.update_domain = data.update_domain;
 
-        client = await DynDnsClientService.getInstance().save(client);
+        client = await DynDnsClientServiceDB.getInstance().save(client);
 
         if (client) {
             // domain links --------------------------------------------------------------------------------------------

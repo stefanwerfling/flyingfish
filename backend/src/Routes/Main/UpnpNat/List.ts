@@ -1,6 +1,5 @@
 import {NatPortServiceDB} from 'flyingfish_core';
-import {StatusCodes} from 'flyingfish_schemas';
-import {UpnpNatPort, UpnpNatResponse} from 'flyingfish_schemas/dist/Backend/Routes/UpnpNat/List.js';
+import {StatusCodes, UpnpNatPort, UpnpNatResponse} from 'flyingfish_schemas';
 
 /**
  * List

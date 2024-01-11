@@ -1,8 +1,7 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": "./",
+    "composite": true,
     "declaration": true,
     "module": "NodeNext",
     "target": "ES2022",
@@ -13,7 +12,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "importHelpers": true,
-    "esModuleInterop": true,
 
     "types": [
       "node"

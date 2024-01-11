@@ -2,8 +2,8 @@
   "name": "flyingfish_schemas",
   "version": "1.0.0",
   "description": "The schema code for flyingfish",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "src/index.ts",
   "type": "module",
   "scripts": {
     "tsc": "tsc",

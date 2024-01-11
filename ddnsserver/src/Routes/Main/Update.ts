@@ -167,15 +167,17 @@ export class Update extends DefaultRoute {
 
                 if (granted) {
                     if (this.isSchemaValidate(SchemaRequestData, req, res)) {
-                        if (!req.session.user) {
-                            req.session.user = {
+                        const sessionData = req.session as SessionData;
+
+                        if (!sessionData.user) {
+                            sessionData.user = {
                                 isLogin: false,
                                 userid: 0
                             };
                         }
 
-                        req.session.user.userid = userId;
-                        req.session.user.isLogin = true;
+                        sessionData.user.userid = userId;
+                        sessionData.user.isLogin = true;
 
                         await Update.setNicUpdate(req, req.session, res);
                     }
