@@ -21,6 +21,12 @@ export interface ISslCertProvider {
     getTitle(): string;
 
     /**
+     * Support the provider wildcard certificates
+     * @returns {boolean}
+     */
+    isSupportWildcard(): boolean;
+
+    /**
      * Is provider ready for the request by last request try.
      * @param {number} lastRequest - Timestamp from last request for creating certificate.
      * @param {number} tryCount - Count by try for creating certificate.

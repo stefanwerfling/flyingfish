@@ -2,6 +2,10 @@ import {JwkHelper} from 'flyingfish_core';
 import * as crypto from 'crypto';
 import forge from 'node-forge';
 
+export type LetsEncryptClientOptions = {
+    keysize?: number;
+};
+
 /**
  * Directory Json
  */
@@ -141,8 +145,19 @@ export class Client {
     protected _accountUrl?: string;
 
     /**
+     * @param {[LetsEncryptClientOptions]} options
+     */
+    public constructor(options?: LetsEncryptClientOptions) {
+        if (options) {
+            if (options.keysize) {
+                this._keySize = options.keysize;
+            }
+        }
+    }
+
+    /**
      * Init the client.
-     * @param {JsonWebKey} jwk
+     * @param {[crypto.webcrypto.JsonWebKey]} jwk
      * @returns {boolean}
      */
     public async init(jwk?: crypto.webcrypto.JsonWebKey): Promise<boolean> {
@@ -171,16 +186,29 @@ export class Client {
         return false;
     }
 
+    /**
+     * Return the jwk
+     * @returns {crypto.webcrypto.JsonWebKey | undefined}
+     */
     public getJwk(): crypto.webcrypto.JsonWebKey | undefined {
         return this._jwk;
     }
 
+    /**
+     * Throw a error when http status is bigger/same 400
+     * @param resJson
+     * @private
+     */
     private _throwIfErrored(resJson: any): void {
         if (resJson.status && typeof resJson.status === 'number' && resJson.status >= 400) {
             throw new Error(JSON.stringify(resJson));
         }
     }
 
+    /**
+     * Generate a new jwk
+     * @private
+     */
     private async _generateJwk(): Promise<crypto.webcrypto.JsonWebKey> {
         return await JwkHelper.generateJwk();
     }
@@ -199,6 +227,12 @@ export class Client {
         return res.headers.get('Replay-Nonce');
     }
 
+    /**
+     * Parse the JWT to parts
+     * @param {string} jwt
+     * @private
+     * @returns {LetsEncryptParsedJwt}
+     */
     private _parseJwt(jwt: string): LetsEncryptParsedJwt {
         const jwtParts = jwt.split('.');
 
@@ -209,6 +243,12 @@ export class Client {
         };
     }
 
+    /**
+     * convert json to a base64 url string
+     * @param {object|string} json
+     * @private
+     * @returns {string}
+     */
     private _jsonToBase64Url(json: object|string): string {
         return btoa(JSON.stringify(json))
         .replace(/\+/gu, '-')
@@ -216,6 +256,12 @@ export class Client {
         .replace(/[=]+$/gu, '');
     }
 
+    /**
+     * Convert an ArrayBuffer to base64 url string
+     * @param {ArrayBuffer} buf
+     * @private
+     * @returns {string}
+     */
     private _arrayBufferToBase64Url(buf: ArrayBuffer): string {
         return btoa(Array.prototype.map.call(
             new Uint8Array(buf),

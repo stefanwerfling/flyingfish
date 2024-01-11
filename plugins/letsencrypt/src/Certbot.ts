@@ -57,6 +57,14 @@ export class Certbot implements ISslCertProvider {
     }
 
     /**
+     * Support the provider wildcard certificates
+     * @returns {boolean}
+     */
+    public isSupportWildcard(): boolean {
+        return false;
+    }
+
+    /**
      * Is provider ready for the request by last request try.
      * @param {number} lastRequest - Timestamp from last request for creating certificate.
      * @param {number} tryCount - Count by try for creating certificate.
@@ -172,7 +180,10 @@ export class Certbot implements ISslCertProvider {
         const isCertExist = await this.existCertificate(options.domainName) !== null;
 
         if (!isCertExist) {
-            Logger.getLogger().error('Certbot::create: cert not create/found.');
+            Logger.getLogger().error(
+                'Certification not create/found.',
+                {class: 'Plugin::LetsEncrypt::Certbot::create'}
+            );
         }
 
         let isSuccess = false;
@@ -180,7 +191,10 @@ export class Certbot implements ISslCertProvider {
         if (returnCode === 0) {
             isSuccess = true;
         } else {
-            Logger.getLogger().error(`Certbot::create: return code: ${returnCode}`);
+            Logger.getLogger().error(
+                `Return code: ${returnCode}`,
+                {class: 'Plugin::LetsEncrypt::Certbot::create'}
+            );
         }
 
         return isCertExist && isSuccess;

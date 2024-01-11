@@ -1,3 +1,4 @@
+import {DateHelper} from 'flyingfish_core';
 import {
     FSslCertProviderOnReset,
     ISslCertProvider,
@@ -11,6 +12,15 @@ import {Client} from './Acme/Client.js';
  * Lets encrypt Acme object.
  */
 export class Acme implements ISslCertProvider {
+
+    public static readonly LIMIT_REQUESTS = 5;
+    public static readonly LIMIT_TIME_HOUR = 1;
+
+    /**
+     * Live path from lets encrypt.
+     * @member {string}
+     */
+    protected _livePath: string = '/etc/letsencrypt/live';
 
     /**
      * Return the keyname for provider as ident.
@@ -28,8 +38,36 @@ export class Acme implements ISslCertProvider {
         return 'LetsEncrypt (DNS-01)';
     }
 
-    public async isReadyForRequest(lastRequest: number, tryCount: number, onResetTryCount?: FSslCertProviderOnReset | undefined): Promise<boolean> {
-        throw new Error('Method not implemented.');
+    /**
+     * Support the provider wildcard certificates
+     * @returns {boolean}
+     */
+    public isSupportWildcard(): boolean {
+        return true;
+    }
+
+    /**
+     * Is provider ready for the request by last request try.
+     * @param {number} lastRequest - Timestamp from last request for creating certificate.
+     * @param {number} tryCount - Count by try for creating certificate.
+     * @param {FSslCertProviderOnReset} [onResetTryCount] - Function call when reset try counts.
+     * @returns {boolean} By true the request can start.
+     */
+    public async isReadyForRequest(
+        lastRequest: number,
+        tryCount: number,
+        onResetTryCount?: FSslCertProviderOnReset
+    ): Promise<boolean> {
+        if ((tryCount >= Acme.LIMIT_REQUESTS) && !DateHelper.isOverAHour(lastRequest, Acme.LIMIT_TIME_HOUR)) {
+            return false;
+        } else if ((tryCount >= Acme.LIMIT_REQUESTS) &&
+            DateHelper.isOverAHour(lastRequest, Acme.LIMIT_TIME_HOUR)) {
+            if (onResetTryCount) {
+                await onResetTryCount();
+            }
+        }
+
+        return true;
     }
 
     public async existCertificate(domainName: string): Promise<boolean> {
@@ -40,17 +78,34 @@ export class Acme implements ISslCertProvider {
         throw new Error('Method not implemented.');
     }
 
+    /**
+     * Create a certificate by provider.
+     * @param {SslCertCreateOptions} options
+     * @param {SslCertCreateGlobal} global
+     * @returns {boolean}
+     */
     public async createCertificate(options: SslCertCreateOptions, global: SslCertCreateGlobal): Promise<boolean> {
         if(global.dnsServer) {
-            const acmeClient = new Client();
+            const acmeClient = new Client({
+                keysize: options.keySize
+            });
+
             await acmeClient.init();
 
-            const acmeRequest = await acmeClient.requestDnsChallenge(options.domainName);
+            let domainName = options.domainName;
+
+            if (options.wildcard) {
+                domainName = `*.${options.domainName}`;
+            }
+
+            const acmeRequest = await acmeClient.requestDnsChallenge(domainName);
 
             if (acmeRequest) {
                 const isAdd = global.dnsServer.addTempDomain(acmeRequest.recordName, [{
+                    name: acmeRequest.recordName,
                     // TXT record
                     type: 0x10,
+                    class:
                     data: acmeRequest.recordText
                 }]);
 

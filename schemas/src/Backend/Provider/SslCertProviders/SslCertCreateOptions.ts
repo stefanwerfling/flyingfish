@@ -21,4 +21,10 @@ export type SslCertCreateOptions = {
      */
     keySize?: number;
 
+    /**
+     * create certificate as wildcard
+     * @member {boolean}
+     */
+    wildcard: boolean;
+
 };

@@ -194,7 +194,9 @@ export class SslCertService {
 
                                     if (await provider.createCertificate({
                                         domainName: domain.domainname,
-                                        email: http.cert_email
+                                        email: http.cert_email,
+                                        // TODO wildcard
+                                        wildcard: false
                                     }, {
                                         dnsServer: Dns2Server.getInstance()
                                     })) {
@@ -225,7 +227,9 @@ export class SslCertService {
 
                                 if (await provider.createCertificate({
                                     domainName: domain.domainname,
-                                    email: http.cert_email
+                                    email: http.cert_email,
+                                    // TODO wildcard
+                                    wildcard: false
                                 }, {
                                     dnsServer: Dns2Server.getInstance()
                                 })) {

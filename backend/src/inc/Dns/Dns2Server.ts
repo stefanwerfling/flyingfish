@@ -1,5 +1,5 @@
 import {RemoteInfo} from 'dgram';
-import DNS, {DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
+import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
 import {DomainRecordDB, DomainRecordServiceDB, DomainServiceDB, Logger} from 'flyingfish_core';
 import {DnsRecordBase, IDnsServer} from 'flyingfish_schemas';
 import {v4 as uuid} from 'uuid';
@@ -78,147 +78,234 @@ export class Dns2Server implements IDnsServer {
                 send: (response: DnsResponse) => void,
                 rinfo: RemoteInfo
             ) => {
-                try {
-                    const response = DNS.Packet.createResponseFromRequest(request);
-                    const [question] = request.questions;
-                    const questionExt = question as DnsQuestionExt;
+                const response = await this._handleRequest(request, rinfo);
 
-                    Logger.getLogger().info(`Dns2Server::request: ${request.header.id}`, request.questions[0]);
-                    Logger.getLogger().info(`Dns2Server::request: Remote-Info ${rinfo.address}:${rinfo.port}`);
-
-                    const domain = await DomainServiceDB.getInstance().findByName(questionExt.name);
-
-                    if (domain) {
-                        let records: DomainRecordDB[];
-
-                        if ((questionExt.class !== null) && (questionExt.type !== null)) {
-                            records = await DomainRecordServiceDB.getInstance().findAllBy(domain.id, questionExt.class, questionExt.type);
-                        } else {
-                            records = await DomainRecordServiceDB.getInstance().findAllByDomain(domain.id);
-                        }
-
-                        for (const record of records) {
-                            let recordSettings = null;
-
-                            if (record.settings !== '') {
-                                try {
-                                    recordSettings = JSON.parse(record.settings);
-                                } catch (e) {
-                                    Logger.getLogger().error(`Dns2Server::request: record settings parse failed: ${record.id}`);
-                                }
-                            }
-
-                            const settingsErrors: SchemaErrors = [];
-
-                            switch (record.dtype) {
-                                case DNS.Packet.TYPE.TXT:
-                                    response.answers.push({
-                                        name: questionExt.name,
-                                        type: record.dtype,
-                                        class: record.dclass,
-                                        ttl: record.ttl,
-                                        data: record.dvalue
-                                    } as DnsAnswerTXT);
-                                    break;
-
-                                case DNS.Packet.TYPE.A:
-                                case DNS.Packet.TYPE.AAAA:
-                                    response.answers.push({
-                                        name: questionExt.name,
-                                        type: record.dtype,
-                                        class: record.dclass,
-                                        ttl: record.ttl,
-                                        address: record.dvalue
-                                    });
-                                    break;
-
-                                case DNS.Packet.TYPE.NS:
-                                    response.answers.push({
-                                        name: questionExt.name,
-                                        type: record.dtype,
-                                        class: record.dclass,
-                                        ttl: record.ttl,
-                                        ns: record.dvalue
-                                    } as DnsAnswerNS);
-                                    break;
-
-                                case DNS.Packet.TYPE.MX:
-                                    response.answers.push({
-                                        name: questionExt.name,
-                                        type: record.dtype,
-                                        class: record.dclass,
-                                        ttl: record.ttl,
-                                        exchange: record.dvalue
-                                    } as DnsAnswerMX);
-                                    break;
-
-                                case DNS.Packet.TYPE.CNAME:
-                                    response.answers.push({
-                                        name: questionExt.name,
-                                        type: record.dtype,
-                                        class: record.dclass,
-                                        ttl: record.ttl,
-                                        domain: record.dvalue
-                                    });
-                                    break;
-
-                                case TYPE_EXT.TLSA:
-                                    if (SchemaRecordSettingsTlSA.validate(recordSettings, settingsErrors)) {
-                                        response.answers.push({
-                                            name: questionExt.name,
-                                            type: record.dtype,
-                                            class: record.dclass,
-                                            ttl: record.ttl,
-                                            certificate_usage: parseInt(recordSettings.certificate_usage, 10) ?? TLSACertificateUsage.DOMAIN_ISSUED_CERTIFICATE,
-                                            selector: parseInt(recordSettings.selector, 10),
-                                            matching_type: parseInt(recordSettings.matching_type, 10),
-                                            certificate_association_data: record.dvalue
-                                        } as DnsAnswerTlSA);
-                                    }
-                                    break;
-                            }
-
-                            if (settingsErrors.length > 0) {
-                                Logger.getLogger().error('Dns2Server::request:recordSettings:');
-                                for (const error of settingsErrors) {
-                                    Logger.getLogger().error(`- ${error}`);
-                                }
-                            }
-                        }
-                    } else {
-                        const resolver = new DNS();
-
-                        let result: DNS.DnsResponse | null = null;
-
-                        switch (questionExt.type) {
-                            case DNS.Packet.TYPE.A:
-                                result = await resolver.resolveA(questionExt.name);
-                                break;
-
-                            case DNS.Packet.TYPE.AAAA:
-                                result = await resolver.resolveAAAA(questionExt.name);
-                                break;
-
-                            case DNS.Packet.TYPE.MX:
-                                result = await resolver.resolveMX(questionExt.name);
-                                break;
-
-                            case DNS.Packet.TYPE.CNAME:
-                                result = await resolver.resolveCNAME(questionExt.name);
-                                break;
-                        }
-
-                        if (result) {
-                            // TODO
-                        }
-                    }
-
+                if (response) {
                     send(response);
-                } catch (e) {
-                    Logger.getLogger().info(`Dns2Server::request: faild to processing the dns question by: ${rinfo.address}:${rinfo.port}`);
                 }
             }
         });
+    }
+
+    /**
+     * Handle for dns requests
+     * @param {DnsRequest} request
+     * @param rinfo
+     * @protected
+     * @returns {DnsResponse|null}
+     */
+    protected async _handleRequest(
+        request: DnsRequest,
+        rinfo: RemoteInfo
+    ): Promise<DnsResponse|null> {
+        try {
+            const response = DNS.Packet.createResponseFromRequest(request);
+            const [question] = request.questions;
+            const questionExt = question as DnsQuestionExt;
+
+            Logger.getLogger().info(
+                `Request by ID: ${request.header.id}`, {
+                    class: 'Dns2Server::_handleRequest',
+                    question: request.questions[0],
+                    remote_address: rinfo.address,
+                    remote_port: rinfo.port
+                }
+            );
+
+            const domain = await DomainServiceDB.getInstance().findByName(questionExt.name);
+
+            if (domain) {
+                let records: DomainRecordDB[];
+
+                if (questionExt.class && questionExt.type) {
+                    records = await DomainRecordServiceDB.getInstance().findAllBy(
+                        domain.id,
+                        questionExt.class,
+                        questionExt.type
+                    );
+                } else {
+                    records = await DomainRecordServiceDB.getInstance().findAllByDomain(domain.id);
+                }
+
+                for (const record of records) {
+                    let recordSettings = null;
+
+                    if (record.settings !== '') {
+                        try {
+                            recordSettings = JSON.parse(record.settings);
+                        } catch (e) {
+                            Logger.getLogger().error(
+                                `Record settings parse failed: ${record.id}`,
+                                {
+                                    class: 'Dns2Server::_handleRequest'
+                                }
+                            );
+                        }
+                    }
+
+                    const settingsErrors: SchemaErrors = [];
+
+                    switch (record.dtype) {
+                        case DNS.Packet.TYPE.TXT:
+                            response.answers.push({
+                                name: questionExt.name,
+                                type: record.dtype,
+                                class: record.dclass,
+                                ttl: record.ttl,
+                                data: record.dvalue
+                            } as DnsAnswerTXT);
+                            break;
+
+                        case DNS.Packet.TYPE.A:
+                        case DNS.Packet.TYPE.AAAA:
+                            response.answers.push({
+                                name: questionExt.name,
+                                type: record.dtype,
+                                class: record.dclass,
+                                ttl: record.ttl,
+                                address: record.dvalue
+                            });
+                            break;
+
+                        case DNS.Packet.TYPE.NS:
+                            response.answers.push({
+                                name: questionExt.name,
+                                type: record.dtype,
+                                class: record.dclass,
+                                ttl: record.ttl,
+                                ns: record.dvalue
+                            } as DnsAnswerNS);
+                            break;
+
+                        case DNS.Packet.TYPE.MX:
+                            response.answers.push({
+                                name: questionExt.name,
+                                type: record.dtype,
+                                class: record.dclass,
+                                ttl: record.ttl,
+                                exchange: record.dvalue
+                            } as DnsAnswerMX);
+                            break;
+
+                        case DNS.Packet.TYPE.CNAME:
+                            response.answers.push({
+                                name: questionExt.name,
+                                type: record.dtype,
+                                class: record.dclass,
+                                ttl: record.ttl,
+                                domain: record.dvalue
+                            });
+                            break;
+
+                        case TYPE_EXT.TLSA:
+                            if (recordSettings && SchemaRecordSettingsTlSA.validate(recordSettings, settingsErrors)) {
+                                response.answers.push({
+                                    name: questionExt.name,
+                                    type: record.dtype,
+                                    class: record.dclass,
+                                    ttl: record.ttl,
+                                    certificate_usage: parseInt(recordSettings.certificate_usage, 10) ?? TLSACertificateUsage.DOMAIN_ISSUED_CERTIFICATE,
+                                    selector: parseInt(recordSettings.selector, 10),
+                                    matching_type: parseInt(recordSettings.matching_type, 10),
+                                    certificate_association_data: record.dvalue
+                                } as DnsAnswerTlSA);
+                            }
+                            break;
+                    }
+
+                    if (settingsErrors.length > 0) {
+                        Logger.getLogger().error('Dns2Server::request:recordSettings:');
+
+                        for (const error of settingsErrors) {
+                            Logger.getLogger().error(
+                                `Setting error: ${error}`, {
+                                    class: 'Dns2Server::_handleRequest'
+                                }
+                            );
+                        }
+                    }
+                }
+
+                if (questionExt.class && questionExt.type) {
+                    this._handleTmpRecords(
+                        domain.id,
+                        questionExt.class,
+                        questionExt.type
+                    );
+                }
+            } else {
+                const resolver = new DNS();
+
+                let result: DNS.DnsResponse | null = null;
+
+                switch (questionExt.type) {
+                    case DNS.Packet.TYPE.A:
+                        result = await resolver.resolveA(questionExt.name);
+                        break;
+
+                    case DNS.Packet.TYPE.AAAA:
+                        result = await resolver.resolveAAAA(questionExt.name);
+                        break;
+
+                    case DNS.Packet.TYPE.MX:
+                        result = await resolver.resolveMX(questionExt.name);
+                        break;
+
+                    case DNS.Packet.TYPE.CNAME:
+                        result = await resolver.resolveCNAME(questionExt.name);
+                        break;
+                }
+
+                if (result) {
+                    // TODO
+                }
+            }
+
+            return response;
+        } catch (e) {
+            Logger.getLogger().info(
+                `Faild to processing the dns question by: ${rinfo.address}:${rinfo.port}`,
+                {class: 'Dns2Server::_handleRequest:'}
+            );
+        }
+
+        return null;
+    }
+
+    /**
+     * Handle the temporary records for a domain.
+     * @param {number} domainId
+     * @param {number} recordClass
+     * @param {[number]} recordType
+     * @protected
+     * @returns {DnsAnswer[]}
+     */
+    protected _handleTmpRecords(domainId: number, recordClass: number, recordType?: number): DnsAnswer[] {
+        const answers: DnsAnswer[] = [];
+
+        const tmpDomain = this._tempRecords.get(domainId);
+
+        if (tmpDomain) {
+            for (const [, record] of tmpDomain) {
+                if (recordClass !== record.class || recordType !== record.type) {
+                    continue;
+                }
+
+                switch (record.type) {
+                    case DNS.Packet.TYPE.TXT:
+                        answers.push({
+                            name: record.name,
+                            type: record.type,
+                            class: record.class,
+                            ttl: record.ttl,
+                            data: record.data
+                        } as DnsAnswerTXT);
+                        break;
+                }
+            }
+        }
+
+        return answers;
     }
 
     /**
@@ -240,7 +327,12 @@ export class Dns2Server implements IDnsServer {
             tcp: port
         });
 
-        Logger.getLogger().info(`Dns2Server::listen: Flingfish DNS listening on the TCP/UDP: ${port}`);
+        Logger.getLogger().info(
+            `Flingfish DNS listening on the TCP/UDP: ${port}`,
+            {
+                class: 'Dns2Server::listen'
+            }
+        );
     }
 
     /**
@@ -297,10 +389,21 @@ export class Dns2Server implements IDnsServer {
         return false;
     }
 
+    /**
+     * add a temporary domain with records
+     * @param {string} domainName
+     * @param {DnsRecordBase[]} records
+     * @returns {boolean}
+     */
     public addTempDomain(
         domainName: string,
         records: DnsRecordBase[]
     ): boolean {
+        if (!this._tempDomains.has(domainName)) {
+            this._tempDomains.set(domainName, records);
+            return true;
+        }
+
         return false;
     }
 
