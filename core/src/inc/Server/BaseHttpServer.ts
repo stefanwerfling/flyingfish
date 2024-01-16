@@ -7,6 +7,8 @@ import express, {Application, NextFunction, Request, Response} from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
+import {TlsClientError} from './TlsClientError.js';
+import {TlsSocket} from './TlsSocket.js';
 
 /**
  * BaseHttpServerOptionCrypt
@@ -196,11 +198,38 @@ export class BaseHttpServer {
                 const privateKey = fs.readFileSync(keyFile);
                 const crt = fs.readFileSync(crtFile);
 
-                https.createServer({
+                const httpsServer = https.createServer({
                     key: privateKey,
                     cert: crt
-                }, app).listen(this._port, () => {
-                    Logger.getLogger().info(`BaseHttpServer::listen: ${this._realm} listening on the https://localhost:${this._port}`);
+                }, app);
+
+                httpsServer.on('tlsClientError', (err, atlsSocket) => {
+                    const tlsError = err as TlsClientError;
+
+                    if (tlsError.reason === 'http request') {
+                        const tTlsSocket = atlsSocket as TlsSocket;
+
+                        if (tTlsSocket._parent) {
+                            tTlsSocket._parent.write('HTTP/1.1 302 Found\n' +
+                                `Location: https://localhost:${this._port}`);
+                        }
+
+                        Logger.getLogger().error(
+                            `The client call the Server over HTTP protocol. Please use HTTPS, example: https://localhost:${this._port}`,
+                            {
+                                class: 'BaseHttpServer::listen'
+                            }
+                        );
+                    }
+                });
+
+                httpsServer.listen(this._port, () => {
+                    Logger.getLogger().info(
+                        `${this._realm} listening on the https://localhost:${this._port}`,
+                        {
+                            class: 'BaseHttpServer::listen'
+                        }
+                    );
                 });
             } else {
                 Logger.getLogger().error('BaseHttpServer::listen: Key and Certificate not found for http server!');
