@@ -1,4 +1,4 @@
-import {DateHelper} from 'flyingfish_core';
+import {DateHelper, FileHelper} from 'flyingfish_core';
 import {
     FSslCertProviderOnReset,
     ISslCertProvider,
@@ -6,6 +6,7 @@ import {
     SslCertCreateGlobal,
     SslCertCreateOptions
 } from 'flyingfish_schemas';
+import path from 'path';
 import {Client} from './Acme/Client.js';
 
 /**
@@ -105,19 +106,26 @@ export class Acme implements ISslCertProvider {
                     name: acmeRequest.recordName,
                     // TXT record
                     type: 0x10,
-                    class:
+                    // IN
+                    class: 1,
+                    ttl: 300,
                     data: acmeRequest.recordText
                 }]);
 
                 if (isAdd) {
                     const acmeFinalize = await acmeClient.submitDnsChallengeAndFinalize(acmeRequest.order);
 
-                    if (acmeFinalize) {
-
-                    }
-
                     // clear tmp domain
                     global.dnsServer.removeTempDomain(acmeRequest.recordName);
+
+                    if (acmeFinalize) {
+                        const certPath = path.join(this._livePath, options.domainName);
+
+                        if (!await FileHelper.mkdir(certPath, true)) {
+                            return false;
+                        }
+
+                    }
                 }
             }
         }

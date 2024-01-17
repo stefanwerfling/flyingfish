@@ -27,4 +27,10 @@ export type SslCertCreateOptions = {
      */
     wildcard: boolean;
 
+    /**
+     * Give the public web root path
+     * @member {string}
+     */
+    webRootPath: string;
+
 };

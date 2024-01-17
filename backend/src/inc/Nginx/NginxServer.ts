@@ -226,12 +226,21 @@ export class NginxServer {
     }
 
     /**
-     * getWellKnownPath
+     * Return the web root path
+     * @returns {string}
      */
-    public getWellKnownPath(): string {
+    public getWebRootPath(): string {
         const prefix = this._options.prefix || NginxServer.NGINX_PREFIX_PATH;
 
-        return path.join(prefix, 'html/.well-known');
+        return path.join(prefix, 'html/');
+    }
+
+    /**
+     * Return the well-known path
+     * @returns {string}
+     */
+    public getWellKnownPath(): string {
+        return path.join(this.getWebRootPath(), '.well-known/');
     }
 
     /**

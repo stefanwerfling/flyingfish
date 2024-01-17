@@ -196,7 +196,8 @@ export class SslCertService {
                                         domainName: domain.domainname,
                                         email: http.cert_email,
                                         // TODO wildcard
-                                        wildcard: false
+                                        wildcard: false,
+                                        webRootPath: NginxServer.getInstance().getWebRootPath()
                                     }, {
                                         dnsServer: Dns2Server.getInstance()
                                     })) {
@@ -229,7 +230,8 @@ export class SslCertService {
                                     domainName: domain.domainname,
                                     email: http.cert_email,
                                     // TODO wildcard
-                                    wildcard: false
+                                    wildcard: false,
+                                    webRootPath: NginxServer.getInstance().getWebRootPath()
                                 }, {
                                     dnsServer: Dns2Server.getInstance()
                                 })) {
