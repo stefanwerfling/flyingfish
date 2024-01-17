@@ -1,7 +1,4 @@
-import {NavbarLinkButton} from 'bambooo/dist/Navbar/NavbarLinkButton';
-import {NavbarLinkFullsize} from 'bambooo/dist/Navbar/NavbarLinkFullsize';
-import {SidebarMenuItem} from 'bambooo/dist/Sidebar/SidebarMenuItem';
-import {SidebarMenuTree} from 'bambooo/dist/Sidebar/SidebarMenuTree';
+import {NavbarLinkButton, NavbarLinkFullsize, SidebarMenuItem, SidebarMenuTree} from 'bambooo';
 import {Login as LoginAPI} from './inc/Api/Login';
 import {User as UserAPI} from './inc/Api/User';
 import {Lang} from './inc/Lang';
