@@ -98,6 +98,18 @@ export class NginxHttpService extends DBService<NginxHttp> {
     }
 
     /**
+     * Find all Http entries by ssl enable = true
+     * @returns {NginxHttp[]}
+     */
+    public async findAllBySslEnable(): Promise<NginxHttp[]> {
+        return this._repository.find({
+            where: {
+                ssl_enable: true
+            }
+        });
+    }
+
+    /**
      * Count all entries with listen ID.
      * @param {number} listenId
      * @returns {number}

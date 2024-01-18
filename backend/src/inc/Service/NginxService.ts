@@ -1,3 +1,4 @@
+import {Ets} from 'ets';
 import {
     DomainServiceDB,
     FileHelper,
@@ -31,7 +32,7 @@ import {
 } from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import path from 'path';
-import {SchemaErrors} from 'vts';
+import {SchemaErrors, Vts} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
@@ -233,7 +234,10 @@ export class NginxService {
         const conf = NginxServer.getInstance().getConf();
 
         if (conf === null) {
-            Logger.getLogger().error('NginxService::_loadConfig: Erro config object is empty!');
+            Logger.getLogger().error('Error config object is empty!', {
+                class: 'NginxService::_loadConfig'
+            });
+
             return;
         }
 
@@ -562,9 +566,9 @@ export class NginxService {
                                     fail_timeout: 0
                                 });
                             } else {
-                                Logger.getLogger().silly(
-                                    `NginxService::_loadConfig: destination listen not found by domain: ${domainName}`
-                                );
+                                Logger.getLogger().silly(`Destination listen not found by domain: ${domainName}`, {
+                                    class: 'NginxService::_loadConfig'
+                                });
                             }
                             break;
 
@@ -611,9 +615,9 @@ export class NginxService {
                                     });
                                 }
                             } else {
-                                Logger.getLogger().silly(
-                                    `NginxService::_loadConfig: None upstream found by domain: ${domainName}`
-                                );
+                                Logger.getLogger().silly(`None upstream found by domain: ${domainName}`, {
+                                    class: 'NginxService::_loadConfig'
+                                });
                             }
                             break;
 
@@ -684,16 +688,16 @@ export class NginxService {
                                             fail_timeout: 0
                                         });
                                     } else {
-                                        Logger.getLogger().error(
-                                            `NginxService::_loadConfig: Ssh (r) entry (out) is empty by domain: ${domainName}, streamid: ${tstream.id}`
-                                        );
+                                        Logger.getLogger().error(`Ssh (r) entry (out) is empty by domain: ${domainName}, streamid: ${tstream.id}`, {
+                                            class: 'NginxService::_loadConfig'
+                                        });
                                     }
                                     break;
 
                                 default:
-                                    Logger.getLogger().error(
-                                        `NginxService::_loadConfig: Ssh (r) entry has not type in/out by domain: ${domainName}, streamid: ${tstream.id}`
-                                    );
+                                    Logger.getLogger().error(`Ssh (r) entry has not type in/out by domain: ${domainName}, streamid: ${tstream.id}`, {
+                                        class: 'NginxService::_loadConfig'
+                                    });
                             }
                             break;
 
@@ -715,9 +719,9 @@ export class NginxService {
                                 procMap.addVariable('"TLSv1.0"', varName);
                                 procMap.addVariable('default', upstreamName);
                             } else {
-                                Logger.getLogger().error(
-                                    `NginxService::_loadConfig: Ssh (l) entry is empty by domain: ${domainName}, streamid: ${tstream.id}`
-                                );
+                                Logger.getLogger().error(`Ssh (l) entry is empty by domain: ${domainName}, streamid: ${tstream.id}`, {
+                                    class: 'NginxService::_loadConfig'
+                                });
                             }
                             break;
 
@@ -731,16 +735,16 @@ export class NginxService {
                                 fail_timeout: 0
                             });
 
-                            Logger.getLogger().warn(
-                                `NginxService::_loadConfig: destination type is not set by domain: ${domainName}, streamid: ${tstream.id}`
-                            );
+                            Logger.getLogger().warn(`Destination type is not set by domain: ${domainName}, streamid: ${tstream.id}`, {
+                                class: 'NginxService::_loadConfig'
+                            });
                     }
 
                     if (!conf.getStream().hashUpstream(upStream.getStreamName())) {
                         if (upStream.countServer() === 0) {
-                            Logger.getLogger().warn(
-                                `NginxService::_loadConfig: upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`
-                            );
+                            Logger.getLogger().warn(`Upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`, {
+                                class: 'NginxService::_loadConfig'
+                            });
 
                             continue;
                         }
@@ -903,9 +907,17 @@ export class NginxService {
                     const provider = await SslCertProviders.getProvider(httpSubCollect.http.cert_provider);
 
                     if (provider) {
-                        const sslBundel = await provider.getCertificationBundel(domainName);
+                        let sslBundel = null;
 
-                        if (sslBundel) {
+                        try {
+                            sslBundel = await provider.getCertificationBundel(domainName);
+                        } catch (eBundel) {
+                            Logger.getLogger().error(` Provider get certificate is except: ${Ets.formate(eBundel, true, true)}`, {
+                                class: 'NginxService::_loadConfig'
+                            });
+                        }
+
+                        if (!Vts.isNull(sslBundel)) {
                             aServer.addVariable(NginxHTTPVariables.ssl_protocols, 'TLSv1 TLSv1.1 TLSv1.2');
                             aServer.addVariable(NginxHTTPVariables.ssl_prefer_server_ciphers, 'on');
                             aServer.addVariable(NginxHTTPVariables.ssl_ciphers, '\'' +
@@ -962,16 +974,16 @@ export class NginxService {
 
                             aServer.addContext(domainIf);
                         } else {
-                            Logger.getLogger().warn(
-                                `NginxService::_loadConfig: Certificate bundel not found for Domain '${domainName}' and ignore settings.`
-                            );
+                            Logger.getLogger().warn(`Certificate bundel not found for Domain '${domainName}' and ignore settings.`, {
+                                class: 'NginxService::_loadConfig'
+                            });
 
                             continue;
                         }
                     } else {
-                        Logger.getLogger().warn(
-                            `NginxService::_loadConfig: Certificate provider not found for Domain '${domainName}' and ignore settings.`
-                        );
+                        Logger.getLogger().warn(`Certificate provider not found for Domain '${domainName}' and ignore settings.`, {
+                            class: 'NginxService::_loadConfig'
+                        });
 
                         continue;
                     }
@@ -1170,13 +1182,17 @@ export class NginxService {
                                         'Basic realm="FlyingFish DynDNS-Server"\''
                                     );
                                 } else {
-                                    Logger.getLogger().warn(`NginxService::_loadConfig: DynDnsServer setting not enabled., domain: '${domainName}'`);
+                                    Logger.getLogger().warn(`DynDnsServer setting not enabled., domain: '${domainName}'`, {
+                                        class: 'NginxService::_loadConfig'
+                                    });
                                 }
                                 break;
 
                             // vpn -------------------------------------------------------------------------------------
                             case NginxLocationDestinationTypes.vpn:
-                                Logger.getLogger().info('soon in development');
+                                Logger.getLogger().info('Soon in development', {
+                                    class: 'NginxService::_loadConfig'
+                                });
                                 break;
                         }
 
@@ -1293,23 +1309,28 @@ export class NginxService {
     protected _startSysLog(): void {
         this._syslog = new SysLogServer();
         this._syslog.setOnListen((sysLogServer) => {
-            Logger.getLogger().info('NginxService::_startSysLog::SysLogServer::setOnListen: Liste started on: ' +
-                `${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`);
+            Logger.getLogger().info('Liste started on: ' + `${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`, {
+                class: 'NginxService::_startSysLog::SysLogServer::setOnListen'
+            });
         });
 
         this._syslog.setOnError((
             _sysLogServer,
             err
         ) => {
-            Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnError: ');
-            Logger.getLogger().error(err);
+            Logger.getLogger().error('Syslog error', {
+                error: err,
+                class: 'NginxService::_startSysLog::SysLogServer::setOnError'
+            });
         });
 
         this._syslog.setOnMessage((
             _sysLogServer,
             msg
         ) => {
-            Logger.getLogger().silly(`NginxService::_startSysLog::SysLogServer::setOnMessage: ${msg.toString()}`);
+            Logger.getLogger().silly(`${msg.toString()}`, {
+                class: 'NginxService::_startSysLog::SysLogServer::setOnMessage'
+            });
 
             const parts = msg.toString().split(`${NginxService.SYSLOG_TAG}: `);
 
@@ -1323,34 +1344,38 @@ export class NginxService {
                         if (SchemaJsonLogAccessStream.validate(nginxLog, errors)) {
                             NginxStreamAccessInfluxDB.addLog(nginxLog);
                         } else {
-                            Logger.getLogger().error(
-                                'NginxService::_startSysLog::SysLogServer::setOnMessage:stream: Validation error SchemaJsonLogAccessStream:'
-                            );
-
-                            Logger.getLogger().error(JSON.stringify(errors, null, 2));
+                            Logger.getLogger().error('Validation error SchemaJsonLogAccessStream:', {
+                                class: 'NginxService::_startSysLog::SysLogServer::setOnMessage:stream',
+                                errors: JSON.stringify(errors, null, 2)
+                            });
                         }
                     } else if (nginxLog.source_type === 'http') {
                         if (SchemaJsonLogAccessHttp.validate(nginxLog, errors)) {
                             NginxHttpAccessInfluxDB.addLog(nginxLog);
                         } else {
-                            Logger.getLogger().error(
-                                'NginxService::_startSysLog::SysLogServer::setOnMessage: Validation error SchemaJsonLogAccessHttp:'
-                            );
-
-                            Logger.getLogger().error(JSON.stringify(errors, null, 2));
+                            Logger.getLogger().error('Validation error SchemaJsonLogAccessHttp:', {
+                                class: 'NginxService::_startSysLog::SysLogServer::setOnMessage',
+                                errors: JSON.stringify(errors, null, 2)
+                            });
                         }
                     }
                 }
             } catch (error) {
-                Logger.getLogger().error('NginxService::_startSysLog::SysLogServer::setOnMessage: Exception:');
+                Logger.getLogger().error('Exception:', {
+                    class: 'NginxService::_startSysLog::SysLogServer::setOnMessage'
+                });
 
                 if (error instanceof Error) {
-                    Logger.getLogger().error(error.message);
+                    Logger.getLogger().error(error.message, {
+                        class: 'NginxService::_startSysLog::SysLogServer::setOnMessage'
+                    });
                 } else {
                     console.log(error);
                 }
 
-                Logger.getLogger().error(JSON.stringify(error, null, 2));
+                Logger.getLogger().error(JSON.stringify(error, null, 2), {
+                    class: 'NginxService::_startSysLog::SysLogServer::setOnMessage'
+                });
             }
         });
 
@@ -1365,16 +1390,24 @@ export class NginxService {
 
         if (dhparam) {
             if (await FileHelper.fileExist(dhparam)) {
-                Logger.getLogger().info('NginxService::start: Dhparam found.');
+                Logger.getLogger().info('Dhparam found.', {
+                    class: 'NginxService::start'
+                });
             } else {
-                Logger.getLogger().info('NginxService::start: Create Dhparam ...');
+                Logger.getLogger().info('Create Dhparam ...', {
+                    class: 'NginxService::start'
+                });
 
                 await fs.mkdir(path.dirname(dhparam), {recursive: true});
 
                 if (await OpenSSL.createDhparam(dhparam, 4096) === null) {
-                    Logger.getLogger().warn('NginxService::start: Can not create Dhparam!');
+                    Logger.getLogger().warn('Can not create Dhparam!', {
+                        class: 'NginxService::start'
+                    });
                 } else {
-                    Logger.getLogger().info('NginxService::start: Dhparam finish.');
+                    Logger.getLogger().info('Dhparam finish.', {
+                        class: 'NginxService::start'
+                    });
                 }
             }
         }
@@ -1384,7 +1417,9 @@ export class NginxService {
         NginxServer.getInstance().start();
 
         if (NginxServer.getInstance().isRun()) {
-            Logger.getLogger().info('NginxService::start: Nginx server is start');
+            Logger.getLogger().info(' Nginx server is start', {
+                class: 'NginxService::start'
+            });
         }
     }
 
@@ -1393,7 +1428,9 @@ export class NginxService {
      * @param forced
      */
     public async stop(forced: boolean = false): Promise<void> {
-        Logger.getLogger().info(`NginxService::stop: nginx stop with forced: ${forced}`);
+        Logger.getLogger().info(`Nginx stop with forced: ${forced}`, {
+            class: 'NginxService::stop'
+        });
 
         if (NginxServer.getInstance().isRun()) {
             NginxServer.getInstance().stop();
@@ -1409,13 +1446,17 @@ export class NginxService {
         await this._loadConfig();
 
         if (await NginxServer.getInstance().testConfig()) {
-            Logger.getLogger().error('NginxService::reload: Nginx server config has a error!');
+            Logger.getLogger().error('Nginx server config has a error!', {
+                class: 'NginxService::reload'
+            });
         }
 
         NginxServer.getInstance().reload();
 
         if (NginxServer.getInstance().isRun()) {
-            Logger.getLogger().info('NginxService::reload: Nginx server is reload');
+            Logger.getLogger().info('Nginx server is reload', {
+                class: 'NginxService::reload'
+            });
         }
     }
 
