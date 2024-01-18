@@ -1,14 +1,22 @@
 {
   "env": {
-    "es5": true,
+    "es2021": true,
     "node": true
   },
   "extends": [
     "eslint:all"
   ],
+  "globals": {
+    "njs": true,
+    "ngx": true,
+    "NginxStreamRequest": true,
+    "NginxHTTPRequest": true
+  },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "sourceType": "module"
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "./tsconfig.json"
   },
   "plugins": [
     "@typescript-eslint",

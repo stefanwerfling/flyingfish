@@ -6,7 +6,7 @@
     "postinstall": "npm run tsc"
   },
   "devDependencies": {
-    "njs-types": "^0.7.3",
+    "njs-types": "^0.8.2",
     "typescript": "^4.6.4"
   }
 }

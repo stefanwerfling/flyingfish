@@ -1,8 +1,8 @@
 /**
  * authorizeHttp
- * @param s
+ * @param {NginxHTTPRequest} s
  */
-async function authorizeHttp(s: NginxHTTPRequest) {
+const authorizeHttp = async(s: NginxHTTPRequest): Promise<void> => {
     const v = s.variables;
 
     if (!v.ff_authheader) {
@@ -23,16 +23,16 @@ async function authorizeHttp(s: NginxHTTPRequest) {
         const resulte = await ngx.fetch(v.ff_auth_basic_url, {
             body: '',
             headers: {
-                'secret': secret,
-                'authheader': v.ff_authheader,
-                'location_id': location_id
+                secret,
+                authheader: v.ff_authheader,
+                location_id
             },
             verify: false
         });
 
         s.warn(`authorize(fetch->status) -> ${resulte.status}`);
 
-        if (resulte.status == 200) {
+        if (resulte.status === 200) {
             s.return(200);
         } else {
             s.return(403);
@@ -41,6 +41,6 @@ async function authorizeHttp(s: NginxHTTPRequest) {
         s.warn('authorize -> Auth Url not found!');
         s.return(500);
     }
-}
+};
 
 export default {authorizeHttp};

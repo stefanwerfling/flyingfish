@@ -24,12 +24,18 @@
 
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipDefaultLibCheck": true
   },
   "include": [
-    "./src",
+    "./src/**/*.ts"
   ],
   "files": [
     "./node_modules/njs-types/ngx_http_js_module.d.ts",
     "./node_modules/njs-types/ngx_stream_js_module.d.ts",
+    "./node_modules/njs-types/njs_core.d.ts",
+    "./node_modules/njs-types/njs_modules/crypto.d.ts",
+    "./node_modules/njs-types/njs_modules/fs.d.ts"
+
   ]
 }
