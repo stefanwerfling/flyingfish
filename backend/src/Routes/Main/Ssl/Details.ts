@@ -29,7 +29,8 @@ export class Details {
                 const provider = await SslCertProviders.getProvider(http.cert_provider);
 
                 if (provider) {
-                    const sslBundel = await provider?.getCertificationBundel(domain.domainname);
+                    // TODO Wildcard
+                    const sslBundel = await provider?.getCertificationBundel(domain.domainname, {wildcard: false});
 
                     if (sslBundel) {
                         const cert = new Certificate(sslBundel.certPem);

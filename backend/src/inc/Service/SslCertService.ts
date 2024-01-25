@@ -222,7 +222,8 @@ export class SslCertService {
                 let isExist = false;
 
                 try {
-                    isExist = await provider.existCertificate(domain.domainname);
+                    // TODO Wildcard
+                    isExist = await provider.existCertificate(domain.domainname, {wildcard: false});
                 } catch (eExist) {
                     Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), cert is exist is except: ${Ets.formate(eExist, true, true)}`, {
                         class: 'SslCertService::_updateHttp'
@@ -235,7 +236,8 @@ export class SslCertService {
                     let sslBundel = null;
 
                     try {
-                        sslBundel = await provider.getCertificationBundel(domain.domainname);
+                        // TODO Wildcard
+                        sslBundel = await provider.getCertificationBundel(domain.domainname, {wildcard: false});
                     } catch (eBundel) {
                         Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), cert bundle is except: ${Ets.formate(eBundel, true, true)}`, {
                             class: 'SslCertService::_updateHttp'

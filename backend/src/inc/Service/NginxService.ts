@@ -10,6 +10,7 @@ import {
     NginxListenDB,
     NginxListenServiceDB,
     NginxListenVariableDB,
+    NginxListenVariableServiceDB,
     NginxLocationDB,
     NginxLocationServiceDB,
     NginxStreamDB,
@@ -17,8 +18,7 @@ import {
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
     SshPortDB,
-    SshPortServiceDB,
-    NginxListenVariableServiceDB
+    SshPortServiceDB
 } from 'flyingfish_core';
 import {
     NginxHttpVariableContextType,
@@ -28,7 +28,8 @@ import {
     NginxListenVariableContextType,
     NginxLocationDestinationTypes,
     NginxStreamDestinationType,
-    NginxStreamSshR
+    NginxStreamSshR,
+    SslCertBundel
 } from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import path from 'path';
@@ -688,16 +689,22 @@ export class NginxService {
                                             fail_timeout: 0
                                         });
                                     } else {
-                                        Logger.getLogger().error(`Ssh (r) entry (out) is empty by domain: ${domainName}, streamid: ${tstream.id}`, {
-                                            class: 'NginxService::_loadConfig'
-                                        });
+                                        Logger.getLogger().error(
+                                            `Ssh (r) entry (out) is empty by domain: ${domainName}, streamid: ${tstream.id}`,
+                                            {
+                                                class: 'NginxService::_loadConfig'
+                                            }
+                                        );
                                     }
                                     break;
 
                                 default:
-                                    Logger.getLogger().error(`Ssh (r) entry has not type in/out by domain: ${domainName}, streamid: ${tstream.id}`, {
-                                        class: 'NginxService::_loadConfig'
-                                    });
+                                    Logger.getLogger().error(
+                                        `Ssh (r) entry has not type in/out by domain: ${domainName}, streamid: ${tstream.id}`,
+                                        {
+                                            class: 'NginxService::_loadConfig'
+                                        }
+                                    );
                             }
                             break;
 
@@ -719,9 +726,12 @@ export class NginxService {
                                 procMap.addVariable('"TLSv1.0"', varName);
                                 procMap.addVariable('default', upstreamName);
                             } else {
-                                Logger.getLogger().error(`Ssh (l) entry is empty by domain: ${domainName}, streamid: ${tstream.id}`, {
-                                    class: 'NginxService::_loadConfig'
-                                });
+                                Logger.getLogger().error(
+                                    `Ssh (l) entry is empty by domain: ${domainName}, streamid: ${tstream.id}`,
+                                    {
+                                        class: 'NginxService::_loadConfig'
+                                    }
+                                );
                             }
                             break;
 
@@ -735,16 +745,22 @@ export class NginxService {
                                 fail_timeout: 0
                             });
 
-                            Logger.getLogger().warn(`Destination type is not set by domain: ${domainName}, streamid: ${tstream.id}`, {
-                                class: 'NginxService::_loadConfig'
-                            });
+                            Logger.getLogger().warn(
+                                `Destination type is not set by domain: ${domainName}, streamid: ${tstream.id}`,
+                                {
+                                    class: 'NginxService::_loadConfig'
+                                }
+                            );
                     }
 
                     if (!conf.getStream().hashUpstream(upStream.getStreamName())) {
                         if (upStream.countServer() === 0) {
-                            Logger.getLogger().warn(`Upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`, {
-                                class: 'NginxService::_loadConfig'
-                            });
+                            Logger.getLogger().warn(
+                                `Upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`,
+                                {
+                                    class: 'NginxService::_loadConfig'
+                                }
+                            );
 
                             continue;
                         }
@@ -907,83 +923,95 @@ export class NginxService {
                     const provider = await SslCertProviders.getProvider(httpSubCollect.http.cert_provider);
 
                     if (provider) {
-                        let sslBundel = null;
+                        let sslBundel: SslCertBundel | null = null;
 
                         try {
-                            sslBundel = await provider.getCertificationBundel(domainName);
+                            // TODO Wildcard
+                            sslBundel = await provider.getCertificationBundel(domainName, {wildcard: false});
                         } catch (eBundel) {
-                            Logger.getLogger().error(` Provider get certificate is except: ${Ets.formate(eBundel, true, true)}`, {
+                            Logger.getLogger().error(` Provider get certificate is except: ${Ets.formate(
+                                eBundel,
+                                true,
+                                true
+                            )}`, {
                                 class: 'NginxService::_loadConfig'
                             });
                         }
 
-                        if (!Vts.isNull(sslBundel)) {
-                            aServer.addVariable(NginxHTTPVariables.ssl_protocols, 'TLSv1 TLSv1.1 TLSv1.2');
-                            aServer.addVariable(NginxHTTPVariables.ssl_prefer_server_ciphers, 'on');
-                            aServer.addVariable(NginxHTTPVariables.ssl_ciphers, '\'' +
-                                'ECDHE-ECDSA-AES256-GCM-SHA384:' +
-                                'ECDHE-RSA-AES256-GCM-SHA384:' +
-                                'ECDHE-ECDSA-CHACHA20-POLY1305:' +
-                                'ECDHE-RSA-CHACHA20-POLY1305:' +
-                                'ECDHE-ECDSA-AES128-GCM-SHA256:' +
-                                'ECDHE-RSA-AES128-GCM-SHA256:' +
-                                'ECDHE-ECDSA-AES256-SHA384:' +
-                                'ECDHE-RSA-AES256-SHA384:' +
-                                'ECDHE-ECDSA-AES128-SHA256:' +
-                                'ECDHE-RSA-AES128-SHA256\'');
-                            aServer.addVariable(NginxHTTPVariables.ssl_ecdh_curve, 'secp384r1');
-
-                            const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
-
-                            if (dhparam) {
-                                aServer.addVariable(NginxHTTPVariables.ssl_dhparam, dhparam);
-                            }
-
-                            aServer.addVariable(NginxHTTPVariables.ssl_session_timeout, '1d');
-                            aServer.addVariable(NginxHTTPVariables.ssl_session_cache, 'shared:SSL:50m');
-                            aServer.addVariable(NginxHTTPVariables.ssl_session_tickets, 'off');
-                            aServer.addVariable(
-                                'add_header Strict-Transport-Security',
-                                '"max-age=63072000; includeSubdomains; preload"'
+                        if (Vts.isNull(sslBundel)) {
+                            Logger.getLogger().warn(
+                                `Certificate bundel not found for Domain '${domainName}' and ignore settings.`,
+                                {
+                                    class: 'NginxService::_loadConfig'
+                                }
                             );
-                            aServer.addVariable(NginxHTTPVariables.ssl_stapling, 'on');
-                            aServer.addVariable(NginxHTTPVariables.ssl_stapling_verify, 'on');
-                            aServer.addVariable(NginxHTTPVariables.ssl_trusted_certificate, sslBundel.chainPem);
-                            aServer.addVariable(NginxHTTPVariables.ssl_certificate, sslBundel.fullChainPem);
-                            aServer.addVariable(NginxHTTPVariables.ssl_certificate_key, sslBundel.privatKeyPem);
-                            aServer.addVariable(NginxHTTPVariables.resolver, `${nginxResolver} valid=300s`);
-                            aServer.addVariable(NginxHTTPVariables.resolver_timeout, '5s');
-
-                            switch (httpSubCollect.http.x_frame_options) {
-                                case ServerXFrameOptions.deny:
-                                    aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.deny);
-                                    break;
-
-                                case ServerXFrameOptions.sameorigin:
-                                    aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.sameorigin);
-                                    break;
-                            }
-
-                            aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
-                            aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
-                            aServer.addVariable('add_header X-Robots-Tag', 'none');
-
-                            // check the host and server name right
-                            const domainIf = new If('$host != $server_name');
-                            domainIf.addVariable('return', '444');
-
-                            aServer.addContext(domainIf);
-                        } else {
-                            Logger.getLogger().warn(`Certificate bundel not found for Domain '${domainName}' and ignore settings.`, {
-                                class: 'NginxService::_loadConfig'
-                            });
 
                             continue;
                         }
+
+                        aServer.addVariable(NginxHTTPVariables.ssl_protocols, 'TLSv1 TLSv1.1 TLSv1.2');
+                        aServer.addVariable(NginxHTTPVariables.ssl_prefer_server_ciphers, 'on');
+                        aServer.addVariable(NginxHTTPVariables.ssl_ciphers, '\'' +
+                            'ECDHE-ECDSA-AES256-GCM-SHA384:' +
+                            'ECDHE-RSA-AES256-GCM-SHA384:' +
+                            'ECDHE-ECDSA-CHACHA20-POLY1305:' +
+                            'ECDHE-RSA-CHACHA20-POLY1305:' +
+                            'ECDHE-ECDSA-AES128-GCM-SHA256:' +
+                            'ECDHE-RSA-AES128-GCM-SHA256:' +
+                            'ECDHE-ECDSA-AES256-SHA384:' +
+                            'ECDHE-RSA-AES256-SHA384:' +
+                            'ECDHE-ECDSA-AES128-SHA256:' +
+                            'ECDHE-RSA-AES128-SHA256\'');
+                        aServer.addVariable(NginxHTTPVariables.ssl_ecdh_curve, 'secp384r1');
+
+                        const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
+
+                        if (dhparam) {
+                            aServer.addVariable(NginxHTTPVariables.ssl_dhparam, dhparam);
+                        }
+
+                        aServer.addVariable(NginxHTTPVariables.ssl_session_timeout, '1d');
+                        aServer.addVariable(NginxHTTPVariables.ssl_session_cache, 'shared:SSL:50m');
+                        aServer.addVariable(NginxHTTPVariables.ssl_session_tickets, 'off');
+                        aServer.addVariable(
+                            'add_header Strict-Transport-Security',
+                            '"max-age=63072000; includeSubdomains; preload"'
+                        );
+                        aServer.addVariable(NginxHTTPVariables.ssl_stapling, 'on');
+                        aServer.addVariable(NginxHTTPVariables.ssl_stapling_verify, 'on');
+                        aServer.addVariable(NginxHTTPVariables.ssl_trusted_certificate, sslBundel.chainPem);
+                        aServer.addVariable(NginxHTTPVariables.ssl_certificate, sslBundel.fullChainPem);
+                        aServer.addVariable(NginxHTTPVariables.ssl_certificate_key, sslBundel.privatKeyPem);
+                        aServer.addVariable(NginxHTTPVariables.resolver, `${nginxResolver} valid=300s`);
+                        aServer.addVariable(NginxHTTPVariables.resolver_timeout, '5s');
+
+                        switch (httpSubCollect.http.x_frame_options) {
+                            case ServerXFrameOptions.deny:
+                                aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.deny);
+                                break;
+
+                            case ServerXFrameOptions.sameorigin:
+                                aServer.addVariable('add_header X-Frame-Options', ServerXFrameOptions.sameorigin);
+                                break;
+                        }
+
+                        aServer.addVariable('add_header X-XSS-Protection', '"1; mode=block"');
+                        aServer.addVariable('add_header X-Content-Type-Options', 'nosniff');
+                        aServer.addVariable('add_header X-Robots-Tag', 'none');
+
+                        // check the host and server name right
+                        const domainIf = new If('$host != $server_name');
+                        domainIf.addVariable('return', '444');
+
+                        aServer.addContext(domainIf);
+
                     } else {
-                        Logger.getLogger().warn(`Certificate provider not found for Domain '${domainName}' and ignore settings.`, {
-                            class: 'NginxService::_loadConfig'
-                        });
+                        Logger.getLogger().warn(
+                            `Certificate provider not found for Domain '${domainName}' and ignore settings.`,
+                            {
+                                class: 'NginxService::_loadConfig'
+                            }
+                        );
 
                         continue;
                     }
@@ -1182,9 +1210,12 @@ export class NginxService {
                                         'Basic realm="FlyingFish DynDNS-Server"\''
                                     );
                                 } else {
-                                    Logger.getLogger().warn(`DynDnsServer setting not enabled., domain: '${domainName}'`, {
-                                        class: 'NginxService::_loadConfig'
-                                    });
+                                    Logger.getLogger().warn(
+                                        `DynDnsServer setting not enabled., domain: '${domainName}'`,
+                                        {
+                                            class: 'NginxService::_loadConfig'
+                                        }
+                                    );
                                 }
                                 break;
 
@@ -1309,9 +1340,12 @@ export class NginxService {
     protected _startSysLog(): void {
         this._syslog = new SysLogServer();
         this._syslog.setOnListen((sysLogServer) => {
-            Logger.getLogger().info('Liste started on: ' + `${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`, {
-                class: 'NginxService::_startSysLog::SysLogServer::setOnListen'
-            });
+            Logger.getLogger().info(
+                `Liste started on: ${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`,
+                {
+                    class: 'NginxService::_startSysLog::SysLogServer::setOnListen'
+                }
+            );
         });
 
         this._syslog.setOnError((

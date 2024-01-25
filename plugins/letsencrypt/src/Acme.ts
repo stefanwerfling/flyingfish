@@ -2,9 +2,9 @@ import {DateHelper, FileHelper} from 'flyingfish_core';
 import {
     FSslCertProviderOnReset,
     ISslCertProvider,
-    SslCertBundel,
+    SslCertBundel, SslCertBundelOptions,
     SslCertCreateGlobal,
-    SslCertCreateOptions
+    SslCertCreateOptions, SslCertExistOptions
 } from 'flyingfish_schemas';
 import path from 'path';
 import {Client} from './Acme/Client.js';
@@ -16,6 +16,11 @@ export class Acme implements ISslCertProvider {
 
     public static readonly LIMIT_REQUESTS = 5;
     public static readonly LIMIT_TIME_HOUR = 1;
+
+    public static readonly PEM_CERT = 'cert.pem';
+    public static readonly PEM_CHAIN = 'chain.pem';
+    public static readonly PEM_FULLCHAIN = 'fullchain.pem';
+    public static readonly PEM_PRIVTKEY = 'privkey.pem';
 
     /**
      * Live path from lets encrypt.
@@ -71,11 +76,42 @@ export class Acme implements ISslCertProvider {
         return true;
     }
 
-    public async existCertificate(domainName: string): Promise<boolean> {
-        throw new Error('Method not implemented.');
+    /**
+     * Build the domain dir path.
+     * @param {string} domainName
+     * @returns {string}
+     */
+    protected _getDomainDir(domainName: string): string {
+        return path.join(this._livePath, domainName);
     }
 
-    public async getCertificationBundel(domainName: string): Promise<SslCertBundel | null> {
+    /**
+     * Exist a certificate by domain name.
+     * @param {string} domainName - Name of domain.
+     * @param {SslCertExistOptions} options - Options for the certificate check is existing
+     * @returns {boolean}
+     */
+    public async existCertificate(domainName: string, options: SslCertExistOptions): Promise<boolean> {
+        const domainDir = this._getDomainDir(domainName);
+
+        if (await FileHelper.directoryExist(domainDir)) {
+            if (options.wildcard) {
+
+            }
+
+            return FileHelper.fileExist(path.join(domainDir, Acme.PEM_CERT));
+        }
+
+        return false;
+    }
+
+    /**
+     * Return when existed, the certificat bundel (cert, fullchain, privatkey).
+     * @param {string} domainName
+     * @param {SslCertBundelOptions} options - Options for the certificate bundel
+     * @returns {SslCertBundel|null}
+     */
+    public async getCertificationBundel(domainName: string, options: SslCertBundelOptions): Promise<SslCertBundel | null> {
         throw new Error('Method not implemented.');
     }
 
@@ -119,7 +155,7 @@ export class Acme implements ISslCertProvider {
                     global.dnsServer.removeTempDomain(acmeRequest.recordName);
 
                     if (acmeFinalize) {
-                        const certPath = path.join(this._livePath, options.domainName);
+                        const certPath = this._getDomainDir(options.domainName);
 
                         if (!await FileHelper.mkdir(certPath, true)) {
                             return false;

@@ -1,7 +1,9 @@
 import {FSslCertProviderOnReset} from './FSslCertProviderOnReset.js';
 import {SslCertBundel} from './SslCertBundel.js';
+import {SslCertBundelOptions} from './SslCertBundelOptions.js';
 import {SslCertCreateGlobal} from './SslCertCreateGlobal.js';
 import {SslCertCreateOptions} from './SslCertCreateOptions.js';
+import {SslCertExistOptions} from './SslCertExistOptions.js';
 
 /**
  * The ssl certificate provider interface.
@@ -42,16 +44,18 @@ export interface ISslCertProvider {
     /**
      * Exist a certificate by domain name.
      * @param {string} domainName - Name of domain.
+     * @param {SslCertExistOptions} options - Options for the certificate check is existing
      * @returns {boolean}
      */
-    existCertificate(domainName: string): Promise<boolean>;
+    existCertificate(domainName: string, options: SslCertExistOptions): Promise<boolean>;
 
     /**
      * Return when existed, the certificat bundel (cert, fullchain, privatkey).
      * @param {string} domainName
+     * @param {SslCertBundelOptions} options - Options for the certificate bundel
      * @returns {SslCertBundel|null}
      */
-    getCertificationBundel(domainName: string): Promise<SslCertBundel|null>;
+    getCertificationBundel(domainName: string, options: SslCertBundelOptions): Promise<SslCertBundel|null>;
 
     /**
      * Create a certificate by provider.

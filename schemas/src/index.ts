@@ -39,6 +39,8 @@ export {ISslCertProvider} from './Backend/Provider/SslCertProviders/ISslCertProv
 export {SslCertBundel} from './Backend/Provider/SslCertProviders/SslCertBundel.js';
 export {SslCertCreateOptions} from './Backend/Provider/SslCertProviders/SslCertCreateOptions.js';
 export {SslCertCreateGlobal} from './Backend/Provider/SslCertProviders/SslCertCreateGlobal.js';
+export {SslCertExistOptions} from './Backend/Provider/SslCertProviders/SslCertExistOptions.js';
+export {SslCertBundelOptions} from './Backend/Provider/SslCertProviders/SslCertBundelOptions.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
 export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';
 export {

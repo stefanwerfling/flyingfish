@@ -1,5 +1,10 @@
 import {DateHelper, FileHelper, Logger} from 'flyingfish_core';
-import {FSslCertProviderOnReset, ISslCertProvider, SslCertBundel, SslCertCreateOptions} from 'flyingfish_schemas';
+import {
+    FSslCertProviderOnReset,
+    ISslCertProvider,
+    SslCertBundel,
+    SslCertCreateOptions
+} from 'flyingfish_schemas';
 import path from 'path';
 import {spawn} from 'child_process';
 
