@@ -1,4 +1,5 @@
-import {DateHelper, FileHelper} from 'flyingfish_core';
+import {Ets} from 'ets';
+import {DateHelper, FileHelper, Logger} from 'flyingfish_core';
 import {
     FSslCertProviderOnReset,
     ISslCertProvider,
@@ -7,7 +8,7 @@ import {
     SslCertCreateOptions, SslCertExistOptions
 } from 'flyingfish_schemas';
 import path from 'path';
-import {Client} from './Acme/Client.js';
+import {Client, LetsEncryptDnsChallengeAndFinalize} from './Acme/Client.js';
 
 /**
  * Lets encrypt Acme object.
@@ -86,6 +87,17 @@ export class Acme implements ISslCertProvider {
     }
 
     /**
+     * Return the filename for cert/key
+     * @param {string} fileType
+     * @param {boolean} isWildcard
+     * @protected
+     * @returns {string}
+     */
+    protected _getFileName(fileType: string, isWildcard: boolean = false): string {
+        return `${isWildcard ?? 'wildcard'}.${  fileType}`;
+    }
+
+    /**
      * Exist a certificate by domain name.
      * @param {string} domainName - Name of domain.
      * @param {SslCertExistOptions} options - Options for the certificate check is existing
@@ -95,11 +107,12 @@ export class Acme implements ISslCertProvider {
         const domainDir = this._getDomainDir(domainName);
 
         if (await FileHelper.directoryExist(domainDir)) {
-            if (options.wildcard) {
-
-            }
-
-            return FileHelper.fileExist(path.join(domainDir, Acme.PEM_CERT));
+            return FileHelper.fileExist(
+                path.join(
+                    domainDir,
+                    this._getFileName(Acme.PEM_CERT, options.wildcard)
+                )
+            );
         }
 
         return false;
@@ -112,7 +125,18 @@ export class Acme implements ISslCertProvider {
      * @returns {SslCertBundel|null}
      */
     public async getCertificationBundel(domainName: string, options: SslCertBundelOptions): Promise<SslCertBundel | null> {
-        throw new Error('Method not implemented.');
+        if (await this.existCertificate(domainName, {wildcard: options.wildcard})) {
+            const domainDir = this._getDomainDir(domainName);
+
+            return {
+                certPem: path.join(domainDir, this._getFileName(Acme.PEM_CERT, options.wildcard)),
+                chainPem: path.join(domainDir, this._getFileName(Acme.PEM_CHAIN, options.wildcard)),
+                fullChainPem: path.join(domainDir, this._getFileName(Acme.PEM_FULLCHAIN, options.wildcard)),
+                privatKeyPem: path.join(domainDir, this._getFileName(Acme.PEM_PRIVTKEY, options.wildcard))
+            };
+        }
+
+        return null;
     }
 
     /**
@@ -137,33 +161,61 @@ export class Acme implements ISslCertProvider {
 
             const acmeRequest = await acmeClient.requestDnsChallenge(domainName);
 
-            if (acmeRequest) {
-                const isAdd = global.dnsServer.addTempDomain(acmeRequest.recordName, [{
-                    name: acmeRequest.recordName,
-                    // TXT record
-                    type: 0x10,
-                    // IN
-                    class: 1,
-                    ttl: 300,
-                    data: acmeRequest.recordText
-                }]);
+            if (acmeRequest === null) {
+                Logger.getLogger().error(`Acme request faild for domain: ${domainName}`, {
+                    class: 'Plugin::LetsEncrypt::Acme::createCertificate'
+                });
 
-                if (isAdd) {
-                    const acmeFinalize = await acmeClient.submitDnsChallengeAndFinalize(acmeRequest.order);
-
-                    // clear tmp domain
-                    global.dnsServer.removeTempDomain(acmeRequest.recordName);
-
-                    if (acmeFinalize) {
-                        const certPath = this._getDomainDir(options.domainName);
-
-                        if (!await FileHelper.mkdir(certPath, true)) {
-                            return false;
-                        }
-
-                    }
-                }
+                return false;
             }
+
+            const newDomain = `${acmeRequest.recordName}.${domainName}`;
+            const isAdd = global.dnsServer.addTempDomain(newDomain, [{
+                name: acmeRequest.recordName,
+                // TXT record
+                type: 0x10,
+                // IN
+                class: 1,
+                ttl: 300,
+                data: acmeRequest.recordText
+            }]);
+
+            if (isAdd) {
+                let acmeFinalize: LetsEncryptDnsChallengeAndFinalize|null = null;
+
+                try {
+                    acmeFinalize = await acmeClient.submitDnsChallengeAndFinalize(acmeRequest.order);
+                } catch (e) {
+                    Logger.getLogger().error(Ets.formate(e), {
+                        class: 'Plugin::LetsEncrypt::Acme::createCertificate'
+                    });
+                }
+
+                // clear tmp domain
+                global.dnsServer.removeTempDomain(newDomain);
+
+                if (acmeFinalize === null) {
+                    Logger.getLogger().error(`Acme callenge finalize request faild for domain: ${domainName}, order: ${acmeRequest.order}`, {
+                        class: 'Plugin::LetsEncrypt::Acme::createCertificate'
+                    });
+
+                    return false;
+                }
+
+                const certPath = this._getDomainDir(options.domainName);
+
+                if (!await FileHelper.mkdir(certPath, true)) {
+                    return false;
+                }
+
+                Logger.getLogger().silly(`Acme callenge finalize response: ${acmeFinalize.pkcs8Key}`, {
+                    class: 'Plugin::LetsEncrypt::Acme::createCertificate'
+                });
+            }
+        } else {
+            Logger.getLogger().error('Acme can not use without dnsserver', {
+                class: 'Plugin::LetsEncrypt::Acme::createCertificate'
+            });
         }
 
         return false;

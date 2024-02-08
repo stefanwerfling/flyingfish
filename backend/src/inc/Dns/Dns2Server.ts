@@ -354,6 +354,13 @@ export class Dns2Server implements IDnsServer {
         const records = this._tempRecords.get(domainId)!;
         records.set(tmpId, record);
 
+        Logger.getLogger().silly(
+            `Add temp record (${record.type}) to domain-id: ${domainId}`,
+            {
+                class: 'Dns2Server::addTempRecord'
+            }
+        );
+
         this._tempRecords.set(domainId, records);
 
         return tmpId;
@@ -400,6 +407,13 @@ export class Dns2Server implements IDnsServer {
         records: DnsRecordBase[]
     ): boolean {
         if (!this._tempDomains.has(domainName)) {
+            Logger.getLogger().silly(
+                `Add temp domain: ${domainName}`,
+                {
+                    class: 'Dns2Server::addTempDomain'
+                }
+            );
+
             this._tempDomains.set(domainName, records);
             return true;
         }

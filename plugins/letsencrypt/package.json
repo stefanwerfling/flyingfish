@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/stefanwerfling/flyingfish#readme",
   "dependencies": {
+    "ets": "git+https://github.com/OpenSourcePKG/ets.git",
     "flyingfish_core": "file:../../core",
     "flyingfish_schemas": "file:../../schemas",
     "node-forge": "^1.3.1",
