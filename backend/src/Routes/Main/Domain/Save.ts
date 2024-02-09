@@ -37,9 +37,9 @@ export class Save {
             aDomain = new DomainDB();
         }
 
-        aDomain.domainname = data.name;
+        aDomain.domainname = data.name.toLowerCase();
         aDomain.disable = data.disable;
-        aDomain.parent_id = await DomainServiceDB.getInstance().findParentId(data.name);
+        aDomain.parent_id = await DomainServiceDB.getInstance().findParentId(data.name.toLowerCase());
 
         aDomain = await DomainServiceDB.getInstance().save(aDomain);
 

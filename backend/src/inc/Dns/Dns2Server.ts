@@ -112,7 +112,7 @@ export class Dns2Server implements IDnsServer {
                 }
             );
 
-            const domain = await DomainServiceDB.getInstance().findByName(questionExt.name);
+            const domain = await DomainServiceDB.getInstance().findByName(questionExt.name.toLowerCase());
 
             if (domain) {
                 let records: DomainRecordDB[];
@@ -227,37 +227,27 @@ export class Dns2Server implements IDnsServer {
                 }
 
                 if (questionExt.class && questionExt.type) {
-                    this._handleTmpRecords(
+                    const answers = this._handleTmpRecords(
                         domain.id,
                         questionExt.class,
                         questionExt.type
                     );
+
+                    if (answers.length > 0) {
+                        response.answers.push(...answers);
+                    }
                 }
             } else {
-                const resolver = new DNS();
+                const answers = this._handleTmpDomains(questionExt.name);
 
-                let result: DNS.DnsResponse | null = null;
+                if (answers.length > 0) {
+                    response.answers.push(...answers);
+                } else {
+                    const resolverAnswers = await this._handleResolver(questionExt.name, questionExt.type);
 
-                switch (questionExt.type) {
-                    case DNS.Packet.TYPE.A:
-                        result = await resolver.resolveA(questionExt.name);
-                        break;
-
-                    case DNS.Packet.TYPE.AAAA:
-                        result = await resolver.resolveAAAA(questionExt.name);
-                        break;
-
-                    case DNS.Packet.TYPE.MX:
-                        result = await resolver.resolveMX(questionExt.name);
-                        break;
-
-                    case DNS.Packet.TYPE.CNAME:
-                        result = await resolver.resolveCNAME(questionExt.name);
-                        break;
-                }
-
-                if (result) {
-                    // TODO
+                    if (resolverAnswers.length > 0) {
+                        response.answers.push(...resolverAnswers);
+                    }
                 }
             }
 
@@ -303,6 +293,71 @@ export class Dns2Server implements IDnsServer {
                         break;
                 }
             }
+        }
+
+        return answers;
+    }
+
+    /**
+     * Handle request tmp domain
+     * @param {string} domainName
+     * @protected
+     * @returns {DnsAnswer[]}
+     */
+    protected _handleTmpDomains(domainName: string): DnsAnswer[] {
+        const answers: DnsAnswer[] = [];
+
+        const domainRecords = this._tempDomains.get(domainName.toLowerCase());
+
+        if (domainRecords) {
+            for (const record of domainRecords) {
+
+                switch (record.type) {
+                    case DNS.Packet.TYPE.TXT:
+                        answers.push({
+                            name: domainName,
+                            type: record.type,
+                            class: record.class,
+                            ttl: record.ttl,
+                            data: record.data
+                        } as DnsAnswerTXT);
+                        break;
+                }
+            }
+        }
+
+        return answers;
+    }
+
+    protected async _handleResolver(domainName: string, recordType?: number): Promise<DnsAnswer[]> {
+        const answers: DnsAnswer[] = [];
+
+        const resolver = new DNS();
+
+        let result: DNS.DnsResponse | null = null;
+
+        if (recordType) {
+            switch (recordType) {
+                case DNS.Packet.TYPE.A:
+                    result = await resolver.resolveA(domainName);
+                    break;
+
+                case DNS.Packet.TYPE.AAAA:
+                    result = await resolver.resolveAAAA(domainName);
+                    break;
+
+                case DNS.Packet.TYPE.MX:
+                    result = await resolver.resolveMX(domainName);
+                    break;
+
+                case DNS.Packet.TYPE.CNAME:
+                    result = await resolver.resolveCNAME(domainName);
+                    break;
+            }
+        }
+
+        if (result) {
+            // TODO
         }
 
         return answers;

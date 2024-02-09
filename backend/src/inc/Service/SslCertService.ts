@@ -399,7 +399,7 @@ export class SslCertService {
                 reloadNginx = await this._updateHttp(http);
             }
         } else {
-            Logger.getLogger().info('SslCertService::update: non https setting found.', {
+            Logger.getLogger().info('SslCertService::update: none https setting found.', {
                 class: 'SslCertService::update'
             });
         }

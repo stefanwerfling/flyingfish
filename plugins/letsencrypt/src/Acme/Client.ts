@@ -564,6 +564,16 @@ export class Client {
             body: JSON.stringify(this._parseJwt(jwt))
         });
 
+        /**
+         * TODO
+         * urn:ietf:params:acme:error:orderNotReady
+         *
+         * {
+         *   "type": "urn:ietf:params:acme:error:orderNotReady",
+         *   "detail": "Order's status (\"pending\") is not acceptable for finalization",
+         *   "status": 403
+         * }
+         */
         const body = await res.json();
 
         this._throwIfErrored(body);
