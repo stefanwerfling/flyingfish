@@ -2,9 +2,9 @@ FROM node:18-bullseye
 
 ENV FLYINGFISH_NGINX_MODULE_MODE_DYN "0"
 
-ARG NGINX_VERSION=1.22.1
-ARG HEADERS_MORE_VERSION=v0.34
-ARG NJS_BRANCH=0.8.0
+ARG NGINX_VERSION="1.25.4"
+ARG HEADERS_MORE_VERSION="v0.37"
+ARG NJS_BRANCH="0.8.3"
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
@@ -58,6 +58,7 @@ RUN cd ~/nginx-$NGINX_VERSION && \
     --with-http_sub_module \
     --with-http_stub_status_module \
     --with-http_v2_module \
+    --with-http_v3_module \
     --with-http_secure_link_module \
     --add-module=../njs/nginx \
     --add-module=../headers-more-nginx-module/ \
@@ -67,6 +68,8 @@ RUN cd ~/nginx-$NGINX_VERSION && \
     --with-stream_realip_module \
     --with-stream_ssl_module \
     --with-stream_ssl_preread_module \
+    --with-cc-opt="-I../quictls/build/include" \
+    --with-ld-opt="-L../quictls/build/lib" \
     --modules-path=/usr/lib/nginx/modules/ &&\
      make && \
      make install
@@ -76,7 +79,6 @@ RUN pip3 install certbot-nginx
 RUN mkdir /etc/letsencrypt
 
 # Init App dirs --------------------------------------------------------------------------------------------------------
-RUN mkdir -p /opt/flyingfish
 RUN mkdir -p /opt/flyingfish/schemas
 RUN mkdir -p /opt/flyingfish/core
 RUN mkdir -p /opt/flyingfish/backend
@@ -84,6 +86,7 @@ RUN mkdir -p /opt/flyingfish/frontend
 RUN mkdir -p /opt/flyingfish/nginx
 RUN mkdir -p /opt/flyingfish/nginx/html
 RUN mkdir -p /opt/flyingfish/plugins
+RUN mkdir -p /opt/flyingfish
 RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
 
