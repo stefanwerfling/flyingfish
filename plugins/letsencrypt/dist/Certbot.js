@@ -11,12 +11,14 @@ export class Certbot {
     _command = 'certbot';
     _config = '/etc/letsencrypt.ini';
     _livePath = '/etc/letsencrypt/live';
-    _publicWwwDirectory = '/opt/app/nginx/html/';
     getName() {
         return 'letsencrypt';
     }
     getTitle() {
         return 'LetsEncrypt (HTTP-01)';
+    }
+    isSupportWildcard() {
+        return false;
     }
     async isReadyForRequest(lastRequest, tryCount, onResetTryCount) {
         if ((tryCount >= Certbot.LIMIT_REQUESTS) && !DateHelper.isOverAHour(lastRequest, Certbot.LIMIT_TIME_HOUR)) {
@@ -53,7 +55,10 @@ export class Certbot {
         return null;
     }
     async createCertificate(options) {
-        if (!await FileHelper.mkdir(this._publicWwwDirectory, true)) {
+        if (!await FileHelper.mkdir(options.webRootPath, true)) {
+            Logger.getLogger().error(`Web root path can not create/found: ${options.webRootPath}`, {
+                class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
+            });
             return false;
         }
         let keySize = 4096;
@@ -71,29 +76,37 @@ export class Certbot {
             '--email',
             options.email,
             '-w',
-            this._publicWwwDirectory,
+            options.webRootPath,
             '-d',
             options.domainName
         ]);
         process.stdout.on('data', (buf) => {
-            Logger.getLogger().info(buf.toString());
+            Logger.getLogger().info(buf.toString(), {
+                class: 'Plugin::LetsEncrypt::Certbot::createCertificate::process:stdout'
+            });
         });
         process.stderr.on('data', (buf) => {
-            Logger.getLogger().error(buf.toString());
+            Logger.getLogger().error(buf.toString(), {
+                class: 'Plugin::LetsEncrypt::Certbot::createCertificate::process:stderr'
+            });
         });
         const returnCode = await new Promise((resolve) => {
             process.on('close', resolve);
         });
         const isCertExist = await this.existCertificate(options.domainName) !== null;
         if (!isCertExist) {
-            Logger.getLogger().error('Certbot::create: cert not create/found.');
+            Logger.getLogger().error('Certification not create/found.', {
+                class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
+            });
         }
         let isSuccess = false;
         if (returnCode === 0) {
             isSuccess = true;
         }
         else {
-            Logger.getLogger().error(`Certbot::create: return code: ${returnCode}`);
+            Logger.getLogger().error(`Return code: ${returnCode}`, {
+                class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
+            });
         }
         return isCertExist && isSuccess;
     }

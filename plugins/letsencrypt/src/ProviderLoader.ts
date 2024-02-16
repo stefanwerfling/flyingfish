@@ -14,7 +14,7 @@ export class ProviderLoader extends ACertProviderOnLoadEvent {
      */
     protected _providers: ISslCertProvider[] = [
         new Certbot(),
-        new Acme()
+        //new Acme()
     ];
 
     /**
