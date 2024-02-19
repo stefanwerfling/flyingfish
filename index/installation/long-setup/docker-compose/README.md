@@ -17,6 +17,7 @@ FlyingFish is divided into several services, thus into containers. The container
 | flyingfish\_service  | Contains the Nginx and backend with frontend.                                                                                                                                             |
 | flyingfish\_himhip   | Contains the service for reading out the host IP and gateway. The task is limited because this container runs with special privileges. The information is sent to the FlyingFish backend. |
 | flyingfish\_ssh      | A custom implemented SSH jump server that only accepts port forwarding with L and R.                                                                                                      |
+| flyingfish\_ddns     | This container takes care of requests from DynDns-Clients.                                                                                                                                |
 
 ### Production template
 

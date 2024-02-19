@@ -25,6 +25,7 @@
       * [DynDns Clients](index/configurations/domains/dyndns-clients.md)
       * [Own DNS Server](index/configurations/domains/own-dns-server.md)
       * [Discussions Subdomains](index/configurations/domains/discussions-subdomains.md)
+      * [DynDns Server](index/configurations/domains/dyndns-server.md)
     * [Routes](index/configurations/routes.md)
   * [Examples](index/examples/README.md)
     * [SSH hidden on HTTPS](index/examples/ssh-hidden-on-https.md)
@@ -36,3 +37,4 @@
     * [Service structure](index/developer/service-structure.md)
     * [Schema](index/developer/schema.md)
     * [Object name rules](index/developer/object-name-rules.md)
+    * [Plugins](index/developer/plugins.md)

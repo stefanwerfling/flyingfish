@@ -2,7 +2,7 @@
 
 ## Open Source <a href="#firstheading" id="firstheading"></a>
 
-The source code from FlyingFish and all parts (Nginx, Mariadb, Influxdb, Nodejs, etc.) are open source and can be viewed by anyone. I used open source to ensure security and trust for the used software. In addition, everyone can contribute to improve the software.
+The source code from FlyingFish and all parts (Nginx, MariaDB, InfluxDB, Node.js, etc.) are open source and can be viewed by anyone. I used open source to ensure security and trust for the used software. In addition, everyone can contribute to improve the software.
 
 [https://github.com/stefanwerfling/flyingfish](https://github.com/stefanwerfling/flyingfish)
 
