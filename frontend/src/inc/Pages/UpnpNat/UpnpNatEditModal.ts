@@ -7,7 +7,7 @@ import {DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorder
 /**
  * UpnpNatEditModalButtonClickFn
  */
-type UpnpNatEditModalButtonClickFn = () => void;
+type UpnpNatEditModalButtonClickFn = () => Promise<void>;
 
 /**
  * UpnpNatEditModal
@@ -213,9 +213,11 @@ export class UpnpNatEditModal extends ModalDialog {
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
 
-        btnSave.on('click', (): void => {
+        btnSave.on('click', async(): Promise<void> => {
             if (this._onSaveClick !== null) {
-                this._onSaveClick();
+                this.showLoading();
+                await this._onSaveClick();
+                this.hideLoading();
             }
         });
     }

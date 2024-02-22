@@ -6,7 +6,7 @@ import {DialogInfo, Form, FormGroup, FormGroupButton, InputBottemBorderOnly2, In
 /**
  * GatewayEditModalButtonClickFn
  */
-type GatewayEditModalButtonClickFn = () => void;
+type GatewayEditModalButtonClickFn = () => Promise<void>;
 
 /**
  * GatewayEditModal
@@ -117,9 +117,11 @@ export class GatewayEditModal extends ModalDialog {
         this.addButtonClose();
         const btnSave = this.addButtonSave().empty().append('Save changes');
 
-        btnSave.on('click', (): void => {
+        btnSave.on('click', async(): Promise<void> => {
             if (this._onSaveClick !== null) {
-                this._onSaveClick();
+                this.showLoading();
+                await this._onSaveClick();
+                this.hideLoading();
             }
         });
     }

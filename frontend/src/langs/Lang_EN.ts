@@ -9,7 +9,7 @@ export class Lang_EN implements LangDefine {
         title: 'FlyingFish',
         login_title: '<b>FlyingFish</b>',
         copyrightname: '<a href="https://github.com/stefanwerfling/flyingfish/" target="_blank">FlyingFish</a>',
-        version: 'v1.0.0',
+        version: 'v1.1.0',
 
         dahsboard_ip_blacklisted: 'The public ip is checked with rDNS query on common providers. This information is useful if you run an email server.',
 

@@ -4,7 +4,7 @@ import {DynDnsServerDomain, DynDnsServerNotInDomain} from 'flyingfish_schemas';
 /**
  * DynDnsServerEditModalButtonClickFn
  */
-export type DynDnsServerEditModalButtonClickFn = () => void;
+export type DynDnsServerEditModalButtonClickFn = () => Promise<void>;
 
 export class DynDnsServerEditModal extends ModalDialog {
 
@@ -61,9 +61,11 @@ export class DynDnsServerEditModal extends ModalDialog {
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
 
-        btnSave.on('click', (): void => {
+        btnSave.on('click', async(): Promise<void> => {
             if (this._onSaveClick !== null) {
-                this._onSaveClick();
+                this.showLoading();
+                await this._onSaveClick();
+                this.hideLoading();
             }
         });
     }

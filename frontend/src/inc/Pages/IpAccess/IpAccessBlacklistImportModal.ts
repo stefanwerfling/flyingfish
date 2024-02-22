@@ -3,7 +3,7 @@ import {Form, FormGroup, Switch, Element, ModalDialog, ModalDialogType} from 'ba
 /**
  * IpAccessBlacklistImportModalButtonClickFn
  */
-type IpAccessBlacklistImportModalButtonClickFn = () => void;
+type IpAccessBlacklistImportModalButtonClickFn = () => Promise<void>;
 
 /**
  * IpAccessBlacklistImportModal
@@ -44,9 +44,11 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
 
-        btnSave.on('click', (): void => {
+        btnSave.on('click', async(): Promise<void> => {
             if (this._onSaveClick !== null) {
-                this._onSaveClick();
+                this.showLoading();
+                await this._onSaveClick();
+                this.hideLoading();
             }
         });
     }

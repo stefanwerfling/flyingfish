@@ -4,7 +4,7 @@ import {BadgeType, FormGroup, FormRow, Switch, InputBottemBorderOnly2, InputType
 /**
  * DomainRecordEditModalButtonClickFn
  */
-type DomainRecordEditModalButtonClickFn = () => void;
+type DomainRecordEditModalButtonClickFn = () => Promise<void>;
 
 /**
  * DomainRecordEditModal
@@ -138,9 +138,11 @@ export class DomainRecordEditModal extends ModalDialog {
         jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
         const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
 
-        btnSave.on('click', (): void => {
+        btnSave.on('click', async(): Promise<void> => {
             if (this._onSaveClick !== null) {
-                this._onSaveClick();
+                this.showLoading();
+                await this._onSaveClick();
+                this.hideLoading();
             }
         });
     }
