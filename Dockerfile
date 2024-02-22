@@ -152,7 +152,6 @@ RUN rm -R ./dist | true
 RUN rm ./package-lock.json | true
 
 RUN npm install --force
-RUN npm run gulp-clone-bambooo
 RUN npm run gulp-copy-data
 RUN npm run gulp-build-webpack
 
