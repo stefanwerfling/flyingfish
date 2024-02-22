@@ -3,15 +3,54 @@ const gulp = require('gulp');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const GetGoogleFonts = require('get-google-fonts');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const download = require('gulp-download-files');
+//const download = require('gulp-download-files');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const webpack = require('webpack');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const webpackConfig = require('./webpack.config.js');
-const {exec} = require('child_process');
+const fs = require('fs');
+
 
 const currentPath = './';
+const collectionPath = './../';
 const assetsPath = `${currentPath}assets/`;
+
+const funcFindNodeModules = (nodesModuleName, subdir) => {
+    const pathIn =  `${currentPath}node_modules/${nodesModuleName}`;
+
+    try {
+        // Query the entry
+        const stats = fs.lstatSync(pathIn);
+
+        // Is it a directory?
+        if (stats.isDirectory()) {
+            console.log(`Return path: ${pathIn}/${subdir}`);
+            return `${pathIn}/${subdir}`;
+        }
+    }
+    catch (e) {
+        // ...
+    }
+
+    const pathOut =  `${collectionPath}node_modules/${nodesModuleName}`;
+
+    try {
+        // Query the entry
+        const stats = fs.lstatSync(pathOut);
+
+        // Is it a directory?
+        if (stats.isDirectory()) {
+            console.log(`Return path: ${pathOut}/${subdir}`);
+            return `${pathOut}/${subdir}`;
+        }
+    }
+    catch (e) {
+        // ...
+    }
+
+    console.log(`Error: Path not found for module: ${nodesModuleName}`);
+    throw new Error(`Path not found for module: ${nodesModuleName}`);
+};
 
 /**
  * copy-data
@@ -33,7 +72,7 @@ gulp.task('copy-data', async() => {
     };
 
     return gulp.src([
-        `${currentPath}node_modules/admin-lte/plugins/**/*`
+        funcFindNodeModules('admin-lte', 'plugins/**/*')
     ])
     .pipe(gulp.dest(`${assetsPath}plugins`))
 
@@ -41,22 +80,22 @@ gulp.task('copy-data', async() => {
 
     // single files
     gulp.src([
-        `${currentPath}node_modules/admin-lte/dist/js/adminlte.js`
+        funcFindNodeModules('admin-lte', 'dist/js/adminlte.js')
     ])
     .pipe(gulp.dest(assetsPath))
 
     &&
 
     gulp.src([
-        `${currentPath}node_modules/ionicons-css/dist/**/*`
+        funcFindNodeModules('ionicons-css', 'dist/**/*')
     ])
     .pipe(gulp.dest(`${assetsPath}ionicons-css`))
 
     &&
 
     gulp.src([
-        `${currentPath}node_modules/admin-lte/dist/css/**/*`,
-        `${currentPath}node_modules/ol/ol.css`
+        funcFindNodeModules('admin-lte', 'dist/css/**/*'),
+        funcFindNodeModules('ol', 'ol.css')
     ])
     .pipe(gulp.dest(`${assetsPath}css`))
 
@@ -87,30 +126,6 @@ gulp.task('build-webpack', () => {
 });
 
 // ---------------------------------------------------------------------------------------------------------------------
-
-gulp.task('setup-bambooo', (cb) => {
-    exec('cd node_modules && rm -R bambooo && git submodule add -f https://github.com/stefanwerfling/bambooo.git', (err, stdout, stderr) => {
-        console.log(stdout);
-        console.log(stderr);
-        cb(err);
-    });
-});
-
-gulp.task('clone-bambooo', (cb) => {
-    exec('cd node_modules && rm -R bambooo && git clone https://github.com/stefanwerfling/bambooo.git', (err, stdout, stderr) => {
-        console.log(stdout);
-        console.log(stderr);
-        cb(err);
-    });
-});
-
-gulp.task('build-bambooo', (cb) => {
-    exec('cd node_modules/bambooo && rm -rf ./dist && npm install && npm run build', (err, stdout, stderr) => {
-        console.log(stdout);
-        console.log(stderr);
-        cb(err);
-    });
-});
 
 // all builds
 gulp.task('default', gulp.parallel('copy-data', 'build-webpack'));

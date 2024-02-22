@@ -6,9 +6,6 @@
   "scripts": {
     "npm-check-updates": "npm-check-updates",
     "gulp-copy-data": "gulp copy-data",
-    "gulp-setup-bambooo": "gulp setup-bambooo",
-    "gulp-clone-bambooo": "gulp clone-bambooo",
-    "gulp-build-bambooo": "gulp build-bambooo",
     "gulp-build-webpack": "gulp build-webpack"
   },
   "keywords": [],
