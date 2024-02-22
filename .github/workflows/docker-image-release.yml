@@ -29,7 +29,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
-      - name: Docker meta flyingfish
+      - name: Docker meta FlyingFish
         id: meta_flyingfish
         uses: docker/metadata-action@v4
         with:
@@ -45,7 +45,7 @@ jobs:
           tags: ${{ steps.meta_flyingfish.outputs.tags }}
           labels: ${{ steps.meta_flyingfish.outputs.labels }}
 
-      - name: Docker meta flyingfish ssh
+      - name: Docker meta FlyingFish SSH
         id: meta_flyingfish_ssh
         uses: docker/metadata-action@v4
         with:
@@ -61,7 +61,7 @@ jobs:
           tags: ${{ steps.meta_flyingfish_ssh.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_ssh.outputs.labels }}
 
-      - name: Docker meta flyingfish himhip
+      - name: Docker meta FlyingFish Himhip
         id: meta_flyingfish_himhip
         uses: docker/metadata-action@v4
         with:
@@ -76,3 +76,19 @@ jobs:
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_himhip.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_himhip.outputs.labels }}
+
+      - name: Docker meta FlyingFish DynDnsServer
+        id: meta_flyingfish_dyndnsserver
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/flyingfish_ddns
+
+      - name: Build and push FlyingFish DynDnsServer
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          file: ./ddnsserver/Dockerfile
+          platforms: linux/amd64,linux/arm64/v8
+          push: ${{ github.ref_type == 'tag' }}
+          tags: ${{ steps.meta_flyingfish_dyndnsserver.outputs.tags }}
+          labels: ${{ steps.meta_flyingfish_dyndnsserver.outputs.labels }}
