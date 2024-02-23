@@ -1,5 +1,5 @@
 
-[![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.0.23-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
+[![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.1.0-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
 ![Docker Pulls](https://img.shields.io/docker/pulls/stefanwerfling/flyingfish?style=for-the-badge)
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 ![Issues](https://img.shields.io/github/issues/stefanwerfling/flyingfish?style=for-the-badge)
@@ -29,9 +29,12 @@ In the classic sense, FlyingFish is a nginx manager. But the way the nginx serve
 ## Quick setup
 [Read the Documentation quick setup](https://flying-fish.gitbook.io/flyingfish/index/installation#quick-setup)
 
-## In progress
+## Release
 
 - [Version 1.1.0](https://github.com/stefanwerfling/flyingfish/milestone/1)
+
+## In progress
+
 - [Version 1.2.0](https://github.com/stefanwerfling/flyingfish/milestone/2)
 - [Version 1.3.0](https://github.com/stefanwerfling/flyingfish/milestone/3)
 - [Version 1.4.0](https://github.com/stefanwerfling/flyingfish/milestone/4)
@@ -39,7 +42,9 @@ In the classic sense, FlyingFish is a nginx manager. But the way the nginx serve
 ## Docker Hub
 
 
-I utilise the docker manifest for multi-platform awareness. Simply getting "stefanwerfling/flyingfish:latest" should get the correct image for your arch. However, you can also get specific Arch images via tags.
+I utilize the docker manifest for multi-platform awareness.
+Simply getting "stefanwerfling/flyingfish:latest" should get the correct image for your arch.
+However, you can also get specific Arch images via tags.
 
 The architectures supported by this image are:
 
@@ -56,11 +61,13 @@ But it's better you run the installation with the instructions in Docker-Compose
 
 ### Docker images (latest)
 * stefanwerfling/flyingfish:latest
-* stefanwerfling/flyingfish:v1.0.23
+* stefanwerfling/flyingfish:v1.1.0
 * stefanwerfling/flyingfish_ssh:latest
-* stefanwerfling/flyingfish_ssh:v1.0.23
+* stefanwerfling/flyingfish_ssh:v1.1.0
 * stefanwerfling/flyingfish_himip:latest
-* stefanwerfling/flyingfish_himip:v1.0.23
+* stefanwerfling/flyingfish_himip:v1.1.0
+* stefanwerfling/flyingfish_ddns:latest
+* stefanwerfling/flyingfish_ddns:v1.1.0
 
 #### Screenshots
 <table>

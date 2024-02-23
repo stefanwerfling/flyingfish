@@ -65,6 +65,7 @@ services:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
       FLYINGFISH_HIMHIP_SECRET: "${HIMHIP_SECRET}"
+      FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
     ports:
       - "443:443"
       - "80:80"
@@ -117,6 +118,25 @@ services:
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.4
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      - mariadb
+
+  ddnsserver:
+    image: stefanwerfling/flyingfish_ddns:latest
+    container_name: flyingfish_ddns
+    environment:
+      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
+      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.6
     logging:
       driver: "json-file"
       options:
