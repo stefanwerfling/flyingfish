@@ -1,4 +1,4 @@
-# Quick update
+# Quick Update
 
 First find out what changes have been made (e.g. environment variables), you can find the changes on GitHub under releases. Always make a backup before updating. If possible, backup the whole VM, otherwise backup the config files and the docker volumes.
 
@@ -43,6 +43,14 @@ docker compose up -d
 ```
 
 Finally, let's clean up.
+
+{% hint style="warning" %}
+Check beforehand whether the containers are all running! Otherwise it could happen that the container is removed with an error. You can check whether the container is running with the following command:
+
+```sh
+docker ps
+```
+{% endhint %}
 
 ```sh
 docker system prune --all
