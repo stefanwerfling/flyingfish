@@ -1,6 +1,6 @@
 # Quick Update
 
-First find out what changes have been made (e.g. environment variables), you can find the changes on GitHub under releases. Always make a backup before updating. If possible, backup the whole VM, otherwise backup the config files and the docker volumes.
+First find out what changes have been made (e.g. environment variables), you can find the changes on GitHub under releases. Always make a backup before updating. If possible, backup the whole VM, otherwise backup the config files and the [docker volumes](create-backup.md).
 
 
 
