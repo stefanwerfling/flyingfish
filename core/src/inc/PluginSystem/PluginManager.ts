@@ -94,10 +94,14 @@ export class PluginManager {
      * @returns {PluginInformation[]}
      */
     public scan(): PluginInformation[] {
-        const nodeModulesPath = path.join(this._appPath, 'node_modules');
+        let nodeModulesPath = path.join(this._appPath, 'node_modules');
 
         if (!fs.existsSync(nodeModulesPath)) {
-            throw new Error(`node_modules directory not found: ${nodeModulesPath}`);
+            nodeModulesPath = path.join(this._appPath, 'node_modules', this._serviceName);
+
+            if (!fs.existsSync(nodeModulesPath)) {
+                throw new Error(`node_modules directory not found: ${nodeModulesPath}`);
+            }
         }
 
         const modules = fs.readdirSync(nodeModulesPath);

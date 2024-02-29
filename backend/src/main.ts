@@ -94,8 +94,12 @@ import exitHook from 'async-exit-hook';
 
     // load plugins ----------------------------------------------------------------------------------------------------
 
-    const pm = new PluginManager('backend', path.resolve());
-    await pm.start();
+    try {
+        const pm = new PluginManager('backend', path.resolve());
+        await pm.start();
+    } catch (error) {
+        Logger.getLogger().error('The plugin manager could not load the plugins.', error);
+    }
 
     // -----------------------------------------------------------------------------------------------------------------
 
