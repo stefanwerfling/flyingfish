@@ -90,67 +90,77 @@ RUN mkdir -p /opt/flyingfish
 RUN mkdir -p /var/log/flyingfish
 RUN mkdir -p /var/lib/flyingfish
 
-# Copy/Install Schemas ----------------------------------------------------------------------------------------------------
+# Copy Schemas ---------------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/flyingfish/schemas
-
 COPY ./schemas/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
 RUN rm package-lock.json | true
 
-RUN npm install
-RUN npm run build
-
-# Copy/Install Core ----------------------------------------------------------------------------------------------------
+# Copy Core ------------------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/flyingfish/core
-
 COPY ./core/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
 RUN rm package-lock.json | true
 
-RUN npm install
-RUN npm run build
+# Copy Plugins ---------------------------------------------------------------------------------------------------------
 
-# Copy/Install DemoPlugin ----------------------------------------------------------------------------------------------
+WORKDIR /opt/flyingfish/plugins
+COPY ./plugins/package.json ./
+
+RUN rm -R node_modules | true
+RUN rm -R dist | true
+RUN rm package-lock.json | true
 
 WORKDIR /opt/flyingfish/plugins/letsencrypt
-
 COPY ./plugins/letsencrypt/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
 RUN rm package-lock.json | true
 
-RUN npm install
-RUN npm run build
-
-# Copy/Install Backend -------------------------------------------------------------------------------------------------
+# Copy/ Backend --------------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/flyingfish/backend
-
 COPY backend ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
 RUN rm package-lock.json | true
 
-RUN npm install
-RUN npm run build
-
 # Copy/Install Frontend ------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/flyingfish/frontend
-
 COPY frontend ./
+
 RUN rm -R ./node_modules | true
 RUN rm -R ./dist | true
 RUN rm ./package-lock.json | true
 
+# Install All ----------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/flyingfish
+COPY ./package.json ./
+RUN npm install
+
+WORKDIR /opt/flyingfish/schemas
+RUN npm run build
+
+WORKDIR /opt/flyingfish/core
+RUN npm run build
+
+WORKDIR /opt/flyingfish/plugins/letsencrypt
+RUN npm run build
+
+WORKDIR /opt/flyingfish/backend
+RUN npm run build
+
+WORKDIR /opt/flyingfish/frontend
 RUN npm install --force
 RUN npm run gulp-copy-data
 RUN npm run gulp-build-webpack

@@ -13,37 +13,27 @@ RUN mkdir -p /opt/flyingfish/sshserver/node_modules
 RUN mkdir -p /var/lib/flyingfish
 RUN mkdir -p /var/lib/flyingfish/ssh
 
-
-# Copy/Install Schemas ----------------------------------------------------------------------------------------------------
+# Copy Schemas ---------------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/flyingfish/schemas
-
 COPY ./schemas/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
 RUN rm package-lock.json | true
 
-RUN npm install
-RUN npm run build
-
-# Copy/Install Core ----------------------------------------------------------------------------------------------------
+# Copy Core ------------------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/flyingfish/core
-
 COPY ./core/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
 RUN rm package-lock.json | true
 
-RUN npm install
-RUN npm run build
-
-# Copy/Install sshserver -----------------------------------------------------------------------------------------------
+# Copy sshserver -------------------------------------------------------------------------------------------------------
 
 WORKDIR /opt/flyingfish/sshserver
-
 COPY ./sshserver ./
 
 RUN rm -R Dockerfile | true
@@ -51,8 +41,23 @@ RUN rm -R node_modules | true
 RUN rm -R dist | true
 RUN rm package-lock.json | true
 
+# Install --------------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/flyingfish
+COPY ./package.json ./
 RUN npm install
+
+WORKDIR /opt/flyingfish/schemas
 RUN npm run build
+
+WORKDIR /opt/flyingfish/core
+RUN npm run build
+
+WORKDIR /opt/flyingfish/sshserver
+RUN npm run build
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 RUN npm install supervisor -g
 
 EXPOSE 22
