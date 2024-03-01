@@ -144,8 +144,6 @@ RUN rm ./package-lock.json | true
 
 # Install All ----------------------------------------------------------------------------------------------------------
 
-RUN npm install -g npm@10.5.0
-
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
 RUN npm install --loglevel verbose
