@@ -146,7 +146,7 @@ RUN rm ./package-lock.json | true
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-RUN npm install
+RUN npm install --loglevel verbose
 
 WORKDIR /opt/flyingfish/schemas
 RUN npm run build

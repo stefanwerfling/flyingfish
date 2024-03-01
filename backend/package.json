@@ -44,6 +44,7 @@
     "@influxdata/influxdb-client": "^1.33.2",
     "adm-zip": "^0.5.10",
     "async-exit-hook": "^2.0.1",
+    "@mapbox/node-pre-gyp": "git+https://github.com/mapbox/node-pre-gyp/tree/v1.0.11",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "delay": "^5.0.0",
