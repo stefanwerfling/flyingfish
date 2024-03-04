@@ -1,7 +1,8 @@
 FROM node:18-bullseye
 
-ENV FLYINGFISH_NGINX_MODULE_MODE_DYN "0"
+ENV FLYINGFISH_NGINX_MODULE_MODE_DYN="0"
 
+ARG NPM_REGISTRY="https://registry.npmjs.org/"
 ARG NGINX_VERSION="1.25.4"
 ARG HEADERS_MORE_VERSION="v0.37"
 ARG NJS_BRANCH="0.8.3"
@@ -146,7 +147,7 @@ RUN rm ./package-lock.json | true
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-RUN npm install --loglevel verbose
+RUN npm install --registry=$NPM_REGISTRY --ignore-scripts --loglevel verbose
 
 WORKDIR /opt/flyingfish/schemas
 RUN npm run build
@@ -161,7 +162,7 @@ WORKDIR /opt/flyingfish/backend
 RUN npm run build
 
 WORKDIR /opt/flyingfish/frontend
-RUN npm install --force
+RUN npm install --registry=$NPM_REGISTRY --force
 RUN npm run gulp-copy-data
 RUN npm run gulp-build-webpack
 
