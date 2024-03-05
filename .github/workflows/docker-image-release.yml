@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Checkout 
         uses: actions/checkout@v4
-        
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       
@@ -41,6 +41,8 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64/v8
+          build-args: |
+            "NPM_REGISTRY=${{ secrets.NPM_REGISTRY }}"
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish.outputs.tags }}
           labels: ${{ steps.meta_flyingfish.outputs.labels }}
