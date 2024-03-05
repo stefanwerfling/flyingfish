@@ -59,6 +59,8 @@ jobs:
           context: ./
           file: ./sshserver/Dockerfile
           platforms: linux/amd64,linux/arm64/v8
+          build-args: |
+            "NPM_REGISTRY=${{ secrets.NPM_REGISTRY }}"
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_ssh.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_ssh.outputs.labels }}
@@ -75,6 +77,8 @@ jobs:
           context: ./
           file: ./himhip/Dockerfile
           platforms: linux/amd64,linux/arm64/v8
+          build-args: |
+            "NPM_REGISTRY=${{ secrets.NPM_REGISTRY }}"
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_himhip.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_himhip.outputs.labels }}
@@ -91,6 +95,8 @@ jobs:
           context: ./
           file: ./ddnsserver/Dockerfile
           platforms: linux/amd64,linux/arm64/v8
+          build-args: |
+            "NPM_REGISTRY=${{ secrets.NPM_REGISTRY }}"
           push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.meta_flyingfish_dyndnsserver.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_dyndnsserver.outputs.labels }}
