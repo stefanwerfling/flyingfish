@@ -1,5 +1,7 @@
 FROM node:18-bullseye
 
+ARG NPM_REGISTRY="https://registry.npmjs.org/"
+
 RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y openssh-client

@@ -52,6 +52,8 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY}
     container_name: flyingfish_service
     volumes:
       - ./nginx:/opt/flyingfish/nginx:rw
@@ -108,6 +110,8 @@ services:
     build:
       context: ./
       dockerfile: ./himhip/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY}
     container_name: flyingfish_himhip
     environment:
       FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
@@ -155,6 +159,8 @@ services:
     build:
       context: ./
       dockerfile: ./sshserver/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY}
     container_name: flyingfish_ssh
     volumes:
       - flyingfishSsh:/opt/flyingfish/ssh:rw
@@ -187,6 +193,8 @@ services:
     build:
       context: ./
       dockerfile: ./ddnsserver/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY}
     container_name: flyingfish_ddns
     volumes:
       - ./ddnsserver/dist:/opt/flyingfish/ddnsserver/dist
