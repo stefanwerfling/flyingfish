@@ -26,5 +26,8 @@
   ],
   "scripts": {
     "npm-check-updates": "npm-check-updates"
+  },
+  "dependencies": {
+    "husky": "^9.0.11"
   }
 }
