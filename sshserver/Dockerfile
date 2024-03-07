@@ -47,7 +47,7 @@ RUN rm package-lock.json | true
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-RUN npm install --registry=$NPM_REGISTRY --ignore-scripts --maxsockets 1 --loglevel verbose
+RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
 
 WORKDIR /opt/flyingfish/schemas
 RUN npm run build
