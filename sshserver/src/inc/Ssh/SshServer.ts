@@ -1,5 +1,6 @@
 import {Logger} from 'flyingfish_core';
 import fs from 'fs';
+import path from 'path';
 import ssh2, {ClientInfo, Connection, Server as Ssh2Server} from 'ssh2';
 import {SshClient} from './SshClient.js';
 import {SshKeygen} from './SshKeygen.js';
@@ -10,7 +11,8 @@ const {Server} = ssh2;
  * SshServerOptions
  */
 export type SshServerOptions = {
-    hostKeys: string;
+    hostKeys?: string;
+    hostKeysPath?: string;
 };
 
 /**
@@ -30,7 +32,17 @@ export class SshServer {
      */
     public static async getInstance(options: SshServerOptions | null = null): Promise<SshServer> {
         if (SshServer._instance === null) {
-            const hostKeyRsaFile = './ssh/ssh_host_rsa_key';
+            let hostKeyRsaFile = './ssh/ssh_host_rsa_key';
+
+            if (options !== null) {
+                if (options.hostKeysPath) {
+                    hostKeyRsaFile = path.join(options.hostKeysPath, 'ssh_host_rsa_key');
+                }
+
+                if (options.hostKeys) {
+                    hostKeyRsaFile = options.hostKeys;
+                }
+            }
 
             if (!fs.existsSync(hostKeyRsaFile)) {
                 Logger.getLogger().info(`SshServer::getInstance: Keyfile not found, create new: ${hostKeyRsaFile}`);
@@ -42,15 +54,7 @@ export class SshServer {
                 }
             }
 
-            let toptions: SshServerOptions = {
-                hostKeys: hostKeyRsaFile
-            };
-
-            if (options !== null) {
-                toptions = options;
-            }
-
-            SshServer._instance = new SshServer(toptions);
+            SshServer._instance = new SshServer(hostKeyRsaFile);
         }
 
         return SshServer._instance!;
@@ -70,15 +74,15 @@ export class SshServer {
 
     /**
      * constructor
-     * @param options
+     * @param {string} hostKeys
      */
-    public constructor(options: SshServerOptions) {
+    private constructor(hostKeys: string) {
         this._clients = new Map<string, SshClient>();
 
         const self = this.getSelf();
 
         this._server = new Server({
-            hostKeys: [fs.readFileSync(options.hostKeys)]
+            hostKeys: [fs.readFileSync(hostKeys)]
         }, (client: Connection, info: ClientInfo) => {
             self._onClientConnect(client, info);
         });

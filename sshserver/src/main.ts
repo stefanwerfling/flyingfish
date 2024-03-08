@@ -3,7 +3,6 @@ import {SchemaFlyingFishArgsSshServer} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
-import {SshKeygen, SshKeygenCrypt} from './inc/Ssh/SshKeygen.js';
 import {SshServer} from './inc/Ssh/SshServer.js';
 
 /**
@@ -87,9 +86,10 @@ import {SshServer} from './inc/Ssh/SshServer.js';
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    await SshKeygen.create2(SshKeygenCrypt.rsa);
+    const server = await SshServer.getInstance({
+        hostKeysPath: tconfig.flyingfish_sshpath
+    });
 
-    const server = await SshServer.getInstance();
     server.listen();
 
 })();
