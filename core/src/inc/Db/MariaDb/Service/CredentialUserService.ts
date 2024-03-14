@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {CredentialUser} from './Entity/CredentialUser.js';
+import {DBService} from '../DBService.js';
+import {CredentialUser} from '../Entity/CredentialUser.js';
 
 /**
  * CredentialUserService

@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {SshUser} from './Entity/SshUser.js';
+import {DBService} from '../DBService.js';
+import {SshUser} from '../Entity/SshUser.js';
 
 /**
  * Ssh user service object.

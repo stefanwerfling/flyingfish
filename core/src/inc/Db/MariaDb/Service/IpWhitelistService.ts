@@ -1,7 +1,7 @@
 import {UpdateResult} from 'typeorm';
-import {DateHelper} from '../../Utils/DateHelper.js';
-import {DBService} from './DBService.js';
-import {IpWhitelist} from './Entity/IpWhitelist.js';
+import {DateHelper} from '../../../Utils/DateHelper.js';
+import {DBService} from '../DBService.js';
+import {IpWhitelist} from '../Entity/IpWhitelist.js';
 
 /**
  * Ip whitelist service object.

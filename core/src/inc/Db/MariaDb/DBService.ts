@@ -3,7 +3,7 @@ import {DBBaseEntityId} from './DBBaseEntityId.js';
 import {DBHelper} from './DBHelper.js';
 
 /**
- * DBServiceId
+ * DBService<DBBaseEntityId>
  */
 export abstract class DBService<T extends DBBaseEntityId> {
 

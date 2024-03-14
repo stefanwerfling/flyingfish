@@ -1,6 +1,6 @@
 import {NginxListenCategory, NginxListenTypes} from 'flyingfish_schemas';
-import {DBService} from './DBService.js';
-import {NginxListen} from './Entity/NginxListen.js';
+import {DBService} from '../DBService.js';
+import {NginxListen} from '../Entity/NginxListen.js';
 
 /**
  * Nginx listen service object.

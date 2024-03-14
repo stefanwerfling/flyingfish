@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {SshPort} from './Entity/SshPort.js';
+import {DBService} from '../DBService.js';
+import {SshPort} from '../Entity/SshPort.js';
 
 /**
  * Ssh port service object.

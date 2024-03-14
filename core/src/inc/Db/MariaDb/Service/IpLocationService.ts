@@ -1,6 +1,6 @@
 import {In} from 'typeorm';
-import {DBService} from './DBService.js';
-import {IpLocation} from './Entity/IpLocation.js';
+import {DBService} from '../DBService.js';
+import {IpLocation} from '../Entity/IpLocation.js';
 
 /**
  * Ip location service object.

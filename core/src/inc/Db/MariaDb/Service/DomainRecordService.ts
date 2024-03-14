@@ -1,6 +1,6 @@
 import {DeleteResult} from 'typeorm';
-import {DBService} from './DBService.js';
-import {DomainRecord} from './Entity/DomainRecord.js';
+import {DBService} from '../DBService.js';
+import {DomainRecord} from '../Entity/DomainRecord.js';
 
 /**
  * Domain record service object.

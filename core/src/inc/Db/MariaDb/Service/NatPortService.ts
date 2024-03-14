@@ -1,7 +1,7 @@
 import {NatStatus} from 'flyingfish_schemas';
-import {DateHelper} from '../../Utils/DateHelper.js';
-import {DBService} from './DBService.js';
-import {NatPort} from './Entity/NatPort.js';
+import {DateHelper} from '../../../Utils/DateHelper.js';
+import {DBService} from '../DBService.js';
+import {NatPort} from '../Entity/NatPort.js';
 
 /**
  * Nat port service object.

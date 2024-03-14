@@ -1,8 +1,8 @@
 import {DeleteResult} from 'typeorm';
-import {DBService} from './DBService.js';
+import {DBService} from '../DBService.js';
 import {DomainService} from './DomainService.js';
-import {Domain} from './Entity/Domain.js';
-import {DynDnsServerDomain} from './Entity/DynDnsServerDomain.js';
+import {Domain} from '../Entity/Domain.js';
+import {DynDnsServerDomain} from '../Entity/DynDnsServerDomain.js';
 
 /**
  * DynDnsServerDomainService

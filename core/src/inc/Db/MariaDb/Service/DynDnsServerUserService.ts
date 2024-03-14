@@ -1,7 +1,7 @@
 import {UpdateResult} from 'typeorm';
-import {DateHelper} from '../../Utils/DateHelper.js';
-import {DBService} from './DBService.js';
-import {DynDnsServerUser} from './Entity/DynDnsServerUser.js';
+import {DateHelper} from '../../../Utils/DateHelper.js';
+import {DBService} from '../DBService.js';
+import {DynDnsServerUser} from '../Entity/DynDnsServerUser.js';
 
 /**
  * DynDnsServerUserService

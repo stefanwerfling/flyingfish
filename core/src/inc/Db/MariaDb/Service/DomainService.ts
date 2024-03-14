@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {Domain} from './Entity/Domain.js';
+import {DBService} from '../DBService.js';
+import {Domain} from '../Entity/Domain.js';
 
 /**
  * DomainService

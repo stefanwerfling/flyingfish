@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {IpListMaintainer} from './Entity/IpListMaintainer.js';
+import {DBService} from '../DBService.js';
+import {IpListMaintainer} from '../Entity/IpListMaintainer.js';
 
 /**
  * Ip list maintainer service object.

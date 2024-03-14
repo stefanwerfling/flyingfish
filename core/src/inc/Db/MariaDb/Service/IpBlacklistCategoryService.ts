@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {IpBlacklistCategory} from './Entity/IpBlacklistCategory.js';
+import {DBService} from '../DBService.js';
+import {IpBlacklistCategory} from '../Entity/IpBlacklistCategory.js';
 
 /**
  * Ip blacklist category service object.

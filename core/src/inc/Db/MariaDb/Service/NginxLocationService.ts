@@ -1,6 +1,6 @@
 import {DeleteResult} from 'typeorm';
-import {DBService} from './DBService.js';
-import {NginxLocation} from './Entity/NginxLocation.js';
+import {DBService} from '../DBService.js';
+import {NginxLocation} from '../Entity/NginxLocation.js';
 
 /**
  * Nginx location service object.

@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {IpBlacklistMaintainer} from './Entity/IpBlacklistMaintainer.js';
+import {DBService} from '../DBService.js';
+import {IpBlacklistMaintainer} from '../Entity/IpBlacklistMaintainer.js';
 
 /**
  * Ip blacklist maintainer service object.

@@ -1,6 +1,6 @@
 import {NginxHttpVariableContextType} from 'flyingfish_schemas';
-import {DBService} from './DBService.js';
-import {NginxHttpVariable} from './Entity/NginxHttpVariable.js';
+import {DBService} from '../DBService.js';
+import {NginxHttpVariable} from '../Entity/NginxHttpVariable.js';
 
 /**
  * Nginx http variable service object.

@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {GatewayIdentifier} from './Entity/GatewayIdentifier.js';
+import {DBService} from '../DBService.js';
+import {GatewayIdentifier} from '../Entity/GatewayIdentifier.js';
 
 /**
  * Gateway identifier service object.

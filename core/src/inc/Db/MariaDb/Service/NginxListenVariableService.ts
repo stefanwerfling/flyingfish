@@ -1,6 +1,6 @@
 import {NginxListenVariableContextType} from 'flyingfish_schemas';
-import {DBService} from './DBService.js';
-import {NginxListenVariable} from './Entity/NginxListenVariable.js';
+import {DBService} from '../DBService.js';
+import {NginxListenVariable} from '../Entity/NginxListenVariable.js';
 
 /**
  * Nginx listen varible service

@@ -1,7 +1,7 @@
 import {MoreThan, UpdateResult, DeleteResult} from 'typeorm';
-import {DateHelper} from '../../Utils/DateHelper.js';
-import {DBService} from './DBService.js';
-import {IpBlacklist} from './Entity/IpBlacklist.js';
+import {DateHelper} from '../../../Utils/DateHelper.js';
+import {DBService} from '../DBService.js';
+import {IpBlacklist} from '../Entity/IpBlacklist.js';
 
 /**
  * IP blacklist service object.

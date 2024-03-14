@@ -1,7 +1,7 @@
 import {UpdateResult} from 'typeorm';
-import {DateHelper} from '../../Utils/DateHelper.js';
-import {DBService} from './DBService.js';
-import {NginxHttp} from './Entity/NginxHttp.js';
+import {DateHelper} from '../../../Utils/DateHelper.js';
+import {DBService} from '../DBService.js';
+import {NginxHttp} from '../Entity/NginxHttp.js';
 
 /**
  * Nginx http service object.

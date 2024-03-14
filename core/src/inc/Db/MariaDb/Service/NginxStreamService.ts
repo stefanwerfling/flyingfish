@@ -1,7 +1,7 @@
 import {NginxStreamDestinationType, NginxStreamSshR} from 'flyingfish_schemas';
 import {Not} from 'typeorm';
-import {DBService} from './DBService.js';
-import {NginxStream} from './Entity/NginxStream.js';
+import {DBService} from '../DBService.js';
+import {NginxStream} from '../Entity/NginxStream.js';
 
 /**
  * Nginx stream service object.

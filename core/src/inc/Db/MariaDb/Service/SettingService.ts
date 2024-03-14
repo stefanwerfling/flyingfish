@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {Settings} from './Entity/Settings.js';
+import {DBService} from '../DBService.js';
+import {Settings} from '../Entity/Settings.js';
 
 /**
  * Setting a service object.

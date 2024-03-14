@@ -1,5 +1,5 @@
-import {DBService} from './DBService.js';
-import {NginxUpstream} from './Entity/NginxUpstream.js';
+import {DBService} from '../DBService.js';
+import {NginxUpstream} from '../Entity/NginxUpstream.js';
 import {DeleteResult} from 'typeorm';
 
 /**

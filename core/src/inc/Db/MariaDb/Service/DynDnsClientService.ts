@@ -1,6 +1,6 @@
-import {DateHelper} from '../../Utils/DateHelper.js';
-import {DBService} from './DBService.js';
-import {DynDnsClient} from './Entity/DynDnsClient.js';
+import {DateHelper} from '../../../Utils/DateHelper.js';
+import {DBService} from '../DBService.js';
+import {DynDnsClient} from '../Entity/DynDnsClient.js';
 
 /**
  * DynDnsClientService

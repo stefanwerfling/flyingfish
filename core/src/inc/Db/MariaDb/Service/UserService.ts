@@ -1,6 +1,6 @@
 import {Not} from 'typeorm';
-import {DBService} from './DBService.js';
-import {User} from './Entity/User.js';
+import {DBService} from '../DBService.js';
+import {User} from '../Entity/User.js';
 
 /**
  * UserService
