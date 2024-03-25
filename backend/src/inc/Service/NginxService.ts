@@ -1025,7 +1025,7 @@ export class NginxService {
                         listenPort,
                         '',
                         ssl_enable,
-                        ssl_enable ? httpSubCollect.http.http2_enable : false,
+                        false,
                         proxyProtocolInEnable
                     ));
 
@@ -1034,12 +1034,18 @@ export class NginxService {
                             listenPort,
                             NginxService.DEFAULT_IP6_PUBLIC,
                             ssl_enable,
-                            ssl_enable ? httpSubCollect.http.http2_enable : false,
+                            false,
                             proxyProtocolInEnable
                         ));
                     }
 
                     aServer.setServerName(domainName);
+
+                    // http2 enable ------------------------------------------------------------------------------------
+
+                    if (ssl_enable && httpSubCollect.http.http2_enable) {
+                        aServer.addVariable('http2', 'on');
+                    }
 
                     // well-known --------------------------------------------------------------------------------------
 
