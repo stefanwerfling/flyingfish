@@ -1,5 +1,5 @@
 
-[![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.1.0-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
+[![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.1.12-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
 ![Docker Pulls](https://img.shields.io/docker/pulls/stefanwerfling/flyingfish?style=for-the-badge)
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 ![Issues](https://img.shields.io/github/issues/stefanwerfling/flyingfish?style=for-the-badge)
@@ -61,13 +61,13 @@ But it's better you run the installation with the instructions in Docker-Compose
 
 ### Docker images (latest)
 * stefanwerfling/flyingfish:latest
-* stefanwerfling/flyingfish:v1.1.0
+* stefanwerfling/flyingfish:v1.1.12
 * stefanwerfling/flyingfish_ssh:latest
-* stefanwerfling/flyingfish_ssh:v1.1.0
+* stefanwerfling/flyingfish_ssh:v1.1.12
 * stefanwerfling/flyingfish_himip:latest
-* stefanwerfling/flyingfish_himip:v1.1.0
+* stefanwerfling/flyingfish_himip:v1.1.12
 * stefanwerfling/flyingfish_ddns:latest
-* stefanwerfling/flyingfish_ddns:v1.1.0
+* stefanwerfling/flyingfish_ddns:v1.1.12
 
 #### Screenshots
 <table>
