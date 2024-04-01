@@ -3,12 +3,13 @@ import * as fs from 'fs';
 import {
     Args,
     DBHelper, DBEntitiesLoader,
-    Logger, PluginManager
+    Logger, PluginManager, RedisClient
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
+import {HimHIP} from './inc/HimHIP/HimHIP.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
 import {IpLocationService} from './inc/Service/IpLocationService.js';
 import {IpService} from './inc/Service/IpService.js';
@@ -137,6 +138,25 @@ import exitHook from 'async-exit-hook';
     } catch (error) {
         Logger.getLogger().error('Error while connecting to the database', error);
         return;
+    }
+
+    // Redis mem-db ----------------------------------------------------------------------------------------------------
+
+    if (tConfig.db.redis && tConfig.db.redis.url) {
+        try {
+            const redisClient = RedisClient.getInstance({
+                url: tConfig.db.redis.url,
+                password: tConfig.db.redis.password
+            });
+
+            await redisClient.connect();
+            await redisClient.registerChannels([
+                new HimHIP()
+            ]);
+        } catch (error) {
+            Logger.getLogger().error('Error while connecting to the mem-database', error);
+            return;
+        }
     }
 
     // start server ----------------------------------------------------------------------------------------------------
@@ -270,6 +290,7 @@ import exitHook from 'async-exit-hook';
         Logger.getLogger().info('Stop FlyingFish Service ...');
 
         await NginxService.getInstance().stop(true);
+        await RedisClient.getInstance().disconnect();
 
         Logger.getLogger().info('... End.');
 

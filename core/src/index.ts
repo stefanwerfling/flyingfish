@@ -73,6 +73,10 @@ export {SshPortService as SshPortServiceDB} from './inc/Db/MariaDb/Service/SshPo
 export {SshUserService as SshUserServiceDB} from './inc/Db/MariaDb/Service/SshUserService.js';
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/Service/UserService.js';
 
+export {RedisClientOptions, RedisClient} from './inc/Db/RedisDb/RedisClient.js';
+export {RedisChannels} from './inc/Db/RedisDb/RedisChannels.js';
+export {RedisChannel} from './inc/Db/RedisDb/RedisChannel.js';
+
 export {Session} from './inc/Server/Session.js';
 export {DefaultRoute, DefaultRouteHandlerGet, DefaultRouteHandlerPost} from './inc/Server/Routes/DefaultRoute.js';
 export {

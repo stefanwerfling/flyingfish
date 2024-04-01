@@ -1,9 +1,10 @@
-import {HimHIPData} from 'flyingfish_schemas';
+import {RedisChannel, RedisChannels} from 'flyingfish_core';
+import {HimHIPData, SchemaHimHIPData} from 'flyingfish_schemas';
 
 /**
  * HimHIP - how is my host ip
  */
-export class HimHIP {
+export class HimHIP extends RedisChannel<HimHIPData> {
 
     /**
      * data
@@ -24,6 +25,20 @@ export class HimHIP {
      */
     public static setData(data: HimHIPData|null): void {
         HimHIP._data = data;
+    }
+
+    public constructor() {
+        super(RedisChannels.HIMHIP_UPDATE_RES);
+    }
+
+    /**
+     * Listen
+     * @param {HimHIPData} data
+     */
+    public async listen(data: HimHIPData): Promise<void> {
+        if (SchemaHimHIPData.validate(data, [])) {
+            HimHIP.setData(data);
+        }
     }
 
 }

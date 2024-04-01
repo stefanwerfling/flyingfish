@@ -18,7 +18,9 @@ export enum ENV_OPTIONAL_DB {
     DB_INFLUX_URL = 'FLYINGFISH_DB_INFLUX_URL',
     DB_INFLUX_TOKEN = 'FLYINGFISH_DB_INFLUX_TOKEN',
     DB_INFLUX_ORG = 'FLYINGFISH_DB_INFLUX_ORG',
-    DB_INFLUX_BUCKET = 'FLYINGFISH_DB_INFLUX_BUCKET'
+    DB_INFLUX_BUCKET = 'FLYINGFISH_DB_INFLUX_BUCKET',
+    DB_REDIS_URL = 'FLYINGFISH_DB_REDIS_URL',
+    DB_REDIS_PASSWORD = 'FLYINGFISH_DB_REDIS_PASSWORD'
 }
 
 /**
@@ -39,6 +41,10 @@ export const SchemaConfigDbOptions = Vts.object({
         bucket: Vts.string(),
         username: Vts.string(),
         password: Vts.string()
+    })),
+    redis: Vts.optional(Vts.object({
+        url: Vts.string(),
+        password: Vts.optional(Vts.string())
     }))
 });
 

@@ -48,9 +48,11 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
     public static readonly DEFAULT_HIMHIP_USE = true;
     public static readonly DEFAULT_HIMHIP_SECRET = '';
+    public static readonly DEFAULT_REDIS_URL = 'redis://10.103.0.7:6379';
 
     /**
      * getInstance
+     * @returns {Config}
      */
     public static getInstance(): Config {
         if (!ConfigCore._instance) {
@@ -62,7 +64,8 @@ export class Config extends ConfigCore<BackendConfigOptions> {
 
     /**
      * _loadEnv
-     * @param aConfig
+     * @param {BackendConfigOptions|null} aConfig
+     * @returns {BackendConfigOptions|null}
      * @protected
      */
     protected _loadEnv(aConfig: BackendConfigOptions | null): BackendConfigOptions | null {
@@ -102,6 +105,9 @@ export class Config extends ConfigCore<BackendConfigOptions> {
                         username: dbMysqlUsername,
                         password: dbMysqlPassword,
                         database: dbMysqlDatabase
+                    },
+                    redis: {
+                        url: Config.DEFAULT_REDIS_URL
                     }
                 },
                 httpserver: {
@@ -121,8 +127,34 @@ export class Config extends ConfigCore<BackendConfigOptions> {
 
         // optional ----------------------------------------------------------------------------------------------------
 
-        // db mysql ----------------------------------------------------------------------------------------------------
+        config = this._loadEnvMariaDb(config);
+        config = this._loadEnvRedisDb(config);
+        config = this._loadEnvInfluxDb(config);
+        config = this._loadEnvHttpserver(config);
+        config = this._loadEnvDnsserver(config);
+        config = this._loadEnvNginx(config);
+        config = this._loadEnvDynDnsserver(config);
+        config = this._loadEnvSshserver(config);
+        config = this._loadEnvDocker(config);
+        config = this._loadEnvLogging(config);
+        config = this._loadEnvHimhip(config);
 
+        // ff ----------------------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.FF_LIBPATH]) {
+            config.flyingfish_libpath = process.env[ENV_OPTIONAL.FF_LIBPATH];
+        }
+
+        return config;
+    }
+
+    /**
+     * Load MariaDB Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvMariaDb(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL_DB.DB_MYSQL_HOST]) {
             config.db.mysql.host = process.env[ENV_OPTIONAL_DB.DB_MYSQL_HOST];
         }
@@ -132,8 +164,16 @@ export class Config extends ConfigCore<BackendConfigOptions> {
                 Config.DEFAULT_DB_MYSQL_PORT;
         }
 
-        // db influx -----------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load InfluxDB Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvInfluxDb(config: BackendConfigOptions): BackendConfigOptions {
         const influxEnvList = [
             ENV_OPTIONAL_DB.DB_INFLUX_URL,
             ENV_OPTIONAL_DB.DB_INFLUX_TOKEN,
@@ -173,8 +213,30 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             }
         }
 
-        // httpserver ----------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    protected _loadEnvRedisDb(config: BackendConfigOptions): BackendConfigOptions {
+        if (config.db.redis) {
+            if (process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]) {
+                config.db.redis.url = process.env[ENV_OPTIONAL_DB.DB_REDIS_URL];
+            }
+
+            if (process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD]) {
+                config.db.redis.password = process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD];
+            }
+        }
+
+        return config;
+    }
+
+    /**
+     * Load HttpServer Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvHttpserver(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.HTTPSERVER_PORT]) {
             config.httpserver.port = parseInt(process.env[ENV_OPTIONAL.HTTPSERVER_PORT]!, 10) ||
                 Config.DEFAULT_HTTPSERVER_PORT;
@@ -184,16 +246,32 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             config.httpserver.publicdir = process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR];
         }
 
-        // dnsserver -----------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load DNSServer Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvDnsserver(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.DNSSERVER_PORT]) {
             config.dnsserver = {
                 port: parseInt(process.env[ENV_OPTIONAL.DNSSERVER_PORT]!, 10) || Config.DEFAULT_DNSSERVER_PORT
             };
         }
 
-        // nginx ---------------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load Nginx Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvNginx(config: BackendConfigOptions): BackendConfigOptions {
         if (!config.nginx) {
             config.nginx = {
                 config: Config.DEFAULT_NGINX_CONFIG,
@@ -217,8 +295,16 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             config.nginx.secret = process.env[ENV_OPTIONAL.NGINX_SECRET];
         }
 
-        // dyndnsserver ------------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load DynDnsServer Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvDynDnsserver(config: BackendConfigOptions): BackendConfigOptions {
         if (!config.dyndnsserver) {
             config.dyndnsserver = {
                 port: Config.DEFAULT_DYNDNSSERVER_PORT,
@@ -244,16 +330,32 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             config.dyndnsserver.enable = process.env[ENV_OPTIONAL.DYNDNSSERVER_ENABLE] === '1';
         }
 
-        // sshserver ---------------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load SShServer Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvSshserver(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.SSHSERVER_IP]) {
             config.sshserver = {
                 ip: process.env[ENV_OPTIONAL.SSHSERVER_IP]
             };
         }
 
-        // docker ------------------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load docker Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvDocker(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.DOCKER_INSIDE]) {
             config.docker = {
                 inside: process.env[ENV_OPTIONAL.DOCKER_INSIDE] === '1',
@@ -261,16 +363,32 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             };
         }
 
-        // Logging -----------------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load Logging Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvLogging(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
             config.logging = {
                 level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
             };
         }
 
-        // himhip ------------------------------------------------------------------------------------------------------
+        return config;
+    }
 
+    /**
+     * Load Himhip Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
+    protected _loadEnvHimhip(config: BackendConfigOptions): BackendConfigOptions {
         if (!config.himhip) {
             config.himhip = {
                 use: Config.DEFAULT_HIMHIP_USE,
@@ -286,18 +404,13 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             config.himhip.secret = process.env[ENV_OPTIONAL.HIMHIP_SECRET];
         }
 
-        // ff ------------------------------------------------------------------------------------------------------
-
-        if (process.env[ENV_OPTIONAL.FF_LIBPATH]) {
-            config.flyingfish_libpath = process.env[ENV_OPTIONAL.FF_LIBPATH];
-        }
-
         return config;
     }
 
     /**
      * _setDefaults
-     * @param config
+     * @param {BackendConfigOptions|null} config
+     * @returns {BackendConfigOptions|null}
      * @protected
      */
     protected _setDefaults(config: BackendConfigOptions | null): BackendConfigOptions | null {
