@@ -129,6 +129,21 @@ But it's better you run the installation with the instructions in Docker-Compose
 	</tr>
 </table>
 
+# Supported by
+Special thanks to the following companys:
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+	<tr>
+		<td align="center">
+            <a href="https://jb.gg/OpenSourceSupport">
+				<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="80" alt=""/>
+				<br /><sub><b>JetBrains</b></sub>
+			</a>
+        </td>
+	</tr>
+</table>
+
 # Contributors
 
 Special thanks to the following contributors:
