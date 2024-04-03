@@ -216,6 +216,12 @@ export class Config extends ConfigCore<BackendConfigOptions> {
         return config;
     }
 
+    /**
+     * Load Redis Env
+     * @param {BackendConfigOptions} config
+     * @returns {BackendConfigOptions}
+     * @protected
+     */
     protected _loadEnvRedisDb(config: BackendConfigOptions): BackendConfigOptions {
         if (config.db.redis) {
             if (process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]) {

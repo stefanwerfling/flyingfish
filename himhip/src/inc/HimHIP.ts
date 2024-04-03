@@ -1,5 +1,6 @@
 import arp from '@network-utils/arp-lookup';
-import {Logger} from 'flyingfish_core';
+import {Logger, RedisChannels, RedisClient} from 'flyingfish_core';
+import {HimHIPData} from 'flyingfish_schemas/dist/src/index.js';
 import got from 'got';
 import {IpRoute} from './IpRoute.js';
 
@@ -21,6 +22,22 @@ export class HimHIP {
 
             if (gatewaymac) {
                 try {
+                    // when redis instance work use new commincation way -----------------------------------------------
+                    if (RedisClient.hasInstance()) {
+                        const rclient = RedisClient.getInstance();
+                        const data: HimHIPData = {
+                            network: ipRouteInfo.network,
+                            gateway: ipRouteInfo.gateway,
+                            interface: ipRouteInfo.interface,
+                            hostip: ipRouteInfo.hostip,
+                            gatewaymac
+                        };
+
+                        await rclient.sendChannel(RedisChannels.HIMHIP_UPDATE_RES, JSON.stringify(data));
+                        return;
+                    }
+
+                    // send data over old way (https express) ----------------------------------------------------------
                     const response = await got({
                         url: reciverUrl,
                         headers: {

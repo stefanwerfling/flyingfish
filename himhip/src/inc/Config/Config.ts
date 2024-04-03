@@ -3,6 +3,7 @@ import {FlyingFishArgs} from '../Env/Args.js';
 import {Config as ConfigCore} from 'flyingfish_core';
 import {
     ConfigOptionsHimHip,
+    ENV_OPTIONAL_DB,
     SchemaConfigOptionsHimHip
 } from 'flyingfish_schemas';
 
@@ -34,6 +35,7 @@ export class Config extends ConfigCore<ConfigOptionsHimHip> {
     public static readonly DEFAULT_SERVER_HOST = '10.103.0.3';
     public static readonly DEFAULT_SERVER_PORT = 3000;
     public static readonly DEFAULT_SERVER_PROTOCOL = 'https';
+    public static readonly DEFAULT_REDIS_URL = 'redis://10.103.0.7:6379';
 
     /**
      * getInstance
@@ -51,12 +53,15 @@ export class Config extends ConfigCore<ConfigOptionsHimHip> {
      * @param args
      */
     public async load2(args: FlyingFishArgs): Promise<ConfigOptionsHimHip | null> {
-        const config: ConfigOptionsHimHip = {
+        let config: ConfigOptionsHimHip = {
             secret: '',
             url_path: Config.DEFAULT_URL_PATH,
             server_host: Config.DEFAULT_SERVER_HOST,
             server_port: Config.DEFAULT_SERVER_PORT,
-            server_protocol: Config.DEFAULT_SERVER_PROTOCOL
+            server_protocol: Config.DEFAULT_SERVER_PROTOCOL,
+            redis: {
+                url: Config.DEFAULT_REDIS_URL
+            }
         };
 
         if (args.secret) {
@@ -92,7 +97,7 @@ export class Config extends ConfigCore<ConfigOptionsHimHip> {
 
             config.secret = process.env[ENV_DUTY.SECRET] ?? '';
 
-            // optional ----------------------------------------------------------------------------------------------------
+            // optional ------------------------------------------------------------------------------------------------
 
             if (process.env[ENV_OPTIONAL.URL_PATH]) {
                 config.url_path = process.env[ENV_OPTIONAL.URL_PATH];
@@ -118,9 +123,31 @@ export class Config extends ConfigCore<ConfigOptionsHimHip> {
                     level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
                 };
             }
+
+            config = this._loadEnvRedisDb(config);
         }
 
         this.set(config!);
+        return config;
+    }
+
+    /**
+     * Load Redis Env
+     * @param {ConfigOptionsHimHip} config
+     * @returns {ConfigOptionsHimHip}
+     * @protected
+     */
+    protected _loadEnvRedisDb(config: ConfigOptionsHimHip): ConfigOptionsHimHip {
+        if (config.redis) {
+            if (process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]) {
+                config.redis.url = process.env[ENV_OPTIONAL_DB.DB_REDIS_URL];
+            }
+
+            if (process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD]) {
+                config.redis.password = process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD];
+            }
+        }
+
         return config;
     }
 

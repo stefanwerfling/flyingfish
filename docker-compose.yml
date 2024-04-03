@@ -47,6 +47,23 @@ services:
         max-size: "500k"
         max-file: "50"
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: flyingfish_redis
+    volumes:
+      - flyingfishRedisData:/data
+    ports:
+      - '127.0.0.1:6379:6379'
+    command: "redis-server --save ${REDIS_SAVE} --loglevel ${REDIS_LOGLEVEL} --requirepass ${REDIS_REQUIREPASS}"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.7
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
   flyingfish:
     image: flyingfish:v1.2
     build:
@@ -80,6 +97,7 @@ services:
       FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
       FLYINGFISH_HIMHIP_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
+      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     ports:
       - "443:443"
       - "80:80"
@@ -99,6 +117,8 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+      - redis
+      - influxdb
     command:
       - node
       - "--inspect-brk=0.0.0.0:9229"
@@ -117,6 +137,7 @@ services:
       FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_SERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     network_mode: host
     cap_add:
       - ALL
@@ -274,6 +295,8 @@ volumes:
   flyingfishLetsencrypt:
     driver: local
   flyingfishSsh:
+    driver: local
+  flyingfishRedisData:
     driver: local
 
 networks:

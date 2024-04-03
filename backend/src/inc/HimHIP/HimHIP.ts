@@ -27,6 +27,9 @@ export class HimHIP extends RedisChannel<HimHIPData> {
         HimHIP._data = data;
     }
 
+    /**
+     * Constructor
+     */
     public constructor() {
         super(RedisChannels.HIMHIP_UPDATE_RES);
     }

@@ -10,6 +10,9 @@ export type RedisClientOptions = {
     password?: string;
 };
 
+/**
+ * Function channel callback
+ */
 export type FunChannelCallback = (message: string) => Promise<void>;
 
 /**
@@ -117,6 +120,10 @@ export class RedisClient {
         });
     }
 
+    /**
+     * Register channels
+     * @param {RedisChannel<any>[]} channels
+     */
     public async registerChannels(channels: RedisChannel<any>[]): Promise<void> {
         for await (const channel of channels) {
             await this._registerChannel(
@@ -132,6 +139,15 @@ export class RedisClient {
                 }
             );
         }
+    }
+
+    /**
+     * sendChannel
+     * @param {string} channel
+     * @param {string} data
+     */
+    public async sendChannel(channel: string, data: string): Promise<void> {
+        await this._client.publish(channel, data);
     }
 
 }
