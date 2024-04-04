@@ -340,6 +340,7 @@ export {BlacklistCategory} from './Backend/IpAccess/BlacklistCategory.js';
 
 // HimHip
 export {SchemaConfigOptionsHimHip, ConfigOptionsHimHip} from './HimHip/Config/Config.js';
+export {SchemaHimHIPUpdate, HimHIPUpdate} from './HimHip/Update.js';
 
 // SshServer
 export {SchemaFlyingFishArgsSshServer, FlyingFishArgsSshServer} from './SshServer/Env/Args.js';

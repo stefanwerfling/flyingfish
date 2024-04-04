@@ -31,6 +31,9 @@ import {HimHIP} from './inc/HimHIP.js';
             });
 
             await redisClient.connect();
+            await redisClient.registerChannels([
+                new HimHIP()
+            ]);
         } catch (error) {
             Logger.getLogger().error('Error while connecting to the mem-database', error);
             return;
