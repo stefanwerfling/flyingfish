@@ -47,6 +47,12 @@ export type BaseHttpServerOptions = {
 export class BaseHttpServer {
 
     /**
+     * List host address
+     * @protected
+     */
+    protected static _listenHost: string = 'localhost';
+
+    /**
      * server default port
      * @private
      */
@@ -77,6 +83,14 @@ export class BaseHttpServer {
     protected readonly _crypt?: BaseHttpServerOptionCrypt;
 
     /**
+     * Set the listen host
+     * @param host
+     */
+    public static setListenHost(host: string): void {
+        BaseHttpServer._listenHost = host;
+    }
+
+    /**
      * constructor
      * @param serverInit
      */
@@ -89,7 +103,7 @@ export class BaseHttpServer {
         this._session = serverInit.session;
 
         this._server = express();
-        this._server.use((req, res, next) => {
+        this._server.use((req, _res, next) => {
             Logger.getLogger().silly(`BaseHttpServer::request: Url: ${req.url} Protocol: ${req.protocol} Method: ${req.method}`);
             next();
         });
@@ -112,7 +126,7 @@ export class BaseHttpServer {
 
         // add error handling
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        this._server.use((error: Error, request: Request, response: Response, _next: NextFunction) => {
+        this._server.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
             response.status(500);
             Logger.getLogger().error(error.stack);
         });
@@ -211,11 +225,11 @@ export class BaseHttpServer {
 
                         if (tTlsSocket._parent) {
                             tTlsSocket._parent.write('HTTP/1.1 302 Found\n' +
-                                `Location: https://localhost:${this._port}`);
+                                `Location: https://${BaseHttpServer._listenHost}:${this._port}`);
                         }
 
                         Logger.getLogger().error(
-                            `The client call the Server over HTTP protocol. Please use HTTPS, example: https://localhost:${this._port}`,
+                            `The client call the Server over HTTP protocol. Please use HTTPS, example: https://${BaseHttpServer._listenHost}:${this._port}`,
                             {
                                 class: 'BaseHttpServer::listen'
                             }
@@ -225,7 +239,7 @@ export class BaseHttpServer {
 
                 httpsServer.listen(this._port, () => {
                     Logger.getLogger().info(
-                        `${this._realm} listening on the https://localhost:${this._port}`,
+                        `${this._realm} listening on the https://${BaseHttpServer._listenHost}:${this._port}`,
                         {
                             class: 'BaseHttpServer::listen'
                         }
@@ -236,7 +250,7 @@ export class BaseHttpServer {
             }
         } else {
             app.listen(this._port, () => {
-                Logger.getLogger().info(`BaseHttpServer::listen: ${this._realm} listening on the http://localhost:${this._port}`);
+                Logger.getLogger().info(`BaseHttpServer::listen: ${this._realm} listening on the http://${BaseHttpServer._listenHost}:${this._port}`);
             });
         }
     }

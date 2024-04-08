@@ -6,6 +6,7 @@ import {
     Logger, PluginManager, RedisClient
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
+import {Vts} from 'vts';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
@@ -239,6 +240,16 @@ import exitHook from 'async-exit-hook';
 
     // listen, start express server
     await mServer.listen();
+    HimHIP.registerEvent((data) => {
+        if (!Vts.isNull(data)) {
+
+            /*
+             * set the ip from host for auto redirect to https
+             * by wrong call with http
+             */
+            HttpServer.setListenHost(data.hostip);
+        }
+    });
 
     // -----------------------------------------------------------------------------------------------------------------
 

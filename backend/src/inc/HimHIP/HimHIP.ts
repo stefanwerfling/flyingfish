@@ -1,6 +1,8 @@
 import {RedisChannel, RedisChannels} from 'flyingfish_core';
 import {HimHIPData, SchemaHimHIPData} from 'flyingfish_schemas';
 
+export type onEventDataUpdate = (data: HimHIPData|null) => void;
+
 /**
  * HimHIP - how is my host ip
  */
@@ -11,6 +13,12 @@ export class HimHIP extends RedisChannel<HimHIPData> {
      * @private
      */
     private static _data: HimHIPData|null = null;
+
+    /**
+     * events
+     * @private
+     */
+    private static _events: onEventDataUpdate[] = [];
 
     /**
      * getData
@@ -25,6 +33,18 @@ export class HimHIP extends RedisChannel<HimHIPData> {
      */
     public static setData(data: HimHIPData|null): void {
         HimHIP._data = data;
+
+        for (const event of HimHIP._events) {
+            event(HimHIP._data);
+        }
+    }
+
+    /**
+     * Register an event
+     * @param {onEventDataUpdate} event
+     */
+    public static registerEvent(event: onEventDataUpdate): void {
+        HimHIP._events.push(event);
     }
 
     /**
