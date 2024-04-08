@@ -17,7 +17,7 @@ export class UpnpNat extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'upnpnat';
+    protected override _name: string = 'upnpnat';
 
     /**
      * upnp nat dialog
@@ -85,7 +85,7 @@ export class UpnpNat extends BasePage {
                         title: 'UpnpNat save success.'
                     });
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -97,7 +97,7 @@ export class UpnpNat extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
         const card = new Card(new ContentCol(content, ContentColSize.col12));
 
@@ -301,7 +301,7 @@ export class UpnpNat extends BasePage {
                                                 title: 'Upnp-Nat delete success.'
                                             });
                                         }
-                                    } catch ({message}) {
+                                    } catch (message) {
                                         this._toast.fire({
                                             icon: 'error',
                                             title: message

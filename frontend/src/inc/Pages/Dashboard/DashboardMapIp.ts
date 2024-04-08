@@ -10,6 +10,7 @@ import {getVectorContext} from 'ol/render.js';
 import {easeOut} from 'ol/easing.js';
 import {Element} from 'bambooo';
 import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
+import {Vts} from 'vts';
 
 /**
  * DashboardMapIpMark
@@ -140,11 +141,26 @@ export class DashboardMapIp extends Element {
         const map = this._map;
 
         this._source.on('addfeature', (e) => {
+            if (Vts.isUndefined(e.feature)) {
+                return;
+            }
+
             const feature = e.feature;
             const start = Date.now();
-            const flashGeom = feature.getGeometry().clone();
+            const geometry = feature.getGeometry();
+
+            if (Vts.isUndefined(geometry)) {
+                return;
+            }
+
+            const flashGeom = geometry.clone();
             const listenerKey = tileLayer.on('postrender', (event) => {
                 const frameState = event.frameState;
+
+                if (Vts.isUndefined(frameState)) {
+                    return;
+                }
+
                 const elapsed = frameState.time - start;
                 if (elapsed >= duration) {
                     unByKey(listenerKey);

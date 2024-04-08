@@ -86,7 +86,7 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
     /**
      * resetValues
      */
-    public resetValues(): void {
+    public override resetValues(): void {
         this.setId(null);
         this.setDisabled(false);
     }

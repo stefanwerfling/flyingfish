@@ -17,6 +17,7 @@ import {
     SwitchTimer, Tooltip, TooltipInfo
 } from 'bambooo';
 import moment from 'moment/moment';
+import {Vts} from 'vts';
 import {Dashboard as DashboardApi} from '../Api/Dashboard';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {Lang} from '../Lang';
@@ -35,7 +36,7 @@ export class Dashboard extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'dashboard';
+    protected override _name: string = 'dashboard';
 
     /**
      * switch timer
@@ -53,13 +54,13 @@ export class Dashboard extends BasePage {
      * line chart requests
      * @protected
      */
-    protected _lineChartRequests: LineChartRequests;
+    protected _lineChartRequests: LineChartRequests | undefined;
 
     /**
      * ip blacklist map
      * @protected
      */
-    protected _ipBlacklistMap: DashboardMapIp;
+    protected _ipBlacklistMap: DashboardMapIp | undefined;
 
     /**
      * constructor
@@ -87,7 +88,7 @@ export class Dashboard extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
 
         const row = new ContentRow(content);
@@ -157,7 +158,9 @@ export class Dashboard extends BasePage {
                 streamRequestsPoints.push(streamRequestPoint.counts);
             }
 
-            this._lineChartRequests.updateData(streamRequestsPoints);
+            if (this._lineChartRequests) {
+                this._lineChartRequests.updateData(streamRequestsPoints);
+            }
 
             // public ip -----------------------------------------------------------------------------------------------
 
@@ -260,7 +263,9 @@ export class Dashboard extends BasePage {
                 }
             }
 
-            this._ipBlacklistMap.setMarks(blockMarkList);
+            if (this._ipBlacklistMap) {
+                this._ipBlacklistMap.setMarks(blockMarkList);
+            }
 
             // ip blocks -----------------------------------------------------------------------------------------------
 
@@ -294,7 +299,9 @@ export class Dashboard extends BasePage {
 
         this._updateSwitch.setTimeoutFn(async() => {
             try {
-                this._onLoadTable();
+                if (!Vts.isNull(this._onLoadTable)) {
+                    this._onLoadTable();
+                }
             } catch (e) {
                 if (e instanceof UnauthorizedError) {
                     UtilRedirect.toLogin();
@@ -306,9 +313,13 @@ export class Dashboard extends BasePage {
     /**
      * unloadContent
      */
-    public async unloadContent(): Promise<void> {
+    public override async unloadContent(): Promise<void> {
         super.unloadContent();
-        await this._ipBlacklistMap.unloadContent();
+
+        if (this._ipBlacklistMap) {
+            await this._ipBlacklistMap.unloadContent();
+        }
+
         this._updateSwitch.setEnable(false);
     }
 

@@ -14,7 +14,7 @@ export class Users extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'users';
+    protected override _name: string = 'users';
 
     /**
      * user dialog
@@ -79,7 +79,7 @@ export class Users extends BasePage {
                         title: 'User save success.'
                     });
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -91,7 +91,7 @@ export class Users extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
         const card = new Card(new ContentCol(content, ContentColSize.col12));
 
@@ -183,7 +183,7 @@ export class Users extends BasePage {
                                                 title: 'User delete success.'
                                             });
                                         }
-                                    } catch ({message}) {
+                                    } catch (message) {
                                         this._toast.fire({
                                             icon: 'error',
                                             title: message

@@ -24,6 +24,7 @@ import {
 } from 'bambooo';
 import {DomainData} from 'flyingfish_schemas';
 import moment from 'moment';
+import {Vts} from 'vts';
 import {Domain as DomainAPI} from '../Api/Domain';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {BasePage} from './BasePage';
@@ -39,7 +40,7 @@ export class Domains extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'domains';
+    protected override _name: string = 'domains';
 
     /**
      * domain dialog
@@ -186,7 +187,7 @@ export class Domains extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
 
         /**
@@ -208,9 +209,12 @@ export class Domains extends BasePage {
                     }
 
                     const domainCollection = domainMap.get(domain.parent_id);
-                    domainCollection.push(domain);
 
-                    domainMap.set(domain.parent_id, domainCollection);
+                    if (!Vts.isUndefined(domainCollection)) {
+                        domainCollection.push(domain);
+
+                        domainMap.set(domain.parent_id, domainCollection);
+                    }
                 }
             }
 

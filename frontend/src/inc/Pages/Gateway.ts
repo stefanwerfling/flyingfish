@@ -15,7 +15,7 @@ export class Gateway extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'gateway';
+    protected override _name: string = 'gateway';
 
     /**
      * gateway dialog
@@ -73,7 +73,7 @@ export class Gateway extends BasePage {
                         title: 'Gateway save success.'
                     });
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -85,7 +85,7 @@ export class Gateway extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
         const card = new Card(new ContentCol(content, ContentColSize.col12));
 
@@ -198,7 +198,7 @@ export class Gateway extends BasePage {
                                                 title: 'Gateway identifier delete success.'
                                             });
                                         }
-                                    } catch ({message}) {
+                                    } catch (message) {
                                         this._toast.fire({
                                             icon: 'error',
                                             title: message

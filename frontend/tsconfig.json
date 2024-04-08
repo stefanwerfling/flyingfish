@@ -1,17 +1,19 @@
 {
   "compilerOptions": {
-    "noImplicitAny": true,
-    "target": "ES2017",
-    "module": "ES2015",
-    "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "ES2015",
+    "moduleResolution": "Node",
+    "noErrorTruncation": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "dist",
+    "strict": true,
+    "target": "ES2017"
   }
 }

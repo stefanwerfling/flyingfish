@@ -18,7 +18,9 @@ import {
     SchemaIpAccessWhiteListResponse,
     SchemaIpAccessWhiteSaveResponse
 } from 'flyingfish_schemas';
+import {Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {UnknownResponse} from './Error/UnknownResponse';
 
 /**
  * BlacklistCategory
@@ -59,6 +61,11 @@ export class IpAccess {
      */
     public static async getMaintainerList(): Promise<IpAccessMaintainer[]> {
         const result = await NetFetch.getData('/json/ipaccess/maintainer/list', SchemaIpAccessMaintainerResponse);
+
+        if (Vts.isUndefined(result.list)) {
+            throw new UnknownResponse('IP Access maintainer return empty list!');
+        }
+
         return result.list;
     }
 

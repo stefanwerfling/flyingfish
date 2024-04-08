@@ -9,7 +9,7 @@ export class DnsResolver extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'dnsresolver';
+    protected override _name: string = 'dnsresolver';
 
     /**
      * constructor

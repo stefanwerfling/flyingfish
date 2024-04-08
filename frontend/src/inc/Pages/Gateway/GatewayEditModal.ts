@@ -205,7 +205,7 @@ export class GatewayEditModal extends ModalDialog {
      * resetValues
      * ovverride for use
      */
-    public resetValues(): void {
+    public override resetValues(): void {
         this.setId(null);
         this.setNetworkName('');
         this.setGatewayMacAddress('');

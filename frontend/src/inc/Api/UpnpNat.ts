@@ -4,7 +4,9 @@ import {
     UpnpNatDeleteRequest,
     UpnpNatGatwayInfo, UpnpNatPort, UpnpNatSaveRequest
 } from 'flyingfish_schemas';
+import {Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {UnknownResponse} from './Error/UnknownResponse';
 
 /**
  * NatStatuts
@@ -33,6 +35,11 @@ export class UpnpNat {
      */
     public static async getCurrentGatewayInfo(): Promise<UpnpNatGatwayInfo> {
         const result = await NetFetch.getData('/json/upnpnat/current_gateway_info', SchemaUpnpNatCurrentGatwayInfoResponse);
+
+        if (Vts.isUndefined(result.data)) {
+            throw new UnknownResponse('UpnpNat current gateway return empty info!');
+        }
+
         return result.data;
     }
 

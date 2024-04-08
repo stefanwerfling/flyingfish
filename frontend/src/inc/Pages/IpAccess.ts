@@ -25,7 +25,7 @@ export class IpAccess extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'ipaccess';
+    protected override _name: string = 'ipaccess';
 
     /**
      * import blacklist dialog
@@ -145,7 +145,7 @@ export class IpAccess extends BasePage {
                         title: 'Blacklist save success.'
                     });
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -182,7 +182,7 @@ export class IpAccess extends BasePage {
                         title: 'Whitelist save success.'
                     });
                 }
-            } catch ({message}) {
+            } catch (message) {
                 this._toast.fire({
                     icon: 'error',
                     title: message
@@ -194,7 +194,7 @@ export class IpAccess extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
 
         const row = new ContentRow(content);
@@ -364,7 +364,7 @@ export class IpAccess extends BasePage {
                                                 title: 'Whitelist entrie delete success.'
                                             });
                                         }
-                                    } catch ({message}) {
+                                    } catch (message) {
                                         this._toast.fire({
                                             icon: 'error',
                                             title: message
@@ -509,7 +509,7 @@ export class IpAccess extends BasePage {
                                                 title: 'Blacklist entrie delete success.'
                                             });
                                         }
-                                    } catch ({message}) {
+                                    } catch (message) {
                                         this._toast.fire({
                                             icon: 'error',
                                             title: message

@@ -1,5 +1,5 @@
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {Schema, SchemaErrors} from 'vts';
+import {Schema, SchemaErrors, Vts} from 'vts';
 import {InternalError} from '../Error/InternalError';
 import {SchemaError} from '../Error/SchemaError';
 import {UnauthorizedError} from '../Error/UnauthorizedError';
@@ -47,6 +47,10 @@ export class Response {
                         throw new UnauthorizedError();
 
                     case StatusCodes.INTERNAL_ERROR:
+                        if (Vts.isUndefined(data.msg)) {
+                            throw new InternalError('');
+                        }
+
                         throw new InternalError(data.msg);
                 }
             }

@@ -110,7 +110,7 @@ export class DomainEditModal extends ModalDialog {
     /**
      * resetValues
      */
-    public resetValues(): void {
+    public override resetValues(): void {
         this.setId(null);
         this.setName('');
         this.setDisable(false);

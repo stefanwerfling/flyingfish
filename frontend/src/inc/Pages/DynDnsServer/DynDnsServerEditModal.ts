@@ -175,7 +175,7 @@ export class DynDnsServerEditModal extends ModalDialog {
     /**
      * resetValues
      */
-    public resetValues(): void {
+    public override resetValues(): void {
         this._multipleDomains.setValue([]);
         this._inputUsername.setValue('');
         this._inputPassword.setValue('');

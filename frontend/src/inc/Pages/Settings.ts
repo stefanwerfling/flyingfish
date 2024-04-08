@@ -13,7 +13,7 @@ export class Settings extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'settings';
+    protected override _name: string = 'settings';
 
     /**
      * constructor
@@ -27,7 +27,7 @@ export class Settings extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
 
         /**

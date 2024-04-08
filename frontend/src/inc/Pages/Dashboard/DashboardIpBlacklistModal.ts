@@ -48,7 +48,7 @@ export class DashboardIpBlacklistModal extends ModalDialog {
     /**
      * show
      */
-    public show(): void {
+    public override show(): void {
         super.show();
 
         const bodyCard = jQuery('<div class="card-body"/>').appendTo(this._body.empty());

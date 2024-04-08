@@ -29,7 +29,7 @@ export class DynDnsServer extends BasePage {
      * name
      * @member {string}
      */
-    protected _name: string = 'dyndnsserver';
+    protected override _name: string = 'dyndnsserver';
 
     /**
      * dyn dns client dialog
@@ -123,7 +123,7 @@ export class DynDnsServer extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
 
         const card = new Card(new ContentCol(row1, ContentColSize.col12));

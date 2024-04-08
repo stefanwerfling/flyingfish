@@ -15,7 +15,7 @@ export class Listens extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'listens';
+    protected override _name: string = 'listens';
 
     /**
      * listen dialog
@@ -27,7 +27,7 @@ export class Listens extends BasePage {
      * toast
      * @protected
      */
-    protected _toast: any;
+    protected override _toast: any;
 
     /**
      * constructor
@@ -116,7 +116,7 @@ export class Listens extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
         const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
@@ -287,7 +287,7 @@ export class Listens extends BasePage {
                                                     });
                                                 }
                                             }
-                                        } catch ({message}) {
+                                        } catch (message) {
                                             this._toast.fire({
                                                 icon: 'error',
                                                 title: message

@@ -22,6 +22,7 @@ import {
     Tr
 } from 'bambooo';
 import {ListenData, RouteHttpSave, RouteStreamSave} from 'flyingfish_schemas';
+import {Vts} from 'vts';
 import {Listen as ListenAPI, ListenCategory} from '../Api/Listen';
 import {Nginx as NginxAPI} from '../Api/Nginx';
 import {
@@ -45,13 +46,13 @@ export class Routes extends BasePage {
      * name
      * @protected
      */
-    protected _name: string = 'routes';
+    protected override _name: string = 'routes';
 
     /**
      * toast
      * @protected
      */
-    protected _toast: any;
+    protected override _toast: any;
 
     /**
      * route stream dialog
@@ -277,7 +278,7 @@ export class Routes extends BasePage {
     /**
      * loadContent
      */
-    public async loadContent(): Promise<void> {
+    public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
 
         /**
@@ -734,13 +735,25 @@ export class Routes extends BasePage {
                                         break;
 
                                     case NginxLocationDestinationTypes.redirect:
-                                        // eslint-disable-next-line no-new
-                                        new Badge(sdTdD, `${aLocation.redirect.redirect} (${aLocation.redirect.code})`, BadgeType.secondary);
+                                        if (!Vts.isUndefined(aLocation.redirect)) {
+                                            // eslint-disable-next-line no-new
+                                            new Badge(
+                                                sdTdD,
+                                                `${aLocation.redirect.redirect} (${aLocation.redirect.code})`,
+                                                BadgeType.secondary
+                                            );
+                                        }
                                         break;
 
                                     case NginxLocationDestinationTypes.ssh:
-                                        // eslint-disable-next-line no-new
-                                        new Badge(sdTdD, `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`, BadgeType.primary);
+                                        if (!Vts.isUndefined(aLocation.ssh)) {
+                                            // eslint-disable-next-line no-new
+                                            new Badge(
+                                                sdTdD,
+                                                `SSH INTERNT OUT (<-- ${aLocation.ssh.port_out})`,
+                                                BadgeType.primary
+                                            );
+                                        }
                                         break;
 
                                     case NginxLocationDestinationTypes.dyndns:

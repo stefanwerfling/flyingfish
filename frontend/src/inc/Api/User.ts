@@ -6,7 +6,9 @@ import {
     UserEntry,
     UserInfo
 } from 'flyingfish_schemas';
+import {Vts} from 'vts';
 import {NetFetch} from '../Net/NetFetch';
+import {UnknownResponse} from './Error/UnknownResponse';
 
 /**
  * User
@@ -18,6 +20,11 @@ export class User {
      */
     public static async getUserInfo(): Promise<UserInfo> {
         const result = await NetFetch.getData('/json/user/info', SchemaUserInfoResponse);
+
+        if (Vts.isUndefined(result.data)) {
+            throw new UnknownResponse('User return empty info!');
+        }
+
         return result.data;
     }
 
