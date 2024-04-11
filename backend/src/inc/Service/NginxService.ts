@@ -39,7 +39,7 @@ import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
 import {Context} from '../Nginx/Config/Context.js';
 import {If} from '../Nginx/Config/If.js';
-import {Listen, ListenProtocol} from '../Nginx/Config/Listen.js';
+import {Listen, ListenDestination, ListenProtocol} from '../Nginx/Config/Listen.js';
 import {Location} from '../Nginx/Config/Location.js';
 import {Map as NginxMap} from '../Nginx/Config/Map.js';
 import {Server as NginxConfServer, ServerXFrameOptions} from '../Nginx/Config/Server.js';
@@ -159,9 +159,8 @@ export class NginxService {
     private _addServerListens(
         server: NginxConfServer,
         listenProtocol: NginxListenProtocol,
-        port: number,
-        ip: string,
-        ip6: string,
+        listenDestination: ListenDestination,
+        listenDestinationIp6: ListenDestination,
         ssl: boolean,
         http2: boolean,
         proxy_protocol: boolean,
@@ -172,8 +171,7 @@ export class NginxService {
         ) {
             server.addListen(
                 new Listen(
-                    port,
-                    ip,
+                    listenDestination,
                     ssl,
                     http2,
                     proxy_protocol
@@ -186,8 +184,7 @@ export class NginxService {
         ) {
             server.addListen(
                 new Listen(
-                    port,
-                    ip,
+                    listenDestination,
                     ssl,
                     http2,
                     proxy_protocol,
@@ -202,8 +199,7 @@ export class NginxService {
             ) {
                 server.addListen(
                     new Listen(
-                        port,
-                        ip6,
+                        listenDestinationIp6,
                         ssl,
                         http2,
                         proxy_protocol
@@ -216,8 +212,7 @@ export class NginxService {
             ) {
                 server.addListen(
                     new Listen(
-                        port,
-                        ip6,
+                        listenDestinationIp6,
                         ssl,
                         http2,
                         proxy_protocol,
@@ -487,9 +482,18 @@ export class NginxService {
         this._addServerListens(
             aServerProxy,
             NginxListenProtocol.tcp,
-            this._proxyUpstreamServer,
-            NginxService.DEFAULT_IP_LOCAL,
-            NginxService.DEFAULT_IP6_PUBLIC,
+            {
+                network: {
+                    port: this._proxyUpstreamServer,
+                    ip: NginxService.DEFAULT_IP_LOCAL
+                }
+            },
+            {
+                network: {
+                    port: this._proxyUpstreamServer,
+                    ip: NginxService.DEFAULT_IP6_PUBLIC
+                }
+            },
             false,
             false,
             true,
@@ -586,9 +590,18 @@ export class NginxService {
                                         this._addServerListens(
                                             aServer,
                                             streamCollects.listen.listen_protocol,
-                                            this._proxyUpstreamServer,
-                                            NginxService.DEFAULT_IP_LOCAL,
-                                            NginxService.DEFAULT_IP6_PUBLIC,
+                                            {
+                                                network: {
+                                                    port: this._proxyUpstreamServer,
+                                                    ip: NginxService.DEFAULT_IP_LOCAL
+                                                }
+                                            },
+                                            {
+                                                network: {
+                                                    port: this._proxyUpstreamServer,
+                                                    ip: NginxService.DEFAULT_IP6_PUBLIC
+                                                }
+                                            },
                                             false,
                                             false,
                                             true,
@@ -659,9 +672,18 @@ export class NginxService {
                                             this._addServerListens(
                                                 aServer,
                                                 streamCollects.listen.listen_protocol,
-                                                this._proxyUpstreamServer,
-                                                NginxService.DEFAULT_IP_LOCAL,
-                                                NginxService.DEFAULT_IP6_PUBLIC,
+                                                {
+                                                    network: {
+                                                        port: this._proxyUpstreamServer,
+                                                        ip: NginxService.DEFAULT_IP_LOCAL
+                                                    }
+                                                },
+                                                {
+                                                    network: {
+                                                        port: this._proxyUpstreamServer,
+                                                        ip: NginxService.DEFAULT_IP6_PUBLIC
+                                                    }
+                                                },
                                                 false,
                                                 false,
                                                 true,
@@ -802,9 +824,18 @@ export class NginxService {
             this._addServerListens(
                 aServer,
                 streamCollects.listen.listen_protocol,
-                listenPort,
-                '',
-                NginxService.DEFAULT_IP6_PUBLIC,
+                {
+                    network: {
+                        port: listenPort,
+                        ip: ''
+                    }
+                },
+                {
+                    network: {
+                        port: listenPort,
+                        ip: NginxService.DEFAULT_IP6_PUBLIC
+                    }
+                },
                 false,
                 false,
                 proxyProtocolInEnable,
@@ -1022,8 +1053,12 @@ export class NginxService {
 
                 if (domainName !== NginxService.DEFAULT_DOMAIN_NAME) {
                     aServer.addListen(new Listen(
-                        listenPort,
-                        '',
+                        {
+                            network: {
+                                port: listenPort,
+                                ip: ''
+                            }
+                        },
                         ssl_enable,
                         false,
                         proxyProtocolInEnable
@@ -1031,8 +1066,12 @@ export class NginxService {
 
                     if (domainHttps.listen.enable_ipv6) {
                         aServer.addListen(new Listen(
-                            listenPort,
-                            NginxService.DEFAULT_IP6_PUBLIC,
+                            {
+                                network: {
+                                    port: listenPort,
+                                    ip: NginxService.DEFAULT_IP6_PUBLIC
+                                }
+                            },
                             ssl_enable,
                             false,
                             proxyProtocolInEnable
@@ -1259,8 +1298,12 @@ export class NginxService {
         if (statusListen) {
             const sServer = new NginxConfServer();
             sServer.addListen(new Listen(
-                statusListen.listen_port,
-                NginxService.DEFAULT_IP_LOCAL,
+                {
+                    network: {
+                        port: statusListen.listen_port,
+                        ip: NginxService.DEFAULT_IP_LOCAL
+                    }
+                },
                 false,
                 false,
                 false,
@@ -1288,8 +1331,12 @@ export class NginxService {
         if (defaultListen) {
             const dServer = new NginxConfServer();
             dServer.addListen(new Listen(
-                defaultListen.listen_port,
-                '',
+                {
+                    network: {
+                        port: defaultListen.listen_port,
+                        ip: ''
+                    }
+                },
                 false,
                 false,
                 defaultListen.proxy_protocol_in,

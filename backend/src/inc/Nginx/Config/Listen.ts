@@ -8,21 +8,31 @@ export enum ListenProtocol {
 }
 
 /**
+ * ListenDestinationNetwork
+ */
+export type ListenDestinationNetwork = {
+    ip: string;
+    port: number;
+};
+
+/**
+ * ListenDestination
+ */
+export type ListenDestination = {
+    network?: ListenDestinationNetwork;
+    unix?: string;
+};
+
+/**
  * Listen
  */
 export class Listen {
 
     /**
-     * ip
+     * destination
      * @protected
      */
-    protected _ip: string;
-
-    /**
-     * port
-     * @protected
-     */
-    protected _port: number;
+    protected _destination: ListenDestination;
 
     /**
      * ssl
@@ -56,25 +66,22 @@ export class Listen {
 
     /**
      * constructor
-     * @param port
-     * @param ip
-     * @param ssl
-     * @param http2
-     * @param proxy_protocol
-     * @param protocol
-     * @param default_server
+     * @param {ListenDestination} destination
+     * @param {boolean} ssl
+     * @param {boolean} http2
+     * @param {boolean} proxy_protocol
+     * @param {ListenProtocol} protocol
+     * @param {boolean} default_server
      */
     public constructor(
-        port: number,
-        ip: string = '',
+        destination: ListenDestination,
         ssl: boolean = false,
         http2: boolean = false,
         proxy_protocol: boolean = false,
         protocol: ListenProtocol = ListenProtocol.none,
         default_server: boolean = false
     ) {
-        this._port = port;
-        this._ip = ip;
+        this._destination = destination;
         this._ssl = ssl;
         this._http2 = http2;
         this._proxy_protocol = proxy_protocol;
@@ -88,11 +95,15 @@ export class Listen {
     public generate(): string {
         let value = 'listen ';
 
-        if (this._ip !== '') {
-            value += `${this._ip}:`;
-        }
+        if (this._destination.unix) {
+            value += `unix:${this._destination.unix}`;
+        } else if(this._destination.network) {
+            if (this._destination.network.ip !== '') {
+                value += `${this._destination.network.ip}:`;
+            }
 
-        value += `${this._port}`;
+            value += `${this._destination.network.port}`;
+        }
 
         if (this._ssl) {
             value += ' ssl';

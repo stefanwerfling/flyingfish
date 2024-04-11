@@ -18,6 +18,7 @@ export type UpstreamServer = {
     weight: number;
     max_fails: number;
     fail_timeout: number;
+    unix_sock?: string;
 };
 
 /**
@@ -102,7 +103,11 @@ export class Upstream extends Context {
         for (const aserver of this._server) {
             let serverStr = 'server ';
 
-            serverStr += `${aserver.address}:${aserver.port}`;
+            if (aserver.unix_sock) {
+                serverStr += `unix:${aserver.unix_sock}`;
+            } else {
+                serverStr += `${aserver.address}:${aserver.port}`;
+            }
 
             if (aserver.weight > 0) {
                 serverStr += ` weight=${aserver.weight}`;
