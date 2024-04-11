@@ -148,9 +148,8 @@ export class NginxService {
      * Intern helper methode for generate listen config.
      * @param {NginxConfServer} server - Nginx server config object.
      * @param {NginxListenProtocol} listenProtocol - Listen protocol type.
-     * @param {number} port - Port number.
-     * @param {string} ip - IP address.
-     * @param {string} ip6 - IPv6 address.
+     * @param {ListenDestination} listenDestination - Listen destination IPv4/Unix.
+     * @param {ListenDestination} listenDestinationIp6 - Listen destination IPv6/Unix.
      * @param {boolean} ssl - Use SSL for listen.
      * @param {boolean} http2 - Use http2 for listen.
      * @param {boolean} proxy_protocol - Use proxy protocol for listen.
