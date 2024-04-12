@@ -1,4 +1,4 @@
-import {mkdir, stat} from 'fs/promises';
+import {mkdir, stat, unlink} from 'fs/promises';
 
 /**
  * FileHelper
@@ -62,6 +62,21 @@ export class FileHelper {
             await mkdir(director, {
                 recursive: recursive
             });
+        } catch (e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete a file
+     * @param {string} file
+     * @returns {boolean}
+     */
+    public static async deleteFile(file: string): Promise<boolean> {
+        try {
+            await unlink(file);
         } catch (e) {
             return false;
         }

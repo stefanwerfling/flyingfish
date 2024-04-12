@@ -129,6 +129,7 @@
     "no-invalid-this": "off",
     "no-magic-numbers": "off",
     "no-mixed-operators": "error",
+    "no-await-in-loop": "off",
     "no-multiple-empty-lines": [
       "error",
       {

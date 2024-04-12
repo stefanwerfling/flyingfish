@@ -223,6 +223,32 @@ export class NginxService {
     }
 
     /**
+     * Convert an ip and port to an "unix socket" path for nginx
+     * @param {string} ip
+     * @param {number} port
+     * @returns {string}
+     * @private
+     */
+    private async getUnixSocket(
+        ip: string,
+        port: number
+    ): Promise<string> {
+        const sockDirectory = path.join(Config.getInstance().get()!.nginx!.prefix, 'socks');
+
+        if (!await FileHelper.directoryExist(sockDirectory)) {
+            await FileHelper.mkdir(sockDirectory, true);
+        }
+
+        const sockUnix = path.join(sockDirectory, `${ip.replaceAll('.', '_')}_${port}.sock`);
+
+        if (await FileHelper.fileExist(sockUnix)) {
+            await FileHelper.deleteFile(sockUnix);
+        }
+
+        return sockUnix;
+    }
+
+    /**
      * Load settings and generate nginx config to file.
      */
     private async _loadConfig(): Promise<void> {
@@ -534,7 +560,7 @@ export class NginxService {
             const proxyProtocolEnable = streamCollects.listen.proxy_protocol;
             const proxyProtocolInEnable = streamCollects.listen.proxy_protocol_in;
 
-            for (const domainName of streamCollects.domains.keys()) {
+            for await (const domainName of streamCollects.domains.keys()) {
                 const streamCollect = streamCollects.domains.get(domainName);
 
                 if (streamCollect === undefined) {
@@ -561,13 +587,19 @@ export class NginxService {
                         // listen --------------------------------------------------------------------------------------
                         case NginxStreamDestinationType.listen:
                             if (streamCollect.destination_listen) {
+                                const unixSocket = await this.getUnixSocket(
+                                    NginxService.DEFAULT_IP_LOCAL,
+                                    streamCollect.destination_listen.listen_port
+                                );
+
                                 // fill default listen destination
                                 upStream.addServer({
                                     address: NginxService.DEFAULT_IP_LOCAL,
                                     port: streamCollect.destination_listen.listen_port,
                                     weight: 0,
                                     max_fails: 0,
-                                    fail_timeout: 0
+                                    fail_timeout: 0,
+                                    unix_sock: unixSocket
                                 });
                             } else {
                                 Logger.getLogger().silly(`Destination listen not found by domain: ${domainName}`, {
@@ -1051,12 +1083,19 @@ export class NginxService {
                 // listen ----------------------------------------------------------------------------------------------
 
                 if (domainName !== NginxService.DEFAULT_DOMAIN_NAME) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const unixSocket = await this.getUnixSocket(
+                        NginxService.DEFAULT_IP_LOCAL,
+                        listenPort
+                    );
+
                     aServer.addListen(new Listen(
                         {
                             network: {
                                 port: listenPort,
                                 ip: ''
-                            }
+                            },
+                            //unix: unixSocket
                         },
                         ssl_enable,
                         false,
@@ -1069,7 +1108,8 @@ export class NginxService {
                                 network: {
                                     port: listenPort,
                                     ip: NginxService.DEFAULT_IP6_PUBLIC
-                                }
+                                },
+                                //unix: unixSocket
                             },
                             ssl_enable,
                             false,
@@ -1328,13 +1368,20 @@ export class NginxService {
         );
 
         if (defaultListen) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const unixSocket = await this.getUnixSocket(
+                NginxService.DEFAULT_IP_LOCAL,
+                defaultListen.listen_port
+            );
+
             const dServer = new NginxConfServer();
             dServer.addListen(new Listen(
                 {
                     network: {
                         port: defaultListen.listen_port,
                         ip: ''
-                    }
+                    },
+                    //unix: unixSocket
                 },
                 false,
                 false,
