@@ -1,4 +1,4 @@
-import {RedisChannel, RedisChannels} from 'flyingfish_core';
+import {Logger, RedisChannel, RedisChannels} from 'flyingfish_core';
 import {HimHIPData, SchemaHimHIPData} from 'flyingfish_schemas';
 
 export type onEventDataUpdate = (data: HimHIPData|null) => void;
@@ -59,6 +59,12 @@ export class HimHIP extends RedisChannel<HimHIPData> {
      * @param {HimHIPData} data
      */
     public async listen(data: HimHIPData): Promise<void> {
+        Logger.getLogger().silly(`HimHIP::listen: receive data -> Gateway-Mac: "${data.gatewaymac}", ` +
+            `Network: "${data.network}", ` +
+            `Gateway: "${data.gateway}, ` +
+            `Interface: "${data.interface}", ` +
+            `Host-IP: "${data.hostip}"`);
+
         if (SchemaHimHIPData.validate(data, [])) {
             HimHIP.setData(data);
         }

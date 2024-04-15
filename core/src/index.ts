@@ -74,6 +74,7 @@ export {SshUserService as SshUserServiceDB} from './inc/Db/MariaDb/Service/SshUs
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/Service/UserService.js';
 
 export {RedisClientOptions, RedisClient} from './inc/Db/RedisDb/RedisClient.js';
+export {RedisSubscribe} from './inc/Db/RedisDb/RedisSubscribe.js';
 export {RedisChannels} from './inc/Db/RedisDb/RedisChannels.js';
 export {RedisChannel} from './inc/Db/RedisDb/RedisChannel.js';
 

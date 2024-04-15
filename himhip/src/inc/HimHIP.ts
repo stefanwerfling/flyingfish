@@ -1,4 +1,5 @@
 import arp from '@network-utils/arp-lookup';
+import {Ets} from 'ets';
 import {Logger, RedisChannel, RedisChannels, RedisClient} from 'flyingfish_core';
 import {HimHIPData, HimHIPUpdate, SchemaHimHIPUpdate} from 'flyingfish_schemas';
 import got from 'got';
@@ -82,6 +83,7 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
             return true;
         }
 
+        Logger.getLogger().silly('HimHip::_sendDataToChannel: none instance has found.');
         return false;
     }
 
@@ -128,22 +130,38 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
      * @param secret
      */
     public static async update(reciverUrl: string, secret: string): Promise<void> {
+        let data: HimHIPData|null = null;
+
         try {
-            const data = await HimHIP._collectData();
+            data = await HimHIP._collectData();
+        } catch (e) {
+            Logger.getLogger().error('HimHip::update: error can not collect information.');
+            Logger.getLogger().error(Ets.formate(e, true, true));
+            return;
+        }
 
-            if (Vts.isNull(data)) {
-                return;
-            }
+        if (Vts.isNull(data)) {
+            Logger.getLogger().silly('HimHip::update: data empty.');
+            return;
+        }
 
-            // when redis instance work use new commincation way -----------------------------------------------
+        // when redis instance work use new commincation way -----------------------------------------------------------
+        try {
             if (await HimHIP._sendDataToChannel(data)) {
                 return;
             }
+        } catch (e) {
+            Logger.getLogger().error('HimHip::update: error can not send information over channel to server.');
+            Logger.getLogger().error(Ets.formate(e, true, true));
+        }
 
-            // send data over old way (https express) ----------------------------------------------------------
+        // send data over old way (https express) ----------------------------------------------------------------------
+
+        try {
             await HimHIP._sendHttpEndpoint(reciverUrl, secret, data);
         } catch (e) {
             Logger.getLogger().error(`HimHip::update: error can not send information to server: '${reciverUrl}'.`);
+            Logger.getLogger().error(Ets.formate(e, true, true));
         }
 
     }

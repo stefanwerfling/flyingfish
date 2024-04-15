@@ -1,6 +1,6 @@
 import {scheduleJob} from 'node-schedule';
 import * as path from 'path';
-import {Args, Logger, RedisClient} from 'flyingfish_core';
+import {Args, Logger, RedisClient, RedisSubscribe} from 'flyingfish_core';
 import {Config} from './inc/Config/Config.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {HimHIP} from './inc/HimHIP.js';
@@ -25,13 +25,16 @@ import {HimHIP} from './inc/HimHIP.js';
 
     if (config.redis && config.redis.url) {
         try {
-            const redisClient = RedisClient.getInstance({
+            const redisSubscribe = RedisSubscribe.getInstance({
                 url: config.redis.url,
                 password: config.redis.password
-            });
+            }, true);
 
+            const redisClient = RedisClient.getInstance();
             await redisClient.connect();
-            await redisClient.registerChannels([
+
+            await redisSubscribe.connect();
+            await redisSubscribe.registerChannels([
                 new HimHIP()
             ]);
         } catch (error) {

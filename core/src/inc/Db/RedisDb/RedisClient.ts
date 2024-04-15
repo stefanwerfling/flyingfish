@@ -65,9 +65,8 @@ export class RedisClient {
     /**
      * Constructor
      * @param {RedisClientOptions} options
-     * @private
      */
-    private constructor(options: RedisClientOptions) {
+    public constructor(options: RedisClientOptions) {
         if (options.password) {
             this._client = createClient({
                 url: options.url,

@@ -148,6 +148,7 @@ services:
         max-file: "50"
     depends_on:
       - flyingfish
+      - redis
 
 #  iptable:
 #    image: flyingfish_iptable:v1.0
