@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import {
     Args,
     DBHelper, DBEntitiesLoader,
-    Logger, PluginManager, RedisClient
+    Logger, PluginManager, RedisClient, RedisSubscribe
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
 import {Vts} from 'vts';
@@ -145,13 +145,16 @@ import exitHook from 'async-exit-hook';
 
     if (tConfig.db.redis && tConfig.db.redis.url) {
         try {
-            const redisClient = RedisClient.getInstance({
+            const redisSubscribe = RedisSubscribe.getInstance({
                 url: tConfig.db.redis.url,
                 password: tConfig.db.redis.password
-            });
+            }, true);
 
+            const redisClient = RedisClient.getInstance();
             await redisClient.connect();
-            await redisClient.registerChannels([
+
+            await redisSubscribe.connect();
+            await redisSubscribe.registerChannels([
                 new HimHIP()
             ]);
         } catch (error) {
