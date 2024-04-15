@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
 import {DashboardInfoResponse, DefaultReturn, StatusCodes} from 'flyingfish_schemas';
+import {HimHIP} from './Dashboard/HimHIP.js';
 import {Info} from './Dashboard/Info.js';
 import {PublicIPBlacklistCheck} from './Dashboard/PublicIPBlacklistCheck.js';
 import {StreamRequests} from './Dashboard/StreamRequests.js';
@@ -50,6 +51,19 @@ export class Dashboard extends DefaultRoute {
             async(req, res) => {
                 if (this.isUserLogin(req, res, false)) {
                     res.status(200).json(await StreamRequests.getList());
+                } else {
+                    res.status(200).json({
+                        statusCode: StatusCodes.UNAUTHORIZED
+                    } as DefaultReturn);
+                }
+            }
+        );
+
+        this._get(
+            '/json/dashboard/refrechhimhip',
+            async(req, res) => {
+                if (this.isUserLogin(req, res, false)) {
+                    res.status(200).json(await HimHIP.refrechHimHIP());
                 } else {
                     res.status(200).json({
                         statusCode: StatusCodes.UNAUTHORIZED

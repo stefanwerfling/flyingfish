@@ -1,7 +1,7 @@
 import {
     DashboardInfoResponse,
     PublicIPBlacklistCheckResponse,
-    SchemaDashboardInfoResponse,
+    SchemaDashboardInfoResponse, SchemaDefaultReturn,
     SchemaPublicIPBlacklistCheckResponse,
     SchemaStreamRequestsResponse,
     StreamRequestsResponse
@@ -34,4 +34,12 @@ export class Dashboard {
         return NetFetch.getData('/json/dashboard/streamrequests', SchemaStreamRequestsResponse);
     }
 
+    /**
+     * Refrech HimHIP data
+     */
+    public static async refrechHimHIP(): Promise<boolean> {
+        NetFetch.getData('/json/dashboard/refrechhimhip', SchemaDefaultReturn);
+
+        return true;
+    }
 }

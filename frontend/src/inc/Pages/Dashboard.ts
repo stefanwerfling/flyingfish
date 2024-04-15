@@ -14,7 +14,9 @@ import {
     InfoBox,
     InfoBoxBg,
     LeftNavbarLink,
-    SwitchTimer, Tooltip, TooltipInfo
+    SwitchTimer,
+    Tooltip,
+    TooltipInfo
 } from 'bambooo';
 import moment from 'moment/moment';
 import {Vts} from 'vts';
@@ -187,6 +189,17 @@ export class Dashboard extends BasePage {
                     });
 
                 }, IconFa.copy);
+
+                btnPubIp.addDivider();
+
+                btnPubIp.addMenuItem('Refrech', async() => {
+                    if (await DashboardApi.refrechHimHIP()) {
+                        this._toast.fire({
+                            icon: 'success',
+                            title: 'Refrech is success'
+                        });
+                    }
+                }, IconFa.sync);
             }
 
             // gateway ip ----------------------------------------------------------------------------------------------
@@ -214,6 +227,17 @@ export class Dashboard extends BasePage {
                     });
 
                 }, IconFa.copy);
+
+                btnGateway.addDivider();
+
+                btnGateway.addMenuItem('Refrech', async() => {
+                    if (await DashboardApi.refrechHimHIP()) {
+                        this._toast.fire({
+                            icon: 'success',
+                            title: 'Refrech is success'
+                        });
+                    }
+                }, IconFa.sync);
             }
 
             // host ip -------------------------------------------------------------------------------------------------
@@ -241,6 +265,17 @@ export class Dashboard extends BasePage {
                     });
 
                 }, IconFa.copy);
+
+                btnHostIp.addDivider();
+
+                btnHostIp.addMenuItem('Refrech', async() => {
+                    if (await DashboardApi.refrechHimHIP()) {
+                        this._toast.fire({
+                            icon: 'success',
+                            title: 'Refrech is success'
+                        });
+                    }
+                }, IconFa.sync);
             }
 
             // ip infos ------------------------------------------------------------------------------------------------
