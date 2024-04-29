@@ -1,15 +1,14 @@
-import {Column, Index, Entity} from 'typeorm';
+import {Column, Entity} from 'typeorm';
 import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 @Entity({name: 'credential'})
 export class Credential extends DBBaseEntityId {
 
     /**
-     * location id
+     * Name of credential
      */
-    @Index()
     @Column()
-    public location_id!: number;
+    public name!: string;
 
     /**
      * scheme

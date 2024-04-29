@@ -19,6 +19,7 @@ export {DBEntitiesLoader} from './inc/Db/MariaDb/DBEntitiesLoader.js';
 
 export {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential.js';
 export {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser.js';
+export {CredentialLocation as CredentialLocationDB} from './inc/Db/MariaDb/Entity/CredentialLocation.js';
 export {Domain as DomainDB} from './inc/Db/MariaDb/Entity/Domain.js';
 export {DomainRecord as DomainRecordDB} from './inc/Db/MariaDb/Entity/DomainRecord.js';
 export {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClient.js';
@@ -47,6 +48,7 @@ export {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
 
 export {CredentialService as CredentialServiceDB} from './inc/Db/MariaDb/Service/CredentialService.js';
 export {CredentialUserService as CredentialUserServiceDB} from './inc/Db/MariaDb/Service/CredentialUserService.js';
+export {CredentialLocationService as CredentialLocationServiceDB} from './inc/Db/MariaDb/Service/CredentialLocationService.js';
 export {DomainService as DomainServiceDB} from './inc/Db/MariaDb/Service/DomainService.js';
 export {DomainRecordService as DomainRecordServiceDB} from './inc/Db/MariaDb/Service/DomainRecordService.js';
 export {DynDnsClientService as DynDnsClientServiceDB} from './inc/Db/MariaDb/Service/DynDnsClientService.js';

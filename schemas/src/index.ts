@@ -30,6 +30,9 @@ export {
     SchemaBackendConfigOptions,
     BackendConfigOptions
 } from './Backend/Config/Config.js';
+export {CredentialSchemaTypes} from './Backend/Credential/CredentialSchemaTypes.js';
+export {SchemaCredentialSchemaBasic, CredentialSchemaBasic} from './Backend/Credential/CredentialSchemaBasic.js';
+export {SchemaCredential, Credential} from './Backend/Credential/Credential.js';
 export {DnsRecordBase} from './Backend/Dns/DnsRecordBase.js';
 export {IDnsServer} from './Backend/Dns/IDnsServer.js';
 export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
@@ -43,6 +46,10 @@ export {SslCertExistOptions} from './Backend/Provider/SslCertProviders/SslCertEx
 export {SslCertBundelOptions} from './Backend/Provider/SslCertProviders/SslCertBundelOptions.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
 export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';
+export {
+    SchemaCredentialResponse,
+    CredentialResponse
+} from './Backend/Routes/Credential/List.js';
 export {
     SchemaDashboardInfoIpBlock,
     DashboardInfoIpBlock,

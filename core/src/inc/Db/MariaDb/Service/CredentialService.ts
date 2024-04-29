@@ -1,3 +1,4 @@
+import {In} from 'typeorm';
 import {DBService} from '../DBService.js';
 import {Credential} from '../Entity/Credential.js';
 
@@ -23,16 +24,14 @@ export class CredentialService extends DBService<Credential> {
     }
 
     /**
-     * getListByLocation
-     * @param locationId
+     * Return all credential by id list
+     * @param {number[]} credIds
+     * @returns {Credential[]}
      */
-    public async getListByLocation(locationId: number): Promise<Credential[]> {
+    public async findByIds(credIds: number[]): Promise<Credential[]> {
         return this._repository.find({
             where: {
-                location_id: locationId
-            },
-            order: {
-                position: 'ASC'
+                id: In(credIds)
             }
         });
     }

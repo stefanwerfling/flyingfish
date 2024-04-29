@@ -1,5 +1,6 @@
 import {PluginManager} from '../../PluginSystem/PluginManager.js';
 import {Credential} from './Entity/Credential.js';
+import {CredentialLocation} from './Entity/CredentialLocation.js';
 import {CredentialUser} from './Entity/CredentialUser.js';
 import {Domain} from './Entity/Domain.js';
 import {DomainRecord} from './Entity/DomainRecord.js';
@@ -43,6 +44,7 @@ export class DBEntitiesLoader {
         const list: MixedList<Function | string | EntitySchema> = [
             Credential,
             CredentialUser,
+            CredentialLocation,
             Domain,
             DomainRecord,
             DynDnsClient,

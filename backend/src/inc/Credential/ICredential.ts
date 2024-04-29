@@ -1,10 +1,10 @@
-import {CredentialSchemes} from './Credential.js';
+import {CredentialSchemaTypes} from 'flyingfish_schemas';
 
 /**
  * ICredential
  */
 export interface ICredential {
-    getSupports(): CredentialSchemes[];
+    getSupports(): CredentialSchemaTypes[];
 
     getName(): string;
 }

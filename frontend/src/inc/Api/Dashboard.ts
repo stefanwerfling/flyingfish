@@ -42,4 +42,5 @@ export class Dashboard {
 
         return true;
     }
+
 }

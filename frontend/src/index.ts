@@ -3,6 +3,7 @@ import {Login as LoginAPI} from './inc/Api/Login';
 import {User as UserAPI} from './inc/Api/User';
 import {Lang} from './inc/Lang';
 import {BasePage} from './inc/Pages/BasePage';
+import {Credential as CredentialPage} from './inc/Pages/Credential';
 import {Dashboard as DashboardPage} from './inc/Pages/Dashboard';
 import {Domains as DomainsPage} from './inc/Pages/Domains';
 import {DynDnsClients} from './inc/Pages/DynDnsClients';
@@ -156,6 +157,14 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect';
                         }
                     }
                 ]
+            },
+            {
+                title: 'Credential',
+                icon: 'fa-solid fa-book',
+                name: 'credential',
+                onClick: (): void => {
+                    loadPage(new CredentialPage());
+                }
             },
             {
                 title: 'Routes',

@@ -38,7 +38,7 @@ import {RouteHttpEditModal} from './Routes/RouteHttpEditModal';
 import {RouteStreamEditModal} from './Routes/RouteStreamEditModal';
 
 /**
- * Hosts Page
+ * Routes Page
  */
 export class Routes extends BasePage {
 
@@ -779,9 +779,20 @@ export class Routes extends BasePage {
                             const tdOptions = new Td(trbody, '');
 
                             if (value.ssl && value.ssl.enable) {
-                                const sslTooltip = new Tooltip(tdOptions, `SSL with '${value.ssl.provider}'`);
+                                const sslTooltip = new Tooltip(tdOptions, `SSL with '${value.ssl.provider}'.`);
                                 // eslint-disable-next-line no-new
                                 new Icon(sslTooltip, IconFa.lock);
+                            }
+                            
+                            for (const tlocation of value.locations) {
+                                if (tlocation.auth_enable) {
+                                    tdOptions.append('&nbsp;');
+
+                                    const authTooltip = new Tooltip(tdOptions, 'Auth enable, use Credential.');
+                                    // eslint-disable-next-line no-new
+                                    new Icon(authTooltip, IconFa.alert);
+                                    break;
+                                }
                             }
 
                             // action td -----------------------------------------------------------------------------------
