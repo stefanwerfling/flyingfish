@@ -21,7 +21,7 @@
     "jquery": "^3.6.4",
     "jquery-ui-dist": "^1.13.2",
     "moment": "^2.29.4",
-    "ol": "^7.3.0",
+    "ol": "^9.1.0",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git"
   },
   "devDependencies": {
