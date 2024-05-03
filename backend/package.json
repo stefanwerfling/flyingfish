@@ -57,7 +57,7 @@
     "flyingfish_schemas": "file:../schemas",
     "flyingfish_plugin_letsencrypt": "file:../plugins/letsencrypt",
     "got": "^12.6.1",
-    "helmet": "^6.2.0",
+    "helmet": "^7.1.0",
     "moment": "^2.29.4",
     "mysql": "^2.18.1",
     "node-cache": "^5.1.2",
