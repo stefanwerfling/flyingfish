@@ -43,7 +43,7 @@
     "express-session": "^1.17.3",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
-    "helmet": "^6.2.0",
+    "helmet": "^7.1.0",
     "mysql": "^2.18.1",
     "typeorm": "0.3.16",
     "uuid": "^9.0.0",
