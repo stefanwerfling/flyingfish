@@ -70,6 +70,6 @@
     "uuid": "^9.0.0",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",
     "winston": "^3.10.0",
-    "winston-daily-rotate-file": "^4.7.1"
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }
