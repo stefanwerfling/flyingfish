@@ -9,6 +9,18 @@ export class Credential extends DefaultRoute {
      */
     public getExpressRouter(): Router {
         this._get(
+            '/json/credential/provider/list',
+            async(
+                req,
+                res
+            ) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(List.getCredentials());
+                }
+            }
+        );
+
+        this._get(
             '/json/credential/list',
             async(
                 req,

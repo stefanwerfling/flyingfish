@@ -1,3 +1,4 @@
+import {IProvider} from '../IProvider.js';
 import {FSslCertProviderOnReset} from './FSslCertProviderOnReset.js';
 import {SslCertBundel} from './SslCertBundel.js';
 import {SslCertBundelOptions} from './SslCertBundelOptions.js';
@@ -8,19 +9,7 @@ import {SslCertExistOptions} from './SslCertExistOptions.js';
 /**
  * The ssl certificate provider interface.
  */
-export interface ISslCertProvider {
-
-    /**
-     * Return the keyname for provider as ident.
-     * @returns {string}
-     */
-    getName(): string;
-
-    /**
-     * Return the title for provider (for frontend).
-     * @returns {string}
-     */
-    getTitle(): string;
+export interface ISslCertProvider extends IProvider {
 
     /**
      * Support the provider wildcard certificates

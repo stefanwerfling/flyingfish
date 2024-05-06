@@ -3,13 +3,13 @@ import {SchemaDefaultReturn} from '../../../Core/Server/Routes/DefaultReturn.js'
 import {SchemaProviderEntry} from '../../Provider/ProviderEntry.js';
 
 /**
- * SchemaSslProvidersResponse
+ * Schema of a credential provider list
  */
-export const SchemaSslProvidersResponse = SchemaDefaultReturn.extend({
+export const SchemaCredentialProviderResponse = SchemaDefaultReturn.extend({
     list: Vts.array(SchemaProviderEntry)
 });
 
 /**
- * SslProvidersResponse
+ * Type of credential provider list
  */
-export type SslProvidersResponse = ExtractSchemaResultType<typeof SchemaSslProvidersResponse>;
+export type CredentialProviderResponse = ExtractSchemaResultType<typeof SchemaCredentialProviderResponse>;

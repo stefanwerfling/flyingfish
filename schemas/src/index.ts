@@ -36,7 +36,8 @@ export {SchemaCredential, Credential} from './Backend/Credential/Credential.js';
 export {DnsRecordBase} from './Backend/Dns/DnsRecordBase.js';
 export {IDnsServer} from './Backend/Dns/IDnsServer.js';
 export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
-export {SchemaSslProvider, SslProvider} from './Backend/Provider/SslCertProviders/SslProviders.js';
+export {SchemaProviderEntry, ProviderEntry} from './Backend/Provider/ProviderEntry.js';
+export {IProvider} from './Backend/Provider/IProvider.js';
 export {FSslCertProviderOnReset} from './Backend/Provider/SslCertProviders/FSslCertProviderOnReset.js';
 export {ISslCertProvider} from './Backend/Provider/SslCertProviders/ISslCertProvider.js';
 export {SslCertBundel} from './Backend/Provider/SslCertProviders/SslCertBundel.js';
@@ -46,6 +47,12 @@ export {SslCertExistOptions} from './Backend/Provider/SslCertProviders/SslCertEx
 export {SslCertBundelOptions} from './Backend/Provider/SslCertProviders/SslCertBundelOptions.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
 export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';
+export {
+    SchemaCredentialProvider,
+    CredentialProvider,
+    SchemaCredentialProviderResponse,
+    CredentialProviderResponse
+} from './Backend/Routes/Credential/Provider.js';
 export {
     SchemaCredentialResponse,
     CredentialResponse
