@@ -1,12 +1,5 @@
+import {ICredentialProviders} from 'flyingfish_core/dist/src/index.js';
 
-export class CredentialProviders {
-
-    public static async getProvider(name: string): Promise<null> {
-
-    }
-
-    public static async getProviders(): Promise<> {
-        
-    }
+export class CredentialProviders implements ICredentialProviders {
 
 }

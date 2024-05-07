@@ -5,4 +5,5 @@ import {IProvider} from '../IProvider.js';
  */
 export interface ICredentialProvider extends IProvider {
 
+
 }

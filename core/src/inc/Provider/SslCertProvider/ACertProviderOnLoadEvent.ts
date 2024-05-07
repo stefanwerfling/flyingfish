@@ -1,5 +1,5 @@
-import {ISslCertProvider} from 'flyingfish_schemas';
 import {APluginEvent} from '../../PluginSystem/APluginEvent.js';
+import {ISslCertProvider} from './ISslCertProvider.js';
 
 /**
  * Abstract certificate provider on load event.

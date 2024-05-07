@@ -1,5 +1,5 @@
-import {ACertProviderOnLoadEvent, PluginManager} from 'flyingfish_core';
-import {ISslCertProvider, SslProvider} from 'flyingfish_schemas';
+import {ACertProviderOnLoadEvent, ISslCertProvider, PluginManager} from 'flyingfish_core';
+import {ProviderEntry} from 'flyingfish_schemas';
 
 /**
  * Ssl Certificate provider.
@@ -31,10 +31,10 @@ export class SslCertProviders {
 
     /**
      * Get a provider list with name and title.
-     * @returns {SslProvider[]}
+     * @returns {ProviderEntry[]}
      */
-    public static async getProviders(): Promise<SslProvider[]> {
-        const list: SslProvider[] = [];
+    public static async getProviders(): Promise<ProviderEntry[]> {
+        const list: ProviderEntry[] = [];
 
         const events = PluginManager.getInstance().getAllEvents<ACertProviderOnLoadEvent>(
             ACertProviderOnLoadEvent
