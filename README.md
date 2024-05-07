@@ -33,6 +33,9 @@ In the classic sense, FlyingFish is a nginx manager. But the way the nginx serve
 
 - [Version 1.1.0](https://github.com/stefanwerfling/flyingfish/milestone/1)
 
+## Current work
+With the milestone version [1.1.0](https://github.com/stefanwerfling/flyingfish/milestone/1) and now [1.2.0](https://github.com/stefanwerfling/flyingfish/milestone/2) the abstraction and division will now be revised. The implementation of plugins and new functions now requires a review of the existing code. This involves a lot of changes to code management and the package.
+
 ## In progress
 
 - [Version 1.2.0](https://github.com/stefanwerfling/flyingfish/milestone/2)
