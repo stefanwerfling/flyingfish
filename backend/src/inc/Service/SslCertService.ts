@@ -166,7 +166,8 @@ export class SslCertService {
 
             // ---------------------------------------------------------------------------------------------------------
 
-            const provider = await SslCertProviders.getProvider(http.cert_provider);
+            const scp = new SslCertProviders();
+            const provider = await scp.getProvider(http.cert_provider);
 
             if (Vts.isNull(provider)) {
                 Logger.getLogger().error(`provider not found by '${domain.domainname}' domain, http: ${http.id}`, {

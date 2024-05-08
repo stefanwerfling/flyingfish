@@ -123,9 +123,10 @@ export {ICredentialProvider} from './inc/Provider/CredentialProvider/ICredential
 export {ICredentialProviders} from './inc/Provider/CredentialProvider/ICredentialProviders.js';
 
 // Provider SslCertProvider
-export {ACertProviderOnLoadEvent} from './inc/Provider/SslCertProvider/ACertProviderOnLoadEvent.js';
+export {ASslCertProviderOnLoadEvent} from './inc/Provider/SslCertProvider/ASslCertProviderOnLoadEvent.js';
 export {FSslCertProviderOnReset} from './inc/Provider/SslCertProvider/FSslCertProviderOnReset.js';
 export {ISslCertProvider} from './inc/Provider/SslCertProvider/ISslCertProvider.js';
+export {ISslCertProviders} from './inc/Provider/SslCertProvider/ISslCertProviders.js';
 export {SslCertBundel} from './inc/Provider/SslCertProvider/SslCertBundel.js';
 export {SslCertBundelOptions} from './inc/Provider/SslCertProvider/SslCertBundelOptions.js';
 export {SslCertCreateGlobal} from './inc/Provider/SslCertProvider/SslCertCreateGlobal.js';

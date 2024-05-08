@@ -1,12 +1,11 @@
-import {ACertProviderOnLoadEvent} from 'flyingfish_core';
-import {ISslCertProvider} from 'flyingfish_schemas';
+import {ASslCertProviderOnLoadEvent, ISslCertProvider} from 'flyingfish_core';
 //import {Acme} from './Acme.js';
 import {Certbot} from './Certbot.js';
 
 /**
  * Provider loader
  */
-export class ProviderLoader extends ACertProviderOnLoadEvent {
+export class ProviderLoader extends ASslCertProviderOnLoadEvent {
 
     /**
      * Register of providers

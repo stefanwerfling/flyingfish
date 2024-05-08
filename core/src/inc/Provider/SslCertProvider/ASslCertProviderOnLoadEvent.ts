@@ -4,7 +4,7 @@ import {ISslCertProvider} from './ISslCertProvider.js';
 /**
  * Abstract certificate provider on load event.
  */
-export abstract class ACertProviderOnLoadEvent extends APluginEvent {
+export abstract class ASslCertProviderOnLoadEvent extends APluginEvent {
 
     /**
      * Return all supported Providers.
