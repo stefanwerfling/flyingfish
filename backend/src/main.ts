@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import {
     Args,
     DBHelper, DBEntitiesLoader,
-    Logger, PluginManager, RedisClient, RedisSubscribe
+    Logger, PluginManager, RedisClient, RedisSubscribe, FileHelper
 } from 'flyingfish_core';
 import {EntitySchema, MixedList} from 'typeorm';
 import {Vts} from 'vts';
@@ -59,7 +59,7 @@ import exitHook from 'async-exit-hook';
         configfile = argv.config;
 
         try {
-            if (!fs.existsSync(configfile)) {
+            if (!await FileHelper.fileExist(configfile)) {
                 console.log(`Config not found: ${configfile}, exit.`);
                 return;
             }

@@ -1,8 +1,8 @@
 import {Ets} from 'ets';
-import fs, {readFileSync} from 'fs';
 import path from 'path';
 import {SchemaErrors} from 'vts';
 import {Logger} from '../Logger/Logger.js';
+import {FileHelper} from '../Utils/FileHelper.js';
 import {Plugin} from './Plugin.js';
 import {PluginDefinition, SchemaPluginDefinition} from './PluginDefinition.js';
 import {APluginEvent} from './APluginEvent.js';
@@ -80,7 +80,7 @@ export class PluginManager {
      * Start all loaded plugins.
      */
     public async start(): Promise<void> {
-        const pluginInfos = this.scan();
+        const pluginInfos = await this.scan();
 
         for await (const pluginInfo of pluginInfos) {
             Logger.getLogger().silly(`PluginManager::start: found plugin: ${pluginInfo.definition.name} (${pluginInfo.definition.version})`);
@@ -93,35 +93,27 @@ export class PluginManager {
      * Scan all modules for plugin information.
      * @returns {PluginInformation[]}
      */
-    public scan(): PluginInformation[] {
+    public async scan(): Promise<PluginInformation[]> {
         let nodeModulesPath = path.join(this._appPath, 'node_modules');
 
-        if (!fs.existsSync(nodeModulesPath)) {
+        if (!await FileHelper.directoryExist(nodeModulesPath)) {
             nodeModulesPath = path.join(this._appPath, 'node_modules', this._serviceName);
 
-            if (!fs.existsSync(nodeModulesPath)) {
+            if (!await FileHelper.directoryExist(nodeModulesPath)) {
                 throw new Error(`node_modules directory not found: ${nodeModulesPath}`);
             }
         }
 
-        const modules = fs.readdirSync(nodeModulesPath);
+        const modules = await FileHelper.readdir(nodeModulesPath);
         const informations: PluginInformation[] = [];
 
-        for (const aModule of modules) {
+        for await (const aModule of modules) {
             const packageJsonPath = path.join(nodeModulesPath, aModule);
 
-            if (fs.existsSync(packageJsonPath)) {
+            if (await FileHelper.directoryExist(packageJsonPath)) {
                 try {
                     const packageFile = path.join(packageJsonPath, 'package.json');
-
-                    // console.log(`PluginManager::scan: read: ${packageFile}`);
-
-                    const rawdata = readFileSync(packageFile, {
-                        // @ts-ignore
-                        encoding: 'utf-8'
-                    });
-
-                    const packetData = JSON.parse(rawdata);
+                    const packetData = await FileHelper.readJsonFile(packageFile);
 
                     if (packetData) {
                         if (packetData.flyingfish) {
@@ -156,7 +148,7 @@ export class PluginManager {
         try {
             const pluginMain = path.join(plugin.path, plugin.definition.main);
 
-            if (!fs.existsSync(pluginMain)) {
+            if (!await FileHelper.fileExist(pluginMain)) {
                 throw new Error(`plugin main not found: ${pluginMain}`);
             }
 

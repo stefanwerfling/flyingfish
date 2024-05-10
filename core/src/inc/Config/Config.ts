@@ -1,8 +1,8 @@
 import {ConfigOptions, SchemaConfigOptions} from 'flyingfish_schemas';
-import {readFileSync} from 'fs';
 import path from 'path';
 import {SchemaErrors} from 'vts';
 import {ObjectSchema} from 'vts/dist/schemas/objectSchema.js';
+import {FileHelper} from '../Utils/FileHelper.js';
 
 /**
  * Config
@@ -78,14 +78,10 @@ export class Config<T extends ConfigOptions> {
 
         if (configFile) {
             try {
-                const rawdata = readFileSync(configFile, {
-                    // @ts-ignore
-                    encoding: 'utf-8'
-                });
+                const fileConfig = await FileHelper.readJsonFile(configFile);
 
                 console.log(`Config::load: Load json-file: ${configFile}`);
 
-                const fileConfig = JSON.parse(rawdata);
                 const errors: SchemaErrors = [];
 
                 if (this._schema instanceof ObjectSchema) {

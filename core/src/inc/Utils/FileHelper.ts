@@ -1,4 +1,4 @@
-import {mkdir, stat, unlink} from 'fs/promises';
+import {mkdir, stat, unlink, readFile, readdir} from 'fs/promises';
 
 /**
  * FileHelper
@@ -82,6 +82,34 @@ export class FileHelper {
         }
 
         return true;
+    }
+
+    /**
+     * Read the content from File
+     * @param {string} file
+     * @returns {string}
+     */
+    public static async readFile(file: string): Promise<string> {
+        return readFile(file, 'utf8');
+    }
+
+    /**
+     * Read a content from File and parse as a json object
+     * @param {string} jsonFile
+     */
+    public static async readJsonFile(jsonFile: string): Promise<any> {
+        const raw = await FileHelper.readFile(jsonFile);
+
+        return JSON.parse(raw);
+    }
+
+    /**
+     * Read a directory
+     * @param {string} directory
+     * @returns {string[]}
+     */
+    public static async readdir(directory: string): Promise<string[]> {
+        return readdir(directory);
     }
 
 }
