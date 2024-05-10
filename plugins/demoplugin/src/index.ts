@@ -1,10 +1,10 @@
-import {Plugin} from 'flyingfish_core';
+import {APlugin, PluginServiceNames} from 'flyingfish_core';
 import {LoadDb} from './LoadDb.js';
 
 /**
  * DemoPlugin
  */
-export default class DemoPlugin extends Plugin {
+export default class DemoPlugin extends APlugin {
 
     /**
      * getName
@@ -24,8 +24,10 @@ export default class DemoPlugin extends Plugin {
      * onEnable
      */
     public onEnable(): boolean {
-        // register Db table loads
-        this.getPluginManager().registerEvents(new LoadDb(), this);
+        if (this.getPluginManager().getServiceName() === PluginServiceNames.backend) {
+            // register Db table loads
+            this.getPluginManager().registerEvents(new LoadDb(), this);
+        }
 
         return false;
     }

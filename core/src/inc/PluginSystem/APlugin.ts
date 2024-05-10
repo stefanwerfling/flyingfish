@@ -1,10 +1,11 @@
 import {PluginDefinition} from './PluginDefinition.js';
 import {PluginManager} from './PluginManager.js';
+import {PluginServiceNames} from './PluginServiceNames.js';
 
 /**
  * Plugin
  */
-export abstract class Plugin {
+export abstract class APlugin {
 
     /**
      * plugin information by package.json

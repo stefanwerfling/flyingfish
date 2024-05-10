@@ -1,50 +1,56 @@
-import * as path from 'path';
-import * as fs from 'fs';
+import exitHook from 'async-exit-hook';
 import {
     Args,
-    DBHelper, DBEntitiesLoader,
-    Logger, PluginManager, RedisClient, RedisSubscribe, FileHelper
+    DBEntitiesLoader,
+    DBHelper,
+    FileHelper,
+    Logger,
+    PluginManager,
+    PluginServiceNames,
+    RedisClient,
+    RedisSubscribe
 } from 'flyingfish_core';
+import * as fs from 'fs';
+import * as path from 'path';
 import {EntitySchema, MixedList} from 'typeorm';
+import {v4 as uuid} from 'uuid';
 import {Vts} from 'vts';
+import {Config} from './inc/Config/Config.js';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
+import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {HimHIP} from './inc/HimHIP/HimHIP.js';
+import {NginxServer} from './inc/Nginx/NginxServer.js';
+import {HttpServer} from './inc/Server/HttpServer.js';
 import {BlacklistService} from './inc/Service/BlacklistService.js';
+import {DynDnsService} from './inc/Service/DynDnsService.js';
+import {HowIsMyPublicIpService} from './inc/Service/HowIsMyPublicIpService.js';
 import {IpLocationService} from './inc/Service/IpLocationService.js';
 import {IpService} from './inc/Service/IpService.js';
+import {NginxService} from './inc/Service/NginxService.js';
 import {NginxStatusService} from './inc/Service/NginxStatusService.js';
 import {SslCertService} from './inc/Service/SslCertService.js';
+import {UpnpNatService} from './inc/Service/UpnpNatService.js';
 import {FlyingFishSsl} from './inc/Utils/FlyingFishSsl.js';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
 import {Dashboard as DashboardController} from './Routes/Main/Dashboard.js';
-import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier.js';
-import {IpAccess as IpAccessController} from './Routes/Main/IpAccess.js';
-import {Settings as SettingsController} from './Routes/Main/Settings.js';
-import {Ssl as SslController} from './Routes/Main/Ssl.js';
 import {Domain as DomainController} from './Routes/Main/Domain.js';
 import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient.js';
-import {Route as RouteController} from './Routes/Main/Route.js';
+import {DynDnsServer as DynDnsServerController} from './Routes/Main/DynDnsServer.js';
+import {GatewayIdentifier as GatewayIdentifierController} from './Routes/Main/GatewayIdentifier.js';
+import {IpAccess as IpAccessController} from './Routes/Main/IpAccess.js';
 import {Listen as ListenController} from './Routes/Main/Listen.js';
-import {Ssh as SshController} from './Routes/Main/Ssh.js';
 import {Login as LoginController} from './Routes/Main/Login.js';
 import {Nginx as NginxController} from './Routes/Main/Nginx.js';
+import {Route as RouteController} from './Routes/Main/Route.js';
+import {Settings as SettingsController} from './Routes/Main/Settings.js';
+import {Ssh as SshController} from './Routes/Main/Ssh.js';
+import {Ssl as SslController} from './Routes/Main/Ssl.js';
 import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat.js';
 import {User as UserController} from './Routes/Main/User.js';
 import {AddressAccess as NjsAddressAccessController} from './Routes/Njs/AddressAccess.js';
 import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
-import {DynDnsServer as DynDnsServerController} from './Routes/Main/DynDnsServer.js';
-import {Config} from './inc/Config/Config.js';
-import {v4 as uuid} from 'uuid';
-import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
-import {NginxServer} from './inc/Nginx/NginxServer.js';
-import {HttpServer} from './inc/Server/HttpServer.js';
-import {DynDnsService} from './inc/Service/DynDnsService.js';
-import {HowIsMyPublicIpService} from './inc/Service/HowIsMyPublicIpService.js';
-import {NginxService} from './inc/Service/NginxService.js';
-import {UpnpNatService} from './inc/Service/UpnpNatService.js';
-import exitHook from 'async-exit-hook';
 
 /**
  * Main
@@ -97,7 +103,7 @@ import exitHook from 'async-exit-hook';
     // load plugins ----------------------------------------------------------------------------------------------------
 
     try {
-        const pm = new PluginManager('backend', path.resolve());
+        const pm = new PluginManager(PluginServiceNames.backend, path.resolve());
         await pm.start();
     } catch (error) {
         Logger.getLogger().error('The plugin manager could not load the plugins.', error);

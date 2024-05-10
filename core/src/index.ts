@@ -110,7 +110,8 @@ export {SimpleProcessAwait} from './inc/Utils/SimpleProcessAwait.js';
 
 // PluginSystem
 export {PluginDefinition, SchemaPluginDefinition} from './inc/PluginSystem/PluginDefinition.js';
-export {Plugin} from './inc/PluginSystem/Plugin.js';
+export {APlugin} from './inc/PluginSystem/APlugin.js';
+export {PluginServiceNames} from './inc/PluginSystem/PluginServiceNames.js';
 export {PluginInformation, PluginManager} from './inc/PluginSystem/PluginManager.js';
 export {APluginEvent} from './inc/PluginSystem/APluginEvent.js';
 

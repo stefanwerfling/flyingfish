@@ -3,9 +3,9 @@ import {ASslCertProviderOnLoadEvent, ISslCertProvider} from 'flyingfish_core';
 import {Certbot} from './Certbot.js';
 
 /**
- * Provider loader
+ * SSL Cert Provider loader
  */
-export class ProviderLoader extends ASslCertProviderOnLoadEvent {
+export class SslCertProviderLoader extends ASslCertProviderOnLoadEvent {
 
     /**
      * Register of providers

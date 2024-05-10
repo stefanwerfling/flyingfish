@@ -3,9 +3,10 @@ import path from 'path';
 import {SchemaErrors} from 'vts';
 import {Logger} from '../Logger/Logger.js';
 import {FileHelper} from '../Utils/FileHelper.js';
-import {Plugin} from './Plugin.js';
+import {APlugin} from './APlugin.js';
 import {PluginDefinition, SchemaPluginDefinition} from './PluginDefinition.js';
 import {APluginEvent} from './APluginEvent.js';
+import {PluginServiceNames} from './PluginServiceNames.js';
 
 /**
  * PluginInformation
@@ -34,15 +35,15 @@ export class PluginManager {
 
     /**
      * Service name from service instance (name of the system in which the plugin works).
-     * @member {string}
+     * @member {PluginServiceNames|string}
      */
-    protected _serviceName: string;
+    protected _serviceName: PluginServiceNames|string;
 
     /**
      * Plugin loading list.
-     * @member {Plugin[]}
+     * @member {APlugin[]}
      */
-    protected _plugins: Plugin[] = [];
+    protected _plugins: APlugin[] = [];
 
     /**
      * events
@@ -63,17 +64,27 @@ export class PluginManager {
     }
 
     /**
-     * @param {string} serviceName - Service name, name who starts the plugin manager.
+     * Constructor
+     * @param {PluginServiceNames|string} serviceName - Service name, name who starts the plugin manager.
      * @param {string} appPath - Path-to-modules directory.
      */
-    public constructor(serviceName: string, appPath?: string) {
+    public constructor(serviceName: PluginServiceNames|string, appPath?: string) {
         if (appPath) {
             this._appPath = appPath;
         }
 
         this._appPath = path.join(path.resolve());
         this._serviceName = serviceName;
+
         PluginManager._instance = this;
+    }
+
+    /**
+     * Return the service name
+     * @returns {PluginServiceNames|string}
+     */
+    public getServiceName(): PluginServiceNames|string {
+        return this._serviceName;
     }
 
     /**
@@ -83,7 +94,9 @@ export class PluginManager {
         const pluginInfos = await this.scan();
 
         for await (const pluginInfo of pluginInfos) {
-            Logger.getLogger().silly(`PluginManager::start: found plugin: ${pluginInfo.definition.name} (${pluginInfo.definition.version})`);
+            Logger.getLogger().silly(
+                `PluginManager::start: found plugin: ${pluginInfo.definition.name} (${pluginInfo.definition.version})`
+            );
 
             await this.load(pluginInfo);
         }
@@ -143,6 +156,7 @@ export class PluginManager {
      * Load plugin to plugin-managaer by plugin information.
      * @param {PluginInformation} plugin - Plugin information.
      * @returns {boolean} Return true when is loaded.
+     * @throws
      */
     public async load(plugin: PluginInformation): Promise<boolean> {
         try {
@@ -158,7 +172,7 @@ export class PluginManager {
 
             console.log(oPlugin);
 
-            const object = new oPlugin.default(plugin, this) as Plugin;
+            const object = new oPlugin.default(plugin, this) as APlugin;
 
             if (object) {
                 this._plugins.push(object);
@@ -177,18 +191,18 @@ export class PluginManager {
 
     /**
      * Return all plugins.
-     * @returns {Plugin[]}
+     * @returns {APlugin[]}
      */
-    public getPlugins(): Plugin[] {
+    public getPlugins(): APlugin[] {
         return this._plugins;
     }
 
     /**
      * Return a plugin by plugin-name.
      * @param {string} name - Name of a plugin.
-     * @returns {Plugin|null}
+     * @returns {APlugin|null}
      */
-    public getPlugin(name: string): Plugin|null {
+    public getPlugin(name: string): APlugin|null {
         const plugin = this._plugins.find((e) => e.getName() === name);
 
         if (plugin) {
@@ -201,9 +215,9 @@ export class PluginManager {
     /**
      * Register an event, called from plugin.
      * @param {APluginEvent} listner - Listner event object.
-     * @param {Plugin} plugin - A plugin instance.
+     * @param {APlugin} plugin - A plugin instance.
      */
-    public registerEvents(listner: APluginEvent, plugin: Plugin): void {
+    public registerEvents(listner: APluginEvent, plugin: APlugin): void {
         const pluginName = plugin.getName();
 
         if (!this._events.has(pluginName)) {

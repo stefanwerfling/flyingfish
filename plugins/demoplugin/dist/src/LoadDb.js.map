@@ -1,0 +1,1 @@
+{"version":3,"file":"LoadDb.js","sourceRoot":"","sources":["../../src/LoadDb.ts"],"names":[],"mappings":"AAAA,OAAO,EAAC,yBAAyB,EAAC,MAAM,iBAAiB,CAAC;AAM1D,MAAM,OAAO,MAAO,SAAQ,yBAAyB;IAK1C,OAAO;QACV,OAAO,QAAQ,CAAC;IACpB,CAAC;IAKM,KAAK,CAAC,kBAAkB;QAC3B,OAAO,EAAE,CAAC;IACd,CAAC;CAEJ"}
