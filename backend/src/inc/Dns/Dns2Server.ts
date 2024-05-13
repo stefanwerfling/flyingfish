@@ -1,7 +1,13 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
-import {DomainRecordDB, DomainRecordServiceDB, DomainServiceDB, Logger} from 'flyingfish_core';
-import {DnsRecordBase, IDnsServer} from 'flyingfish_schemas';
+import {
+    DnsRecordBase,
+    DomainRecordDB,
+    DomainRecordServiceDB,
+    DomainServiceDB,
+    IDnsServer,
+    Logger
+} from 'flyingfish_core';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
@@ -104,11 +110,13 @@ export class Dns2Server implements IDnsServer {
             const questionExt = question as DnsQuestionExt;
 
             Logger.getLogger().info(
-                `Request by ID: ${request.header.id}`, {
+                `Request by ID: ${request.header.id}`,
+                {
                     class: 'Dns2Server::_handleRequest',
                     question: request.questions[0],
                     remote_address: rinfo.address,
-                    remote_port: rinfo.port
+                    remote_port: rinfo.port,
+                    requestid: request.header.id
                 }
             );
 
@@ -218,8 +226,10 @@ export class Dns2Server implements IDnsServer {
 
                         for (const error of settingsErrors) {
                             Logger.getLogger().error(
-                                `Setting error: ${error}`, {
-                                    class: 'Dns2Server::_handleRequest'
+                                `Setting error: ${error}`,
+                                {
+                                    class: 'Dns2Server::_handleRequest',
+                                    requestid: request.header.id
                                 }
                             );
                         }
@@ -251,13 +261,32 @@ export class Dns2Server implements IDnsServer {
                 }
             }
 
+            Logger.getLogger().info(
+                `Found match, send (${response.answers.length}) by request-id: ${request.header.id}`,
+                {
+                    class: 'Dns2Server::_handleRequest',
+                    requestid: request.header.id
+                }
+            );
+
             return response;
         } catch (e) {
             Logger.getLogger().info(
                 `Faild to processing the dns question by: ${rinfo.address}:${rinfo.port}`,
-                {class: 'Dns2Server::_handleRequest:'}
+                {
+                    class: 'Dns2Server::_handleRequest:',
+                    requestid: request.header.id
+                }
             );
         }
+
+        Logger.getLogger().warn(
+            `No match found, return null as answer by request-id: ${request.header.id}`,
+            {
+                class: 'Dns2Server::_handleRequest:',
+                requestid: request.header.id
+            }
+        );
 
         return null;
     }
