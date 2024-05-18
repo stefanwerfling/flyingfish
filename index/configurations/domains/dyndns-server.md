@@ -29,4 +29,10 @@ Add/Edit an account where a DynDns client can log in and submit its update.
 2. Password for user.
 3. Domains for the update.
 
+
+
+{% hint style="info" %}
+[To set up the router or DynDNS client, read the example for more information.](../../examples/own-dyndns-server.md)
+{% endhint %}
+
 [^1]: 
