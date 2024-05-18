@@ -26,7 +26,8 @@ export class Details {
             const domain = await DomainServiceDB.getInstance().findOne(http.domain_id);
 
             if (domain) {
-                const provider = await SslCertProviders.getProvider(http.cert_provider);
+                const sp = new SslCertProviders();
+                const provider = await sp.getProvider(http.cert_provider);
 
                 if (provider) {
                     // TODO Wildcard

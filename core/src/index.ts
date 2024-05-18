@@ -4,6 +4,10 @@ export {Args} from './inc/Env/Args.js';
 // Config
 export {Config} from './inc/Config/Config.js';
 
+// Credential
+export {ICredential} from './inc/Credential/ICredential.js';
+export {ICredentialAuthBasic} from './inc/Credential/ICredentialAuthBasic.js';
+
 // Logger
 export {Logger} from './inc/Logger/Logger.js';
 
@@ -118,10 +122,13 @@ export {APluginEvent} from './inc/PluginSystem/APluginEvent.js';
 // Provider
 export {IProvider} from './inc/Provider/IProvider.js';
 export {IProviders} from './inc/Provider/IProviders.js';
+export {AProviderOnLoadEvent} from './inc/Provider/AProviderOnLoadEvent.js';
+export {BaseProviders} from './inc/Provider/BaseProviders.js';
 
 // Provider CredentialProvider
 export {ICredentialProvider} from './inc/Provider/CredentialProvider/ICredentialProvider.js';
 export {ICredentialProviders} from './inc/Provider/CredentialProvider/ICredentialProviders.js';
+export {ACredentialProviderOnLoadEvent} from './inc/Provider/CredentialProvider/ACredentialProviderOnLoadEvent.js';
 
 // Provider SslCertProvider
 export {ASslCertProviderOnLoadEvent} from './inc/Provider/SslCertProvider/ASslCertProviderOnLoadEvent.js';

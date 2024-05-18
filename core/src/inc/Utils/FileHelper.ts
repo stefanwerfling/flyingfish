@@ -1,4 +1,5 @@
-import {mkdir, stat, unlink, readFile, readdir} from 'fs/promises';
+import {mkdir, stat, unlink, readFile, readdir, lstat} from 'fs/promises';
+import {Logger} from '../Logger/Logger.js';
 
 /**
  * FileHelper
@@ -30,14 +31,30 @@ export class FileHelper {
 
     /**
      * fileExist
-     * @param file
+     * @param {string} file
+     * @param {boolean} allowLink
+     * @returns {boolean}
      */
-    public static async fileExist(file: string): Promise<boolean> {
+    public static async fileExist(file: string, allowLink: boolean = false): Promise<boolean> {
         try {
-            return (await stat(file)).isFile();
+            if( (await stat(file)).isFile()) {
+                return true;
+            }
         } catch (e) {
-            return false;
+            Logger.getLogger().silly(`FileHelper::fileExist: exception by file: ${file}`, e);
         }
+
+        if (allowLink) {
+            try {
+                if ((await lstat(file)).isSymbolicLink()) {
+                    return true;
+                }
+            } catch (e) {
+                Logger.getLogger().silly(`FileHelper::fileExist: exception by file link: ${file}`, e);
+            }
+        }
+
+        return false;
     }
 
     /**

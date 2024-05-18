@@ -9,7 +9,8 @@ export const SchemaPluginDefinition = Vts.object({
     version: Vts.string(),
     author: Vts.string(),
     url: Vts.string(),
-    main: Vts.string()
+    main: Vts.string(),
+    main_directory: Vts.optional(Vts.array(Vts.string()))
 });
 
 /**

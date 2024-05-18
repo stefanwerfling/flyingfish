@@ -160,15 +160,32 @@ export class PluginManager {
      */
     public async load(plugin: PluginInformation): Promise<boolean> {
         try {
+            let importFile: string|null = null;
+
             const pluginMain = path.join(plugin.path, plugin.definition.main);
 
-            if (!await FileHelper.fileExist(pluginMain)) {
-                throw new Error(`plugin main not found: ${pluginMain}`);
+            if (await FileHelper.fileExist(pluginMain, true)) {
+                importFile = pluginMain;
             }
 
-            Logger.getLogger().silly(`PluginManager::load: file plugin: ${pluginMain} (${plugin.definition.name})`);
+            if (plugin.definition.main_directory) {
+                for await (const dir of plugin.definition.main_directory) {
+                    const pluginSubMain = path.join(plugin.path, dir, plugin.definition.main);
 
-            const oPlugin = await import(pluginMain);
+                    if (await FileHelper.fileExist(pluginSubMain, true)) {
+                        importFile = pluginSubMain;
+                        break;
+                    }
+                }
+            }
+
+            if (importFile === null) {
+                throw new Error(`plugin main not found: ${plugin.path}`);
+            }
+
+            Logger.getLogger().silly(`PluginManager::load: file plugin: ${importFile} (${plugin.definition.name})`);
+
+            const oPlugin = await import(importFile);
 
             console.log(oPlugin);
 

@@ -10,9 +10,11 @@ export class Providers {
      * getProviders
      */
     public static async getProviders(): Promise<SslProvidersResponse> {
+        const sp = new SslCertProviders();
+
         return {
             statusCode: StatusCodes.OK,
-            list: await SslCertProviders.getProviders()
+            list: await sp.getProviders()
         };
     }
 

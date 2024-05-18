@@ -1,7 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import {CredentialDB, CredentialUserServiceDB, Logger} from 'flyingfish_core';
-import {CredentialSchemaTypes} from 'flyingfish_schemas/dist/src/index.js';
-import {ICredential, ICredentialAuthBasic} from './ICredential.js';
+import {CredentialDB, CredentialUserServiceDB, Logger, ICredential, ICredentialAuthBasic} from 'flyingfish_core';
+import {CredentialSchemaTypes} from 'flyingfish_schemas';
 
 /**
  * CredentialDB

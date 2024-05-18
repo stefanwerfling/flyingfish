@@ -18,7 +18,8 @@ import {
     NginxUpstreamDB,
     NginxUpstreamServiceDB,
     SshPortDB,
-    SshPortServiceDB
+    SshPortServiceDB,
+    SslCertBundel
 } from 'flyingfish_core';
 import {
     NginxHttpVariableContextType,
@@ -28,8 +29,7 @@ import {
     NginxListenVariableContextType,
     NginxLocationDestinationTypes,
     NginxStreamDestinationType,
-    NginxStreamSshR,
-    SslCertBundel
+    NginxStreamSshR
 } from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import path from 'path';
@@ -599,7 +599,7 @@ export class NginxService {
                                     weight: 0,
                                     max_fails: 0,
                                     fail_timeout: 0,
-                                    unix_sock: unixSocket
+                                    //unix_sock: unixSocket
                                 });
                             } else {
                                 Logger.getLogger().silly(`Destination listen not found by domain: ${domainName}`, {
@@ -982,7 +982,8 @@ export class NginxService {
                 // ssl use ---------------------------------------------------------------------------------------------
 
                 if (ssl_enable) {
-                    const provider = await SslCertProviders.getProvider(httpSubCollect.http.cert_provider);
+                    const sslCertProviders = new SslCertProviders();
+                    const provider = await sslCertProviders.getProvider(httpSubCollect.http.cert_provider);
 
                     if (provider) {
                         let sslBundel: SslCertBundel | null = null;

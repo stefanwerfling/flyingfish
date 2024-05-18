@@ -1,17 +1,22 @@
-import {ICredentialProvider, ICredentialProviders} from 'flyingfish_core';
+import {
+    BaseProviders,
+    ICredentialProvider,
+    ICredentialProviders
+} from 'flyingfish_core';
 import {ProviderEntry} from 'flyingfish_schemas';
 
-export class CredentialProviders implements ICredentialProviders {
+/**
+ * Credential providers
+ */
+export class CredentialProviders extends BaseProviders implements ICredentialProviders {
 
-    public async getCredentialProvider(
-        name: string,
-        sourceCredentialId: number
-    ): Promise<ICredentialProvider | null> {
-        return null;
-    }
-
+    /**
+     * Return a provider by name
+     * @param {string} name
+     * @returns {ICredentialProvider | null}
+     */
     public async getProvider(name: string): Promise<ICredentialProvider | null> {
-        return null;
+        return  this._getProvider<ICredentialProvider>(name);
     }
 
     public getProviders(): Promise<ProviderEntry[]> {

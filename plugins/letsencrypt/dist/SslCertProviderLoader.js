@@ -1,6 +1,6 @@
 import { ASslCertProviderOnLoadEvent } from 'flyingfish_core';
 import { Certbot } from './Certbot.js';
-export class ProviderLoader extends ASslCertProviderOnLoadEvent {
+export class SslCertProviderLoader extends ASslCertProviderOnLoadEvent {
     _providers = [
         new Certbot(),
     ];
@@ -11,4 +11,4 @@ export class ProviderLoader extends ASslCertProviderOnLoadEvent {
         return this._providers;
     }
 }
-//# sourceMappingURL=ProviderLoader.js.map
+//# sourceMappingURL=SslCertProviderLoader.js.map

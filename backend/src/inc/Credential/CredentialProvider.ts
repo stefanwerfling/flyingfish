@@ -1,6 +1,6 @@
-import {CredentialDB} from 'flyingfish_core';
+import {CredentialDB, ICredential} from 'flyingfish_core';
 import {CredentialDatabase} from './CredentialDatabase.js';
-import {ICredential} from './ICredential.js';
+
 
 /**
  * CredentialProvider

@@ -1,5 +1,5 @@
-import { APlugin } from 'flyingfish_core';
-import { ProviderLoader } from './ProviderLoader.js';
+import { APlugin, PluginServiceNames } from 'flyingfish_core';
+import { SslCertProviderLoader } from './SslCertProviderLoader.js';
 export default class LetsEncrypt extends APlugin {
     getName() {
         return 'LetsEncrypt';
@@ -8,8 +8,9 @@ export default class LetsEncrypt extends APlugin {
         return false;
     }
     onEnable() {
-        const pl = new ProviderLoader();
-        this.getPluginManager().registerEvents(pl, this);
+        if (this.getPluginManager().getServiceName() === PluginServiceNames.backend) {
+            this.getPluginManager().registerEvents(new SslCertProviderLoader(), this);
+        }
         return true;
     }
 }
