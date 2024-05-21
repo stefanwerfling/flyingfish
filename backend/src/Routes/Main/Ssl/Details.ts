@@ -31,7 +31,12 @@ export class Details {
 
                 if (provider) {
                     // TODO Wildcard
-                    const sslBundel = await provider?.getCertificationBundel(domain.domainname, {wildcard: false});
+                    const sslBundel = await provider.getCertificationBundel(
+                        domain.domainname,
+                        {
+                            wildcard: false
+                        }
+                    );
 
                     if (sslBundel) {
                         const cert = new Certificate(sslBundel.certPem);

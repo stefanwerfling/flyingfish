@@ -6,7 +6,7 @@ import {
     NginxLocationServiceDB
 } from 'flyingfish_core';
 import {CredentialSchemaBasic} from 'flyingfish_schemas';
-import {CredentialProvider} from './CredentialProvider.js';
+import {CredentialProviders} from '../Provider/CredentialProvider/CredentialProviders.js';
 
 /**
  * Credential
@@ -36,13 +36,16 @@ export class Credential {
 
             Logger.getLogger().silly(`Credential::authBasic: Found credentials: ${credentials.length}`);
 
+            const cps = new CredentialProviders();
+
             for await (const credential of credentials) {
-                const credentialObj = CredentialProvider.getCredential(credential.provider, credential);
+
+                const credentialObj = await cps.getProvider(credential.provider);
 
                 if (credentialObj) {
                     Logger.getLogger().silly(`Credential::authBasic: Use credential object: ${credentialObj}`);
 
-                    const credentialAuthBasic = credentialObj as ICredentialAuthBasic;
+                    const credentialAuthBasic = credentialObj.getCredential(credential.id) as ICredentialAuthBasic;
 
                     const result = await credentialAuthBasic.authBasic(auth.username, auth.password);
 

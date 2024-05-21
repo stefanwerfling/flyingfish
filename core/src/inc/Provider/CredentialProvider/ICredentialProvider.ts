@@ -8,7 +8,9 @@ export interface ICredentialProvider extends IProvider {
 
     /**
      * Return the credential
+     * @param {number} credentialId
+     * @returns {ICredential}
      */
-    getCredential(): ICredential;
+    getCredential(credentialId: number): ICredential;
 
 }

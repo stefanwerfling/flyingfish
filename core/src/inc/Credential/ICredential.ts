@@ -11,10 +11,4 @@ export interface ICredential {
      */
     getSupports(): CredentialSchemaTypes[];
 
-    /**
-     * Return the credential name
-     * @returns {string}
-     */
-    getName(): string;
-
 }

@@ -1,4 +1,4 @@
-import {ListenData, Location, RouteVariable, SshPortEntry, SslProvider} from 'flyingfish_schemas';
+import {ListenData, Location, ProviderEntry, RouteVariable, SshPortEntry} from 'flyingfish_schemas';
 import moment from 'moment';
 import {ListenCategory, ListenTypes} from '../../Api/Listen';
 import {
@@ -598,7 +598,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * setSslProviders
      * @param providers
      */
-    public setSslProviders(providers: SslProvider[]): void {
+    public setSslProviders(providers: ProviderEntry[]): void {
         this._selectSslProvider.clearValues();
 
         this._selectSslProvider.addValue({

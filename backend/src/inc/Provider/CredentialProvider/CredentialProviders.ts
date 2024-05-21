@@ -4,6 +4,7 @@ import {
     ICredentialProviders
 } from 'flyingfish_core';
 import {ProviderEntry} from 'flyingfish_schemas';
+import {CredentialProvider as CredentialProviderDatabase} from './Database/CredentialProvider.js';
 
 /**
  * Credential providers
@@ -16,11 +17,29 @@ export class CredentialProviders extends BaseProviders implements ICredentialPro
      * @returns {ICredentialProvider | null}
      */
     public async getProvider(name: string): Promise<ICredentialProvider | null> {
-        return  this._getProvider<ICredentialProvider>(name);
+        switch (name) {
+            case CredentialProviderDatabase.NAME:
+                return new CredentialProviderDatabase();
+
+            default:
+                return this._getProvider<ICredentialProvider>(name);
+        }
     }
 
-    public getProviders(): Promise<ProviderEntry[]> {
-        return Promise.resolve([]);
+    /**
+     * Get a provider list with name and title.
+     * @returns {ProviderEntry[]}
+     */
+    public async getProviders(): Promise<ProviderEntry[]> {
+        const list: ProviderEntry[] = [];
+
+        const plist = await this._getProviders<ICredentialProvider>();
+
+        if (plist) {
+            list.push(...plist);
+        }
+
+        return list;
     }
 
 }

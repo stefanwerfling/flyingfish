@@ -34,6 +34,7 @@ import {SslCertService} from './inc/Service/SslCertService.js';
 import {UpnpNatService} from './inc/Service/UpnpNatService.js';
 import {FlyingFishSsl} from './inc/Utils/FlyingFishSsl.js';
 import {Update as HimHipUpdateController} from './Routes/HimHip/Update.js';
+import {Credential as CredentialController} from './Routes/Main/Credential.js';
 import {Dashboard as DashboardController} from './Routes/Main/Dashboard.js';
 import {Domain as DomainController} from './Routes/Main/Domain.js';
 import {DynDnsClient as DynDnsClientController} from './Routes/Main/DynDnsClient.js';
@@ -233,6 +234,7 @@ import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
             new SslController(),
             new SshController(),
             new SettingsController(),
+            new CredentialController(),
 
             new NjsAddressAccessController(),
             new NjsAuthBasicController(),

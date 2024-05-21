@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import {CredentialDB, CredentialUserServiceDB, Logger, ICredential, ICredentialAuthBasic} from 'flyingfish_core';
+import {CredentialUserServiceDB, Logger, ICredential, ICredentialAuthBasic} from 'flyingfish_core';
 import {CredentialSchemaTypes} from 'flyingfish_schemas';
 
 /**
@@ -17,15 +17,8 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
      * constructor
      * @param credential
      */
-    public constructor(credential: CredentialDB) {
-        this._credentialId = credential.id;
-    }
-
-    /**
-     * getName
-     */
-    public static getName(): string {
-        return 'database';
+    public constructor(credentialId: number) {
+        this._credentialId = credentialId;
     }
 
     /**
@@ -56,13 +49,6 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
      */
     public getSupports(): CredentialSchemaTypes[] {
         return [CredentialSchemaTypes.Basic];
-    }
-
-    /**
-     * getName
-     */
-    public getName(): string {
-        return CredentialDatabase.getName();
     }
 
 }

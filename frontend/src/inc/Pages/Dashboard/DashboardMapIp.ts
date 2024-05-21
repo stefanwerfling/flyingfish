@@ -1,4 +1,5 @@
 import {View, Map, Feature, Overlay} from 'ol';
+import {FeatureLike} from 'ol/Feature';
 import {Point} from 'ol/geom';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
@@ -43,7 +44,7 @@ export class DashboardMapIp extends Element {
      * map source
      * @protected
      */
-    protected _source: VectorSource;
+    protected _source: VectorSource<FeatureLike>;
 
     protected _popover: any|undefined;
 
@@ -68,7 +69,7 @@ export class DashboardMapIp extends Element {
             })
         });
 
-        this._source = new VectorSource({
+        this._source = new VectorSource<FeatureLike>({
             wrapX: false
         });
 

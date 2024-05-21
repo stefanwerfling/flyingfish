@@ -4,8 +4,8 @@ import {CredentialProviders} from '../../../inc/Provider/CredentialProvider/Cred
 export class Provider {
 
     public static async getProviders(): Promise<CredentialProviderResponse> {
-        const cp = new CredentialProviders();
-        const providers = await cp.getProviders();
+        const cps = new CredentialProviders();
+        const providers = await cps.getProviders();
 
         return {
             statusCode: StatusCodes.OK,
