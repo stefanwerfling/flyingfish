@@ -11,7 +11,8 @@
     "removeComments": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "rootDir": "src"
   },
   "include": [
     "./src/**/*.ts"

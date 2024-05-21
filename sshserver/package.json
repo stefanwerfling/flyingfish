@@ -21,8 +21,8 @@
     "@types/ssh2": "^0.5.52",
     "@types/uuid": "^9.0.8",
     "@types/node-forge": "git+https://github.com/stefanwerfling/node-forge-types.git",
-    "@typescript-eslint/eslint-plugin": "^5.59.6",
-    "@typescript-eslint/parser": "^5.59.6",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.41.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "typescript": "^4.9.5"
