@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/node": "^18.16.13",
-    "@types/ssh2": "^0.5.52",
+    "@types/ssh2": "^1.15.0",
     "@types/uuid": "^9.0.8",
     "@types/node-forge": "git+https://github.com/stefanwerfling/node-forge-types.git",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
