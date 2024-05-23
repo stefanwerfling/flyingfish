@@ -4,9 +4,10 @@ import {
     FileHelper,
     FSslCertProviderOnReset,
     ISslCertProvider,
-    Logger, SslCertBundel, SslCertBundelOptions, SslCertCreateGlobal, SslCertCreateOptions,
+    Logger, ProviderType, SslCertBundel, SslCertBundelOptions, SslCertCreateGlobal, SslCertCreateOptions,
     SslCertExistOptions
 } from 'flyingfish_core';
+import {ProviderEntry} from 'flyingfish_schemas';
 import path from 'path';
 import {Client, LetsEncryptDnsChallengeAndFinalize} from './Acme/Client.js';
 
@@ -14,6 +15,9 @@ import {Client, LetsEncryptDnsChallengeAndFinalize} from './Acme/Client.js';
  * Lets encrypt Acme object.
  */
 export class Acme implements ISslCertProvider {
+
+    public static NAME = 'letsencrypt_dns01';
+    public static TITLE = 'LetsEncrypt (DNS-01)';
 
     public static readonly LIMIT_REQUESTS = 5;
     public static readonly LIMIT_TIME_HOUR = 1;
@@ -34,7 +38,7 @@ export class Acme implements ISslCertProvider {
      * @returns {string}
      */
     public getName(): string {
-        return 'letsencrypt_dns01';
+        return Acme.NAME;
     }
 
     /**
@@ -42,7 +46,26 @@ export class Acme implements ISslCertProvider {
      * @returns {string}
      */
     public getTitle(): string {
-        return 'LetsEncrypt (DNS-01)';
+        return Acme.TITLE;
+    }
+
+    /**
+     * Return the type of provider
+     * @returns {ProviderType}
+     */
+    public getType(): ProviderType {
+        return ProviderType.sslcert;
+    }
+
+    /**
+     * Return the provider entry
+     * @returns {ProviderEntry}
+     */
+    public getProviderEntry(): ProviderEntry {
+        return {
+            name: Acme.NAME,
+            title: Acme.TITLE
+        };
     }
 
     /**

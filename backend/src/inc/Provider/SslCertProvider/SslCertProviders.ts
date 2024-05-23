@@ -1,8 +1,4 @@
-import {
-    BaseProviders,
-    ISslCertProvider,
-    ISslCertProviders
-} from 'flyingfish_core';
+import {BaseProviders, ISslCertProvider, ISslCertProviders, ProviderType} from 'flyingfish_core';
 import {ProviderEntry} from 'flyingfish_schemas';
 
 /**
@@ -16,7 +12,7 @@ export class SslCertProviders extends BaseProviders implements ISslCertProviders
      * @returns {ISslCertProvider|null}
      */
     public async getProvider(name: string): Promise<ISslCertProvider | null> {
-        return this._getProvider<ISslCertProvider>(name);
+        return this._getProvider<ISslCertProvider>(name, ProviderType.sslcert);
     }
 
     /**
@@ -24,7 +20,7 @@ export class SslCertProviders extends BaseProviders implements ISslCertProviders
      * @returns {ProviderEntry[]}
      */
     public async getProviders(): Promise<ProviderEntry[]> {
-        return this._getProviders<ISslCertProvider>();
+        return this._getProviders<ISslCertProvider>(ProviderType.sslcert);
     }
 
 }

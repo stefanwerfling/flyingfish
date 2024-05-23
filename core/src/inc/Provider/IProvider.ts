@@ -1,3 +1,6 @@
+import {ProviderEntry} from 'flyingfish_schemas';
+import {ProviderType} from './ProviderType.js';
+
 /**
  * Interface for a Provider
  */
@@ -14,5 +17,17 @@ export interface IProvider {
      * @returns {string}
      */
     getTitle(): string;
+
+    /**
+     * Return the type of provider
+     * @returns {ProviderType}
+     */
+    getType(): ProviderType;
+
+    /**
+     * Return the provider entry
+     * @returns {ProviderEntry}
+     */
+    getProviderEntry(): ProviderEntry;
 
 }

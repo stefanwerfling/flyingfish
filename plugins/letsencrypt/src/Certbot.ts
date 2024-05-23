@@ -3,9 +3,10 @@ import {
     FileHelper,
     FSslCertProviderOnReset,
     ISslCertProvider,
-    Logger,
+    Logger, ProviderType,
     SslCertBundel, SslCertCreateOptions
 } from 'flyingfish_core';
+import {ProviderEntry} from 'flyingfish_schemas';
 import path from 'path';
 import {spawn} from 'child_process';
 
@@ -13,6 +14,9 @@ import {spawn} from 'child_process';
  * Lets encrypt certbot object.
  */
 export class Certbot implements ISslCertProvider {
+
+    public static NAME = 'letsencrypt';
+    public static TITLE = 'LetsEncrypt (HTTP-01)';
 
     public static readonly LIMIT_REQUESTS = 5;
     public static readonly LIMIT_TIME_HOUR = 1;
@@ -45,7 +49,7 @@ export class Certbot implements ISslCertProvider {
      * @returns {string}
      */
     public getName(): string {
-        return 'letsencrypt';
+        return Certbot.NAME;
     }
 
     /**
@@ -53,7 +57,26 @@ export class Certbot implements ISslCertProvider {
      * @returns {string}
      */
     public getTitle(): string {
-        return 'LetsEncrypt (HTTP-01)';
+        return Certbot.TITLE;
+    }
+
+    /**
+     * Return the type of provider
+     * @returns {ProviderType}
+     */
+    public getType(): ProviderType {
+        return ProviderType.sslcert;
+    }
+
+    /**
+     * Return the provider entry
+     * @returns {ProviderEntry}
+     */
+    public getProviderEntry(): ProviderEntry {
+        return {
+            name: Certbot.NAME,
+            title: Certbot.TITLE
+        };
     }
 
     /**

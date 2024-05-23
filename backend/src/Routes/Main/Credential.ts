@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
 import {List} from './Credential/List.js';
+import {Provider} from './Credential/Provider.js';
 
 export class Credential extends DefaultRoute {
 
@@ -15,7 +16,7 @@ export class Credential extends DefaultRoute {
                 res
             ) => {
                 if (this.isUserLogin(req, res)) {
-                    res.status(200).json(List.getCredentials());
+                    res.status(200).json(await Provider.getProviders());
                 }
             }
         );
@@ -27,7 +28,7 @@ export class Credential extends DefaultRoute {
                 res
             ) => {
                 if (this.isUserLogin(req, res)) {
-                    res.status(200).json(List.getCredentials());
+                    res.status(200).json(await List.getCredentials());
                 }
             }
         );

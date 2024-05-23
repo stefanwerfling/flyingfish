@@ -1,4 +1,5 @@
-import {ICredential, ICredentialProvider} from 'flyingfish_core';
+import {ICredential, ICredentialProvider, ProviderType} from 'flyingfish_core';
+import {ProviderEntry} from 'flyingfish_schemas';
 import {CredentialDatabase} from './CredentialDatabase.js';
 
 /**
@@ -7,6 +8,7 @@ import {CredentialDatabase} from './CredentialDatabase.js';
 export class CredentialProvider implements ICredentialProvider {
 
     public static NAME = 'intern_database';
+    public static TITLE = 'Intern database';
 
     /**
      * Return credential
@@ -25,7 +27,26 @@ export class CredentialProvider implements ICredentialProvider {
     }
 
     public getTitle(): string {
-        return 'Intern database';
+        return CredentialProvider.TITLE;
+    }
+
+    /**
+     * Return the type of provider
+     * @returns {ProviderType}
+     */
+    public getType(): ProviderType {
+        return ProviderType.credential;
+    }
+
+    /**
+     * Return the provider entry
+     * @returns {ProviderEntry}
+     */
+    public getProviderEntry(): ProviderEntry {
+        return {
+            name: CredentialProvider.NAME,
+            title: CredentialProvider.TITLE
+        };
     }
 
 }

@@ -120,6 +120,7 @@ export {PluginInformation, PluginManager} from './inc/PluginSystem/PluginManager
 export {APluginEvent} from './inc/PluginSystem/APluginEvent.js';
 
 // Provider
+export {ProviderType} from './inc/Provider/ProviderType.js';
 export {IProvider} from './inc/Provider/IProvider.js';
 export {IProviders} from './inc/Provider/IProviders.js';
 export {AProviderOnLoadEvent} from './inc/Provider/AProviderOnLoadEvent.js';
