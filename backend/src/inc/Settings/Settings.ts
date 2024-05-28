@@ -23,9 +23,10 @@ export class Settings {
     public static readonly BLACKLIST_IPLOCATE_DEFAULT = '';
 
     /**
-     * getSetting
-     * @param name
-     * @param vdefault
+     * Get setting by name
+     * @param {string} name
+     * @param {string} vdefault
+     * @returns {string}
      */
     public static async getSetting(name: string, vdefault: string): Promise<string> {
         const setting = await SettingServiceDB.getInstance().findByName(name);
@@ -38,9 +39,9 @@ export class Settings {
     }
 
     /**
-     * setSetting
-     * @param name
-     * @param value
+     * Set setting by name
+     * @param {string} name
+     * @param {string} value
      */
     public static async setSetting(name: string, value: string): Promise<void> {
         let setting = await SettingServiceDB.getInstance().findByName(name);
@@ -52,7 +53,7 @@ export class Settings {
 
         setting.value = value;
 
-        await await SettingServiceDB.getInstance().save(setting);
+        await SettingServiceDB.getInstance().save(setting);
     }
 
 }
