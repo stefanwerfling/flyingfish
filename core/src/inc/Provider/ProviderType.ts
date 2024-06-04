@@ -4,4 +4,4 @@
 export enum ProviderType {
     sslcert = 'sslcert',
     credential = 'credential'
-};
+}

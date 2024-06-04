@@ -107,8 +107,6 @@ export {
     DynDnsClientDelete
 } from './Backend/Routes/DynDnsClient/Delete.js';
 export {
-    SchemaDynDnsClientProvider,
-    DynDnsClientProvider,
     SchemaDynDnsClientProviderListResponse,
     DynDnsClientProviderListResponse
 } from './Backend/Routes/DynDnsClient/Providers.js';

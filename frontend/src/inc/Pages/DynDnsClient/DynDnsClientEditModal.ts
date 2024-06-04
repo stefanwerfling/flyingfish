@@ -1,4 +1,4 @@
-import {DomainData, DynDnsClientDomain, DynDnsClientProvider} from 'flyingfish_schemas';
+import {DomainData, DynDnsClientDomain, ProviderEntry} from 'flyingfish_schemas';
 import {FormGroup, FormRow, InputBottemBorderOnly2, InputType, Multiple, SelectBottemBorderOnly2, Switch, Element,
     ModalDialog, ModalDialogType} from 'bambooo';
 
@@ -112,9 +112,9 @@ export class DynDnsClientEditModal extends ModalDialog {
 
     /**
      * setProviders
-     * @param providers
+     * @param {ProviderEntry[]} providers
      */
-    public setProviders(providers: DynDnsClientProvider[]): void {
+    public setProviders(providers: ProviderEntry[]): void {
         this._selectProvider.clearValues();
 
         this._selectProvider.addValue({

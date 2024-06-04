@@ -1,7 +1,6 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaDefaultReturn} from '../../../Core/Server/Routes/DefaultReturn.js';
-import {SchemaDynDnsClientProvider} from './Providers.js';
-
+import {SchemaProviderEntry} from '../../Provider/ProviderEntry.js';
 /**
  * DynDnsClientDomain
  */
@@ -21,7 +20,7 @@ export type DynDnsClientDomain = ExtractSchemaResultType<typeof SchemaDynDnsClie
 export const SchemaDynDnsClientData = Vts.object({
     id: Vts.number(),
     domains: Vts.array(SchemaDynDnsClientDomain),
-    provider: SchemaDynDnsClientProvider,
+    provider: SchemaProviderEntry,
     username: Vts.string(),
     password: Vts.optional(Vts.string()),
     update_domain: Vts.boolean(),

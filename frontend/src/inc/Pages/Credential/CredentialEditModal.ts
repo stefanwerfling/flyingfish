@@ -6,7 +6,7 @@ import {
     Element,
     SelectBottemBorderOnly2
 } from 'bambooo';
-import {CredentialSchemaTypes} from 'flyingfish_schemas/dist/src';
+import {CredentialSchemaTypes, ProviderEntry} from 'flyingfish_schemas/dist/src';
 
 /**
  * Credential edit modal
@@ -71,6 +71,28 @@ export class CredentialEditModal extends ModalDialog {
      */
     public getId(): number|null {
         return this._id;
+    }
+
+    /**
+     * setProviders
+     * @param providers
+     */
+    public setProviders(providers: ProviderEntry[]): void {
+        this._selectProvider.clearValues();
+
+        this._selectProvider.addValue({
+            key: 'none',
+            value: 'Please select your provider'
+        });
+
+        for (const provider of providers) {
+            this._selectProvider.addValue({
+                key: provider.name,
+                value: provider.title
+            });
+        }
+
+        this._selectProvider.setSelectedValue('none');
     }
 
 }

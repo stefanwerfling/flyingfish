@@ -56,6 +56,11 @@ export class Credential extends BasePage {
             this._credentialDialog.resetValues();
             this._credentialDialog.setTitle('Credential Add');
             this._credentialDialog.show();
+
+            const providers = await CredentialAPI.getProviderList();
+
+            this._credentialDialog.setProviders(providers.list);
+
             return false;
         }, 'btn btn-block btn-default btn-sm', IconFa.add);
     }
@@ -129,6 +134,10 @@ export class Credential extends BasePage {
                             async(): Promise<void> => {
                                 this._credentialDialog.resetValues();
                                 this._credentialDialog.setTitle('Credential Edit');
+
+                                const providers = await CredentialAPI.getProviderList();
+
+                                this._credentialDialog.setProviders(providers.list);
                             },
                             IconFa.edit
                         );

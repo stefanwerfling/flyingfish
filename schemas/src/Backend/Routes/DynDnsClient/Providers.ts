@@ -1,24 +1,12 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaDefaultReturn} from '../../../Core/Server/Routes/DefaultReturn.js';
-
-/**
- * DynDnsClientProvider
- */
-export const SchemaDynDnsClientProvider = Vts.object({
-    name: Vts.string(),
-    title: Vts.string()
-});
-
-/**
- * DynDnsClientProvider
- */
-export type DynDnsClientProvider = ExtractSchemaResultType<typeof SchemaDynDnsClientProvider>;
+import {SchemaProviderEntry} from '../../Provider/ProviderEntry.js';
 
 /**
  * DynDnsClientProviderListResponse
  */
 export const SchemaDynDnsClientProviderListResponse = SchemaDefaultReturn.extend({
-    list: Vts.array(SchemaDynDnsClientProvider)
+    list: Vts.array(SchemaProviderEntry)
 });
 
 /**

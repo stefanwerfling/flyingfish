@@ -4,6 +4,9 @@ import {AProviderOnLoadEvent} from './AProviderOnLoadEvent.js';
 import {IProvider} from './IProvider.js';
 import {ProviderType} from './ProviderType.js';
 
+/**
+ * Base Provider
+ */
 export class BaseProviders {
 
     /**

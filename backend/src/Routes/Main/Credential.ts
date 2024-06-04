@@ -3,6 +3,9 @@ import {DefaultRoute} from 'flyingfish_core';
 import {List} from './Credential/List.js';
 import {Provider} from './Credential/Provider.js';
 
+/**
+ * Credential route
+ */
 export class Credential extends DefaultRoute {
 
     /**
