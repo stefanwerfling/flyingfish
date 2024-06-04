@@ -6,7 +6,7 @@ import {
     Element,
     SelectBottemBorderOnly2
 } from 'bambooo';
-import {CredentialSchemaTypes, ProviderEntry} from 'flyingfish_schemas/dist/src';
+import {CredentialSchemaTypes, ProviderEntry} from 'flyingfish_schemas';
 
 /**
  * Credential edit modal
