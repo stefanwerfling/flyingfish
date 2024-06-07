@@ -27,7 +27,7 @@
     "@types/cookie-parser": "^1.4.3",
     "@types/express": "^4.17.17",
     "@types/express-session": "^1.17.7",
-    "@types/node": "^18.16.13",
+    "@types/node": "^20.14.2",
     "@types/node-forge": "git+https://github.com/stefanwerfling/node-forge-types.git",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",

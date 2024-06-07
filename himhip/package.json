@@ -17,7 +17,7 @@
   },
   "description": "How is my Host IP, is a part of FlyingFish",
   "devDependencies": {
-    "@types/node": "^18.16.13",
+    "@types/node": "^20.14.2",
     "@types/node-gzip": "^1.1.0",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^7.4.0",

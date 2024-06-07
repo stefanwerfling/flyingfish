@@ -1,4 +1,4 @@
-FROM node:18-bullseye
+FROM node:20-bullseye
 
 ENV FLYINGFISH_NGINX_MODULE_MODE_DYN="0"
 

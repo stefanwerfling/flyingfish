@@ -24,7 +24,7 @@
   "author": "Stefan Werfling",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@types/node": "^18.16.13",
+    "@types/node": "^20.14.2",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.41.0",
