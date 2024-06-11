@@ -12,11 +12,13 @@ import {
     Th,
     Tr
 } from 'bambooo';
+import {Credential as CredentialData, CredentialSchemaTypes} from 'flyingfish_schemas';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
 import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
 import {Credential as CredentialAPI} from '../Api/Credential';
 import {CredentialEditModal} from './Credential/CredentialEditModal';
+import {CredentialUsers} from './Credential/CredentialUsers';
 
 /**
  * Credential Page
@@ -63,6 +65,45 @@ export class Credential extends BasePage {
 
             return false;
         }, 'btn btn-block btn-default btn-sm', IconFa.add);
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._credentialDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._credentialDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const credential: CredentialData = {
+                    id: tid,
+                    name: this._credentialDialog.getName(),
+                    authSchemaType: this._credentialDialog.getAuthSchemaType(),
+                    provider: this._credentialDialog.getProvider(),
+                    settings: ''
+                };
+
+                if (await CredentialAPI.save(credential)) {
+                    this._credentialDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'Credential save success.'
+                    });
+                }
+            } catch (message) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: message
+                });
+                console.error(message);
+            }
+        });
     }
 
     /**
@@ -101,6 +142,13 @@ export class Credential extends BasePage {
             table.getTbody().empty();
 
             try {
+                const providers = await CredentialAPI.getProviderList();
+                const providerList: Map<string, string> = new Map<string, string>();
+
+                for (const provider of providers.list) {
+                    providerList.set(provider.name, provider.title);
+                }
+
                 const credentialRespons = await CredentialAPI.getList();
 
                 if (credentialRespons.list) {
@@ -115,11 +163,24 @@ export class Credential extends BasePage {
                         // eslint-disable-next-line no-new
                         new Td(trbody, `${entry.name}`);
 
-                        // eslint-disable-next-line no-new
-                        new Td(trbody, `${entry.authSchemaType}`);
+                        let authSchemaStr = 'Basic';
+
+                        if (entry.authSchemaType === CredentialSchemaTypes.Digest) {
+                            authSchemaStr = 'Digest';
+                        }
 
                         // eslint-disable-next-line no-new
-                        new Td(trbody, `${entry.provider}`);
+                        new Td(trbody, `${authSchemaStr}`);
+
+                        const providerName = providerList.get(entry.provider);
+                        let providerNameStr = entry.provider;
+
+                        if (providerName) {
+                            providerNameStr = providerName;
+                        }
+
+                        // eslint-disable-next-line no-new
+                        new Td(trbody, `${providerNameStr}`);
 
                         const tdRAction = new Td(trbody, '');
                         const btnRMenu = new ButtonMenu(
@@ -135,14 +196,27 @@ export class Credential extends BasePage {
                                 this._credentialDialog.resetValues();
                                 this._credentialDialog.setTitle('Credential Edit');
 
-                                const providers = await CredentialAPI.getProviderList();
-
+                                this._credentialDialog.setId(entry.id);
                                 this._credentialDialog.setProviders(providers.list);
+                                this._credentialDialog.setName(entry.name);
+                                this._credentialDialog.setAuthSchemaType(`${entry.authSchemaType}`);
+                                this._credentialDialog.setProvider(entry.provider);
+                                this._credentialDialog.show();
                             },
                             IconFa.edit
                         );
 
                         btnRMenu.addDivider();
+
+                        btnRMenu.addMenuItem(
+                            'User-List',
+                            async(): Promise<void> => {
+                                if (this._loadPageFn) {
+                                    this._loadPageFn(new CredentialUsers(entry));
+                                }
+                            },
+                            'fas fa-solid fa-users'
+                        );
                     }
                 }
             } catch (error) {

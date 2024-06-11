@@ -1,8 +1,9 @@
 import {
     CredentialProviderResponse,
     CredentialResponse,
+    Credential as CredentialData,
     SchemaCredentialProviderResponse,
-    SchemaCredentialResponse
+    SchemaCredentialResponse, SchemaDefaultReturn
 } from 'flyingfish_schemas';
 import {NetFetch} from '../Net/NetFetch';
 
@@ -25,6 +26,15 @@ export class Credential {
      */
     public static async getList(): Promise<CredentialResponse> {
         return NetFetch.getData('/json/credential/list', SchemaCredentialResponse);
+    }
+
+    /**
+     * Save a credential
+     * @param {CredentialData} data
+     */
+    public static async save(data: CredentialData): Promise<boolean> {
+        await NetFetch.postData('/json/credential/save', data, SchemaDefaultReturn);
+        return true;
     }
 
 }

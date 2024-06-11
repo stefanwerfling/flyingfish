@@ -9,6 +9,11 @@ import {
 import {CredentialSchemaTypes, ProviderEntry} from 'flyingfish_schemas';
 
 /**
+ * CredentialEditModalButtonClickFn
+ */
+export type CredentialEditModalButtonClickFn = () => Promise<void>;
+
+/**
  * Credential edit modal
  */
 export class CredentialEditModal extends ModalDialog {
@@ -38,6 +43,12 @@ export class CredentialEditModal extends ModalDialog {
     protected _selectProvider: SelectBottemBorderOnly2;
 
     /**
+     * click save fn
+     * @protected
+     */
+    protected _onSaveClick: CredentialEditModalButtonClickFn|null = null;
+
+    /**
      * constructor
      * @param elementObject
      */
@@ -64,6 +75,19 @@ export class CredentialEditModal extends ModalDialog {
 
         const groupProvider = new FormGroup(bodyCard, 'Provider');
         this._selectProvider = new SelectBottemBorderOnly2(groupProvider);
+
+        // buttons -----------------------------------------------------------------------------------------------------
+
+        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
+        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
+
+        btnSave.on('click', async(): Promise<void> => {
+            if (this._onSaveClick !== null) {
+                this.showLoading();
+                await this._onSaveClick();
+                this.hideLoading();
+            }
+        });
     }
 
     /**
@@ -74,8 +98,56 @@ export class CredentialEditModal extends ModalDialog {
     }
 
     /**
+     * setId
+     * @param id
+     */
+    public setId(id: number): void {
+        this._id = id;
+    }
+
+    /**
+     * Return the credential name
+     * @returns {string}
+     */
+    public getName(): string {
+        return this._inputName.getValue();
+    }
+
+    /**
+     * Set the name of credential
+     * @param {string} name
+     */
+    public setName(name: string): void {
+        this._inputName.setValue(name);
+    }
+
+    /**
+     * Return the selected auth schema type
+     * @returns {CredentialSchemaTypes}
+     */
+    public getAuthSchemaType(): CredentialSchemaTypes {
+        switch (this._selectSchemaAuth.getSelectedValue()) {
+            case `${CredentialSchemaTypes.Basic}`:
+                return CredentialSchemaTypes.Basic;
+
+            case `${CredentialSchemaTypes.Digest}`:
+                return CredentialSchemaTypes.Digest;
+        }
+
+        return CredentialSchemaTypes.Basic;
+    }
+
+    /**
+     * Set the selected auth schema type
+     * @param {string} type
+     */
+    public setAuthSchemaType(type: string): void {
+        this._selectSchemaAuth.setSelectedValue(type);
+    }
+
+    /**
      * setProviders
-     * @param providers
+     * @param {ProviderEntry[]} providers
      */
     public setProviders(providers: ProviderEntry[]): void {
         this._selectProvider.clearValues();
@@ -93,6 +165,30 @@ export class CredentialEditModal extends ModalDialog {
         }
 
         this._selectProvider.setSelectedValue('none');
+    }
+
+    /**
+     * Set the selected provider
+     * @param {string} providerName
+     */
+    public setProvider(providerName: string): void {
+        this._selectProvider.setSelectedValue(providerName);
+    }
+
+    /**
+     * Return the selected provider
+     * @returns {string}
+     */
+    public getProvider(): string {
+        return this._selectProvider.getSelectedValue();
+    }
+
+    /**
+     * Set the on save event
+     * @param {CredentialEditModalButtonClickFn} onSave
+     */
+    public setOnSave(onSave: CredentialEditModalButtonClickFn): void {
+        this._onSaveClick = onSave;
     }
 
 }

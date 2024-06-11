@@ -48,7 +48,7 @@ export class DefaultRoute {
         if (!schema.validate(data, errors)) {
             res.status(200).json({
                 statusCode: StatusCodes.INTERNAL_ERROR,
-                msg: errors.join(', ')
+                msg: JSON.stringify(errors, null, 2)
             } as DefaultReturn);
 
             return false;
