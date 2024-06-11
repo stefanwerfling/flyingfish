@@ -12,7 +12,7 @@ import {
     ContentRow,
     DialogConfirm,
     Icon,
-    IconFa,
+    IconFa, InfoBox, InfoBoxBg, InfoBoxMb,
     LeftNavbarLink,
     ModalDialogType,
     Table,
@@ -894,6 +894,12 @@ export class Routes extends BasePage {
                     });
 
                     card.hideLoading();
+                }
+
+                if (routes.list.length <= 1) {
+                    const ib = new InfoBox(new ContentCol(new ContentRow(content), ContentColSize.col12), InfoBoxBg.none, InfoBoxMb.none);
+                    ib.setIcon(IconFa.info, InfoBoxBg.info);
+                    ib.getTextElement().append('None Domain exist for Routes, please add a new Domain!');
                 }
             }
         };
