@@ -38,6 +38,16 @@ export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
 export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';
 export {
+    SchemaCredentialUser,
+    CredentialUser
+} from './Backend/Routes/Credential/Users/User.js';
+export {
+    SchemaCredentialUsersRequest,
+    CredentialUsersRequest,
+    SchemaCredentialUsersResponse,
+    CredentialUsersResponse
+} from './Backend/Routes/Credential/Users/List.js';
+export {
     SchemaCredentialProviderResponse,
     CredentialProviderResponse
 } from './Backend/Routes/Credential/Provider.js';

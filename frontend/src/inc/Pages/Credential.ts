@@ -111,7 +111,6 @@ export class Credential extends BasePage {
      */
     public override async loadContent(): Promise<void> {
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
-
         const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
         card.setTitle('Credential');
