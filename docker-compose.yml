@@ -209,6 +209,8 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+      - flyingfish
+      - redis
 
   ddnsserver:
     image: flyingfish_ddns:v1.0
@@ -241,6 +243,8 @@ services:
         max-file: "50"
     depends_on:
       - mariadb
+      - flyingfish
+      - redis
 #    command:
 #      - node
 #      - "--inspect-brk=0.0.0.0:9229"
