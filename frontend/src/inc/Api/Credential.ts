@@ -3,7 +3,11 @@ import {
     CredentialResponse,
     Credential as CredentialData,
     SchemaCredentialProviderResponse,
-    SchemaCredentialResponse, SchemaDefaultReturn
+    SchemaCredentialResponse,
+    SchemaDefaultReturn,
+    CredentialUser,
+    CredentialUsersRequest,
+    SchemaCredentialUsersResponse
 } from 'flyingfish_schemas';
 import {NetFetch} from '../Net/NetFetch';
 
@@ -31,10 +35,30 @@ export class Credential {
     /**
      * Save a credential
      * @param {CredentialData} data
+     * @returns {boolean}
      */
     public static async save(data: CredentialData): Promise<boolean> {
         await NetFetch.postData('/json/credential/save', data, SchemaDefaultReturn);
         return true;
+    }
+
+    /**
+     * Return the credential userlist
+     * @param {number} credentialId
+     * @returns {CredentialUser[]}
+     */
+    public static async getUserList(credentialId: number): Promise<CredentialUser[]> {
+        const req: CredentialUsersRequest = {
+            credential_id: credentialId
+        };
+
+        const response = await NetFetch.postData('/json/credential/user/list', req, SchemaCredentialUsersResponse);
+
+        if (response.list) {
+            return response.list;
+        }
+
+        return [];
     }
 
 }
