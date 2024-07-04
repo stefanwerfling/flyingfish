@@ -61,4 +61,14 @@ export class Credential {
         return [];
     }
 
+    /**
+     * Save a user
+     * @param {CredentialUser} data
+     * @returns {boolean}
+     */
+    public static async saveUser(data: CredentialUser): Promise<boolean> {
+        await NetFetch.postData('/json/credential/user/save', data, SchemaDefaultReturn);
+        return true;
+    }
+
 }

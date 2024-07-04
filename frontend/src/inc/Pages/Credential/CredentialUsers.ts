@@ -12,7 +12,7 @@ import {
     Th,
     Tr
 } from 'bambooo';
-import {Credential} from 'flyingfish_schemas';
+import {Credential, CredentialUser} from 'flyingfish_schemas';
 import {Credential as CredentialAPI} from '../../Api/Credential';
 import {UnauthorizedError} from '../../Api/Error/UnauthorizedError';
 import {UtilRedirect} from '../../Utils/UtilRedirect';
@@ -67,6 +67,46 @@ export class CredentialUsers extends BasePage {
             this._userDialog.show();
             return false;
         }, 'btn btn-block btn-default btn-sm', IconFa.add);
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._userDialog.setOnSave(async(): Promise<void> => {
+            let tid = this._userDialog.getId();
+
+            if (tid === null) {
+                tid = 0;
+            }
+
+            try {
+                const user: CredentialUser = {
+                    id: tid,
+                    credential_id: this._credential.id,
+                    username: this._userDialog.getUsername(),
+                    password: this._userDialog.getPassword(),
+                    password_repeat: this._userDialog.getPasswordRepeat(),
+                    disabled: this._userDialog.isDisabled()
+                };
+
+                if (await CredentialAPI.saveUser(user)) {
+                    this._userDialog.hide();
+
+                    if (this._onLoadTable) {
+                        this._onLoadTable();
+                    }
+
+                    this._toast.fire({
+                        icon: 'success',
+                        title: 'Credential save success.'
+                    });
+                }
+            } catch (message) {
+                this._toast.fire({
+                    icon: 'error',
+                    title: message
+                });
+                console.error(message);
+            }
+        });
     }
 
     /**
@@ -113,7 +153,7 @@ export class CredentialUsers extends BasePage {
                     new Td(trbody, `${user.username}`);
 
                     // eslint-disable-next-line no-new
-                    new Td(trbody, '');
+                    new Td(trbody, `${user.disabled ? 'yes' : 'no'}`);
 
                     const tdRAction = new Td(trbody, '');
                     const btnRMenu = new ButtonMenu(
@@ -129,7 +169,10 @@ export class CredentialUsers extends BasePage {
                             this._userDialog.resetValues();
                             this._userDialog.setTitle('Edit Credential User');
 
-
+                            this._userDialog.setId(user.id);
+                            this._userDialog.setUsername(user.username);
+                            this._userDialog.setDisabled(user.disabled);
+                            this._userDialog.show();
                         },
                         IconFa.edit
                     );

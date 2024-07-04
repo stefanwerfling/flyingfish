@@ -1,16 +1,39 @@
+import {
+    Badge,
+    BadgeType,
+    ButtonClass,
+    ButtonDefault,
+    ButtonDefaultType,
+    Card,
+    CardBodyType,
+    CardLine,
+    CardType,
+    Element,
+    FormGroup,
+    FormRow,
+    Icon,
+    IconFa,
+    InputBottemBorderOnly2,
+    InputType,
+    ModalDialog,
+    ModalDialogType,
+    NavTab,
+    PText,
+    PTextType,
+    SelectBottemBorderOnly2,
+    StrongText,
+    Switch,
+    Table,
+    Td,
+    Tooltip,
+    TooltipInfo,
+    Tr
+} from 'bambooo';
 import {ListenData, Location, ProviderEntry, RouteVariable, SshPortEntry} from 'flyingfish_schemas';
 import moment from 'moment';
 import {ListenCategory, ListenTypes} from '../../Api/Listen';
-import {
-    NginxHTTPVariables,
-    NginxLocationDestinationTypes
-} from '../../Api/Route';
+import {NginxHTTPVariables, NginxLocationDestinationTypes} from '../../Api/Route';
 import {Ssl as SslAPI} from '../../Api/Ssl';
-import {
-    ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardLine, CardType, FormGroup,
-    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, Icon, IconFa, NavTab, PText, PTextType,
-    StrongText, Tooltip, TooltipInfo, Element, ModalDialog, ModalDialogType, FormRow, Table, Tr, Td
-} from 'bambooo';
 import {Lang} from '../../Lang';
 import {LocationCard} from './LocationCard';
 
@@ -47,6 +70,12 @@ export class RouteHttpEditModal extends ModalDialog {
      * @protected
      */
     protected _locationCard: Card;
+
+    /**
+     * location badge info
+     * @protected
+     */
+    protected _locationTabBadge: Badge;
 
     /**
      * location cards
@@ -157,6 +186,16 @@ export class RouteHttpEditModal extends ModalDialog {
         const tabSsl = this._navTab.addTab('SSL', 'routehttpssl');
         const tabLocation = this._navTab.addTab('Location', 'routehttplocation');
 
+        tabLocation.title.append('&nbsp;');
+
+        this._locationTabBadge = new Badge(
+            tabLocation.title,
+            '0',
+            BadgeType.success
+        );
+
+        this._locationTabBadge.hide();
+
         // tab location ------------------------------------------------------------------------------------------------
 
         this._locationCard = new Card(tabLocation.body, CardBodyType.none);
@@ -192,6 +231,7 @@ export class RouteHttpEditModal extends ModalDialog {
             });
 
             this._locationCards.push(location);
+            this._updateLocationTabBadge();
         });
 
         // tab advanced ------------------------------------------------------------------------------------------------
@@ -525,6 +565,30 @@ export class RouteHttpEditModal extends ModalDialog {
 
             this._locationCards.push(location);
         }
+
+        this._updateLocationTabBadge();
+    }
+
+    /**
+     * Update the location tab badge
+     * @protected
+     */
+    protected _updateLocationTabBadge(): void {
+        let count = 0;
+this._locationCards.in
+        for (const tlocation of this._locationCards) {
+            if (tlocation) {
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            this._locationTabBadge.show();
+
+            this._locationTabBadge.getElement().empty().text(count);
+        } else {
+            this._locationTabBadge.hide();
+        }
     }
 
     /**
@@ -707,6 +771,8 @@ export class RouteHttpEditModal extends ModalDialog {
             element.remove();
             delete this._locationCards[index];
         });
+
+        this._updateLocationTabBadge();
     }
 
     /**

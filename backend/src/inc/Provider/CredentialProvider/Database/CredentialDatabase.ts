@@ -3,7 +3,7 @@ import {CredentialUserServiceDB, Logger, ICredential, ICredentialAuthBasic} from
 import {CredentialSchemaTypes} from 'flyingfish_schemas';
 
 /**
- * CredentialDB
+ * CredentialDatabase provider
  */
 export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
 

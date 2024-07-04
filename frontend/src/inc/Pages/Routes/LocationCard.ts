@@ -1,7 +1,10 @@
 import {Location, SshPortEntry} from 'flyingfish_schemas';
 import {NginxLocationDestinationTypes} from '../../Api/Route';
-import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup, FormRow,
-    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab} from 'bambooo';
+import {
+    ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup, FormRow,
+    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, TooltipInfo, Tooltip
+} from 'bambooo';
+import {Lang} from '../../Lang';
 import {UtilNumber} from '../../Utils/UtilNumber';
 
 /**
@@ -86,6 +89,12 @@ export class LocationCard {
      * @protected
      */
     protected _switchHeaderHost: Switch;
+
+    /**
+     * select credential authentication
+     * @protected
+     */
+    protected _selectCredAuth: SelectBottemBorderOnly2;
 
     /**
      * input header host name
@@ -251,12 +260,21 @@ export class LocationCard {
 
         const groupEnableAuth = new FormGroup(enableL1.createCol(6), 'Authentication Enable');
         this._switchAuth = new Switch(groupEnableAuth, 'locauth');
-        this._switchAuth.hide();
 
         const rowHost = new FormRow(bodyCardAdv);
 
-        const groupEnableHeaderHost = new FormGroup(rowHost.createCol(4), 'Header Host Enable');
+        const groupEnableHeaderHost = new FormGroup(rowHost.createCol(6), 'Header Host Enable');
         this._switchHeaderHost = new Switch(groupEnableHeaderHost, 'locheaderhost');
+
+        const groupCredAuth = new FormGroup(rowHost.createCol(6), 'Authentication Credentials');
+        this._selectCredAuth = new SelectBottemBorderOnly2(groupCredAuth);
+        this._switchAuth.setChangeFn(async(value) => {
+            if (value) {
+                groupCredAuth.show();
+            } else {
+                groupCredAuth.hide();
+            }
+        });
 
         const rowHostOptions = new FormRow(bodyCardAdv);
         const groupHeaderHostName = new FormGroup(rowHostOptions.createCol(6), 'Header Hostname');
@@ -264,9 +282,10 @@ export class LocationCard {
         this._inputHeaderHostName.setPlaceholder('Bypass a Hostname, empty set by $host');
 
         const groupHeaderHostPort = new FormGroup(rowHostOptions.createCol(6), 'Header Port');
+        // eslint-disable-next-line no-new
+        new TooltipInfo(groupHeaderHostPort.getLabelElement(), Lang.i().l('route_http_location_headerhostport'));
         this._inputHeaderHostPort = new InputBottemBorderOnly2(groupHeaderHostPort);
-        this._inputHeaderHostPort.setPlaceholder('Only use by diff port on router');
-
+        this._inputHeaderHostPort.setPlaceholder('443');
 
         const enableL3 = new FormRow(bodyCardAdv);
 
@@ -297,6 +316,9 @@ export class LocationCard {
         removeUpstreamBtn.setOnClickFn(() => {
             this.remove();
         });
+
+        // init tooltips
+        Tooltip.init();
     }
 
     /**

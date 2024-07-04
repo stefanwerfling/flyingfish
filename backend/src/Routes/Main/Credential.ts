@@ -1,10 +1,11 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {SchemaCredential, SchemaCredentialUsersRequest} from 'flyingfish_schemas';
+import {SchemaCredential, SchemaCredentialUser, SchemaCredentialUsersRequest} from 'flyingfish_schemas';
 import {List} from './Credential/List.js';
 import {Provider} from './Credential/Provider.js';
 import {Save} from './Credential/Save.js';
 import {List as UserList} from './Credential/User/List.js';
+import {Save as UserSave} from './Credential/User/Save.js';
 
 /**
  * Credential route
@@ -62,6 +63,20 @@ export class Credential extends DefaultRoute {
                 if (this.isUserLogin(req, res)) {
                     if (this.isSchemaValidate(SchemaCredentialUsersRequest, req.body, res)) {
                         res.status(200).json(await UserList.getUsers(req.body));
+                    }
+                }
+            }
+        );
+
+        this._post(
+            '/json/credential/user/save',
+            async(
+                req,
+                res
+            ) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaCredentialUser, req.body, res)) {
+                        res.status(200).json(await UserSave.saveUser(req.body));
                     }
                 }
             }
