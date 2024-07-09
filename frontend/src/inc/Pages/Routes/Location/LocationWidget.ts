@@ -1,22 +1,27 @@
-import {Location, SshPortEntry} from 'flyingfish_schemas';
-import {NginxLocationDestinationTypes} from '../../Api/Route';
 import {
-    ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, CardType, FormGroup, FormRow,
-    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, TooltipInfo, Tooltip
+    ButtonClass,
+    ButtonDefault, ButtonDefaultType,
+    Card,
+    CardBodyType,
+    CardType,
+    FormGroup, FormRow,
+    ICollectionEntryWidget,
+    InputBottemBorderOnly2, InputType,
+    NavTab,
+    SelectBottemBorderOnly2, Switch, Tooltip, TooltipInfo
 } from 'bambooo';
-import {Lang} from '../../Lang';
-import {UtilNumber} from '../../Utils/UtilNumber';
+import {Location, SshPortEntry} from 'flyingfish_schemas/dist/src';
+import {NginxLocationDestinationTypes} from '../../../Api/Route';
+import {Lang} from '../../../Lang';
+import {UtilNumber} from '../../../Utils/UtilNumber';
+import {LocationListWidget} from './LocationListWidget';
 
-/**
- * LocationCard
- */
-export class LocationCard {
+export class LocationWidget extends Card implements ICollectionEntryWidget {
 
     /**
-     * info card
-     * @protected
+     * TabIndex
      */
-    protected _card: Card;
+    public static _tabIndex = 0;
 
     /**
      * nav tab
@@ -133,16 +138,17 @@ export class LocationCard {
     protected _switchXrealip: Switch;
 
     /**
-     * constructor
-     * @param card
-     * @param index
+     * Constructor
+     * @param {LocationListWidget} element
+     * @param {boolean} editable
      */
-    public constructor(card: Card, index: number) {
-        this._card = new Card(card.getElement(), CardBodyType.none, CardType.success);
+    public constructor(element: LocationListWidget, editable: boolean = false) {
+        super(element.getElement(), CardBodyType.none, CardType.success);
 
-        this._navTab = new NavTab(this._card, 'routehttplocationnavtab');
-        const tabDetails = this._navTab.addTab('Details', `routehttplocationdetails${index}`);
-        const tabAdvanced = this._navTab.addTab('Advanced', `routehttplocationadvanced${index}`);
+        LocationWidget._tabIndex++;
+        this._navTab = new NavTab(this, 'routehttplocationnavtab');
+        const tabDetails = this._navTab.addTab('Details', `routehttplocationdetails${LocationWidget._tabIndex}`);
+        const tabAdvanced = this._navTab.addTab('Advanced', `routehttplocationadvanced${LocationWidget._tabIndex}`);
 
         // tab deatils -------------------------------------------------------------------------------------------------
         const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);
@@ -306,7 +312,7 @@ export class LocationCard {
         // buttons -----------------------------------------------------------------------------------------------------
 
         const removeUpstreamBtn = new ButtonDefault(
-            this._card.getToolsElement(),
+            this.getToolsElement(),
             '',
             'fa-trash',
             ButtonClass.tool,
@@ -314,11 +320,13 @@ export class LocationCard {
         );
 
         removeUpstreamBtn.setOnClickFn(() => {
-            this.remove();
+            element.removeLocation(this);
         });
 
         // init tooltips
         Tooltip.init();
+
+        this.setReadOnly(!editable);
     }
 
     /**
@@ -588,7 +596,7 @@ export class LocationCard {
     public setLocation(location: Location): void {
         this._location = location;
 
-        this._card.setTitle(`#${location.id}`);
+        this.setTitle(`#${location.id}`);
 
         this.setMatch(location.match);
         this.setEnableWebsocket(location.websocket_enable);
@@ -614,7 +622,8 @@ export class LocationCard {
     }
 
     /**
-     * getLocation
+     * Return all form data to location object
+     * @returns {Location}
      */
     public getLocation(): Location {
         const tlocation: Location = {
@@ -658,10 +667,26 @@ export class LocationCard {
     }
 
     /**
-     * remove
+     * Set readonly
+     * @param readOnly
      */
+    public setReadOnly(readOnly: boolean): void {
+        this._inputMatch.setReadOnly(readOnly);
+        this._inputProxyPass.setReadOnly(readOnly);
+        this._inputRedirectCode.setReadOnly(readOnly);
+        this._inputRedirectPath.setReadOnly(readOnly);
+        this._switchHeaderHost.setInativ(readOnly);
+        this._switchAuth.setInativ(readOnly);
+        this._inputHeaderHostName.setReadOnly(readOnly);
+        this._inputHeaderHostPort.setReadOnly(readOnly);
+        this._switchXForwardedScheme.setInativ(readOnly);
+        this._switchXForwardedProto.setInativ(readOnly);
+        this._switchXForwardedFor.setInativ(readOnly);
+        this._switchXrealip.setInativ(readOnly);
+    }
+    
     public remove(): void {
-        this._card.getMainElement().remove();
+        this._element.remove();
     }
 
 }

@@ -1,9 +1,6 @@
 import {
     Badge,
     BadgeType,
-    ButtonClass,
-    ButtonDefault,
-    ButtonDefaultType,
     Card,
     CardBodyType,
     CardLine,
@@ -32,10 +29,10 @@ import {
 import {ListenData, Location, ProviderEntry, RouteVariable, SshPortEntry} from 'flyingfish_schemas';
 import moment from 'moment';
 import {ListenCategory, ListenTypes} from '../../Api/Listen';
-import {NginxHTTPVariables, NginxLocationDestinationTypes} from '../../Api/Route';
+import {NginxHTTPVariables} from '../../Api/Route';
 import {Ssl as SslAPI} from '../../Api/Ssl';
 import {Lang} from '../../Lang';
-import {LocationCard} from './LocationCard';
+import {LocationListWidget} from './Location/LocationListWidget';
 
 /**
  * RouteHttpEditModalButtonClickFn
@@ -66,12 +63,6 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _navTab: NavTab;
 
     /**
-     * location card
-     * @protected
-     */
-    protected _locationCard: Card;
-
-    /**
      * location badge info
      * @protected
      */
@@ -81,7 +72,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * location cards
      * @protected
      */
-    protected _locationCards: LocationCard[] = [];
+    protected _locationCollection: LocationListWidget;
 
     /**
      * Domainname or IP
@@ -198,41 +189,9 @@ export class RouteHttpEditModal extends ModalDialog {
 
         // tab location ------------------------------------------------------------------------------------------------
 
-        this._locationCard = new Card(tabLocation.body, CardBodyType.none);
-        this._locationCard.setTitle('Location list');
-
-        const addLocationBtn = new ButtonDefault(
-            this._locationCard.getToolsElement(),
-            '',
-            'fa-plus',
-            ButtonClass.tool,
-            ButtonDefaultType.none
-        );
-
-        addLocationBtn.setOnClickFn(() => {
-            const location = new LocationCard(this._locationCard, this._locationCards.length + 1);
-            location.setSshListens(this._sshListens);
-            location.setLocation({
-                id: 0,
-                destination_type: NginxLocationDestinationTypes.none,
-                ssh: {},
-                match: '',
-                proxy_pass: '',
-                auth_enable: false,
-                websocket_enable: false,
-                xrealip_enable: true,
-                xforwarded_for_enable: true,
-                xforwarded_proto_enable: true,
-                xforwarded_scheme_enable: true,
-                host_enable: true,
-                host_name: '',
-                host_name_port: 0,
-                variables: []
-            });
-
-            this._locationCards.push(location);
+        this._locationCollection = new LocationListWidget(tabLocation.body, () => {
             this._updateLocationTabBadge();
-        });
+        },true);
 
         // tab advanced ------------------------------------------------------------------------------------------------
 
@@ -558,15 +517,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * @param locations
      */
     public setLocations(locations: Location[]): void {
-        for (const tlocation of locations) {
-            const location = new LocationCard(this._locationCard, this._locationCards.length + 1);
-            location.setSshListens(this._sshListens);
-            location.setLocation(tlocation);
-
-            this._locationCards.push(location);
-        }
-
-        this._updateLocationTabBadge();
+        this._locationCollection.setLocationList(locations);
     }
 
     /**
@@ -574,13 +525,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * @protected
      */
     protected _updateLocationTabBadge(): void {
-        let count = 0;
-this._locationCards.in
-        for (const tlocation of this._locationCards) {
-            if (tlocation) {
-                count++;
-            }
-        }
+        const count = this._locationCollection.getSize();
 
         if (count > 0) {
             this._locationTabBadge.show();
@@ -595,15 +540,7 @@ this._locationCards.in
      * getLocations
      */
     public getLocations(): Location[] {
-        const list: Location[] = [];
-
-        for (const tlocation of this._locationCards) {
-            if (tlocation) {
-                list.push(tlocation.getLocation());
-            }
-        }
-
-        return list;
+        return this._locationCollection.getLocationList();
     }
 
     /**
@@ -766,13 +703,7 @@ this._locationCards.in
         this.setHttp2Enable(false);
         this.setXFrameOptions('');
         this._inputVariableCmbs.setValue('');
-
-        this._locationCards.forEach((element, index) => {
-            element.remove();
-            delete this._locationCards[index];
-        });
-
-        this._updateLocationTabBadge();
+        this._locationCollection.removeAll();
     }
 
     /**
