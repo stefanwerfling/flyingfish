@@ -1,4 +1,4 @@
-import express, {Application, request, response} from 'express';
+import express, {Application} from 'express';
 import session from 'express-session';
 import * as http from 'http';
 import {v4 as uuid} from 'uuid';

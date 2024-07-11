@@ -55,7 +55,7 @@ WORKDIR /opt/flyingfish/core
 RUN npm run build
 
 WORKDIR /opt/flyingfish/node_modules/tuntap2
-RUN npm run build
+RUN npm run build --loglevel verbose
 
 WORKDIR /opt/flyingfish/vpn
 RUN npm run build
