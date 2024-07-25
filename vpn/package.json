@@ -43,6 +43,7 @@
     "got": "^12.5.3",
     "node-schedule": "^2.1.0",
     "tuntap2": "git+https://github.com/stefanwerfling/node-tuntap2.git#ESModule",
+    "node-rohc": "git+https://github.com/stefanwerfling/node-rohc.git",
     "uuid": "^9.0.0",
     "ws": "^8.12.1",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",
