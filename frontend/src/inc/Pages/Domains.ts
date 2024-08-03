@@ -601,7 +601,7 @@ export class Domains extends BasePage {
             const row1 = new ContentRow(content);
             loadDomain(0, new ContentCol(row1, ContentColSize.col12));
 
-            if (domainMap.size <= 1) {
+            if (domainMap.size <= 0) {
                 const ib = new InfoBox(new ContentCol(row1, ContentColSize.col12), InfoBoxBg.none, InfoBoxMb.none);
                 ib.setIcon(IconFa.info, InfoBoxBg.info);
                 ib.getTextElement().append('None Domain exist, please add a new Domain!');

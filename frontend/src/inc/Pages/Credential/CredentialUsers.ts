@@ -6,7 +6,7 @@ import {
     ContentColSize,
     ContentRow,
     IconFa,
-    LeftNavbarLink,
+    LeftNavbarLink, SidebarMenuItem, SidebarMenuTree,
     Table,
     Td,
     Th,
@@ -28,7 +28,7 @@ export class CredentialUsers extends BasePage {
      * name
      * @protected
      */
-    protected override _name: string = 'credential';
+    protected override _name: string = 'credential_user';
 
     /**
      * Credential
@@ -113,6 +113,22 @@ export class CredentialUsers extends BasePage {
      * loadContent
      */
     public override async loadContent(): Promise<void> {
+        // Menu Tree ---------------------------------------------------------------------------------------------------
+
+        const menuItem = this._wrapper.getMainSidebar().getSidebar().getMenu().getMenuItem('credential');
+
+        if (menuItem !== null) {
+            menuItem.setActiv(true);
+
+            const menuTree = new SidebarMenuTree(menuItem);
+
+            const pmenuItem = new SidebarMenuItem(menuTree);
+            pmenuItem.setActiv(true);
+            pmenuItem.setTitle(`User-List: ${this._credential.name}`);
+        }
+
+        // -------------------------------------------------------------------------------------------------------------
+
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
         const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
