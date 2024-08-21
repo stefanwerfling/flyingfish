@@ -265,6 +265,7 @@ export class DynDnsClientEditModal extends ModalDialog {
      */
     public override resetValues(): void {
         this.setProvider('none');
+        this._id = null;
         this._multipleDomains.setValue([]);
         this._inputUsername.setValue('');
         this._inputPassword.setValue('');
