@@ -5,6 +5,7 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
+    "test": "node --experimental-vm-modules ../node_modules/.bin/jest",
     "npm-check-updates": "npm-check-updates",
     "tsc": "tsc",
     "build": "npm run tsc"
@@ -37,6 +38,7 @@
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.46.0",
+    "eslint-plugin-jest": "^28.8.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "typescript": "^4.9.5"
   },
@@ -54,8 +56,8 @@
     "express-session": "^1.17.3",
     "fast-xml-parser": "^4.2.7",
     "flyingfish_core": "file:../core",
-    "flyingfish_schemas": "file:../schemas",
     "flyingfish_plugin_letsencrypt": "file:../plugins/letsencrypt",
+    "flyingfish_schemas": "file:../schemas",
     "got": "^12.6.1",
     "helmet": "^7.1.0",
     "moment": "^2.29.4",

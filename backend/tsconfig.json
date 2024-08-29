@@ -12,9 +12,9 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2022",
-    "rootDir": "src"
+    "rootDir": "src",
   },
   "include": [
-    "./src/**/*.ts"
+    "./src/**/*.ts",
   ]
 }

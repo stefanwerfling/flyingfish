@@ -1,24 +1,66 @@
 import {Logger} from 'flyingfish_core';
 import got from 'got';
+import {ExtractSchemaResultType, Vts} from 'vts';
+
+export const SchemaIpLocateData = Vts.object({
+    id: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    country: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    country_code: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    city: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    continent: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    latitude: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    longitude: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    time_zone: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    postal_code: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    org: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    asn: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    subdivision: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ]),
+    subdivision2: Vts.or([
+        Vts.string(),
+        Vts.null()
+    ])
+});
 
 /**
  * IpLocateData
  */
-export type IpLocateData = {
-    ip: string|null;
-    country: string|null;
-    country_code: string|null;
-    city: string|null;
-    continent: string|null;
-    latitude: string|null;
-    longitude: string|null;
-    time_zone: string|null;
-    postal_code: string|null;
-    org: string|null;
-    asn: string|null;
-    subdivision: string|null;
-    subdivision2: string|null;
-};
+export type IpLocateData = ExtractSchemaResultType<typeof SchemaIpLocateData>;
 
 /**
  * IpLocateIo
