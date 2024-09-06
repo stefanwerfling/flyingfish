@@ -2,8 +2,11 @@ import {Logger} from 'flyingfish_core';
 import got from 'got';
 import {ExtractSchemaResultType, Vts} from 'vts';
 
+/**
+ * Schema for IP locate data
+ */
 export const SchemaIpLocateData = Vts.object({
-    id: Vts.or([
+    ip: Vts.or([
         Vts.string(),
         Vts.null()
     ]),
