@@ -45,7 +45,7 @@
     "flyingfish_schemas": "file:../schemas",
     "helmet": "^7.1.0",
     "mysql": "^2.18.1",
-    "typeorm": "0.3.16",
+    "typeorm": "0.3.20",
     "uuid": "^9.0.0",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",
     "winston": "^3.10.0",
