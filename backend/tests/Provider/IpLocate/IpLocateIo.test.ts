@@ -11,7 +11,7 @@ describe('testing ip locate IO by ip 8.8.8.8', () => {
         result = await IpLocateIo.location(ip);
     });
 
-    test('test result is not empty', async() => {
+    test('test result is empty', async() => {
         expect(result).toBeTruthy();
     });
 

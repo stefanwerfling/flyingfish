@@ -14,7 +14,10 @@ const config: JestConfigWithTsJest = {
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
     },
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts']
+    setupFilesAfterEnv: [
+        'jest-expect-message',
+        './jest.setup.ts'
+    ]
 };
 
 export default config;

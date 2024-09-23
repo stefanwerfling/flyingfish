@@ -69,24 +69,33 @@ export class Logger {
                 }
             }
 
-            const transport: DailyRotateFile = new DailyRotateFile({
-                dirname: dirname,
-                filename: filename,
-                datePattern: 'YYYY-MM-DD-HH',
-                zippedArchive: zippedArchive,
-                maxSize: maxSize,
-                maxFiles: maxFiles
-            });
+            const transports: TransportStream[] = [];
 
-            transport.on('rotate',
-                (
-                    oldFilename,
-                    newFilename
-                ) => {
-                    console.log(`Logger change loggingfile: ${oldFilename} --> ${newFilename}`);
+            try {
+                const dRFtransport: DailyRotateFile = new DailyRotateFile({
+                    dirname: dirname,
+                    filename: filename,
+                    datePattern: 'YYYY-MM-DD-HH',
+                    zippedArchive: zippedArchive,
+                    maxSize: maxSize,
+                    maxFiles: maxFiles
                 });
 
-            const transports: TransportStream[] = [transport];
+                dRFtransport.on(
+                    'rotate',
+                    (
+                        oldFilename,
+                        newFilename
+                    ) => {
+                        console.log(`Logger change loggingfile: ${oldFilename} --> ${newFilename}`);
+                    }
+                );
+
+                transports.push(dRFtransport);
+            } catch (e) {
+                console.error(e);
+                enableConsole = true;
+            }
 
             if (enableConsole) {
                 transports.push(new winston.transports.Console({
