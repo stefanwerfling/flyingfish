@@ -101,6 +101,15 @@ import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
     Logger.getLogger();
     Logger.getLogger().info('Start FlyingFish Service ...');
 
+    process.on('uncaughtException', (err) => {
+        Logger.getLogger().error(err);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+        Logger.getLogger().error(reason);
+        Logger.getLogger().error(promise);
+    });
+
     // load plugins ----------------------------------------------------------------------------------------------------
 
     try {
