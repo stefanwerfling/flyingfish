@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/bootstrap": "^4.6.2",
+    "@types/bootstrap": "^5.2.10",
     "@types/jquery": "^3.5.16",
     "admin-lte": "^3.2.0",
     "bambooo": "git+https://github.com/stefanwerfling/bambooo.git",
