@@ -131,6 +131,14 @@ export {ICredentialProvider} from './inc/Provider/CredentialProvider/ICredential
 export {ICredentialProviders} from './inc/Provider/CredentialProvider/ICredentialProviders.js';
 export {ACredentialProviderOnLoadEvent} from './inc/Provider/CredentialProvider/ACredentialProviderOnLoadEvent.js';
 
+// Provider DynDns Client
+export {
+    DynDnsClientUpdateResult,
+    DynDnsClientUpdateOptions,
+    DynDnsClientHostsOptions,
+    IDynDnsClient
+} from './inc/Provider/DynDnsClientProvider/IDynDnsClient.js';
+
 // Provider SslCertProvider
 export {ASslCertProviderOnLoadEvent} from './inc/Provider/SslCertProvider/ASslCertProviderOnLoadEvent.js';
 export {FSslCertProviderOnReset} from './inc/Provider/SslCertProvider/FSslCertProviderOnReset.js';

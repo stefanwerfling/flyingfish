@@ -1,4 +1,5 @@
-import {IDynDns} from './IDynDns.js';
+import {IDynDnsClient} from 'flyingfish_core/dist/src/index.js';
+import {NoIp} from './NoIp/NoIp.js';
 import {Selfhost} from './Selfhost/Selfhost.js';
 
 /**
@@ -15,20 +16,24 @@ export type DynDnsProvider = {
 export class DynDnsProviders {
 
     /**
-     * getProvider
-     * @param name
+     * Return the provider by name
+     * @param {string} name
+     * @returns {IDynDnsClient|null}
      */
-    public static getProvider(name: string): IDynDns|null {
+    public static getProvider(name: string): IDynDnsClient|null {
         switch (name) {
             case Selfhost.getName():
                 return new Selfhost();
+            case NoIp.getName():
+                return new NoIp();
         }
 
         return null;
     }
 
     /**
-     * getProviders
+     * Return all providers
+     * @returns {DynDnsProvider[]}
      */
     public static getProviders(): DynDnsProvider[] {
         const list: DynDnsProvider[] = [];
@@ -36,6 +41,11 @@ export class DynDnsProviders {
         list.push({
             name: Selfhost.getName(),
             title: Selfhost.getTitle()
+        });
+
+        list.push({
+            name: NoIp.getName(),
+            title: NoIp.getTitle()
         });
 
         return list;

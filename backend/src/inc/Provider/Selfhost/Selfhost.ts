@@ -1,6 +1,11 @@
-import {Logger} from 'flyingfish_core';
+import {
+    DynDnsClientHostsOptions,
+    DynDnsClientUpdateOptions,
+    DynDnsClientUpdateResult,
+    IDynDnsClient,
+    Logger
+} from 'flyingfish_core';
 import got from 'got';
-import {IDynDns, IDynDnsUpdate} from '../IDynDns.js';
 
 /**
  * SelfhostStatusMap
@@ -23,7 +28,7 @@ export type SelfhostReturn = {
  * Selfhost
  * @see https://selfhost.de/cgi-bin/selfhost?p=document&name=api
  */
-export class Selfhost implements IDynDns {
+export class Selfhost implements IDynDnsClient {
 
     /**
      * consts
@@ -51,37 +56,39 @@ export class Selfhost implements IDynDns {
     };
 
     /**
-     * getName
+     * Static Name
      */
     public static getName(): string {
         return 'selfhost';
     }
 
     /**
-     * getTitle
+     * Static Title
      */
     public static getTitle(): string {
         return 'SelfHost';
     }
 
     /**
-     * getName
+     * Get the name of client
+     * @returns {string}
      */
     public getName(): string {
         return Selfhost.getName();
     }
 
     /**
-     * getTitle
+     * Get the title of title
+     * @returns {string}
      */
     public getTitle(): string {
         return Selfhost.getTitle();
     }
 
     /**
-     * _parseReturn
-     * @param str
-     * @protected
+     * Parse the return from server
+     * @param {string} str
+     * @returns {SelfhostReturn}
      */
     protected _parseReturn(str: string): SelfhostReturn {
         const lines = str.split('\n');
@@ -119,8 +126,9 @@ export class Selfhost implements IDynDns {
     }
 
     /**
-     * getStatusMsg
-     * @param status
+     * Return the Msg status
+     * @param {number} status
+     * @returns {string}
      */
     public getStatusMsg(status: number): string {
         if (Selfhost.STATUS[status]) {
@@ -131,13 +139,12 @@ export class Selfhost implements IDynDns {
     }
 
     /**
-     * update
-     * @param username
-     * @param password
-     * @param ip
+     * Update hostname[s] with the IP
+     * @param {DynDnsClientUpdateOptions} options
+     * @returns {DynDnsClientUpdateResult}
      */
-    public async update(username: string, password: string, ip: string = ''): Promise<IDynDnsUpdate> {
-        const tresult: IDynDnsUpdate = {
+    public async update(options: DynDnsClientUpdateOptions): Promise<DynDnsClientUpdateResult> {
+        const tresult: DynDnsClientUpdateResult = {
             result: false,
             status: 0
         };
@@ -145,12 +152,16 @@ export class Selfhost implements IDynDns {
         try {
             let myip = '';
 
-            if (ip !== '') {
-                myip = `&myip=${ip}`;
+            if (options.ip !== null) {
+                myip = `&myip=${options.ip}`;
+            }
+
+            if (options.ip6 !== null) {
+                myip = `&myip=${options.ip6}`;
             }
 
             const response = await got({
-                url: `${Selfhost.URL}username=${username}&password=${password}${myip}`
+                url: `${Selfhost.URL}username=${options.username}&password=${options.password}${myip}`
             });
 
             Logger.getLogger().info(`Selfhost::update: http status code: ${response.statusCode}`);
@@ -181,16 +192,16 @@ export class Selfhost implements IDynDns {
     }
 
     /**
-     * getHosts
-     * @param username
-     * @param password
+     * Return all supported hostnames
+     * @param {DynDnsClientHostsOptions} options
+     * @returns {string[]}
      */
-    public async getHosts(username: string, password: string): Promise<string[]> {
+    public async getHosts(options: DynDnsClientHostsOptions): Promise<string[]> {
         const list: string[] = [];
 
         try {
             const response = await got({
-                url: `${Selfhost.URL}username=${username}&password=${password}&hostlist=1`
+                url: `${Selfhost.URL}username=${options.username}&password=${options.password}&hostlist=1`
             });
 
             if (response.statusCode === 200) {

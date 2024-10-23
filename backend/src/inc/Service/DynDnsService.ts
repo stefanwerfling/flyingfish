@@ -55,7 +55,13 @@ export class DynDnsService {
                 continue;
             }
 
-            const providerResult = await provider.update(client.username, client.password, '');
+            const providerResult = await provider.update({
+                username: client.username,
+                password: client.password,
+                ip: null,
+                ip6: null,
+                hostname: []
+            });
 
             // update last update time
             await DynDnsClientServiceDB.getInstance().updateStatus(client.id, providerResult.status);
