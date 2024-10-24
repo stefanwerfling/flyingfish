@@ -1,5 +1,5 @@
+import {IDynDnsClient} from 'flyingfish_core/dist/src';
 import {DynDnsProviders} from '../../../src/inc/Provider/DynDnsProviders';
-import {IDynDns} from '../../../src/inc/Provider/IDynDns';
 import {SchemaMatchers} from '../../../src/types/ExpectSchema';
 
 expect.extend(SchemaMatchers);
@@ -8,7 +8,7 @@ describe('testing dyndns client noip', () => {
     let username: string|null = null;
     let password: string|null = null;
     let hostname: string|null = null;
-    let provider: IDynDns|null = null;
+    let provider: IDynDnsClient|null = null;
 
     beforeAll(async() => {
         if (process.env.TESTS_BACKEND_DYNCLIENT_NOIP_USERNAME) {
@@ -40,11 +40,13 @@ describe('testing dyndns client noip', () => {
         expect(provider).not.toBeNull();
 
         if (provider) {
-            const result = await provider.update(
-                'wrongname',
-                'password',
-                '3.4.5.6'
-            );
+            const result = await provider.update({
+                username: 'wrongname',
+                password: 'password',
+                ip: '3.4.5.6',
+                ip6: null,
+                hostname: []
+            });
 
             expect(result.result).toBe(false);
         }
