@@ -1,4 +1,4 @@
-import {IDynDnsClient} from 'flyingfish_core/dist/src';
+import {IDynDnsClient} from 'flyingfish_core';
 import {DynDnsProviders} from '../../../src/inc/Provider/DynDnsProviders';
 import {SchemaMatchers} from '../../../src/types/ExpectSchema';
 
@@ -55,8 +55,16 @@ describe('testing dyndns client noip', () => {
     test('update', async() => {
         expect(provider).not.toBeNull();
 
-        /*const result = provider.update(
+        if (provider) {
+            const result = await provider.update({
+                username: username!,
+                password: password!,
+                ip: '3.4.5.6',
+                ip6: null,
+                hostname: [hostname!]
+            });
 
-        );*/
+            expect(result.result).toBe(true);
+        }
     });
 });

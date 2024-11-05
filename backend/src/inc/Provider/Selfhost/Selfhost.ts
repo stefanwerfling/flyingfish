@@ -127,12 +127,14 @@ export class Selfhost implements IDynDnsClient {
 
     /**
      * Return the Msg status
-     * @param {number} status
+     * @param {string} status
      * @returns {string}
      */
-    public getStatusMsg(status: number): string {
-        if (Selfhost.STATUS[status]) {
-            return Selfhost.STATUS[status];
+    public getStatusMsg(status: string): string {
+        const nstatus = parseInt(status, 10) || 0;
+
+        if (Selfhost.STATUS[nstatus]) {
+            return Selfhost.STATUS[nstatus];
         }
 
         return 'unknow';
@@ -176,8 +178,10 @@ export class Selfhost implements IDynDnsClient {
                         tresult.result = true;
                     }
 
+                    const statusMsg = this.getStatusMsg(`${result.statusCode}`);
+
                     Logger.getLogger().error(`Selfhost::update: status code: ${result.statusCode}`);
-                    Logger.getLogger().error(`Selfhost::update: status code-msg: ${this.getStatusMsg(result.statusCode)}`);
+                    Logger.getLogger().error(`Selfhost::update: status code-msg: ${statusMsg}`);
 
                     if (result.msg) {
                         Logger.getLogger().error(`Selfhost::update: msg by selfhost: ${result.msg}`);

@@ -133,6 +133,7 @@ export {ACredentialProviderOnLoadEvent} from './inc/Provider/CredentialProvider/
 
 // Provider DynDns Client
 export {
+    DynDnsClientUpdateStatus,
     DynDnsClientUpdateResult,
     DynDnsClientUpdateOptions,
     DynDnsClientHostsOptions,

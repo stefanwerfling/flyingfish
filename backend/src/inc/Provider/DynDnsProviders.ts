@@ -1,4 +1,4 @@
-import {IDynDnsClient} from 'flyingfish_core/dist/src/index.js';
+import {IDynDnsClient} from 'flyingfish_core';
 import {NoIp} from './NoIp/NoIp.js';
 import {Selfhost} from './Selfhost/Selfhost.js';
 
@@ -24,6 +24,7 @@ export class DynDnsProviders {
         switch (name) {
             case Selfhost.getName():
                 return new Selfhost();
+
             case NoIp.getName():
                 return new NoIp();
         }

@@ -1,9 +1,18 @@
 /**
+ * Enum DynDns Client update status
+ */
+export enum DynDnsClientUpdateStatus {
+    SUCCESS = 0,
+    ERROR = 1,
+    ERROR_OPTIONS = 2
+}
+
+/**
  * Type of DynDns Client update result
  */
 export type DynDnsClientUpdateResult = {
     result: boolean;
-    status: number;
+    status: DynDnsClientUpdateStatus;
 };
 
 /**
@@ -44,10 +53,10 @@ export interface IDynDnsClient {
 
     /**
      * Return the Msg status
-     * @param {number} status
+     * @param {string} status
      * @returns {string}
      */
-    getStatusMsg(status: number): string;
+    getStatusMsg(status: string): string;
 
     /**
      * Update hostname[s] with the IP
