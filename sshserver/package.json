@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
-    "delay": "^5.0.0",
+    "delay": "^6.0.0",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
     "mysql": "^2.18.1",
