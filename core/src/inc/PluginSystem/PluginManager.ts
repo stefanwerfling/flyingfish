@@ -251,8 +251,9 @@ export class PluginManager {
     }
 
     /**
-     * getAllEvents
-     * @param aClass
+     * Return all Events
+     * @param {Function} aClass
+     * @returns {APluginEvent[]}
      */
     // eslint-disable-next-line @typescript-eslint/ban-types
     public getAllEvents<T extends APluginEvent>(aClass: Function): T[] {

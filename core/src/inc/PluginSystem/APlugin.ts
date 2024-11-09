@@ -1,9 +1,8 @@
 import {PluginDefinition} from './PluginDefinition.js';
 import {PluginManager} from './PluginManager.js';
-import {PluginServiceNames} from './PluginServiceNames.js';
 
 /**
- * Plugin
+ * Abstract Plugin class
  */
 export abstract class APlugin {
 
@@ -21,7 +20,8 @@ export abstract class APlugin {
 
     /**
      * constructor
-     * @param info
+     * @param {PluginDefinition} info
+     * @param {PluginManager} pm
      */
     public constructor(info: PluginDefinition, pm: PluginManager) {
         this._info = info;
@@ -31,6 +31,7 @@ export abstract class APlugin {
     /**
      * getPluginManager
      * @protected
+     * @returns {PluginManager}
      */
     protected getPluginManager(): PluginManager {
         return this._pluginManager;
@@ -38,16 +39,19 @@ export abstract class APlugin {
 
     /**
      * plugin name
+     * @returns {string}
      */
     public abstract getName(): string;
 
     /**
      * onEnable
+     * @returns {boolean}
      */
     public abstract onEnable(): boolean;
 
     /**
      * onDisable
+     * @returns {boolean}
      */
     public abstract onDisable(): boolean;
 

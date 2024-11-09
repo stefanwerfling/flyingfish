@@ -4,7 +4,8 @@
 export abstract class APluginEvent {
 
     /**
-     * getName
+     * Return the name
+     * @returns {string}
      */
     public abstract getName(): string;
 

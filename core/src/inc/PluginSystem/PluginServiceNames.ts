@@ -8,4 +8,4 @@ export enum PluginServiceNames {
     iptable = 'iptable',
     sshserver = 'sshserver',
     vpn = 'vpn'
-};
+}
