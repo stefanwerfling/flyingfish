@@ -32,6 +32,7 @@
     * [FlyingFish to other reverse proxy](index/examples/flyingfish-to-other-reverse-proxy.md)
     * [Backup Server, SSH to Nas](index/examples/backup-server-ssh-to-nas.md)
     * [Own DynDNS Server](index/examples/own-dyndns-server.md)
+    * [Inventree - Route](index/examples/inventree-route.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
     * [Project structure](index/developer/project-structure/README.md)
