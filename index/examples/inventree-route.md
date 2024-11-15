@@ -12,7 +12,7 @@ When installing Inventree, install docker compose according to the instructions.
 
 Contrary to the documentation, you set the variable "INVENTREE\_SITE\_URL" in the .env to your domain with https. Example: `https://inven.mydomain.de`
 
-In the docker-compose.yml we change the “expose” to “port” on the service “inventree-server” so that port 8000 can be reached.
+In the docker-compose.yml we change the “expose” to “ports” on the service “inventree-server” so that port 8000 can be reached.
 
 <figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
 
