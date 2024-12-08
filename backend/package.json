@@ -48,7 +48,7 @@
     "async-exit-hook": "^2.0.1",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
-    "delay": "^5.0.0",
+    "delay": "^6.0.0",
     "dns2": "^2.1.0",
     "ets": "git+https://github.com/OpenSourcePKG/ets.git",
     "express": "^4.18.2",
