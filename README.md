@@ -16,6 +16,11 @@
 
 <br>
 
+# News 2024-12-01 
+Hello everyone, a lot is happening this year, the FlyingFish sub-projects have received many updates. Some questions were clarified/new ideas were collected, a long active test was carried out permanently with FlyinFish. I am currently on vacation until January 2025. From there the further development of FlyingFish really starts again. I would like to thank my sponsor "JetBrains" again. I hope that I can continue to rely on this great development environment. I wish you a Merry Christmas and a good start into the New Year.
+
+Stefan
+
 # Flyingfish
 
 FlyingFish is a reverse proxy manager with own WebUI, DNS server, SSH server, DynDNS, UPNP support, Lets Encrypt and much more.
