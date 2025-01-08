@@ -25,10 +25,12 @@ export class List {
                 const provider = DynDnsProviders.getProvider(client.provider);
                 let providerName = '';
                 let providerTitle = '';
+                let statusMsg = '';
 
                 if (provider) {
                     providerName = provider.getName();
                     providerTitle = provider.getTitle();
+                    statusMsg = provider.getStatusMsg(`${client.last_status}`);
                 }
 
                 const domains: DynDnsClientDomain[] = [];
@@ -58,7 +60,7 @@ export class List {
                     update_domain: client.update_domain,
                     username: client.username,
                     last_status: client.last_status,
-                    last_status_msg: provider?.getStatusMsg(client.last_status)!,
+                    last_status_msg: statusMsg,
                     last_update: client.last_update
                 });
             }

@@ -1,9 +1,4 @@
-import {InputBottemBorderOnly2, FormGroup, Switch, Element, ModalDialog, ModalDialogType} from 'bambooo';
-
-/**
- * DomainEditModalButtonClickFn
- */
-type DomainEditModalButtonClickFn = () => Promise<void>;
+import {InputBottemBorderOnly2, FormGroup, Switch, Element, ModalDialog, ModalDialogType, LangText} from 'bambooo';
 
 /**
  * DomainEditModal
@@ -29,12 +24,6 @@ export class DomainEditModal extends ModalDialog {
     protected _switchDisable: Switch;
 
     /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: DomainEditModalButtonClickFn|null = null;
-
-    /**
      * constructor
      * @param elementObject
      */
@@ -50,16 +39,10 @@ export class DomainEditModal extends ModalDialog {
         const groupDisable = new FormGroup(bodyCard, 'Disable this Domain');
         this._switchDisable = new Switch(groupDisable, 'domaindisable');
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
+        // buttons -----------------------------------------------------------------------------------------------------
 
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -114,14 +97,6 @@ export class DomainEditModal extends ModalDialog {
         this.setId(null);
         this.setName('');
         this.setDisable(false);
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: DomainEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

@@ -1,11 +1,8 @@
 import {DomainData, DynDnsClientDomain, ProviderEntry} from 'flyingfish_schemas';
-import {FormGroup, FormRow, InputBottemBorderOnly2, InputType, Multiple, SelectBottemBorderOnly2, Switch, Element,
-    ModalDialog, ModalDialogType} from 'bambooo';
-
-/**
- * DynDnsClientEditModalButtonClickFn
- */
-export type DynDnsClientEditModalButtonClickFn = () => Promise<void>;
+import {
+    FormGroup, FormRow, InputBottemBorderOnly2, InputType, Multiple, SelectBottemBorderOnly2, Switch, Element,
+    ModalDialog, ModalDialogType, LangText
+} from 'bambooo';
 
 /**
  * DynDnsClientEditModal
@@ -47,12 +44,6 @@ export class DynDnsClientEditModal extends ModalDialog {
      * @protected
      */
     protected _switchUpdateDomains: Switch;
-
-    /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: DynDnsClientEditModalButtonClickFn|null = null;
 
     /**
      * constructor
@@ -98,16 +89,8 @@ export class DynDnsClientEditModal extends ModalDialog {
 
         // buttons -----------------------------------------------------------------------------------------------------
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
-
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -269,14 +252,6 @@ export class DynDnsClientEditModal extends ModalDialog {
         this._multipleDomains.setValue([]);
         this._inputUsername.setValue('');
         this._inputPassword.setValue('');
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: DynDnsClientEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

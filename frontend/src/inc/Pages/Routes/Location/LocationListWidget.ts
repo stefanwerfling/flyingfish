@@ -9,6 +9,7 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
     /**
      * Constructor
      * @param {Element|any} element
+     * @param onUpdate
      * @param {boolean} editable
      */
     public constructor(element: Element|any, onUpdate?: CollectionWidgetOnUpdate<LocationWidget>, editable: boolean = false) {

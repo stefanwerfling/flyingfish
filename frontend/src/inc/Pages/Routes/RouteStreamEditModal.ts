@@ -1,16 +1,13 @@
 import {ListenData, SshPortEntry, UpStream} from 'flyingfish_schemas';
 import {ListenCategory, ListenTypes} from '../../Api/Listen';
 import {NginxStreamDestinationType, NginxStreamSshR} from '../../Api/Route';
-import {BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
+import {
+    BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, Tooltip, TooltipInfo, Element,
-    ModalDialog, ModalDialogType} from 'bambooo';
+    ModalDialog, ModalDialogType, LangText
+} from 'bambooo';
 import {Lang} from '../../Lang';
 import {UpstreamCard} from './UpstreamCard';
-
-/**
- * RouteStreamEditModalButtonClickFn
- */
-type RouteStreamEditModalButtonClickFn = () => Promise<void>;
 
 /**
  * RouteStreamEditModal
@@ -184,12 +181,6 @@ export class RouteStreamEditModal extends ModalDialog {
      * @protected
      */
     protected _selectLoadBalanceAlg: SelectBottemBorderOnly2;
-
-    /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: RouteStreamEditModalButtonClickFn|null = null;
 
     /**
      * constructor
@@ -434,16 +425,8 @@ export class RouteStreamEditModal extends ModalDialog {
 
         // buttons -----------------------------------------------------------------------------------------------------
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
-
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
 
         // init tooltips
         Tooltip.init();
@@ -830,14 +813,6 @@ export class RouteStreamEditModal extends ModalDialog {
             element.remove();
             delete this._upstreamCards[index];
         });
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: RouteStreamEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

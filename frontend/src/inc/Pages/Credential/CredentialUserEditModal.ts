@@ -5,13 +5,8 @@ import {
     ModalDialog,
     ModalDialogType,
     Switch,
-    Element
+    Element, LangText
 } from 'bambooo';
-
-/**
- * CredentialUserEditModalButtonClickFn
- */
-export type CredentialUserEditModalButtonClickFn = () => Promise<void>;
 
 /**
  * Credential user edit modal
@@ -49,12 +44,6 @@ export class CredentialUserEditModal extends ModalDialog {
     protected _switchDisable: Switch;
 
     /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: CredentialUserEditModalButtonClickFn | null = null;
-
-    /**
      * constructor
      * @param elementObject
      */
@@ -77,16 +66,8 @@ export class CredentialUserEditModal extends ModalDialog {
 
         // buttons -----------------------------------------------------------------------------------------------------
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
-
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -167,14 +148,6 @@ export class CredentialUserEditModal extends ModalDialog {
      */
     public setDisabled(disable: boolean): void {
         this._switchDisable.setEnable(disable);
-    }
-
-    /**
-     * Set the on save function
-     * @param {CredentialUserEditModalButtonClickFn} onSave
-     */
-    public setOnSave(onSave: CredentialUserEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
     /**

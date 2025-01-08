@@ -1,9 +1,14 @@
-import {Form, FormGroup, InputBottemBorderOnly2, InputType, Switch, Element, ModalDialog, ModalDialogType} from 'bambooo';
-
-/**
- * IpAccessWhitelistModalButtonClickFn
- */
-type IpAccessWhitelistModalButtonClickFn = () => Promise<void>;
+import {
+    Form,
+    FormGroup,
+    InputBottemBorderOnly2,
+    InputType,
+    Switch,
+    Element,
+    ModalDialog,
+    ModalDialogType,
+    LangText
+} from 'bambooo';
 
 /**
  * IpAccessWhitelistModal
@@ -35,12 +40,6 @@ export class IpAccessWhitelistModal extends ModalDialog {
     protected _inputDescription: InputBottemBorderOnly2;
 
     /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: IpAccessWhitelistModalButtonClickFn|null = null;
-
-    /**
      * constructor
      * @param elementObject
      */
@@ -59,16 +58,10 @@ export class IpAccessWhitelistModal extends ModalDialog {
         const groupDescription = new FormGroup(bodyCard, 'Description');
         this._inputDescription = new InputBottemBorderOnly2(groupDescription);
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
+        // buttons -----------------------------------------------------------------------------------------------------
 
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -139,14 +132,6 @@ export class IpAccessWhitelistModal extends ModalDialog {
         this.setIp('');
         this.setDisabled(false);
         this.setDescription('');
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: IpAccessWhitelistModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

@@ -1,9 +1,14 @@
-import {Form, FormGroup, InputBottemBorderOnly2, InputType, Switch, Element, ModalDialog, ModalDialogType} from 'bambooo';
-
-/**
- * UsersEditModalButtonClickFn
- */
-type UsersEditModalButtonClickFn = () => Promise<void>;
+import {
+    Form,
+    FormGroup,
+    InputBottemBorderOnly2,
+    InputType,
+    Switch,
+    Element,
+    ModalDialog,
+    ModalDialogType,
+    LangText
+} from 'bambooo';
 
 /**
  * UsersEditModal
@@ -47,12 +52,6 @@ export class UsersEditModal extends ModalDialog {
     protected _inputPasswordRepeat: InputBottemBorderOnly2;
 
     /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: UsersEditModalButtonClickFn|null = null;
-
-    /**
      * constructor
      * @param elementObject
      */
@@ -81,16 +80,8 @@ export class UsersEditModal extends ModalDialog {
 
         // buttons -----------------------------------------------------------------------------------------------------
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
-
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -193,14 +184,6 @@ export class UsersEditModal extends ModalDialog {
         this.setDisable(false);
         this.setPassword('');
         this.setPasswordRepeat('');
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: UsersEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

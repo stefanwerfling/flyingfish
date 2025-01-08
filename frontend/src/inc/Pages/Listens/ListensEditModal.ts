@@ -1,13 +1,10 @@
 import {ListenVariable} from 'flyingfish_schemas';
 import {ListenAddressCheckType, ListenTypes, NginxListenStreamServerVariables} from '../../Api/Listen';
-import {Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element, NavTab,
-    ModalDialog, ModalDialogType, Tooltip, TooltipInfo} from 'bambooo';
+import {
+    Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element, NavTab,
+    ModalDialog, ModalDialogType, Tooltip, TooltipInfo, LangText
+} from 'bambooo';
 import {Lang} from '../../Lang';
-
-/**
- * ListensEditModalButtonClickFn
- */
-type ListensEditModalButtonClickFn = () => Promise<void>;
 
 /**
  * ListensEditModal
@@ -103,12 +100,6 @@ export class ListensEditModal extends ModalDialog {
      * @protected
      */
     protected _inputStreamProxyConnectTimeout: InputBottemBorderOnly2;
-
-    /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: ListensEditModalButtonClickFn|null = null;
 
     /**
      * constructor
@@ -235,18 +226,10 @@ export class ListensEditModal extends ModalDialog {
         this._inputStreamProxyConnectTimeout = new InputBottemBorderOnly2(groupStreamProxyConnectTimeout, undefined, InputType.number);
         this._inputStreamProxyConnectTimeout.setPlaceholder('60');
 
-        // button ------------------------------------------------------------------------------------------------------
+        // buttons -----------------------------------------------------------------------------------------------------
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
-
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
 
         // init tooltips
         Tooltip.init();
@@ -520,14 +503,6 @@ export class ListensEditModal extends ModalDialog {
         this.setProxyProtocolIn(false);
         this.setStreamProxyTimeout('');
         this.setStreamProxyConnectTimeout('');
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: ListensEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

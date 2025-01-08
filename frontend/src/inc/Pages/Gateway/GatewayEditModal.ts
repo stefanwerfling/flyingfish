@@ -1,12 +1,8 @@
 import {UpnpNat} from '../../Api/UpnpNat';
-import {DialogInfo, Form, FormGroup, FormGroupButton, InputBottemBorderOnly2, InputType, Icon, IconFa,
-    Element, ModalDialog, ModalDialogType} from 'bambooo';
-
-
-/**
- * GatewayEditModalButtonClickFn
- */
-type GatewayEditModalButtonClickFn = () => Promise<void>;
+import {
+    DialogInfo, Form, FormGroup, FormGroupButton, InputBottemBorderOnly2, InputType, Icon, IconFa,
+    Element, ModalDialog, ModalDialogType, LangText
+} from 'bambooo';
 
 /**
  * GatewayEditModal
@@ -42,12 +38,6 @@ export class GatewayEditModal extends ModalDialog {
      * @protected
      */
     protected _inputColor: InputBottemBorderOnly2;
-
-    /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: GatewayEditModalButtonClickFn|null = null;
 
     /**
      * constructor
@@ -113,17 +103,10 @@ export class GatewayEditModal extends ModalDialog {
         const groupColor = new FormGroup(form, 'Color');
         this._inputColor = new InputBottemBorderOnly2(groupColor, 'color', InputType.colorpicker);
 
+        // buttons -----------------------------------------------------------------------------------------------------
 
-        this.addButtonClose();
-        const btnSave = this.addButtonSave().empty().append('Save changes');
-
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -211,14 +194,6 @@ export class GatewayEditModal extends ModalDialog {
         this.setGatewayMacAddress('');
         this.setGatewayIpAddress('');
         this.setColor('');
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: GatewayEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

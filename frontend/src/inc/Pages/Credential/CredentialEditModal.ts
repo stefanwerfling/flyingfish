@@ -4,14 +4,9 @@ import {
     ModalDialog,
     ModalDialogType,
     Element,
-    SelectBottemBorderOnly2
+    SelectBottemBorderOnly2, LangText
 } from 'bambooo';
 import {CredentialSchemaTypes, ProviderEntry} from 'flyingfish_schemas';
-
-/**
- * CredentialEditModalButtonClickFn
- */
-export type CredentialEditModalButtonClickFn = () => Promise<void>;
 
 /**
  * Credential edit modal
@@ -43,12 +38,6 @@ export class CredentialEditModal extends ModalDialog {
     protected _selectProvider: SelectBottemBorderOnly2;
 
     /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: CredentialEditModalButtonClickFn|null = null;
-
-    /**
      * constructor
      * @param elementObject
      */
@@ -78,16 +67,8 @@ export class CredentialEditModal extends ModalDialog {
 
         // buttons -----------------------------------------------------------------------------------------------------
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
-
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -181,14 +162,6 @@ export class CredentialEditModal extends ModalDialog {
      */
     public getProvider(): string {
         return this._selectProvider.getSelectedValue();
-    }
-
-    /**
-     * Set the on save event
-     * @param {CredentialEditModalButtonClickFn} onSave
-     */
-    public setOnSave(onSave: CredentialEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

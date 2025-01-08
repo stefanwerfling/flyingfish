@@ -1,10 +1,7 @@
-import {BadgeType, FormGroup, FormRow, Switch, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2,
-    Element, ModalDialog, ModalDialogType} from 'bambooo';
-
-/**
- * DomainRecordEditModalButtonClickFn
- */
-type DomainRecordEditModalButtonClickFn = () => Promise<void>;
+import {
+    BadgeType, FormGroup, FormRow, Switch, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2,
+    Element, ModalDialog, ModalDialogType, LangText
+} from 'bambooo';
 
 /**
  * DomainRecordEditModal
@@ -58,12 +55,6 @@ export class DomainRecordEditModal extends ModalDialog {
      * @protected
      */
     protected _switchUByDynDnsClient: Switch;
-
-    /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: DomainRecordEditModalButtonClickFn|null = null;
 
     /**
      * constructor
@@ -135,16 +126,10 @@ export class DomainRecordEditModal extends ModalDialog {
         const groupDnyDnsClient = new FormGroup(rowOpt.createCol(6), 'Update by DynDns Client');
         this._switchUByDynDnsClient = new Switch(groupDnyDnsClient, 'ubydnsclient');
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
+        // buttons -----------------------------------------------------------------------------------------------------
 
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -272,14 +257,6 @@ export class DomainRecordEditModal extends ModalDialog {
         this.setTTL('300');
         this.setValue('');
         this.setUpdateByDynDnsClient(false);
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: DomainRecordEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

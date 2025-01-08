@@ -1,13 +1,10 @@
 import {GatewayIdentifierEntry, ListenData} from 'flyingfish_schemas';
 import {ListenTypes} from '../../Api/Listen';
 import {UpnpNat} from '../../Api/UpnpNat';
-import {DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorderOnly2, InputType,
-    SelectBottemBorderOnly2, Switch, Icon, IconFa, Element, ModalDialog, ModalDialogType} from 'bambooo';
-
-/**
- * UpnpNatEditModalButtonClickFn
- */
-type UpnpNatEditModalButtonClickFn = () => Promise<void>;
+import {
+    DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorderOnly2, InputType,
+    SelectBottemBorderOnly2, Switch, Icon, IconFa, Element, ModalDialog, ModalDialogType, LangText
+} from 'bambooo';
 
 /**
  * UpnpNatEditModal
@@ -79,12 +76,6 @@ export class UpnpNatEditModal extends ModalDialog {
      * @protected
      */
     protected _inputDescription: InputBottemBorderOnly2;
-
-    /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: UpnpNatEditModalButtonClickFn|null = null;
 
     /**
      * constructor
@@ -210,16 +201,10 @@ export class UpnpNatEditModal extends ModalDialog {
         this._inputDescription = new InputBottemBorderOnly2(groupDescription, 'natdescription');
         this._inputDescription.setPlaceholder('A description ...');
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save changes</button>').appendTo(this._footer);
+        // buttons -----------------------------------------------------------------------------------------------------
 
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -447,14 +432,6 @@ export class UpnpNatEditModal extends ModalDialog {
         this.setTTL(36000);
         this.setProtocol('tcp');
         this.setDescription('');
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: UpnpNatEditModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }

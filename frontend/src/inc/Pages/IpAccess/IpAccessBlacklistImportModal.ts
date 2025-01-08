@@ -1,9 +1,4 @@
-import {Form, FormGroup, Switch, Element, ModalDialog, ModalDialogType} from 'bambooo';
-
-/**
- * IpAccessBlacklistImportModalButtonClickFn
- */
-type IpAccessBlacklistImportModalButtonClickFn = () => Promise<void>;
+import {Form, FormGroup, Switch, Element, ModalDialog, ModalDialogType, LangText} from 'bambooo';
 
 /**
  * IpAccessBlacklistImportModal
@@ -23,12 +18,6 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
     protected _switchDisabled: Switch;
 
     /**
-     * click save fn
-     * @protected
-     */
-    protected _onSaveClick: IpAccessBlacklistImportModalButtonClickFn|null = null;
-
-    /**
      * constructor
      * @param elementObject
      */
@@ -41,16 +30,10 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
         const groupDisabled = new FormGroup(form, 'Disabled this ip block');
         this._switchDisabled = new Switch(groupDisabled, 'ipimportblockdisable');
 
-        jQuery('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>').appendTo(this._footer);
-        const btnSave = jQuery('<button type="button" class="btn btn-primary">Save</button>').appendTo(this._footer);
+        // buttons -----------------------------------------------------------------------------------------------------
 
-        btnSave.on('click', async(): Promise<void> => {
-            if (this._onSaveClick !== null) {
-                this.showLoading();
-                await this._onSaveClick();
-                this.hideLoading();
-            }
-        });
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
     }
 
     /**
@@ -89,14 +72,6 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
     public override resetValues(): void {
         this.setId(null);
         this.setDisabled(false);
-    }
-
-    /**
-     * setOnSave
-     * @param onSave
-     */
-    public setOnSave(onSave: IpAccessBlacklistImportModalButtonClickFn): void {
-        this._onSaveClick = onSave;
     }
 
 }
