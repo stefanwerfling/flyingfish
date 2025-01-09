@@ -1,5 +1,3 @@
-version: '3.1'
-
 services:
   mariadb:
     image: mariadb:lts
@@ -10,6 +8,12 @@ services:
       MYSQL_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: "${MARIADB_DATABASE}"
+    healthcheck:
+      test: [ "CMD", "mariadb", "-u${MARIADB_ROOT_USERNAME}", "-p${MARIADB_ROOT_PASSWORD}", "-e", "use ${MARIADB_DATABASE}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     volumes:
       - flyingfishDbData:/var/lib/mysql
     ports:
@@ -46,6 +50,9 @@ services:
       options:
         max-size: "500k"
         max-file: "50"
+    depends_on:
+          mariadb:
+            condition: service_healthy
 
   redis:
     image: redis:7.2-alpine
@@ -63,6 +70,9 @@ services:
       options:
         max-size: "500k"
         max-file: "50"
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   flyingfish:
     image: flyingfish:v1.2
@@ -116,9 +126,12 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - mariadb
-      - redis
-      - influxdb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      influxdb:
+        condition: service_started
     command:
       - node
       - "--inspect-brk=0.0.0.0:9229"
@@ -147,8 +160,10 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - flyingfish
-      - redis
+      redis:
+        condition: service_started
+      flyingfish:
+        condition: service_started
 
 #  iptable:
 #    image: flyingfish_iptable:v1.0
@@ -208,9 +223,12 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - mariadb
-      - flyingfish
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      flyingfish:
+        condition: service_started
 
   ddnsserver:
     image: flyingfish_ddns:v1.0
@@ -242,9 +260,12 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - mariadb
-      - flyingfish
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      flyingfish:
+        condition: service_started
 #    command:
 #      - node
 #      - "--inspect-brk=0.0.0.0:9229"

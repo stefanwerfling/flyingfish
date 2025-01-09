@@ -1,5 +1,3 @@
-version: '3.1'
-
 services:
   mariadb:
     image: mariadb:lts
@@ -10,10 +8,16 @@ services:
       MYSQL_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: "${MARIADB_DATABASE}"
+    healthcheck:
+      test: [ "CMD", "mariadb", "-u${MARIADB_ROOT_USERNAME}", "-p${MARIADB_ROOT_PASSWORD}", "-e", "use ${MARIADB_DATABASE}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     volumes:
       - flyingfishDbData:/var/lib/mysql
     ports:
-      - 127.0.0.1:3306:3306
+      - "127.0.0.1:3306:3306"
     networks:
       flyingfishNet:
           ipv4_address: 10.103.0.2
@@ -46,6 +50,29 @@ services:
       options:
         max-size: "500k"
         max-file: "50"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: flyingfish_redis
+    volumes:
+      - flyingfishRedisData:/data
+    ports:
+      - '127.0.0.1:6379:6379'
+    command: "redis-server --save ${REDIS_SAVE} --loglevel ${REDIS_LOGLEVEL} --requirepass ${REDIS_REQUIREPASS}"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.7
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   flyingfish:
     image: stefanwerfling/flyingfish:latest
@@ -66,6 +93,7 @@ services:
       FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
       FLYINGFISH_HIMHIP_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
+      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     ports:
       - "443:443"
       - "80:80"
@@ -82,7 +110,12 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      influxdb:
+        condition: service_started
 
   himhip:
     image: stefanwerfling/flyingfish_himip:latest
@@ -91,6 +124,7 @@ services:
       FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_SERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     network_mode: host
     cap_add:
       - ALL
@@ -100,7 +134,10 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - flyingfish
+      redis:
+        condition: service_started
+      flyingfish:
+        condition: service_started
 
   sshremote:
     image: stefanwerfling/flyingfish_ssh:latest
@@ -124,7 +161,12 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      flyingfish:
+        condition: service_started
 
   ddnsserver:
     image: stefanwerfling/flyingfish_ddns:latest
@@ -143,7 +185,12 @@ services:
         max-size: "500k"
         max-file: "50"
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      flyingfish:
+        condition: service_started
 
 volumes:
   flyingfishDbData:
