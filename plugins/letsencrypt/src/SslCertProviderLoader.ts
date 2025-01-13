@@ -1,5 +1,4 @@
 import {ASslCertProviderOnLoadEvent, ISslCertProvider} from 'flyingfish_core';
-//import {Acme} from './Acme.js';
 import {Certbot} from './Certbot.js';
 
 /**
@@ -12,8 +11,7 @@ export class SslCertProviderLoader extends ASslCertProviderOnLoadEvent {
      * @protected
      */
     protected _providers: ISslCertProvider[] = [
-        new Certbot(),
-        //new Acme()
+        new Certbot()
     ];
 
     /**
