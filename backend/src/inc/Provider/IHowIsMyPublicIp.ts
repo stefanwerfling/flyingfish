@@ -4,12 +4,20 @@
 export interface IHowIsMyPublicIp {
 
     /**
-     * getName
+     * Return the name of the provider
+     * @returns {string}
      */
     getName(): string;
 
     /**
-     * get
+     * get return an ip
+     * @returns {string|null}
      */
     get(): Promise<string|null>;
+
+    /**
+     * get64 return an ip6
+     * @returns {string|null}
+     */
+    get64(): Promise<string|null>;
 }
