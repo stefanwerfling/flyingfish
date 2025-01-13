@@ -26,6 +26,14 @@ export class DynDnsClient extends DBBaseEntityId {
     public password!: string;
 
     /**
+     * main domain id
+     */
+    @Column({
+        default: 0
+    })
+    public main_domain_id!: number;
+
+    /**
      * update domain
      */
     @Column({

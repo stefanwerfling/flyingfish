@@ -1,7 +1,7 @@
 import DNS from 'dns2';
 import {
     DateHelper,
-    DomainRecordServiceDB,
+    DomainRecordServiceDB, DomainServiceDB,
     DynDnsClientDomainServiceDB,
     DynDnsClientServiceDB,
     Logger
@@ -45,6 +45,8 @@ export class DynDnsService {
     public async updateDns(): Promise<void> {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
 
+        const currentIp = await HowIsMyPublicIpService.getInstance().getCurrentIp(false);
+
         const clients = await DynDnsClientServiceDB.getInstance().findAll();
 
         for await (const client of clients) {
@@ -55,13 +57,47 @@ export class DynDnsService {
                 continue;
             }
 
+            let updateIp = true;
+
+            // check dns ip have change --------------------------------------------------------------------------------
+
+            if (client.main_domain_id !== 0 && currentIp !== null) {
+                const domain = await DomainServiceDB.getInstance().findOne(client.main_domain_id);
+
+                if (domain) {
+                    try {
+                        const resolver = new DNS();
+                        const result = await resolver.resolveA(domain.domainname);
+
+                        if (result) {
+                            for (const answer of result.answers) {
+                                if (answer.address !== undefined && answer.address === currentIp) {
+                                    updateIp = false;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        Logger.getLogger().error(e);
+                    }
+                }
+            }
+
+            if (!updateIp) {
+                // when ip is the same, we jump to the next client
+                continue;
+            }
+
+            // update dyndns client domains ----------------------------------------------------------------------------
+
             const providerResult = await provider.update({
                 username: client.username,
                 password: client.password,
-                ip: null,
+                ip: currentIp,
                 ip6: null,
                 hostname: []
             });
+
+            // ---------------------------------------------------------------------------------------------------------
 
             // update last update time
             await DynDnsClientServiceDB.getInstance().updateStatus(client.id, providerResult.status);
