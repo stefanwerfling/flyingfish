@@ -39,8 +39,15 @@ export class HowIsMyPublicIpService {
     protected _currentIp: string|null = null;
 
     /**
-     * getCurrentIp
-     * @param determine
+     * current ip6
+     * @protected
+     */
+    protected _currentIp6: string|null = null;
+
+    /**
+     * Return the current IP
+     * @param {boolean} determine
+     * @returns {string|null}
      */
     public async getCurrentIp(determine: boolean = true): Promise<string | null> {
         if (this._currentIp === null) {
@@ -53,6 +60,21 @@ export class HowIsMyPublicIpService {
     }
 
     /**
+     * Return the current IP6
+     * @param {boolean} determine
+     * @returns {string|null}
+     */
+    public async getCurrentIp6(determine: boolean = true): Promise<string | null> {
+        if (this._currentIp6 === null) {
+            if (determine) {
+                await this.determined();
+            }
+        }
+
+        return this._currentIp6;
+    }
+
+    /**
      * determined
      */
     public async determined(): Promise<void> {
@@ -62,10 +84,14 @@ export class HowIsMyPublicIpService {
         if (provider) {
             if (this._currentIp === null) {
                 this._currentIp = await provider.get();
+                this._currentIp6 = await provider.get64();
 
                 Logger.getLogger().info(`HowIsMyPublicIpService::determined: Set my current public ip(${this._currentIp})`);
+                Logger.getLogger().info(`HowIsMyPublicIpService::determined: Set my current public ip6(${this._currentIp6})`);
             } else {
                 const ip = await provider.get();
+                const ip6 = await provider.get64();
+                let hasChanges = false;
 
                 if (this._currentIp === ip) {
                     Logger.getLogger().silly(`HowIsMyPublicIpService::determined: Public ip has not change: ${ip}`);
@@ -73,7 +99,17 @@ export class HowIsMyPublicIpService {
                     Logger.getLogger().info(`HowIsMyPublicIpService::determined: Public ip change old(${this._currentIp}) new(${ip})`);
 
                     this._currentIp = ip;
+                    hasChanges = true;
+                }
 
+                if (this._currentIp6 === ip6) {
+                    Logger.getLogger().silly(`HowIsMyPublicIpService::determined: Public ip6 has not change: ${ip6}`);
+                } else {
+                    this._currentIp6 = ip6;
+                    hasChanges = true;
+                }
+
+                if (hasChanges) {
                     if (Config.getInstance().get()?.dyndnsclient) {
                         if (Config.getInstance().get()?.dyndnsclient?.enable) {
                             await DynDnsService.getInstance().updateDns();
