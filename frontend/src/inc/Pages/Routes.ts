@@ -18,7 +18,7 @@ import {
     Table,
     Td,
     Th,
-    Tooltip,
+    Tooltip, TooltipInfo,
     Tr
 } from 'bambooo';
 import {ListenData, RouteHttpSave, RouteStreamSave} from 'flyingfish_schemas';
@@ -33,6 +33,7 @@ import {
 } from '../Api/Route';
 import {Ssh as SshAPI} from '../Api/Ssh';
 import {Ssl as SslAPI} from '../Api/Ssl';
+import {Lang} from '../Lang';
 import {BasePage} from './BasePage';
 import {RouteHttpEditModal} from './Routes/RouteHttpEditModal';
 import {RouteStreamEditModal} from './Routes/RouteStreamEditModal';
@@ -324,6 +325,9 @@ export class Routes extends BasePage {
                     if (entry.domainfix) {
                         // eslint-disable-next-line no-new
                         new Badge(card.getTitleElement(), 'default', BadgeType.danger);
+
+                        // eslint-disable-next-line no-new
+                        new TooltipInfo(card.getTitleElement(), Lang.i().l('route_default_route'));
                     } else {
                         const btnOpenUrl = new ButtonMenu(
                             card.getTitleElement(),
@@ -445,8 +449,10 @@ export class Routes extends BasePage {
                             if (listen.proxy_protocol) {
                                 sdTd.append('&nbsp;');
 
+                                const sdTt = new Tooltip(sdTd, 'Proxy protocol activated');
+
                                 // eslint-disable-next-line no-new
-                                new Badge(sdTd, 'P', BadgeType.color_cream_yellow);
+                                new Badge(sdTt, 'P', BadgeType.color_cream_yellow);
                             }
                         }
 
@@ -532,8 +538,10 @@ export class Routes extends BasePage {
                                         if (tupstream.proxy_protocol_out) {
                                             sdTdD.append('&nbsp;');
 
+                                            const sdTtD = new Tooltip(sdTd, 'Proxy protocol removed');
+
                                             // eslint-disable-next-line no-new
-                                            new Badge(sdTdD, 'P', BadgeType.color_cream_yellow);
+                                            new Badge(sdTtD, 'P', BadgeType.color_cream_yellow);
                                         }
 
                                         sdTdD.append('<br>');
@@ -901,6 +909,8 @@ export class Routes extends BasePage {
                     ib.setIcon(IconFa.info, InfoBoxBg.info);
                     ib.getTextElement().append('None Domain exist for Routes, please add a new Domain!');
                 }
+
+                Tooltip.init();
             }
         };
 
