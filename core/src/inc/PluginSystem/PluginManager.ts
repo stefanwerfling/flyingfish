@@ -2,6 +2,7 @@ import {Ets} from 'ets';
 import path from 'path';
 import {SchemaErrors} from 'vts';
 import {Logger} from '../Logger/Logger.js';
+import {DirHelper} from '../Utils/DirHelper.js';
 import {FileHelper} from '../Utils/FileHelper.js';
 import {APlugin} from './APlugin.js';
 import {PluginDefinition, SchemaPluginDefinition} from './PluginDefinition.js';
@@ -117,7 +118,7 @@ export class PluginManager {
             }
         }
 
-        const modules = await FileHelper.readdir(nodeModulesPath);
+        const modules = await DirHelper.readdir(nodeModulesPath);
         const informations: PluginInformation[] = [];
 
         for await (const aModule of modules) {

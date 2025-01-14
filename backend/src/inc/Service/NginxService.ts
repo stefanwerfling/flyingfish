@@ -242,7 +242,7 @@ export class NginxService {
         const sockUnix = path.join(sockDirectory, `${ip.replaceAll('.', '_')}_${port}.sock`);
 
         if (await FileHelper.fileExist(sockUnix)) {
-            await FileHelper.deleteFile(sockUnix);
+            await FileHelper.fileDelete(sockUnix);
         }
 
         return sockUnix;

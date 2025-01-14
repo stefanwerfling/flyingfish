@@ -2,6 +2,9 @@ import winston, {Logger as WinstonLogger} from 'winston';
 import TransportStream from 'winston-transport';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import {Config} from '../Config/Config.js';
+import {DirHelper} from '../Utils/DirHelper.js';
+import {FileHelper} from '../Utils/FileHelper.js';
+import * as path from 'path';
 
 /**
  * Logger
@@ -21,6 +24,34 @@ export class Logger {
      * @protected
      */
     protected static _logger: WinstonLogger|null = null;
+
+    /**
+     * Clean log files
+     * @param {string} logPath
+     * @param {number} maxDays
+     */
+    public static async cleanLogfiles(logPath: string, maxDays: number): Promise<void> {
+        const files = await DirHelper.readdir(logPath);
+
+        for await (const file of files) {
+            try {
+                const filePath = path.join(logPath, file);
+
+                const isOlder = await FileHelper.isOlderHours(
+                    filePath,
+                    maxDays * 24,
+                );
+
+                if (isOlder) {
+                    await FileHelper.fileDelete(filePath);
+                    console.info('Delete old log file: ', filePath);
+                }
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
+    }
 
     /**
      * getLogger
@@ -69,6 +100,12 @@ export class Logger {
                 }
             }
 
+            // Clean old logs ------------------------------------------------------------------------------------------
+
+            Logger.cleanLogfiles(dirname, parseInt(maxFiles, 10)).then();
+
+            // ---------------------------------------------------------------------------------------------------------
+
             const transports: TransportStream[] = [];
 
             try {
@@ -103,11 +140,15 @@ export class Logger {
                 }));
             }
 
-            const { combine, timestamp, json } = winston.format;
+            const { combine, timestamp, splat, json } = winston.format;
 
             Logger._logger = winston.createLogger({
                 level: level,
-                format: combine(timestamp(), json()),
+                format: combine(
+                    timestamp(),
+                    splat(),
+                    json()
+                ),
                 transports: transports
             });
 

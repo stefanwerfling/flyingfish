@@ -1,4 +1,4 @@
-import {mkdir, stat, unlink, readFile, readdir, lstat} from 'fs/promises';
+import {mkdir, stat, unlink, readFile, lstat, rename} from 'fs/promises';
 import {Logger} from '../Logger/Logger.js';
 
 /**
@@ -7,9 +7,10 @@ import {Logger} from '../Logger/Logger.js';
 export class FileHelper {
 
     /**
-     * isOlderHours
-     * @param filename
-     * @param durationHours
+     * Is a file older as duration hours?
+     * @param {string} filename
+     * @param {number} durationHours
+     * @returns {boolean}
      */
     public static async isOlderHours(
         filename: string,
@@ -30,7 +31,7 @@ export class FileHelper {
     }
 
     /**
-     * fileExist
+     * Exist a file
      * @param {string} file
      * @param {boolean} allowLink
      * @returns {boolean}
@@ -58,8 +59,9 @@ export class FileHelper {
     }
 
     /**
-     * directoryExist
-     * @param director
+     * Exist a directory
+     * @param {string} director
+     * @returns {boolean}
      */
     public static async directoryExist(director: string): Promise<boolean> {
         try {
@@ -70,9 +72,10 @@ export class FileHelper {
     }
 
     /**
-     * mkdir
-     * @param director
-     * @param recursive
+     * Create a directory
+     * @param {string} director
+     * @param {boolean} recursive
+     * @returns {boolean}
      */
     public static async mkdir(director: string, recursive: boolean = false): Promise<boolean> {
         try {
@@ -87,11 +90,40 @@ export class FileHelper {
     }
 
     /**
-     * Delete a file
+     * Return the file size
+     * @param {string} file
+     * @returns {number}
+     */
+    public static async fileSize(file: string): Promise<number> {
+        try {
+            return (await stat(file)).size;
+        } catch (e) {
+            return -1;
+        }
+    }
+
+    /**
+     * File rename
+     * @param {string} filePath
+     * @param {string} targetPath
+     * @returns {boolean}
+     */
+    public static async fileRename(filePath: string, targetPath: string): Promise<boolean> {
+        try {
+            await rename(filePath, targetPath);
+        } catch (e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * File delete
      * @param {string} file
      * @returns {boolean}
      */
-    public static async deleteFile(file: string): Promise<boolean> {
+    public static async fileDelete(file: string): Promise<boolean> {
         try {
             await unlink(file);
         } catch (e) {
@@ -118,15 +150,6 @@ export class FileHelper {
         const raw = await FileHelper.readFile(jsonFile);
 
         return JSON.parse(raw);
-    }
-
-    /**
-     * Read a directory
-     * @param {string} directory
-     * @returns {string[]}
-     */
-    public static async readdir(directory: string): Promise<string[]> {
-        return readdir(directory);
     }
 
 }
