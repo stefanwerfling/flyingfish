@@ -1,4 +1,4 @@
-import {NginxHttpDB} from 'flyingfish_core/dist/src/index.js';
+import {NginxHttpDB} from 'flyingfish_core';
 
 /**
  * Cert Task object

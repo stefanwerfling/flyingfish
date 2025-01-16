@@ -5,7 +5,7 @@ import {
     NginxHttpVariableServiceDB, NginxLocationDB, NginxLocationServiceDB
 } from 'flyingfish_core';
 import {DefaultReturn, NginxHttpVariableContextType, RouteHttpSave, StatusCodes} from 'flyingfish_schemas';
-import {NginxHTTPVariables} from '../../../../inc/Nginx/NginxVariables.js';
+import {NginxHTTPVariables} from '../../../../inc/Nginx/NginxHTTPVariables.js';
 
 /**
  * AllowedRouteVariableServer

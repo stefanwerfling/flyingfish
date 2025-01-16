@@ -88,8 +88,7 @@ export class IpLocateIo {
                 return response.body as IpLocateData;
             }
         } catch (e) {
-            Logger.getLogger().error('IpLocate::location:');
-            Logger.getLogger().error(e);
+            Logger.getLogger().error('IpLocate::location:', e);
         }
 
         return null;

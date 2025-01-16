@@ -40,16 +40,16 @@ export class FireholDownloader {
         dlStream.on('downloadProgress', (transferred) => {
             const percentage = Math.round(transferred.percent * 100);
 
-            Logger.getLogger().silly(`FireholDownloader::load: progress: ${transferred.transferred}/${transferred.total} (${percentage}%)`);
+            Logger.getLogger().silly('FireholDownloader::load: progress: %d/%d (%d%)', transferred.transferred, transferred.total, percentage);
         });
 
         try {
             const pipeline = promisify(stream.pipeline);
             await pipeline(dlStream, fwStream);
 
-            Logger.getLogger().info(`FireholDownloader::load: File downloaded to ${fileName}`);
+            Logger.getLogger().info('FireholDownloader::load: File downloaded to %s', fileName);
         } catch (e) {
-            console.error(`FireholDownloader::load: Something went wrong. ${e}`);
+            console.error('FireholDownloader::load: Something went wrong. %o', e);
         }
 
         return fileName;

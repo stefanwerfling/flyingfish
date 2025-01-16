@@ -59,11 +59,14 @@ export class HimHIP extends RedisChannel<HimHIPData> {
      * @param {HimHIPData} data
      */
     public async listen(data: HimHIPData): Promise<void> {
-        Logger.getLogger().silly(`HimHIP::listen: receive data -> Gateway-Mac: "${data.gatewaymac}", ` +
-            `Network: "${data.network}", ` +
-            `Gateway: "${data.gateway}, ` +
-            `Interface: "${data.interface}", ` +
-            `Host-IP: "${data.hostip}"`);
+        Logger.getLogger().silly(
+            'HimHIP::listen: receive data -> Gateway-Mac: "%s", Network: "%s", Gateway: "%s, Interface: "%s", Host-IP: "%s"',
+            data.gatewaymac,
+            data.network,
+            data.gateway,
+            data.interface,
+            data.hostip
+        );
 
         if (SchemaHimHIPData.validate(data, [])) {
             HimHIP.setData(data);

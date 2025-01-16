@@ -57,7 +57,7 @@ export class IpService {
 
             for (const result of results) {
                 if (result.listed) {
-                    Logger.getLogger().error(`IpService::check: IP found in Blacklist: ${result.rbl}`);
+                    Logger.getLogger().error('IpService::check: IP found in Blacklist: %s', result.rbl);
 
                     isFound = true;
                 }

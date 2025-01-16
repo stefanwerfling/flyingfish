@@ -32,7 +32,7 @@ export class Firehol {
                 const entrieFilenameExt = path.extname(entry.entryName);
 
                 if (entrieFilenameExt.toLowerCase() === '.ipset') {
-                    Logger.getLogger().silly(`Firehol::loadLists: parse ipset file: ${entry.entryName}`);
+                    Logger.getLogger().silly('Firehol::loadLists: parse ipset file: %s', entry.entryName);
 
                     const content = entry.getData().toString('utf8');
                     const parser = new IpSetParser(content);
@@ -48,7 +48,7 @@ export class Firehol {
             try {
                 await unlink(zipFile);
             } catch (err) {
-                Logger.getLogger().error(`Firehol::loadLists: ${err}`);
+                Logger.getLogger().error('Firehol::loadLists: %o', err);
             }
         }
 

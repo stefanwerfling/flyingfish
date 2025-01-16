@@ -183,7 +183,7 @@ export class NoIp implements IDynDnsClient {
                 }
             });
 
-            Logger.getLogger().info(`NoIP::update: http status code: ${response.statusCode}`);
+            Logger.getLogger().info('NoIP::update: http status code: %d', response.statusCode);
 
             if (response.statusCode === 200) {
                 if (response.body !== '') {

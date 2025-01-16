@@ -86,24 +86,24 @@ export class HowIsMyPublicIpService {
                 this._currentIp = await provider.get();
                 this._currentIp6 = await provider.get64();
 
-                Logger.getLogger().info(`HowIsMyPublicIpService::determined: Set my current public ip(${this._currentIp})`);
-                Logger.getLogger().info(`HowIsMyPublicIpService::determined: Set my current public ip6(${this._currentIp6})`);
+                Logger.getLogger().info('HowIsMyPublicIpService::determined: Set my current public ip(%s)', this._currentIp);
+                Logger.getLogger().info(`HowIsMyPublicIpService::determined: Set my current public ip6(%s)`, this._currentIp6);
             } else {
                 const ip = await provider.get();
                 const ip6 = await provider.get64();
                 let hasChanges = false;
 
                 if (this._currentIp === ip) {
-                    Logger.getLogger().silly(`HowIsMyPublicIpService::determined: Public ip has not change: ${ip}`);
+                    Logger.getLogger().silly('HowIsMyPublicIpService::determined: Public ip has not change: %s', ip);
                 } else {
-                    Logger.getLogger().info(`HowIsMyPublicIpService::determined: Public ip change old(${this._currentIp}) new(${ip})`);
+                    Logger.getLogger().info('HowIsMyPublicIpService::determined: Public ip change old(%s) new(%s)', this._currentIp, ip);
 
                     this._currentIp = ip;
                     hasChanges = true;
                 }
 
                 if (this._currentIp6 === ip6) {
-                    Logger.getLogger().silly(`HowIsMyPublicIpService::determined: Public ip6 has not change: ${ip6}`);
+                    Logger.getLogger().silly('HowIsMyPublicIpService::determined: Public ip6 has not change: %s', ip6);
                 } else {
                     this._currentIp6 = ip6;
                     hasChanges = true;
@@ -122,7 +122,7 @@ export class HowIsMyPublicIpService {
                 }
             }
         } else {
-            Logger.getLogger().warn(`HowIsMyPublicIpService::determined: none provider found by config: ${providername}`);
+            Logger.getLogger().warn('HowIsMyPublicIpService::determined: none provider found by config: %s', providername);
         }
     }
 

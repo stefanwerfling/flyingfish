@@ -57,9 +57,13 @@ export class SslCertService {
         const wellKnownFf = Path.join(NginxServer.getInstance().getWellKnownPath(), 'flyingfish');
 
         if (!await FileHelper.directoryExist(wellKnownFf)) {
-            Logger.getLogger().silly(`Create wellknown directory by domain: ${domain}`, {
-                class: 'SslCertService::_requestDomainCheckReachability'
-            });
+            Logger.getLogger().silly(
+                'Create wellknown directory by domain: %s',
+                domain,
+                {
+                    class: 'SslCertService::_requestDomainCheckReachability'
+                }
+            );
 
             await FileHelper.mkdir(wellKnownFf, true);
         }
@@ -67,9 +71,14 @@ export class SslCertService {
         const checkFile = Path.join(wellKnownFf, 'check.json');
 
         if (await FileHelper.fileExist(checkFile)) {
-            Logger.getLogger().silly(`Delete old checkfile: ${checkFile} by domain: ${domain}`, {
-                class: 'SslCertService::_requestDomainCheckReachability'
-            });
+            Logger.getLogger().silly(
+                'Delete old checkfile: %s by domain: %s',
+                checkFile,
+                domain,
+                {
+                    class: 'SslCertService::_requestDomainCheckReachability'
+                }
+            );
 
             await fs.unlink(checkFile);
         }
@@ -82,9 +91,14 @@ export class SslCertService {
         await fs.writeFile(checkFile, JSON.stringify(data));
 
         if (!await FileHelper.fileExist(checkFile)) {
-            Logger.getLogger().error(`Check file can not create: ${checkFile} by domain: ${domain}`, {
-                class: 'SslCertService::_requestDomainCheckReachability'
-            });
+            Logger.getLogger().error(
+                'Check file can not create: %s by domain: %s',
+                checkFile,
+                domain,
+                {
+                    class: 'SslCertService::_requestDomainCheckReachability'
+                }
+            );
 
             return false;
         }
@@ -96,9 +110,14 @@ export class SslCertService {
         });
 
         if (await FileHelper.fileExist(checkFile)) {
-            Logger.getLogger().silly(`Delete checkfile: ${checkFile} by domain: ${domain}`, {
-                class: 'SslCertService::_requestDomainCheckReachability'
-            });
+            Logger.getLogger().silly(
+                'Delete checkfile: %s by domain: %s',
+                checkFile,
+                domain,
+                {
+                    class: 'SslCertService::_requestDomainCheckReachability'
+                }
+            );
 
             await fs.unlink(checkFile);
         }
@@ -108,9 +127,12 @@ export class SslCertService {
 
             if (SchemaDomainCheckReachability.validate(response.body, errors)) {
                 if (response.body.domain === data.domain && response.body.secureKey === data.secureKey) {
-                    Logger.getLogger().silly('Domain and securekey check result true.', {
-                        class: 'SslCertService::_requestDomainCheckReachability'
-                    });
+                    Logger.getLogger().silly(
+                        'Domain and securekey check result true.',
+                        {
+                            class: 'SslCertService::_requestDomainCheckReachability'
+                        }
+                    );
 
                     return true;
                 }
@@ -140,16 +162,24 @@ export class SslCertService {
      */
     protected async _updateHttp(http: NginxHttpDB): Promise<boolean> {
         if (!http.ssl_enable) {
-            Logger.getLogger().error(`ssl is not enable for http: ${http.id}`, {
-                class: 'SslCertService::_updateHttp'
-            });
+            Logger.getLogger().error(
+                'ssl is not enable for http: %d',
+                http.id,
+                {
+                    class: 'SslCertService::_updateHttp'
+                }
+            );
 
             return false;
         }
 
-        Logger.getLogger().silly(`ssl is enable for  http: ${http.id}`, {
-            class: 'SslCertService::_updateHttp'
-        });
+        Logger.getLogger().silly(
+            'ssl is enable for http: %d',
+            http.id,
+            {
+                class: 'SslCertService::_updateHttp'
+            }
+        );
 
         let reloadNginx = false;
 
@@ -157,9 +187,13 @@ export class SslCertService {
 
         if (domain) {
             if (domain.disable) {
-                Logger.getLogger().silly(`domain is disable for http: ${http.id}`, {
-                    class: 'SslCertService::_updateHttp'
-                });
+                Logger.getLogger().silly(
+                    'domain is disable for http: %d',
+                    http.id,
+                    {
+                        class: 'SslCertService::_updateHttp'
+                    }
+                );
 
                 return false;
             }
@@ -170,9 +204,14 @@ export class SslCertService {
             const provider = await scp.getProvider(http.cert_provider);
 
             if (Vts.isNull(provider)) {
-                Logger.getLogger().error(`provider not found by '${domain.domainname}' domain, http: ${http.id}`, {
-                    class: 'SslCertService::_updateHttp'
-                });
+                Logger.getLogger().error(
+                    'provider not found by \'%s\' domain, http: %d',
+                    domain.domainname,
+                    http.id,
+                    {
+                        class: 'SslCertService::_updateHttp'
+                    }
+                );
 
                 return false;
             }
@@ -185,7 +224,8 @@ export class SslCertService {
                     http.cert_create_attempts,
                     async() => {
                         Logger.getLogger().info(
-                            `Time is over, rest attempts for cert request for domain: ${domain.domainname}`,
+                            'Time is over, rest attempts for cert request for domain: %s',
+                            domain.domainname,
                             {
                                 class: 'SslCertService::_updateHttp::isReadyForRequest::inlinefunc'
                             }
@@ -195,17 +235,27 @@ export class SslCertService {
                     }
                 );
             } catch (eReady) {
-                Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), domain is ready is except: ${Ets.formate(eReady, true, true)}`, {
-                    class: 'SslCertService::_updateHttp'
-                });
+                Logger.getLogger().error(
+                    '\'%s\' (http_id: %d), domain is ready is except: %s',
+                    domain.domainname,
+                    http.id,
+                    Ets.formate(eReady, true, true),
+                    {
+                        class: 'SslCertService::_updateHttp'
+                    }
+                );
 
                 return false;
             }
 
             if (!isReadyForRequest) {
-                Logger.getLogger().info(`Too many attempts for cert request, waiting for domain: ${domain.domainname}`, {
-                    class: 'SslCertService::_updateHttp'
-                });
+                Logger.getLogger().info(
+                    'Too many attempts for cert request, waiting for domain: %s',
+                    domain.domainname,
+                    {
+                        class: 'SslCertService::_updateHttp'
+                    }
+                );
 
                 return false;
             }
@@ -213,9 +263,13 @@ export class SslCertService {
             // ---------------------------------------------------------------------------------------------
 
             if (http.cert_email === '') {
-                Logger.getLogger().info(`Missing email address for domain: ${domain.domainname}`, {
-                    class: 'SslCertService::_updateHttp'
-                });
+                Logger.getLogger().info(
+                    'Missing email address for domain: %s',
+                    domain.domainname,
+                    {
+                        class: 'SslCertService::_updateHttp'
+                    }
+                );
             } else {
                 let isCreateFailed = false;
                 let isCreate = false;
@@ -226,9 +280,15 @@ export class SslCertService {
                     // TODO Wildcard
                     isExist = await provider.existCertificate(domain.domainname, {wildcard: false});
                 } catch (eExist) {
-                    Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), cert is exist is except: ${Ets.formate(eExist, true, true)}`, {
-                        class: 'SslCertService::_updateHttp'
-                    });
+                    Logger.getLogger().error(
+                        '\'%s\' (http_id: %d), cert is exist is except: %s',
+                        domain.domainname,
+                        http.id,
+                        Ets.formate(eExist, true, true),
+                        {
+                            class: 'SslCertService::_updateHttp'
+                        }
+                    );
 
                     return false;
                 }
@@ -240,17 +300,28 @@ export class SslCertService {
                         // TODO Wildcard
                         sslBundel = await provider.getCertificationBundel(domain.domainname, {wildcard: false});
                     } catch (eBundel) {
-                        Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), cert bundle is except: ${Ets.formate(eBundel, true, true)}`, {
-                            class: 'SslCertService::_updateHttp'
-                        });
+                        Logger.getLogger().error(
+                            '\'%s\' (http_id: %d), cert bundle is except: %s',
+                            domain.domainname,
+                            http.id,
+                            Ets.formate(eBundel, true, true),
+                            {
+                                class: 'SslCertService::_updateHttp'
+                            }
+                        );
 
                         return false;
                     }
 
                     if (Vts.isNull(sslBundel)) {
-                        Logger.getLogger().error(`Ssl bundel not found by '${domain.domainname}' domain, http_id: ${http.id}`, {
-                            class: 'SslCertService::_updateHttp'
-                        });
+                        Logger.getLogger().error(
+                            'Ssl bundel not found by \'%s\' domain, http_id: $d',
+                            domain.domainname,
+                            http.id,
+                            {
+                                class: 'SslCertService::_updateHttp'
+                            }
+                        );
 
                         return false;
                     }
@@ -258,22 +329,37 @@ export class SslCertService {
                     const cert = new Certificate(sslBundel.certPem);
 
                     if (cert.isValidate()) {
-                        Logger.getLogger().info(`Certificate is up to date for domain: ${domain.domainname}`, {
-                            class: 'SslCertService::_updateHttp'
-                        });
+                        Logger.getLogger().info(
+                            'Certificate is up to date for domain: %s',
+                            domain.domainname,
+                            {
+                                class: 'SslCertService::_updateHttp'
+                            }
+                        );
                     } else {
                         try {
                             if (!await this._requestDomainCheckReachability(domain.domainname)) {
-                                Logger.getLogger().error(`'${domain.domainname}' domain is not reachability, http_id: ${http.id}`, {
-                                    class: 'SslCertService::_updateHttp'
-                                });
+                                Logger.getLogger().error(
+                                    '\'%s\' domain is not reachability, http_id: %d',
+                                    domain.domainname,
+                                    http.id,
+                                    {
+                                        class: 'SslCertService::_updateHttp'
+                                    }
+                                );
 
                                 return false;
                             }
                         } catch (eDCheck) {
-                            Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), domain check is except: ${Ets.formate(eDCheck, true, true)}`, {
-                                class: 'SslCertService::_updateHttp'
-                            });
+                            Logger.getLogger().error(
+                                '\'%s\' (http_id: %d), domain check is except: %s',
+                                domain.domainname,
+                                http.id,
+                                Ets.formate(eDCheck, true, true),
+                                {
+                                    class: 'SslCertService::_updateHttp'
+                                }
+                            );
 
                             return false;
                         }
@@ -293,24 +379,38 @@ export class SslCertService {
                                 dnsServer: Dns2Server.getInstance()
                             });
                         } catch (eCreate) {
-                            Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), domain create is except: ${Ets.formate(eCreate, true, true)}`, {
-                                class: 'SslCertService::_updateHttp'
-                            });
+                            Logger.getLogger().error(
+                                '\'%s\' (http_id: %d), domain create is except: %s',
+                                domain.domainname,
+                                http.id,
+                                Ets.formate(eCreate, true, true),
+                                {
+                                    class: 'SslCertService::_updateHttp'
+                                }
+                            );
 
                             return false;
                         }
 
                         if (isCertCreated) {
-                            Logger.getLogger().info(`Certificate is renew for domain: ${domain.domainname}`, {
-                                class: 'SslCertService::_updateHttp'
-                            });
+                            Logger.getLogger().info(
+                                'Certificate is renew for domain: %s',
+                                domain.domainname,
+                                {
+                                    class: 'SslCertService::_updateHttp'
+                                }
+                            );
 
                             isCreate = true;
                             reloadNginx = true;
                         } else {
-                            Logger.getLogger().error(`Certificate is faild to renew for domain: ${domain.domainname}`, {
-                                class: 'SslCertService::_updateHttp'
-                            });
+                            Logger.getLogger().error(
+                                'Certificate is faild to renew for domain: %s',
+                                domain.domainname,
+                                {
+                                    class: 'SslCertService::_updateHttp'
+                                }
+                            );
 
                             isCreateFailed = true;
                         }
@@ -320,16 +420,27 @@ export class SslCertService {
 
                     try {
                         if (!await this._requestDomainCheckReachability(domain.domainname)) {
-                            Logger.getLogger().error(`'${domain.domainname}' domain is not reachability, http_id: ${http.id}`, {
-                                class: 'SslCertService::_updateHttp'
-                            });
+                            Logger.getLogger().error(
+                                '\'%s\' domain is not reachability, http_id: %d',
+                                domain.domainname,
+                                http.id,
+                                {
+                                    class: 'SslCertService::_updateHttp'
+                                }
+                            );
 
                             return false;
                         }
                     } catch (e) {
-                        Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), domain check is except: ${Ets.formate(e, true, true)}`, {
-                            class: 'SslCertService::_updateHttp'
-                        });
+                        Logger.getLogger().error(
+                            '\'%s\' (http_id: %d), domain check is except: %s',
+                            domain.domainname,
+                            http.id,
+                            Ets.formate(e, true, true),
+                            {
+                                class: 'SslCertService::_updateHttp'
+                            }
+                        );
 
                         return false;
                     }
@@ -349,24 +460,38 @@ export class SslCertService {
                             dnsServer: Dns2Server.getInstance()
                         });
                     } catch (eCreate) {
-                        Logger.getLogger().error(`'${domain.domainname}' (http_id: ${http.id}), domain create is except: ${Ets.formate(eCreate, true, true)}`, {
-                            class: 'SslCertService::_updateHttp'
-                        });
+                        Logger.getLogger().error(
+                            '\'%s\' (http_id: %d), domain create is except: %s',
+                            domain.domainname,
+                            http.id,
+                            Ets.formate(eCreate, true, true),
+                            {
+                                class: 'SslCertService::_updateHttp'
+                            }
+                        );
 
                         return false;
                     }
 
                     if (isCertCreated) {
-                        Logger.getLogger().info(`Certificate is created for domain: ${domain.domainname}`, {
-                            class: 'SslCertService::_updateHttp'
-                        });
+                        Logger.getLogger().info(
+                            'Certificate is created for domain: %s',
+                            domain.domainname,
+                            {
+                                class: 'SslCertService::_updateHttp'
+                            }
+                        );
 
                         isCreate = true;
                         reloadNginx = true;
                     } else {
-                        Logger.getLogger().error(`Certificate is faild to create for domain: ${domain.domainname}`, {
-                            class: 'SslCertService::_updateHttp'
-                        });
+                        Logger.getLogger().error(
+                            'Certificate is faild to create for domain: %s',
+                            domain.domainname,
+                            {
+                                class: 'SslCertService::_updateHttp'
+                            }
+                        );
 
                         isCreateFailed = true;
                     }

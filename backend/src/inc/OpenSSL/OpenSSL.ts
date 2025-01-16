@@ -19,7 +19,7 @@ export class OpenSSL {
             `${size}`
         ];
 
-        Logger.getLogger().silly(`OpenSSL::createDhparam: "openssl ${args.join(' ')}"`);
+        Logger.getLogger().silly('OpenSSL::createDhparam: "openssl %s"', args.join(' '));
 
         const process = spawn('openssl', args);
 
@@ -45,7 +45,7 @@ export class OpenSSL {
             `${size}`
         ];
 
-        Logger.getLogger().silly(`OpenSSL::genRsa: "openssl ${args.join(' ')}"`);
+        Logger.getLogger().silly('OpenSSL::genRsa: "openssl %s"', args.join(' '));
 
         const process = spawn('openssl', args);
 
@@ -62,17 +62,17 @@ export class OpenSSL {
      */
     public static async createCrt(keyFile: string, crtFile: string, configFile: string): Promise<boolean> {
         if (await FileHelper.fileExist(crtFile)) {
-            Logger.getLogger().error(`Crt-File already exist: ${crtFile}`);
+            Logger.getLogger().error('Crt-File already exist: %s', crtFile);
             return false;
         }
 
         if (!await FileHelper.fileExist(keyFile)) {
-            Logger.getLogger().error(`Key-File not found: ${keyFile}`);
+            Logger.getLogger().error('Key-File not found: %s', keyFile);
             return false;
         }
 
         if (!await FileHelper.fileExist(configFile)) {
-            Logger.getLogger().error(`Config-File not found: ${configFile}`);
+            Logger.getLogger().error('Config-File not found: %s', configFile);
             return false;
         }
 
@@ -88,7 +88,7 @@ export class OpenSSL {
             configFile
         ];
 
-        Logger.getLogger().silly(`OpenSSL::createCrt: "openssl ${args.join(' ')}"`);
+        Logger.getLogger().silly('OpenSSL::createCrt: "openssl %s"', args.join(' '));
 
         const process = spawn('openssl', args);
 
@@ -122,7 +122,7 @@ export class OpenSSL {
             configFile
         ];
 
-        Logger.getLogger().silly(`OpenSSL::createCsr: "openssl ${args.join(' ')}"`);
+        Logger.getLogger().silly('OpenSSL::createCsr: "openssl %s"', args.join(' '));
 
         const process = spawn('openssl', args);
 
@@ -141,27 +141,27 @@ export class OpenSSL {
      */
     public static async createCa(caFile: string, csrFile: string, crtFile: string, keyFile: string, configFile: string): Promise<boolean> {
         if (await FileHelper.fileExist(caFile)) {
-            Logger.getLogger().error(`Ca-File already exist: ${caFile}`);
+            Logger.getLogger().error('Ca-File already exist: %s', caFile);
             return false;
         }
 
         if (!await FileHelper.fileExist(csrFile)) {
-            Logger.getLogger().error(`Csr-File not found: ${csrFile}`);
+            Logger.getLogger().error('Csr-File not found: %s', csrFile);
             return false;
         }
 
         if (!await FileHelper.fileExist(crtFile)) {
-            Logger.getLogger().error(`Crt-File not found: ${crtFile}`);
+            Logger.getLogger().error('Crt-File not found: %s', crtFile);
             return false;
         }
 
         if (!await FileHelper.fileExist(keyFile)) {
-            Logger.getLogger().error(`Key-File not found: ${keyFile}`);
+            Logger.getLogger().error('Key-File not found: %s', keyFile);
             return false;
         }
 
         if (!await FileHelper.fileExist(configFile)) {
-            Logger.getLogger().error(`Config-File not found: ${configFile}`);
+            Logger.getLogger().error('Config-File not found: %s', configFile);
             return false;
         }
 
@@ -181,7 +181,7 @@ export class OpenSSL {
             caFile
         ];
 
-        Logger.getLogger().silly(`OpenSSL::createCa: "openssl ${args.join(' ')}"`);
+        Logger.getLogger().silly('OpenSSL::createCa: "openssl %s"', args.join(' '));
 
         const process = spawn('openssl', args);
 

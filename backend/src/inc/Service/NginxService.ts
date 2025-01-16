@@ -33,7 +33,7 @@ import {
 } from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import path from 'path';
-import {SchemaErrors, Vts} from 'vts';
+import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
 import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
@@ -44,9 +44,10 @@ import {Location} from '../Nginx/Config/Location.js';
 import {Map as NginxMap} from '../Nginx/Config/Map.js';
 import {Server as NginxConfServer, ServerXFrameOptions} from '../Nginx/Config/Server.js';
 import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream.js';
+import {NginxHTTPVariables} from '../Nginx/NginxHTTPVariables.js';
 import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../Nginx/NginxLogFormatJson.js';
 import {NginxServer} from '../Nginx/NginxServer.js';
-import {NginxHTTPVariables, NginxStreamServerVariables} from '../Nginx/NginxVariables.js';
+import {NginxStreamServerVariables} from '../Nginx/NginxStreamServerVariables.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
 import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
 import {Settings} from '../Settings/Settings.js';
@@ -594,9 +595,13 @@ export class NginxService {
                                     fail_timeout: 0
                                 });
                             } else {
-                                Logger.getLogger().silly(`Destination listen not found by domain: ${domainName}`, {
-                                    class: 'NginxService::_loadConfig'
-                                });
+                                Logger.getLogger().silly(
+                                    'Destination listen not found by domain: %s',
+                                    domainName,
+                                    {
+                                        class: 'NginxService::_loadConfig'
+                                    }
+                                );
                             }
                             break;
 
@@ -652,9 +657,13 @@ export class NginxService {
                                     });
                                 }
                             } else {
-                                Logger.getLogger().silly(`None upstream found by domain: ${domainName}`, {
-                                    class: 'NginxService::_loadConfig'
-                                });
+                                Logger.getLogger().silly(
+                                    'None upstream found by domain: %s',
+                                    domainName,
+                                    {
+                                        class: 'NginxService::_loadConfig'
+                                    }
+                                );
                             }
                             break;
 
@@ -735,7 +744,9 @@ export class NginxService {
                                         });
                                     } else {
                                         Logger.getLogger().error(
-                                            `Ssh (r) entry (out) is empty by domain: ${domainName}, streamid: ${tstream.id}`,
+                                            'Ssh (r) entry (out) is empty by domain: %s, streamid: %d',
+                                            domainName,
+                                            tstream.id,
                                             {
                                                 class: 'NginxService::_loadConfig'
                                             }
@@ -745,7 +756,9 @@ export class NginxService {
 
                                 default:
                                     Logger.getLogger().error(
-                                        `Ssh (r) entry has not type in/out by domain: ${domainName}, streamid: ${tstream.id}`,
+                                        'Ssh (r) entry has not type in/out by domain: %s, streamid: %d',
+                                        domainName,
+                                        tstream.id,
                                         {
                                             class: 'NginxService::_loadConfig'
                                         }
@@ -772,7 +785,9 @@ export class NginxService {
                                 procMap.addVariable('default', upstreamName);
                             } else {
                                 Logger.getLogger().error(
-                                    `Ssh (l) entry is empty by domain: ${domainName}, streamid: ${tstream.id}`,
+                                    'Ssh (l) entry is empty by domain: %s, streamid: %d',
+                                    domainName,
+                                    tstream.id,
                                     {
                                         class: 'NginxService::_loadConfig'
                                     }
@@ -791,7 +806,9 @@ export class NginxService {
                             });
 
                             Logger.getLogger().warn(
-                                `Destination type is not set by domain: ${domainName}, streamid: ${tstream.id}`,
+                                'Destination type is not set by domain: %s, streamid: %d',
+                                domainName,
+                                tstream.id,
                                 {
                                     class: 'NginxService::_loadConfig'
                                 }
@@ -801,7 +818,9 @@ export class NginxService {
                     if (!conf.getStream().hashUpstream(upStream.getStreamName())) {
                         if (upStream.countServer() === 0) {
                             Logger.getLogger().warn(
-                                `Upstream is without a server destination by  domain: ${domainName}, streamid: ${tstream.id}`,
+                                'Upstream is without a server destination by  domain: %s, streamid: %d',
+                                domainName,
+                                tstream.id,
                                 {
                                     class: 'NginxService::_loadConfig'
                                 }
@@ -984,18 +1003,19 @@ export class NginxService {
                             // TODO Wildcard
                             sslBundel = await provider.getCertificationBundel(domainName, {wildcard: false});
                         } catch (eBundel) {
-                            Logger.getLogger().error(` Provider get certificate is except: ${Ets.formate(
-                                eBundel,
-                                true,
-                                true
-                            )}`, {
-                                class: 'NginxService::_loadConfig'
-                            });
+                            Logger.getLogger().error(
+                                'Provider get certificate is except: %s',
+                                Ets.formate(eBundel, true, true),
+                                {
+                                    class: 'NginxService::_loadConfig'
+                                }
+                            );
                         }
 
-                        if (Vts.isNull(sslBundel)) {
+                        if (sslBundel === null) {
                             Logger.getLogger().warn(
-                                `Certificate bundel not found for Domain '${domainName}' and ignore settings.`,
+                                'Certificate bundel not found for Domain \'%s\' and ignore settings.',
+                                domainName,
                                 {
                                     class: 'NginxService::_loadConfig'
                                 }
@@ -1062,7 +1082,8 @@ export class NginxService {
 
                     } else {
                         Logger.getLogger().warn(
-                            `Certificate provider not found for Domain '${domainName}' and ignore settings.`,
+                            'Certificate provider not found for Domain \'%s\' and ignore settings.',
+                            domainName,
                             {
                                 class: 'NginxService::_loadConfig'
                             }
@@ -1280,7 +1301,8 @@ export class NginxService {
                                     );
                                 } else {
                                     Logger.getLogger().warn(
-                                        `DynDnsServer setting not enabled., domain: '${domainName}'`,
+                                        'DynDnsServer setting not enabled., domain: \'%s\'',
+                                        domainName,
                                         {
                                             class: 'NginxService::_loadConfig'
                                         }
@@ -1419,7 +1441,9 @@ export class NginxService {
         this._syslog = new SysLogServer();
         this._syslog.setOnListen((sysLogServer) => {
             Logger.getLogger().info(
-                `Liste started on: ${sysLogServer.getOptions().address}:${sysLogServer.getOptions().port}`,
+                'Liste started on: %s:%d',
+                sysLogServer.getOptions().address,
+                sysLogServer.getOptions().port,
                 {
                     class: 'NginxService::_startSysLog::SysLogServer::setOnListen'
                 }
@@ -1440,9 +1464,13 @@ export class NginxService {
             _sysLogServer,
             msg
         ) => {
-            Logger.getLogger().silly(`${msg.toString()}`, {
-                class: 'NginxService::_startSysLog::SysLogServer::setOnMessage'
-            });
+            Logger.getLogger().silly(
+                '%s',
+                msg.toString(), 
+                {
+                    class: 'NginxService::_startSysLog::SysLogServer::setOnMessage'
+                }
+            );
 
             const parts = msg.toString().split(`${NginxService.SYSLOG_TAG}: `);
 

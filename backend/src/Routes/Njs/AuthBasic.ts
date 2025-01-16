@@ -19,8 +19,7 @@ export class AuthBasic extends DefaultRoute {
         location_id: string,
         authHeader: string
     ): Promise<boolean> {
-        Logger.getLogger().info(`check -> location_id: ${location_id}`);
-        Logger.getLogger().info(`check -> authheader: ${authHeader}`);
+        Logger.getLogger().info('check -> location_id: %s authheader:', location_id, authHeader);
 
         const auth = BasicAuthParser.parse(authHeader);
 
@@ -40,7 +39,7 @@ export class AuthBasic extends DefaultRoute {
                     break;
             }
 
-            Logger.getLogger().info(`check -> scheme: ${auth.scheme}, username: ${auth.username}, password: *****`);
+            Logger.getLogger().info('check -> scheme: %s, username: %s, password: *****', auth.scheme, auth.username);
 
             if (resulte) {
                 response.status(200).send();

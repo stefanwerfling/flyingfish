@@ -16,7 +16,7 @@ export class Logout {
             session.user.isLogin = false;
         }
 
-        Logger.getLogger().info(`Logout success by session: ${session.id}`);
+        Logger.getLogger().info('Logout success by session: %s', session.id);
 
         return {
             statusCode: StatusCodes.OK

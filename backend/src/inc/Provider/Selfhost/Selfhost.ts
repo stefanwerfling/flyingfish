@@ -166,7 +166,7 @@ export class Selfhost implements IDynDnsClient {
                 url: `${Selfhost.URL}username=${options.username}&password=${options.password}${myip}`
             });
 
-            Logger.getLogger().info(`Selfhost::update: http status code: ${response.statusCode}`);
+            Logger.getLogger().info('Selfhost::update: http status code: %d', response.statusCode);
 
             if (response.statusCode === 200) {
                 if (response.body !== '') {
@@ -180,11 +180,11 @@ export class Selfhost implements IDynDnsClient {
 
                     const statusMsg = this.getStatusMsg(`${result.statusCode}`);
 
-                    Logger.getLogger().error(`Selfhost::update: status code: ${result.statusCode}`);
-                    Logger.getLogger().error(`Selfhost::update: status code-msg: ${statusMsg}`);
+                    Logger.getLogger().error('Selfhost::update: status code: %d', result.statusCode);
+                    Logger.getLogger().error('Selfhost::update: status code-msg: %s', statusMsg);
 
                     if (result.msg) {
-                        Logger.getLogger().error(`Selfhost::update: msg by selfhost: ${result.msg}`);
+                        Logger.getLogger().error('Selfhost::update: msg by selfhost: %s', result.msg);
                     }
                 }
             }

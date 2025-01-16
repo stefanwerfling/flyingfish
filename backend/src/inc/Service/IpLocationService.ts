@@ -52,7 +52,7 @@ export class IpLocationService {
         const location = await IpLocateIo.location(ip);
 
         if (location && location.ip) {
-            Logger.getLogger().info(`IpLocationService::_getIpLocation: new Location by ip: ${ip}`);
+            Logger.getLogger().info('IpLocationService::_getIpLocation: new Location by ip: %s', ip);
 
             let newIpLocation = new IpLocationDB();
 
@@ -99,7 +99,7 @@ export class IpLocationService {
                 const ipLocationId = await this._getIpLocation(entry.ip);
 
                 if (ipLocationId === null) {
-                    Logger.getLogger().info(`IpLocationService::location: Location not found by ip: ${entry.ip}`);
+                    Logger.getLogger().info('IpLocationService::location: Location not found by ip: %s', entry.ip);
                 } else {
                     entry.ip_location_id = ipLocationId;
 
@@ -117,7 +117,7 @@ export class IpLocationService {
                 const ipLocationId = await this._getIpLocation(entry.ip);
 
                 if (ipLocationId === null) {
-                    Logger.getLogger().info(`IpLocationService::location: Location not found by ip: ${entry.ip}`);
+                    Logger.getLogger().info('IpLocationService::location: Location not found by ip: %s', entry.ip);
                 } else {
                     entry.ip_location_id = ipLocationId;
 

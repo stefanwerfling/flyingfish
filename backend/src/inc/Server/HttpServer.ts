@@ -95,9 +95,9 @@ export class HttpServer extends BaseHttpServer {
      */
     protected async _checkKeyFile(keyFile: string): Promise<boolean> {
         if (await FileHelper.fileExist(keyFile)) {
-            Logger.getLogger().silly(`HttpServer::listen: express certs found in path: ${this._crypt?.sslPath}`);
+            Logger.getLogger().silly('HttpServer::listen: express certs found in path: %s', this._crypt?.sslPath);
         } else {
-            Logger.getLogger().silly(`HttpServer::listen: create certs for express by path: ${this._crypt?.sslPath}`);
+            Logger.getLogger().silly('HttpServer::listen: create certs for express by path: %s', this._crypt?.sslPath);
 
             await FlyingFishSsl.createExpressCerts(this._crypt?.sslPath!);
         }

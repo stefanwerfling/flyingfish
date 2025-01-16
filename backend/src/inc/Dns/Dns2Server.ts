@@ -143,7 +143,8 @@ export class Dns2Server implements IDnsServer {
                             recordSettings = JSON.parse(record.settings);
                         } catch (e) {
                             Logger.getLogger().error(
-                                `Record settings parse failed: ${record.id}`,
+                                'Record settings parse failed: %d',
+                                record.id,
                                 {
                                     class: 'Dns2Server::_handleRequest'
                                 }
@@ -226,7 +227,8 @@ export class Dns2Server implements IDnsServer {
 
                         for (const error of settingsErrors) {
                             Logger.getLogger().error(
-                                `Setting error: ${error}`,
+                                'Setting error: %s',
+                                error,
                                 {
                                     class: 'Dns2Server::_handleRequest',
                                     requestid: request.header.id
@@ -262,7 +264,9 @@ export class Dns2Server implements IDnsServer {
             }
 
             Logger.getLogger().info(
-                `Found match, send (${response.answers.length}) by request-id: ${request.header.id}`,
+                'Found match, send (%d) by request-id: %s',
+                response.answers.length,
+                request.header.id,
                 {
                     class: 'Dns2Server::_handleRequest',
                     requestid: request.header.id
@@ -272,7 +276,9 @@ export class Dns2Server implements IDnsServer {
             return response;
         } catch (e) {
             Logger.getLogger().info(
-                `Faild to processing the dns question by: ${rinfo.address}:${rinfo.port}`,
+                'Faild to processing the dns question by: %s:%d',
+                rinfo.address,
+                rinfo.port,
                 {
                     class: 'Dns2Server::_handleRequest:',
                     requestid: request.header.id
@@ -281,7 +287,8 @@ export class Dns2Server implements IDnsServer {
         }
 
         Logger.getLogger().warn(
-            `No match found, return null as answer by request-id: ${request.header.id}`,
+            'No match found, return null as answer by request-id: %s',
+            request.header.id,
             {
                 class: 'Dns2Server::_handleRequest:',
                 requestid: request.header.id
@@ -412,7 +419,8 @@ export class Dns2Server implements IDnsServer {
         });
 
         Logger.getLogger().info(
-            `Flingfish DNS listening on the TCP/UDP: ${port}`,
+            'Flingfish DNS listening on the TCP/UDP: %d',
+            port,
             {
                 class: 'Dns2Server::listen'
             }
@@ -439,7 +447,9 @@ export class Dns2Server implements IDnsServer {
         records.set(tmpId, record);
 
         Logger.getLogger().silly(
-            `Add temp record (${record.type}) to domain-id: ${domainId}`,
+            'Add temp record (%d) to domain-id: %d',
+            record.type,
+            domainId,
             {
                 class: 'Dns2Server::addTempRecord'
             }
@@ -492,7 +502,8 @@ export class Dns2Server implements IDnsServer {
     ): boolean {
         if (!this._tempDomains.has(domainName)) {
             Logger.getLogger().silly(
-                `Add temp domain: ${domainName}`,
+                'Add temp domain: $s',
+                domainName,
                 {
                     class: 'Dns2Server::addTempDomain'
                 }

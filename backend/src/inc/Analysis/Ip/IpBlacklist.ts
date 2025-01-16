@@ -114,7 +114,7 @@ export class IpBlacklist {
         const dns = new DNS();
         const result = await dns.resolveA(dnsName);
 
-        Logger.getLogger().silly(`IpBlacklist::checkdnsrr: result for "${dnsName}" is: ${result.answers.length > 0}`);
+        Logger.getLogger().silly('IpBlacklist::checkdnsrr: result for "%s" is: %d', dnsName, result.answers.length > 0);
 
         return result.answers.length > 0;
     }

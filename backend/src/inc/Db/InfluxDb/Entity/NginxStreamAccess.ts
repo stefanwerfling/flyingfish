@@ -39,7 +39,9 @@ export class NginxStreamAccess {
             } catch (error) {
                 if (error instanceof Error) {
                     Logger.getLogger().error(
-                        `NginxStreamAccess::addLog: parse int from upstream_bytes_sent: "${error.message}" by value: "${log.upstream_bytes_sent}"`
+                        'NginxStreamAccess::addLog: parse int from upstream_bytes_sent: "%s" by value: "%s"',
+                        error.message,
+                        log.upstream_bytes_sent
                     );
                 } else {
                     throw error;
@@ -103,7 +105,7 @@ export class NginxStreamAccess {
                 message = e.message;
             }
 
-            Logger.getLogger().error(`NginxStreamAccess::getRangeLastRequestCounts: request error: ${message}`);
+            Logger.getLogger().error('NginxStreamAccess::getRangeLastRequestCounts: request error: %s', message);
         }
 
         return list;

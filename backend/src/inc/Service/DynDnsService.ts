@@ -53,7 +53,7 @@ export class DynDnsService {
             const provider = DynDnsProviders.getProvider(client.provider);
 
             if (!provider) {
-                Logger.getLogger().error(`DynDnsService::updateDns: provider not found by name: ${client.provider}`);
+                Logger.getLogger().error('DynDnsService::updateDns: provider not found by name: %s', client.provider);
                 continue;
             }
 
@@ -103,14 +103,14 @@ export class DynDnsService {
             await DynDnsClientServiceDB.getInstance().updateStatus(client.id, providerResult.status);
 
             if (providerResult.result) {
-                Logger.getLogger().info(`DynDnsService::updateDns: Domain ip update by provider(${provider?.getName()})`);
+                Logger.getLogger().info('DynDnsService::updateDns: Domain ip update by provider(%s)', provider.getName());
 
                 if (client.update_domain) {
                     const dyndnsdomains = await DynDnsClientDomainServiceDB.getInstance().findAllByClientId(client.id);
 
                     if (dyndnsdomains) {
                         for await (const dyndnsdomain of dyndnsdomains) {
-                            Logger.getLogger().info(`DynDnsService::updateDns: Update domain ip for domain-id: ${dyndnsdomain.domain_id}`);
+                            Logger.getLogger().info('DynDnsService::updateDns: Update domain ip for domain-id: %d', dyndnsdomain.domain_id);
 
                             const records = await DomainRecordServiceDB.getInstance().findAllByDomainUpdateDnsClient(
                                 dyndnsdomain.domain_id,
@@ -135,19 +135,32 @@ export class DynDnsService {
 
                                         await DomainRecordServiceDB.getInstance().save(record);
 
-                                        Logger.getLogger().info(`DynDnsService::updateDns: domain record updated by domain-id: ${dyndnsdomain.domain_id} with ip: ${myIp}`);
+                                        Logger.getLogger().info(
+                                            'DynDnsService::updateDns: domain record updated by domain-id: %d with ip: %s',
+                                            dyndnsdomain.domain_id,
+                                            myIp
+                                        );
                                     }
                                 } else {
-                                    Logger.getLogger().warn(`DynDnsService::updateDns: own ip not determined by domain-id: ${dyndnsdomain.domain_id}`);
+                                    Logger.getLogger().warn(
+                                        'DynDnsService::updateDns: own ip not determined by domain-id: %d',
+                                        dyndnsdomain.domain_id
+                                    );
                                 }
                             } else {
-                                Logger.getLogger().warn(`DynDnsService::updateDns: domain record not found by domain-id: ${dyndnsdomain.domain_id}`);
+                                Logger.getLogger().warn(
+                                    'DynDnsService::updateDns: domain record not found by domain-id: %d',
+                                    dyndnsdomain.domain_id
+                                );
                             }
                         }
                     }
                 }
             } else {
-                Logger.getLogger().warn(`DynDnsService::updateDns: Domain ip update faild by provider(${provider?.getName()})`);
+                Logger.getLogger().warn(
+                    'DynDnsService::updateDns: Domain ip update faild by provider(%s)',
+                    provider.getName()
+                );
             }
         }
     }

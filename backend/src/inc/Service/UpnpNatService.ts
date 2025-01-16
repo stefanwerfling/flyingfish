@@ -91,7 +91,9 @@ export class UpnpNatService {
 
                                             if (alisten.disable) {
                                                 Logger.getLogger().info(
-                                                    `UpnpNatService::update: Listen (${alisten.listen_port}, ${alisten.description}) is disable, skip to next ...`
+                                                    'UpnpNatService::update: Listen (%d, %s) is disable, skip to next ...',
+                                                    alisten.listen_port,
+                                                    alisten.description
                                                 );
 
                                                 await this._setNatPortStatus(NatStatus.inactive, anat.id);
@@ -103,14 +105,26 @@ export class UpnpNatService {
                                     const map = await client.createMapping(options);
 
                                     if (map) {
-                                        Logger.getLogger().info(`UpnpNatService::update: Port mapping create  ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
+                                        Logger.getLogger().info(
+                                            'UpnpNatService::update: Port mapping create %s:%d -> %s:%s',
+                                            anat.gateway_address,
+                                            anat.public_port,
+                                            options.clientAddress,
+                                            options.private
+                                        );
 
                                         await this._setNatPortStatus(NatStatus.ok, anat.id);
                                     } else {
                                         await this._setNatPortStatus(NatStatus.error, anat.id);
                                     }
                                 } catch (ex) {
-                                    Logger.getLogger().info(`UpnpNatService::update: Port mapping faild ${anat.gateway_address}:${anat.public_port} -> ${options.clientAddress}:${options.private}`);
+                                    Logger.getLogger().info(
+                                        'UpnpNatService::update: Port mapping faild %s:%d -> %s:%s',
+                                        anat.gateway_address,
+                                        anat.public_port,
+                                        options.clientAddress,
+                                        options.private
+                                    );
 
                                     let message = 'unknown';
 
@@ -120,21 +134,21 @@ export class UpnpNatService {
                                         message = ex.message;
                                     }
 
-                                    Logger.getLogger().info(`UpnpNatService::update: error: ${message}`);
+                                    Logger.getLogger().info('UpnpNatService::update: error: %s', message);
 
                                     await this._setNatPortStatus(NatStatus.error, anat.id);
                                 }
                             } else {
-                                Logger.getLogger().info(`UpnpNatService::update: Gateway '${anat.gateway_address}' unreachable, skip ahead ...`);
+                                Logger.getLogger().info('UpnpNatService::update: Gateway \'%s\' unreachable, skip ahead ...', anat.gateway_address);
 
                                 await this._setNatPortStatus(NatStatus.error, anat.id);
                             }
                         }
                     } else {
-                        Logger.getLogger().info(`UpnpNatService::update: Upnp-Nat list is empty by Gateway Identifier: ${gatewayId.id}`);
+                        Logger.getLogger().info('UpnpNatService::update: Upnp-Nat list is empty by Gateway Identifier: %d', gatewayId.id);
                     }
                 } else {
-                    Logger.getLogger().info(`UpnpNatService::update: Gateway identifier not found by mac: ${himhip.gatewaymac}`);
+                    Logger.getLogger().info('UpnpNatService::update: Gateway identifier not found by mac: %s', himhip.gatewaymac);
                 }
             } else {
                 Logger.getLogger().info('UpnpNatService::update: HimHip service is not ready, skip upnpnat service ...');

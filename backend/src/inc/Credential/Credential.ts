@@ -24,7 +24,7 @@ export class Credential {
         const location = await NginxLocationServiceDB.getInstance().findOne(nLocationId);
 
         if (location) {
-            Logger.getLogger().silly(`Credential::authBasic: location found by id: ${location.id}`);
+            Logger.getLogger().silly('Credential::authBasic: location found by id: %d', location.id);
 
             const credLocactions = await CredentialLocationServiceDB.getInstance().getListByLocation(location.id);
 
@@ -34,7 +34,7 @@ export class Credential {
                 })
             );
 
-            Logger.getLogger().silly(`Credential::authBasic: Found credentials: ${credentials.length}`);
+            Logger.getLogger().silly('Credential::authBasic: Found credentials: %d', credentials.length);
 
             const cps = new CredentialProviders();
 
@@ -43,13 +43,13 @@ export class Credential {
                 const credentialObj = await cps.getProvider(credential.provider);
 
                 if (credentialObj) {
-                    Logger.getLogger().silly(`Credential::authBasic: Use credential object: ${credentialObj}`);
+                    Logger.getLogger().silly('Credential::authBasic: Use credential object: %o', credentialObj);
 
                     const credentialAuthBasic = credentialObj.getCredential(credential.id) as ICredentialAuthBasic;
 
                     const result = await credentialAuthBasic.authBasic(auth.username, auth.password);
 
-                    Logger.getLogger().silly(`Credential::authBasic: credential object result: ${result}`);
+                    Logger.getLogger().silly('Credential::authBasic: credential object result: %d', result);
 
                     if (result) {
                         return true;
@@ -57,7 +57,7 @@ export class Credential {
                 }
             }
         } else {
-            Logger.getLogger().error(`Credential::authBasic: Location not found: ${locationId}`);
+            Logger.getLogger().error('Credential::authBasic: Location not found: %s', locationId);
         }
 
         return false;

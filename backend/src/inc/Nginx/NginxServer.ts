@@ -141,7 +141,7 @@ export class NginxServer {
 
         const args = this._getArguments();
 
-        Logger.getLogger().silly(`NginxServer::start: start nginx with: ${this._command} ${args.join(' ')}`);
+        Logger.getLogger().silly('NginxServer::start: start nginx with: %s %s', this._command, args.join(' '));
 
         this._process = spawn(this._command, args);
 
@@ -150,17 +150,17 @@ export class NginxServer {
 
             for (const entry of logs) {
                 if (entry.trim() !== '') {
-                    Logger.getLogger().info(`NginxServer::stdout: ${entry}`);
+                    Logger.getLogger().info('NginxServer::stdout: %s', entry);
                 }
             }
         });
 
         this._process.stderr!.on('data', (buf) => {
-            const logs = buf.toString().split('\n');
+            const logs: string[] = buf.toString().split('\n');
 
             for (const entry of logs) {
                 if (entry.trim() !== '') {
-                    Logger.getLogger().error(`NginxServer::stderr: ${entry}`);
+                    Logger.getLogger().error('NginxServer::stderr: %s', entry);
                 }
             }
         });

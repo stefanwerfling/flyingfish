@@ -9,7 +9,7 @@ import {
     NginxListenDB,
     NginxListenServiceDB, NginxListenVariableDB, NginxListenVariableServiceDB
 } from 'flyingfish_core';
-import {NginxStreamServerVariables} from '../../../inc/Nginx/NginxVariables.js';
+import {NginxStreamServerVariables} from '../../../inc/Nginx/NginxStreamServerVariables.js';
 
 /**
  * AllowedRouteVariableServer
@@ -44,9 +44,9 @@ export class Save {
                 aListen = tListen;
 
                 if (aListen) {
-                    Logger.getLogger().silly(`Listen::saveListen: Found listen by id: ${aListen.id}`);
+                    Logger.getLogger().silly('Listen::saveListen: Found listen by id: %d', aListen.id);
                 } else {
-                    Logger.getLogger().error(`Listen::saveListen: Not found listen by id: ${data.id}`);
+                    Logger.getLogger().error('Listen::saveListen: Not found listen by id: %d', data.id);
                 }
             } else {
                 return {
@@ -68,7 +68,7 @@ export class Save {
         }
 
         if (aListen.listen_port !== data.port) {
-            Logger.getLogger().silly(`Listen::saveListen: Port diff by: DB Port: ${aListen.listen_port} and request: ${data.port}`);
+            Logger.getLogger().silly('Listen::saveListen: Port diff by: DB Port: %d and request: %d', aListen.listen_port, data.port);
 
             const count = await NginxListenServiceDB.getInstance().countByPort(data.port);
 

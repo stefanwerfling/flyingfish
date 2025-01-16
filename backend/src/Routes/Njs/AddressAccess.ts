@@ -28,7 +28,12 @@ export class AddressAccess extends DefaultRoute {
         remote_addr: string,
         type: string
     ): Promise<boolean> {
-        Logger.getLogger().info(`AddressAccess::access: realip_remote_addr: ${realip_remote_addr} remote_addr: ${remote_addr} type: ${type}`);
+        Logger.getLogger().info(
+            'AddressAccess::access: realip_remote_addr: %s remote_addr: %s type: %s',
+            realip_remote_addr,
+            remote_addr,
+            type
+        );
 
         const listenId = parseInt(listen_id, 10) || 0;
 
@@ -60,7 +65,7 @@ export class AddressAccess extends DefaultRoute {
         const address = await IpBlacklistServiceDB.getInstance().findByIp(realip_remote_addr, false);
 
         if (!address) {
-            Logger.getLogger().info(`AddressAccess::_globalCheckBlacklist: Address(${realip_remote_addr}) not found in blacklist.`);
+            Logger.getLogger().info('AddressAccess::_globalCheckBlacklist: Address(%s) not found in blacklist.', realip_remote_addr);
 
             return true;
         }
@@ -68,7 +73,7 @@ export class AddressAccess extends DefaultRoute {
         // update and not await
         IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).then();
 
-        Logger.getLogger().info(`AddressAccess::_globalCheckBlacklist: Address(${realip_remote_addr}) found in blacklist!`);
+        Logger.getLogger().info('AddressAccess::_globalCheckBlacklist: Address(%s) found in blacklist!', realip_remote_addr);
 
         return false;
     }
@@ -97,7 +102,7 @@ export class AddressAccess extends DefaultRoute {
                 return true;
             }
         } else {
-            Logger.getLogger().warn(`AddressAccess::_listCheck: Listen(${listenId}) not found!`);
+            Logger.getLogger().warn('AddressAccess::_listCheck: Listen(%d) not found!', listenId);
         }
 
         return false;
@@ -113,12 +118,12 @@ export class AddressAccess extends DefaultRoute {
         const address = await IpBlacklistServiceDB.getInstance().findByIp(realip_remote_addr, false);
 
         if (!address) {
-            Logger.getLogger().info(`AddressAccess::_listCheckBlackList: Address(${realip_remote_addr}) not found in blacklist.`);
+            Logger.getLogger().info('AddressAccess::_listCheckBlackList: Address(%s) not found in blacklist.', realip_remote_addr);
 
             return true;
         }
 
-        Logger.getLogger().info(`AddressAccess::_listCheckBlackList: Address(${realip_remote_addr}) found in blacklist!`);
+        Logger.getLogger().info('AddressAccess::_listCheckBlackList: Address(%s) found in blacklist!', realip_remote_addr);
 
         // update and not await
         IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).then();
@@ -136,7 +141,7 @@ export class AddressAccess extends DefaultRoute {
         const address = await IpWhitelistServiceDB.getInstance().findByIp(realip_remote_addr, false);
 
         if (address) {
-            Logger.getLogger().info(`AddressAccess::_listCheckWhiteList: Address(${realip_remote_addr}) found in whitelist!`);
+            Logger.getLogger().info('AddressAccess::_listCheckWhiteList: Address(%s) found in whitelist!', realip_remote_addr);
 
             // update and not await
             IpWhitelistServiceDB.getInstance().updateAccess(address.id, address.count_access + 1).then();
@@ -144,7 +149,7 @@ export class AddressAccess extends DefaultRoute {
             return true;
         }
 
-        Logger.getLogger().info(`AddressAccess::_listCheckWhiteList: Address(${realip_remote_addr}) not found in whitelist.`);
+        Logger.getLogger().info('AddressAccess::_listCheckWhiteList: Address(%s) not found in whitelist.', realip_remote_addr);
 
         return false;
     }

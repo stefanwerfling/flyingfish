@@ -15,7 +15,7 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
 
     /**
      * constructor
-     * @param credential
+     * @param {number} credentialId
      */
     public constructor(credentialId: number) {
         this._credentialId = credentialId;
@@ -28,17 +28,17 @@ export class CredentialDatabase implements ICredential, ICredentialAuthBasic {
         const user = await CredentialUserServiceDB.getInstance().findUser(this._credentialId, username, false);
 
         if (user) {
-            Logger.getLogger().info(`CredentialDatabase->authBasic user found: ${username}`);
+            Logger.getLogger().info('CredentialDatabase->authBasic user found: %s', username);
 
             const bresult = await bcrypt.compare(password, user.password);
 
-            Logger.getLogger().info(`CredentialDatabase->authBasic password-result: ${bresult}`);
+            Logger.getLogger().info('CredentialDatabase->authBasic password-result: %d', bresult);
 
             if (bresult) {
                 return true;
             }
         } else {
-            Logger.getLogger().warn(`CredentialDatabase->authBasic user not found: ${username}`);
+            Logger.getLogger().warn('CredentialDatabase->authBasic user not found: %s', username);
         }
 
         return false;

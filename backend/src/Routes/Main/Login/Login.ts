@@ -27,14 +27,14 @@ export class Login {
                 session.user.userid = user.id;
                 session.user.isLogin = true;
 
-                Logger.getLogger().info(`Login success by session: ${session.id}`);
+                Logger.getLogger().info('Login success by session: %s', session.id);
 
                 return {
                     statusCode: StatusCodes.OK
                 };
             }
 
-            Logger.getLogger().warn(`Login faild: wrong password by email: ${login.email}`);
+            Logger.getLogger().warn('Login faild: wrong password by email: %s', login.email);
 
             return {
                 statusCode: StatusCodes.INTERNAL_ERROR,

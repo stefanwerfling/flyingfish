@@ -45,8 +45,7 @@ export class Ipify implements IHowIsMyPublicIp {
                 return data.ip;
             }
         } catch (e) {
-            Logger.getLogger().error('Ipify::get:');
-            Logger.getLogger().error(e);
+            Logger.getLogger().error('Ipify::get:', e);
         }
 
         return null;
@@ -69,8 +68,7 @@ export class Ipify implements IHowIsMyPublicIp {
                 return data.ip;
             }
         } catch (e) {
-            Logger.getLogger().error('Ipify::get:');
-            Logger.getLogger().error(e);
+            Logger.getLogger().error('Ipify::get:', e);
         }
 
         return null;

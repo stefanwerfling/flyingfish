@@ -104,8 +104,7 @@ export class InfluxDbHelper {
         writeApi
         .close()
         .catch((e) => {
-            Logger.getLogger().error('InfluxDbHelper::addPoint: Error: ');
-            Logger.getLogger().error(e);
+            Logger.getLogger().error('InfluxDbHelper::addPoint: Error: ', e);
 
             if (e instanceof HttpError && e.statusCode === 401) {
                 Logger.getLogger().error('InfluxDbHelper::addPoint: setup a new InfluxDB database');
