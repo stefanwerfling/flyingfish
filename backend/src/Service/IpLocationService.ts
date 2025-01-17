@@ -6,8 +6,8 @@ import {
     Logger
 } from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {IpLocateIo} from '../Provider/IpLocate/IpLocateIo.js';
-import {Settings as GlobalSettings} from '../Settings/Settings.js';
+import {IpLocateIo} from '../inc/Provider/IpLocate/IpLocateIo.js';
+import {Settings as GlobalSettings} from '../inc/Settings/Settings.js';
 
 /**
  * IpLocationService

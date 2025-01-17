@@ -1,6 +1,6 @@
 import {DomainRecordDB, DomainRecordServiceDB} from 'flyingfish_core';
 import {DomainRecordSave, DomainRecordSaveResponse, StatusCodes} from 'flyingfish_schemas';
-import {HowIsMyPublicIpService} from '../../../../inc/Service/HowIsMyPublicIpService.js';
+import {HowIsMyPublicIpService} from '../../../../Service/HowIsMyPublicIpService.js';
 
 /**
  * Save

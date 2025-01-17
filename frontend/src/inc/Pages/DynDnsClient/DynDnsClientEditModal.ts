@@ -22,6 +22,12 @@ export class DynDnsClientEditModal extends ModalDialog {
     protected _selectProvider: SelectBottemBorderOnly2;
 
     /**
+     * multiple main domain
+     * @protected
+     */
+    protected _multipleMainDomain: Multiple;
+
+    /**
      * multiple domains
      * @protected
      */
@@ -69,6 +75,10 @@ export class DynDnsClientEditModal extends ModalDialog {
 
         const groupPassword = new FormGroup(bodyCard, 'Password');
         this._inputPassword = new InputBottemBorderOnly2(groupPassword, undefined, InputType.password);
+
+        const groupMainDomain = new FormGroup(bodyCard, 'Main Domain');
+        this._multipleMainDomain = new Multiple(groupMainDomain);
+        this._multipleMainDomain.setLimit(1);
 
         const rowOptions = new FormRow(bodyCard);
 
@@ -131,14 +141,29 @@ export class DynDnsClientEditModal extends ModalDialog {
     }
 
     /**
-     * setDomains
-     * @param domains
+     * Set domains for select
+     * @param {DomainData[]} domains
      */
     public setDomains(domains: DomainData[]): void {
         this._multipleDomains.clearValues();
 
         for (const domain of domains) {
             this._multipleDomains.addValue({
+                key: `${domain.id}`,
+                value: domain.name
+            });
+        }
+    }
+
+    /**
+     * Set main domains for select
+     * @param {DomainData[]} domains
+     */
+    public setMainDomains(domains: DomainData[]): void {
+        this._multipleMainDomain.clearValues();
+
+        for (const domain of domains) {
+            this._multipleMainDomain.addValue({
                 key: `${domain.id}`,
                 value: domain.name
             });
@@ -160,17 +185,18 @@ export class DynDnsClientEditModal extends ModalDialog {
     }
 
     /**
-     * getId
+     * Return the id
+     * @returns {number|null}
      */
     public getId(): number|null {
         return this._id;
     }
 
     /**
-     * setDomainSelected
-     * @param domains
+     * Set domains selected
+     * @param {DynDnsClientDomain[]} domains
      */
-    public setDomainSelected(domains: DynDnsClientDomain[]): void {
+    public setDomainsSelected(domains: DynDnsClientDomain[]): void {
         const list: string[] = [];
 
         for (const domain of domains) {
@@ -181,9 +207,10 @@ export class DynDnsClientEditModal extends ModalDialog {
     }
 
     /**
-     * getDomainSelected
+     * Get domains selected
+     * @returns {DynDnsClientDomain[]}
      */
-    public getDomainSelected(): DynDnsClientDomain[] {
+    public getDomainsSelected(): DynDnsClientDomain[] {
         const list: DynDnsClientDomain[] = [];
 
         const values = this._multipleDomains.getValue();
@@ -244,11 +271,34 @@ export class DynDnsClientEditModal extends ModalDialog {
     }
 
     /**
+     * Set the main domain selected
+     * @param {number} domainId
+     */
+    public setMainDomainSelected(domainId: number): void {
+        this._multipleMainDomain.setValue([`${domainId}`]);
+    }
+
+    /**
+     * Return the main domain selected
+     * @returns {number}
+     */
+    public getMainDomainSelected(): number {
+        const values = this._multipleMainDomain.getValue();
+
+        if (values.length > 0) {
+            return parseInt(values[0], 10);
+        }
+
+        return 0;
+    }
+
+    /**
      * resetValues
      */
     public override resetValues(): void {
         this.setProvider('none');
         this._id = null;
+        this._multipleMainDomain.setValue([]);
         this._multipleDomains.setValue([]);
         this._inputUsername.setValue('');
         this._inputPassword.setValue('');

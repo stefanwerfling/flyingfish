@@ -1,7 +1,7 @@
 import {Logger} from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {Config} from '../Config/Config.js';
-import {HowIsMyPublicIpProviders} from '../Provider/HowIsMyPublicIpProviders.js';
+import {Config} from '../inc/Config/Config.js';
+import {HowIsMyPublicIpProviders} from '../inc/Provider/HowIsMyPublicIpProviders.js';
 import {DynDnsService} from './DynDnsService.js';
 
 /**
@@ -87,7 +87,7 @@ export class HowIsMyPublicIpService {
                 this._currentIp6 = await provider.get64();
 
                 Logger.getLogger().info('HowIsMyPublicIpService::determined: Set my current public ip(%s)', this._currentIp);
-                Logger.getLogger().info(`HowIsMyPublicIpService::determined: Set my current public ip6(%s)`, this._currentIp6);
+                Logger.getLogger().info('HowIsMyPublicIpService::determined: Set my current public ip6(%s)', this._currentIp6);
             } else {
                 const ip = await provider.get();
                 const ip6 = await provider.get64();

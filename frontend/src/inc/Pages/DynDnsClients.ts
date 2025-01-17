@@ -58,6 +58,7 @@ export class DynDnsClients extends BasePage {
 
                 if (domains) {
                     this._dynDnsClientDialog.setDomains(domains.list);
+                    this._dynDnsClientDialog.setMainDomains(domains.list);
                 }
             } catch (e) {
                 if (e instanceof UnauthorizedError) {
@@ -86,7 +87,8 @@ export class DynDnsClients extends BasePage {
                         name: this._dynDnsClientDialog.getProvider(),
                         title: ''
                     },
-                    domains: this._dynDnsClientDialog.getDomainSelected(),
+                    domains: this._dynDnsClientDialog.getDomainsSelected(),
+                    main_domain: this._dynDnsClientDialog.getMainDomainSelected(),
                     username: this._dynDnsClientDialog.getUsername(),
                     password: this._dynDnsClientDialog.getPassword(),
                     update_domain: this._dynDnsClientDialog.getUpdateDomains(),
@@ -234,6 +236,7 @@ export class DynDnsClients extends BasePage {
 
                                     if (domains) {
                                         this._dynDnsClientDialog.setDomains(domains.list);
+                                        this._dynDnsClientDialog.setMainDomains(domains.list);
                                     }
                                 } catch (e) {
                                     if (e instanceof UnauthorizedError) {
@@ -243,9 +246,10 @@ export class DynDnsClients extends BasePage {
 
                                 this._dynDnsClientDialog.setId(entry.id);
                                 this._dynDnsClientDialog.setProvider(entry.provider.name);
-                                this._dynDnsClientDialog.setDomainSelected(entry.domains);
+                                this._dynDnsClientDialog.setDomainsSelected(entry.domains);
                                 this._dynDnsClientDialog.setUsername(entry.username);
                                 this._dynDnsClientDialog.setUpdateDomains(entry.update_domain);
+                                this._dynDnsClientDialog.setMainDomainSelected(entry.main_domain);
                             },
                             IconFa.edit
                         );

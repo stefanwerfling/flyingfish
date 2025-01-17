@@ -7,8 +7,8 @@ import {
     Logger
 } from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {Firehol} from '../Provider/Firehol/Firehol.js';
-import {Settings as GlobalSettings} from '../Settings/Settings.js';
+import {Firehol} from '../inc/Provider/Firehol/Firehol.js';
+import {Settings as GlobalSettings} from '../inc/Settings/Settings.js';
 
 /**
  * BlacklistService

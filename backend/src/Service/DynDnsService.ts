@@ -7,7 +7,7 @@ import {
     Logger
 } from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
-import {DynDnsProviders} from '../Provider/DynDnsProviders.js';
+import {DynDnsProviders} from '../inc/Provider/DynDnsProviders.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 
 /**
@@ -46,6 +46,8 @@ export class DynDnsService {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
 
         const currentIp = await HowIsMyPublicIpService.getInstance().getCurrentIp(false);
+        const currentIp6 = await HowIsMyPublicIpService.getInstance().getCurrentIp6(false);
+        const hostnames: string[] = [];
 
         const clients = await DynDnsClientServiceDB.getInstance().findAll();
 
@@ -65,6 +67,8 @@ export class DynDnsService {
                 const domain = await DomainServiceDB.getInstance().findOne(client.main_domain_id);
 
                 if (domain) {
+                    hostnames.push(domain.domainname);
+
                     try {
                         const resolver = new DNS();
                         const result = await resolver.resolveA(domain.domainname);
@@ -93,8 +97,8 @@ export class DynDnsService {
                 username: client.username,
                 password: client.password,
                 ip: currentIp,
-                ip6: null,
-                hostname: []
+                ip6: currentIp6,
+                hostnames: hostnames
             });
 
             // ---------------------------------------------------------------------------------------------------------

@@ -7,10 +7,10 @@ import {Job, scheduleJob} from 'node-schedule';
 import Path from 'path';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors, Vts} from 'vts';
-import {Certificate} from '../Cert/Certificate.js';
-import {Dns2Server} from '../Dns/Dns2Server.js';
-import {NginxServer} from '../Nginx/NginxServer.js';
-import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
+import {Certificate} from '../inc/Cert/Certificate.js';
+import {Dns2Server} from '../inc/Dns/Dns2Server.js';
+import {NginxServer} from '../inc/Nginx/NginxServer.js';
+import {SslCertProviders} from '../inc/Provider/SslCertProvider/SslCertProviders.js';
 import {NginxService} from './NginxService.js';
 
 /**

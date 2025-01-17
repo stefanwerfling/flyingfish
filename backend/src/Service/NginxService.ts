@@ -34,24 +34,24 @@ import {
 import fs from 'fs/promises';
 import path from 'path';
 import {SchemaErrors} from 'vts';
-import {Config} from '../Config/Config.js';
-import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
-import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
-import {Context} from '../Nginx/Config/Context.js';
-import {If} from '../Nginx/Config/If.js';
-import {Listen, ListenDestination, ListenProtocol} from '../Nginx/Config/Listen.js';
-import {Location} from '../Nginx/Config/Location.js';
-import {Map as NginxMap} from '../Nginx/Config/Map.js';
-import {Server as NginxConfServer, ServerXFrameOptions} from '../Nginx/Config/Server.js';
-import {Upstream, UpstreamLoadBalancingAlgorithm} from '../Nginx/Config/Upstream.js';
-import {NginxHTTPVariables} from '../Nginx/NginxHTTPVariables.js';
-import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../Nginx/NginxLogFormatJson.js';
-import {NginxServer} from '../Nginx/NginxServer.js';
-import {NginxStreamServerVariables} from '../Nginx/NginxStreamServerVariables.js';
-import {OpenSSL} from '../OpenSSL/OpenSSL.js';
-import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
-import {Settings} from '../Settings/Settings.js';
-import {SysLogServer} from '../SysLogServer/SysLogServer.js';
+import {Config} from '../inc/Config/Config.js';
+import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../inc/Db/InfluxDb/Entity/NginxHttpAccess.js';
+import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../inc/Db/InfluxDb/Entity/NginxStreamAccess.js';
+import {Context} from '../inc/Nginx/Config/Context.js';
+import {If} from '../inc/Nginx/Config/If.js';
+import {Listen, ListenDestination, ListenProtocol} from '../inc/Nginx/Config/Listen.js';
+import {Location} from '../inc/Nginx/Config/Location.js';
+import {Map as NginxMap} from '../inc/Nginx/Config/Map.js';
+import {Server as NginxConfServer, ServerXFrameOptions} from '../inc/Nginx/Config/Server.js';
+import {Upstream, UpstreamLoadBalancingAlgorithm} from '../inc/Nginx/Config/Upstream.js';
+import {NginxHTTPVariables} from '../inc/Nginx/NginxHTTPVariables.js';
+import {NginxLogFormatJson, SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from '../inc/Nginx/NginxLogFormatJson.js';
+import {NginxServer} from '../inc/Nginx/NginxServer.js';
+import {NginxStreamServerVariables} from '../inc/Nginx/NginxStreamServerVariables.js';
+import {OpenSSL} from '../inc/OpenSSL/OpenSSL.js';
+import {SslCertProviders} from '../inc/Provider/SslCertProvider/SslCertProviders.js';
+import {Settings} from '../inc/Settings/Settings.js';
+import {SysLogServer} from '../inc/SysLogServer/SysLogServer.js';
 
 /**
  * HttpLocationCollect
@@ -224,7 +224,7 @@ export class NginxService {
     }
 
     /**
-     * Convert an ip and port to a "unix socket" path for nginx
+     * Convert an ip and port to an "unix socket" path for nginx
      * @param {string} ip
      * @param {number} port
      * @returns {string}

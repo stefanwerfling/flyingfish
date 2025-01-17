@@ -2,10 +2,10 @@ import {GatewayIdentifierServiceDB, Logger, NatPortServiceDB, NginxListenService
 import {NatStatus} from 'flyingfish_schemas';
 import {Job, scheduleJob} from 'node-schedule';
 import Ping from 'ping';
-import {UpnpNatCache} from '../Cache/UpnpNatCache.js';
-import {HimHIP} from '../HimHIP/HimHIP.js';
-import {UpnpNatClient} from '../Net/UpnpNat/UpnpNatClient.js';
-import {NewPortMappingOpts} from '../Net/UpnpNat/Mapping/NewPortMappingOpts.js';
+import {UpnpNatCache} from '../inc/Cache/UpnpNatCache.js';
+import {HimHIP} from '../inc/HimHIP/HimHIP.js';
+import {UpnpNatClient} from '../inc/Net/UpnpNat/UpnpNatClient.js';
+import {NewPortMappingOpts} from '../inc/Net/UpnpNat/Mapping/NewPortMappingOpts.js';
 
 /**
  * UpnpNatService

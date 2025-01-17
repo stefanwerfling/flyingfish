@@ -1,8 +1,8 @@
 import {IpBlacklistServiceDB, IpLocationServiceDB} from 'flyingfish_core';
 import {DashboardInfoIpBlock, DashboardInfoResponse, StatusCodes} from 'flyingfish_schemas';
 import {HimHIP} from '../../../inc/HimHIP/HimHIP.js';
-import {HowIsMyPublicIpService} from '../../../inc/Service/HowIsMyPublicIpService.js';
-import {IpService} from '../../../inc/Service/IpService.js';
+import {HowIsMyPublicIpService} from '../../../Service/HowIsMyPublicIpService.js';
+import {IpService} from '../../../Service/IpService.js';
 
 /**
  * Info

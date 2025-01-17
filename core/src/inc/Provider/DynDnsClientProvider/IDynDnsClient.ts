@@ -23,7 +23,7 @@ export type DynDnsClientUpdateOptions = {
     password: string;
     ip: string|null;
     ip6: string|null;
-    hostname: string[];
+    hostnames: string[];
 };
 
 /**

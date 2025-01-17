@@ -53,6 +53,7 @@ export class List {
                 list.push({
                     id: client.id,
                     domains: domains,
+                    main_domain: client.main_domain_id,
                     provider: {
                         name: providerName,
                         title: providerTitle

@@ -1,7 +1,7 @@
 import {Logger} from 'flyingfish_core';
 import got from 'got';
 import {NginxStatus, NginxStatusResult} from '../../Nginx/NginxStatus.js';
-import {NginxService} from '../../Service/NginxService.js';
+import {NginxService} from '../../../Service/NginxService.js';
 
 /**
  * NginxHandler

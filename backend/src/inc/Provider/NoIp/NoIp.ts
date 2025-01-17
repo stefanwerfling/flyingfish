@@ -146,13 +146,13 @@ export class NoIp implements IDynDnsClient {
             status: DynDnsClientUpdateStatus.ERROR
         };
 
-        if (options.hostname.length === 0) {
+        if (options.hostnames.length === 0) {
             tresult.status = DynDnsClientUpdateStatus.ERROR_OPTIONS;
 
             return tresult;
         }
 
-        const urlOptionHostname = `?hostname=${options.hostname.join(',')}`;
+        const urlOptionHostname = `?hostname=${options.hostnames.join(',')}`;
         let urlOptionMyIp = '';
 
         if (options.ip !== null) {
