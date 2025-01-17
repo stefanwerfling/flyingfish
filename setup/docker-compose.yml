@@ -45,14 +45,16 @@ services:
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.5
+    healthcheck:
+      test: "curl -f http://localhost:8086/ping"
+      interval: 5s
+      timeout: 10s
+      retries: 5
     logging:
       driver: "json-file"
       options:
         max-size: "500k"
         max-file: "50"
-    depends_on:
-      mariadb:
-        condition: service_healthy
 
   redis:
     image: redis:7.2-alpine
@@ -65,14 +67,16 @@ services:
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.7
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a ${REDIS_REQUIREPASS} ping | grep PONG" ]
+      interval: 1s
+      timeout: 3s
+      retries: 5
     logging:
       driver: "json-file"
       options:
         max-size: "500k"
         max-file: "50"
-    depends_on:
-      mariadb:
-        condition: service_healthy
 
   flyingfish:
     image: stefanwerfling/flyingfish:latest
@@ -113,9 +117,9 @@ services:
       mariadb:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
       influxdb:
-        condition: service_started
+        condition: service_healthy
 
   himhip:
     image: stefanwerfling/flyingfish_himip:latest
@@ -135,7 +139,7 @@ services:
         max-file: "50"
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
       flyingfish:
         condition: service_started
 
@@ -164,7 +168,7 @@ services:
       mariadb:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
       flyingfish:
         condition: service_started
 
@@ -188,7 +192,7 @@ services:
       mariadb:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
       flyingfish:
         condition: service_started
 
