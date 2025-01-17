@@ -96,7 +96,9 @@ export class PluginManager {
 
         for await (const pluginInfo of pluginInfos) {
             Logger.getLogger().silly(
-                `PluginManager::start: found plugin: ${pluginInfo.definition.name} (${pluginInfo.definition.version})`
+                'PluginManager::start: found plugin: %s (%s)',
+                pluginInfo.definition.name,
+                pluginInfo.definition.version
             );
 
             await this.load(pluginInfo);
@@ -139,8 +141,7 @@ export class PluginManager {
                                     path: packageJsonPath
                                 });
                             } else {
-                                console.log('PluginManager::scan: Config file error:');
-                                console.log(JSON.stringify(errors, null, 2));
+                                console.log('PluginManager::scan: Config file error:', errors);
                             }
                         }
                     }
@@ -184,7 +185,7 @@ export class PluginManager {
                 throw new Error(`plugin main not found: ${plugin.path}`);
             }
 
-            Logger.getLogger().silly(`PluginManager::load: file plugin: ${importFile} (${plugin.definition.name})`);
+            Logger.getLogger().silly('PluginManager::load: file plugin: %s (%s)', importFile, plugin.definition.name);
 
             const oPlugin = await import(importFile);
 
@@ -196,11 +197,10 @@ export class PluginManager {
                 this._plugins.push(object);
                 object.onEnable();
 
-                Logger.getLogger().info(`PluginManager::load: Plugin is loaded ${plugin.definition.name}`);
+                Logger.getLogger().info('PluginManager::load: Plugin is loaded %s', plugin.definition.name);
             }
         } catch (e) {
-            Logger.getLogger().error(`PluginManager::load: can not load plugin: ${plugin.definition.name}`);
-            Logger.getLogger().error(Ets.formate(e, true));
+            Logger.getLogger().error('PluginManager::load: can not load plugin: %s', plugin.definition.name, Ets.formate(e, true));
             return false;
         }
 

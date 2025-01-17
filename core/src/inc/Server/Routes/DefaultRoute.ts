@@ -102,11 +102,11 @@ export class DefaultRoute {
                 try {
                     handler(req, res);
                 } catch (ie) {
-                    Logger.getLogger().error(`DefaultRoute::_get: Exception intern, path can not call: ${path}`);
+                    Logger.getLogger().error('DefaultRoute::_get: Exception intern, path can not call: %s', path);
                 }
             });
         } catch (e) {
-            Logger.getLogger().error(`DefaultRoute::_get: Exception extern, path can not call: ${path}`);
+            Logger.getLogger().error('DefaultRoute::_get: Exception extern, path can not call: %', path);
         }
     }
 
@@ -122,11 +122,11 @@ export class DefaultRoute {
                 try {
                     handler(req, res);
                 } catch (ie) {
-                    Logger.getLogger().error(`DefaultRoute::_post: Exception intern, path can not call: ${path}`);
+                    Logger.getLogger().error('DefaultRoute::_post: Exception intern, path can not call: %s', path);
                 }
             });
         } catch (e) {
-            Logger.getLogger().error(`DefaultRoute::_post: Exception extern, path can not call: ${path}`);
+            Logger.getLogger().error('DefaultRoute::_post: Exception extern, path can not call: %s', path);
         }
     }
 

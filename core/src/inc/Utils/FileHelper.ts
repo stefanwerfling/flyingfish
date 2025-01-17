@@ -42,7 +42,7 @@ export class FileHelper {
                 return true;
             }
         } catch (e) {
-            Logger.getLogger().silly(`FileHelper::fileExist: exception by file: ${file}`, e);
+            Logger.getLogger().silly('FileHelper::fileExist: exception by file: %s', file, e);
         }
 
         if (allowLink) {
@@ -51,7 +51,7 @@ export class FileHelper {
                     return true;
                 }
             } catch (e) {
-                Logger.getLogger().silly(`FileHelper::fileExist: exception by file link: ${file}`, e);
+                Logger.getLogger().silly('FileHelper::fileExist: exception by file link: %s', file, e);
             }
         }
 

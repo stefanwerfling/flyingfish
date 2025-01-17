@@ -28,7 +28,7 @@ export class Update extends DefaultRoute {
 
             if (req.params.ip) {
                 ips = req.params.ip.split(',');
-                Logger.getLogger().silly(`Update::setNicUpdate: set ip by param, by user: ${session.user.userid}`);
+                Logger.getLogger().silly('Update::setNicUpdate: set ip by param, by user: %d', session.user.userid);
             } else if (iIp) {
                 if (typeof iIp === 'string') {
                     ips.push(iIp);
@@ -38,7 +38,7 @@ export class Update extends DefaultRoute {
             }
 
             if (ips.length > 0) {
-                Logger.getLogger().silly(`Update::setNicUpdate: use ip: ${ips.join(', ')} by user: ${session.user.userid}`);
+                Logger.getLogger().silly('Update::setNicUpdate: use ip: %s by user: %d', ips.join(', '), session.user.userid);
             } else {
                 response.status(500).send('IP could not be determined');
                 return;
@@ -64,9 +64,9 @@ export class Update extends DefaultRoute {
             if (req.params.hostname) {
                 hostnames = req.params.hostname.split(',');
 
-                Logger.getLogger().silly(`Update::setNicUpdate: check hostname: ${dynDomains.join(',')} by user: ${session.user.userid}`);
+                Logger.getLogger().silly('Update::setNicUpdate: check hostname: %s by user: %d', dynDomains.join(','), session.user.userid);
             } else {
-                Logger.getLogger().silly(`Update::setNicUpdate: update all hostnames, by user: ${session.user.userid}`);
+                Logger.getLogger().silly('Update::setNicUpdate: update all hostnames, by user: %d', session.user.userid);
             }
 
             const domainUpdates: DomainDB[] = [];
@@ -114,7 +114,7 @@ export class Update extends DefaultRoute {
             response.status(200).send('OK');
             return;
         } else if (session.user) {
-            Logger.getLogger().silly(`Update::setNicUpdate: user is not login: ${session.user.userid}`);
+            Logger.getLogger().silly('Update::setNicUpdate: user is not login: %d', session.user.userid);
         }
 
         response.status(401).send('Authentication required.');
@@ -138,7 +138,7 @@ export class Update extends DefaultRoute {
                 req,
                 res
             ) => {
-                Logger.getLogger().silly(`Update::nic-update: heders.authorization: ${req.headers.authorization}`);
+                Logger.getLogger().silly('Update::nic-update: heders.authorization: %s', req.headers.authorization);
 
                 const credentials = auth(req);
 
@@ -146,22 +146,22 @@ export class Update extends DefaultRoute {
                 let granted = false;
 
                 if (credentials) {
-                    Logger.getLogger().silly(`Update::nic-update: basic auth - name: ${credentials.name}`);
+                    Logger.getLogger().silly('Update::nic-update: basic auth - name: %s', credentials.name);
 
                     const ddnsUser = await DynDnsServerUserServiceDB.getInstance().findByName(credentials.name);
 
                     if (ddnsUser) {
-                        Logger.getLogger().silly(`Update::nic-update: basic auth - user found by id: ${ddnsUser.id}`);
+                        Logger.getLogger().silly('Update::nic-update: basic auth - user found by id: %d', ddnsUser.id);
 
                         const bresult = await bcrypt.compare(credentials.pass, ddnsUser.password);
 
                         if (bresult) {
-                            Logger.getLogger().silly(`Update::nic-update: password accept for user id: ${ddnsUser.id}`);
+                            Logger.getLogger().silly('Update::nic-update: password accept for user id: %d', ddnsUser.id);
                             granted = true;
                             userId = ddnsUser.id;
                         }
                     } else {
-                        Logger.getLogger().warn(`Update::nic-update: basic auth - user not found - name: ${credentials.name}`);
+                        Logger.getLogger().warn('Update::nic-update: basic auth - user not found - name: %s', credentials.name);
                     }
                 }
 
@@ -194,6 +194,7 @@ export class Update extends DefaultRoute {
                 req,
                 res
             ) => {
+                // TODO
                 Update.setUpdate(req, res);
             }
         );

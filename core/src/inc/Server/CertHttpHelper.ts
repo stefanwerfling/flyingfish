@@ -20,7 +20,7 @@ export class CertHttpHelper {
      */
     public static async createExpressCerts(sslLibPath: string): Promise<void> {
         if (!await FileHelper.directoryExist(sslLibPath)) {
-            FileHelper.mkdir(sslLibPath, true);
+            await FileHelper.mkdir(sslLibPath, true);
         }
 
         const keyFile = Path.join(sslLibPath, CertHttpHelper.FILE_KEYPEM);
@@ -34,7 +34,7 @@ export class CertHttpHelper {
         });
 
         if (!await FileHelper.fileExist(keyFile)) {
-            Logger.getLogger().silly(`CertHttpHelper::createExpressCerts: cant not wirte keyfile: ${keyFile}`);
+            Logger.getLogger().silly('CertHttpHelper::createExpressCerts: cant not wirte keyfile: %s', keyFile);
             return;
         }
 

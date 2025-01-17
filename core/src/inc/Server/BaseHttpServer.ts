@@ -104,7 +104,7 @@ export class BaseHttpServer {
 
         this._server = express();
         this._server.use((req, _res, next) => {
-            Logger.getLogger().silly(`BaseHttpServer::request: Url: ${req.url} Protocol: ${req.protocol} Method: ${req.method}`);
+            Logger.getLogger().silly('BaseHttpServer::request: Url: %s Protocol: %s Method: %s', req.url, req.protocol, req.method);
             next();
         });
 
@@ -188,7 +188,7 @@ export class BaseHttpServer {
      */
     protected async _checkKeyFile(keyFile: string): Promise<boolean> {
         if (fs.existsSync(keyFile)) {
-            Logger.getLogger().silly(`BaseHttpServer::listen: express certs found in path: ${this._crypt?.sslPath}`);
+            Logger.getLogger().silly('BaseHttpServer::listen: express certs found in path: %s', this._crypt?.sslPath);
 
             return true;
         }
@@ -229,7 +229,9 @@ export class BaseHttpServer {
                         }
 
                         Logger.getLogger().error(
-                            `The client call the Server over HTTP protocol. Please use HTTPS, example: https://${BaseHttpServer._listenHost}:${this._port}`,
+                            'The client call the Server over HTTP protocol. Please use HTTPS, example: https://%s:%d',
+                            BaseHttpServer._listenHost,
+                            this._port,
                             {
                                 class: 'BaseHttpServer::listen'
                             }
@@ -239,7 +241,10 @@ export class BaseHttpServer {
 
                 httpsServer.listen(this._port, () => {
                     Logger.getLogger().info(
-                        `${this._realm} listening on the https://${BaseHttpServer._listenHost}:${this._port}`,
+                        '%s listening on the https://%s:%d',
+                        this._realm,
+                        BaseHttpServer._listenHost,
+                        this._port,
                         {
                             class: 'BaseHttpServer::listen'
                         }
@@ -250,7 +255,12 @@ export class BaseHttpServer {
             }
         } else {
             app.listen(this._port, () => {
-                Logger.getLogger().info(`BaseHttpServer::listen: ${this._realm} listening on the http://${BaseHttpServer._listenHost}:${this._port}`);
+                Logger.getLogger().info(
+                    'BaseHttpServer::listen: %s listening on the http://%s:%d',
+                    this._realm,
+                    BaseHttpServer._listenHost,
+                    this._port
+                );
             });
         }
     }

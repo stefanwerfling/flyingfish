@@ -132,8 +132,7 @@ export class RedisClient {
                         const data = JSON.parse(message);
                         await channel.listen(data);
                     } catch (e) {
-                        Logger.getLogger().error('RedisClient::registerChannels: Redis client channel resive data parse error!');
-                        Logger.getLogger().error(e);
+                        Logger.getLogger().error('RedisClient::registerChannels: Redis client channel resive data parse error!', e);
                     }
                 }
             );
