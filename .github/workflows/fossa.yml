@@ -1,0 +1,16 @@
+name: FOSSA License Scan
+
+on: [push, pull_request]
+
+jobs:
+  fossa_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Run FOSSA scan
+        uses: fossa-ci/fossa-action@v2
+        with:
+          fossa_token: ${{ secrets.FOSSA_API_KEY }}
