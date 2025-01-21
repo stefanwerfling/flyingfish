@@ -1,3 +1,10 @@
+# Flyingfish
+
+<p align="center">
+  <img height="200" src="doc/images/logo.png">
+</p>
+
+<br>
 
 [![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.1.12-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
 ![Docker Pulls](https://img.shields.io/docker/pulls/stefanwerfling/flyingfish?style=for-the-badge)
@@ -6,19 +13,16 @@
 ![Forks](https://img.shields.io/github/forks/stefanwerfling/flyingfish?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/stefanwerfling/flyingfish?style=for-the-badge)
 [![Liberapay](https://img.shields.io/liberapay/patrons/StefanWerf.svg?logo=liberapay&style=for-the-badge)](https://liberapay.com/StefanWerf/donate)
+
+<br>
+
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6347/badge)](https://bestpractices.coreinfrastructure.org/projects/6347)
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish.svg?type=shield&issueType=security)](https://app.fossa.com/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish?ref=badge_shield&issueType=security)
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish.svg?type=shield&issueType=license)](https://app.fossa.com/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish?ref=badge_shield&issueType=license)
 
 <br>
 
-<p align="center">
-  <img height="200" src="doc/images/logo.png">
-</p>
 
-<br>
-
-# Flyingfish
 
 FlyingFish is a reverse proxy manager with own WebUI, DNS server, SSH server, DynDNS, UPNP support, Lets Encrypt and much more.
 
