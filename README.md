@@ -7,6 +7,8 @@
 ![Stars](https://img.shields.io/github/stars/stefanwerfling/flyingfish?style=for-the-badge)
 [![Liberapay](https://img.shields.io/liberapay/patrons/StefanWerf.svg?logo=liberapay&style=for-the-badge)](https://liberapay.com/StefanWerf/donate)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6347/badge)](https://bestpractices.coreinfrastructure.org/projects/6347)
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish.svg?type=shield&issueType=security)](https://app.fossa.com/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish?ref=badge_shield&issueType=security)
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish.svg?type=shield&issueType=license)](https://app.fossa.com/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish?ref=badge_shield&issueType=license)
 
 <br>
 
@@ -15,11 +17,6 @@
 </p>
 
 <br>
-
-# News 2024-12-01 
-Hello everyone, a lot is happening this year, the FlyingFish sub-projects have received many updates. Some questions were clarified/new ideas were collected, a long active test was carried out permanently with FlyinFish. I am currently on vacation until January 2025. From there the further development of FlyingFish really starts again. I would like to thank my sponsor "JetBrains" again. I hope that I can continue to rely on this great development environment. I wish you a Merry Christmas and a good start into the New Year.
-
-Stefan
 
 # Flyingfish
 
@@ -175,3 +172,5 @@ Special thanks to the following contributors:
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
+
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish.svg?type=large&issueType=license)](https://app.fossa.com/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish?ref=badge_large&issueType=license)
