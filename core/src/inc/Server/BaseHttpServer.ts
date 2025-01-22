@@ -36,7 +36,7 @@ export type BaseHttpServerOptions = {
     realm: string;
     port?: number;
     routes?: DefaultRoute[];
-    session: BaseHttpServerOptionSession;
+    session?: BaseHttpServerOptionSession;
     publicDir?: string;
     crypt?: BaseHttpServerOptionCrypt;
 };
@@ -74,7 +74,7 @@ export class BaseHttpServer {
      * session
      * @protected
      */
-    protected readonly _session: BaseHttpServerOptionSession;
+    protected readonly _session?: BaseHttpServerOptionSession;
 
     /**
      * use crypt
@@ -100,7 +100,10 @@ export class BaseHttpServer {
         }
 
         this._realm = serverInit.realm;
-        this._session = serverInit.session;
+
+        if (serverInit.session) {
+            this._session = serverInit.session;
+        }
 
         this._server = express();
         this._server.use((req, _res, next) => {
@@ -143,20 +146,22 @@ export class BaseHttpServer {
 
         // -------------------------------------------------------------------------------------------------------------
 
-        this._server.use(
-            session({
-                secret: this._session.secret,
-                proxy: true,
-                resave: true,
-                saveUninitialized: true,
-                store: new session.MemoryStore(),
-                cookie: {
-                    path: this._session.cookie_path,
-                    secure: this._session.ssl_path !== '',
-                    maxAge: this._session.max_age
-                }
-            })
-        );
+        if (this._session) {
+            this._server.use(
+                session({
+                    secret: this._session.secret,
+                    proxy: true,
+                    resave: true,
+                    saveUninitialized: true,
+                    store: new session.MemoryStore(),
+                    cookie: {
+                        path: this._session.cookie_path,
+                        secure: this._session.ssl_path !== '',
+                        maxAge: this._session.max_age
+                    }
+                })
+            );
+        }
     }
 
     /**

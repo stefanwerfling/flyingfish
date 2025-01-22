@@ -102,12 +102,11 @@ import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
     Logger.getLogger().info('Start FlyingFish Service ...');
 
     process.on('uncaughtException', (err) => {
-        Logger.getLogger().error(err);
+        Logger.getLogger().error('FlyingFish: uncaughtException', err);
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-        Logger.getLogger().error(reason);
-        Logger.getLogger().error(promise);
+        Logger.getLogger().error('FlyingFish: unhandledRejection', reason, promise);
     });
 
     // load plugins ----------------------------------------------------------------------------------------------------
@@ -244,9 +243,6 @@ import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
             new SshController(),
             new SettingsController(),
             new CredentialController(),
-
-            new NjsAddressAccessController(),
-            new NjsAuthBasicController(),
 
             new HimHipUpdateController()
         ],

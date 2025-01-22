@@ -50,6 +50,7 @@ import {NginxServer} from '../inc/Nginx/NginxServer.js';
 import {NginxStreamServerVariables} from '../inc/Nginx/NginxStreamServerVariables.js';
 import {OpenSSL} from '../inc/OpenSSL/OpenSSL.js';
 import {SslCertProviders} from '../inc/Provider/SslCertProvider/SslCertProviders.js';
+import {NginxControlHttpServer} from '../inc/Server/NginxControlHttpServer.js';
 import {Settings} from '../inc/Settings/Settings.js';
 import {SysLogServer} from '../inc/SysLogServer/SysLogServer.js';
 
@@ -102,8 +103,8 @@ type StreamCollect = {
  */
 export class NginxService {
 
-    public static readonly INTERN_SERVER_ADDRESS_ACCESS = 'https://127.0.0.1:3000/njs/address_access';
-    public static readonly INTERN_SERVER_AUTH_BASIC = 'https://127.0.0.1:3000/njs/auth_basic';
+    public static readonly INTERN_SERVER_ADDRESS_ACCESS = '/njs/address_access';
+    public static readonly INTERN_SERVER_AUTH_BASIC = '/njs/auth_basic';
 
     public static readonly LOCATION_STATUS = '/flyingfish_status';
 
@@ -138,6 +139,12 @@ export class NginxService {
      * @member {SysLogServer|null}
      */
     private _syslog: SysLogServer | null = null;
+
+    /**
+     * Nginx privat control server for ip checks
+     * @private
+     */
+    private _control: NginxControlHttpServer | null = null;
 
     /**
      * Proxy upstream server counter. With port start from {NginxService.PORT_PROXY_UPSTREAM_BEGIN}.
@@ -221,32 +228,6 @@ export class NginxService {
                 );
             }
         }
-    }
-
-    /**
-     * Convert an ip and port to an "unix socket" path for nginx
-     * @param {string} ip
-     * @param {number} port
-     * @returns {string}
-     * @private
-     */
-    private async getUnixSocket(
-        ip: string,
-        port: number
-    ): Promise<string> {
-        const sockDirectory = path.join(Config.getInstance().get()!.nginx!.prefix, 'socks');
-
-        if (!await FileHelper.directoryExist(sockDirectory)) {
-            await FileHelper.mkdir(sockDirectory, true);
-        }
-
-        const sockUnix = path.join(sockDirectory, `${ip.replaceAll('.', '_')}_${port}.sock`);
-
-        if (await FileHelper.fileExist(sockUnix)) {
-            await FileHelper.fileDelete(sockUnix);
-        }
-
-        return sockUnix;
     }
 
     /**
@@ -886,7 +867,13 @@ export class NginxService {
 
             if (streamCollects.listen.enable_address_check) {
                 aServer.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
-                aServer.addVariable('set $ff_address_access_url', NginxService.INTERN_SERVER_ADDRESS_ACCESS);
+
+                if (this._control) {
+                    aServer.addVariable('set $ff_address_access_url', `"http://unix:${this._control.getUnixSocket()}:${NginxService.INTERN_SERVER_ADDRESS_ACCESS}"`);
+                } else {
+                    Logger.getLogger().error('Nginx control server is not init for INTERN_SERVER_ADDRESS_ACCESS');
+                }
+
                 aServer.addVariable('set $ff_listen_id', `${streamCollects.listen.id}`);
                 aServer.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
                 aServer.addVariable('js_access', 'mainstream.accessAddressStream');
@@ -1190,7 +1177,13 @@ export class NginxService {
                             const authLocation = new Location(`/auth${entry.id}`);
                             authLocation.addVariable('internal', '');
                             authLocation.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
-                            authLocation.addVariable('set $ff_auth_basic_url', NginxService.INTERN_SERVER_AUTH_BASIC);
+
+                            if (this._control) {
+                                authLocation.addVariable('set $ff_auth_basic_url', `"http://unix:${this._control.getUnixSocket()}:${NginxService.INTERN_SERVER_AUTH_BASIC}"`);
+                            } else {
+                                Logger.getLogger().error('Nginx control server is not init for INTERN_SERVER_AUTH_BASIC');
+                            }
+
                             authLocation.addVariable('set $ff_location_id', `${entry.id}`);
                             authLocation.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
                             authLocation.addVariable('set $ff_authheader', '$http_authorization');
@@ -1522,6 +1515,11 @@ export class NginxService {
         this._syslog.listen();
     }
 
+    protected async _startControl(): Promise<void> {
+        this._control = new NginxControlHttpServer();
+        await this._control.listen();
+    }
+
     /**
      * start
      */
@@ -1553,11 +1551,12 @@ export class NginxService {
         }
 
         this._startSysLog();
+        await this._startControl();
         await this._loadConfig();
         NginxServer.getInstance().start();
 
         if (NginxServer.getInstance().isRun()) {
-            Logger.getLogger().info(' Nginx server is start', {
+            Logger.getLogger().info('Nginx server is start', {
                 class: 'NginxService::start'
             });
         }

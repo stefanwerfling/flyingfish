@@ -1,4 +1,5 @@
-import {mkdir, stat, unlink, readFile, lstat, rename} from 'fs/promises';
+import {mkdir, stat, unlink, readFile, lstat, rename, chmod, access} from 'fs/promises';
+import {constants} from 'fs';
 import {Logger} from '../Logger/Logger.js';
 
 /**
@@ -42,7 +43,14 @@ export class FileHelper {
                 return true;
             }
         } catch (e) {
-            Logger.getLogger().silly('FileHelper::fileExist: exception by file: %s', file, e);
+            Logger.getLogger().silly('FileHelper::fileExist: exception stat by file: %s', file, e);
+        }
+
+        try {
+            await access(file, constants.F_OK);
+            return true;
+        } catch (e) {
+            Logger.getLogger().silly('FileHelper::fileExist: exception by access ile: %s', file, e);
         }
 
         if (allowLink) {
@@ -150,6 +158,15 @@ export class FileHelper {
         const raw = await FileHelper.readFile(jsonFile);
 
         return JSON.parse(raw);
+    }
+
+    /**
+     * Chmod a path
+     * @param {string} apath
+     * @param {number|string} mode
+     */
+    public static async chmod(apath: string, mode: string|number): Promise<void> {
+        return chmod(apath, mode);
     }
 
 }
