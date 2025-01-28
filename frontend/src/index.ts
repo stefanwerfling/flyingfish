@@ -1,23 +1,23 @@
 import {NavbarLinkButton, NavbarLinkFullsize, SidebarMenuItem, SidebarMenuTree} from 'bambooo';
-import {Login as LoginAPI} from './inc/Api/Login';
-import {User as UserAPI} from './inc/Api/User';
-import {Lang} from './inc/Lang';
-import {BasePage} from './inc/Pages/BasePage';
-import {Credential as CredentialPage} from './inc/Pages/Credential';
-import {Dashboard as DashboardPage} from './inc/Pages/Dashboard';
-import {Domains as DomainsPage} from './inc/Pages/Domains';
-import {DynDnsClients} from './inc/Pages/DynDnsClients';
-import {DynDnsServer} from './inc/Pages/DynDnsServer';
-import {IpAccess} from './inc/Pages/IpAccess';
-import {Listens as ListensPage} from './inc/Pages/Listens';
-import {Routes as RoutesPage} from './inc/Pages/Routes';
-import {Settings as SettingsPage} from './inc/Pages/Settings';
-import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat';
-import {Gateway as GatewayPage} from './inc/Pages/Gateway';
-import {Users as UsersPage} from './inc/Pages/Users';
-import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator';
-import {UtilColor} from './inc/Utils/UtilColor';
-import {UtilRedirect} from './inc/Utils/UtilRedirect';
+import {Login as LoginAPI} from './inc/Api/Login.js';
+import {User as UserAPI} from './inc/Api/User.js';
+import {Lang} from './inc/Lang.js';
+import {BasePage} from './inc/Pages/BasePage.js';
+import {Credential as CredentialPage} from './inc/Pages/Credential.js';
+import {Dashboard as DashboardPage} from './inc/Pages/Dashboard.js';
+import {Domains as DomainsPage} from './inc/Pages/Domains.js';
+import {DynDnsClients} from './inc/Pages/DynDnsClients.js';
+import {DynDnsServer} from './inc/Pages/DynDnsServer.js';
+import {IpAccess} from './inc/Pages/IpAccess.js';
+import {Listens as ListensPage} from './inc/Pages/Listens.js';
+import {Routes as RoutesPage} from './inc/Pages/Routes.js';
+import {Settings as SettingsPage} from './inc/Pages/Settings.js';
+import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat.js';
+import {Gateway as GatewayPage} from './inc/Pages/Gateway.js';
+import {Users as UsersPage} from './inc/Pages/Users.js';
+import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator.js';
+import {UtilColor} from './inc/Utils/UtilColor.js';
+import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
 
 /**
  * Main function for ready document

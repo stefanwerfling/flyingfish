@@ -8,7 +8,8 @@
   "scripts": {
     "tsc": "tsc",
     "build": "npm run tsc",
-    "install": "npm run tsc"
+    "install": "npm run tsc",
+    "npm-check-updates": "npm-check-updates"
   },
   "repository": {
     "type": "git",
@@ -24,12 +25,14 @@
   "author": "Stefan Werfling",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@types/node": "^20.14.2",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.4.0",
-    "eslint": "^8.41.0",
+    "@stylistic/eslint-plugin-ts": "^3.0.0",
+    "@types/node": "^20.17.16",
+    "@typescript-eslint/eslint-plugin": "^8.21.0",
+    "@typescript-eslint/parser": "^8.21.0",
+    "eslint": "^9.19.0",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
-    "typescript": "^4.9.5"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
     "vts": "git+https://github.com/OpenSourcePKG/vts.git"

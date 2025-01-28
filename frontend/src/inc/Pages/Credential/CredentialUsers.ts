@@ -13,11 +13,11 @@ import {
     Tr
 } from 'bambooo';
 import {Credential, CredentialUser} from 'flyingfish_schemas';
-import {Credential as CredentialAPI} from '../../Api/Credential';
-import {UnauthorizedError} from '../../Api/Error/UnauthorizedError';
-import {UtilRedirect} from '../../Utils/UtilRedirect';
-import {BasePage} from '../BasePage';
-import {CredentialUserEditModal} from './CredentialUserEditModal';
+import {Credential as CredentialAPI} from '../../Api/Credential.js';
+import {UnauthorizedError} from '../../Api/Error/UnauthorizedError.js';
+import {UtilRedirect} from '../../Utils/UtilRedirect.js';
+import {BasePage} from '../BasePage.js';
+import {CredentialUserEditModal} from './CredentialUserEditModal.js';
 
 /**
  * Credential Users page

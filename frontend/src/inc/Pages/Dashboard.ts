@@ -18,16 +18,16 @@ import {
     Tooltip,
     TooltipInfo
 } from 'bambooo';
-import moment from 'moment/moment';
+import moment from 'moment';
 import {Vts} from 'vts';
-import {Dashboard as DashboardApi} from '../Api/Dashboard';
-import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
-import {Lang} from '../Lang';
-import {UtilRedirect} from '../Utils/UtilRedirect';
-import {BasePage} from './BasePage';
-import {DashboardIpBlacklistModal} from './Dashboard/DashboardIpBlacklistModal';
-import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp';
-import {LineChartRequests} from './Dashboard/LineChartRequests';
+import {Dashboard as DashboardApi} from '../Api/Dashboard.js';
+import {UnauthorizedError} from '../Api/Error/UnauthorizedError.js';
+import {Lang} from '../Lang.js';
+import {UtilRedirect} from '../Utils/UtilRedirect.js';
+import {BasePage} from './BasePage.js';
+import {DashboardIpBlacklistModal} from './Dashboard/DashboardIpBlacklistModal.js';
+import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp.js';
+import {LineChartRequests} from './Dashboard/LineChartRequests.js';
 
 /**
  * Dashboard
@@ -142,7 +142,6 @@ export class Dashboard extends BasePage {
 
         // eslint-disable-next-line no-new
         new TooltipInfo(infoBoxPubIpBlacklist.getTextElement(), Lang.i().l('dahsboard_ip_blacklisted'));
-
 
         // init tooltips
         Tooltip.init();

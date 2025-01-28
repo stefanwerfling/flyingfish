@@ -1,4 +1,12 @@
-import {InputBottemBorderOnly2, FormGroup, Switch, Element, ModalDialog, ModalDialogType, LangText} from 'bambooo';
+import {
+    InputBottemBorderOnly2,
+    FormGroup,
+    Switch,
+    Element,
+    ModalDialog,
+    ModalDialogType,
+    LangText
+} from 'bambooo';
 
 /**
  * DomainEditModal

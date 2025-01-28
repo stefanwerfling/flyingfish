@@ -8,13 +8,13 @@ import moment from 'moment';
 import {
     BlacklistCategory,
     IpAccess as IpAccessAPI
-} from '../Api/IpAccess';
+} from '../Api/IpAccess.js';
 import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, Button, ButtonType,
     ButtonMenu, Icon, IconFa, NavTab, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
-import {BasePage} from './BasePage';
-import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal';
-import {IpAccessBlacklistOwnModal} from './IpAccess/IpAccessBlacklistOwnModal';
-import {IpAccessWhitelistModal} from './IpAccess/IpAccessWhitelistModal';
+import {BasePage} from './BasePage.js';
+import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal.js';
+import {IpAccessBlacklistOwnModal} from './IpAccess/IpAccessBlacklistOwnModal.js';
+import {IpAccessWhitelistModal} from './IpAccess/IpAccessWhitelistModal.js';
 
 /**
  * IpAccess
@@ -353,7 +353,7 @@ export class IpAccess extends BasePage {
                                 'whitelistDelete',
                                 ModalDialogType.large,
                                 'Delete whitelist entrie',
-                                `Delete this IP: "${wentry.ip}" from whitelist?`,
+                                `Should the IP ("${wentry.ip}") be removed from the whitelist?`,
                                 async(_, dialog) => {
                                     try {
                                         if (await IpAccessAPI.deleteWhitelist({
@@ -498,7 +498,7 @@ export class IpAccess extends BasePage {
                                 'blacklistDelete',
                                 ModalDialogType.large,
                                 'Delete blacklist entrie',
-                                `Delete this IP: "${bentry.ip}" from blacklist?`,
+                                `Should the IP ("${bentry.ip}") be removed from the blacklist?`,
                                 async(_, dialog) => {
                                     try {
                                         if (await IpAccessAPI.deleteBlackList({
@@ -663,7 +663,7 @@ export class IpAccess extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

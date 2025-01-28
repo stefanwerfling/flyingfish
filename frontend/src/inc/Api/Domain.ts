@@ -6,7 +6,7 @@ import {
     SchemaDomainDeleteResponse, SchemaDomainRecordDeleteResponse, SchemaDomainRecordSaveResponse,
     SchemaDomainResponse, SchemaDomainSaveResponse
 } from 'flyingfish_schemas';
-import {NetFetch} from '../Net/NetFetch';
+import {NetFetch} from '../Net/NetFetch.js';
 
 /**
  * Domain

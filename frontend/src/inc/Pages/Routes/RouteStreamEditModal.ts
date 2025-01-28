@@ -1,13 +1,13 @@
 import {ListenData, SshPortEntry, UpStream} from 'flyingfish_schemas';
-import {ListenCategory, ListenTypes} from '../../Api/Listen';
-import {NginxStreamDestinationType, NginxStreamSshR} from '../../Api/Route';
+import {ListenCategory, ListenTypes} from '../../Api/Listen.js';
+import {NginxStreamDestinationType, NginxStreamSshR} from '../../Api/Route.js';
 import {
     BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
     InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, Tooltip, TooltipInfo, Element,
     ModalDialog, ModalDialogType, LangText
 } from 'bambooo';
-import {Lang} from '../../Lang';
-import {UpstreamCard} from './UpstreamCard';
+import {Lang} from '../../Lang.js';
+import {UpstreamCard} from './UpstreamCard.js';
 
 /**
  * RouteStreamEditModal
@@ -21,7 +21,7 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _id: number|null = 0;
 
     /**
-     * type only stream
+     * type-only stream
      * @protected
      */
     protected _type: number = 0;
@@ -511,7 +511,7 @@ export class RouteStreamEditModal extends ModalDialog {
             const option = {
                 key: `${alisten.id}`,
                 value: `${alisten.name} - ${alisten.port} (${type})`,
-                style
+                style: style
             };
 
             if (alisten.type === this._type) {

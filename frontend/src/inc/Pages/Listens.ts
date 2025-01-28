@@ -1,10 +1,10 @@
 import {ListenData} from 'flyingfish_schemas';
-import {Listen as ListenAPI, ListenAddressCheckType, ListenTypes} from '../Api/Listen';
-import {Nginx as NginxAPI} from '../Api/Nginx';
+import {Listen as ListenAPI, ListenAddressCheckType, ListenTypes} from '../Api/Listen.js';
+import {Nginx as NginxAPI} from '../Api/Nginx.js';
 import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, ButtonType,
     ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
-import {BasePage} from './BasePage';
-import {ListensEditModal} from './Listens/ListensEditModal';
+import {BasePage} from './BasePage.js';
+import {ListensEditModal} from './Listens/ListensEditModal.js';
 
 /**
  * Listens
@@ -18,7 +18,7 @@ export class Listens extends BasePage {
     protected override _name: string = 'listens';
 
     /**
-     * listen dialog
+     * listen to dialog
      * @protected
      */
     protected _listenDialog: ListensEditModal;
@@ -313,7 +313,7 @@ export class Listens extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

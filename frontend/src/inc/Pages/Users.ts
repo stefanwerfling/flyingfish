@@ -1,9 +1,9 @@
 import {UserEntry} from 'flyingfish_schemas';
-import {User as UserAPI} from '../Api/User';
+import {User as UserAPI} from '../Api/User.js';
 import {ButtonClass, Card, ContentCol, ContentColSize, DialogConfirm, ButtonType, ButtonMenu, IconFa, Table,
     Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
-import {BasePage} from './BasePage';
-import {UsersEditModal} from './Users/UsersEditModal';
+import {BasePage} from './BasePage.js';
+import {UsersEditModal} from './Users/UsersEditModal.js';
 
 /**
  * Users
@@ -208,7 +208,7 @@ export class Users extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

@@ -5,8 +5,8 @@ import {
     SchemaGatewayIdentifierListResponse
 } from 'flyingfish_schemas';
 import {Vts} from 'vts';
-import {NetFetch} from '../Net/NetFetch';
-import {UnknownResponse} from './Error/UnknownResponse';
+import {NetFetch} from '../Net/NetFetch.js';
+import {UnknownResponse} from './Error/UnknownResponse.js';
 
 /**
  * GatewayIdentifier
@@ -41,7 +41,7 @@ export class GatewayIdentifier {
      */
     public static async delete(id: number): Promise<boolean> {
         const request: GatewayIdentifierDelete = {
-            id
+            id: id
         };
 
         await NetFetch.postData('/json/gatewayidentifier/delete', request, SchemaDefaultReturn);

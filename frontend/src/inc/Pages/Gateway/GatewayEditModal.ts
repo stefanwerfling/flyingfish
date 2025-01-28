@@ -1,4 +1,4 @@
-import {UpnpNat} from '../../Api/UpnpNat';
+import {UpnpNat} from '../../Api/UpnpNat.js';
 import {
     DialogInfo, Form, FormGroup, FormGroupButton, InputBottemBorderOnly2, InputType, Icon, IconFa,
     Element, ModalDialog, ModalDialogType, LangText

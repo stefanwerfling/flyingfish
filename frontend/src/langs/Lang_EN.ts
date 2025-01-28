@@ -1,4 +1,4 @@
-import {LangDefine} from '../inc/Lang/LangDefine';
+import {LangDefine} from '../inc/Lang/LangDefine.js';
 
 /**
  * Lang_EN
@@ -13,7 +13,7 @@ export class Lang_EN implements LangDefine {
 
         dahsboard_ip_blacklisted: 'The public ip is checked with rDNS query on common providers. This information is useful if you run an email server.',
 
-        listen_stream_proxytimeout: 'Sets the <i>timeout</i> between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.',
+        listen_stream_proxytimeout: 'Set the <i>timeout</i> between two successive read or write operations on client or proxied server connections. If no data is transmitted within this time, the connection is closed.',
         listen_stream_proxyconnecttimeout: 'Defines a timeout for establishing a connection with a proxied server.',
 
         route_default_route: 'The default routes cannot be edited. They serve as a visual representation of the route the stream takes to the proxy server.',

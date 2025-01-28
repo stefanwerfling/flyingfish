@@ -23,20 +23,20 @@ import {
 } from 'bambooo';
 import {ListenData, RouteHttpSave, RouteStreamSave} from 'flyingfish_schemas';
 import {Vts} from 'vts';
-import {Listen as ListenAPI, ListenCategory} from '../Api/Listen';
-import {Nginx as NginxAPI} from '../Api/Nginx';
+import {Listen as ListenAPI, ListenCategory} from '../Api/Listen.js';
+import {Nginx as NginxAPI} from '../Api/Nginx.js';
 import {
     NginxLocationDestinationTypes,
     NginxStreamDestinationType,
     NginxStreamSshR,
     Route as RouteAPI
-} from '../Api/Route';
-import {Ssh as SshAPI} from '../Api/Ssh';
-import {Ssl as SslAPI} from '../Api/Ssl';
-import {Lang} from '../Lang';
-import {BasePage} from './BasePage';
-import {RouteHttpEditModal} from './Routes/RouteHttpEditModal';
-import {RouteStreamEditModal} from './Routes/RouteStreamEditModal';
+} from '../Api/Route.js';
+import {Ssh as SshAPI} from '../Api/Ssh.js';
+import {Ssl as SslAPI} from '../Api/Ssl.js';
+import {Lang} from '../Lang.js';
+import {BasePage} from './BasePage.js';
+import {RouteHttpEditModal} from './Routes/RouteHttpEditModal.js';
+import {RouteStreamEditModal} from './Routes/RouteStreamEditModal.js';
 
 /**
  * Routes Page
@@ -915,7 +915,7 @@ export class Routes extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

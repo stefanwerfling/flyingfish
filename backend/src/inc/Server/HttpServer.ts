@@ -53,13 +53,6 @@ export class HttpServer extends BaseHttpServer {
                     if (SchemaRequestData.validate(request, []) && Session.isUserLogin(request.session)) {
                         return true;
                     }
-                } else if (request.url.indexOf('/njs/') === 0) {
-                    const secret = request.header('secret') ?? '';
-                    const ssecret = Config.getInstance().get()!.nginx!.secret ?? '';
-
-                    if (secret === ssecret) {
-                        return true;
-                    }
                 } else if (request.url.indexOf('/himhip/') === 0) {
                     const secret = request.header('secret') ?? '';
                     const ssecret = Config.getInstance().get()!.himhip!.secret ?? '';
@@ -71,17 +64,15 @@ export class HttpServer extends BaseHttpServer {
 
                 return false;
             },
-            max: async(request) => {
+            limit: async(request) => {
                 if (request.url.indexOf('/json/') === 0) {
                     return 100;
-                } else if (request.url.indexOf('/njs/') === 0) {
-                    return -1;
                 } else if (request.url.indexOf('/himhip/') === 0) {
-                    return -1;
+                    return Number.MAX_SAFE_INTEGER;
                 }
 
                 // File access for html/js/img etc. allow ever.
-                return 0;
+                return Number.MAX_SAFE_INTEGER;
             }
         });
 

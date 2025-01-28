@@ -1,5 +1,5 @@
-import {Lang} from './inc/Lang';
-import {Login} from './inc/Api/Login';
+import {Lang} from './inc/Lang.js';
+import {Login} from './inc/Api/Login.js';
 
 /**
  * Main function for ready document

@@ -13,12 +13,12 @@ import {
     Tr
 } from 'bambooo';
 import {DynDnsServerData} from 'flyingfish_schemas';
-import moment from 'moment/moment';
-import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
-import {DynDnsServer as DynDnsServerAPI} from '../Api/DynDnsServer';
-import {UtilRedirect} from '../Utils/UtilRedirect';
-import {BasePage} from './BasePage';
-import {DynDnsServerEditModal} from './DynDnsServer/DynDnsServerEditModal';
+import moment from 'moment';
+import {UnauthorizedError} from '../Api/Error/UnauthorizedError.js';
+import {DynDnsServer as DynDnsServerAPI} from '../Api/DynDnsServer.js';
+import {UtilRedirect} from '../Utils/UtilRedirect.js';
+import {BasePage} from './BasePage.js';
+import {DynDnsServerEditModal} from './DynDnsServer/DynDnsServerEditModal.js';
 
 /**
  * DynDnsServer
@@ -270,7 +270,7 @@ export class DynDnsServer extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

@@ -1,12 +1,12 @@
 import {GatewayIdentifierEntry, ListenData, UpnpNatSaveRequest} from 'flyingfish_schemas';
 import moment from 'moment';
-import {GatewayIdentifier as GatewayIdentifierAPI} from '../Api/GatewayIdentifier';
-import {Listen as ListenAPI} from '../Api/Listen';
-import {NatStatus, UpnpNat as UpnpNatAPI} from '../Api/UpnpNat';
+import {GatewayIdentifier as GatewayIdentifierAPI} from '../Api/GatewayIdentifier.js';
+import {Listen as ListenAPI} from '../Api/Listen.js';
+import {NatStatus, UpnpNat as UpnpNatAPI} from '../Api/UpnpNat.js';
 import {Badge, BadgeType, Card, Circle, CircleColor, ContentCol, ContentColSize, DialogConfirm, ButtonType,
     ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
-import {BasePage} from './BasePage';
-import {UpnpNatEditModal} from './UpnpNat/UpnpNatEditModal';
+import {BasePage} from './BasePage.js';
+import {UpnpNatEditModal} from './UpnpNat/UpnpNatEditModal.js';
 
 /**
  * UpnpNat Page
@@ -325,7 +325,7 @@ export class UpnpNat extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

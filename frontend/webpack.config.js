@@ -27,7 +27,10 @@ module.exports = {
 
     // file resolutions
     resolve: {
-        extensions: ['.ts', '.js']
+        extensions: ['.ts', '.js'],
+        extensionAlias: {
+            '.js': ['.js', '.ts'],
+        },
     },
 
     // loaders

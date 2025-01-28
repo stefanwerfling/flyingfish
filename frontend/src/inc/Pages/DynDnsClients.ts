@@ -1,15 +1,15 @@
 import {DynDnsClientData} from 'flyingfish_schemas';
 import moment from 'moment';
-import {Domain} from '../Api/Domain';
-import {DynDnsClient as DynDnsClientAPI} from '../Api/DynDnsClient';
-import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
+import {Domain} from '../Api/Domain.js';
+import {DynDnsClient as DynDnsClientAPI} from '../Api/DynDnsClient.js';
+import {UnauthorizedError} from '../Api/Error/UnauthorizedError.js';
 import {
     Badge, BadgeType, ButtonClass, Card, Circle, CircleColor, ContentCol, ContentColSize, ContentRow,
     DialogConfirm, ButtonType, ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink, ColumnContent
 } from 'bambooo';
-import {UtilRedirect} from '../Utils/UtilRedirect';
-import {BasePage} from './BasePage';
-import {DynDnsClientEditModal} from './DynDnsClient/DynDnsClientEditModal';
+import {UtilRedirect} from '../Utils/UtilRedirect.js';
+import {BasePage} from './BasePage.js';
+import {DynDnsClientEditModal} from './DynDnsClient/DynDnsClientEditModal.js';
 
 /**
  * DynDnsClients Page

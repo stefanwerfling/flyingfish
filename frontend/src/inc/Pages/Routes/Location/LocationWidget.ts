@@ -10,11 +10,11 @@ import {
     NavTab,
     SelectBottemBorderOnly2, Switch, Tooltip, TooltipInfo
 } from 'bambooo';
-import {Location, SshPortEntry} from 'flyingfish_schemas/dist/src';
-import {NginxLocationDestinationTypes} from '../../../Api/Route';
-import {Lang} from '../../../Lang';
-import {UtilNumber} from '../../../Utils/UtilNumber';
-import {LocationListWidget} from './LocationListWidget';
+import {Location, SshPortEntry} from 'flyingfish_schemas';
+import {NginxLocationDestinationTypes} from '../../../Api/Route.js';
+import {Lang} from '../../../Lang.js';
+import {UtilNumber} from '../../../Utils/UtilNumber.js';
+import {LocationListWidget} from './LocationListWidget.js';
 
 export class LocationWidget extends Card implements ICollectionEntryWidget {
 
@@ -421,7 +421,7 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
 
     /**
      * setSshListens
-     * @param listens
+     * @param {SshPortEntry[]} listens
      */
     public setSshListens(listens: SshPortEntry[]): void {
         this._selectSshListen.clearValues();
@@ -622,7 +622,7 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
     }
 
     /**
-     * Return all form data to location object
+     * Return all form data to a location object
      * @returns {Location}
      */
     public getLocation(): Location {

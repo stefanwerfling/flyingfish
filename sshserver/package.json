@@ -16,19 +16,21 @@
   "author": "Stefan Werfling",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@types/bcrypt": "^5.0.0",
-    "@types/node": "^20.14.2",
+    "@types/bcrypt": "^5.0.2",
     "@types/ssh2": "^0.5.52",
     "@types/uuid": "^9.0.8",
     "@types/node-forge": "git+https://github.com/stefanwerfling/node-forge-types.git",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.4.0",
-    "eslint": "^8.41.0",
+    "@stylistic/eslint-plugin-ts": "^3.0.0",
+    "@types/node": "^20.17.16",
+    "@typescript-eslint/eslint-plugin": "^8.21.0",
+    "@typescript-eslint/parser": "^8.21.0",
+    "eslint": "^9.19.0",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
-    "typescript": "^4.9.5"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
-    "bcrypt": "^5.0.1",
+    "bcrypt": "^5.1.1",
     "delay": "^5.0.0",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",

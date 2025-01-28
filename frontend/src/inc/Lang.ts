@@ -1,5 +1,5 @@
-import {LangDefine} from './Lang/LangDefine';
-import {Lang_EN} from '../langs/Lang_EN';
+import {LangDefine} from './Lang/LangDefine.js';
+import {Lang_EN} from '../langs/Lang_EN.js';
 
 /**
  * Lang
@@ -10,7 +10,7 @@ export class Lang {
     private static _instance: Lang | null = null;
 
     private _defaultLang: LangDefine;
-    private _lang: LangDefine;
+    private readonly _lang: LangDefine;
 
     /**
      * init

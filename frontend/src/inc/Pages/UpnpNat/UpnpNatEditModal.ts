@@ -1,6 +1,6 @@
 import {GatewayIdentifierEntry, ListenData} from 'flyingfish_schemas';
-import {ListenTypes} from '../../Api/Listen';
-import {UpnpNat} from '../../Api/UpnpNat';
+import {ListenTypes} from '../../Api/Listen.js';
+import {UpnpNat} from '../../Api/UpnpNat.js';
 import {
     DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorderOnly2, InputType,
     SelectBottemBorderOnly2, Switch, Icon, IconFa, Element, ModalDialog, ModalDialogType, LangText

@@ -13,12 +13,12 @@ import {
     Tr
 } from 'bambooo';
 import {Credential as CredentialData, CredentialSchemaTypes} from 'flyingfish_schemas';
-import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
-import {UtilRedirect} from '../Utils/UtilRedirect';
-import {BasePage} from './BasePage';
-import {Credential as CredentialAPI} from '../Api/Credential';
-import {CredentialEditModal} from './Credential/CredentialEditModal';
-import {CredentialUsers} from './Credential/CredentialUsers';
+import {UnauthorizedError} from '../Api/Error/UnauthorizedError.js';
+import {UtilRedirect} from '../Utils/UtilRedirect.js';
+import {BasePage} from './BasePage.js';
+import {Credential as CredentialAPI} from '../Api/Credential.js';
+import {CredentialEditModal} from './Credential/CredentialEditModal.js';
+import {CredentialUsers} from './Credential/CredentialUsers.js';
 
 /**
  * Credential Page
@@ -228,7 +228,7 @@ export class Credential extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

@@ -1,9 +1,9 @@
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import {Schema, SchemaErrors, Vts} from 'vts';
-import {InternalError} from '../Error/InternalError';
-import {SchemaError} from '../Error/SchemaError';
-import {UnauthorizedError} from '../Error/UnauthorizedError';
-import {UnknownResponse} from '../Error/UnknownResponse';
+import {InternalError} from '../Error/InternalError.js';
+import {SchemaError} from '../Error/SchemaError.js';
+import {UnauthorizedError} from '../Error/UnauthorizedError.js';
+import {UnknownResponse} from '../Error/UnknownResponse.js';
 
 /**
  * Response

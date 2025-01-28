@@ -8,8 +8,8 @@ const GetGoogleFonts = require('get-google-fonts');
 const webpack = require('webpack');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const webpackConfig = require('./webpack.config.js');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
-
 
 const currentPath = './';
 const collectionPath = './../';

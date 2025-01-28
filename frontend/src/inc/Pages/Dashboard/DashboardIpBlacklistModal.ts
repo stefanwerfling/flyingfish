@@ -11,7 +11,7 @@ import {
     ButtonMenu,
     ButtonType, ButtonMenuPosition, IconFa
 } from 'bambooo';
-import {Dashboard as DashboardAPI} from '../../Api/Dashboard';
+import {Dashboard as DashboardAPI} from '../../Api/Dashboard.js';
 
 /**
  * DashboardIpBlacklistModal

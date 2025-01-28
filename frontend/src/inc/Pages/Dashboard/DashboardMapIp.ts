@@ -1,16 +1,16 @@
 import {View, Map, Feature, Overlay} from 'ol';
-import {FeatureLike} from 'ol/Feature';
-import {Point} from 'ol/geom';
-import TileLayer from 'ol/layer/Tile';
-import VectorLayer from 'ol/layer/Vector';
-import {fromLonLat} from 'ol/proj';
-import {OSM} from 'ol/source';
-import VectorSource from 'ol/source/Vector';
+import {FeatureLike} from 'ol/Feature.js';
+import {Point} from 'ol/geom.js';
+import TileLayer from 'ol/layer/Tile.js';
+import VectorLayer from 'ol/layer/Vector.js';
+import {fromLonLat} from 'ol/proj.js';
+import {OSM} from 'ol/source.js';
+import VectorSource from 'ol/source/Vector.js';
 import {unByKey} from 'ol/Observable.js';
 import {getVectorContext} from 'ol/render.js';
 import {easeOut} from 'ol/easing.js';
 import {Element} from 'bambooo';
-import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
+import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style.js';
 import {Vts} from 'vts';
 
 /**

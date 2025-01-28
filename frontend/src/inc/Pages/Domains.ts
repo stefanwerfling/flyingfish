@@ -28,11 +28,11 @@ import {
 import {DomainData} from 'flyingfish_schemas';
 import moment from 'moment';
 import {Vts} from 'vts';
-import {Domain as DomainAPI} from '../Api/Domain';
-import {Nginx as NginxAPI} from '../Api/Nginx';
-import {BasePage} from './BasePage';
-import {DomainEditModal} from './Domains/DomainEditModal';
-import {DomainRecordEditModal} from './Domains/DomainRecordEditModal';
+import {Domain as DomainAPI} from '../Api/Domain.js';
+import {Nginx as NginxAPI} from '../Api/Nginx.js';
+import {BasePage} from './BasePage.js';
+import {DomainEditModal} from './Domains/DomainEditModal.js';
+import {DomainRecordEditModal} from './Domains/DomainRecordEditModal.js';
 
 /**
  * Domains
@@ -474,6 +474,7 @@ export class Domains extends BasePage {
                                 // eslint-disable-next-line no-new
                                 new Badge(typeTd.getElement(), `${typeName}`, bageType);
 
+                                // eslint-disable-next-line no-useless-assignment
                                 let className = '';
 
                                 switch (record.class) {
@@ -609,7 +610,7 @@ export class Domains extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

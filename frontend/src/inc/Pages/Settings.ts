@@ -1,8 +1,8 @@
 import {SettingsList} from 'flyingfish_schemas';
-import {Nginx as NginxAPI} from '../Api/Nginx';
-import {Settings as SettingsAPI} from '../Api/Settings';
+import {Nginx as NginxAPI} from '../Api/Nginx.js';
+import {Settings as SettingsAPI} from '../Api/Settings.js';
 import {Card, ContentCol, ContentColSize, ContentRow, FormGroup, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2} from 'bambooo';
-import {BasePage} from './BasePage';
+import {BasePage} from './BasePage.js';
 
 /**
  * Settings
@@ -150,7 +150,7 @@ export class Settings extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

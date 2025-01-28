@@ -1,5 +1,5 @@
 import {LoginRequest, SchemaDefaultReturn, SchemaIsLogin} from 'flyingfish_schemas';
-import {NetFetch} from '../Net/NetFetch';
+import {NetFetch} from '../Net/NetFetch.js';
 
 /**
  * Login

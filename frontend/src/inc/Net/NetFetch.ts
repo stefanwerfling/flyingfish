@@ -1,7 +1,7 @@
 import {DefaultReturn} from 'flyingfish_schemas';
 import {Schema} from 'vts';
-import {UnknownResponse} from '../Api/Error/UnknownResponse';
-import {Response} from '../Api/Response/Response';
+import {UnknownResponse} from '../Api/Error/UnknownResponse.js';
+import {Response} from '../Api/Response/Response.js';
 
 /**
  * NetFetch

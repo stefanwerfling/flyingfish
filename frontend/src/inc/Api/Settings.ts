@@ -1,7 +1,7 @@
 import {SchemaDefaultReturn, SchemaSettingsResponse, SettingsList} from 'flyingfish_schemas';
 import {Vts} from 'vts';
-import {NetFetch} from '../Net/NetFetch';
-import {UnknownResponse} from './Error/UnknownResponse';
+import {NetFetch} from '../Net/NetFetch.js';
+import {UnknownResponse} from './Error/UnknownResponse.js';
 
 /**
  * Settings

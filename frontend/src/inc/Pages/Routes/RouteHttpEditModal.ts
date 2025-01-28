@@ -28,11 +28,11 @@ import {
 } from 'bambooo';
 import {ListenData, Location, ProviderEntry, RouteVariable, SshPortEntry} from 'flyingfish_schemas';
 import moment from 'moment';
-import {ListenCategory, ListenTypes} from '../../Api/Listen';
-import {NginxHTTPVariables} from '../../Api/Route';
-import {Ssl as SslAPI} from '../../Api/Ssl';
-import {Lang} from '../../Lang';
-import {LocationListWidget} from './Location/LocationListWidget';
+import {ListenCategory, ListenTypes} from '../../Api/Listen.js';
+import {NginxHTTPVariables} from '../../Api/Route.js';
+import {Ssl as SslAPI} from '../../Api/Ssl.js';
+import {Lang} from '../../Lang.js';
+import {LocationListWidget} from './Location/LocationListWidget.js';
 
 /**
  * RouteHttpEditModal
@@ -454,7 +454,7 @@ export class RouteHttpEditModal extends ModalDialog {
             const option = {
                 key: `${alisten.id}`,
                 value: `${alisten.name} - ${alisten.port} (${type})`,
-                style
+                style: style
             };
 
             if (alisten.type === this._type) {

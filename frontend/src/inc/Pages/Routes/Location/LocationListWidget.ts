@@ -1,8 +1,8 @@
 import {CardBodyType, CardLine, CardType, CollectionCardWidget} from 'bambooo';
-import {CollectionWidgetOnUpdate} from 'bambooo/src/v1/Widget/Collection/CollectionWidget';
-import {Location} from 'flyingfish_schemas/dist/src';
-import {NginxLocationDestinationTypes} from '../../../Api/Route';
-import {LocationWidget} from './LocationWidget';
+import {CollectionWidgetOnUpdate} from 'bambooo/src/v1/Widget/Collection/CollectionWidget.js';
+import {Location} from 'flyingfish_schemas';
+import {NginxLocationDestinationTypes} from '../../../Api/Route.js';
+import {LocationWidget} from './LocationWidget.js';
 
 export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
 
@@ -14,13 +14,13 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
      */
     public constructor(element: Element|any, onUpdate?: CollectionWidgetOnUpdate<LocationWidget>, editable: boolean = false) {
         super({
-            element,
-            editable,
+            element: element,
+            editable: editable,
             entryClass: LocationWidget,
             bodyType: CardBodyType.none,
             cardType: CardType.none,
             cardLine: CardLine.none,
-            onUpdate
+            onUpdate: onUpdate
         });
 
         this._element.setTitle('Location list');

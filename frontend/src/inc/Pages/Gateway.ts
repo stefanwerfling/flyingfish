@@ -1,10 +1,10 @@
 import {GatewayIdentifierEntry} from 'flyingfish_schemas';
-import {GatewayIdentifier as GatewayIdentifierAPI} from '../Api/GatewayIdentifier';
-import {UpnpNat} from '../Api/UpnpNat';
+import {GatewayIdentifier as GatewayIdentifierAPI} from '../Api/GatewayIdentifier.js';
+import {UpnpNat} from '../Api/UpnpNat.js';
 import {Badge, BadgeType, Card, Circle, CircleColor, ContentCol, ContentColSize, DialogConfirm, ButtonType,
     ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
-import {BasePage} from './BasePage';
-import {GatewayEditModal} from './Gateway/GatewayEditModal';
+import {BasePage} from './BasePage.js';
+import {GatewayEditModal} from './Gateway/GatewayEditModal.js';
 
 /**
  * Gateway

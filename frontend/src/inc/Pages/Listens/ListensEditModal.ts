@@ -1,10 +1,10 @@
 import {ListenVariable} from 'flyingfish_schemas';
-import {ListenAddressCheckType, ListenTypes, NginxListenStreamServerVariables} from '../../Api/Listen';
+import {ListenAddressCheckType, ListenTypes, NginxListenStreamServerVariables} from '../../Api/Listen.js';
 import {
     Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element, NavTab,
     ModalDialog, ModalDialogType, Tooltip, TooltipInfo, LangText
 } from 'bambooo';
-import {Lang} from '../../Lang';
+import {Lang} from '../../Lang.js';
 
 /**
  * ListensEditModal
