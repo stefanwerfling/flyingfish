@@ -3,8 +3,10 @@ import moment from 'moment';
 import {Domain} from '../Api/Domain';
 import {DynDnsClient as DynDnsClientAPI} from '../Api/DynDnsClient';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError';
-import {Badge, BadgeType, ButtonClass, Card, Circle, CircleColor, ContentCol, ContentColSize, ContentRow,
-    DialogConfirm, ButtonType, ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
+import {
+    Badge, BadgeType, ButtonClass, Card, Circle, CircleColor, ContentCol, ContentColSize, ContentRow,
+    DialogConfirm, ButtonType, ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink, ColumnContent
+} from 'bambooo';
 import {UtilRedirect} from '../Utils/UtilRedirect';
 import {BasePage} from './BasePage';
 import {DynDnsClientEditModal} from './DynDnsClient/DynDnsClientEditModal';
@@ -88,7 +90,10 @@ export class DynDnsClients extends BasePage {
                         title: ''
                     },
                     domains: this._dynDnsClientDialog.getDomainsSelected(),
-                    main_domain: this._dynDnsClientDialog.getMainDomainSelected(),
+                    main_domain: {
+                        id: this._dynDnsClientDialog.getMainDomainSelected(),
+                        name: ''
+                    },
                     username: this._dynDnsClientDialog.getUsername(),
                     password: this._dynDnsClientDialog.getPassword(),
                     update_domain: this._dynDnsClientDialog.getUpdateDomains(),
@@ -139,7 +144,10 @@ export class DynDnsClients extends BasePage {
         new Th(trhead, 'Id');
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Domains');
+        new Th(trhead, new ColumnContent([
+            'Main Domain',
+            'Update Domain'
+        ]));
 
         // eslint-disable-next-line no-new
         new Th(trhead, 'Provider');
@@ -180,10 +188,24 @@ export class DynDnsClients extends BasePage {
                             'white-space': 'normal'
                         });
 
-                        for (const domain of entry.domains) {
+                        if (entry.main_domain) {
                             // eslint-disable-next-line no-new
-                            new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
-                            domainsTd.append('&nbsp;');
+                            new Badge(domainsTd, `${entry.main_domain.name}`, BadgeType.dark);
+                        } else {
+                            // eslint-disable-next-line no-new
+                            new Badge(domainsTd, '<none>', BadgeType.dark);
+                        }
+
+                        domainsTd.append('<br>');
+
+                        if (entry.update_domain) {
+                            for (const domain of entry.domains) {
+                                // eslint-disable-next-line no-new
+                                new Badge(domainsTd, `${domain.name}`, BadgeType.secondary);
+                                domainsTd.append('&nbsp;');
+                            }
+                        } else {
+                            domainsTd.append('disabled');
                         }
 
                         // eslint-disable-next-line no-new
@@ -249,7 +271,10 @@ export class DynDnsClients extends BasePage {
                                 this._dynDnsClientDialog.setDomainsSelected(entry.domains);
                                 this._dynDnsClientDialog.setUsername(entry.username);
                                 this._dynDnsClientDialog.setUpdateDomains(entry.update_domain);
-                                this._dynDnsClientDialog.setMainDomainSelected(entry.main_domain);
+
+                                if (entry.main_domain) {
+                                    this._dynDnsClientDialog.setMainDomainSelected(entry.main_domain.id);
+                                }
                             },
                             IconFa.edit
                         );

@@ -37,7 +37,7 @@ export class NginxControlHttpServer extends BaseHttpServer {
 
     public constructor() {
         super({
-            realm: 'FlyingFish Nginx controll',
+            realm: 'FlyingFish Nginx control',
             routes: [
                 new NjsAddressAccessController(),
                 new NjsAuthBasicController(),
@@ -54,7 +54,7 @@ export class NginxControlHttpServer extends BaseHttpServer {
 
         const server = app.listen(this._unixPath, () => {
             Logger.getLogger().info(
-                'NginxControllHttpServer::listen: %s listening on the socket %s',
+                'NginxControlHttpServer::listen: %s listening on the socket %s',
                 this._realm,
                 this._unixPath
             );
@@ -62,13 +62,13 @@ export class NginxControlHttpServer extends BaseHttpServer {
             FileHelper.chmod(this._unixPath, 0o777);
 
             Logger.getLogger().info(
-                'NginxControllHttpServer::listen: set chmod 777 to socket %s',
+                'NginxControlHttpServer::listen: set chmod 777 to socket %s',
                 this._unixPath
             );
         });
 
         server.on('error', (err) => {
-            Logger.getLogger().error('NginxControllHttpServer::error', err);
+            Logger.getLogger().error('NginxControlHttpServer::error', err);
         });
     }
 

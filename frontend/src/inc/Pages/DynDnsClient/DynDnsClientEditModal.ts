@@ -82,10 +82,10 @@ export class DynDnsClientEditModal extends ModalDialog {
 
         const rowOptions = new FormRow(bodyCard);
 
-        const groupUpdateDomains = new FormGroup(rowOptions.createCol(6), 'Update Domains');
+        const groupUpdateDomains = new FormGroup(rowOptions.createCol(6), 'Enable update Domains');
         this._switchUpdateDomains = new Switch(groupUpdateDomains, 'updateDomains');
 
-        const groupDomains = new FormGroup(bodyCard, 'Domains');
+        const groupDomains = new FormGroup(bodyCard, 'Update Domains');
         this._multipleDomains = new Multiple(groupDomains);
         groupDomains.hide();
 

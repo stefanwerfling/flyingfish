@@ -50,10 +50,21 @@ export class List {
                     }
                 }
 
+                let mainDomain: DynDnsClientDomain|null = null;
+
+                const mainDomaindb = await DomainServiceDB.getInstance().findOne(client.main_domain_id);
+
+                if (mainDomaindb) {
+                    mainDomain = {
+                        id: mainDomaindb.id,
+                        name: mainDomaindb.domainname
+                    };
+                }
+
                 list.push({
                     id: client.id,
                     domains: domains,
-                    main_domain: client.main_domain_id,
+                    main_domain: mainDomain,
                     provider: {
                         name: providerName,
                         title: providerTitle

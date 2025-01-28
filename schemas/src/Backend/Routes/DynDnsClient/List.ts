@@ -20,7 +20,7 @@ export type DynDnsClientDomain = ExtractSchemaResultType<typeof SchemaDynDnsClie
 export const SchemaDynDnsClientData = Vts.object({
     id: Vts.number(),
     domains: Vts.array(SchemaDynDnsClientDomain),
-    main_domain: Vts.number(),
+    main_domain: Vts.or([SchemaDynDnsClientDomain, Vts.null()]),
     provider: SchemaProviderEntry,
     username: Vts.string(),
     password: Vts.optional(Vts.string()),

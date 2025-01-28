@@ -35,6 +35,10 @@ export class Save {
 
         client.update_domain = data.update_domain;
 
+        if (data.main_domain !== null) {
+            client.main_domain_id = data.main_domain.id;
+        }
+
         client = await DynDnsClientServiceDB.getInstance().save(client);
 
         if (client) {
