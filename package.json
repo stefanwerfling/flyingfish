@@ -26,7 +26,8 @@
     "vpn"
   ],
   "scripts": {
-    "npm-check-updates": "npm-check-updates"
+    "npm-check-updates": "cd ./schemas/ && npm-check-updates && cd ../core/ && npm-check-updates && cd ../backend/ && npm-check-updates && cd ../frontend/ && npm-check-updates && cd ../ddnsserver/ && npm-check-updates && cd ../himhip/ && npm-check-updates && cd ../nginx/ && npm-check-updates && cd ../plugins/ && npm-check-updates && cd ../sshserver/ && npm-check-updates",
+    "compile": "cd ./schemas/ && npm run compile && cd ../core/ && npm run compile && cd ../backend/ && npm run compile && cd ../frontend/ && gulp default && cd ../ddnsserver/ && npm run compile && cd ../himhip/ && npm run compile && cd ../nginx/ && npm run compile && cd ../plugins/ && npm run compile && cd ../sshserver/ && npm run compile"
   },
   "devDependencies": {
     "husky": "^9.1.7",

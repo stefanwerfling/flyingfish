@@ -6,9 +6,9 @@
   "types": "src/index.ts",
   "type": "module",
   "scripts": {
-    "tsc": "tsc",
-    "build": "npm run tsc",
-    "install": "npm run tsc"
+    "build": "npm run compile",
+    "compile": "tsc --project tsconfig.json",
+    "install": "npm run compile"
   },
   "repository": {
     "type": "git",

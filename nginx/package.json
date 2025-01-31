@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "tsc": "./node_modules/typescript/bin/tsc",
-    "postinstall": "npm run tsc"
+    "postinstall": "npm run tsc",
+    "npm-check-updates": "npm-check-updates",
+    "build": "npm run compile",
+    "compile": "tsc --project tsconfig.json"
   },
   "devDependencies": {
     "njs-types": "^0.8.2",

@@ -58,7 +58,7 @@ export class UpnpNat {
      */
     public static async delete(id: number): Promise<boolean> {
         const request: UpnpNatDeleteRequest = {
-            id
+            id: id
         };
 
         await NetFetch.postData('/json/upnpnat/delete', request, SchemaDefaultReturn);

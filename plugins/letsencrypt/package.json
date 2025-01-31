@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "npm-check-updates": "npm-check-updates",
-    "tsc": "tsc",
-    "build": "npm run tsc"
+    "build": "npm run compile",
+    "compile": "tsc --project tsconfig.json",
+    "install": "npm run compile"
   },
   "repository": {
     "type": "git",

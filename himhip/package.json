@@ -38,9 +38,10 @@
     "url": "git+https://github.com/stefanwerfling/flyingfish.git/himhip"
   },
   "scripts": {
-    "build": "npm run tsc",
     "npm-check-updates": "npm-check-updates",
-    "tsc": "tsc"
+    "build": "npm run compile",
+    "compile": "tsc --project tsconfig.json",
+    "install": "npm run compile"
   },
   "type": "module",
   "version": "1.0.0"

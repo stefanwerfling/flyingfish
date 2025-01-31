@@ -38,7 +38,6 @@ export enum NginxListenStreamServerVariables {
     proxy_connect_timeout = 'proxy_connect_timeout'
 }
 
-
 /**
  * Listen
  */

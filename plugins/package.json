@@ -19,6 +19,10 @@
     "letsencrypt"
   ],
   "scripts": {
-    "npm-check-updates": "npm-check-updates"
+    "npm-check-updates": "cd ./demoplugin/ && npm-check-updates && cd ../letsencrypt/ && npm-check-updates",
+    "compile": "cd ./demoplugin/ && npm run compile && cd ../letsencrypt/ && npm run compile"
+  },
+  "devDependencies": {
+    "npm-check-updates": "^17.1.14"
   }
 }
