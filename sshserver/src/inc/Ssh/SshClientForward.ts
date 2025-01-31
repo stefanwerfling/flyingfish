@@ -10,7 +10,7 @@ export interface ISshClientForward {
     /**
      * start
      */
-    start(accept?: () => ServerChannel, reject?: () => boolean): void;
+    start(accept?: () => ServerChannel, reject?: () => void): void;
 
     /**
      * close
@@ -58,7 +58,7 @@ export class SshClientForward implements ISshClientForward {
      * @param reject
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public start(accept?: () => ServerChannel, reject?: () => boolean): void {
+    public start(accept?: () => ServerChannel, reject?: () => void): void {
         Logger.getLogger().error('SshClientForward::start: Please overwrite start!');
     }
 

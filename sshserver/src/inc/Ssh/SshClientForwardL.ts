@@ -35,7 +35,7 @@ export class SshClientForwardL extends SshClientForward {
      * @param accept
      * @param reject
      */
-    public start(accept?: () => ServerChannel|undefined, reject?: () => boolean|undefined): void {
+    public start(accept?: () => ServerChannel|undefined, reject?: () => void): void {
         this._client.logToClient('SshClientForwardL::start: start');
 
         if (accept && reject) {

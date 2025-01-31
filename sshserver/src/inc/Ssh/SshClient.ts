@@ -206,11 +206,7 @@ export class SshClient {
             self._request(accept, reject, name, info);
         });
 
-        this._clientConnection.on('tcpip', (
-            accept: () => ServerChannel,
-            reject: () => boolean,
-            info: TcpipRequestInfo
-        ) => {
+        this._clientConnection.on('tcpip', (accept, reject, info) => {
             self._tcpip(accept, reject, info);
         });
     }
@@ -322,7 +318,7 @@ export class SshClient {
      */
     public _tcpip(
         accept: () => ServerChannel,
-        reject: () => boolean,
+        reject: () => void,
         info: TcpipRequestInfo
     ): void {
         switch (this._forwardPort?.type) {

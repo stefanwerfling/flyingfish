@@ -45,7 +45,7 @@ export class SshServer {
             }
 
             if (!fs.existsSync(hostKeyRsaFile)) {
-                Logger.getLogger().info(`SshServer::getInstance: Keyfile not found, create new: ${hostKeyRsaFile}`);
+                Logger.getLogger().info('SshServer::getInstance: Keyfile not found, create new: %s', hostKeyRsaFile);
 
                 if (!await SshKeygen.create2(hostKeyRsaFile)) {
                     Logger.getLogger().error('SshServer::getInstance: Keyfile can not create!');
@@ -102,13 +102,13 @@ export class SshServer {
      * @protected
      */
     public _onClientConnect(client: Connection, info: ClientInfo): void {
-        console.log('SshServer::_onConnection: Client connected!');
+        Logger.getLogger().info('SshServer::_onConnection: Client connected!');
 
         const aclient = new SshClient(client, info);
         this._clients.set(aclient.getIdent(), aclient);
 
-        client.on('close', (hadError) => {
-            aclient.close(hadError);
+        client.on('close', () => {
+            aclient.close(false);
             this._clients.delete(aclient.getIdent());
         });
     }
@@ -117,8 +117,12 @@ export class SshServer {
      * listen
      */
     public listen(): void {
-        this._server.listen(22, '0.0.0.0', () => {
-            Logger.getLogger().info(`SshServer::listen: Listening on port ${this._server.address().port}`);
+        const port = 22;
+
+        this._server.listen(port, '0.0.0.0', () => {
+            Logger.getLogger().info('SshServer::listen: Listening on port %d', {
+                port: port
+            });
         });
     }
 
