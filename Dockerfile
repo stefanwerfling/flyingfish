@@ -3,9 +3,9 @@ FROM node:20-bullseye
 ENV FLYINGFISH_NGINX_MODULE_MODE_DYN="0"
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
-ARG NGINX_VERSION="1.25.4"
-ARG HEADERS_MORE_VERSION="v0.37"
-ARG NJS_BRANCH="0.8.3"
+ARG NGINX_VERSION="1.26.2"
+ARG HEADERS_MORE_VERSION="v0.38"
+ARG NJS_BRANCH="0.8.9"
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
@@ -17,7 +17,7 @@ RUN apt install -y python3-pip python3-dev
 RUN apt install -y git
 
 RUN apt-get remove -y nginx nginx-common
-RUN cd ~ && wget http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && tar -zxvf nginx-$NGINX_VERSION.tar.gz
+RUN cd ~ && wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && tar -zxvf nginx-$NGINX_VERSION.tar.gz
 RUN apt update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y build-essential
