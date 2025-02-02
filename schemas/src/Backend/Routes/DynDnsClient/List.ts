@@ -25,6 +25,7 @@ export const SchemaDynDnsClientData = Vts.object({
     username: Vts.string(),
     password: Vts.optional(Vts.string()),
     update_domain: Vts.boolean(),
+    gateway_identifier_id: Vts.number(),
     last_status: Vts.number(),
     last_status_msg: Vts.string(),
     last_update: Vts.number()
