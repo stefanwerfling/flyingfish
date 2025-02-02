@@ -45,8 +45,8 @@ export class DynDnsService {
     public async updateDns(): Promise<void> {
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
 
-        const currentIp = await HowIsMyPublicIpService.getInstance().getCurrentIp(false);
-        const currentIp6 = await HowIsMyPublicIpService.getInstance().getCurrentIp6(false);
+        const currentIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
+        const currentIp6 = await HowIsMyPublicIpService.getInstance().getCurrentIp6();
         const hostnames: string[] = [];
 
         const clients = await DynDnsClientServiceDB.getInstance().findAll();

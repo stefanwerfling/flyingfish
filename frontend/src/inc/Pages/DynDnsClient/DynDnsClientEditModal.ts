@@ -1,4 +1,4 @@
-import {DomainData, DynDnsClientDomain, ProviderEntry} from 'flyingfish_schemas';
+import {DomainData, DynDnsClientDomain, GatewayIdentifierEntry, ProviderEntry} from 'flyingfish_schemas';
 import {
     FormGroup, FormRow, InputBottemBorderOnly2, InputType, Multiple, SelectBottemBorderOnly2, Switch, Element,
     ModalDialog, ModalDialogType, LangText
@@ -52,6 +52,12 @@ export class DynDnsClientEditModal extends ModalDialog {
     protected _switchUpdateDomains: Switch;
 
     /**
+     * select gateway identifier
+     * @protected
+     */
+    protected _selectGatewayIdentifier: SelectBottemBorderOnly2;
+
+    /**
      * constructor
      * @param elementObject
      */
@@ -79,6 +85,9 @@ export class DynDnsClientEditModal extends ModalDialog {
         const groupMainDomain = new FormGroup(bodyCard, 'Main Domain');
         this._multipleMainDomain = new Multiple(groupMainDomain);
         this._multipleMainDomain.setLimit(1);
+
+        const groupGatewayIdentifier = new FormGroup(bodyCard, 'Gateway network assignment');
+        this._selectGatewayIdentifier = new SelectBottemBorderOnly2(groupGatewayIdentifier);
 
         const rowOptions = new FormRow(bodyCard);
 
@@ -293,11 +302,46 @@ export class DynDnsClientEditModal extends ModalDialog {
     }
 
     /**
+     * setGatewayIdentifiers
+     * @param list
+     */
+    public setGatewayIdentifiers(list: GatewayIdentifierEntry[]): void {
+        this._selectGatewayIdentifier.clearValues();
+        this._selectGatewayIdentifier.addValue({
+            key: '0',
+            value: 'Please select your Listen'
+        });
+
+        for (const aGatewayIdentiefer of list) {
+            this._selectGatewayIdentifier.addValue({
+                key: `${aGatewayIdentiefer.id}`,
+                value: aGatewayIdentiefer.networkname
+            });
+        }
+    }
+
+    /**
+     * setGatewayIdentifier
+     * @param gatewayIdentifier
+     */
+    public setGatewayIdentifier(gatewayIdentifier: number): void {
+        this._selectGatewayIdentifier.setSelectedValue(`${gatewayIdentifier}`);
+    }
+
+    /**
+     * getGatewayIdentifier
+     */
+    public getGatewayIdentifier(): number {
+        return parseInt(this._selectGatewayIdentifier.getSelectedValue(), 10) || 0;
+    }
+
+    /**
      * resetValues
      */
     public override resetValues(): void {
         this.setProvider('none');
         this._id = null;
+        this.setGatewayIdentifier(0);
         this._multipleMainDomain.setValue([]);
         this._multipleDomains.setValue([]);
         this._inputUsername.setValue('');

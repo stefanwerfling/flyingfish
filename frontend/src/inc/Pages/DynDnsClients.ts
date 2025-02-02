@@ -1,7 +1,8 @@
-import {DynDnsClientData} from 'flyingfish_schemas';
+import {DynDnsClientData, GatewayIdentifierEntry} from 'flyingfish_schemas';
 import moment from 'moment';
 import {Domain} from '../Api/Domain.js';
 import {DynDnsClient as DynDnsClientAPI} from '../Api/DynDnsClient.js';
+import {GatewayIdentifier as GatewayIdentifierAPI} from '../Api/GatewayIdentifier.js';
 import {UnauthorizedError} from '../Api/Error/UnauthorizedError.js';
 import {
     Badge, BadgeType, ButtonClass, Card, Circle, CircleColor, ContentCol, ContentColSize, ContentRow,
@@ -97,6 +98,7 @@ export class DynDnsClients extends BasePage {
                     username: this._dynDnsClientDialog.getUsername(),
                     password: this._dynDnsClientDialog.getPassword(),
                     update_domain: this._dynDnsClientDialog.getUpdateDomains(),
+                    gateway_identifier_id: this._dynDnsClientDialog.getGatewayIdentifier(),
                     last_status: 0,
                     last_status_msg: '',
                     last_update: 0
@@ -150,7 +152,10 @@ export class DynDnsClients extends BasePage {
         ]));
 
         // eslint-disable-next-line no-new
-        new Th(trhead, 'Provider');
+        new Th(trhead, new ColumnContent([
+            'Provider',
+            'Gateway'
+        ]));
 
         // eslint-disable-next-line no-new
         new Th(trhead, 'Username');
@@ -170,6 +175,19 @@ export class DynDnsClients extends BasePage {
         this._onLoadTable = async(): Promise<void> => {
             card.showLoading();
             table.getTbody().empty();
+
+            // gateway identifiers -------------------------------------------------------------------------------------
+
+            const gatewayIdentifierMap: Map<number, GatewayIdentifierEntry> = new Map<number, GatewayIdentifierEntry>();
+            const gatewayIdentifiers = await GatewayIdentifierAPI.getList();
+
+            if (gatewayIdentifiers) {
+                this._dynDnsClientDialog.setGatewayIdentifiers(gatewayIdentifiers);
+
+                for (const gi of gatewayIdentifiers) {
+                    gatewayIdentifierMap.set(gi.id, gi);
+                }
+            }
 
             try {
                 const clients = await DynDnsClientAPI.getClients();
@@ -208,8 +226,24 @@ export class DynDnsClients extends BasePage {
                             domainsTd.append('disabled');
                         }
 
-                        // eslint-disable-next-line no-new
-                        new Td(trbody, `${entry.provider.title}`);
+                        const providerTd = new Td(trbody, '');
+                        providerTd.setCss({
+                            'white-space': 'normal'
+                        });
+
+                        domainsTd.append(`${entry.provider.title}`);
+
+                        const gatewayIdentifier = gatewayIdentifierMap.get(entry.gateway_identifier_id);
+
+                        if (gatewayIdentifier) {
+                            // eslint-disable-next-line no-new
+                            new Badge(
+                                domainsTd,
+                                `${gatewayIdentifier.networkname}`,
+                                BadgeType.primary,
+                                `${gatewayIdentifier.color}`
+                            );
+                        }
 
                         // eslint-disable-next-line no-new
                         new Td(trbody, `${entry.username}`);
@@ -271,6 +305,7 @@ export class DynDnsClients extends BasePage {
                                 this._dynDnsClientDialog.setDomainsSelected(entry.domains);
                                 this._dynDnsClientDialog.setUsername(entry.username);
                                 this._dynDnsClientDialog.setUpdateDomains(entry.update_domain);
+                                this._dynDnsClientDialog.setGatewayIdentifier(entry.gateway_identifier_id);
 
                                 if (entry.main_domain) {
                                     this._dynDnsClientDialog.setMainDomainSelected(entry.main_domain.id);
@@ -329,7 +364,7 @@ export class DynDnsClients extends BasePage {
         };
 
         // load table
-        await this._onLoadTable();
+        this._onLoadTable();
     }
 
 }

@@ -423,6 +423,7 @@ export class UpnpNatEditModal extends ModalDialog {
      */
     public override resetValues(): void {
         this.setId(null);
+        this.setGatewayIdentifier(0);
         this.setGatewayAddress('');
         this._inputPublicPort.setValue('');
         this.setClientAddress('');

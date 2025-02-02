@@ -42,6 +42,14 @@ export class DynDnsClient extends DBBaseEntityId {
     public update_domain!: boolean;
 
     /**
+     * gateway identifier id
+     */
+    @Column({
+        default: 0
+    })
+    public gateway_identifier_id!: number;
+
+    /**
      * last status
      */
     @Column({

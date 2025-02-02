@@ -28,6 +28,7 @@ export class Save {
 
         client.provider = data.provider.name;
         client.username = data.username;
+        client.gateway_identifier_id = data.gateway_identifier_id;
 
         if (data.password) {
             client.password = data.password;

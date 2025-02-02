@@ -71,6 +71,7 @@ export class List {
                     },
                     update_domain: client.update_domain,
                     username: client.username,
+                    gateway_identifier_id: client.gateway_identifier_id,
                     last_status: client.last_status,
                     last_status_msg: statusMsg,
                     last_update: client.last_update
