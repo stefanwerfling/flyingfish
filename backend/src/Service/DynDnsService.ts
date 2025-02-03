@@ -3,10 +3,11 @@ import {
     DateHelper,
     DomainRecordServiceDB, DomainServiceDB,
     DynDnsClientDomainServiceDB,
-    DynDnsClientServiceDB,
+    DynDnsClientServiceDB, GatewayIdentifierServiceDB,
     Logger
 } from 'flyingfish_core';
 import {Job, scheduleJob} from 'node-schedule';
+import {HimHIP} from '../inc/HimHIP/HimHIP.js';
 import {DynDnsProviders} from '../inc/Provider/DynDnsProviders.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 
@@ -58,6 +59,33 @@ export class DynDnsService {
                 Logger.getLogger().error('DynDnsService::updateDns: provider not found by name: %s', client.provider);
                 continue;
             }
+
+            // check used gateway and is inside this gateway -----------------------------------------------------------
+
+            if (client.gateway_identifier_id !== 0) {
+                const himhip = HimHIP.getData();
+
+                if (himhip) {
+                    const gatewayId = await GatewayIdentifierServiceDB.getInstance().findByMac(himhip.gatewaymac);
+
+                    if (gatewayId) {
+                        if (gatewayId.id !== client.gateway_identifier_id) {
+                            Logger.getLogger().warn('DynDnsService::updateDns: Client is not in the right gateway: %s', gatewayId.mac_address);
+                            continue;
+                        }
+
+                        Logger.getLogger().info('DynDnsService::updateDns: Client allowed in the gateway: %s', gatewayId.mac_address);
+                    } else {
+                        Logger.getLogger().error('DynDnsService::updateDns: Gateway not found: %s (%s)', client.provider, client.id);
+                        continue;
+                    }
+                } else {
+                    Logger.getLogger().warn('DynDnsService::updateDns: HimHIP is not ready, skip update job: %s (%s)', client.provider, client.id);
+                    continue;
+                }
+            }
+
+            // ---------------------------------------------------------------------------------------------------------
 
             let updateIp = true;
 

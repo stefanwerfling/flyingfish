@@ -231,14 +231,15 @@ export class DynDnsClients extends BasePage {
                             'white-space': 'normal'
                         });
 
-                        domainsTd.append(`${entry.provider.title}`);
+                        providerTd.append(`${entry.provider.title}`);
+                        providerTd.append('<br>');
 
                         const gatewayIdentifier = gatewayIdentifierMap.get(entry.gateway_identifier_id);
 
                         if (gatewayIdentifier) {
                             // eslint-disable-next-line no-new
                             new Badge(
-                                domainsTd,
+                                providerTd,
                                 `${gatewayIdentifier.networkname}`,
                                 BadgeType.primary,
                                 `${gatewayIdentifier.color}`
