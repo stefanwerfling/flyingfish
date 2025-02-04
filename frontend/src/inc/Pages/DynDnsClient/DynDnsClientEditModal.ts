@@ -1,8 +1,9 @@
 import {DomainData, DynDnsClientDomain, GatewayIdentifierEntry, ProviderEntry} from 'flyingfish_schemas';
 import {
     FormGroup, FormRow, InputBottemBorderOnly2, InputType, Multiple, SelectBottemBorderOnly2, Switch, Element,
-    ModalDialog, ModalDialogType, LangText
+    ModalDialog, ModalDialogType, LangText, TooltipInfo, Tooltip
 } from 'bambooo';
+import {Lang} from '../../Lang.js';
 
 /**
  * DynDnsClientEditModal
@@ -87,11 +88,19 @@ export class DynDnsClientEditModal extends ModalDialog {
         this._multipleMainDomain.setLimit(1);
 
         const groupGatewayIdentifier = new FormGroup(bodyCard, 'Gateway network assignment');
+
+        // eslint-disable-next-line no-new
+        new TooltipInfo(groupGatewayIdentifier.getLabelElement(), Lang.i().l('dyndns_client_edit_gateway'));
+
         this._selectGatewayIdentifier = new SelectBottemBorderOnly2(groupGatewayIdentifier);
 
         const rowOptions = new FormRow(bodyCard);
 
         const groupUpdateDomains = new FormGroup(rowOptions.createCol(6), 'Enable update Domains');
+
+        // eslint-disable-next-line no-new
+        new TooltipInfo(groupUpdateDomains.getLabelElement(), Lang.i().l('dyndns_client_edit_updatedomains'));
+
         this._switchUpdateDomains = new Switch(groupUpdateDomains, 'updateDomains');
 
         const groupDomains = new FormGroup(bodyCard, 'Update Domains');
@@ -110,6 +119,9 @@ export class DynDnsClientEditModal extends ModalDialog {
 
         this.addButtonClose(new LangText('Close'));
         this.addButtonSave(new LangText('Save changes'), true);
+
+        // init tooltips
+        Tooltip.init();
     }
 
     /**
@@ -121,7 +133,7 @@ export class DynDnsClientEditModal extends ModalDialog {
 
         this._selectProvider.addValue({
             key: 'none',
-            value: 'Please select your provider'
+            value: 'without'
         });
 
         for (const provider of providers) {

@@ -22,7 +22,10 @@ export class Lang_EN implements LangDefine {
         route_stream_loadbalancealg: 'The load balancing algorithm is only used when there is more than one upstream.<br><br><b>Least connection</b>: This algorithm distributes the client\'s request to servers with the least active connections at a particular time. This will ensure that no one server is overworked while other servers have fewer active connections.<br><br><b>IP hash</b>: This algorithm hashes the IP address of the client sending the request with a hashing function and then sends the request to one of the servers for processing. Subsequent requests from the clients IP address are always sent to the same server.',
 
         route_http_http2: 'The http2 protocol can only be used on an SSL connection. Enable SSL to unlock this setting.',
-        route_http_location_headerhostport: 'Only use by different port on router, your port != 80,443'
+        route_http_location_headerhostport: 'Only use by different port on router, your port != 80,443',
+
+        dyndns_client_edit_gateway: 'The client is bound to the gateway and only runs when it is in the gateway. If nothing is specified, the client will always be executed.',
+        dyndns_client_edit_updatedomains: 'The specified domains are updated internally with the new IP in the record.'
     };
 
     /**
