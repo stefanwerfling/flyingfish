@@ -1,6 +1,10 @@
+import rateLimit from 'express-rate-limit';
 import {BaseHttpServer} from 'flyingfish_core';
 import helmet from 'helmet';
 
+/**
+ * HttpServer
+ */
 export class HttpServer extends BaseHttpServer {
 
     /**
@@ -36,6 +40,16 @@ export class HttpServer extends BaseHttpServer {
                 baseUri: ['\'self\'']
             }
         }));
+
+        const limiter = rateLimit({
+            windowMs: 15 * 60 * 1000,
+            standardHeaders: true,
+            legacyHeaders: false,
+            skip: async() => { return true; },
+            limit: async() => { return Number.MAX_SAFE_INTEGER; }
+        });
+
+        this._server.use(limiter);
     }
 
 }

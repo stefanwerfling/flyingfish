@@ -49,7 +49,7 @@ export class Update extends DefaultRoute {
             const dynDomains = await DynDnsServerDomainServiceDB.getInstance().findByUser(session.user.userid);
             const domains: DomainDB[] = [];
 
-            for (const dynDomain of dynDomains) {
+            for await (const dynDomain of dynDomains) {
                 const domain = await DomainServiceDB.getInstance().findOne(dynDomain.domain_id);
 
                 if (domain) {
@@ -83,12 +83,12 @@ export class Update extends DefaultRoute {
 
             // ---------------------------------------------------------------------------------------------------------
 
-            for (const domain of domainUpdates) {
+            for await (const domain of domainUpdates) {
                 const records = await DomainRecordServiceDB.getInstance().findAllByDomain(domain.id);
 
-                for (const record of records) {
+                for await (const record of records) {
                     if (record.dtype === Update.TYPE_A) {
-                        for (const ip of ips) {
+                        for await (const ip of ips) {
                             if (IPHelper.isIPv4(ip) && (record.dvalue !== ip)) {
                                 record.dvalue = ip;
                                 record.last_update = DateHelper.getCurrentDbTime();
@@ -97,7 +97,7 @@ export class Update extends DefaultRoute {
                             }
                         }
                     } else if (record.dtype === Update.TYPE_AAAA) {
-                        for (const ip of ips) {
+                        for await (const ip of ips) {
                             if (IPHelper.isIPv6(ip) && (record.dvalue !== ip)) {
                                 record.dvalue = ip;
                                 record.last_update = DateHelper.getCurrentDbTime();
