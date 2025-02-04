@@ -1,7 +1,7 @@
 import DNS from 'dns2';
 import {
     DateHelper,
-    DomainRecordServiceDB, DomainServiceDB,
+    DomainRecordServiceDB, DomainServiceDB, DynDnsClientDB,
     DynDnsClientDomainServiceDB,
     DynDnsClientServiceDB, GatewayIdentifierServiceDB,
     Logger
@@ -40,17 +40,39 @@ export class DynDnsService {
     protected _scheduler: Job | null = null;
 
     /**
-     * updateDns
+     * in process
      * @protected
      */
-    public async updateDns(): Promise<void> {
+    protected _inProcess: boolean = false;
+
+    /**
+     * updateDns
+     * @param {number|null} clientId
+     * @protected
+     */
+    public async updateDns(clientId: number|null = null): Promise<void> {
+        this._inProcess = true;
+
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
 
         const currentIp = await HowIsMyPublicIpService.getInstance().getCurrentIp();
         const currentIp6 = await HowIsMyPublicIpService.getInstance().getCurrentIp6();
         const hostnames: string[] = [];
 
-        const clients = await DynDnsClientServiceDB.getInstance().findAll();
+        let clients: DynDnsClientDB[] = [];
+
+        if (clientId === null ) {
+            clients = await DynDnsClientServiceDB.getInstance().findAll();
+        } else {
+            const aClient = await DynDnsClientServiceDB.getInstance().findOne(clientId);
+
+            if (aClient) {
+                clients.push(aClient);
+            } else {
+                Logger.getLogger().error('DynDnsService::updateDns: client not found by id: %d', clientId);
+            }
+        }
+
 
         for await (const client of clients) {
             const provider = DynDnsProviders.getProvider(client.provider);
@@ -76,11 +98,11 @@ export class DynDnsService {
 
                         Logger.getLogger().info('DynDnsService::updateDns: Client allowed in the gateway: %s', gatewayId.mac_address);
                     } else {
-                        Logger.getLogger().error('DynDnsService::updateDns: Gateway not found: %s (%s)', client.provider, client.id);
+                        Logger.getLogger().error('DynDnsService::updateDns: Gateway not found: %s (%d)', client.provider, client.id);
                         continue;
                     }
                 } else {
-                    Logger.getLogger().warn('DynDnsService::updateDns: HimHIP is not ready, skip update job: %s (%s)', client.provider, client.id);
+                    Logger.getLogger().warn('DynDnsService::updateDns: HimHIP is not ready, skip update job: %s (%d)', client.provider, client.id);
                     continue;
                 }
             }
@@ -195,6 +217,8 @@ export class DynDnsService {
                 );
             }
         }
+
+        this._inProcess = false;
     }
 
     /**
@@ -204,8 +228,38 @@ export class DynDnsService {
         await this.updateDns();
 
         this._scheduler = scheduleJob('1 */1 * * *', async() => {
+            if (this._inProcess) {
+                return;
+            }
+
             await this.updateDns();
         });
+    }
+
+    /**
+     * stop
+     */
+    public async stop(): Promise<void> {
+        if (this._scheduler !== null) {
+            this._scheduler.cancel();
+        }
+    }
+
+    /**
+     * call the scheduler
+     */
+    public async invokeUpdate(): Promise<void> {
+        if (this._scheduler !== null) {
+            this._scheduler.invoke();
+        }
+    }
+
+    /**
+     * Is the scheduler in a process
+     * @returns {boolean}
+     */
+    public isInProcess(): boolean {
+        return this._inProcess;
     }
 
 }

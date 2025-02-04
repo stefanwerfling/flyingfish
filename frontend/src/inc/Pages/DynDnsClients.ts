@@ -45,8 +45,10 @@ export class DynDnsClients extends BasePage {
 
         // -------------------------------------------------------------------------------------------------------------
 
+        const leftNavbar = this._wrapper.getNavbar().getLeftNavbar();
+
         // eslint-disable-next-line no-new
-        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Client', async() => {
+        new LeftNavbarLink(leftNavbar, 'Add Client', async() => {
             this._dynDnsClientDialog.resetValues();
             this._dynDnsClientDialog.setTitle('DynDns Client Add');
             this._dynDnsClientDialog.show();
@@ -72,7 +74,26 @@ export class DynDnsClients extends BasePage {
             return false;
         }, 'btn btn-block btn-default btn-sm', IconFa.add);
 
-        this._wrapper.getNavbar().getLeftNavbar().getElement().append('&nbsp;');
+        leftNavbar.getElement().append('&nbsp;');
+
+        // eslint-disable-next-line no-new
+        new LeftNavbarLink(leftNavbar, 'Run Service', async() => {
+            try {
+                await DynDnsClientAPI.runService();
+
+                if (this._onLoadTable) {
+                    this._onLoadTable();
+                }
+            } catch (e) {
+                if (e instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
+                }
+            }
+
+            return false;
+        }, 'btn btn-block btn-default btn-sm', 'fas fa-play');
+
+        leftNavbar.getElement().append('&nbsp;');
 
         // -------------------------------------------------------------------------------------------------------------
 
@@ -313,6 +334,45 @@ export class DynDnsClients extends BasePage {
                                 }
                             },
                             IconFa.edit
+                        );
+
+                        btnRMenu.addDivider();
+
+                        btnRMenu.addMenuItem(
+                            'Run',
+                            async(): Promise<void> => {
+                                DialogConfirm.confirm(
+                                    'dnydnsRunClient',
+                                    ModalDialogType.large,
+                                    'Run Client',
+                                    'Are you sure you want to Run the client?',
+                                    async(_, dialog) => {
+                                        try {
+                                            if (await DynDnsClientAPI.runClient(entry.id)) {
+                                                this._toast.fire({
+                                                    icon: 'success',
+                                                    title: 'DynDns Client run success.'
+                                                });
+                                            }
+                                        } catch (message) {
+                                            this._toast.fire({
+                                                icon: 'error',
+                                                title: message
+                                            });
+                                        }
+
+                                        dialog.hide();
+
+                                        if (this._onLoadTable) {
+                                            this._onLoadTable();
+                                        }
+                                    },
+                                    undefined,
+                                    'Run',
+                                    ButtonClass.success
+                                );
+                            },
+                            'fas fa-play'
                         );
 
                         btnRMenu.addDivider();

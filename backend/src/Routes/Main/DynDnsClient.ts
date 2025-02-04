@@ -1,9 +1,10 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {SchemaDynDnsClientData, SchemaDynDnsClientDelete} from 'flyingfish_schemas';
+import {SchemaDynDnsClientData, SchemaDynDnsClientDelete, SchemaDynDnsClientDomainRunRequest} from 'flyingfish_schemas';
 import {Delete} from './DynDnsClient/Delete.js';
 import {List} from './DynDnsClient/List.js';
 import {Providers} from './DynDnsClient/Providers.js';
+import {Run} from './DynDnsClient/Run.js';
 import {Save} from './DynDnsClient/Save.js';
 
 /**
@@ -50,6 +51,26 @@ export class DynDnsClient extends DefaultRoute {
                 if (this.isUserLogin(req, res)) {
                     if (this.isSchemaValidate(SchemaDynDnsClientDelete, req.body, res)) {
                         res.status(200).json(await Delete.deleteClient(req.body));
+                    }
+                }
+            }
+        );
+
+        this._get(
+            '/json/dyndnsclient/run/service',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    res.status(200).json(await Run.rundService());
+                }
+            }
+        );
+
+        this._post(
+            '/json/dyndnsclient/run/client',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaDynDnsClientDomainRunRequest, req.body, res)) {
+                        res.status(200).json(await Run.runClient(req.body));
                     }
                 }
             }

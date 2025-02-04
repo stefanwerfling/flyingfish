@@ -120,6 +120,12 @@ export {
     SchemaDynDnsClientProviderListResponse,
     DynDnsClientProviderListResponse
 } from './Backend/Routes/DynDnsClient/Providers.js';
+export {
+    SchemaDynDnsClientDomainRun,
+    DynDnsClientDomainRun,
+    SchemaDynDnsClientDomainRunRequest,
+    DynDnsClientDomainRunRequest
+} from './Backend/Routes/DynDnsClient/Run.js';
 
 export {
     SchemaDynDnsServerUser,

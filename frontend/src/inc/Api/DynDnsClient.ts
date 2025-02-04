@@ -1,5 +1,5 @@
 import {
-    DynDnsClientData,
+    DynDnsClientData, DynDnsClientDomainRunRequest,
     DynDnsClientListResponse, DynDnsClientProviderListResponse,
     SchemaDefaultReturn,
     SchemaDynDnsClientListResponse,
@@ -41,6 +41,32 @@ export class DynDnsClient {
      */
     public static async deleteClient(client: DynDnsClientData): Promise<boolean> {
         await NetFetch.postData('/json/dyndnsclient/delete', client, SchemaDefaultReturn);
+        return true;
+    }
+
+    /**
+     * Run Service
+     * @returns {boolean}
+     */
+    public static async runService(): Promise<boolean> {
+        await NetFetch.getData('/json/dyndnsclient/run/service', SchemaDefaultReturn);
+        return true;
+    }
+
+    /**
+     * Run client
+     * @param {number} clientId
+     * @returns {boolean}
+     */
+    public static async runClient(clientId: number): Promise<boolean> {
+        const req: DynDnsClientDomainRunRequest = {
+            client: {
+                id: clientId
+            }
+        };
+
+        await NetFetch.postData('/json/dyndnsclient/run/client', req, SchemaDefaultReturn);
+
         return true;
     }
 
