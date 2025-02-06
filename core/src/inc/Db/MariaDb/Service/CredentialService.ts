@@ -1,6 +1,7 @@
-import {In} from 'typeorm';
+import {DeleteResult, In} from 'typeorm';
 import {DBService} from '../DBService.js';
 import {Credential} from '../Entity/Credential.js';
+import {CredentialLocationService} from './CredentialLocationService.js';
 
 /**
  * CredentialService
@@ -34,6 +35,16 @@ export class CredentialService extends DBService<Credential> {
                 id: In(credIds)
             }
         });
+    }
+
+    /**
+     * Remove a row (entry) by ID.
+     * @param {number} id - ID from entry.
+     * @returns {DeleteResult}
+     */
+    public override async remove(id: number): Promise<DeleteResult> {
+        await CredentialLocationService.getInstance().removeByCredential(id);
+        return super.remove(id);
     }
 
 }

@@ -240,6 +240,8 @@ export {
     RouteStreamSSH,
     SchemaRouteStream,
     RouteStream,
+    SchemaLocationCredential,
+    LocationCredential,
     SchemaLocation,
     Location,
     SchemaRouteHttp,

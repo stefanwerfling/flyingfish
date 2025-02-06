@@ -70,6 +70,19 @@ export const SchemaRouteStream = Vts.object({
 export type RouteStream = ExtractSchemaResultType<typeof SchemaRouteStream>;
 
 /**
+ * Schema location credential
+ */
+export const SchemaLocationCredential = Vts.object({
+    id: Vts.number(),
+    name: Vts.string()
+});
+
+/**
+ * Type location credential
+ */
+export type LocationCredential = ExtractSchemaResultType<typeof SchemaLocationCredential>;
+
+/**
  * SchemaLocation
  */
 export const SchemaLocation = Vts.object({
@@ -87,6 +100,7 @@ export const SchemaLocation = Vts.object({
         redirect: Vts.string()
     })),
     auth_enable: Vts.boolean(),
+    credentials: Vts.array(SchemaLocationCredential),
     websocket_enable: Vts.boolean(),
     host_enable: Vts.boolean(),
     host_name: Vts.string(),

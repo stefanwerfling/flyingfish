@@ -1,6 +1,7 @@
 import {CardBodyType, CardLine, CardType, CollectionCardWidget} from 'bambooo';
 import {CollectionWidgetOnUpdate} from 'bambooo/src/v1/Widget/Collection/CollectionWidget.js';
 import {Location} from 'flyingfish_schemas';
+import {Credential as CredentialApi} from '../../../Api/Credential.js';
 import {NginxLocationDestinationTypes} from '../../../Api/Route.js';
 import {LocationWidget} from './LocationWidget.js';
 
@@ -39,6 +40,7 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
             match: '',
             proxy_pass: '',
             auth_enable: false,
+            credentials: [],
             websocket_enable: false,
             xrealip_enable: true,
             xforwarded_for_enable: true,
@@ -54,15 +56,21 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
     }
 
     /**
-     * Set a location list to collection
+     * Set a location list to a collection
      * @param {Location[]} locations
      */
-    public setLocationList(locations: Location[]): void {
+    public async setLocationList(locations: Location[]): Promise<void> {
         this.removeAll();
+
+        const credentials = await CredentialApi.getList();
 
         for (const tlocation of locations) {
             const location = new LocationWidget(this, this._editable);
             location.setLocation(tlocation);
+
+            if (credentials.list) {
+                location.setCredentialValues(credentials.list);
+            }
 
             this.addObject(location);
         }

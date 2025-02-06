@@ -1,6 +1,7 @@
 import {DeleteResult} from 'typeorm';
 import {DBService} from '../DBService.js';
 import {NginxLocation} from '../Entity/NginxLocation.js';
+import {CredentialLocationService} from './CredentialLocationService.js';
 
 /**
  * Nginx location service object.
@@ -59,6 +60,16 @@ export class NginxLocationService extends DBService<NginxLocation> {
                 sshport_out_id: sshportOutId
             }
         });
+    }
+
+    /**
+     * Remove a row (entry) by ID.
+     * @param {number} id - ID from entry.
+     * @returns {DeleteResult}
+     */
+    public override async remove(id: number): Promise<DeleteResult> {
+        await CredentialLocationService.getInstance().removeByLoction(id);
+        return super.remove(id);
     }
 
 }

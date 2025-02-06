@@ -1,4 +1,6 @@
 import {
+    CredentialLocationDB,
+    CredentialLocationServiceDB,
     NginxHttpDB,
     NginxHttpServiceDB,
     NginxHttpVariableDB,
@@ -157,7 +159,39 @@ export class Save {
                 aNewLocation.sshport_out_id = aLocation.ssh.id || 0;
             }
 
-            await NginxLocationServiceDB.getInstance().save(aNewLocation);
+            aNewLocation = await NginxLocationServiceDB.getInstance().save(aNewLocation);
+
+            // credential ----------------------------------------------------------------------------------------------
+
+            const oldCredentials = await CredentialLocationServiceDB.getInstance().getListByLocation(aNewLocation.id);
+
+            if (oldCredentials) {
+                const oldCredentialsExistence = (credentialId: number): boolean => aLocation.credentials.some(({id}) => id === credentialId);
+
+                for await (const oldCredential of oldCredentials) {
+                    if (!oldCredentialsExistence(oldCredential.credential_id)) {
+                        await CredentialLocationServiceDB.getInstance().remove(oldCredential.id);
+                    }
+                }
+            }
+
+            for await (const credential of aLocation.credentials) {
+                let aNewCreLocation: CredentialLocationDB | null = null;
+
+                const tcredential = await CredentialLocationServiceDB.getInstance().findBy(aNewLocation.id, credential.id);
+
+                if (tcredential) {
+                    aNewCreLocation = tcredential;
+                } else {
+                    aNewCreLocation = new CredentialLocationDB();
+                }
+
+                aNewCreLocation.position = 0;
+                aNewCreLocation.location_id = aNewLocation.id;
+                aNewCreLocation.credential_id = credential.id;
+
+                await CredentialLocationServiceDB.getInstance().save(aNewCreLocation);
+            }
         }
 
         return {

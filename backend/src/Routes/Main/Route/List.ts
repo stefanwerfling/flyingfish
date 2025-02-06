@@ -1,11 +1,15 @@
 import {
+    CredentialDB,
+    CredentialLocationServiceDB,
     DomainServiceDB, NginxHttpServiceDB, NginxHttpVariableServiceDB, NginxLocationServiceDB,
     NginxStreamServiceDB,
     NginxUpstreamServiceDB, SshPortServiceDB,
     SshUserServiceDB
 } from 'flyingfish_core';
+import {CredentialLocationService} from 'flyingfish_core/dist/src/inc/Db/MariaDb/Service/CredentialLocationService.js';
+import {CredentialService} from 'flyingfish_core/dist/src/inc/Db/MariaDb/Service/CredentialService.js';
 import {
-    Location, NginxHttpVariableContextType,
+    Location, LocationCredential, NginxHttpVariableContextType,
     RouteData,
     RouteHttp,
     RoutesResponse,
@@ -27,6 +31,15 @@ export class List {
     public static async getRoutes(): Promise<RoutesResponse> {
         const list: RouteData[] = [];
         const sshportList: RouteSshPort[] = [];
+
+        const credentials = await CredentialService.getInstance().findAll();
+        const credentialMap: Map<number, string> = new Map<number, string>();
+
+        for (const credential of credentials) {
+            credentialMap.set(credential.id, credential.name);
+        }
+
+        // -------------------------------------------------------------------------------------------------------------
 
         const domains = await DomainServiceDB.getInstance().findAll();
 
@@ -145,12 +158,28 @@ export class List {
                                 });
                             }
 
+                            const credentialList: LocationCredential[] = [];
+
+                            const lcredentials = await CredentialLocationServiceDB.getInstance().getListByLocation(alocation.id);
+
+                            for (const lcredential of lcredentials) {
+                                const name = credentialMap.get(lcredential.credential_id);
+
+                                if (name) {
+                                    credentialList.push({
+                                        id: lcredential.credential_id,
+                                        name: name
+                                    });
+                                }
+                            }
+
                             const location: Location = {
                                 id: alocation.id,
                                 destination_type: alocation.destination_type,
                                 match: alocation.match,
                                 proxy_pass: alocation.proxy_pass,
                                 auth_enable: alocation.auth_enable,
+                                credentials: credentialList,
                                 websocket_enable: alocation.websocket_enable,
                                 host_enable: alocation.host_enable,
                                 host_name: alocation.host_name,

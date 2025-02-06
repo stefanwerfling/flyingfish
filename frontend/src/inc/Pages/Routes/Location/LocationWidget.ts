@@ -6,11 +6,11 @@ import {
     CardType,
     FormGroup, FormRow,
     ICollectionEntryWidget,
-    InputBottemBorderOnly2, InputType,
+    InputBottemBorderOnly2, InputType, Multiple,
     NavTab,
     SelectBottemBorderOnly2, Switch, Tooltip, TooltipInfo
 } from 'bambooo';
-import {Location, SshPortEntry} from 'flyingfish_schemas';
+import {Credential, Location, LocationCredential, SshPortEntry} from 'flyingfish_schemas';
 import {NginxLocationDestinationTypes} from '../../../Api/Route.js';
 import {Lang} from '../../../Lang.js';
 import {UtilNumber} from '../../../Utils/UtilNumber.js';
@@ -99,7 +99,7 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
      * select credential authentication
      * @protected
      */
-    protected _selectCredAuth: SelectBottemBorderOnly2;
+    protected _selectCredAuth: Multiple;
 
     /**
      * input header host name
@@ -273,8 +273,8 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
         this._switchHeaderHost = new Switch(groupEnableHeaderHost, 'locheaderhost');
 
         const groupCredAuth = new FormGroup(rowHost.createCol(6), 'Authentication Credentials');
-        this._selectCredAuth = new SelectBottemBorderOnly2(groupCredAuth);
-        this._switchAuth.setChangeFn(async(value) => {
+        this._selectCredAuth = new Multiple(groupCredAuth);
+        this._switchAuth.setChangeFn(async(value): Promise<void> => {
             if (value) {
                 groupCredAuth.show();
             } else {
@@ -589,6 +589,47 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
         return this._switchXrealip.isEnable();
     }
 
+    public setCredentials(credentials: LocationCredential[]): void {
+        const list: string[] = [];
+
+        for (const entry of credentials) {
+            list.push(`${entry.id}`);
+        }
+
+        this._selectCredAuth.setValue(list);
+    }
+
+    /**
+     * Set the credential values
+     * @param {Credential[]} list
+     */
+    public setCredentialValues(list: Credential[]): void {
+        for (const credential of list) {
+            this._selectCredAuth.addValue({
+                key: `${credential.id}`,
+                value: credential.name
+            });
+        }
+    }
+
+    /**
+     * Return the selected crdentials
+     */
+    public getCredentials(): LocationCredential[] {
+        const list: LocationCredential[] = [];
+
+        const values = this._selectCredAuth.getValue();
+
+        for (const value of values) {
+            list.push({
+                id: parseInt(value, 10),
+                name: ''
+            });
+        }
+
+        return list;
+    }
+
     /**
      * setLocation
      * @param location
@@ -601,6 +642,7 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
         this.setMatch(location.match);
         this.setEnableWebsocket(location.websocket_enable);
         this.setEnableAuth(location.auth_enable);
+        this.setCredentials(location.credentials);
         this.setHeaderHostEnable(location.host_enable);
         this.setHeaderHostName(location.host_name);
         this.setHeaderHostPort(location.host_name_port);
@@ -632,6 +674,7 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
             match: this.getMatch(),
             proxy_pass: '',
             auth_enable: this.getEnableAuth(),
+            credentials: this.getCredentials(),
             websocket_enable: this.getEnableWebsocket(),
             host_enable: this.getHeaderHostEnable(),
             host_name: this.getHeaderHostName(),

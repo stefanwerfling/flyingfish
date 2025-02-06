@@ -57,7 +57,7 @@ export class RedisClient {
     protected _client: RedisClientType;
 
     /**
-     * Is Connect
+     * Is Connected
      * @protected
      */
     protected _isConnect: boolean = false;

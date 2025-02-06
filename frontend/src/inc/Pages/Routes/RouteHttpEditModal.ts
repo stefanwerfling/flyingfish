@@ -498,7 +498,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * @param locations
      */
     public setLocations(locations: Location[]): void {
-        this._locationCollection.setLocationList(locations);
+        this._locationCollection.setLocationList(locations).then();
     }
 
     /**
