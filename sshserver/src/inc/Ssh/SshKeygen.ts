@@ -67,6 +67,7 @@ export class SshKeygen {
             await fs.writeFile(file, keys.private);
         } catch (err) {
             Logger.getLogger().error('SshKeygen::create2: ssh key file can not create!');
+
             return false;
         }
 

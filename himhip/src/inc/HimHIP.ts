@@ -20,7 +20,7 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
 
     /**
      * Channel listen
-     * @param update
+     * @param {HimHIPUpdate} update
      */
     public async listen(update: HimHIPUpdate): Promise<void> {
         if (SchemaHimHIPUpdate.validate(update, [])) {
@@ -35,6 +35,7 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
                     await HimHIP._sendDataToChannel(data);
                 } catch (e) {
                     Logger.getLogger().error('HimHip::listen: error can not send information to channel.');
+                    Logger.getLogger().error(Ets.formate(e, true, true));
                 }
             }
         }
@@ -57,7 +58,7 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
                     gateway: ipRouteInfo.gateway,
                     interface: ipRouteInfo.interface,
                     hostip: ipRouteInfo.hostip,
-                    gatewaymac
+                    gatewaymac: gatewaymac
                 };
             }
 
@@ -99,7 +100,7 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
         const response = await got({
             url: reciverUrl,
             headers: {
-                secret,
+                secret: secret,
                 gatewaymac: data.gatewaymac,
                 network: data.network,
                 gateway: data.gateway,
@@ -126,10 +127,11 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
 
     /**
      * update
-     * @param reciverUrl
-     * @param secret
+     * @param {string} reciverUrl
+     * @param {string} secret
      */
     public static async update(reciverUrl: string, secret: string): Promise<void> {
+        // eslint-disable-next-line no-useless-assignment
         let data: HimHIPData|null = null;
 
         try {
@@ -160,7 +162,7 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
         try {
             await HimHIP._sendHttpEndpoint(reciverUrl, secret, data);
         } catch (e) {
-            Logger.getLogger().error(`HimHip::update: error can not send information to server: '${reciverUrl}'.`);
+            Logger.getLogger().error('HimHip::update: error can not send information to server: %s', reciverUrl);
             Logger.getLogger().error(Ets.formate(e, true, true));
         }
 

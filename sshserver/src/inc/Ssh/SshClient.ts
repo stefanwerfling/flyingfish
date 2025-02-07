@@ -86,8 +86,8 @@ export class SshClient {
 
     /**
      * constructor
-     * @param clientConnection
-     * @param info
+     * @param {Connection} clientConnection
+     * @param {ClientInfo} info
      */
     public constructor(clientConnection: Connection, info: ClientInfo) {
         this._ident = uuid();
@@ -109,6 +109,7 @@ export class SshClient {
 
     /**
      * getSelf
+     * @returns {SshClient}
      */
     public getSelf(): SshClient {
         return this;
@@ -116,6 +117,7 @@ export class SshClient {
 
     /**
      * getIdent
+     * @returns {string}
      */
     public getIdent(): string {
         return this._ident;
@@ -123,7 +125,7 @@ export class SshClient {
 
     /**
      * _authentication
-     * @param ctx
+     * @param {AuthContext} ctx
      * @protected
      */
     public async _authentication(ctx: AuthContext): Promise<void> {
@@ -170,15 +172,15 @@ export class SshClient {
                         return;
                     }
 
-                    Logger.getLogger().error(`SshClient::_authentication: port not found in DB by id: ${user.id}`);
+                    Logger.getLogger().error('SshClient::_authentication: port not found in DB by id: %s', user.id);
                 } else {
                     Logger.getLogger().error('SshClient::_authentication: user password is wrong!');
                 }
             } else {
-                Logger.getLogger().warn(`SshClient::_authentication: user not found "${ctx.username}"!`);
+                Logger.getLogger().warn('SshClient::_authentication: user not found "%s"!', ctx.username);
             }
         } else {
-            Logger.getLogger().warn(`SshClient::_authentication: method "${ctx.method}" not supproted!`);
+            Logger.getLogger().warn('SshClient::_authentication: method "%s" not supproted!', ctx.method);
         }
 
         ctx.reject();
@@ -246,11 +248,12 @@ export class SshClient {
             this._shellChannel.write('\n');
         }
 
-        Logger.getLogger().info(`SshClientHander::logToClient:(${this._clientInfo.ip}): ${msg}`);
+        Logger.getLogger().info('SshClientHander::logToClient:(%s): %s', this._clientInfo.ip, msg);
     }
 
     /**
      * getConnection
+     * @returns {Connection}
      */
     public getConnection(): Connection {
         return this._clientConnection;
@@ -258,6 +261,7 @@ export class SshClient {
 
     /**
      * getInfo
+     * @returns {ClientInfo}
      */
     public getInfo(): ClientInfo {
         return this._clientInfo;
@@ -265,6 +269,7 @@ export class SshClient {
 
     /**
      * getUser
+     * @returns {SshClientUser|undefined}
      */
     public getUser(): SshClientUser|undefined {
         return this._user;
@@ -272,6 +277,7 @@ export class SshClient {
 
     /**
      * getForwardPort
+     * @returns {SshClientForwardPort|undefined}
      */
     public getForwardPort(): SshClientForwardPort|undefined {
         return this._forwardPort;

@@ -15,8 +15,9 @@ export class Credential {
 
     /**
      * authBasic
-     * @param locationId
-     * @param auth
+     * @param {string} locationId
+     * @param {CredentialSchemaBasic} auth
+     * @returns {boolean}
      */
     public static async authBasic(locationId: string, auth: CredentialSchemaBasic): Promise<boolean> {
         const nLocationId = parseInt(locationId, 10) || 0;
