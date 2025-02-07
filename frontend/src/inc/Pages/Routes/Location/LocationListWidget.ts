@@ -66,12 +66,12 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
 
         for (const tlocation of locations) {
             const location = new LocationWidget(this, this._editable);
-            location.setLocation(tlocation);
 
             if (credentials.list) {
                 location.setCredentialValues(credentials.list);
             }
 
+            location.setLocation(tlocation);
             this.addObject(location);
         }
     }
