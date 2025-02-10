@@ -162,7 +162,7 @@ export class Certbot implements ISslCertProvider {
      */
     public async createCertificate(options: SslCertCreateOptions): Promise<boolean> {
         if (!await FileHelper.mkdir(options.webRootPath, true)) {
-            Logger.getLogger().error(`Web root path can not create/found: ${options.webRootPath}`, {
+            Logger.getLogger().error('Web root path can not create/found: %s', options.webRootPath, {
                 class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
             });
 
@@ -221,7 +221,7 @@ export class Certbot implements ISslCertProvider {
         if (returnCode === 0) {
             isSuccess = true;
         } else {
-            Logger.getLogger().error(`Return code: ${returnCode}`, {
+            Logger.getLogger().error('Return code: $s', returnCode, {
                 class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
             });
         }

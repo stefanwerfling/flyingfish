@@ -50,8 +50,6 @@ import {Ssh as SshController} from './Routes/Main/Ssh.js';
 import {Ssl as SslController} from './Routes/Main/Ssl.js';
 import {UpnpNat as UpnpNatController} from './Routes/Main/UpnpNat.js';
 import {User as UserController} from './Routes/Main/User.js';
-import {AddressAccess as NjsAddressAccessController} from './Routes/Njs/AddressAccess.js';
-import {AuthBasic as NjsAuthBasicController} from './Routes/Njs/AuthBasic.js';
 
 /**
  * Main

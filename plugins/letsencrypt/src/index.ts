@@ -1,4 +1,4 @@
-import {APlugin, PluginServiceNames} from 'flyingfish_core';
+import {APlugin, Logger, PluginServiceNames} from 'flyingfish_core';
 import {SslCertProviderLoader} from './SslCertProviderLoader.js';
 
 /**
@@ -29,6 +29,10 @@ export default class LetsEncrypt extends APlugin {
     public onEnable(): boolean {
         if (this.getPluginManager().getServiceName() === PluginServiceNames.backend) {
             this.getPluginManager().registerEvents(new SslCertProviderLoader(), this);
+        } else {
+            Logger.getLogger().warn('The LetsEncrypt plugin can only load from backend.', {
+                class: 'Plugin::LetsEncrypt::onEnable'
+            });
         }
 
         return true;
