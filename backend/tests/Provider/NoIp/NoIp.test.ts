@@ -45,7 +45,7 @@ describe('testing dyndns client noip', () => {
                 password: 'password',
                 ip: '3.4.5.6',
                 ip6: null,
-                hostname: []
+                hostnames: []
             });
 
             expect(result.result).toBe(false);
@@ -61,7 +61,7 @@ describe('testing dyndns client noip', () => {
                 password: password!,
                 ip: '3.4.5.6',
                 ip6: null,
-                hostname: [hostname!]
+                hostnames: [hostname!]
             });
 
             expect(result.result).toBe(true);

@@ -8,6 +8,7 @@
     "test": "node --experimental-vm-modules ../node_modules/.bin/jest",
     "npm-check-updates": "npm-check-updates",
     "build": "npm run compile",
+    "build_force": "rm -r dist | true && rm tsconfig.tsbuildinfo | true && npm run compile",
     "compile": "tsc --project tsconfig.json"
   },
   "repository": {

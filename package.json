@@ -27,7 +27,8 @@
   ],
   "scripts": {
     "npm-check-updates": "cd ./schemas/ && npm-check-updates && cd ../core/ && npm-check-updates && cd ../backend/ && npm-check-updates && cd ../frontend/ && npm-check-updates && cd ../ddnsserver/ && npm-check-updates && cd ../himhip/ && npm-check-updates && cd ../nginx/ && npm-check-updates && cd ../plugins/ && npm-check-updates && cd ../sshserver/ && npm-check-updates",
-    "compile": "cd ./schemas/ && npm run compile && cd ../core/ && npm run compile && cd ../backend/ && npm run compile && cd ../frontend/ && gulp default && cd ../ddnsserver/ && npm run compile && cd ../himhip/ && npm run compile && cd ../nginx/ && npm run compile && cd ../plugins/ && npm run compile && cd ../sshserver/ && npm run compile"
+    "compile": "cd ./schemas/ && npm run compile && cd ../core/ && npm run compile && cd ../backend/ && npm run compile && cd ../frontend/ && gulp default && cd ../ddnsserver/ && npm run compile && cd ../himhip/ && npm run compile && cd ../nginx/ && npm run compile && cd ../plugins/ && npm run compile && cd ../sshserver/ && npm run compile",
+    "build_force": "cd ./schemas/ && npm run build_force && cd ../core/ && npm run build_force && cd ../backend/ && npm run build_force && cd ../frontend/ && gulp default && cd ../ddnsserver/ && npm run build_force && cd ../himhip/ && npm run build_force && cd ../nginx/ && npm run compile && cd ../plugins/ && npm run build_force && cd ../sshserver/ && npm run build_force"
   },
   "devDependencies": {
     "husky": "^9.1.7",

@@ -98,6 +98,7 @@ COPY ./schemas/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
+RUN rm -R tsconfig.tsbuildinfo | true
 RUN rm package-lock.json | true
 
 # Copy Core ------------------------------------------------------------------------------------------------------------
@@ -107,6 +108,7 @@ COPY ./core/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
+RUN rm -R tsconfig.tsbuildinfo | true
 RUN rm package-lock.json | true
 
 # Copy Plugins ---------------------------------------------------------------------------------------------------------
@@ -116,6 +118,7 @@ COPY ./plugins/package.json ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
+RUN rm -R tsconfig.tsbuildinfo | true
 RUN rm package-lock.json | true
 
 WORKDIR /opt/flyingfish/plugins/letsencrypt
@@ -123,6 +126,7 @@ COPY ./plugins/letsencrypt/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
+RUN rm -R tsconfig.tsbuildinfo | true
 RUN rm package-lock.json | true
 
 # Copy/ Backend --------------------------------------------------------------------------------------------------------
@@ -132,6 +136,7 @@ COPY backend ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
+RUN rm -R tsconfig.tsbuildinfo | true
 RUN rm package-lock.json | true
 
 # Copy/Install Frontend ------------------------------------------------------------------------------------------------
