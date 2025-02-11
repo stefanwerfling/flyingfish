@@ -1,5 +1,6 @@
 import {ASslCertProviderOnLoadEvent, ISslCertProvider} from 'flyingfish_core';
-import {Certbot} from './Certbot.js';
+import {LetsEncryptDns01} from './LetsEncryptDns01.js';
+import {LetsEncryptHttp01} from './LetsEncryptHttp01.js';
 
 /**
  * SSL Cert Provider loader
@@ -11,7 +12,8 @@ export class SslCertProviderLoader extends ASslCertProviderOnLoadEvent {
      * @protected
      */
     protected _providers: ISslCertProvider[] = [
-        new Certbot()
+        new LetsEncryptHttp01(),
+        new LetsEncryptDns01()
     ];
 
     /**

@@ -1,5 +1,5 @@
-import {mkdir, stat, unlink, readFile, lstat, rename, chmod, access} from 'fs/promises';
-import {constants} from 'fs';
+import {Ets} from 'ets';
+import {mkdir, stat, unlink, readFile, rename, chmod, writeFile, realpath} from 'fs/promises';
 import {Logger} from '../Logger/Logger.js';
 
 /**
@@ -22,6 +22,7 @@ export class FileHelper {
         try {
             stats = await stat(filename);
         } catch (e) {
+            Logger.getLogger().silly(e);
             return true;
         }
 
@@ -38,32 +39,21 @@ export class FileHelper {
      * @returns {boolean}
      */
     public static async fileExist(file: string, allowLink: boolean = false): Promise<boolean> {
-        try {
-            if( (await stat(file)).isFile()) {
-                return true;
-            }
-        } catch (e) {
-            Logger.getLogger().silly('FileHelper::fileExist: exception stat by file: %s', file, e);
-        }
+        let fileStat;
 
         try {
-            await access(file, constants.F_OK);
+            fileStat = await stat(file);
+        } catch(e) {
+            Logger.getLogger().silly('FileHelper::fileExist: exception stat by file: %s', file);
+            Logger.getLogger().silly('FileHelper::fileExist: Trace: %s', Ets.formate(e, true, true));
+            return false;
+        }
+
+        if (fileStat.isFile()) {
             return true;
-        } catch (e) {
-            Logger.getLogger().silly('FileHelper::fileExist: exception by access ile: %s', file, e);
         }
 
-        if (allowLink) {
-            try {
-                if ((await lstat(file)).isSymbolicLink()) {
-                    return true;
-                }
-            } catch (e) {
-                Logger.getLogger().silly('FileHelper::fileExist: exception by file link: %s', file, e);
-            }
-        }
-
-        return false;
+        return allowLink && fileStat.isSymbolicLink();
     }
 
     /**
@@ -75,6 +65,7 @@ export class FileHelper {
         try {
             return (await stat(director)).isDirectory();
         } catch (e) {
+            Logger.getLogger().silly(e);
             return false;
         }
     }
@@ -91,6 +82,7 @@ export class FileHelper {
                 recursive: recursive
             });
         } catch (e) {
+            Logger.getLogger().silly(e);
             return false;
         }
 
@@ -106,6 +98,7 @@ export class FileHelper {
         try {
             return (await stat(file)).size;
         } catch (e) {
+            Logger.getLogger().silly(e);
             return -1;
         }
     }
@@ -120,6 +113,7 @@ export class FileHelper {
         try {
             await rename(filePath, targetPath);
         } catch (e) {
+            Logger.getLogger().silly(e);
             return false;
         }
 
@@ -135,6 +129,7 @@ export class FileHelper {
         try {
             await unlink(file);
         } catch (e) {
+            Logger.getLogger().silly(e);
             return false;
         }
 
@@ -151,7 +146,7 @@ export class FileHelper {
     }
 
     /**
-     * Read a content from File and parse as a json object
+     * Read a content from File and parse as a JSON object
      * @param {string} jsonFile
      */
     public static async readJsonFile(jsonFile: string): Promise<any> {
@@ -167,6 +162,24 @@ export class FileHelper {
      */
     public static async chmod(apath: string, mode: string|number): Promise<void> {
         return chmod(apath, mode);
+    }
+
+    /**
+     * Create a file with content
+     * @param {string} file
+     * @param {string} content
+     */
+    public static async create(file: string, content: string): Promise<void> {
+        return writeFile(file, content);
+    }
+
+    /**
+     * Real path
+     * @param {string} apath
+     * @returns {string}
+     */
+    public static async realPath(apath: string): Promise<string> {
+        return realpath(apath);
     }
 
 }

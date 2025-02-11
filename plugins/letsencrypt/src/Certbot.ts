@@ -2,21 +2,14 @@ import {
     DateHelper,
     FileHelper,
     FSslCertProviderOnReset,
-    ISslCertProvider,
-    Logger, ProviderType,
-    SslCertBundel, SslCertCreateOptions
+    SslCertBundel
 } from 'flyingfish_core';
-import {ProviderEntry} from 'flyingfish_schemas';
 import path from 'path';
-import {spawn} from 'child_process';
 
 /**
  * Lets encrypt certbot object.
  */
-export class Certbot implements ISslCertProvider {
-
-    public static NAME = 'letsencrypt';
-    public static TITLE = 'LetsEncrypt (HTTP-01)';
+export class Certbot {
 
     public static readonly LIMIT_REQUESTS = 5;
     public static readonly LIMIT_TIME_HOUR = 1;
@@ -39,51 +32,38 @@ export class Certbot implements ISslCertProvider {
     protected _config: string = '/etc/letsencrypt.ini';
 
     /**
+     * Base Path
+     * @protected
+     */
+    protected _basePath: string = '/etc/letsencrypt';
+
+    /**
      * Live path from lets encrypt.
      * @member {string}
      */
-    protected _livePath: string = '/etc/letsencrypt/live';
+    protected _livePath: string = '/live';
 
     /**
-     * Return the keyname for provider as ident.
+     * Build the domain dir path.
+     * @param {string} domainName
      * @returns {string}
      */
-    public getName(): string {
-        return Certbot.NAME;
+    protected _getDomainDir(domainName: string): string {
+        return path.join(this._basePath, this._livePath, domainName);
     }
 
     /**
-     * Return the title for provider (for frontend).
-     * @returns {string}
-     */
-    public getTitle(): string {
-        return Certbot.TITLE;
-    }
-
-    /**
-     * Return the type of provider
-     * @returns {ProviderType}
-     */
-    public getType(): ProviderType {
-        return ProviderType.sslcert;
-    }
-
-    /**
-     * Return the provider entry
-     * @returns {ProviderEntry}
-     */
-    public getProviderEntry(): ProviderEntry {
-        return {
-            name: Certbot.NAME,
-            title: Certbot.TITLE
-        };
-    }
-
-    /**
-     * Support the provider wildcard certificates
+     * Exist a certificate by domain name.
+     * @param {string} domainName - Name of domain.
      * @returns {boolean}
      */
-    public isSupportWildcard(): boolean {
+    public async existCertificate(domainName: string): Promise<boolean> {
+        const domainDir = this._getDomainDir(domainName);
+
+        if (await FileHelper.directoryExist(domainDir)) {
+            return FileHelper.fileExist(path.join(domainDir, Certbot.PEM_CERT));
+        }
+
         return false;
     }
 
@@ -112,30 +92,6 @@ export class Certbot implements ISslCertProvider {
     }
 
     /**
-     * Build the domain dir path.
-     * @param {string} domainName
-     * @returns {string}
-     */
-    protected _getDomainDir(domainName: string): string {
-        return path.join(this._livePath, domainName);
-    }
-
-    /**
-     * Exist a certificate by domain name.
-     * @param {string} domainName - Name of domain.
-     * @returns {boolean}
-     */
-    public async existCertificate(domainName: string): Promise<boolean> {
-        const domainDir = this._getDomainDir(domainName);
-
-        if (await FileHelper.directoryExist(domainDir)) {
-            return FileHelper.fileExist(path.join(domainDir, Certbot.PEM_CERT));
-        }
-
-        return false;
-    }
-
-    /**
      * Return when existed, the certificat bundel (cert, fullchain, privatkey).
      * @param {string} domainName
      * @returns {SslCertBundel|null}
@@ -153,80 +109,6 @@ export class Certbot implements ISslCertProvider {
         }
 
         return null;
-    }
-
-    /**
-     * Create a certificate by provider.
-     * @param {SslCertCreateOptions} options
-     * @returns {boolean}
-     */
-    public async createCertificate(options: SslCertCreateOptions): Promise<boolean> {
-        if (!await FileHelper.mkdir(options.webRootPath, true)) {
-            Logger.getLogger().error('Web root path can not create/found: %s', options.webRootPath, {
-                class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
-            });
-
-            return false;
-        }
-
-        let keySize = 4096;
-
-        if (options.keySize) {
-            keySize = options.keySize;
-        }
-
-        const process = spawn(this._command,
-            [
-                'certonly',
-                '--non-interactive',
-                '--rsa-key-size',
-                `${keySize}`,
-                '--webroot',
-                '--agree-tos',
-                '--no-eff-email',
-                '--email',
-                options.email,
-                '-w',
-                options.webRootPath,
-                '-d',
-                options.domainName
-            ]);
-
-        process.stdout!.on('data', (buf) => {
-            Logger.getLogger().info(buf.toString(), {
-                class: 'Plugin::LetsEncrypt::Certbot::createCertificate::process:stdout'
-            });
-        });
-
-        process.stderr!.on('data', (buf) => {
-            Logger.getLogger().error(buf.toString(), {
-                class: 'Plugin::LetsEncrypt::Certbot::createCertificate::process:stderr'
-            });
-        });
-
-        const returnCode = await new Promise((resolve) => {
-            process.on('close', resolve);
-        });
-
-        const isCertExist = await this.existCertificate(options.domainName) !== null;
-
-        if (!isCertExist) {
-            Logger.getLogger().error('Certification not create/found.', {
-                class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
-            });
-        }
-
-        let isSuccess = false;
-
-        if (returnCode === 0) {
-            isSuccess = true;
-        } else {
-            Logger.getLogger().error('Return code: $s', returnCode, {
-                class: 'Plugin::LetsEncrypt::Certbot::createCertificate'
-            });
-        }
-
-        return isCertExist && isSuccess;
     }
 
 }

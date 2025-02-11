@@ -147,6 +147,7 @@ export class PluginManager {
                     }
                 } catch (e) {
                     Logger.getLogger().warn('PluginManager::scan: package.json can not read/parse');
+                    Logger.getLogger().warn(e);
                 }
             }
         }
@@ -256,7 +257,7 @@ export class PluginManager {
      * @param {Function} aClass
      * @returns {APluginEvent[]}
      */
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     public getAllEvents<T extends APluginEvent>(aClass: Function): T[] {
         const eventList: T[] = [];
 
