@@ -94,6 +94,7 @@ export class DBSetup {
         l10443.listen_category = NginxListenCategory.default_https;
         l10443.description = 'HTTPS Listener Intern';
         l10443.fixlisten = true;
+        l10443.proxy_protocol_in = true;
 
         l10443 = await NginxListenServiceDB.getInstance().save(l10443);
 
@@ -105,20 +106,9 @@ export class DBSetup {
         l10080.listen_category = NginxListenCategory.default_http;
         l10080.description = 'HTTP Listener Intern';
         l10080.fixlisten = true;
+        l10080.proxy_protocol_in = true;
 
         l10080 = await NginxListenServiceDB.getInstance().save(l10080);
-
-        // add 10081 listener status
-        const l10081 = new NginxListenDB();
-        l10081.name = 'STATUS INTERN';
-        l10081.listen_port = 10081;
-        l10081.listen_type = NginxListenTypes.http;
-        l10081.listen_category = NginxListenCategory.status;
-        l10081.description = 'Status Listener Intern';
-        l10081.routeless = true;
-        l10081.fixlisten = true;
-
-        await NginxListenServiceDB.getInstance().save(l10081);
 
         Logger.getLogger().info('Default listener create for first init.');
 
