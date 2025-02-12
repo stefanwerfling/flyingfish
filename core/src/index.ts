@@ -105,6 +105,10 @@ export {
     BaseHttpServerOptions,
     BaseHttpServer
 } from './inc/Server/BaseHttpServer.js';
+export {
+    USHttpServerOptions,
+    USHttpServer
+} from './inc/Server/USHttpServer.js';
 
 // Utils
 export {DateHelper} from './inc/Utils/DateHelper.js';

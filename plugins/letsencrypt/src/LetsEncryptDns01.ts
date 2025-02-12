@@ -1,8 +1,16 @@
 import {spawn} from 'child_process';
-import {FileHelper, ISslCertProvider, Logger, ProviderType, SslCertCreateOptions} from 'flyingfish_core';
+import {
+    FileHelper,
+    ISslCertProvider,
+    Logger,
+    ProviderType,
+    SslCertCreateGlobal,
+    SslCertCreateOptions
+} from 'flyingfish_core';
 import {ProviderEntry} from 'flyingfish_schemas';
 import path from 'path';
 import {Certbot} from './Certbot.js';
+import {HookServer} from './Dns01/HookServer.js';
 
 /**
  * LetsEncryptDns01
@@ -55,13 +63,18 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
         return true;
     }
 
-    protected async _createHookAuth(): Promise<string> {
+    /**
+     * Create the auth hook script
+     * @param {string} unixSocket
+     * @protected
+     */
+    protected async _createHookAuth(unixSocket: string): Promise<string> {
         const pathHook = path.join(this._basePath, 'dns01HookAuth.sh');
 
         if (!await FileHelper.fileExist(pathHook)) {
             const content = '#!/bin/bash\r\n' +
                 '\r\n' +
-                'curl -X POST "http://127.0.0.1/letsencrypt/auth" \\\r\n' +
+                `curl -X POST --unix-socket ${unixSocket} "http://localhost/letsencrypt/auth" \\\r\n` +
                 '-H "Content-Type: application/json" \\\r\n' +
                 '-d "{\\"domain\\": \\"$CERTBOT_DOMAIN\\", \\"value\\": \\"$CERTBOT_VALIDATION\\"}"' +
                 '\r\n' +
@@ -73,13 +86,18 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
         return pathHook;
     }
 
-    protected async _createHookCleanup(): Promise<string> {
+    /**
+     * Create the clean hook script
+     * @param {string} unixSocket
+     * @protected
+     */
+    protected async _createHookCleanup(unixSocket: string): Promise<string> {
         const pathHook = path.join(this._basePath, 'dns01HookCleanup.sh');
 
         if (!await FileHelper.fileExist(pathHook)) {
             const content = '#!/bin/bash\r\n' +
                 '\r\n' +
-                'curl -X POST "http://127.0.0.1/letsencrypt/cleanup" \\\r\n' +
+                `curl -X POST --unix-socket ${unixSocket} "http://localhost/letsencrypt/cleanup" \\\r\n` +
                 '-H "Content-Type: application/json" \\\r\n' +
                 '-d "{\\"domain\\": \\"$CERTBOT_DOMAIN\\"}"' +
                 '\r\n' +
@@ -96,9 +114,10 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
      * https://chattirakeshkumar.medium.com/comprehensive-ssl-certificate-setup-with-lets-encrypt-and-certbot-208403d5e462
      * https://eff-certbot.readthedocs.io/en/stable/using.html#re-creating-and-updating-existing-certificates
      * @param {SslCertCreateOptions} options
+     * @param {SslCertCreateGlobal} global
      * @returns {boolean}
      */
-    public async createCertificate(options: SslCertCreateOptions): Promise<boolean> {
+    public async createCertificate(options: SslCertCreateOptions, global: SslCertCreateGlobal): Promise<boolean> {
         if (!await FileHelper.mkdir(options.webRootPath, true)) {
             Logger.getLogger().error('Web root path can not create/found: %s', options.webRootPath, {
                 class: 'Plugin::LetsEncrypt::LetsEncryptDns01::createCertificate'
@@ -106,6 +125,13 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
 
             return false;
         }
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        const hookServer = new HookServer(this._basePath);
+        await hookServer.listen();
+
+        // -------------------------------------------------------------------------------------------------------------
 
         let keySize = 4096;
 
@@ -124,8 +150,8 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
             options.email,
         ];
 
-        const pathHookAuth = await this._createHookAuth();
-        const pathHookCleanup = await this._createHookCleanup();
+        const pathHookAuth = await this._createHookAuth(hookServer.getUnixSocket());
+        const pathHookCleanup = await this._createHookCleanup(hookServer.getUnixSocket());
 
         args.push('--manual-auth-hook');
         args.push(pathHookAuth);
@@ -157,6 +183,12 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
         const returnCode = await new Promise((resolve) => {
             process.on('close', resolve);
         });
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        hookServer.close();
+
+        // -------------------------------------------------------------------------------------------------------------
 
         const isCertExist = await this.existCertificate(options.domainName) !== null;
 
