@@ -28,7 +28,7 @@ export class NginxControlHttpServer extends BaseHttpServer {
 
         const sockUnix = path.join(sockDirectory, `${NginxControlHttpServer.UNIX_ADDRESS}.sock`);
 
-        if (await FileHelper.fileExist(sockUnix, true)) {
+        if (await FileHelper.fileExist(sockUnix, true, true)) {
             await FileHelper.fileDelete(sockUnix);
         }
 
@@ -49,7 +49,7 @@ export class NginxControlHttpServer extends BaseHttpServer {
      * start the listen
      */
     public async listen(): Promise<void> {
-        const app = this._server;
+        const app = this._express;
         this._unixPath = await this._getUnixSocket();
 
         const server = app.listen(this._unixPath, () => {

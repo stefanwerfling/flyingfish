@@ -1515,9 +1515,31 @@ export class NginxService {
         this._syslog.listen();
     }
 
+    protected async _closeSysLog(): Promise<void> {
+        if (this._syslog !== null) {
+            this._syslog.close();
+            this._syslog = null;
+        }
+    }
+
+    /**
+     * Start the nginx control server
+     * @protected
+     */
     protected async _startControl(): Promise<void> {
         this._control = new NginxControlHttpServer();
         await this._control.listen();
+    }
+
+    /**
+     * Close the nginx control server
+     * @protected
+     */
+    protected async _closeControl(): Promise<void> {
+        if (this._control) {
+            this._control.close();
+            this._control = null;
+        }
     }
 
     /**
@@ -1576,6 +1598,9 @@ export class NginxService {
         } else if (forced) {
             NginxServer.getInstance().stop();
         }
+
+        await this._closeControl();
+        await this._closeSysLog();
     }
 
     /**

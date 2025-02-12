@@ -17,8 +17,8 @@ export class HttpServer extends BaseHttpServer {
     protected _initServer(): void {
         super._initServer();
 
-        this._server.use(helmet());
-        this._server.use(helmet.contentSecurityPolicy({
+        this._express.use(helmet());
+        this._express.use(helmet.contentSecurityPolicy({
             directives: {
                 defaultSrc: ['\'self\''],
                 connectSrc: ['\'self\''],
@@ -76,7 +76,7 @@ export class HttpServer extends BaseHttpServer {
             }
         });
 
-        this._server.use(limiter);
+        this._express.use(limiter);
     }
 
     /**

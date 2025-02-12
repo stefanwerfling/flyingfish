@@ -123,4 +123,14 @@ export class SysLogServer {
         return this._socket !== null;
     }
 
+    /**
+     * Close the server
+     */
+    public close(): void {
+        if (this._socket !== null) {
+            this._socket.close();
+            this._socket = null;
+        }
+    }
+
 }

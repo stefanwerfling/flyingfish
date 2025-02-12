@@ -35,10 +35,11 @@ export class FileHelper {
     /**
      * Exist a file
      * @param {string} file
-     * @param {boolean} allowLink
+     * @param {boolean} isLink
+     * @param {boolean} isSocket
      * @returns {boolean}
      */
-    public static async fileExist(file: string, allowLink: boolean = false): Promise<boolean> {
+    public static async fileExist(file: string, isLink: boolean = false, isSocket: boolean = false): Promise<boolean> {
         let fileStat;
 
         try {
@@ -53,7 +54,11 @@ export class FileHelper {
             return true;
         }
 
-        return allowLink && fileStat.isSymbolicLink();
+        if (isLink && fileStat.isSymbolicLink()) {
+            return true;
+        }
+
+        return isSocket && fileStat.isSocket();
     }
 
     /**

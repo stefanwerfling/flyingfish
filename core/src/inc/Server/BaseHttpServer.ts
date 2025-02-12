@@ -1,5 +1,6 @@
 import fs from 'fs';
 import https from 'https';
+import * as http from 'node:http';
 import Path from 'path';
 import {Logger} from '../Logger/Logger.js';
 import {DefaultRoute} from './Routes/DefaultRoute.js';
@@ -54,19 +55,25 @@ export class BaseHttpServer {
 
     /**
      * server default port
-     * @private
+     * @protected
      */
     protected readonly _port: number = 3000;
 
     /**
-     * server object
-     * @private
+     * express object
+     * @protected
      */
-    protected readonly _server: Application;
+    protected readonly _express: Application;
+
+    /**
+     * Server object
+     * @protected
+     */
+    protected _server: http.Server|null = null;
 
     /**
      * realm
-     * @private
+     * @protected
      */
     protected readonly _realm: string;
 
@@ -105,8 +112,8 @@ export class BaseHttpServer {
             this._session = serverInit.session;
         }
 
-        this._server = express();
-        this._server.use((req, _res, next) => {
+        this._express = express();
+        this._express.use((req, _res, next) => {
             Logger.getLogger().silly('BaseHttpServer::request: Url: %s Protocol: %s Method: %s', req.url, req.protocol, req.method);
             next();
         });
@@ -129,7 +136,7 @@ export class BaseHttpServer {
 
         // add error handling
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        this._server.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
+        this._express.use((error: Error, _request: Request, response: Response, _next: NextFunction) => {
             response.status(500);
             Logger.getLogger().error(error.stack);
         });
@@ -140,14 +147,14 @@ export class BaseHttpServer {
      * @protected
      */
     protected _initServer(): void {
-        this._server.use(bodyParser.urlencoded({extended: true}));
-        this._server.use(bodyParser.json());
-        this._server.use(cookieParser());
+        this._express.use(bodyParser.urlencoded({extended: true}));
+        this._express.use(bodyParser.json());
+        this._express.use(cookieParser());
 
         // -------------------------------------------------------------------------------------------------------------
 
         if (this._session) {
-            this._server.use(
+            this._express.use(
                 session({
                     secret: this._session.secret,
                     proxy: true,
@@ -171,7 +178,7 @@ export class BaseHttpServer {
      */
     private _routes(routes: DefaultRoute[]): void {
         routes.forEach((route) => {
-            this._server.use(route.getExpressRouter());
+            this._express.use(route.getExpressRouter());
         });
     }
 
@@ -182,7 +189,7 @@ export class BaseHttpServer {
      */
     private _assets(publicDir: string | null): void {
         if (publicDir !== null) {
-            this._server.use(express.static(publicDir));
+            this._express.use(express.static(publicDir));
         }
     }
 
@@ -205,8 +212,6 @@ export class BaseHttpServer {
      * listen
      */
     public async listen(): Promise<void> {
-        const app = this._server;
-
         if (this._crypt) {
             fs.mkdirSync(this._crypt.sslPath, {recursive: true});
 
@@ -217,12 +222,12 @@ export class BaseHttpServer {
                 const privateKey = fs.readFileSync(keyFile);
                 const crt = fs.readFileSync(crtFile);
 
-                const httpsServer = https.createServer({
+                this._server = https.createServer({
                     key: privateKey,
                     cert: crt
-                }, app);
+                }, this._express);
 
-                httpsServer.on('tlsClientError', (err, atlsSocket) => {
+                this._server.on('tlsClientError', (err, atlsSocket) => {
                     const tlsError = err as TlsClientError;
 
                     if (tlsError.reason === 'http request') {
@@ -244,7 +249,7 @@ export class BaseHttpServer {
                     }
                 });
 
-                httpsServer.listen(this._port, () => {
+                this._server.listen(this._port, () => {
                     Logger.getLogger().info(
                         '%s listening on the https://%s:%d',
                         this._realm,
@@ -259,7 +264,7 @@ export class BaseHttpServer {
                 Logger.getLogger().error('BaseHttpServer::listen: Key and Certificate not found for http server!');
             }
         } else {
-            app.listen(this._port, () => {
+            this._server = this._express.listen(this._port, () => {
                 Logger.getLogger().info(
                     'BaseHttpServer::listen: %s listening on the http://%s:%d',
                     this._realm,
@@ -267,6 +272,16 @@ export class BaseHttpServer {
                     this._port
                 );
             });
+        }
+    }
+
+    /**
+     * Close the server listen
+     */
+    public close(): void {
+        if (this._server !== null) {
+            this._server.close();
+            this._server = null;
         }
     }
 
