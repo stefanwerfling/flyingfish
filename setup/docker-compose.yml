@@ -40,6 +40,11 @@ services:
       - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
       - DOCKER_INFLUXDB_INIT_RETENTION=${INFLUXDB_RETENTION}
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+      - INFLUXDB_STORAGE_CACHE_MAX_MEMORY_SIZE=52428800
+      - INFLUXDB_STORAGE_CACHE_SNAPSHOT_MEMORY_SIZE=26214400
+      - INFLUXDB_STORAGE_CACHE_SNAPSHOT_WRITE_COLD_DURATION=10s
+      - INFLUXDB_STORAGE_WAL_FSYNC_DELAY=1s
+      - INFLUXDB_STORAGE_INDEX_VERSION=tsi1
     ports:
       - "127.0.0.1:8086:8086"
     networks:
@@ -63,7 +68,7 @@ services:
       - flyingfishRedisData:/data
     ports:
       - '127.0.0.1:6379:6379'
-    command: "redis-server --save ${REDIS_SAVE} --loglevel ${REDIS_LOGLEVEL} --requirepass ${REDIS_REQUIREPASS}"
+    command: ["redis-server", "--save", "${REDIS_SAVE}", "--loglevel", "${REDIS_LOGLEVEL}", "--maxmemory", "${REDIS_MAX_MEMORY}", "--maxmemory-policy", "allkeys-lru", "--requirepass", "${REDIS_REQUIREPASS}"]
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.7
