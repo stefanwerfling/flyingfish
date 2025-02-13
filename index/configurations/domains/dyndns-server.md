@@ -32,7 +32,7 @@ Add/Edit an account where a DynDns client can log in and submit its update.
 
 
 {% hint style="info" %}
-[To set up the router or DynDNS client, read the example for more information.](../../examples/own-dyndns-server.md)
+[To set up the router or DynDNS client, read the example for more information.](../../examples/own-dyndns-server-fritzbox.md)
 {% endhint %}
 
 [^1]: 

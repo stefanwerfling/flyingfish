@@ -31,7 +31,7 @@
     * [SSH hidden on HTTPS](index/examples/ssh-hidden-on-https.md)
     * [FlyingFish to other reverse proxy](index/examples/flyingfish-to-other-reverse-proxy.md)
     * [Backup Server, SSH to Nas](index/examples/backup-server-ssh-to-nas.md)
-    * [Own DynDNS Server](index/examples/own-dyndns-server.md)
+    * [Own DynDNS Server - Fritzbox](index/examples/own-dyndns-server-fritzbox.md)
     * [Inventree - Route](index/examples/inventree-route.md)
   * [Developer](index/developer/README.md)
     * [Ideas, requests and bugs](index/developer/ideas-requests-and-bugs.md)
