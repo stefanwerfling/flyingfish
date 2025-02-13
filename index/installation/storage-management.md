@@ -6,7 +6,7 @@ This resulted in some problems for the host system because the wrong memory size
 
 ## Memory
 
-Choose the appropriate RAM size for your system. At the beginning and also as a goal I set a system with `2 GB`. This depends on what kind of traffic I expect. This means I have now restricted the Redis server and the InfluxDB server. The settings for this can be set in the Docker-Compose file and in the Env.&#x20;
+Choose the appropriate RAM size for your system. At the beginning and also as a goal I set a system with `2 GB`. This depends on what kind of traffic I expect. This means I have now restricted the Redis server and the InfluxDB server. The settings for this can be set in the Docker-Compose file and in the [Env. ](long-setup/env.md)
 
 The limit of the Nginx workers is also set to 4096 by default. These can be set in the web interface under Settings.
 
