@@ -128,7 +128,7 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
 
         // -------------------------------------------------------------------------------------------------------------
 
-        const hookServer = new HookServer(this._basePath);
+        const hookServer = new HookServer(this._basePath, global);
         await hookServer.listen();
 
         // -------------------------------------------------------------------------------------------------------------

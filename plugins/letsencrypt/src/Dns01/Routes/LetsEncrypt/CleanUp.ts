@@ -1,11 +1,12 @@
-import {DefaultRoute, DnsRecordBase, SslCertCreateGlobal} from 'flyingfish_core';
+import {DefaultRoute, SslCertCreateGlobal} from 'flyingfish_core';
 import {Router} from 'express';
-import {HookAuthReq, SchemaHookAuthReq} from '../../Schema/HookAuth.js';
+import {SchemaHookAuthReq} from '../../Schema/HookAuth.js';
+import {HookCleanupReq, SchemaHookCleanupReq} from '../../Schema/HookCleanup.js';
 
 /**
- * LetsEncrypt DNS 01 Route Auth
+ * LetsEncrypt DNS 01 Route CleanUp
  */
-export class Auth extends DefaultRoute {
+export class CleanUp extends DefaultRoute {
 
     /**
      * SslCertcreate global
@@ -23,7 +24,12 @@ export class Auth extends DefaultRoute {
         this._global = global;
     }
 
-    protected async _requestAuth(req: HookAuthReq): Promise<boolean> {
+    /**
+     * Request clean up
+     * @param {HookCleanupReq} req
+     * @protected
+     */
+    protected async _requestCleanUp(req: HookCleanupReq): Promise<boolean> {
         if (this._global.dnsServer) {
             let domain = req.domain;
 
@@ -31,17 +37,7 @@ export class Auth extends DefaultRoute {
                 domain = `_acme-challenge.${domain}`;
             }
 
-            const record: DnsRecordBase = {
-                // TXT
-                type: 0x10,
-                // IN
-                class: 0x01,
-                name: domain,
-                ttl: 1,
-                data: req.value
-            };
-
-            this._global.dnsServer.addTempDomain(domain, [record]);
+            this._global.dnsServer.removeTempDomain(domain);
 
             return true;
         }
@@ -55,10 +51,10 @@ export class Auth extends DefaultRoute {
      */
     public getExpressRouter(): Router {
         this._post(
-            '/letsencrypt/auth',
+            '/letsencrypt/cleanup',
             async(req, res) => {
-                if (this.isSchemaValidate(SchemaHookAuthReq, req.body, res)) {
-                    if (await this._requestAuth(req.body)) {
+                if (this.isSchemaValidate(SchemaHookCleanupReq, req.body, res)) {
+                    if (await this._requestCleanUp(req.body)) {
                         res.sendStatus(200);
                     } else {
                         res.sendStatus(500);
