@@ -16,6 +16,9 @@ import {Lang} from '../../../Lang.js';
 import {UtilNumber} from '../../../Utils/UtilNumber.js';
 import {LocationListWidget} from './LocationListWidget.js';
 
+/**
+ * Location Widget
+ */
 export class LocationWidget extends Card implements ICollectionEntryWidget {
 
     /**

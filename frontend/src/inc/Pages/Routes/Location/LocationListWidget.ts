@@ -1,5 +1,4 @@
-import {CardBodyType, CardLine, CardType, CollectionCardWidget} from 'bambooo';
-import {CollectionWidgetOnUpdate} from 'bambooo/src/v1/Widget/Collection/CollectionWidget.js';
+import {CardBodyType, CardLine, CardType, CollectionCardWidget, CollectionWidgetOnUpdate} from 'bambooo';
 import {Location} from 'flyingfish_schemas';
 import {Credential as CredentialApi} from '../../../Api/Credential.js';
 import {NginxLocationDestinationTypes} from '../../../Api/Route.js';

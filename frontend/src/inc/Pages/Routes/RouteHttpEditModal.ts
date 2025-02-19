@@ -4,7 +4,7 @@ import {
     Card,
     CardBodyType,
     CardLine,
-    CardType,
+    CardType, CollectionWidgetOnUpdateEvent,
     Element,
     FormGroup,
     FormRow,
@@ -178,8 +178,16 @@ export class RouteHttpEditModal extends ModalDialog {
 
         // tab location ------------------------------------------------------------------------------------------------
 
-        this._locationCollection = new LocationListWidget(tabLocation.body, () => {
+        this._locationCollection = new LocationListWidget(tabLocation.body, (event, entry) => {
             this._updateLocationTabBadge();
+
+            switch (event) {
+                case CollectionWidgetOnUpdateEvent.add:
+                    if (entry) {
+                        entry.setSshListens(this._sshListens);
+                    }
+                    break;
+            }
         },true);
 
         // tab advanced ------------------------------------------------------------------------------------------------
