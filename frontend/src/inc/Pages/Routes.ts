@@ -538,7 +538,7 @@ export class Routes extends BasePage {
                                         if (tupstream.proxy_protocol_out) {
                                             sdTdD.append('&nbsp;');
 
-                                            const sdTtD = new Tooltip(sdTd, 'Proxy protocol removed');
+                                            const sdTtD = new Tooltip(sdTdD, 'Proxy protocol removed');
 
                                             // eslint-disable-next-line no-new
                                             new Badge(sdTtD, 'P', BadgeType.color_cream_yellow);

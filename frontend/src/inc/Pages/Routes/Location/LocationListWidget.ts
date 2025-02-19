@@ -4,6 +4,11 @@ import {Credential as CredentialApi} from '../../../Api/Credential.js';
 import {NginxLocationDestinationTypes} from '../../../Api/Route.js';
 import {LocationWidget} from './LocationWidget.js';
 
+/**
+ * Event on PreSet
+ */
+export type LocationListWidgetOnPreSet = (entry: LocationWidget) => void;
+
 export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
 
     /**
@@ -57,8 +62,9 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
     /**
      * Set a location list to a collection
      * @param {Location[]} locations
+     * @param {LocationListWidgetOnPreSet|null} onPreset
      */
-    public async setLocationList(locations: Location[]): Promise<void> {
+    public async setLocationList(locations: Location[], onPreset: LocationListWidgetOnPreSet|null = null): Promise<void> {
         this.removeAll();
 
         const credentials = await CredentialApi.getList();
@@ -70,11 +76,19 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
                 location.setCredentialValues(credentials.list);
             }
 
+            if (onPreset !== null) {
+                onPreset(location);
+            }
+
             location.setLocation(tlocation);
             this.addObject(location);
         }
     }
 
+    /**
+     * Return a location list
+     * @returns {Location[]}
+     */
     public getLocationList(): Location[] {
         const list: Location[] = [];
 
