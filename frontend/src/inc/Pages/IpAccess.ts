@@ -14,6 +14,7 @@ import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogCo
 import {BasePage} from './BasePage.js';
 import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal.js';
 import {IpAccessBlacklistOwnModal} from './IpAccess/IpAccessBlacklistOwnModal.js';
+import {IpAccessCountriesWidget} from './IpAccess/IpAccessCountriesWidget.js';
 import {IpAccessWhitelistModal} from './IpAccess/IpAccessWhitelistModal.js';
 
 /**
@@ -204,6 +205,7 @@ export class IpAccess extends BasePage {
         const mainTabs = new NavTab(cardIpAccess, 'ipaccesstabs');
         const tabBlacklist = mainTabs.addTab('Blacklist', 'ipaccesstabblacklist');
         const tabWhitelist = mainTabs.addTab('Whitelist', 'ipaccesstabwhitelist');
+        const tabCountrylist = mainTabs.addTab('Countries', 'ipaccesstabcountrylist');
 
         tabBlacklist.body.addClass('dark-mode');
 
@@ -658,6 +660,15 @@ export class IpAccess extends BasePage {
                     });
                 }
             }
+
+            // country list --------------------------------------------------------------------------------------------
+
+            tabCountrylist.body.empty();
+
+            const map = new IpAccessCountriesWidget(tabCountrylist.body);
+            map.show();
+
+            // ---------------------------------------------------------------------------------------------------------
 
             cardIpAccess.hideLoading();
         };
