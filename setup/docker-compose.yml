@@ -68,7 +68,19 @@ services:
       - flyingfishRedisData:/data
     ports:
       - '127.0.0.1:6379:6379'
-    command: ["redis-server", "--save", "${REDIS_SAVE}", "--loglevel", "${REDIS_LOGLEVEL}", "--maxmemory", "${REDIS_MAX_MEMORY}", "--maxmemory-policy", "allkeys-lru", "--requirepass", "${REDIS_REQUIREPASS}"]
+    command: [
+      "redis-server",
+      "--save",
+      "${REDIS_SAVE}",
+      "--loglevel",
+      "${REDIS_LOGLEVEL}",
+      "--maxmemory",
+      "${REDIS_MAX_MEMORY}",
+      "--maxmemory-policy",
+      "allkeys-lru",
+      "--requirepass",
+      "${REDIS_REQUIREPASS}"
+    ]
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.7
@@ -102,6 +114,7 @@ services:
       FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
       FLYINGFISH_HIMHIP_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
+      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
       FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     ports:
       - "443:443"
@@ -133,6 +146,7 @@ services:
       FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_SERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
       FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     network_mode: host
     cap_add:
