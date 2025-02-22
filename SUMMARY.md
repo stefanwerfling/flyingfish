@@ -43,3 +43,4 @@
       * [Object name rules](index/developer/project-structure/object-name-rules.md)
     * [Image build](index/developer/image-build.md)
     * [Plugins](index/developer/plugins.md)
+  * [Contribution](index/contribution.md)
