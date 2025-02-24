@@ -1,0 +1,3 @@
+files:
+  - source: /frontend/src/langs/i18n/Lang_EN.json
+    translation: /frontend/src/langs/i18n/Lang_%two_letters_code%.json
