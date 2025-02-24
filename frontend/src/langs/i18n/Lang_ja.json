@@ -12,5 +12,5 @@
   "route_http_http2": "The http2 protocol can only be used on an SSL connection. Enable SSL to unlock this setting.",
   "route_http_location_headerhostport": "Only use by different port on router, your port != 80,443",
   "dyndns_client_edit_gateway": "The client is bound to the gateway and only runs when it is in the gateway. If nothing is specified, the client will always be executed.",
-  "dyndns_client_edit_updatedomains": "The specified domains are updated internally with the new IP in the record."
+  "dyndns_client_edit_updatedomains": "指定されたドメインは内部的に更新され、レコード内の新しい IP が更新されます。"
 }
