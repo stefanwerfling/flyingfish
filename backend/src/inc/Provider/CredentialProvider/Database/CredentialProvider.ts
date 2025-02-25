@@ -39,8 +39,8 @@ export class CredentialProvider implements ICredentialProvider {
     }
 
     /**
-     * Return the provider entry
-     * @returns {ProviderEntry}
+     * Return the Provider Entry
+     * @return {ProviderEntry}
      */
     public getProviderEntry(): ProviderEntry {
         return {

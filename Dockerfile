@@ -152,7 +152,9 @@ RUN rm ./package-lock.json | true
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
+RUN npm install --ignore-scripts --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
+WORKDIR /opt/flyingfish/node_modules/bcrypt
+RUN npm install --force
 
 WORKDIR /opt/flyingfish/schemas
 RUN npm run build

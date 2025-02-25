@@ -7,7 +7,7 @@ import {
     SslCertCreateGlobal,
     SslCertCreateOptions
 } from 'flyingfish_core';
-import {ProviderEntry} from 'flyingfish_schemas';
+import {ProviderSslEntry} from 'flyingfish_schemas';
 import path from 'path';
 import {Certbot} from './Certbot.js';
 import {HookServer} from './Dns01/HookServer.js';
@@ -46,12 +46,16 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
 
     /**
      * Return the provider entry
-     * @returns {ProviderEntry}
+     * @returns {ProviderSslEntry}
      */
-    public getProviderEntry(): ProviderEntry {
+    public getProviderEntry(): ProviderSslEntry {
         return {
             name: LetsEncryptDns01.NAME,
-            title: LetsEncryptDns01.TITLE
+            title: LetsEncryptDns01.TITLE,
+            options: {
+                email_required: true,
+                wildcardSupported: this.isSupportWildcard()
+            }
         };
     }
 

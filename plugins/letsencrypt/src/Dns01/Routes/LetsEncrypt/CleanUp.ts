@@ -1,6 +1,5 @@
 import {DefaultRoute, SslCertCreateGlobal} from 'flyingfish_core';
 import {Router} from 'express';
-import {SchemaHookAuthReq} from '../../Schema/HookAuth.js';
 import {HookCleanupReq, SchemaHookCleanupReq} from '../../Schema/HookCleanup.js';
 
 /**

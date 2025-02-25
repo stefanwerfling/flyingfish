@@ -1,3 +1,4 @@
+import {ProviderEntry, ProviderSslEntry} from 'flyingfish_schemas/dist/src/index.js';
 import {IProvider} from '../IProvider.js';
 import {FSslCertProviderOnReset} from './FSslCertProviderOnReset.js';
 import {SslCertBundel} from './SslCertBundel.js';
@@ -9,7 +10,7 @@ import {SslCertExistOptions} from './SslCertExistOptions.js';
 /**
  * The ssl certificate provider interface.
  */
-export interface ISslCertProvider extends IProvider {
+export interface ISslCertProvider extends IProvider<ProviderSslEntry> {
 
     /**
      * Support the provider wildcard certificates

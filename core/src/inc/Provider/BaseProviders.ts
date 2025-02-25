@@ -7,7 +7,7 @@ import {ProviderType} from './ProviderType.js';
 /**
  * Base Provider
  */
-export class BaseProviders {
+export class BaseProviders<E extends ProviderEntry, T extends IProvider<E>> {
 
     /**
      * Return a provider by name
@@ -16,8 +16,8 @@ export class BaseProviders {
      * @protected
      * @returns {T extends IProvider|null}
      */
-    protected async _getProvider<T extends IProvider>(name: string, type: ProviderType): Promise<T | null> {
-        const events = PluginManager.getInstance().getAllEvents<AProviderOnLoadEvent<T>>(AProviderOnLoadEvent<T>);
+    protected async _getProvider(name: string, type: ProviderType): Promise<T | null> {
+        const events = PluginManager.getInstance().getAllEvents<AProviderOnLoadEvent<E, T>>(AProviderOnLoadEvent<E, T>);
 
         for await (const event of events) {
             const providers = await event.getProviders();
@@ -38,10 +38,10 @@ export class BaseProviders {
      * @protected
      * @returns {ProviderEntry[]}
      */
-    protected async _getProviders<T extends IProvider>(type: ProviderType): Promise<ProviderEntry[]> {
-        const list: ProviderEntry[] = [];
+    protected async _getProviders(type: ProviderType): Promise<E[]> {
+        const list: E[] = [];
 
-        const events = PluginManager.getInstance().getAllEvents<AProviderOnLoadEvent<T>>(AProviderOnLoadEvent<T>);
+        const events = PluginManager.getInstance().getAllEvents<AProviderOnLoadEvent<E, T>>(AProviderOnLoadEvent<E, T>);
 
         for await (const event of events) {
             const providers = await event.getProviders();

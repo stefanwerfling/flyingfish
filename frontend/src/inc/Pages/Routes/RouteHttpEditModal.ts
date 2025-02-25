@@ -26,7 +26,7 @@ import {
     TooltipInfo,
     Tr
 } from 'bambooo';
-import {ListenData, Location, ProviderEntry, RouteVariable, SshPortEntry} from 'flyingfish_schemas';
+import {ListenData, Location, ProviderSslEntry, RouteVariable, SshPortEntry} from 'flyingfish_schemas';
 import moment from 'moment';
 import {ListenCategory, ListenTypes} from '../../Api/Listen.js';
 import {NginxHTTPVariables} from '../../Api/Route.js';
@@ -112,6 +112,12 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _switchSslEnable: Switch;
 
     /**
+     * Ssl Provider list
+     * @protected
+     */
+    protected _sslProviderList: ProviderSslEntry[] = [];
+
+    /**
      * ssl provider
      * @protected
      */
@@ -128,6 +134,12 @@ export class RouteHttpEditModal extends ModalDialog {
      * @protected
      */
     protected _inputSslEmail: InputBottemBorderOnly2;
+
+    /**
+     * ssl wildcard
+     * @protected
+     */
+    protected _switchSslWildcard: Switch;
 
     /**
      * switch http2 enable
@@ -243,14 +255,39 @@ export class RouteHttpEditModal extends ModalDialog {
         const groupSslEnable = new FormGroup(bodyCardSsl, 'SSL Enable');
         this._switchSslEnable = new Switch(groupSslEnable, 'ssl_enable');
 
-        const groupSslProvider = new FormGroup(bodyCardSsl, 'SSL Provider');
+        const rowProvider = new FormRow(bodyCardSsl);
+
+        const groupSslProvider = new FormGroup(rowProvider.createCol(9), 'SSL Provider');
         this._selectSslProvider = new SelectBottemBorderOnly2(groupSslProvider);
         groupSslProvider.hide();
+
+        const groupSslWildcard = new FormGroup(rowProvider.createCol(3), 'Wildcard');
+        this._switchSslWildcard = new Switch(groupSslWildcard, 'ssl_wildcard');
+        groupSslWildcard.hide();
 
         const groupSslEmail = new FormGroup(bodyCardSsl, 'SSL EMail');
         this._inputSslEmail = new InputBottemBorderOnly2(groupSslEmail);
         this._inputSslEmail.setPlaceholder('admin@flyingfish.org');
         groupSslEmail.hide();
+
+        this._selectSslProvider.setChangeFn(value => {
+            this._switchSslWildcard.setInativ(true);
+            this._inputSslEmail.setReadOnly(true);
+
+            for (const provider of this._sslProviderList) {
+                if (provider.name === value) {
+                    if (provider.options.email_required) {
+                        this._inputSslEmail.setReadOnly(false);
+                    }
+
+                    if (provider.options.wildcardSupported) {
+                        this._switchSslWildcard.setInativ(false);
+                    }
+
+                    break;
+                }
+            }
+        });
 
         this._sslCertDetails = new Card(bodyCardSsl, CardBodyType.none, CardType.primary, CardLine.none);
         // eslint-disable-next-line no-new
@@ -261,12 +298,14 @@ export class RouteHttpEditModal extends ModalDialog {
         this._switchSslEnable.setChangeFn(async(value) => {
             this._switchHttp2Enable.setInativ(true);
             groupSslProvider.hide();
+            groupSslWildcard.hide();
             groupSslEmail.hide();
             this._sslCertDetails.hide();
 
             if (value) {
                 this._switchHttp2Enable.setInativ(false);
                 groupSslProvider.show();
+                groupSslWildcard.show();
                 groupSslEmail.show();
 
                 if (this._id) {
@@ -582,7 +621,8 @@ export class RouteHttpEditModal extends ModalDialog {
      * setSslProviders
      * @param providers
      */
-    public setSslProviders(providers: ProviderEntry[]): void {
+    public setSslProviders(providers: ProviderSslEntry[]): void {
+        this._sslProviderList = providers;
         this._selectSslProvider.clearValues();
 
         this._selectSslProvider.addValue({
@@ -626,6 +666,22 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public getSslEmail(): string {
         return this._inputSslEmail.getValue();
+    }
+
+    /**
+     * Set ssl wildcard enable
+     * @param {boolean} enable
+     */
+    public setSslWildcard(enable: boolean): void {
+        this._switchSslWildcard.setEnable(enable);
+    }
+
+    /**
+     * Return the Ssl Wildcard is used
+     * @return {boolean}
+     */
+    public getSslWildcard(): boolean {
+        return this._switchSslWildcard.isEnable();
     }
 
     /**

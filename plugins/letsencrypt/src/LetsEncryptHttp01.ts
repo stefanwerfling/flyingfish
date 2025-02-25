@@ -4,7 +4,7 @@ import {
     Logger,
     SslCertCreateOptions, FileHelper
 } from 'flyingfish_core';
-import {ProviderEntry} from 'flyingfish_schemas';
+import {ProviderSslEntry} from 'flyingfish_schemas';
 import {Certbot} from './Certbot.js';
 import {spawn} from 'child_process';
 
@@ -42,12 +42,16 @@ export class LetsEncryptHttp01 extends Certbot implements ISslCertProvider {
 
     /**
      * Return the provider entry
-     * @returns {ProviderEntry}
+     * @returns {ProviderSslEntry}
      */
-    public getProviderEntry(): ProviderEntry {
+    public getProviderEntry(): ProviderSslEntry {
         return {
             name: LetsEncryptHttp01.NAME,
-            title: LetsEncryptHttp01.TITLE
+            title: LetsEncryptHttp01.TITLE,
+            options: {
+                wildcardSupported: this.isSupportWildcard(),
+                email_required: true
+            }
         };
     }
 

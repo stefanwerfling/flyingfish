@@ -233,7 +233,8 @@ export class Routes extends BasePage {
                         ssl: {
                             enable: this._routeHttpDialog.getSslEnable(),
                             provider: this._routeHttpDialog.getSslProvider(),
-                            email: this._routeHttpDialog.getSslEmail()
+                            email: this._routeHttpDialog.getSslEmail(),
+                            wildcard: this._routeHttpDialog.getSslWildcard()
                         },
                         locations: this._routeHttpDialog.getLocations(),
                         http2_enable: this._routeHttpDialog.getHttp2Enable(),
@@ -835,6 +836,7 @@ export class Routes extends BasePage {
 
                                     this._routeHttpDialog.setSslProvider(value.ssl.provider);
                                     this._routeHttpDialog.setSslEmail(value.ssl.email);
+                                    this._routeHttpDialog.setSslWildcard(value.ssl.wildcard);
                                     this._routeHttpDialog.setLocations(value.locations);
                                     this._routeHttpDialog.setHttp2Enable(value.http2_enable);
                                     this._routeHttpDialog.setXFrameOptions(value.x_frame_options);

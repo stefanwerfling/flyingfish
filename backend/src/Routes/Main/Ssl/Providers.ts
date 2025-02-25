@@ -1,4 +1,4 @@
-import {SslProvidersResponse, StatusCodes} from 'flyingfish_schemas';
+import {ProviderSslEntry, SslProvidersResponse, StatusCodes} from 'flyingfish_schemas';
 import {SslCertProviders} from '../../../inc/Provider/SslCertProvider/SslCertProviders.js';
 
 /**

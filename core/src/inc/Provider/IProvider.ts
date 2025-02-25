@@ -4,7 +4,7 @@ import {ProviderType} from './ProviderType.js';
 /**
  * Interface for a Provider
  */
-export interface IProvider {
+export interface IProvider<E extends ProviderEntry> {
 
     /**
      * Return the keyname for provider as ident.
@@ -26,8 +26,8 @@ export interface IProvider {
 
     /**
      * Return the provider entry
-     * @returns {ProviderEntry}
+     * @returns {E extends ProviderEntry}
      */
-    getProviderEntry(): ProviderEntry;
+    getProviderEntry(): E;
 
 }

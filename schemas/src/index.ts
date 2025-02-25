@@ -34,6 +34,7 @@ export {CredentialSchemaTypes} from './Backend/Credential/CredentialSchemaTypes.
 export {SchemaCredentialSchemaBasic, CredentialSchemaBasic} from './Backend/Credential/CredentialSchemaBasic.js';
 export {SchemaCredential, Credential} from './Backend/Credential/Credential.js';
 export {SchemaProviderEntry, ProviderEntry} from './Backend/Provider/ProviderEntry.js';
+export {SchemaProviderSslEntry, ProviderSslEntry} from './Backend/Provider/ProviderSslEntry.js';
 export {SchemaHimHIPData, HimHIPData} from './Backend/HimHIP/HimHIP.js';
 export {SchemaUpnpNatCacheMapping, UpnpNatCacheMapping} from './Backend/Cache/UpnpNatCache.js';
 export {SchemaDnsGlobalServer, DnsGlobalServer} from './Backend/Analysis/Dns/DnsGlobal.js';

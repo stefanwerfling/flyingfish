@@ -1,13 +1,11 @@
 import {
-    CredentialDB,
     CredentialLocationServiceDB,
     DomainServiceDB, NginxHttpServiceDB, NginxHttpVariableServiceDB, NginxLocationServiceDB,
     NginxStreamServiceDB,
     NginxUpstreamServiceDB, SshPortServiceDB,
-    SshUserServiceDB
+    SshUserServiceDB,
+    CredentialServiceDB
 } from 'flyingfish_core';
-import {CredentialLocationService} from 'flyingfish_core/dist/src/inc/Db/MariaDb/Service/CredentialLocationService.js';
-import {CredentialService} from 'flyingfish_core/dist/src/inc/Db/MariaDb/Service/CredentialService.js';
 import {
     Location, LocationCredential, NginxHttpVariableContextType,
     RouteData,
@@ -32,7 +30,7 @@ export class List {
         const list: RouteData[] = [];
         const sshportList: RouteSshPort[] = [];
 
-        const credentials = await CredentialService.getInstance().findAll();
+        const credentials = await CredentialServiceDB.getInstance().findAll();
         const credentialMap: Map<number, string> = new Map<number, string>();
 
         for (const credential of credentials) {
@@ -132,7 +130,8 @@ export class List {
                             ssl: {
                                 enable: thttp.ssl_enable,
                                 provider: thttp.cert_provider,
-                                email: thttp.cert_email
+                                email: thttp.cert_email,
+                                wildcard: thttp.cert_wildcard
                             },
                             locations: [],
                             http2_enable: thttp.http2_enable,

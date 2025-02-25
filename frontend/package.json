@@ -33,6 +33,7 @@
     "vts": "git+https://github.com/OpenSourcePKG/vts.git"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "@popperjs/core": "^2.11.7",
     "@types/jquery": "^3.5.32",
     "bootstrap": "^5.3.3",

@@ -127,7 +127,8 @@ export const SchemaRouteHttp = Vts.object({
     ssl: Vts.object({
         enable: Vts.boolean(),
         provider: Vts.string(),
-        email: Vts.string()
+        email: Vts.string(),
+        wildcard: Vts.boolean()
     }),
     locations: Vts.array(SchemaLocation),
     http2_enable: Vts.boolean(),

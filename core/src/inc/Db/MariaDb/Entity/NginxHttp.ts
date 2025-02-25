@@ -51,6 +51,14 @@ export class NginxHttp extends DBBaseEntityId {
     public cert_provider!: string;
 
     /**
+     * ssl enable
+     */
+    @Column({
+        default: false
+    })
+    public cert_wildcard!: boolean;
+
+    /**
      * cert email
      */
     @Column({

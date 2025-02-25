@@ -5,7 +5,7 @@ import {CredentialProvider as CredentialProviderDatabase} from './Database/Crede
 /**
  * Credential providers
  */
-export class CredentialProviders extends BaseProviders implements ICredentialProviders {
+export class CredentialProviders extends BaseProviders<ProviderEntry, ICredentialProvider> implements ICredentialProviders {
 
     /**
      * Return a provider by name
@@ -16,10 +16,9 @@ export class CredentialProviders extends BaseProviders implements ICredentialPro
         switch (name) {
             case CredentialProviderDatabase.NAME:
                 return new CredentialProviderDatabase();
-
-            default:
-                return this._getProvider<ICredentialProvider>(name, ProviderType.credential);
         }
+
+        return this._getProvider(name, ProviderType.credential);
     }
 
     /**
@@ -31,7 +30,7 @@ export class CredentialProviders extends BaseProviders implements ICredentialPro
             new CredentialProviderDatabase().getProviderEntry()
         ];
 
-        const plist = await this._getProviders<ICredentialProvider>(ProviderType.credential);
+        const plist = await this._getProviders(ProviderType.credential);
 
         if (plist) {
             list.push(...plist);

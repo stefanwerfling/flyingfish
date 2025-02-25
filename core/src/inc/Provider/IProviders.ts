@@ -4,7 +4,7 @@ import {IProvider} from './IProvider.js';
 /**
  * Interface for Providers object
  */
-export interface IProviders<T extends IProvider> {
+export interface IProviders<E extends ProviderEntry, T extends IProvider<E>> {
 
     /**
      * Return the provider by name
@@ -15,8 +15,8 @@ export interface IProviders<T extends IProvider> {
 
     /**
      * Return all providers by name and title
-     * @returns {ProviderEntry[]}
+     * @returns {E extends ProviderEntry[]}
      */
-    getProviders(): Promise<ProviderEntry[]>;
+    getProviders(): Promise<E[]>;
 
 }

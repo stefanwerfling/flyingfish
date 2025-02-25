@@ -68,6 +68,7 @@ export class Save {
         aHttp.ssl_enable = data.http.ssl.enable || false;
         aHttp.cert_provider = data.http.ssl.provider || '';
         aHttp.cert_email = data.http.ssl.email || '';
+        aHttp.cert_wildcard = data.http.ssl.wildcard || false;
         aHttp.http2_enable = data.http.http2_enable;
         aHttp.x_frame_options = data.http.x_frame_options;
         aHttp.wellknown_disabled = data.http.wellknown_disabled;

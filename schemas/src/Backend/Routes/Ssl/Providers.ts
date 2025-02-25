@@ -1,12 +1,12 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaDefaultReturn} from '../../../Core/Server/Routes/DefaultReturn.js';
-import {SchemaProviderEntry} from '../../Provider/ProviderEntry.js';
+import {SchemaProviderSslEntry} from '../../Provider/ProviderSslEntry.js';
 
 /**
  * SchemaSslProvidersResponse
  */
 export const SchemaSslProvidersResponse = SchemaDefaultReturn.extend({
-    list: Vts.array(SchemaProviderEntry)
+    list: Vts.array(SchemaProviderSslEntry)
 });
 
 /**
