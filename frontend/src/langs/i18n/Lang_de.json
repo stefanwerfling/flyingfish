@@ -1,0 +1,16 @@
+{
+  "title": "FlyingFish",
+  "login_title": "<b>FlyingFish</b>",
+  "copyrightname": "<a href=\"https://github.com/stefanwerfling/flyingfish/\" target=\"_blank\">FlyingFish</a>",
+  "version": "v1.1.0",
+  "dahsboard_ip_blacklisted": "Die öffentliche IP wird mit rDNS-Abfrage auf gängigen Anbietern überprüft. Diese Information ist nützlich, wenn Sie einen E-Mail-Server betreiben.",
+  "listen_stream_proxytimeout": "Legen Sie das <i>-Timeout</i> zwischen zwei aufeinanderfolgenden Lese- oder Schreiboperationen auf Client- oder Proxied-Server-Verbindungen fest. Werden innerhalb dieser Zeit keine Daten übermittelt, wird die Verbindung geschlossen.",
+  "listen_stream_proxyconnecttimeout": "Definiert ein Timeout für den Aufbau einer Verbindung mit einem Proxied-Server.",
+  "route_default_route": "Die Standardrouten können nicht bearbeitet werden. Sie dienen als visuelle Darstellung der Route, die der Stream zum Proxy-Server nimmt.",
+  "route_stream_useasdefault": "Pro Listing kann nur ein Standard-Stream gesetzt werden. Dieser Stream wird auf der Listung verwendet, wenn die Domain nicht ermittelt werden kann (z. . Dieser Eintrag wird nur berücksichtigt, wenn er kein Standardprotokoll ist.",
+  "route_stream_loadbalancealg": "Der Lastausgleich-Algorithmus wird nur verwendet, wenn mehr als ein Upstream vorhanden ist.<br><br><b>Least connection</b>: Dieser Algorithmus verteilt die Anfrage des Clients an Server mit den am wenigsten aktiven Verbindungen zu einem bestimmten Zeitpunkt. Dadurch wird sichergestellt, dass kein Server überarbeitet wird, während andere Server weniger aktive Verbindungen haben.<br><br><b>IP Hash</b>: Dieser Algorithmus hasht die IP-Adresse des Clients, der die Anfrage mit einer Hashing-Funktion sendet, und sendet dann die Anfrage an einen der Server zur Verarbeitung. Nachträgliche Anfragen der Client-IP-Adresse werden immer an denselben Server gesendet.",
+  "route_http_http2": "Das http2-Protokoll kann nur auf einer SSL-Verbindung verwendet werden. Aktivieren Sie SSL, um diese Einstellung zu entsperren.",
+  "route_http_location_headerhostport": "Verwenden Sie nur mit einem anderen Port auf dem Router, Ihrem Port != 80,443",
+  "dyndns_client_edit_gateway": "Der Client ist an das Gateway gebunden und läuft nur, wenn er sich im Gateway befindet. Wenn nichts angegeben ist, wird der Client immer ausgeführt.",
+  "dyndns_client_edit_updatedomains": "Die angegebenen Domänen werden intern mit der neuen IP im Datensatz aktualisiert."
+}
