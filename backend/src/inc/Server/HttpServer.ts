@@ -46,8 +46,8 @@ export class HttpServer extends BaseHttpServer {
 
         const limiter = rateLimit({
             windowMs: 15 * 60 * 1000,
-            standardHeaders: true,
             legacyHeaders: false,
+            standardHeaders: 'draft-8',
             skip: async(request) => {
                 if (request.url.indexOf('/json/') === 0) {
                     if (SchemaRequestData.validate(request, []) && Session.isUserLogin(request.session)) {

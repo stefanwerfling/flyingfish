@@ -9,7 +9,7 @@
     "build": "npm run compile",
     "build_force": "rm -r dist | true && rm tsconfig.tsbuildinfo | true && npm run compile",
     "compile": "tsc --project tsconfig.json",
-    "install": "npm run compile",
+    "install": "tsc --project tsconfig.json",
     "npm-check-updates": "npm-check-updates"
   },
   "repository": {
@@ -26,11 +26,11 @@
   "author": "Stefan Werfling",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@stylistic/eslint-plugin-ts": "^3.0.0",
-    "@types/node": "^20.17.16",
-    "@typescript-eslint/eslint-plugin": "^8.21.0",
-    "@typescript-eslint/parser": "^8.21.0",
-    "eslint": "^9.19.0",
+    "@stylistic/eslint-plugin-ts": "^4.1.0",
+    "@types/node": "^22.13.5",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "eslint": "^9.21.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "typescript": "^5.7.3"

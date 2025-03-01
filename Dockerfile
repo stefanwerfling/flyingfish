@@ -152,9 +152,7 @@ RUN rm ./package-lock.json | true
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-RUN npm install --ignore-scripts --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
-WORKDIR /opt/flyingfish/node_modules/bcrypt
-RUN npm install --force
+RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
 
 WORKDIR /opt/flyingfish/schemas
 RUN npm run build
@@ -169,7 +167,7 @@ WORKDIR /opt/flyingfish/backend
 RUN npm run build
 
 WORKDIR /opt/flyingfish/frontend
-RUN npm install --registry=$NPM_REGISTRY --force
+RUN npm install --registry=$NPM_REGISTRY --force --maxsockets 1 --loglevel verbose
 RUN npm run gulp-copy-data
 RUN npm run gulp-build-webpack
 
