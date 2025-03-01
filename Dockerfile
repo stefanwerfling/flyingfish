@@ -1,6 +1,7 @@
-FROM node:20-bullseye
+FROM node:22-bookworm-slim
 
 ENV FLYINGFISH_NGINX_MODULE_MODE_DYN="0"
+ENV DEBIAN_FRONTEND=noninteractive
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
 ARG NGINX_VERSION="1.26.2"
@@ -12,7 +13,7 @@ RUN apt-get upgrade -y
 RUN apt-get install -y dublin-traceroute
 RUN apt-get install -y iputils-ping
 RUN apt-get install -y openssl
-RUN apt-get install -y curl gnupg2 ca-certificates lsb-release debian-archive-keyring
+RUN apt-get install -y curl wget gnupg2 ca-certificates lsb-release debian-archive-keyring
 RUN apt install -y python3-pip python3-dev
 RUN apt install -y git
 
@@ -21,7 +22,7 @@ RUN cd ~ && wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && tar -
 RUN apt update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y build-essential
-RUN apt-get install -y libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev
+RUN apt-get install -y libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libxslt-dev
 RUN apt-get install -y mercurial
 RUN cd ~ && \
     git clone --depth 1 --branch $NJS_BRANCH https://github.com/nginx/njs.git && \
@@ -75,9 +76,8 @@ RUN cd ~/nginx-$NGINX_VERSION && \
      make && \
      make install
 
-RUN pip3 install pip --upgrade
-RUN pip3 install certbot-nginx
-RUN mkdir /etc/letsencrypt
+RUN apt update && apt install -y certbot
+RUN mkdir /etc/letsencrypt | true
 
 # Init App dirs --------------------------------------------------------------------------------------------------------
 RUN mkdir -p /opt/flyingfish/schemas
