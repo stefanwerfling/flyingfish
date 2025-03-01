@@ -1,4 +1,5 @@
 import {
+    SchemaDefaultReturn,
     SchemaSslDetailsResponse,
     SchemaSslProvidersResponse,
     SslDetails,
@@ -15,6 +16,7 @@ export class Ssl {
 
     /**
      * getList
+     * @return {SslProvidersResponse}
      * @throws
      */
     public static async getProviders(): Promise<SslProvidersResponse> {
@@ -23,7 +25,7 @@ export class Ssl {
 
     /**
      * getCertDetails
-     * @param httpid
+     * @param {number} httpid
      */
     public static async getCertDetails(httpid: number): Promise<SslDetails> {
         const resultContent = await NetFetch.postData('/json/ssl/cert/details', {httpid}, SchemaSslDetailsResponse);
@@ -33,6 +35,15 @@ export class Ssl {
         }
 
         return resultContent.details;
+    }
+
+    /**
+     * Run Service
+     * @return {boolean}
+     */
+    public static async runService(): Promise<boolean> {
+        await NetFetch.getData('/json/ssl/run/service', SchemaDefaultReturn);
+        return true;
     }
 
 }

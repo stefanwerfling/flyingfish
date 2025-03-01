@@ -275,10 +275,14 @@ export class SslCertService {
                 let isCreate = false;
 
                 let isExist = false;
+                let useWildcard = false;
+
+                if (provider.isSupportWildcard()) {
+                    useWildcard = http.cert_wildcard;
+                }
 
                 try {
-                    // TODO Wildcard
-                    isExist = await provider.existCertificate(domain.domainname, {wildcard: false});
+                    isExist = await provider.existCertificate(domain.domainname, {wildcard: useWildcard});
                 } catch (eExist) {
                     Logger.getLogger().error(
                         '\'%s\' (http_id: %d), cert is exist is except: %s',
@@ -297,8 +301,7 @@ export class SslCertService {
                     let sslBundel = null;
 
                     try {
-                        // TODO Wildcard
-                        sslBundel = await provider.getCertificationBundel(domain.domainname, {wildcard: false});
+                        sslBundel = await provider.getCertificationBundel(domain.domainname, {wildcard: useWildcard});
                     } catch (eBundel) {
                         Logger.getLogger().error(
                             '\'%s\' (http_id: %d), cert bundle is except: %s',
@@ -372,8 +375,7 @@ export class SslCertService {
                             isCertCreated = await provider.createCertificate({
                                 domainName: domain.domainname,
                                 email: http.cert_email,
-                                // TODO wildcard
-                                wildcard: false,
+                                wildcard: useWildcard,
                                 webRootPath: NginxServer.getInstance().getWebRootPath()
                             }, {
                                 dnsServer: Dns2Server.getInstance()
@@ -453,8 +455,7 @@ export class SslCertService {
                         isCertCreated = await provider.createCertificate({
                             domainName: domain.domainname,
                             email: http.cert_email,
-                            // TODO wildcard
-                            wildcard: false,
+                            wildcard: useWildcard,
                             webRootPath: NginxServer.getInstance().getWebRootPath()
                         }, {
                             dnsServer: Dns2Server.getInstance()
@@ -566,6 +567,14 @@ export class SslCertService {
         if (this._schedulerUpdate !== null) {
             this._schedulerUpdate.invoke();
         }
+    }
+
+    /**
+     * Is the scheduler in a process
+     * @returns {boolean}
+     */
+    public isInProcess(): boolean {
+        return this._inProcess;
     }
 
 }

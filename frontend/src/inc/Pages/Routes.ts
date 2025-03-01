@@ -23,6 +23,7 @@ import {
 } from 'bambooo';
 import {ListenData, RouteHttpSave, RouteStreamSave} from 'flyingfish_schemas';
 import {Vts} from 'vts';
+import {UnauthorizedError} from '../Api/Error/UnauthorizedError.js';
 import {Listen as ListenAPI, ListenCategory} from '../Api/Listen.js';
 import {Nginx as NginxAPI} from '../Api/Nginx.js';
 import {
@@ -34,6 +35,7 @@ import {
 import {Ssh as SshAPI} from '../Api/Ssh.js';
 import {Ssl as SslAPI} from '../Api/Ssl.js';
 import {Lang} from '../Lang.js';
+import {UtilRedirect} from '../Utils/UtilRedirect.js';
 import {BasePage} from './BasePage.js';
 import {RouteHttpEditModal} from './Routes/RouteHttpEditModal.js';
 import {RouteStreamEditModal} from './Routes/RouteStreamEditModal.js';
@@ -88,9 +90,10 @@ export class Routes extends BasePage {
         // Navbar Left -------------------------------------------------------------------------------------------------
 
         const toast = this._toast;
+        const leftNavbar = this._wrapper.getNavbar().getLeftNavbar();
 
         // eslint-disable-next-line no-new
-        new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Reload Config', async() => {
+        new LeftNavbarLink(leftNavbar, 'Reload Config', async() => {
             if (await NginxAPI.reload()) {
                 toast.fire({
                     icon: 'success',
@@ -105,6 +108,28 @@ export class Routes extends BasePage {
 
             return false;
         }, 'btn btn-block btn-default btn-sm', IconFa.redo);
+
+        leftNavbar.getElement().append('&nbsp;');
+
+        // eslint-disable-next-line no-new
+        new LeftNavbarLink(leftNavbar, 'Run SSL-Cert Service', async() => {
+            try {
+                await SslAPI.runService();
+
+                if (this._onLoadTable) {
+                    this._onLoadTable();
+                }
+            } catch (e) {
+                if (e instanceof UnauthorizedError) {
+                    UtilRedirect.toLogin();
+                }
+            }
+
+            return false;
+        }, 'btn btn-block btn-default btn-sm', 'fas fa-play');
+
+        leftNavbar.getElement().append('&nbsp;');
+
 
         // -------------------------------------------------------------------------------------------------------------
 
