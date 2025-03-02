@@ -75,17 +75,20 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
     protected async _createHookAuth(unixSocket: string): Promise<string> {
         const pathHook = path.join(this._basePath, 'dns01HookAuth.sh');
 
-        if (!await FileHelper.fileExist(pathHook)) {
-            const content = '#!/bin/bash\r\n' +
-                '\r\n' +
-                `curl -X POST --unix-socket ${unixSocket} "http://localhost/letsencrypt/auth" \\\r\n` +
-                '-H "Content-Type: application/json" \\\r\n' +
-                '-d "{\\"domain\\": \\"$CERTBOT_DOMAIN\\", \\"value\\": \\"$CERTBOT_VALIDATION\\"}"' +
-                '\r\n' +
-                'sleep 30';
-
-            await FileHelper.create(pathHook, content);
+        if (await FileHelper.fileExist(pathHook)) {
+            await FileHelper.fileDelete(pathHook);
         }
+
+        const content = '#!/bin/bash\n' +
+            '\n' +
+            `curl -X POST --unix-socket ${unixSocket} "http://localhost/letsencrypt/auth" \\\n` +
+            '-H "Content-Type: application/json" \\\n' +
+            '-d "{\\"domain\\": \\"$CERTBOT_DOMAIN\\", \\"value\\": \\"$CERTBOT_VALIDATION\\"}"' +
+            '\n' +
+            'sleep 30';
+
+        await FileHelper.create(pathHook, content);
+        await FileHelper.chmod(pathHook, 0o755);
 
         return pathHook;
     }
@@ -98,17 +101,20 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
     protected async _createHookCleanup(unixSocket: string): Promise<string> {
         const pathHook = path.join(this._basePath, 'dns01HookCleanup.sh');
 
-        if (!await FileHelper.fileExist(pathHook)) {
-            const content = '#!/bin/bash\r\n' +
-                '\r\n' +
-                `curl -X POST --unix-socket ${unixSocket} "http://localhost/letsencrypt/cleanup" \\\r\n` +
-                '-H "Content-Type: application/json" \\\r\n' +
-                '-d "{\\"domain\\": \\"$CERTBOT_DOMAIN\\"}"' +
-                '\r\n' +
-                'sleep 30';
-
-            await FileHelper.create(pathHook, content);
+        if (await FileHelper.fileExist(pathHook)) {
+            await FileHelper.fileDelete(pathHook);
         }
+
+        const content = '#!/bin/bash\n' +
+            '\n' +
+            `curl -X POST --unix-socket ${unixSocket} "http://localhost/letsencrypt/cleanup" \\\n` +
+            '-H "Content-Type: application/json" \\\n' +
+            '-d "{\\"domain\\": \\"$CERTBOT_DOMAIN\\"}"' +
+            '\n' +
+            'sleep 30';
+
+        await FileHelper.create(pathHook, content);
+        await FileHelper.chmod(pathHook, 0o755);
 
         return pathHook;
     }
@@ -146,6 +152,8 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
         const args = [
             'certonly',
             '--manual',
+            '--preferred-challenges',
+            'dns',
             '--rsa-key-size',
             `${keySize}`,
             '--agree-tos',
@@ -157,17 +165,13 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
         const pathHookAuth = await this._createHookAuth(hookServer.getUnixSocket());
         const pathHookCleanup = await this._createHookCleanup(hookServer.getUnixSocket());
 
-        args.push('--manual-auth-hook');
-        args.push(pathHookAuth);
-        args.push('--manual-cleanup-hook');
-        args.push(pathHookCleanup);
+        args.push('--manual-auth-hook', pathHookAuth);
+        args.push('--manual-cleanup-hook', pathHookCleanup);
 
-        args.push('-d');
-        args.push(options.domainName);
+        args.push('-d', options.domainName);
 
         if (options.wildcard) {
-            args.push('-d');
-            args.push(`*.${options.domainName}`);
+            args.push('-d', `*.${options.domainName}`);
         }
 
         const process = spawn(this._command, args);
@@ -207,7 +211,7 @@ export class LetsEncryptDns01 extends Certbot implements ISslCertProvider {
         if (returnCode === 0) {
             isSuccess = true;
         } else {
-            Logger.getLogger().error('Return code: $s', returnCode, {
+            Logger.getLogger().error('Return code: %s', returnCode, {
                 class: 'Plugin::LetsEncrypt::LetsEncryptDns01::createCertificate'
             });
         }
