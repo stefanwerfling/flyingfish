@@ -312,13 +312,18 @@ import {User as UserController} from './Routes/Main/User.js';
     // exit ------------------------------------------------------------------------------------------------------------
 
     exitHook(async(callback): Promise<void> => {
-        Logger.getLogger().info('Stop FlyingFish Service ...');
+        try {
+            Logger.getLogger().info('Stop FlyingFish Service ...');
+            
+            await NginxService.getInstance().stop(true);
+            await RedisClient.getInstance().disconnect();
 
-        await NginxService.getInstance().stop(true);
-        await RedisClient.getInstance().disconnect();
-
-        Logger.getLogger().info('... End.');
-
-        callback();
+            Logger.getLogger().info('... End.');
+        } catch (e) {
+            Logger.getLogger().error("Error during shutdown:", e);
+            console.trace();
+        } finally {
+            callback();
+        }
     });
 })();
