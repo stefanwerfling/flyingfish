@@ -1,11 +1,10 @@
-FROM node:20-bullseye
+FROM node:22-bookworm-slim
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
-RUN apt-get install -y iproute2
-RUN apt-get install -y net-tools
+RUN apt-get install -y iproute2 git net-tools
 
 # ----------------------------------------------------------------------------------------------------------------------
 

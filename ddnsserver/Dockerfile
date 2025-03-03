@@ -1,10 +1,10 @@
-FROM node:20-bullseye
+FROM node:22-bookworm-slim
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
-RUN apt-get install -y openssh-client
+RUN apt-get install -y openssh-client git
 
 RUN mkdir -p /opt/flyingfish
 RUN mkdir -p /opt/flyingfish/schemas
