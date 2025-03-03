@@ -73,6 +73,11 @@ export class HttpServer extends BaseHttpServer {
 
                 // File access for html/js/img etc. allow ever.
                 return Number.MAX_SAFE_INTEGER;
+            },
+            handler: (req, res) => {
+                Logger.getLogger().warn('Too Many Requests: %s is blocked for %s.', req.ip, req.url);
+
+                res.status(429).json({ message: "Too Many Requests" });
             }
         });
 
