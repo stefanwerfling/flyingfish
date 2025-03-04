@@ -8,11 +8,15 @@ import JsVectorMap from 'jsvectormap';
 import 'jsvectormap/dist/maps/world.js';
 import 'jsvectormap/src/scss/jsvectormap.scss';
 
+export type IpAccessCountriesWidgetOnSelected = () => void;
+
 export class IpAccessCountriesWidget extends Element {
 
     protected _map: JsVectorMap;
 
     private _selectedCountries: Set<string> = new Set<string>();
+
+    protected _onSelected: IpAccessCountriesWidgetOnSelected|null = null;
 
     /**
      * constructor
@@ -23,7 +27,11 @@ export class IpAccessCountriesWidget extends Element {
 
         const telement = this._getAnyElement(elementObject);
 
-        this._element = jQuery('<div style="width: 100%; height: 500px"></div>').appendTo(telement);
+        this._element = jQuery('<div></div>').appendTo(telement);
+        this._element.css({
+            width: '100px',
+            height: '500px'
+        });
 
         this._map = new JsVectorMap({
             selector: jQuery(this._element)[0],
@@ -37,11 +45,21 @@ export class IpAccessCountriesWidget extends Element {
             },
             onRegionClick: (_: any, code: string): void => {
                 this._toggleCountry(code);
+            },
+            onRegionSelected: (): void => {
+                if (this._onSelected !== null) {
+                    this._onSelected();
+                }
             }
         });
 
         this._element.on('resize', () => {
             this._map.updateSize();
+        });
+
+        this._element.css({
+            width: '100%',
+            height: '500px'
         });
     }
 
@@ -63,6 +81,22 @@ export class IpAccessCountriesWidget extends Element {
 
     public update(): void {
         this._map.updateSize();
+    }
+
+    public addSelectedCountry(code: string): void {
+        this._toggleCountry(code);
+    }
+
+    public setSelectedCountries(countries: string[]): void {
+        this._selectedCountries.clear();
+
+        countries.map((code) => {
+            this._toggleCountry(code);
+        });
+    }
+
+    public setOnSelected(select: IpAccessCountriesWidgetOnSelected|null): void {
+        this._onSelected = select;
     }
 
 }

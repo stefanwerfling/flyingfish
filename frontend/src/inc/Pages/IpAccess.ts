@@ -1,3 +1,4 @@
+import {SearchWidgetData} from 'bambooo/src/v1/Widget/Search/SearchWidget.js';
 import {
     IpAccessBlackListImportSaveRequest,
     IpAccessBlackListOwnSaveRequest,
@@ -9,13 +10,36 @@ import {
     BlacklistCategory,
     IpAccess as IpAccessAPI
 } from '../Api/IpAccess.js';
-import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, Button, ButtonType,
-    ButtonMenu, Icon, IconFa, NavTab, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
+import {
+    Badge,
+    BadgeType,
+    Card,
+    ContentCol,
+    ContentColSize,
+    ContentRow,
+    DialogConfirm,
+    Button,
+    ButtonType,
+    ButtonMenu,
+    Icon,
+    IconFa,
+    NavTab,
+    Table,
+    Td,
+    Th,
+    Tr,
+    ModalDialogType,
+    LeftNavbarLink,
+    FormRow,
+    SearchWidget,
+    LangText
+} from 'bambooo';
 import {BasePage} from './BasePage.js';
 import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal.js';
 import {IpAccessBlacklistOwnModal} from './IpAccess/IpAccessBlacklistOwnModal.js';
 import {IpAccessCountriesWidget} from './IpAccess/IpAccessCountriesWidget.js';
 import {IpAccessWhitelistModal} from './IpAccess/IpAccessWhitelistModal.js';
+import countryList from './IpAccess/countries.json';
 
 /**
  * IpAccess
@@ -665,8 +689,53 @@ export class IpAccess extends BasePage {
 
             tabCountrylist.body.empty();
 
-            const map = new IpAccessCountriesWidget(tabCountrylist.body);
+            const rowCountries = new FormRow(jQuery('<div class="card-body"/>').appendTo(tabCountrylist.body));
+
+            const map = new IpAccessCountriesWidget(rowCountries.createCol(6));
             map.show();
+
+            const countryCard = new Card(rowCountries.createCol(3));
+            countryCard.setTitle(new LangText('Country Blacklist'));
+
+            const selectCountry = new SearchWidget(countryCard.getBodyElement());
+            selectCountry.setMaximumSelectionLength(0);
+
+            const countryData: SearchWidgetData[] = [];
+
+            countryList.list.map((entry) => {
+                countryData.push({
+                    id: entry.code,
+                    text: entry.name
+                });
+            });
+
+            selectCountry.setData(countryData);
+
+            rowCountries.createAutoCol();
+
+            selectCountry.setOnSelect(() => {
+                map.setSelectedCountries(selectCountry.getValues().map(value => {
+                    return value.id;
+                }));
+            });
+
+            map.setOnSelected(() => {
+                selectCountry.clear();
+
+                const tcountries = map.getSelectedCountries();
+                const values: SearchWidgetData[] = [];
+
+                countryList.list.map((entry) => {
+                    if (tcountries.indexOf(entry.code) !== -1) {
+                        values.push({
+                            id: entry.code,
+                            text: entry.name
+                        });
+                    }
+                });
+
+                selectCountry.setValues(values);
+            });
 
             // ---------------------------------------------------------------------------------------------------------
 
