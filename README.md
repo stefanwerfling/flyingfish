@@ -7,7 +7,7 @@
 <br>
 
 [![FlyingFish](https://img.shields.io/badge/FlyingFish-v1.1.12-blue?style=for-the-badge)](https://github.com/stefanwerfling/flyingfish)
-![Discord](https://img.shields.io/discord/1347133593578766369?style=for-the-badge&label=Discord&color=5865F2&link=https%3A%2F%2Fdiscord.gg%2F52PQ2mbWQD)
+[![Discord](https://img.shields.io/discord/1347133593578766369?style=for-the-badge&label=Discord&color=5865F2&link=https%3A%2F%2Fdiscord.gg%2F52PQ2mbWQD)](https://discord.gg/52PQ2mbWQD)
 ![Docker Pulls](https://img.shields.io/docker/pulls/stefanwerfling/flyingfish?style=for-the-badge)
 [![License: GPL v3.0](https://img.shields.io/badge/License-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 ![Issues](https://img.shields.io/github/issues/stefanwerfling/flyingfish?style=for-the-badge)
