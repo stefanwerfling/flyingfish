@@ -44,6 +44,23 @@ In the classic sense, FlyingFish is a nginx manager. But the way the nginx serve
 ## Current work
 With the milestone version [1.1.0](https://github.com/stefanwerfling/flyingfish/milestone/1) and now [1.2.0](https://github.com/stefanwerfling/flyingfish/milestone/2) the abstraction and division will now be revised. The implementation of plugins and new functions now requires a review of the existing code. This involves a lot of changes to code management and the package.
 
+### Why does it take so long for a version to come out?
+There are currently several reasons for this:
+- Replacing existing packages with new ones requires code conversion and a lot of testing.
+- When replacing the binaries (e.g. new nginx version) I have to test that it is compiled with the extensions and functionality tests. (For example, there was an error in nginx_njs that I had to report as an ISSUE and then reproduce in collaboration with the developer).
+- Changes to Docker and Containers, which again requires testing. (extensions and tests)
+- Code refactoring, replacing code, switching to a new structure. Ironing out weird spots.
+- I have started to write sub packages or other supports (because they are incomplete, no longer supported, errors have crept in)
+  - [Bambooo](https://github.com/stefanwerfling/bambooo) - My frontend framework (for AdminLTE), which always gets updates.
+  - [VTS](https://github.com/stefanwerfling/vts/) - Data type validation library
+  - [ETS](https://github.com/stefanwerfling/ets) - Error formatter fully written in Typescript.
+  - [node-dns](https://github.com/stefanwerfling/node-dns/tree/ts) - Rewriting in Typescript, got no answer to my ISSUE
+  - [node-forge-types](https://github.com/stefanwerfling/node-forge-types) - Correction of the *.d classes for certificate analysis and generation
+  - [node-tuntap2](https://github.com/stefanwerfling/node-tuntap2) - TunTap API for VPN Service 
+  - [node-rohc](https://github.com/stefanwerfling/node-rohc) - Scheduled for VPN Service
+    - [rohc](https://github.com/stefanwerfling/rohc) - Update (fix read write proc entry in kernel versions)
+- many more ....
+
 ## In progress
 
 - [Version 1.2.0](https://github.com/stefanwerfling/flyingfish/milestone/2)
