@@ -53,7 +53,7 @@
     "delay": "^6.0.0",
     "dns2": "^2.1.0",
     "ets": "git+https://github.com/OpenSourcePKG/ets.git",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "fast-xml-parser": "^5.0.8",
