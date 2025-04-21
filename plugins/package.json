@@ -24,6 +24,6 @@
     "build_force": "cd ./demoplugin/ && npm run build_force && cd ../letsencrypt/ && npm run build_force"
   },
   "devDependencies": {
-    "npm-check-updates": "^17.1.15"
+    "npm-check-updates": "^18.0.0"
   }
 }
