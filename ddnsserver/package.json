@@ -41,7 +41,7 @@
     "basic-auth": "^2.0.1",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "flyingfish_core": "file:../core",
