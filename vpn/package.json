@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/stefanwerfling/flyingfish#readme",
   "devDependencies": {
-    "@types/express": "^4.17.21",
+    "@types/express": "^5.0.2",
     "@types/express-session": "^1.18.1",
     "@types/got": "^9.6.12",
     "@types/jmespath": "^0.15.2",
