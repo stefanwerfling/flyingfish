@@ -1,0 +1,16 @@
+{
+  "title": "FlyingFish",
+  "login_title": "<b>FlyingFish</b>",
+  "copyrightname": "<a href=\"https://github.com/stefanwerfling/flyingfish/\" target=\"_blank\">FlyingFish</a>",
+  "version": "v1.1.0",
+  "dahsboard_ip_blacklisted": "La IP pública se comprueba con la consulta rDNS en proveedores comunes. Esta información es útil si se ejecuta un servidor de correo electrónico.",
+  "listen_stream_proxytimeout": "Establece el tiempo de espera <i></i> entre dos operaciones sucesivas de lectura o escritura en conexiones cliente o servidor proxyficado. Si no se transmite ningún dato dentro de este tiempo, la conexión será cerrada.",
+  "listen_stream_proxyconnecttimeout": "Define un tiempo de espera para establecer una conexión con un servidor proxyfied.",
+  "route_default_route": "Las rutas por defecto no pueden ser editadas. Sirven como una representación visual de la ruta que el flujo lleva al servidor proxy.",
+  "route_stream_useasdefault": "Sólo se puede establecer una secuencia por escucha. Esta secuencia se utiliza en la escucha cuando el dominio no se puede determinar (e. . un protocolo no SSL). Esta entrada sólo se considera si no es una escucha estándar.",
+  "route_stream_loadbalancealg": "The load balancing algorithm is only used when there is more than one upstream.<br><br><b>Least connection</b>: This algorithm distributes the client's request to servers with the least active connections at a particular time. This will ensure that no one server is overworked while other servers have fewer active connections.<br><br><b>IP hash</b>: This algorithm hashes the IP address of the client sending the request with a hashing function and then sends the request to one of the servers for processing. Subsequent requests from the clients IP address are always sent to the same server.",
+  "route_http_http2": "El protocolo http2 sólo puede utilizarse en una conexión SSL. Activar SSL para desbloquear esta configuración.",
+  "route_http_location_headerhostport": "Solo usar por un puerto diferente en el router, su puerto != 80,443",
+  "dyndns_client_edit_gateway": "El cliente está vinculado a la pasarela y sólo se ejecuta cuando está en la pasarela. Si no se especifica nada, el cliente se ejecutará siempre.",
+  "dyndns_client_edit_updatedomains": "Los dominios especificados se actualizan internamente con la nueva IP en el registro."
+}
