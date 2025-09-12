@@ -226,6 +226,8 @@ volumes:
     driver: local
   flyingfishSsh:
     driver: local
+  flyingfishRedisData:
+    driver: local
     
 networks:
   flyingfishNet:
