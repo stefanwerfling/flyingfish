@@ -296,6 +296,14 @@ export {
     SslDetailsResponse
 } from './Backend/Routes/Ssl/Details.js';
 export {
+    SchemaSslListWildcardRequest,
+    SslListWildcardRequest,
+    SchemaSslListWildcardEntry,
+    SslListWildcardEntry,
+    SchemaSslListWildcardResponse,
+    SslListWildcardResponse
+} from './Backend/Routes/Ssl/ListWildcard.js';
+export {
     SchemaSslProvidersResponse,
     SslProvidersResponse
 } from './Backend/Routes/Ssl/Providers.js';

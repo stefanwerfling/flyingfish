@@ -210,6 +210,7 @@ export class RouteHttpEditModal extends ModalDialog {
             BadgeType.success
         );
 
+        // eslint-disable-next-line no-new
         new Icon(this._sslTabBadge, 'fa fa-check-circle');
 
         const tabLocation = this._navTab.addTab('Location', 'routehttplocation');
@@ -299,6 +300,7 @@ export class RouteHttpEditModal extends ModalDialog {
         const tabSslAdvanced = this._navTabSsl.addTab('Advanced', 'routehttptabssladvanced');
         const tabSslCertDetails = this._navTabSsl.addTab('Cert-Details', 'routehttptabsslcertdetails');
 
+        // eslint-disable-next-line no-unused-expressions
         tabSslAdvanced.body;
 
         const bodyCardSslProvider = jQuery('<div class="card-body"/>').appendTo(tabSslProvider.body);

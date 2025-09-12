@@ -130,7 +130,6 @@ export class Routes extends BasePage {
 
         leftNavbar.getElement().append('&nbsp;');
 
-
         // -------------------------------------------------------------------------------------------------------------
 
         this._routeStreamDialog.setOnSave(async(): Promise<void> => {
