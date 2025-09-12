@@ -21,7 +21,7 @@
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6347/badge)](https://bestpractices.coreinfrastructure.org/projects/6347)
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish.svg?type=shield&issueType=security)](https://app.fossa.com/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish?ref=badge_shield&issueType=security)
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish.svg?type=shield&issueType=license)](https://app.fossa.com/projects/custom%2B50964%2Fgithub.com%2Fstefanwerfling%2Fflyingfish?ref=badge_shield&issueType=license)
-
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/stefanwerfling/flyingfish)
 <br>
 
 
