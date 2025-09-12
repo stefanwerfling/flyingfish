@@ -1,7 +1,8 @@
 import {Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
-import {SchemaSslDetailsRequest} from 'flyingfish_schemas';
+import {SchemaSslDetailsRequest, SchemaSslListWildcardRequest} from 'flyingfish_schemas';
 import {Details} from './Ssl/Details.js';
+import {ListWildcard} from './Ssl/ListWildcard.js';
 import {Providers} from './Ssl/Providers.js';
 import {Run} from './Ssl/Run.js';
 
@@ -41,7 +42,18 @@ export class Ssl extends DefaultRoute {
                     res.status(200).json(await Run.rundService());
                 }
             }
-        )
+        );
+
+        this._post(
+            '/json/ssl/cert/wildcards',
+            async(req, res) => {
+                if (this.isUserLogin(req, res)) {
+                    if (this.isSchemaValidate(SchemaSslListWildcardRequest, req.body, res)) {
+                        res.status(200).json(await ListWildcard.getAllCertforWildcard(req.body));
+                    }
+                }
+            }
+        );
 
         return super.getExpressRouter();
     }

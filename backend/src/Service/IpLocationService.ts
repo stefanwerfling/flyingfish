@@ -41,6 +41,7 @@ export class IpLocationService {
      * _getIpLocation
      * @param ip
      * @protected
+     * @throws Error
      */
     protected async _getIpLocation(ip: string): Promise<number | null> {
         const aIpLocation = await IpLocationServiceDB.getInstance().findByIp(ip);
@@ -61,12 +62,12 @@ export class IpLocationService {
             newIpLocation.country_code = location.country_code || '';
             newIpLocation.city = location.city || '';
             newIpLocation.continent = location.continent || '';
-            newIpLocation.latitude = location.latitude || '';
-            newIpLocation.longitude = location.longitude || '';
+            newIpLocation.latitude = `${location.latitude}`;
+            newIpLocation.longitude = `${location.longitude}`;
             newIpLocation.time_zone = location.time_zone || '';
             newIpLocation.postal_code = location.postal_code || '';
-            newIpLocation.org = location.org || '';
-            newIpLocation.asn = location.asn || '';
+            newIpLocation.org = `${location.company?.name}`;
+            newIpLocation.asn = `${location.asn?.asn}`;
 
             newIpLocation = await IpLocationServiceDB.getInstance().save(newIpLocation);
 
@@ -96,14 +97,18 @@ export class IpLocationService {
 
         if (listB) {
             for await (const entry of listB) {
-                const ipLocationId = await this._getIpLocation(entry.ip);
+                try {
+                    const ipLocationId = await this._getIpLocation(entry.ip);
 
-                if (ipLocationId === null) {
-                    Logger.getLogger().info('IpLocationService::location: Location not found by ip: %s', entry.ip);
-                } else {
-                    entry.ip_location_id = ipLocationId;
+                    if (ipLocationId === null) {
+                        Logger.getLogger().info('IpLocationService::location: Location not found by ip: %s', entry.ip);
+                    } else {
+                        entry.ip_location_id = ipLocationId;
 
-                    await IpBlacklistServiceDB.getInstance().save(entry);
+                        await IpBlacklistServiceDB.getInstance().save(entry);
+                    }
+                } catch (e) {
+                    Logger.getLogger().error('IpLocationService::location: Exception last block updates by blacklist');
                 }
             }
         }
@@ -114,14 +119,18 @@ export class IpLocationService {
 
         if (listW) {
             for await (const entry of listW) {
-                const ipLocationId = await this._getIpLocation(entry.ip);
+                try {
+                    const ipLocationId = await this._getIpLocation(entry.ip);
 
-                if (ipLocationId === null) {
-                    Logger.getLogger().info('IpLocationService::location: Location not found by ip: %s', entry.ip);
-                } else {
-                    entry.ip_location_id = ipLocationId;
+                    if (ipLocationId === null) {
+                        Logger.getLogger().info('IpLocationService::location: Location not found by ip: %s', entry.ip);
+                    } else {
+                        entry.ip_location_id = ipLocationId;
 
-                    await IpWhitelistServiceDB.getInstance().save(entry);
+                        await IpWhitelistServiceDB.getInstance().save(entry);
+                    }
+                } catch (e) {
+                    Logger.getLogger().error('IpLocationService::location: Exception updates by whitelist');
                 }
             }
         }

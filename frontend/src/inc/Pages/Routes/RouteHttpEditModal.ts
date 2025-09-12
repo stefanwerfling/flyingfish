@@ -26,7 +26,14 @@ import {
     TooltipInfo,
     Tr
 } from 'bambooo';
-import {ListenData, Location, ProviderSslEntry, RouteVariable, SshPortEntry} from 'flyingfish_schemas';
+import {
+    ListenData,
+    Location,
+    ProviderSslEntry,
+    RouteVariable,
+    SshPortEntry,
+    SslListWildcardEntry
+} from 'flyingfish_schemas';
 import moment from 'moment';
 import {ListenCategory, ListenTypes} from '../../Api/Listen.js';
 import {NginxHTTPVariables} from '../../Api/Route.js';
@@ -56,6 +63,12 @@ export class RouteHttpEditModal extends ModalDialog {
      * @protected
      */
     protected _navTab: NavTab;
+
+    /**
+     * SSL badge info
+     * @protected
+     */
+    protected _sslTabBadge: Badge;
 
     /**
      * location badge info
@@ -112,6 +125,12 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _switchSslEnable: Switch;
 
     /**
+     * Nav Tab ssl
+     * @protected
+     */
+    protected _navTabSsl: NavTab;
+
+    /**
      * Ssl Provider list
      * @protected
      */
@@ -166,6 +185,12 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _inputVariableCmbs: InputBottemBorderOnly2;
 
     /**
+     * select ssl wildcard cert
+     * @protected
+     */
+    protected _selectSslWildcardCert: SelectBottemBorderOnly2;
+
+    /**
      * constructor
      * @param elementObject
      */
@@ -176,6 +201,17 @@ export class RouteHttpEditModal extends ModalDialog {
 
         const tabDetails = this._navTab.addTab('Details', 'routehttpdetails');
         const tabSsl = this._navTab.addTab('SSL', 'routehttpssl');
+
+        tabSsl.title.append('&nbsp;');
+
+        this._sslTabBadge = new Badge(
+            tabSsl.title,
+            '',
+            BadgeType.success
+        );
+
+        new Icon(this._sslTabBadge, 'fa fa-check-circle');
+
         const tabLocation = this._navTab.addTab('Location', 'routehttplocation');
 
         tabLocation.title.append('&nbsp;');
@@ -255,24 +291,44 @@ export class RouteHttpEditModal extends ModalDialog {
         const groupSslEnable = new FormGroup(bodyCardSsl, 'SSL Enable');
         this._switchSslEnable = new Switch(groupSslEnable, 'ssl_enable');
 
-        const rowProvider = new FormRow(bodyCardSsl);
+        this._navTabSsl = new NavTab(tabSsl.body, 'routehttpnavtabssl');
+        this._navTabSsl.hide();
+
+        const tabSslProvider = this._navTabSsl.addTab('Provider', 'routehttptabsslprovider');
+        const tabSslCert = this._navTabSsl.addTab('Certificates', 'routehttptabsslcert');
+        const tabSslAdvanced = this._navTabSsl.addTab('Advanced', 'routehttptabssladvanced');
+        const tabSslCertDetails = this._navTabSsl.addTab('Cert-Details', 'routehttptabsslcertdetails');
+
+        tabSslAdvanced.body;
+
+        const bodyCardSslProvider = jQuery('<div class="card-body"/>').appendTo(tabSslProvider.body);
+
+        const rowProvider = new FormRow(bodyCardSslProvider);
 
         const groupSslProvider = new FormGroup(rowProvider.createCol(9), 'SSL Provider');
         this._selectSslProvider = new SelectBottemBorderOnly2(groupSslProvider);
-        groupSslProvider.hide();
 
         const groupSslWildcard = new FormGroup(rowProvider.createCol(3), 'Wildcard');
         this._switchSslWildcard = new Switch(groupSslWildcard, 'ssl_wildcard');
-        groupSslWildcard.hide();
+        this._switchSslWildcard.setInativ(true);
 
-        const groupSslEmail = new FormGroup(bodyCardSsl, 'SSL EMail');
+        const groupSslEmail = new FormGroup(bodyCardSslProvider, 'SSL EMail');
         this._inputSslEmail = new InputBottemBorderOnly2(groupSslEmail);
         this._inputSslEmail.setPlaceholder('admin@flyingfish.org');
-        groupSslEmail.hide();
+        this._inputSslEmail.setReadOnly(true);
 
         this._selectSslProvider.setChangeFn(value => {
             this._switchSslWildcard.setInativ(true);
             this._inputSslEmail.setReadOnly(true);
+
+            if (value === '') {
+                tabSslCert.tab.show();
+            } else {
+                tabSslCert.tab.hide();
+
+                // reset
+                this.setWildcardCertificate(0);
+            }
 
             for (const provider of this._sslProviderList) {
                 if (provider.name === value) {
@@ -289,7 +345,23 @@ export class RouteHttpEditModal extends ModalDialog {
             }
         });
 
-        this._sslCertDetails = new Card(bodyCardSsl, CardBodyType.none, CardType.primary, CardLine.none);
+        // -------------------------------------------------------------------------------------------------------------
+
+        const bodyCardSslCert = jQuery('<div class="card-body"/>').appendTo(tabSslCert.body);
+
+        const groupSslWildcardCert = new FormGroup(bodyCardSslCert, 'Wildcard Certificate from Domain');
+        this._selectSslWildcardCert = new SelectBottemBorderOnly2(groupSslWildcardCert);
+        this._selectSslWildcardCert.setChangeFn(value => {
+            if (value === '0') {
+                tabSslProvider.tab.show();
+            } else {
+                tabSslProvider.tab.hide();
+            }
+        });
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        this._sslCertDetails = new Card(tabSslCertDetails.body, CardBodyType.none, CardType.primary, CardLine.none);
         // eslint-disable-next-line no-new
         new Icon(this._sslCertDetails.getTitleElement(), IconFa.certificate);
         this._sslCertDetails.getTitleElement().append('&nbsp;Certificate Details');
@@ -297,16 +369,13 @@ export class RouteHttpEditModal extends ModalDialog {
 
         this._switchSslEnable.setChangeFn(async(value) => {
             this._switchHttp2Enable.setInativ(true);
-            groupSslProvider.hide();
-            groupSslWildcard.hide();
-            groupSslEmail.hide();
+            this._navTabSsl.hide();
             this._sslCertDetails.hide();
+            this._updateSSLTabBadge();
 
             if (value) {
                 this._switchHttp2Enable.setInativ(false);
-                groupSslProvider.show();
-                groupSslWildcard.show();
-                groupSslEmail.show();
+                this._navTabSsl.show();
 
                 if (this._id) {
                     this._sslCertDetails.show();
@@ -400,6 +469,22 @@ export class RouteHttpEditModal extends ModalDialog {
                         new Td(trTo, `${certToDate.format('YYYY-MM-DD HH:mm:ss')}`);
 
                         this._sslCertDetails.getElement().append('<hr>');
+
+                        // extensions ----------------------------------------------------------------------------------
+
+                        const strongExtensions = new StrongText(this._sslCertDetails);
+                        // eslint-disable-next-line no-new
+                        new Icon(strongExtensions, IconFa.bars);
+                        strongExtensions.getElement().append('&nbsp;Extensions');
+
+                        const tableExtensions = new Table(this._sslCertDetails);
+
+                        for (const ext of certDetails.extensions) {
+                            const trExt = new Tr(tableExtensions);
+
+                            // eslint-disable-next-line no-new
+                            new Td(trExt, `<b>${ext}</b>`);
+                        }
                     }
                 }
             }
@@ -555,6 +640,14 @@ export class RouteHttpEditModal extends ModalDialog {
             this._locationTabBadge.getElement().empty().text(count);
         } else {
             this._locationTabBadge.hide();
+        }
+    }
+
+    protected _updateSSLTabBadge(): void {
+        if (this._switchSslEnable.isEnable()) {
+            this._sslTabBadge.show();
+        } else {
+            this._sslTabBadge.hide();
         }
     }
 
@@ -730,6 +823,42 @@ export class RouteHttpEditModal extends ModalDialog {
     }
 
     /**
+     * Fill Wildcard List
+     * @protected
+     */
+    public setWildcardCertificateList(list: SslListWildcardEntry[]): void {
+        this._selectSslWildcardCert.clearValues();
+
+        this._selectSslWildcardCert.addValue({
+            key: '0',
+            value: list.length === 0 ? 'None Certificates found' : 'Not select'
+        });
+
+        for (const wcert of list) {
+            this._selectSslWildcardCert.addValue({
+                key: `${wcert.owern_http_id}`,
+                value: wcert.label
+            });
+        }
+    }
+
+    /**
+     * Set wildcard certificate
+     * @param {number} ownerHttpId
+     */
+    public setWildcardCertificate(ownerHttpId: number): void {
+        this._selectSslWildcardCert.setSelectedValue(`${ownerHttpId}`);
+    }
+
+    /**
+     * Return wildcard certificate
+     * @return {number}
+     */
+    public getWildcardCertificate(): number {
+        return parseInt(this._selectSslWildcardCert.getSelectedValue(), 10) || 0;
+    }
+
+    /**
      * resetValues
      */
     public override resetValues(): void {
@@ -738,11 +867,17 @@ export class RouteHttpEditModal extends ModalDialog {
         this._inputIndex.setValue('');
         this.setListen('0');
         this.setSslEnable(false);
+        this.setSslWildcard(false);
+        this.setSslEmail('');
+        this.setWildcardCertificate(0);
         this._switchHttp2Enable.setInativ(true);
         this.setHttp2Enable(false);
         this.setXFrameOptions('');
         this._inputVariableCmbs.setValue('');
         this._locationCollection.removeAll();
+
+        this._navTab.setTabSelect(0);
+        this._navTabSsl.setTabSelect(0);
     }
 
 }

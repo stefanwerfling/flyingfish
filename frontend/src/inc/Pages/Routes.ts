@@ -432,6 +432,12 @@ export class Routes extends BasePage {
                                 if (sslProviders) {
                                     this._routeHttpDialog.setSslProviders(sslProviders.list);
                                 }
+
+                                const sslWildcards = await SslAPI.getAllCertforWildcard(entry.id);
+
+                                if (sslWildcards) {
+                                    this._routeHttpDialog.setWildcardCertificateList(sslWildcards);
+                                }
                             },
                             IconFa.add
                         );

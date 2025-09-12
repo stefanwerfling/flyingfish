@@ -1,8 +1,8 @@
 import {
     SchemaDefaultReturn,
-    SchemaSslDetailsResponse,
+    SchemaSslDetailsResponse, SchemaSslListWildcardResponse,
     SchemaSslProvidersResponse,
-    SslDetails,
+    SslDetails, SslListWildcardEntry,
     SslProvidersResponse
 } from 'flyingfish_schemas';
 import {Vts} from 'vts';
@@ -44,6 +44,27 @@ export class Ssl {
     public static async runService(): Promise<boolean> {
         await NetFetch.getData('/json/ssl/run/service', SchemaDefaultReturn);
         return true;
+    }
+
+    /**
+     * Get All Cert for Wildcard
+     * @param {number} domainId
+     * @returns {SslListWildcardEntry[]}
+     */
+    public static async getAllCertforWildcard(domainId: number): Promise<SslListWildcardEntry[]> {
+        const resultContent = await NetFetch.postData(
+            '/json/ssl/cert/wildcards',
+            {
+                domain_id: domainId
+            },
+            SchemaSslListWildcardResponse
+        );
+
+        if (resultContent.list) {
+            return resultContent.list;
+        }
+
+        return [];
     }
 
 }

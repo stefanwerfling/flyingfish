@@ -13,6 +13,7 @@ export class DomainService extends DBService<Domain> {
 
     /**
      * getInstance
+     * @return {DomainService}
      */
     public static getInstance(): DomainService {
         return DBService.getSingleInstance(
@@ -24,8 +25,9 @@ export class DomainService extends DBService<Domain> {
 
     /**
      * findByName
-     * @param name
-     * @param disable
+     * @param {string} name
+     * @param {boolean} disable
+     * @returns {Domain | null}
      */
     public findByName(name: string, disable: boolean = false): Promise<Domain | null> {
         return this._repository.findOne({
@@ -38,7 +40,8 @@ export class DomainService extends DBService<Domain> {
 
     /**
      * findParentId
-     * @param domainname
+     * @param {string} domainname
+     * @return {number}
      */
     public async findParentId(domainname: string): Promise<number> {
         const parts = domainname.split('.');
@@ -60,8 +63,48 @@ export class DomainService extends DBService<Domain> {
     }
 
     /**
+     * findAllParents
+     * @param {string} domainname
+     * @returns {Domain[]}
+     */
+    public async findAllParents(domainname: string): Promise<Domain[]> {
+        const parts = domainname.split('.');
+        const nameList: string[] = [];
+
+        if (parts.length <= 1) {
+            return [];
+        }
+
+        while (parts.length > 1) {
+            parts.shift();
+
+            nameList.push(parts.join('.'));
+        }
+
+        let query = this._repository.createQueryBuilder('domain');
+
+        let isFirstWhere = true;
+
+        for (const dname of nameList) {
+            if (isFirstWhere) {
+                isFirstWhere = false;
+                query = query.where({
+                    domainname: dname
+                });
+            } else {
+                query = query.orWhere({
+                    domainname: dname
+                });
+            }
+        }
+
+        return query.getMany();
+    }
+
+    /**
      * getChildrenById
-     * @param id
+     * @param {number} id
+     * @returns {Domain[]}
      */
     public async getChildrenById(id: number): Promise<Domain[]> {
         return this._repository.find({
@@ -73,7 +116,7 @@ export class DomainService extends DBService<Domain> {
 
     /**
      * updateChildrenToNewParent
-     * @param domain
+     * @param {Domain} domain
      */
     public async updateChildrenToNewParent(domain: Domain): Promise<void> {
         if (domain.parent_id === 0) {

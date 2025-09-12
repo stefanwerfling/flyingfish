@@ -1,4 +1,4 @@
-import {UpdateResult} from 'typeorm';
+import {In, UpdateResult} from 'typeorm';
 import {DateHelper} from '../../../Utils/DateHelper.js';
 import {DBService} from '../DBService.js';
 import {NginxHttp} from '../Entity/NginxHttp.js';
@@ -118,6 +118,20 @@ export class NginxHttpService extends DBService<NginxHttp> {
         return this._repository.count({
             where: {
                 listen_id: listenId
+            }
+        });
+    }
+
+    /**
+     * Find all Cert Wildcard NginxHttps
+     * @param {number[]} domainIds
+     * @returns {NginxHttp[]}
+     */
+    public async findAllCertWildcard(domainIds: number[]): Promise<NginxHttp[]> {
+        return this._repository.find({
+            where: {
+                cert_wildcard: true,
+                domain_id: In(domainIds)
             }
         });
     }
