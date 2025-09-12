@@ -2,6 +2,6 @@
  * Credential schema types
  */
 export enum CredentialSchemaTypes {
-    Basic,
-    Digest
+    Basic = '0',
+    Digest = '1'
 }

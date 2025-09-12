@@ -7,7 +7,7 @@ import {CredentialSchemaTypes} from './CredentialSchemaTypes.js';
 export const SchemaCredential = Vts.object({
     id: Vts.number(),
     name: Vts.string(),
-    authSchemaType: Vts.enum(CredentialSchemaTypes),
+    authSchemaType: Vts.or([Vts.enum(CredentialSchemaTypes), Vts.string()]),
     provider: Vts.string(),
     settings: Vts.string()
 });

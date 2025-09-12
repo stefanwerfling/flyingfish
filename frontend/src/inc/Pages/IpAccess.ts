@@ -1,4 +1,3 @@
-import {SearchWidgetData} from 'bambooo/src/v1/Widget/Search/SearchWidget.js';
 import {
     IpAccessBlackListImportSaveRequest,
     IpAccessBlackListOwnSaveRequest,
@@ -32,7 +31,8 @@ import {
     LeftNavbarLink,
     FormRow,
     SearchWidget,
-    LangText
+    LangText,
+    SearchWidgetData
 } from 'bambooo';
 import {BasePage} from './BasePage.js';
 import {IpAccessBlacklistImportModal} from './IpAccess/IpAccessBlacklistImportModal.js';
@@ -702,7 +702,7 @@ export class IpAccess extends BasePage {
 
             const countryData: SearchWidgetData[] = [];
 
-            countryList.list.map((entry) => {
+            countryList.list.forEach((entry) => {
                 countryData.push({
                     id: entry.code,
                     text: entry.name
@@ -725,7 +725,7 @@ export class IpAccess extends BasePage {
                 const tcountries = map.getSelectedCountries();
                 const values: SearchWidgetData[] = [];
 
-                countryList.list.map((entry) => {
+                countryList.list.forEach((entry) => {
                     if (tcountries.indexOf(entry.code) !== -1) {
                         values.push({
                             id: entry.code,

@@ -1,7 +1,6 @@
 import {ConfigOptions, SchemaConfigOptions} from 'flyingfish_schemas';
 import path from 'path';
-import {SchemaErrors} from 'vts';
-import {ObjectSchema} from 'vts/dist/schemas/objectSchema.js';
+import {SchemaErrors, ObjectSchema} from 'vts';
 import {FileHelper} from '../Utils/FileHelper.js';
 
 /**

@@ -1,7 +1,5 @@
 import {CredentialDB, CredentialServiceDB} from 'flyingfish_core';
 import {DefaultReturn, StatusCodes, Credential, CredentialSchemaTypes} from 'flyingfish_schemas';
-import {Vts} from 'vts';
-
 /**
  * Save credential route
  */
@@ -30,22 +28,14 @@ export class Save {
         credential.name = data.name;
         credential.provider = data.provider;
 
-        if (Vts.isString(data.authSchemaType)) {
-            data.authSchemaType = parseInt(data.authSchemaType, 10) || CredentialSchemaTypes.Basic;
-        }
+        switch (data.authSchemaType) {
+            case CredentialSchemaTypes.Basic:
+            case CredentialSchemaTypes.Digest:
+                credential.scheme = parseInt(data.authSchemaType, 10);
+                break;
 
-        if(Vts.isInteger(data.authSchemaType)) {
-            switch (data.authSchemaType) {
-                case CredentialSchemaTypes.Basic:
-                case CredentialSchemaTypes.Digest:
-                    credential.scheme = data.authSchemaType;
-                    break;
-
-                default:
-                    credential.scheme = CredentialSchemaTypes.Basic;
-            }
-        } else {
-            credential.scheme = CredentialSchemaTypes.Basic;
+            default:
+                credential.scheme = parseInt(CredentialSchemaTypes.Basic, 10);
         }
 
         credential.settings = data.settings;

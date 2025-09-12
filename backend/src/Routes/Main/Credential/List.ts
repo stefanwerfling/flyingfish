@@ -12,7 +12,7 @@ export class List {
                 id: credential.id,
                 name: credential.name,
                 provider: credential.provider,
-                authSchemaType: credential.scheme,
+                authSchemaType: `${credential.scheme}`,
                 settings: credential.settings
             });
         }
