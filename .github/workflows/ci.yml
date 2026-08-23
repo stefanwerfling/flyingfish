@@ -1,0 +1,104 @@
+name: CI
+
+# Quality gate for the overhaul (refactoring phase 1):
+# - Typecheck (tsc --noEmit) across all TypeScript service workspaces
+# - Network-free unit tests (only backend/test/**, no DB/external APIs)
+# - ESLint over backend/test/** (new code must be lint-clean)
+# Note: backend/src still has legacy violations (cleanup runs separately) -> the
+# lint scope is extended to src afterwards. ESLint runs in eslintrc legacy mode
+# (ESLINT_USE_FLAT_CONFIG=false) until it is migrated to flat config.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: Typecheck (tsc --noEmit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # No lockfile in the repo (package-lock.json is gitignored) -> npm install,
+      # like the Dockerfile does. No npm ci (that requires a lockfile).
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      # The shared packages expose "types" pointing at source -> the typecheck
+      # needs no prior build.
+      - name: Typecheck TypeScript service workspaces
+        run: |
+          set -e
+          for w in schemas core backend ddnsserver himhip sshserver; do
+            echo "::group::tsc --noEmit ${w}"
+            npx tsc --noEmit -p "${w}/tsconfig.json"
+            echo "::endgroup::"
+          done
+
+  test:
+    name: Unit tests (network-free)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      # jest resolves flyingfish_core/_schemas at runtime via "main" (dist). schemas
+      # builds itself via its install script; core needs an explicit build.
+      - name: Build shared libraries
+        run: |
+          npm run build --workspace=schemas
+          npm run build --workspace=core
+
+      # Bootstrap env for jest.setup (placeholders only; the unit tests do not
+      # connect to DB/Redis/external services).
+      - name: Provide bootstrap env
+        run: cp setup/.env .env
+
+      # Only backend/test/** (convention: network-free tests under test/ at src level).
+      # The legacy integration tests under backend/tests/** (NoIp/IpLocate, real
+      # network) are intentionally excluded.
+      - name: Run network-free backend tests
+        run: npm test --workspace=backend -- test/
+
+  lint:
+    name: ESLint (test sources)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      # For now only backend/test/** (new convention). backend/src is added after
+      # the legacy-violation cleanup. eslintrc legacy mode, no type-aware rules ->
+      # no workspace build needed.
+      - name: ESLint backend tests
+        working-directory: backend
+        env:
+          ESLINT_USE_FLAT_CONFIG: 'false'
+        run: npx eslint test --ext .ts
