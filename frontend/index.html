@@ -6,13 +6,7 @@
   <link rel="manifest" id="manifest-placeholder">
   <title id="ff_page_title"></title>
 
-  <script>
-      document.querySelector('#manifest-placeholder').setAttribute('href', window.location.origin + '/manifest.json');
-
-      if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('dist/service-worker.js');
-      }
-  </script>
+  <script src="js/pwa-init.js"></script>
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="assets/css/fonts/fonts.css">
   <!-- Font Awesome -->
@@ -50,9 +44,7 @@
   <!-- jQuery UI 1.11.4 -->
   <script src="assets/plugins/jquery-ui/jquery-ui.min.js"></script>
   <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-  <script>
-      $.widget.bridge('uibutton', $.ui.button)
-  </script>
+  <script src="js/uibutton-bridge.js"></script>
   <!-- Bootstrap 4 -->
   <script src="assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
   <!-- ChartJS -->

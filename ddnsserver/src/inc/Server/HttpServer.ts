@@ -22,8 +22,7 @@ export class HttpServer extends BaseHttpServer {
                 frameSrc: ['\'self\''],
                 childSrc: ['\'self\''],
                 scriptSrc: [
-                    '\'self\'',
-                    '\'unsafe-inline\''
+                    '\'self\''
                 ],
                 styleSrc: [
                     '\'self\'',
