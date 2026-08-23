@@ -4,9 +4,12 @@ ENV FLYINGFISH_NGINX_MODULE_MODE_DYN="0"
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
-ARG NGINX_VERSION="1.26.2"
-ARG HEADERS_MORE_VERSION="v0.38"
-ARG NJS_BRANCH="0.8.9"
+# nginx 1.30.x = current stable line (1.26 is EOL). 1.30.4 (2026-07-15).
+# Includes the fix for CVE-2025-23419 (TLSv1.3 SNI SSL session reuse).
+# Module versions chosen to match the line (njs 0.9.x, headers-more v0.40).
+ARG NGINX_VERSION="1.30.4"
+ARG HEADERS_MORE_VERSION="v0.40"
+ARG NJS_BRANCH="0.9.9"
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
