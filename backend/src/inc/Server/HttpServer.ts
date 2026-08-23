@@ -26,18 +26,15 @@ export class HttpServer extends BaseHttpServer {
                 childSrc: ['\'self\''],
                 scriptSrc: [
                     '\'self\'',
-                    '*',
                     '\'unsafe-inline\''
                 ],
                 styleSrc: [
                     '\'self\'',
-                    '*',
                     '\'unsafe-inline\''
                 ],
                 fontSrc: [
                     '\'self\'',
-                    '*',
-                    '\'unsafe-inline\''
+                    'data:'
                 ],
                 imgSrc: ['\'self\'', 'https: data:'],
                 baseUri: ['\'self\'']

@@ -23,30 +23,29 @@ export class HttpServer extends BaseHttpServer {
                 childSrc: ['\'self\''],
                 scriptSrc: [
                     '\'self\'',
-                    '*',
                     '\'unsafe-inline\''
                 ],
                 styleSrc: [
                     '\'self\'',
-                    '*',
                     '\'unsafe-inline\''
                 ],
                 fontSrc: [
                     '\'self\'',
-                    '*',
-                    '\'unsafe-inline\''
+                    'data:'
                 ],
                 imgSrc: ['\'self\'', 'https: data:'],
                 baseUri: ['\'self\'']
             }
         }));
 
+        // The rate limit applies even with Basic Auth: it protects the DDNS update
+        // endpoints against credential brute-force. 100 requests / 15 min per IP is
+        // generous for legitimate DynDNS clients (which only update on IP change).
         const limiter = rateLimit({
             windowMs: 15 * 60 * 1000,
             standardHeaders: true,
             legacyHeaders: false,
-            skip: async() => { return true; },
-            limit: async() => { return Number.MAX_SAFE_INTEGER; }
+            limit: 100
         });
 
         this._express.use(limiter);

@@ -1,0 +1,38 @@
+# Docker build-context hygiene.
+# The Dockerfile copies sources and rebuilds node_modules/dist inside the image
+# (RUN rm -R ...), so those do not belong in the build context. Without this file
+# the multi-GB *.tar image exports would be sent as context and bloat every build.
+
+# Dependencies & build artifacts (rebuilt fresh inside the image)
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+
+# Local image exports (multiple GB) - never needed in the build context
+*.tar
+
+# VCS / IDE / CI
+.git
+.gitignore
+.github
+.idea
+.vscode
+
+# Docs & design artifacts
+doc
+*.pdf
+flyingfish.spdx.json
+
+# Local / runtime data
+.env
+**/*.log
+nginx/logs
+nginx/servers
+nginx/sample
+nginx/body
+nginxtest
+letsencrypt
+
+# Misc
+.mcp.json
+.claude

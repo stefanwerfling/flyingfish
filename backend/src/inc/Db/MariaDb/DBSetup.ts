@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcrypt';
+import {randomBytes} from 'node:crypto';
 import {
     DomainDB,
     DomainServiceDB,
@@ -31,16 +32,32 @@ export class DBSetup {
         const userCount = await us.countAll();
 
         if (userCount === 0) {
+            // No hardcoded default password anymore. The initial password comes from
+            // FLYINGFISH_ADMIN_INIT_PASSWORD; if the variable is empty, a strong random
+            // password is generated and logged ONCE.
+            const envPassword = (process.env.FLYINGFISH_ADMIN_INIT_PASSWORD ?? '').trim();
+            const generated = envPassword === '';
+            const initPassword = generated ? randomBytes(18).toString('base64url') : envPassword;
+
             const nUser = new UserDB();
             nUser.username = 'ffadmin';
             nUser.email = 'admin@flyingfish.org';
-            nUser.password = await bcrypt.hash('changeMyPassword', 10);
+            nUser.password = await bcrypt.hash(initPassword, 10);
             nUser.disable = false;
 
             // save user to db
             await us.save(nUser);
 
-            Logger.getLogger().info('Admin user create for first init.');
+            if (generated) {
+                Logger.getLogger().warn('======================================================================');
+                Logger.getLogger().warn('Initial admin created: username "ffadmin"');
+                Logger.getLogger().warn('Generated initial password: %s', initPassword);
+                Logger.getLogger().warn('Log in and change it immediately. Set FLYINGFISH_ADMIN_INIT_PASSWORD');
+                Logger.getLogger().warn('to provide your own initial password instead.');
+                Logger.getLogger().warn('======================================================================');
+            } else {
+                Logger.getLogger().info('Admin user created for first init (password from FLYINGFISH_ADMIN_INIT_PASSWORD).');
+            }
         }
 
         const listenCount = await NginxListenServiceDB.getInstance().countAll();

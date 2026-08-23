@@ -106,9 +106,6 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
                 gateway: data.gateway,
                 interface: data.interface,
                 hostip: data.hostip
-            },
-            https: {
-                rejectUnauthorized: false
             }
         });
 

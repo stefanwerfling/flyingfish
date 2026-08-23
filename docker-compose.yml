@@ -68,7 +68,19 @@ services:
       - flyingfishRedisData:/data
     ports:
       - '127.0.0.1:6379:6379'
-    command: ["redis-server", "--save", "${REDIS_SAVE}", "--loglevel", "${REDIS_LOGLEVEL}", "--maxmemory", "${REDIS_MAX_MEMORY}", "--maxmemory-policy", "allkeys-lru", "--requirepass", "${REDIS_REQUIREPASS}"]
+    command: [
+      "redis-server",
+      "--save",
+      "${REDIS_SAVE}",
+      "--loglevel",
+      "${REDIS_LOGLEVEL}",
+      "--maxmemory",
+      "${REDIS_MAX_MEMORY}",
+      "--maxmemory-policy",
+      "allkeys-lru",
+      "--requirepass",
+      "${REDIS_REQUIREPASS}"
+    ]
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.7
@@ -84,25 +96,26 @@ services:
         max-file: "50"
 
   flyingfish:
-    image: flyingfish:v1.2
+    image: flyingfish:v1.1.13
     build:
       context: ./
       dockerfile: Dockerfile
       args:
-        NPM_REGISTRY: ${NPM_REGISTRY}
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
     container_name: flyingfish_service
     volumes:
       - ./nginx:/opt/flyingfish/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw
       - ./backend/dist:/opt/flyingfish/backend/dist
-      - ./backend/node_modules:/opt/flyingfish/backend/node_modules
+      #- ./backend/node_modules:/opt/flyingfish/backend/node_modules
       - ./backend/package.json:/opt/flyingfish/backend/package.json
-      - ./frontend/assets:/opt/flyingfish/frontend/assets
+      #- ./frontend/assets:/opt/flyingfish/frontend/assets
       - ./frontend/dist:/opt/flyingfish/frontend/dist
       - ./frontend/src:/opt/flyingfish/frontend/src
       - ./node_modules:/opt/flyingfish/node_modules
-      - ./package.json:/opt/flyingfish/package.json
+      -  ./package.json:/opt/flyingfish/package.json
+      - ./plugins/letsencrypt:/opt/flyingfish/node_modules/flyingfish_plugin_letsencrypt
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -116,6 +129,7 @@ services:
       FLYINGFISH_HIMHIP_USE: "${HIMHIP_USE}"
       FLYINGFISH_HIMHIP_SECRET: "${HIMHIP_SECRET}"
       FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
+      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
       FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     ports:
       - "443:443"
@@ -125,7 +139,7 @@ services:
       - "${HTTPSERVER_PORT}:${HTTPSERVER_PORT}"
       - "1900:1900"
       - "10901:10901"
-      - "9229:9229"
+      # - "9229:9229"  # Node debugger port only when needed (opt-in, see command)
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.3
@@ -143,17 +157,20 @@ services:
         condition: service_healthy
     command:
       - node
-      - "--inspect-brk=0.0.0.0:9229"
+      # Debug opt-in: uncomment the next line only when needed. --inspect-brk halts
+      # startup until a debugger connects on 9229 - NOT for default/prod, and never
+      # expose it permanently on 0.0.0.0.
+      # - "--inspect-brk=0.0.0.0:9229"
       - "backend/dist/main.js"
       - "--envargs=1"
 
   himhip:
-    image: flyingfish_himip:v1.0
+    image: flyingfish_himip:v1.1.13
     build:
       context: ./
       dockerfile: ./himhip/Dockerfile
       args:
-        NPM_REGISTRY: ${NPM_REGISTRY}
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
     container_name: flyingfish_himhip
     environment:
       FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
@@ -161,8 +178,9 @@ services:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     network_mode: host
+    # HimHIP only reads routes/ARP (ip route, arp) - NET_ADMIN is enough, not cap ALL.
     cap_add:
-      - ALL
+      - NET_ADMIN
     logging:
       driver: "json-file"
       options:
@@ -201,12 +219,12 @@ services:
 #      - flyingfish
 
   sshremote:
-    image: flyingfish_ssh:v1.0
+    image: flyingfish_ssh:v1.1.13
     build:
       context: ./
       dockerfile: ./sshserver/Dockerfile
       args:
-        NPM_REGISTRY: ${NPM_REGISTRY}
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
     container_name: flyingfish_ssh
     volumes:
       - flyingfishSsh:/opt/flyingfish/ssh:rw
@@ -240,12 +258,12 @@ services:
         condition: service_started
 
   ddnsserver:
-    image: flyingfish_ddns:v1.0
+    image: flyingfish_ddns:v1.1.13
     build:
       context: ./
       dockerfile: ./ddnsserver/Dockerfile
       args:
-        NPM_REGISTRY: ${NPM_REGISTRY}
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
     container_name: flyingfish_ddns
     volumes:
       - ./ddnsserver/dist:/opt/flyingfish/ddnsserver/dist
@@ -278,6 +296,7 @@ services:
 #    command:
 #      - node
 #      - "--inspect-brk=0.0.0.0:9229"
+#      - "ddnsserver/dist/main.js"
 #      - "ddnsserver/dist/main.js"
 #      - "--envargs=1"
 
