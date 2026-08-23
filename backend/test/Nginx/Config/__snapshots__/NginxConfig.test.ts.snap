@@ -1,0 +1,104 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Nginx Config :: Http http block with directive and nested server 1`] = `
+"http {
+	sendfile on;
+
+	server {
+		listen 80;
+		server_name example.com;
+	}
+
+}
+"
+`;
+
+exports[`Nginx Config :: Server (HTTP) reverse-proxy server with SSL listen and proxy_pass location 1`] = `
+"server {
+	listen 443 ssl http2;
+	ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+	server_name example.com;
+
+	location / {
+		proxy_pass http://stream_to_8080;
+	}
+
+}
+"
+`;
+
+exports[`Nginx Config :: Server (dual-stack & error_page) IPv4+IPv6 listens, root, access_log and error_page 1`] = `
+"server {
+	listen 0.0.0.0:443 ssl http2;
+	listen [::]:443 ssl http2;
+	access_log /var/log/nginx/example.access.log;
+	server_name example.com;
+	root /var/www/html;
+	error_page 404 /404.html;
+}
+"
+`;
+
+exports[`Nginx Config :: Stream (core routing) SNI routing: map + two upstreams + ssl_preread server 1`] = `
+"stream {
+
+	upstream backend_a {
+		server 10.0.0.10:443;
+	}
+
+	upstream backend_b {
+		server 10.0.0.11:443;
+	}
+
+
+	map $ssl_preread_server_name $ff_backend {
+		default backend_a;
+		a.example.com backend_a;
+		b.example.com backend_b;
+	}
+
+
+	server {
+		listen 443 proxy_protocol;
+		ssl_preread on;
+		proxy_pass $ff_backend;
+	}
+
+}
+"
+`;
+
+exports[`Nginx Config :: Stream (core routing) stream with upstream + proxy_protocol server 1`] = `
+"stream {
+
+	upstream stream_to_8080 {
+		server 127.0.0.1:8080;
+	}
+
+
+	server {
+		listen 443 proxy_protocol;
+		proxy_pass stream_to_8080;
+		proxy_protocol on;
+	}
+
+}
+"
+`;
+
+exports[`Nginx Config :: Upstream multiple servers enable the least_conn algorithm 1`] = `
+"upstream balanced {
+	least_conn;
+	server 10.0.0.1:9000;
+	server 10.0.0.2:9000;
+}
+"
+`;
+
+exports[`Nginx Config :: Upstream single server without options 1`] = `
+"upstream stream_to_8080 {
+	server 127.0.0.1:8080;
+}
+"
+`;
