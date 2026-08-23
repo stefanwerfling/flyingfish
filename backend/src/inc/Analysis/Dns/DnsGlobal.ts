@@ -268,7 +268,8 @@ export class DnsGlobal {
         }
     ];
 
-    public async check(dnsName: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function -- placeholder for the upcoming global DNS check
+    public async check(_dnsName: string): Promise<void> {
 
     }
 

@@ -95,10 +95,10 @@ export class IpLocateIo {
 
             if (response.body) {
                 if (SchemaIpLocateData.validate(response.body, [])) {
-                    return response.body
-                } else {
-                    Logger.getLogger().warn(`IpLocate::location: response is not validate schema by ip: ${ipAddress}!`);
-                }
+                    return response.body;
+                } 
+                Logger.getLogger().warn(`IpLocate::location: response is not validate schema by ip: ${ipAddress}!`);
+                
             }
         } catch (e) {
             Logger.getLogger().error('IpLocate::location:', e);

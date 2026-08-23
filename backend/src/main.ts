@@ -120,7 +120,7 @@ import {User as UserController} from './Routes/Main/User.js';
 
     try {
         // MariaDb -----------------------------------------------------------------------------------------------------
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- TypeORM's MixedList entity list uses the Function constructor type
         const entities: MixedList<Function | string | EntitySchema> = await DBEntitiesLoader.loadEntities() as [];
 
         await DBHelper.init({
@@ -320,7 +320,7 @@ import {User as UserController} from './Routes/Main/User.js';
 
             Logger.getLogger().info('... End.');
         } catch (e) {
-            Logger.getLogger().error("Error during shutdown:", e);
+            Logger.getLogger().error('Error during shutdown:', e);
             console.trace();
         } finally {
             callback();

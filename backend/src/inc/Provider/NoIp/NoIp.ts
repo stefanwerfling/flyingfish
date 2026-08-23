@@ -76,10 +76,10 @@ export class NoIp implements IDynDnsClient {
 
     /**
      * Return all supported hostnames
-     * @param {DynDnsClientHostsOptions} options
+     * @param {DynDnsClientHostsOptions} _options
      * @returns {string[]}
      */
-    public async getHosts(options: DynDnsClientHostsOptions): Promise<string[]> {
+    public async getHosts(_options: DynDnsClientHostsOptions): Promise<string[]> {
         return Promise.resolve([]);
     }
 

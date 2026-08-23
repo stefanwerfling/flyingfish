@@ -540,6 +540,7 @@ export class NginxService {
             const proxyProtocolEnable = streamCollects.listen.proxy_protocol;
             const proxyProtocolInEnable = streamCollects.listen.proxy_protocol_in;
 
+            // eslint-disable-next-line no-await-in-loop -- per-domain config must be built sequentially to keep deterministic output order
             for await (const domainName of streamCollects.domains.keys()) {
                 const streamCollect = streamCollects.domains.get(domainName);
 

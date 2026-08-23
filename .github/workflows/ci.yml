@@ -3,10 +3,9 @@ name: CI
 # Quality gate for the overhaul (refactoring phase 1):
 # - Typecheck (tsc --noEmit) across all TypeScript service workspaces
 # - Network-free unit tests (only backend/test/**, no DB/external APIs)
-# - ESLint over backend/test/** (new code must be lint-clean)
-# Note: backend/src still has legacy violations (cleanup runs separately) -> the
-# lint scope is extended to src afterwards. ESLint runs in eslintrc legacy mode
-# (ESLINT_USE_FLAT_CONFIG=false) until it is migrated to flat config.
+# - ESLint over backend/src + backend/test (must be error-free)
+# ESLint runs in eslintrc legacy mode (ESLINT_USE_FLAT_CONFIG=false) until it is
+# migrated to flat config. Warnings (e.g. TODO markers) do not fail the build.
 
 on:
   push:
@@ -80,7 +79,7 @@ jobs:
         run: npm test --workspace=backend -- test/
 
   lint:
-    name: ESLint (test sources)
+    name: ESLint (backend)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -94,11 +93,11 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      # For now only backend/test/** (new convention). backend/src is added after
-      # the legacy-violation cleanup. eslintrc legacy mode, no type-aware rules ->
-      # no workspace build needed.
-      - name: ESLint backend tests
+      # Lints backend/src and backend/test (eslintrc legacy mode, no type-aware
+      # rules -> no workspace build needed). Only errors fail the build; warnings
+      # (e.g. TODO markers via no-warning-comments) do not.
+      - name: ESLint backend (src + tests)
         working-directory: backend
         env:
           ESLINT_USE_FLAT_CONFIG: 'false'
-        run: npx eslint test --ext .ts
+        run: npx eslint src test --ext .ts

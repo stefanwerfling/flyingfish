@@ -73,7 +73,6 @@ export class DynDnsService {
             }
         }
 
-
         for await (const client of clients) {
             const provider = DynDnsProviders.getProvider(client.provider);
 

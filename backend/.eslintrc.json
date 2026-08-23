@@ -44,6 +44,8 @@
       "error",
       {
         "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "none",
         "ignoreRestSiblings": false,
         "vars": "all"
       }
@@ -171,6 +173,10 @@
     "no-undefined": "off",
     "no-underscore-dangle": "off",
     "no-unused-vars": "off",
+    // Intentional defensive pattern in the service layer: initialize to a default,
+    // assign inside a try, return inside the catch. The initial value is never read
+    // by design, so no-useless-assignment would only add noise.
+    "no-useless-assignment": "off",
     "no-use-before-define": "off",
     "no-useless-constructor": "off",
     "no-warning-comments": "warn",

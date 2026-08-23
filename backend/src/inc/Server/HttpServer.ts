@@ -74,7 +74,7 @@ export class HttpServer extends BaseHttpServer {
             handler: (req, res) => {
                 Logger.getLogger().warn('Too Many Requests: %s is blocked for %s.', req.ip, req.url);
 
-                res.status(429).json({ message: "Too Many Requests" });
+                res.status(429).json({ message: 'Too Many Requests' });
             }
         });
 

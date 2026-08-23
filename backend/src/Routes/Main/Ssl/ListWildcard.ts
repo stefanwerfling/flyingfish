@@ -35,13 +35,13 @@ export class ListWildcard {
             list.push({
                 owern_http_id: http.id,
                 label: `*.${domainMap.get(http.domain_id)}`
-            })
+            });
         }
 
         return {
             statusCode: StatusCodes.OK,
             list: list
-        }
+        };
     }
 
 }

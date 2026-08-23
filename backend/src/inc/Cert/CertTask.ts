@@ -19,5 +19,4 @@ export class CertTask {
         this._http = http;
     }
 
-
 }
