@@ -80,10 +80,11 @@ import {Update as UpdateController} from './Routes/Main/Update.js';
                 DynDnsServerDomainDB,
                 DynDnsServerUserDB
             ],
-            migrations: [
-            ],
-            migrationsRun: true,
-            synchronize: true
+            // This service is a consumer of the shared database; the backend owns
+            // the schema and runs the migrations.
+            migrations: [],
+            migrationsRun: false,
+            synchronize: false
         });
     } catch (error) {
         Logger.getLogger().error('Error while connecting to the database', error);

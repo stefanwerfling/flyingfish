@@ -18,6 +18,7 @@ import {Vts} from 'vts';
 import {Config} from './inc/Config/Config.js';
 import {InfluxDbHelper} from './inc/Db/InfluxDb/InfluxDbHelper.js';
 import {DBSetup} from './inc/Db/MariaDb/DBSetup.js';
+import {InitialSchema1787961600000} from './inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {HimHIP} from './inc/HimHIP/HimHIP.js';
@@ -131,9 +132,18 @@ import {User as UserController} from './Routes/Main/User.js';
             password: tConfig.db.mysql.password,
             database: tConfig.db.mysql.database,
             entities: entities,
-            migrations: [],
-            migrationsRun: true,
-            synchronize: true
+            migrations: [InitialSchema1787961600000],
+            migrationsRun: false,
+            synchronize: false
+        });
+
+        // Run migrations. Existing databases (whose schema was created by the
+        // former synchronize:true) are auto-baselined: the initial migration is
+        // stamped as applied instead of being re-run.
+        await DBHelper.runMigrations(undefined, {
+            legacyTable: 'user',
+            migrationName: 'InitialSchema1787961600000',
+            timestamp: 1787961600000
         });
 
         // db setup first init

@@ -19,6 +19,9 @@
     "prefer-arrow",
     "jest"
   ],
+  "ignorePatterns": [
+    "src/inc/Db/MariaDb/migrations/**"
+  ],
   "rules": {
     // eslint typescript rules
     "@typescript-eslint/adjacent-overload-signatures": "error",
