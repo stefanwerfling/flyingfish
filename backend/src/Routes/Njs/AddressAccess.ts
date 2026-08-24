@@ -71,7 +71,7 @@ export class AddressAccess extends DefaultRoute {
         }
 
         // update and not await
-        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).then();
+        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).catch((error) => Logger.getLogger().error('AddressAccess: blacklist counter update failed', {error: error}));
 
         Logger.getLogger().info('AddressAccess::_globalCheckBlacklist: Address(%s) found in blacklist!', realip_remote_addr);
 
@@ -126,7 +126,7 @@ export class AddressAccess extends DefaultRoute {
         Logger.getLogger().info('AddressAccess::_listCheckBlackList: Address(%s) found in blacklist!', realip_remote_addr);
 
         // update and not await
-        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).then();
+        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).catch((error) => Logger.getLogger().error('AddressAccess: blacklist counter update failed', {error: error}));
 
         return false;
     }
@@ -144,7 +144,7 @@ export class AddressAccess extends DefaultRoute {
             Logger.getLogger().info('AddressAccess::_listCheckWhiteList: Address(%s) found in whitelist!', realip_remote_addr);
 
             // update and not await
-            IpWhitelistServiceDB.getInstance().updateAccess(address.id, address.count_access + 1).then();
+            IpWhitelistServiceDB.getInstance().updateAccess(address.id, address.count_access + 1).catch((error) => Logger.getLogger().error('AddressAccess: whitelist counter update failed', {error: error}));
 
             return true;
         }

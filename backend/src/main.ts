@@ -327,10 +327,11 @@ import {User as UserController} from './Routes/Main/User.js';
     await HowIsMyPublicIpService.getInstance().start();
     await SslCertService.getInstance().start();
 
-    // not await
-    BlacklistService.getInstance().start().then();
-    IpLocationService.getInstance().start().then();
-    IpService.getInstance().start().then();
+    // Fire-and-forget service starts: do not block startup, but log rejections
+    // instead of leaving them as unhandled promise rejections.
+    BlacklistService.getInstance().start().catch((error) => Logger.getLogger().error('main: BlacklistService start failed', {error: error}));
+    IpLocationService.getInstance().start().catch((error) => Logger.getLogger().error('main: IpLocationService start failed', {error: error}));
+    IpService.getInstance().start().catch((error) => Logger.getLogger().error('main: IpService start failed', {error: error}));
 
     // exit ------------------------------------------------------------------------------------------------------------
 
