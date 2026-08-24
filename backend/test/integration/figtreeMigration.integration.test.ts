@@ -10,7 +10,7 @@
 import {DBHelper as FigtreeDBHelper} from 'figtree';
 import {DBEntitiesLoader, PluginManager} from 'flyingfish_core';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
-import {closeTestDb, initTestDb} from './dbHarness.js';
+import {closeTestDb, getTestDbName, initTestDb} from './dbHarness.js';
 
 const baseline = {
     legacyTable: 'user',
@@ -35,7 +35,7 @@ describe('figtree migration path (integration)', () => {
             port: Number(process.env.FF_TEST_DB_PORT ?? 13306),
             username: process.env.FF_TEST_DB_USER ?? 'root',
             password: process.env.FF_TEST_DB_PASSWORD ?? 'test',
-            database: process.env.FF_TEST_DB_NAME ?? 'flyingfish',
+            database: getTestDbName(),
             entities: entities,
             migrations: [InitialSchema1787961600000],
             migrationsRun: false,

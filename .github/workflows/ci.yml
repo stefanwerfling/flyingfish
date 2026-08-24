@@ -138,7 +138,9 @@ jobs:
           npm run build --workspace=core
 
       # Runs against the MariaDB service above; the dbHarness applies the migrations.
-      # Serial (--runInBand) because the suites share one database.
+      # Parallel: each jest worker uses its own database (<name>_<worker id>),
+      # created on demand, so the suites don't share state. maxWorkers is capped
+      # to keep the MariaDB connection count well within limits.
       - name: Run integration tests
         working-directory: backend
         env:
@@ -147,4 +149,4 @@ jobs:
           FF_TEST_DB_USER: root
           FF_TEST_DB_PASSWORD: test
           FF_TEST_DB_NAME: flyingfish
-        run: npm test -- test/integration/ --runInBand
+        run: npm test -- test/integration/ --maxWorkers=4
