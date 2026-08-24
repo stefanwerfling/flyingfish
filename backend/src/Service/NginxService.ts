@@ -1625,4 +1625,15 @@ export class NginxService {
         }
     }
 
+    /**
+     * Build the current nginx config as a string from the database, without
+     * writing any file or touching the nginx process. Used by the characterization
+     * tests around the config generation (phase-2 split).
+     */
+    public async generateConfig(): Promise<string> {
+        await this._loadConfig();
+
+        return NginxServer.getInstance().getConf()?.generate() ?? '';
+    }
+
 }

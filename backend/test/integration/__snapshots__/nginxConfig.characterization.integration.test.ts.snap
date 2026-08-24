@@ -1,0 +1,173 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NginxService config generation (characterization, integration) generates a baseline config from an empty database 1`] = `
+"
+user root;
+worker_processes auto;
+pid /tmp/ff-char-nginx/nginx.pid;
+error_log /tmp/ff-char-nginx/logs/error.log;
+
+events {
+	worker_connections 4096;
+}
+daemon off;
+pcre_jit on;
+
+stream {
+	js_import mainstream from /tmp/ff-char-nginx/dist/mainstream.js;
+	resolver 8.8.8.8 valid=1s;
+
+	upstream ffus_internsshserver {
+		server 10.103.0.4:22;
+	}
+
+	upstream ffus_internsshserver_proxy {
+		server 127.0.0.1:20000;
+	}
+
+
+	server {
+		listen 127.0.0.1:20000 proxy_protocol;
+		proxy_pass 10.103.0.4:22;
+	}
+
+}
+
+http {
+	js_import mainhttp from /tmp/ff-char-nginx/dist/mainhttp.js;
+	default_type application/octet-stream;
+	sendfile on;
+	server_tokens off;
+	tcp_nopush on;
+	tcp_nodelay on;
+	client_body_temp_path /tmp/ff-char-nginx/body 1 2;
+	keepalive_timeout 90s;
+	proxy_connect_timeout 90s;
+	proxy_send_timeout 90s;
+	proxy_read_timeout 90s;
+	ssl_prefer_server_ciphers on;
+	gzip on;
+}
+"
+`;
+
+exports[`NginxService config generation (characterization, integration) generates a config for the default install (DBSetup.firstInit) 1`] = `
+"
+user root;
+worker_processes auto;
+pid /tmp/ff-char-nginx/nginx.pid;
+error_log /tmp/ff-char-nginx/logs/error.log;
+
+events {
+	worker_connections 4096;
+}
+daemon off;
+pcre_jit on;
+
+stream {
+	js_import mainstream from /tmp/ff-char-nginx/dist/mainstream.js;
+	resolver 8.8.8.8 valid=1s;
+	log_format ff_s_accesslogs_1 escape=json '{"source":"nginx","source_type":"stream","logging":"access","ff_stream_id":1,"time":"$time_iso8601","msec":"$msec","host":"$remote_addr","protocol":"$protocol","status":"$status","bytes_sent":"$bytes_sent","bytes_received":"$bytes_received","session_time":"$session_time","upstream_addr":"$upstream_addr","upstream_bytes_sent":"$upstream_bytes_sent","upstream_bytes_received":"$upstream_bytes_received","upstream_connect_time":"$upstream_connect_time"}';
+	log_format ff_s_accesslogs_2 escape=json '{"source":"nginx","source_type":"stream","logging":"access","ff_stream_id":2,"time":"$time_iso8601","msec":"$msec","host":"$remote_addr","protocol":"$protocol","status":"$status","bytes_sent":"$bytes_sent","bytes_received":"$bytes_received","session_time":"$session_time","upstream_addr":"$upstream_addr","upstream_bytes_sent":"$upstream_bytes_sent","upstream_bytes_received":"$upstream_bytes_received","upstream_connect_time":"$upstream_connect_time"}';
+	log_format ff_s_accesslogs_3 escape=json '{"source":"nginx","source_type":"stream","logging":"access","ff_stream_id":3,"time":"$time_iso8601","msec":"$msec","host":"$remote_addr","protocol":"$protocol","status":"$status","bytes_sent":"$bytes_sent","bytes_received":"$bytes_received","session_time":"$session_time","upstream_addr":"$upstream_addr","upstream_bytes_sent":"$upstream_bytes_sent","upstream_bytes_received":"$upstream_bytes_received","upstream_connect_time":"$upstream_connect_time"}';
+
+	upstream ffus_internsshserver {
+		server 10.103.0.4:22;
+	}
+
+	upstream ffus_internsshserver_proxy {
+		server 127.0.0.1:20001;
+	}
+
+	upstream ffus_StreamTo5333_1 {
+		server 127.0.0.1:5333;
+	}
+
+	upstream ffus_StreamTo10443_1 {
+		server 127.0.0.1:10443;
+	}
+
+	upstream ffus_StreamTo10080_1 {
+		server 127.0.0.1:10080;
+	}
+
+
+	map $ssl_preread_server_name $ffstream53 {
+		default ffus_StreamTo5333_1;
+	}
+
+	map $ssl_preread_server_name $ffstream443 {
+		default ffus_StreamTo10443_1;
+	}
+
+	map $ssl_preread_server_name $ffstream80 {
+		default ffus_StreamTo10080_1;
+	}
+
+
+	server {
+		listen 127.0.0.1:20001 proxy_protocol;
+		proxy_pass 10.103.0.4:22;
+	}
+
+	server {
+		listen 53;
+		listen 53 udp;
+		ssl_preread on;
+		proxy_pass $ffstream53;
+	}
+
+	server {
+		listen 443;
+		ssl_preread on;
+		proxy_protocol on;
+		proxy_pass $ffstream443;
+	}
+
+	server {
+		listen 80;
+		ssl_preread on;
+		proxy_protocol on;
+		proxy_pass $ffstream80;
+	}
+
+}
+
+http {
+	js_import mainhttp from /tmp/ff-char-nginx/dist/mainhttp.js;
+	default_type application/octet-stream;
+	sendfile on;
+	server_tokens off;
+	tcp_nopush on;
+	tcp_nodelay on;
+	client_body_temp_path /tmp/ff-char-nginx/body 1 2;
+	keepalive_timeout 90s;
+	proxy_connect_timeout 90s;
+	proxy_send_timeout 90s;
+	proxy_read_timeout 90s;
+	ssl_prefer_server_ciphers on;
+	gzip on;
+	log_format ff_h_accesslogs_0 escape=json '{"source":"nginx","source_type":"http","logging":"access","ff_http_id":0,"time":"$time_iso8601","host":"$remote_addr","proxy_protocol_addr":"$proxy_protocol_addr","forwardedfor":"$http_x_forwarded_for","req":"$request","method":"$request_method","scheme":"$scheme","uri":"$request_uri","status":"$status","size":"$body_bytes_sent","referer":"$http_referer","ua":"$http_user_agent","reqtime":"$request_time","runtime":"$upstream_http_x_runtime","apptime":"$upstream_response_time","cache":"$upstream_http_x_cache","vhost":"$host"}';
+
+	server {
+		listen 10080 proxy_protocol default_server;
+		error_page 500 502 503 504 /50x.html;
+		error_page 404 /404.html;
+
+		location /.well-known/ {
+			auth_basic off;
+			auth_request off;
+			default_type "text/plain";
+			alias /tmp/ff-char-nginx/html/.well-known/;
+		}
+
+		location /404.html {
+			root /tmp/ff-char-nginx/pages;
+			internal ;
+		}
+
+	}
+
+}
+"
+`;
