@@ -6,9 +6,9 @@
  * (save -> list -> delete), an HTTP route with a proxy_pass location, a stream
  * route with an upstream, and the "listen required" / "duplicate route" guards.
  *
- * Stream routes are exercised via the upstream destination type (DB-only); the
- * ssh_l/ssh_r destination types (which build an ssh user/port graph) are not
- * covered here.
+ * Stream routes are exercised via the upstream destination type and via the
+ * ssh_r/ssh_l destination types, which build (and, on delete, tear down) an ssh
+ * user/port graph - cross-checked through the Ssh controller.
  *
  * Runs against a real MariaDB via the dbHarness - see the CI integration job.
  */
@@ -28,10 +28,11 @@ import request from 'supertest';
 import {Domain} from '../../src/Routes/Main/Domain.js';
 import {Listen} from '../../src/Routes/Main/Listen.js';
 import {Route} from '../../src/Routes/Main/Route.js';
+import {Ssh} from '../../src/Routes/Main/Ssh.js';
 import {buildApiApp, loginAgent} from './apiTestHelpers.js';
 import {closeTestDb, initTestDb, resetTestDb} from './dbHarness.js';
 
-const routes = [new Domain(), new Listen(), new Route()];
+const routes = [new Domain(), new Listen(), new Route(), new Ssh()];
 
 const DOMAIN_NAME = 'route.example.com';
 
@@ -127,6 +128,39 @@ const streamRoute = (domainId: number, listenId: number, upstreams: UpStream[] =
             load_balancing_algorithm: '',
             ssh_r_type: NginxStreamSshR.none,
             upstreams: upstreams
+        }
+    };
+};
+
+const sshStreamRoute = (
+    domainId: number,
+    listenId: number,
+    destinationType: NginxStreamDestinationType = NginxStreamDestinationType.ssh_r,
+    sshRType: NginxStreamSshR = NginxStreamSshR.in,
+    sshPort = 0
+): RouteStreamSave => {
+    return {
+        domainid: domainId,
+        stream: {
+            id: 0,
+            listen_id: listenId,
+            destination_type: destinationType,
+            destination_listen_id: 0,
+            alias_name: '',
+            index: 0,
+            isdefault: false,
+            use_as_default: false,
+            load_balancing_algorithm: '',
+            ssh_r_type: sshRType,
+            ssh: {
+                id: 0,
+                port: sshPort,
+                user_id: 0,
+                username: 'sshuser',
+                password: 'sshpass',
+                destinationAddress: '127.0.0.1:22'
+            },
+            upstreams: []
         }
     };
 };
@@ -287,5 +321,51 @@ describe('Route API (integration)', () => {
         const second = await agent.post('/json/route/stream/save').send(streamRoute(domainId, listenId));
         expect(second.body.statusCode).toBe(StatusCodes.INTERNAL_ERROR);
         expect(second.body.msg).toBe('You can only add one stream by this listen to this domain!');
+    });
+
+    test('ssh_r stream builds and tears down the ssh user/port graph', async() => {
+        const agent = await loginAgent(routes);
+        const {domainId, listenId} = await createFixtures(agent);
+
+        // ssh.port 0 -> the save picks the first free port starting at 10000.
+        const save = await agent.post('/json/route/stream/save').send(sshStreamRoute(domainId, listenId));
+        expect(save.body.statusCode).toBe(StatusCodes.OK);
+
+        // the ssh port graph is now visible through the Ssh controller
+        const sshList = await agent.get('/json/ssh/list');
+        expect(sshList.body.list).toHaveLength(1);
+        expect(sshList.body.list[0].port).toBe(10000);
+
+        // and the stream carries the ssh block
+        const list = await agent.get('/json/route/list');
+        const domainRoute = findDomainRoute(list.body.list);
+        expect(domainRoute.streams).toHaveLength(1);
+        expect(domainRoute.streams[0].ssh).toBeDefined();
+        expect(domainRoute.streams[0].ssh?.port).toBe(10000);
+        expect(domainRoute.streams[0].ssh?.username).toBe('sshuser');
+
+        // deleting the stream cascades: the ssh port + user are cleaned up
+        const streamId = domainRoute.streams[0].id;
+        const del = await agent.post('/json/route/stream/delete').send({id: streamId});
+        expect(del.body.statusCode).toBe(StatusCodes.OK);
+
+        const sshAfter = await agent.get('/json/ssh/list');
+        expect(sshAfter.body.list).toHaveLength(0);
+        const routeAfter = await agent.get('/json/route/list');
+        expect(findDomainRoute(routeAfter.body.list).streams).toHaveLength(0);
+    });
+
+    test('ssh_l stream creates an ssh port at the requested port', async() => {
+        const agent = await loginAgent(routes);
+        const {domainId, listenId} = await createFixtures(agent);
+
+        const save = await agent.post('/json/route/stream/save').send(
+            sshStreamRoute(domainId, listenId, NginxStreamDestinationType.ssh_l, NginxStreamSshR.none, 22000)
+        );
+        expect(save.body.statusCode).toBe(StatusCodes.OK);
+
+        const sshList = await agent.get('/json/ssh/list');
+        expect(sshList.body.list).toHaveLength(1);
+        expect(sshList.body.list[0].port).toBe(22000);
     });
 });
