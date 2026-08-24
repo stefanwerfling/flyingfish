@@ -1,65 +1,17 @@
 /**
  * API integration tests for the GatewayIdentifier CRUD controller
- * (supertest + real MariaDB). Extends the pattern established by the Login
- * API test to a full authenticated list/save/delete round-trip.
- *
- * Boots a minimal Express app with the Login + GatewayIdentifier controllers,
- * session middleware and the test database, then drives the endpoints via
- * supertest (logging in through the real login flow to obtain a session).
+ * (supertest + real MariaDB): an authenticated list/save/delete round-trip
+ * driven through a real logged-in session.
  *
  * Runs against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import * as bcrypt from 'bcrypt';
-import bodyParser from 'body-parser';
-import express, {Express} from 'express';
-import session from 'express-session';
-import {UserDB, UserServiceDB} from 'flyingfish_core';
 import {GatewayIdentifierEntry, StatusCodes} from 'flyingfish_schemas';
 import request from 'supertest';
 import {GatewayIdentifier} from '../../src/Routes/Main/GatewayIdentifier.js';
-import {Login} from '../../src/Routes/Main/Login.js';
+import {buildApiApp, loginAgent} from './apiTestHelpers.js';
 import {closeTestDb, initTestDb, resetTestDb} from './dbHarness.js';
 
-const EMAIL = 'admin@flyingfish.org';
-const PASSWORD = 'secret123';
-
-const buildApp = (): Express => {
-    const app = express();
-
-    app.use(bodyParser.json());
-    app.use(session({
-        secret: 'test-secret',
-        resave: false,
-        saveUninitialized: true,
-        store: new session.MemoryStore()
-    }));
-    app.use(new Login().getExpressRouter());
-    app.use(new GatewayIdentifier().getExpressRouter());
-
-    return app;
-};
-
-const seedUser = async(): Promise<void> => {
-    const user = new UserDB();
-    user.username = 'ffadmin';
-    user.email = EMAIL;
-    user.password = await bcrypt.hash(PASSWORD, 10);
-    user.disable = false;
-
-    await UserServiceDB.getInstance().save(user);
-};
-
-/**
- * Seed the admin user and return a supertest agent that has logged in, so its
- * cookie carries an authenticated session to the guarded endpoints.
- */
-const loginAgent = async(): Promise<ReturnType<typeof request.agent>> => {
-    await seedUser();
-    const agent = request.agent(buildApp());
-    await agent.post('/json/login').send({email: EMAIL, password: PASSWORD});
-
-    return agent;
-};
+const routes = [new GatewayIdentifier()];
 
 const sampleEntry = (): GatewayIdentifierEntry => {
     return {
@@ -82,13 +34,13 @@ describe('GatewayIdentifier API (integration)', () => {
     afterAll(closeTestDb);
 
     test('list requires authentication', async() => {
-        const res = await request(buildApp()).get('/json/gatewayidentifier/list');
+        const res = await request(buildApiApp(routes)).get('/json/gatewayidentifier/list');
 
         expect(res.body.statusCode).toBe(StatusCodes.UNAUTHORIZED);
     });
 
     test('save then list returns the stored gateway identifier', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         const save = await agent.post('/json/gatewayidentifier/save').send(sampleEntry());
         expect(save.body.statusCode).toBe(StatusCodes.OK);
@@ -105,7 +57,7 @@ describe('GatewayIdentifier API (integration)', () => {
     });
 
     test('save updates an existing entry instead of creating a new one', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         await agent.post('/json/gatewayidentifier/save').send(sampleEntry());
         const created = await agent.get('/json/gatewayidentifier/list');
@@ -124,7 +76,7 @@ describe('GatewayIdentifier API (integration)', () => {
     });
 
     test('delete removes the gateway identifier', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         await agent.post('/json/gatewayidentifier/save').send(sampleEntry());
         const created = await agent.get('/json/gatewayidentifier/list');
@@ -138,7 +90,7 @@ describe('GatewayIdentifier API (integration)', () => {
     });
 
     test('save rejects a schema-invalid payload', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         const res = await agent.post('/json/gatewayidentifier/save').send({networkname: 'incomplete'});
 

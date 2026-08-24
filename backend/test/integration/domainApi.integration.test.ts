@@ -1,60 +1,17 @@
 /**
  * API integration tests for the Domain CRUD controller (supertest + real
- * MariaDB). Covers the authenticated list/save/delete round-trip plus the
- * domain-name normalisation and schema validation behaviour.
+ * MariaDB). Covers the authenticated list/save/delete round-trip, domain-name
+ * normalisation and schema validation.
  *
  * Runs against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import * as bcrypt from 'bcrypt';
-import bodyParser from 'body-parser';
-import express, {Express} from 'express';
-import session from 'express-session';
-import {UserDB, UserServiceDB} from 'flyingfish_core';
 import {DomainData, StatusCodes} from 'flyingfish_schemas';
 import request from 'supertest';
 import {Domain} from '../../src/Routes/Main/Domain.js';
-import {Login} from '../../src/Routes/Main/Login.js';
+import {buildApiApp, loginAgent} from './apiTestHelpers.js';
 import {closeTestDb, initTestDb, resetTestDb} from './dbHarness.js';
 
-const EMAIL = 'admin@flyingfish.org';
-const PASSWORD = 'secret123';
-
-const buildApp = (): Express => {
-    const app = express();
-
-    app.use(bodyParser.json());
-    app.use(session({
-        secret: 'test-secret',
-        resave: false,
-        saveUninitialized: true,
-        store: new session.MemoryStore()
-    }));
-    app.use(new Login().getExpressRouter());
-    app.use(new Domain().getExpressRouter());
-
-    return app;
-};
-
-const seedUser = async(): Promise<void> => {
-    const user = new UserDB();
-    user.username = 'ffadmin';
-    user.email = EMAIL;
-    user.password = await bcrypt.hash(PASSWORD, 10);
-    user.disable = false;
-
-    await UserServiceDB.getInstance().save(user);
-};
-
-/**
- * Seed the admin user and return a logged-in supertest agent.
- */
-const loginAgent = async(): Promise<ReturnType<typeof request.agent>> => {
-    await seedUser();
-    const agent = request.agent(buildApp());
-    await agent.post('/json/login').send({email: EMAIL, password: PASSWORD});
-
-    return agent;
-};
+const routes = [new Domain()];
 
 const sampleDomain = (name = 'example.com'): DomainData => {
     return {
@@ -79,13 +36,13 @@ describe('Domain API (integration)', () => {
     afterAll(closeTestDb);
 
     test('list requires authentication', async() => {
-        const res = await request(buildApp()).get('/json/domain/list');
+        const res = await request(buildApiApp(routes)).get('/json/domain/list');
 
         expect(res.body.statusCode).toBe(StatusCodes.UNAUTHORIZED);
     });
 
     test('save then list returns the stored domain', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         const save = await agent.post('/json/domain/save').send(sampleDomain());
         expect(save.body.statusCode).toBe(StatusCodes.OK);
@@ -97,7 +54,7 @@ describe('Domain API (integration)', () => {
     });
 
     test('save normalises the domain name to lower case', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         await agent.post('/json/domain/save').send(sampleDomain('Example.COM'));
 
@@ -107,7 +64,7 @@ describe('Domain API (integration)', () => {
     });
 
     test('delete removes the domain', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         await agent.post('/json/domain/save').send(sampleDomain());
         const created = await agent.get('/json/domain/list');
@@ -121,7 +78,7 @@ describe('Domain API (integration)', () => {
     });
 
     test('save rejects a schema-invalid payload', async() => {
-        const agent = await loginAgent();
+        const agent = await loginAgent(routes);
 
         const res = await agent.post('/json/domain/save').send({name: 'incomplete.example'});
 
