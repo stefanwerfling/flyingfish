@@ -1,5 +1,7 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
+import {ServiceAbstract} from 'figtree';
+import {ServiceStatus} from 'figtree-schemas';
 import {
     DnsRecordBase,
     DomainRecordDB,
@@ -34,8 +36,27 @@ export const TYPE_EXT = {
 
 /**
  * Dns2Server
+ *
+ * Authoritative DNS server (TCP/UDP) that answers from the domain-record tables
+ * and serves temporary records for the ACME DNS-01 challenge. Migrated onto
+ * figtree's `ServiceAbstract` as a lifecycle service: the framework owns
+ * start/stop, health and restart, replacing the former bare `listen()` call
+ * that the old `main.ts` invoked by hand.
+ *
+ * Kept in `inc/Dns/` (not `Application/Service/`) because it is infrastructure
+ * tightly coupled to its sibling `./RecordType/*` answer builders. Retains its
+ * singleton accessor + `IDnsServer` interface: `SslCertService` (and DNS-record
+ * routes) drive the temp-record API on demand via `getInstance()`.
+ *
+ * Registered by `FlyingFishBackend` with a dependency on the `mariadb` service
+ * so it only listens once the database is up.
  */
-export class Dns2Server implements IDnsServer {
+export class Dns2Server extends ServiceAbstract implements IDnsServer {
+
+    /**
+     * Name of the service.
+     */
+    public static readonly NAME = 'dnsserver';
 
     /**
      * instance
@@ -76,6 +97,8 @@ export class Dns2Server implements IDnsServer {
      * constructor
      */
     public constructor() {
+        super(Dns2Server.NAME, [ 'mariadb' ]);
+
         this._server = DNS.createServer({
             udp: true,
             tcp: true,
@@ -397,6 +420,25 @@ export class Dns2Server implements IDnsServer {
         }
 
         return answers;
+    }
+
+    /**
+     * Start the DNS server (invoked by the service manager once its
+     * dependencies are up).
+     */
+    public override async start(): Promise<void> {
+        this._status = ServiceStatus.Progress;
+        this.listen();
+        this._status = ServiceStatus.Success;
+    }
+
+    /**
+     * Stop the DNS server, releasing the TCP/UDP sockets.
+     * @param {boolean} _forced
+     */
+    public override async stop(_forced: boolean = false): Promise<void> {
+        await this._server.close();
+        this._status = ServiceStatus.None;
     }
 
     /**

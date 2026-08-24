@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import {Logger} from 'flyingfish_core';
+import {FlyingFishConfig} from './src/Application/Config/FlyingFishConfig';
 import {Config} from './src/inc/Config/Config';
 
 beforeAll(async() => {
@@ -41,23 +42,30 @@ beforeAll(async() => {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    await Config.getInstance().load(null, true);
-    const config = Config.getInstance().get();
+    // Establish the flyingfish_core Config singleton as the delegating backend
+    // Config (whose `get()` bridges to FlyingFishConfig). core's Logger reads
+    // its config through this singleton, so it must exist before load().
+    Config.getInstance();
+
+    // Since the figtree migration, the configuration is loaded into
+    // FlyingFishConfig (figtree's Config singleton); the backend Config.get()
+    // delegates there. Load and configure it directly so core's Logger sees a
+    // writable log dir instead of falling back to /var/log/flyingfish/.
+    await FlyingFishConfig.getInstance().load(null, true);
+    const config = FlyingFishConfig.getInstance().get();
 
     if (config === null) {
         console.log('Configloader is return empty config, please check your .env file');
         return;
     }
 
-    if (config) {
-        if (typeof config.logging === 'undefined') {
-            config.logging = {};
-        }
-
-        config.logging.dirname = '/tmp/';
-
-        Config.getInstance().set(config);
-
-        Logger.getLogger();
+    if (typeof config.logging === 'undefined') {
+        config.logging = {};
     }
+
+    config.logging.dirname = '/tmp/';
+
+    FlyingFishConfig.getInstance().set(config);
+
+    Logger.getLogger();
 });

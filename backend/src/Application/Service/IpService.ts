@@ -1,12 +1,31 @@
+import {ServiceJobAbstract} from 'figtree';
 import {Logger} from 'flyingfish_core';
-import {Job, scheduleJob} from 'node-schedule';
-import {IpBlacklist, IpBlacklistCheck} from '../inc/Analysis/Ip/IpBlacklist.js';
+import {IpBlacklist, IpBlacklistCheck} from '../../inc/Analysis/Ip/IpBlacklist.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 
 /**
  * IpService
+ *
+ * Checks the host's own public IP against the RBL blacklists once an hour.
+ * Migrated onto figtree's `ServiceJobAbstract` (the framework owns cron
+ * scheduling, tick timing, error handling, health and restart).
+ *
+ * Dual role: unlike the pure job services, this class KEEPS its singleton
+ * accessor and static result state, because the dashboard routes read
+ * `IpService.isBlacklisted` / `IpService.foundOnRBL` and call
+ * `IpService.getInstance().check()` on demand. `FlyingFishBackend` therefore
+ * registers `IpService.getInstance()` (not a fresh instance) so the scheduled
+ * instance and the route-facing singleton are the same object.
+ *
+ * Depends on the `mariadb` service; the RBL lookups also use the public IP
+ * resolved by the (not-yet-migrated) `HowIsMyPublicIpService` singleton.
  */
-export class IpService {
+export class IpService extends ServiceJobAbstract {
+
+    /**
+     * Name of the service.
+     */
+    public static readonly NAME = 'ip';
 
     /**
      * instance
@@ -36,10 +55,12 @@ export class IpService {
     }
 
     /**
-     * scheduler job
-     * @protected
+     * Constructor.
      */
-    protected _scheduler: Job|null = null;
+    public constructor() {
+        super(IpService.NAME, [ 'mariadb' ]);
+        this._cron = '1 */1 * * *';
+    }
 
     /**
      * check
@@ -78,14 +99,20 @@ export class IpService {
     }
 
     /**
-     * start
+     * Start the service. Runs one immediate check (mirroring the former
+     * hand-rolled `start()`) before handing the cron schedule to the framework.
      */
-    public async start(): Promise<void> {
+    public override async start(): Promise<void> {
+        await super.start();
         await this.check();
+    }
 
-        this._scheduler = scheduleJob('1 */1 * * *', async() => {
-            await this.check();
-        });
+    /**
+     * Scheduled execution (invoked by the cron tick).
+     * @protected
+     */
+    protected override async _execute(): Promise<void> {
+        await this.check();
     }
 
 }

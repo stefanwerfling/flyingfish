@@ -1,22 +1,41 @@
 import {Ets} from 'ets';
+import {ServiceJobAbstract} from 'figtree';
 import {DomainServiceDB, FileHelper, Logger, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import got from 'got';
-import {Job, scheduleJob} from 'node-schedule';
 import Path from 'path';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors, Vts} from 'vts';
-import {Certificate} from '../inc/Cert/Certificate.js';
-import {Dns2Server} from '../inc/Dns/Dns2Server.js';
-import {NginxServer} from '../inc/Nginx/NginxServer.js';
-import {SslCertProviders} from '../inc/Provider/SslCertProvider/SslCertProviders.js';
+import {Certificate} from '../../inc/Cert/Certificate.js';
+import {Dns2Server} from '../../inc/Dns/Dns2Server.js';
+import {NginxServer} from '../../inc/Nginx/NginxServer.js';
+import {SslCertProviders} from '../../inc/Provider/SslCertProvider/SslCertProviders.js';
 import {NginxService} from './NginxService.js';
 
 /**
- * SSL certificate serverice object
+ * SSL certificate service object.
+ *
+ * Renews/creates the Let's Encrypt (and other provider) certificates for the
+ * SSL-enabled nginx hosts once a minute, reloading nginx when a cert changed.
+ * Migrated onto figtree's `ServiceJobAbstract`: the framework owns the cron
+ * scheduling, tick timing, error handling, health and restart.
+ *
+ * Dual role: KEEPS its singleton accessor because the SSL "run now" route reads
+ * `isInProcess()` / calls `invokeUpdate()`. Depends on `mariadb`, `nginx`
+ * (it reloads nginx) and `dnsserver` (ACME DNS-01 uses the Dns2Server temp
+ * records) — so the scheduler only starts once those are up.
+ *
+ * NOTE: the overlap guard uses a distinct `_updateInProcess` flag — the base
+ * `ServiceAbstract` already owns a protected `_inProcess` field, so the
+ * original field was renamed to avoid the collision.
  */
-export class SslCertService {
+export class SslCertService extends ServiceJobAbstract {
+
+    /**
+     * Name of the service.
+     */
+    public static readonly NAME = 'sslcert';
 
     /**
      * Ssl cert service instance
@@ -36,16 +55,18 @@ export class SslCertService {
     }
 
     /**
-     * scheduler update job
+     * update in process (overlap guard for update)
      * @protected
      */
-    protected _schedulerUpdate: Job|null = null;
+    protected _updateInProcess: boolean = false;
 
     /**
-     * in process
-     * @protected
+     * Constructor.
      */
-    protected _inProcess: boolean = false;
+    public constructor() {
+        super(SslCertService.NAME, [ 'mariadb', 'nginx', 'dnsserver' ]);
+        this._cron = '*/1 * * * *';
+    }
 
     /**
      * Check is a domain rechability
@@ -515,7 +536,7 @@ export class SslCertService {
      * update
      */
     public async update(): Promise<void> {
-        this._inProcess = true;
+        this._updateInProcess = true;
 
         const https = await NginxHttpServiceDB.getInstance().findAllBySslEnable();
 
@@ -535,38 +556,27 @@ export class SslCertService {
             await NginxService.getInstance().reload();
         }
 
-        this._inProcess = false;
+        this._updateInProcess = false;
     }
 
     /**
-     * start
+     * Scheduled execution (invoked by the cron tick). Skips overlapping runs
+     * via the `_updateInProcess` guard, as the former scheduler callback did.
+     * @protected
      */
-    public async start(): Promise<void> {
-        this._schedulerUpdate = scheduleJob('*/1 * * * *', async() => {
-            if (this._inProcess) {
-                return;
-            }
-
-            await this.update();
-        });
-    }
-
-    /**
-     * stop
-     */
-    public async stop(): Promise<void> {
-        if (this._schedulerUpdate !== null) {
-            this._schedulerUpdate.cancel();
+    protected override async _execute(): Promise<void> {
+        if (this._updateInProcess) {
+            return;
         }
+
+        await this.update();
     }
 
     /**
      * Invoke the update, for example, can call by route save.
      */
     public async invokeUpdate(): Promise<void> {
-        if (this._schedulerUpdate !== null) {
-            this._schedulerUpdate.invoke();
-        }
+        await this.invoke();
     }
 
     /**
@@ -574,7 +584,7 @@ export class SslCertService {
      * @returns {boolean}
      */
     public isInProcess(): boolean {
-        return this._inProcess;
+        return this._updateInProcess;
     }
 
 }

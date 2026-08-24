@@ -1,12 +1,14 @@
+import {Config, ConfigBackend} from 'figtree';
 import {BackendConfigOptions, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaBackendConfigOptions} from 'flyingfish_schemas';
 import path from 'path';
 import * as process from 'process';
 import {v4 as uuid} from 'uuid';
-import {Config as ConfigCore} from 'flyingfish_core';
-import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 
 /**
  * ENV_OPTIONAL
+ *
+ * Optional FlyingFish environment variables (the duty/optional DB names live
+ * in `flyingfish_schemas` as `ENV_DUTY_DB` / `ENV_OPTIONAL_DB`).
  */
 export enum ENV_OPTIONAL {
     HTTPSERVER_PORT = 'FLYINGFISH_HTTPSERVER_PORT',
@@ -29,15 +31,28 @@ export enum ENV_OPTIONAL {
 }
 
 /**
- * Config
+ * FlyingFish configuration.
+ *
+ * Built on figtree's `ConfigBackend`, typed with FlyingFish's own
+ * `BackendConfigOptions` (structurally assignable to figtree's
+ * `ConfigBackendOptions`, so figtree's `MariaDBService`/`HttpService` read
+ * `db.mysql`/`httpserver` unchanged, while the FlyingFish-specific sections —
+ * `nginx`, `dnsserver`, `dyndnsserver`, `upnpnat`, `himhip`, … — stay typed).
+ *
+ * figtree's `Config.load()` calls `_loadEnv()` (only when env mode is active,
+ * i.e. `--envargs=1`) and always `_setDefaults()`; both are ported below from
+ * the former `inc/Config/Config.ts`, using the `FLYINGFISH_*` variable names.
  */
-export class Config extends ConfigCore<BackendConfigOptions> {
+export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
 
     /**
      * DEFAULTS
      */
-    public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
-    public static readonly DEFAULT_HTTPSERVER_PUBLICDIR = 'frontend';
+    public static readonly DEFAULT_FF_DB_MYSQL_HOST = '10.103.0.2';
+    public static readonly DEFAULT_FF_DB_MYSQL_PORT = 3306;
+    public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
+    public static readonly DEFAULT_FF_HTTPSERVER_PORT = 3000;
+    public static readonly DEFAULT_FF_HTTPSERVER_PUBLICDIR = 'frontend';
     public static readonly DEFAULT_DNSSERVER_PORT = 5333;
     public static readonly DEFAULT_NGINX_CONFIG = path.join('/', 'opt', 'flyingfish', 'nginx', 'nginx.conf');
     public static readonly DEFAULT_NGINX_PREFIX = path.join('/', 'opt', 'flyingfish', 'nginx');
@@ -52,43 +67,27 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     public static readonly DEFAULT_REDIS_URL = 'redis://10.103.0.7:6379';
 
     /**
-     * getInstance
-     * @returns {Config}
+     * Return the config instance.
+     * @return {FlyingFishConfig}
      */
-    public static getInstance(): Config {
-        if (!ConfigCore._instance) {
-            ConfigCore._instance = new Config(SchemaBackendConfigOptions);
+    public static override getInstance(): FlyingFishConfig {
+        if (!Config._instance) {
+            Config._instance = new FlyingFishConfig(SchemaBackendConfigOptions);
         }
 
-        return ConfigCore._instance as Config;
+        return Config._instance as FlyingFishConfig;
     }
 
     /**
-     * get
-     *
-     * Strangler bridge: the figtree `BackendApp` loads the configuration into
-     * `FlyingFishConfig` (figtree's `Config` singleton), not into this
-     * flyingfish_core-based singleton. Delegate reads so the not-yet-migrated
-     * consumers that still call `Config.getInstance().get()` see the loaded
-     * config. The `_loadEnv`/`_setDefaults` logic below is retained but dormant
-     * (the same logic now lives in `FlyingFishConfig`); remove this class once
-     * every consumer reads from `FlyingFishConfig` directly.
-     * @return {BackendConfigOptions|null}
-     */
-    public override get(): BackendConfigOptions | null {
-        return FlyingFishConfig.getInstance().get();
-    }
-
-    /**
-     * _loadEnv
+     * Load the config from environment variables.
      * @param {BackendConfigOptions|null} aConfig
-     * @returns {BackendConfigOptions|null}
+     * @return {BackendConfigOptions|null}
      * @protected
      */
-    protected _loadEnv(aConfig: BackendConfigOptions | null): BackendConfigOptions | null {
+    protected override _loadEnv(aConfig: BackendConfigOptions | null): BackendConfigOptions | null {
         let config = aConfig;
 
-        // defaults ------------------------------------------------------------------------------------------------
+        // defaults ----------------------------------------------------------------------------------------------------
 
         if (config) {
             if (process.env[ENV_DUTY_DB.DB_MYSQL_USERNAME]) {
@@ -105,7 +104,7 @@ export class Config extends ConfigCore<BackendConfigOptions> {
         } else {
             for (const env of Object.values(ENV_DUTY_DB)) {
                 if (!process.env[env]) {
-                    console.log(`Config::load: Env Variable "${env}" not found!`);
+                    console.log(`FlyingFishConfig::_loadEnv: Env Variable "${env}" not found!`);
                     return null;
                 }
             }
@@ -117,27 +116,27 @@ export class Config extends ConfigCore<BackendConfigOptions> {
             config = {
                 db: {
                     mysql: {
-                        host: Config.DEFAULT_DB_MYSQL_HOST,
-                        port: Config.DEFAULT_DB_MYSQL_PORT,
+                        host: FlyingFishConfig.DEFAULT_FF_DB_MYSQL_HOST,
+                        port: FlyingFishConfig.DEFAULT_FF_DB_MYSQL_PORT,
                         username: dbMysqlUsername,
                         password: dbMysqlPassword,
                         database: dbMysqlDatabase
                     },
                     redis: {
-                        url: Config.DEFAULT_REDIS_URL
+                        url: FlyingFishConfig.DEFAULT_REDIS_URL
                     }
                 },
                 httpserver: {
-                    port: Config.DEFAULT_HTTPSERVER_PORT,
-                    publicdir: Config.DEFAULT_HTTPSERVER_PUBLICDIR
+                    port: FlyingFishConfig.DEFAULT_FF_HTTPSERVER_PORT,
+                    publicdir: FlyingFishConfig.DEFAULT_FF_HTTPSERVER_PUBLICDIR
                 },
                 nginx: {
-                    config: Config.DEFAULT_NGINX_CONFIG,
-                    prefix: Config.DEFAULT_NGINX_PREFIX
+                    config: FlyingFishConfig.DEFAULT_NGINX_CONFIG,
+                    prefix: FlyingFishConfig.DEFAULT_NGINX_PREFIX
                 },
                 himhip: {
-                    use: Config.DEFAULT_HIMHIP_USE,
-                    secret: Config.DEFAULT_HIMHIP_SECRET
+                    use: FlyingFishConfig.DEFAULT_HIMHIP_USE,
+                    secret: FlyingFishConfig.DEFAULT_HIMHIP_SECRET
                 }
             };
         }
@@ -166,9 +165,9 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load MariaDB Env
+     * Load MariaDB env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvMariaDb(config: BackendConfigOptions): BackendConfigOptions {
@@ -178,16 +177,16 @@ export class Config extends ConfigCore<BackendConfigOptions> {
 
         if (process.env[ENV_OPTIONAL_DB.DB_MYSQL_PORT]) {
             config.db.mysql.port = parseInt(process.env[ENV_OPTIONAL_DB.DB_MYSQL_PORT]!, 10) ||
-                Config.DEFAULT_DB_MYSQL_PORT;
+                FlyingFishConfig.DEFAULT_FF_DB_MYSQL_PORT;
         }
 
         return config;
     }
 
     /**
-     * Load InfluxDB Env
+     * Load InfluxDB env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvInfluxDb(config: BackendConfigOptions): BackendConfigOptions {
@@ -234,9 +233,9 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load Redis Env
+     * Load Redis env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvRedisDb(config: BackendConfigOptions): BackendConfigOptions {
@@ -254,15 +253,15 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load HttpServer Env
+     * Load HTTP server env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvHttpserver(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.HTTPSERVER_PORT]) {
             config.httpserver.port = parseInt(process.env[ENV_OPTIONAL.HTTPSERVER_PORT]!, 10) ||
-                Config.DEFAULT_HTTPSERVER_PORT;
+                FlyingFishConfig.DEFAULT_FF_HTTPSERVER_PORT;
         }
 
         if (process.env[ENV_OPTIONAL.HTTPSERVER_PUBLICDIR]) {
@@ -273,15 +272,15 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load DNSServer Env
+     * Load DNS server env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvDnsserver(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.DNSSERVER_PORT]) {
             config.dnsserver = {
-                port: parseInt(process.env[ENV_OPTIONAL.DNSSERVER_PORT]!, 10) || Config.DEFAULT_DNSSERVER_PORT
+                port: parseInt(process.env[ENV_OPTIONAL.DNSSERVER_PORT]!, 10) || FlyingFishConfig.DEFAULT_DNSSERVER_PORT
             };
         }
 
@@ -289,16 +288,16 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load Nginx Env
+     * Load Nginx env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvNginx(config: BackendConfigOptions): BackendConfigOptions {
         if (!config.nginx) {
             config.nginx = {
-                config: Config.DEFAULT_NGINX_CONFIG,
-                prefix: Config.DEFAULT_NGINX_PREFIX
+                config: FlyingFishConfig.DEFAULT_NGINX_CONFIG,
+                prefix: FlyingFishConfig.DEFAULT_NGINX_PREFIX
             };
         }
 
@@ -322,23 +321,23 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load DynDnsServer Env
+     * Load DynDNS server env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvDynDnsserver(config: BackendConfigOptions): BackendConfigOptions {
         if (!config.dyndnsserver) {
             config.dyndnsserver = {
-                port: Config.DEFAULT_DYNDNSSERVER_PORT,
-                ip: Config.DEFAULT_DYNDNSSERVER_IP,
-                schema: Config.DEFAULT_DYNDNSSERVER_SCHEMA,
-                enable: Config.DEFAULT_DYNDNSSERVER_ENABLE
+                port: FlyingFishConfig.DEFAULT_DYNDNSSERVER_PORT,
+                ip: FlyingFishConfig.DEFAULT_DYNDNSSERVER_IP,
+                schema: FlyingFishConfig.DEFAULT_DYNDNSSERVER_SCHEMA,
+                enable: FlyingFishConfig.DEFAULT_DYNDNSSERVER_ENABLE
             };
         }
 
         if (process.env[ENV_OPTIONAL.DYNDNSSERVER_PORT]) {
-            config.dyndnsserver.port = parseInt(process.env[ENV_OPTIONAL.DYNDNSSERVER_PORT]!, 10) || Config.DEFAULT_DYNDNSSERVER_PORT;
+            config.dyndnsserver.port = parseInt(process.env[ENV_OPTIONAL.DYNDNSSERVER_PORT]!, 10) || FlyingFishConfig.DEFAULT_DYNDNSSERVER_PORT;
         }
 
         if (process.env[ENV_OPTIONAL.DYNDNSSERVER_IP]) {
@@ -357,9 +356,9 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load SShServer Env
+     * Load SSH server env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvSshserver(config: BackendConfigOptions): BackendConfigOptions {
@@ -373,16 +372,16 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load docker Env
+     * Load docker env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvDocker(config: BackendConfigOptions): BackendConfigOptions {
         if (process.env[ENV_OPTIONAL.DOCKER_INSIDE]) {
             config.docker = {
                 inside: process.env[ENV_OPTIONAL.DOCKER_INSIDE] === '1',
-                gateway: Config.DEFAULT_DOCKER_GATEWAY
+                gateway: FlyingFishConfig.DEFAULT_DOCKER_GATEWAY
             };
         }
 
@@ -390,9 +389,9 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load Logging Env
+     * Load logging env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvLogging(config: BackendConfigOptions): BackendConfigOptions {
@@ -406,16 +405,16 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * Load Himhip Env
+     * Load HimHIP env.
      * @param {BackendConfigOptions} config
-     * @returns {BackendConfigOptions}
+     * @return {BackendConfigOptions}
      * @protected
      */
     protected _loadEnvHimhip(config: BackendConfigOptions): BackendConfigOptions {
         if (!config.himhip) {
             config.himhip = {
-                use: Config.DEFAULT_HIMHIP_USE,
-                secret: Config.DEFAULT_HIMHIP_SECRET
+                use: FlyingFishConfig.DEFAULT_HIMHIP_USE,
+                secret: FlyingFishConfig.DEFAULT_HIMHIP_SECRET
             };
         }
 
@@ -431,17 +430,18 @@ export class Config extends ConfigCore<BackendConfigOptions> {
     }
 
     /**
-     * _setDefaults
+     * Fill the remaining defaults (paths, secrets, feature toggles) that are
+     * not driven by environment variables. Always runs (file and env mode).
      * @param {BackendConfigOptions|null} config
-     * @returns {BackendConfigOptions|null}
+     * @return {BackendConfigOptions|null}
      * @protected
      */
-    protected _setDefaults(config: BackendConfigOptions | null): BackendConfigOptions | null {
+    protected override _setDefaults(config: BackendConfigOptions | null): BackendConfigOptions | null {
         if (config === null) {
             return null;
         }
 
-        let ffPath = Config.DEFAULT_FF_DIR;
+        let ffPath = FlyingFishConfig.DEFAULT_FF_DIR;
 
         if (config.flyingfish_libpath) {
             ffPath = config.flyingfish_libpath;
@@ -464,13 +464,13 @@ export class Config extends ConfigCore<BackendConfigOptions> {
 
         if (!config.dnsserver) {
             config.dnsserver = {
-                port: Config.DEFAULT_DNSSERVER_PORT
+                port: FlyingFishConfig.DEFAULT_DNSSERVER_PORT
             };
         }
 
         if (!config.sshserver) {
             config.sshserver = {
-                ip: Config.DEFAULT_SSHSERVER_IP
+                ip: FlyingFishConfig.DEFAULT_SSHSERVER_IP
             };
         }
 

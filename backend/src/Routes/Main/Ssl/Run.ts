@@ -1,5 +1,5 @@
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {SslCertService} from '../../../Service/SslCertService.js';
+import {SslCertService} from '../../../Application/Service/SslCertService.js';
 
 /**
  * Run

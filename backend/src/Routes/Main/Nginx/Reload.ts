@@ -1,5 +1,5 @@
 import {DefaultReturn, StatusCodes} from 'flyingfish_schemas';
-import {NginxService} from '../../../Service/NginxService.js';
+import {NginxService} from '../../../Application/Service/NginxService.js';
 
 /**
  * Reload

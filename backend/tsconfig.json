@@ -13,6 +13,7 @@
     "strict": true,
     "target": "ES2022",
     "rootDir": "src",
+    "skipLibCheck": true,
   },
   "include": [
     "./src/**/*.ts"

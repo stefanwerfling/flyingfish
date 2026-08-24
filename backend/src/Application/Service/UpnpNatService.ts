@@ -1,22 +1,39 @@
+import {ServiceJobAbstract} from 'figtree';
 import {GatewayIdentifierServiceDB, Logger, NatPortServiceDB, NginxListenServiceDB} from 'flyingfish_core';
 import {NatStatus} from 'flyingfish_schemas';
-import {Job, scheduleJob} from 'node-schedule';
 import Ping from 'ping';
-import {UpnpNatCache} from '../inc/Cache/UpnpNatCache.js';
-import {HimHIP} from '../inc/HimHIP/HimHIP.js';
-import {UpnpNatClient} from '../inc/Net/UpnpNat/UpnpNatClient.js';
-import {NewPortMappingOpts} from '../inc/Net/UpnpNat/Mapping/NewPortMappingOpts.js';
+import {UpnpNatCache} from '../../inc/Cache/UpnpNatCache.js';
+import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
+import {NewPortMappingOpts} from '../../inc/Net/UpnpNat/Mapping/NewPortMappingOpts.js';
+import {UpnpNatClient} from '../../inc/Net/UpnpNat/UpnpNatClient.js';
 
 /**
  * UpnpNatService
+ *
+ * Reconciles the configured NAT port mappings against the gateway (via UPnP)
+ * once a minute. Migrated onto figtree's `ServiceJobAbstract`: the framework
+ * owns the cron scheduling, tick timing, error handling, health and restart,
+ * replacing the former hand-rolled `node-schedule` job.
+ *
+ * Conditionally registered by `FlyingFishBackend` only when
+ * `config.upnpnat.enable` is set (the former `main.ts` gated the start the same
+ * way). Depends on the `mariadb` service; the mappings also require HimHIP
+ * gateway data, which `update()` skips gracefully when not yet available.
  */
-export class UpnpNatService {
+export class UpnpNatService extends ServiceJobAbstract {
 
     /**
-     * scheduler job
-     * @protected
+     * Name of the service.
      */
-    protected _scheduler: Job|null = null;
+    public static readonly NAME = 'upnpnat';
+
+    /**
+     * Constructor.
+     */
+    public constructor() {
+        super(UpnpNatService.NAME, [ 'mariadb' ]);
+        this._cron = '*/1 * * * *';
+    }
 
     /**
      * _setNatPortStatus
@@ -159,21 +176,11 @@ export class UpnpNatService {
     }
 
     /**
-     * start
+     * Scheduled execution (invoked by the cron tick).
+     * @protected
      */
-    public async start(): Promise<void> {
-        this._scheduler = scheduleJob('*/1 * * * *', async() => {
-            await this.update();
-        });
-    }
-
-    /**
-     * stop
-     */
-    public async stop(): Promise<void> {
-        if (this._scheduler !== null) {
-            this._scheduler.cancel();
-        }
+    protected override async _execute(): Promise<void> {
+        await this.update();
     }
 
 }

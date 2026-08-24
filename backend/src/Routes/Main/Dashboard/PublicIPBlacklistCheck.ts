@@ -1,5 +1,5 @@
 import {PublicIPBlacklistCheckResponse, StatusCodes} from 'flyingfish_schemas';
-import {IpService} from '../../../Service/IpService.js';
+import {IpService} from '../../../Application/Service/IpService.js';
 
 /**
  * PublicIPBlacklistCheck

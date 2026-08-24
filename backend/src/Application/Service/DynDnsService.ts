@@ -1,4 +1,5 @@
 import DNS from 'dns2';
+import {ServiceJobAbstract} from 'figtree';
 import {
     DateHelper,
     DomainRecordServiceDB, DomainServiceDB, DynDnsClientDB,
@@ -6,15 +7,34 @@ import {
     DynDnsClientServiceDB, GatewayIdentifierServiceDB,
     Logger
 } from 'flyingfish_core';
-import {Job, scheduleJob} from 'node-schedule';
-import {HimHIP} from '../inc/HimHIP/HimHIP.js';
-import {DynDnsProviders} from '../inc/Provider/DynDnsProviders.js';
+import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
+import {DynDnsProviders} from '../../inc/Provider/DynDnsProviders.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 
 /**
  * DynDnsService
+ *
+ * Pushes the host's current public IP to the configured DynDNS providers once
+ * an hour (and on demand). Migrated onto figtree's `ServiceJobAbstract`: the
+ * framework owns the cron scheduling, tick timing, error handling, health and
+ * restart, replacing the former hand-rolled `node-schedule` job.
+ *
+ * Dual role: KEEPS its singleton accessor because `HowIsMyPublicIpService`
+ * triggers `updateDns()` on IP change and the DynDNS "run now" route reads
+ * `isInProcess()` / calls `invokeUpdate()`. Conditionally registered by
+ * `FlyingFishBackend` only when `config.dyndnsclient.enable` is set (the former
+ * `main.ts` gated the start the same way). Depends on the `mariadb` service.
+ *
+ * NOTE: the overlap guard uses a distinct `_updateInProcess` flag — the base
+ * `ServiceAbstract` already owns a protected `_inProcess` field for its own
+ * start bookkeeping, so the original field was renamed to avoid the collision.
  */
-export class DynDnsService {
+export class DynDnsService extends ServiceJobAbstract {
+
+    /**
+     * Name of the service.
+     */
+    public static readonly NAME = 'dyndns';
 
     /**
      * instance
@@ -34,16 +54,18 @@ export class DynDnsService {
     }
 
     /**
-     * scheduler job
+     * update in process (overlap guard for updateDns)
      * @protected
      */
-    protected _scheduler: Job | null = null;
+    protected _updateInProcess: boolean = false;
 
     /**
-     * in process
-     * @protected
+     * Constructor.
      */
-    protected _inProcess: boolean = false;
+    public constructor() {
+        super(DynDnsService.NAME, [ 'mariadb' ]);
+        this._cron = '1 */1 * * *';
+    }
 
     /**
      * updateDns
@@ -51,7 +73,7 @@ export class DynDnsService {
      * @protected
      */
     public async updateDns(clientId: number|null = null): Promise<void> {
-        this._inProcess = true;
+        this._updateInProcess = true;
 
         Logger.getLogger().silly('DynDnsService::updateDns: exec schedule job');
 
@@ -217,40 +239,36 @@ export class DynDnsService {
             }
         }
 
-        this._inProcess = false;
+        this._updateInProcess = false;
     }
 
     /**
-     * start
+     * Start the service. Runs one immediate update (mirroring the former
+     * hand-rolled `start()`) before handing the cron schedule to the framework.
      */
-    public async start(): Promise<void> {
+    public override async start(): Promise<void> {
+        await super.start();
         await this.updateDns();
-
-        this._scheduler = scheduleJob('1 */1 * * *', async() => {
-            if (this._inProcess) {
-                return;
-            }
-
-            await this.updateDns();
-        });
     }
 
     /**
-     * stop
+     * Scheduled execution (invoked by the cron tick). Skips overlapping runs
+     * via the `_updateInProcess` guard, as the former scheduler callback did.
+     * @protected
      */
-    public async stop(): Promise<void> {
-        if (this._scheduler !== null) {
-            this._scheduler.cancel();
+    protected override async _execute(): Promise<void> {
+        if (this._updateInProcess) {
+            return;
         }
+
+        await this.updateDns();
     }
 
     /**
      * call the scheduler
      */
     public async invokeUpdate(): Promise<void> {
-        if (this._scheduler !== null) {
-            this._scheduler.invoke();
-        }
+        await this.invoke();
     }
 
     /**
@@ -258,7 +276,7 @@ export class DynDnsService {
      * @returns {boolean}
      */
     public isInProcess(): boolean {
-        return this._inProcess;
+        return this._updateInProcess;
     }
 
 }

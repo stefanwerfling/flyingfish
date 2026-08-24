@@ -1,5 +1,5 @@
 import {DefaultReturn, DynDnsClientDomainRunRequest, StatusCodes} from 'flyingfish_schemas';
-import {DynDnsService} from '../../../Service/DynDnsService.js';
+import {DynDnsService} from '../../../Application/Service/DynDnsService.js';
 
 /**
  * Run

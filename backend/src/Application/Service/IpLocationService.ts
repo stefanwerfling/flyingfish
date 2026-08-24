@@ -1,3 +1,4 @@
+import {ServiceJobAbstract} from 'figtree';
 import {
     IpBlacklistServiceDB,
     IpLocationDB,
@@ -5,41 +6,41 @@ import {
     IpWhitelistServiceDB,
     Logger
 } from 'flyingfish_core';
-import {Job, scheduleJob} from 'node-schedule';
-import {IpLocateIo} from '../inc/Provider/IpLocate/IpLocateIo.js';
-import {Settings as GlobalSettings} from '../inc/Settings/Settings.js';
+import {IpLocateIo} from '../../inc/Provider/IpLocate/IpLocateIo.js';
+import {Settings as GlobalSettings} from '../../inc/Settings/Settings.js';
 
 /**
  * IpLocationService
+ *
+ * Resolves the geo-location for blacklisted/whitelisted IPs and back-fills the
+ * `ip_location_id` on those entries. Migrated onto figtree's
+ * `ServiceJobAbstract`: the framework now owns the cron scheduling, tick
+ * timing, error handling, health and restart, replacing the former
+ * hand-rolled `node-schedule` job wrapped in a bespoke singleton.
+ *
+ * Registered by `FlyingFishBackend` with a dependency on the `mariadb` service
+ * so the scheduler only starts once the database is up.
  */
-export class IpLocationService {
+export class IpLocationService extends ServiceJobAbstract {
 
     /**
-     * instance
-     * @private
+     * Name of the service.
      */
-    private static _instance: IpLocationService|null = null;
+    public static readonly NAME = 'iplocation';
 
     /**
-     * getInstance
+     * Constructor.
      */
-    public static getInstance(): IpLocationService {
-        if (IpLocationService._instance === null) {
-            IpLocationService._instance = new IpLocationService();
-        }
-
-        return IpLocationService._instance;
+    public constructor() {
+        super(IpLocationService.NAME, [ 'mariadb' ]);
+        this._cron = '*/15 * * * *';
     }
 
     /**
-     * scheduler job
-     * @protected
-     */
-    protected _scheduler: Job|null = null;
-
-    /**
-     * _getIpLocation
-     * @param ip
+     * Resolve (and cache) the location id for an IP, creating a new
+     * `IpLocationDB` entry via the IP-locate provider when unknown.
+     * @param {string} ip
+     * @return {number|null}
      * @protected
      * @throws Error
      */
@@ -78,7 +79,8 @@ export class IpLocationService {
     }
 
     /**
-     * location
+     * Back-fill locations for the last-blocked blacklist entries and the
+     * whitelist entries that have no location yet.
      */
     public async location(): Promise<void> {
         const blacklistLocate = await GlobalSettings.getSetting(
@@ -137,14 +139,20 @@ export class IpLocationService {
     }
 
     /**
-     * start
+     * Start the service. Runs one immediate pass (mirroring the former
+     * hand-rolled `start()`) before handing the cron schedule to the framework.
      */
-    public async start(): Promise<void> {
+    public override async start(): Promise<void> {
+        await super.start();
         await this.location();
+    }
 
-        this._scheduler = scheduleJob('*/15 * * * *', async() => {
-            await this.location();
-        });
+    /**
+     * Scheduled execution (invoked by the cron tick).
+     * @protected
+     */
+    protected override async _execute(): Promise<void> {
+        await this.location();
     }
 
 }

@@ -9,7 +9,7 @@ import {mkdirSync} from 'node:fs';
 import {Config} from '../../src/inc/Config/Config.js';
 import {DBSetup} from '../../src/inc/Db/MariaDb/DBSetup.js';
 import {NginxServer} from '../../src/inc/Nginx/NginxServer.js';
-import {NginxService} from '../../src/Service/NginxService.js';
+import {NginxService} from '../../src/Application/Service/NginxService.js';
 import {closeTestDb, initTestDb} from './dbHarness.js';
 
 describe('NginxService config generation (characterization, integration)', () => {

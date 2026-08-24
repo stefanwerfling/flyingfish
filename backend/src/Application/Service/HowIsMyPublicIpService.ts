@@ -1,13 +1,30 @@
+import {ServiceJobAbstract} from 'figtree';
 import {Logger} from 'flyingfish_core';
-import {Job, scheduleJob} from 'node-schedule';
-import {Config} from '../inc/Config/Config.js';
-import {HowIsMyPublicIpProviders} from '../inc/Provider/HowIsMyPublicIpProviders.js';
+import {Config} from '../../inc/Config/Config.js';
+import {HowIsMyPublicIpProviders} from '../../inc/Provider/HowIsMyPublicIpProviders.js';
 import {DynDnsService} from './DynDnsService.js';
 
 /**
  * HowIsMyPublicIpService
+ *
+ * Determines the host's current public IPv4/IPv6 once a minute via the
+ * configured provider and, on change, triggers the DynDNS client update.
+ * Migrated onto figtree's `ServiceJobAbstract` (the framework owns cron
+ * scheduling, tick timing, error handling, health and restart).
+ *
+ * Dual role: KEEPS its singleton accessor and cached `_currentIp`/`_currentIp6`
+ * state, because several consumers read the resolved IP on demand via
+ * `HowIsMyPublicIpService.getInstance().getCurrentIp()` — the DynDNS service,
+ * the dashboard info route and the domain-record save route. `FlyingFishBackend`
+ * therefore registers `getInstance()` (not a fresh instance) so the scheduled
+ * instance and the consumer-facing singleton are the same object.
  */
-export class HowIsMyPublicIpService {
+export class HowIsMyPublicIpService extends ServiceJobAbstract {
+
+    /**
+     * Name of the service.
+     */
+    public static readonly NAME = 'howismypublicip';
 
     /**
      * instance
@@ -27,12 +44,6 @@ export class HowIsMyPublicIpService {
     }
 
     /**
-     * scheduler job
-     * @protected
-     */
-    protected _scheduler: Job|null = null;
-
-    /**
      * current ip
      * @protected
      */
@@ -43,6 +54,14 @@ export class HowIsMyPublicIpService {
      * @protected
      */
     protected _currentIp6: string|null = null;
+
+    /**
+     * Constructor.
+     */
+    public constructor() {
+        super(HowIsMyPublicIpService.NAME, [ 'mariadb' ]);
+        this._cron = '*/1 * * * *';
+    }
 
     /**
      * Return the current IP
@@ -127,14 +146,20 @@ export class HowIsMyPublicIpService {
     }
 
     /**
-     * start
+     * Start the service. Runs one immediate determination (mirroring the former
+     * hand-rolled `start()`) before handing the cron schedule to the framework.
      */
-    public async start(): Promise<void> {
+    public override async start(): Promise<void> {
+        await super.start();
         await this.determined();
+    }
 
-        this._scheduler = scheduleJob('*/1 * * * *', async() => {
-            await this.determined();
-        });
+    /**
+     * Scheduled execution (invoked by the cron tick).
+     * @protected
+     */
+    protected override async _execute(): Promise<void> {
+        await this.determined();
     }
 
 }

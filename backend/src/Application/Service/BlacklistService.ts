@@ -1,3 +1,4 @@
+import {ServiceJobAbstract} from 'figtree';
 import {
     DateHelper,
     IpBlacklistCategoryDB,
@@ -6,40 +7,40 @@ import {
     IpBlacklistServiceDB, IpListMaintainerDB, IpListMaintainerServiceDB,
     Logger
 } from 'flyingfish_core';
-import {Job, scheduleJob} from 'node-schedule';
-import {Firehol} from '../inc/Provider/Firehol/Firehol.js';
-import {Settings as GlobalSettings} from '../inc/Settings/Settings.js';
+import {Firehol} from '../../inc/Provider/Firehol/Firehol.js';
+import {Settings as GlobalSettings} from '../../inc/Settings/Settings.js';
 
 /**
  * BlacklistService
+ *
+ * Imports the FireHOL IP block lists into the blacklist tables (maintainers,
+ * categories, entries) at most once every 24h. Migrated onto figtree's
+ * `ServiceJobAbstract`: the framework now owns the cron scheduling, tick
+ * timing, error handling, health and restart, replacing the former
+ * hand-rolled `node-schedule` job wrapped in a bespoke singleton.
+ *
+ * Registered by `FlyingFishBackend` with a dependency on the `mariadb` service
+ * so the scheduler only starts once the database is up.
  */
-export class BlacklistService {
+export class BlacklistService extends ServiceJobAbstract {
 
     /**
-     * instance
-     * @private
+     * Name of the service.
      */
-    private static _instance: BlacklistService|null = null;
+    public static readonly NAME = 'blacklist';
 
     /**
-     * getInstance
+     * Constructor.
      */
-    public static getInstance(): BlacklistService {
-        if (BlacklistService._instance === null) {
-            BlacklistService._instance = new BlacklistService();
-        }
-
-        return BlacklistService._instance;
+    public constructor() {
+        super(BlacklistService.NAME, [ 'mariadb' ]);
+        this._cron = '1 1 * * *';
     }
 
     /**
-     * scheduler job
-     * @protected
-     */
-    protected _scheduler: Job|null = null;
-
-    /**
-     * update
+     * Import the FireHOL block lists, throttled to once per 24h via the
+     * `BLACKLIST_IMPORTER_LASTUPDATE` setting. No-op when the importer is
+     * disabled in the global settings.
      */
     public async update(): Promise<void> {
         const importer = await GlobalSettings.getSetting(
@@ -159,14 +160,20 @@ export class BlacklistService {
     }
 
     /**
-     * start
+     * Start the service. Runs one immediate pass (mirroring the former
+     * hand-rolled `start()`) before handing the cron schedule to the framework.
      */
-    public async start(): Promise<void> {
+    public override async start(): Promise<void> {
+        await super.start();
         await this.update();
+    }
 
-        this._scheduler = scheduleJob('1 1 * * *', async() => {
-            await this.update();
-        });
+    /**
+     * Scheduled execution (invoked by the cron tick).
+     * @protected
+     */
+    protected override async _execute(): Promise<void> {
+        await this.update();
     }
 
 }
