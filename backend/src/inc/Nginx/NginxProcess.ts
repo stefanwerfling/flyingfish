@@ -1,7 +1,7 @@
 import {FileHelper, Logger} from 'flyingfish_core';
 import fs from 'fs/promises';
 import path from 'path';
-import {Config} from '../Config/Config.js';
+import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
 import {NginxServer} from './NginxServer.js';
 
@@ -71,7 +71,7 @@ export class NginxProcess {
      * @protected
      */
     protected async _ensureDhparam(): Promise<void> {
-        const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
+        const dhparam = FlyingFishConfig.getInstance().get()?.nginx?.dhparamfile;
 
         if (!dhparam) {
             return;

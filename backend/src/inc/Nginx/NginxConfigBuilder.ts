@@ -33,7 +33,7 @@ import {
 } from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import path from 'path';
-import {Config} from '../Config/Config.js';
+import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 import {Context} from './Config/Context.js';
 import {If} from './Config/If.js';
 import {Listen, ListenDestination, ListenProtocol} from './Config/Listen.js';
@@ -240,7 +240,7 @@ export class NginxConfigBuilder {
 
         conf.getStream().addVariable(
             'js_import mainstream from',
-            path.join(Config.getInstance().get()!.nginx!.prefix, 'dist/mainstream.js')
+            path.join(FlyingFishConfig.getInstance().get()!.nginx!.prefix, 'dist/mainstream.js')
         );
 
         const nginxResolver = await Settings.getSetting(
@@ -254,7 +254,7 @@ export class NginxConfigBuilder {
 
         conf.getHttp().addVariable(
             'js_import mainhttp from',
-            path.join(Config.getInstance().get()!.nginx!.prefix, 'dist/mainhttp.js')
+            path.join(FlyingFishConfig.getInstance().get()!.nginx!.prefix, 'dist/mainhttp.js')
         );
 
         conf.getHttp().addVariable('default_type', 'application/octet-stream');
@@ -264,7 +264,7 @@ export class NginxConfigBuilder {
         conf.getHttp().addVariable('tcp_nodelay', 'on');
         conf.getHttp().addVariable(
             'client_body_temp_path',
-            `${path.join(Config.getInstance().get()!.nginx!.prefix, 'body')} 1 2`
+            `${path.join(FlyingFishConfig.getInstance().get()!.nginx!.prefix, 'body')} 1 2`
         );
 
         conf.getHttp().addVariable('keepalive_timeout', '90s');
@@ -430,7 +430,7 @@ export class NginxConfigBuilder {
 
         const tSshInternUpstream = new Upstream(varNameSshIntern);
         tSshInternUpstream.addServer({
-            address: Config.getInstance().get()!.sshserver!.ip!,
+            address: FlyingFishConfig.getInstance().get()!.sshserver!.ip!,
             port: 22,
             weight: 0,
             max_fails: 0,
@@ -466,7 +466,7 @@ export class NginxConfigBuilder {
             false
         );
 
-        aServerProxy.addVariable('proxy_pass', `${Config.getInstance().get()!.sshserver!.ip!}:${22}`);
+        aServerProxy.addVariable('proxy_pass', `${FlyingFishConfig.getInstance().get()!.sshserver!.ip!}:${22}`);
 
         const tSshInternUpstreamProxy = new Upstream(varNameSshInternProxy);
         tSshInternUpstreamProxy.addServer({
@@ -637,7 +637,7 @@ export class NginxConfigBuilder {
                                     if (streamCollect.sshport) {
 
                                         // eslint-disable-next-line no-case-declarations
-                                        let destination_address_out = Config.getInstance().get()!.sshserver!.ip!;
+                                        let destination_address_out = FlyingFishConfig.getInstance().get()!.sshserver!.ip!;
                                         // eslint-disable-next-line no-case-declarations
                                         let destination_port_out = streamCollect.sshport.port;
 
@@ -828,7 +828,7 @@ export class NginxConfigBuilder {
             );
 
             if (streamCollects.listen.enable_address_check) {
-                aServer.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
+                aServer.addVariable('set $ff_secret', FlyingFishConfig.getInstance().get()!.nginx!.secret ?? '');
 
                 if (control) {
                     aServer.addVariable('set $ff_address_access_url', `"http://unix:${control.getUnixSocket()}:${NginxConfigBuilder.INTERN_SERVER_ADDRESS_ACCESS}"`);
@@ -988,7 +988,7 @@ export class NginxConfigBuilder {
                             'ECDHE-RSA-AES128-SHA256\'');
                         aServer.addVariable(NginxHTTPVariables.ssl_ecdh_curve, 'secp384r1');
 
-                        const dhparam = Config.getInstance().get()?.nginx?.dhparamfile;
+                        const dhparam = FlyingFishConfig.getInstance().get()?.nginx?.dhparamfile;
 
                         if (dhparam) {
                             aServer.addVariable(NginxHTTPVariables.ssl_dhparam, dhparam);
@@ -1125,7 +1125,7 @@ export class NginxConfigBuilder {
                                 releam = entry.auth_relam;
                             }
 
-                            const dummyHtpasswd = path.join(Config.getInstance().get()!.nginx!.prefix, 'htpasswd');
+                            const dummyHtpasswd = path.join(FlyingFishConfig.getInstance().get()!.nginx!.prefix, 'htpasswd');
 
                             if (!await FileHelper.fileExist(dummyHtpasswd)) {
                                 await fs.writeFile(dummyHtpasswd, '');
@@ -1138,7 +1138,7 @@ export class NginxConfigBuilder {
 
                             const authLocation = new Location(`/auth${entry.id}`);
                             authLocation.addVariable('internal', '');
-                            authLocation.addVariable('set $ff_secret', Config.getInstance().get()!.nginx!.secret ?? '');
+                            authLocation.addVariable('set $ff_secret', FlyingFishConfig.getInstance().get()!.nginx!.secret ?? '');
 
                             if (control) {
                                 authLocation.addVariable('set $ff_auth_basic_url', `"http://unix:${control.getUnixSocket()}:${NginxConfigBuilder.INTERN_SERVER_AUTH_BASIC}"`);
@@ -1224,7 +1224,7 @@ export class NginxConfigBuilder {
 
                                     location.addVariable(
                                         'proxy_pass',
-                                        `${entry.sshport_schema}://${Config.getInstance().get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
+                                        `${entry.sshport_schema}://${FlyingFishConfig.getInstance().get()?.sshserver?.ip}:${locationCollect.sshport_out.port}`
                                     );
                                 } else if (entry.proxy_pass) {
                                     location.addVariable('proxy_pass', entry.proxy_pass);
@@ -1238,11 +1238,11 @@ export class NginxConfigBuilder {
 
                             // dyndns ----------------------------------------------------------------------------------
                             case NginxLocationDestinationTypes.dyndns:
-                                if (Config.getInstance().get()?.dyndnsserver &&
-                                    Config.getInstance().get()?.dyndnsserver?.enable) {
+                                if (FlyingFishConfig.getInstance().get()?.dyndnsserver &&
+                                    FlyingFishConfig.getInstance().get()?.dyndnsserver?.enable) {
                                     location.addVariable(
                                         'proxy_pass',
-                                        `${Config.getInstance().get()?.dyndnsserver?.schema}://${Config.getInstance().get()?.dyndnsserver?.ip}:${Config.getInstance().get()?.dyndnsserver?.port}`
+                                        `${FlyingFishConfig.getInstance().get()?.dyndnsserver?.schema}://${FlyingFishConfig.getInstance().get()?.dyndnsserver?.ip}:${FlyingFishConfig.getInstance().get()?.dyndnsserver?.port}`
                                     );
 
                                     location.addVariable(

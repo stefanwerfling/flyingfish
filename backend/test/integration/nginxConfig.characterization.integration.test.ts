@@ -6,8 +6,8 @@
  * behaviour-preserving (the snapshot must not change).
  */
 import {mkdirSync} from 'node:fs';
-import {Config} from '../../src/inc/Config/Config.js';
 import {DBSetup} from '../../src/inc/Db/MariaDb/DBSetup.js';
+import {FlyingFishConfig} from '../../src/Application/Config/FlyingFishConfig.js';
 import {NginxServer} from '../../src/inc/Nginx/NginxServer.js';
 import {NginxService} from '../../src/Application/Service/NginxService.js';
 import {closeTestDb, initTestDb} from './dbHarness.js';
@@ -16,13 +16,13 @@ describe('NginxService config generation (characterization, integration)', () =>
     beforeAll(async() => {
         await initTestDb();
 
-        const config = Config.getInstance().get();
+        const config = FlyingFishConfig.getInstance().get();
         if (config) {
             config.nginx = {
                 prefix: '/tmp/ff-char-nginx',
                 secret: 'characterization-secret'
             };
-            Config.getInstance().set(config);
+            FlyingFishConfig.getInstance().set(config);
         }
 
         mkdirSync('/tmp/ff-char-nginx/logs', {recursive: true});

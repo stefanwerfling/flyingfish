@@ -1,6 +1,6 @@
 import {ServiceAbstract} from 'figtree';
 import {ServiceStatus} from 'figtree-schemas';
-import {Config} from '../../inc/Config/Config.js';
+import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {InfluxDbHelper} from '../../inc/Db/InfluxDb/InfluxDbHelper.js';
 
 /**
@@ -38,7 +38,7 @@ export class InfluxDbService extends ServiceAbstract {
     public override async start(): Promise<void> {
         this._status = ServiceStatus.Progress;
 
-        const influx = Config.getInstance().get()?.db.influx;
+        const influx = FlyingFishConfig.getInstance().get()?.db.influx;
 
         if (influx) {
             await InfluxDbHelper.init({

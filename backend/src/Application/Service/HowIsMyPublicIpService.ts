@@ -1,6 +1,6 @@
 import {ServiceJobAbstract} from 'figtree';
 import {Logger} from 'flyingfish_core';
-import {Config} from '../../inc/Config/Config.js';
+import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {HowIsMyPublicIpProviders} from '../../inc/Provider/HowIsMyPublicIpProviders.js';
 import {DynDnsService} from './DynDnsService.js';
 
@@ -97,7 +97,7 @@ export class HowIsMyPublicIpService extends ServiceJobAbstract {
      * determined
      */
     public async determined(): Promise<void> {
-        const providername = Config.getInstance().get()?.himpip?.provider!;
+        const providername = FlyingFishConfig.getInstance().get()?.himpip?.provider!;
         const provider = HowIsMyPublicIpProviders.getProvider(providername);
 
         if (provider) {
@@ -129,8 +129,8 @@ export class HowIsMyPublicIpService extends ServiceJobAbstract {
                 }
 
                 if (hasChanges) {
-                    if (Config.getInstance().get()?.dyndnsclient) {
-                        if (Config.getInstance().get()?.dyndnsclient?.enable) {
+                    if (FlyingFishConfig.getInstance().get()?.dyndnsclient) {
+                        if (FlyingFishConfig.getInstance().get()?.dyndnsclient?.enable) {
                             await DynDnsService.getInstance().updateDns();
                         } else {
                             Logger.getLogger().silly('HowIsMyPublicIpService::determined: DynDnsClient is disabled by config!');

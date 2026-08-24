@@ -3,7 +3,7 @@ import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
 import {PluginManager, PluginServiceNames} from 'flyingfish_core';
 import path from 'path';
 import {Schema} from 'vts';
-import {Config} from '../inc/Config/Config.js';
+import {CoreConfigBridge} from './Config/CoreConfigBridge.js';
 import {Dns2Server} from '../inc/Dns/Dns2Server.js';
 import {HimHIP} from '../inc/HimHIP/HimHIP.js';
 import {FlyingFishConfig} from './Config/FlyingFishConfig.js';
@@ -76,12 +76,12 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
      * @protected
      */
     protected override async _initServices(): Promise<void> {
-        // Strangler bridge (config): seat the flyingfish_core Config singleton as
-        // the delegating backend Config, so core code that reads
-        // `Config.getInstance().get()` (e.g. core's Logger) sees the config the
-        // figtree boot loaded into FlyingFishConfig. Without this, core reads an
-        // unseated plain Config (null) and falls back to /var/log/flyingfish.
-        Config.getInstance();
+        // Strangler bridge (config): seat the flyingfish_core Config singleton so
+        // core code that reads `Config.getInstance().get()` (e.g. core's Logger)
+        // sees the config the figtree boot loaded into FlyingFishConfig. Without
+        // this, core reads an unseated plain Config (null) and falls back to
+        // /var/log/flyingfish.
+        CoreConfigBridge.seat();
 
         // Strangler bridge: the flyingfish_core plugin manager must be
         // initialized before the database service, because core's

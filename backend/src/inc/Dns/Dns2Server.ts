@@ -12,7 +12,7 @@ import {
 } from 'flyingfish_core';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
-import {Config} from '../Config/Config.js';
+import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 import {DnsAnswerMX} from './RecordType/MX.js';
 import {DnsAnswerNS} from './RecordType/NS.js';
 import {DnsAnswerTlSA, SchemaRecordSettingsTlSA, TLSACertificateUsage} from './RecordType/TLSA.js';
@@ -445,9 +445,9 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      * start server listen
      */
     public listen(): void {
-        let port = Config.DEFAULT_DNSSERVER_PORT;
+        let port = FlyingFishConfig.DEFAULT_DNSSERVER_PORT;
 
-        const dnsserver = Config.getInstance().get()?.dnsserver;
+        const dnsserver = FlyingFishConfig.getInstance().get()?.dnsserver;
 
         if (dnsserver) {
             if (dnsserver.port) {

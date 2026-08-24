@@ -2,7 +2,7 @@ import rateLimit from 'express-rate-limit';
 import {BaseHttpServer, FileHelper, Logger, Session} from 'flyingfish_core';
 import {SchemaRequestData} from 'flyingfish_schemas';
 import helmet from 'helmet';
-import {Config} from '../Config/Config.js';
+import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
 
 /**
@@ -51,7 +51,7 @@ export class HttpServer extends BaseHttpServer {
                     }
                 } else if (request.url.indexOf('/himhip/') === 0) {
                     const secret = request.header('secret') ?? '';
-                    const ssecret = Config.getInstance().get()!.himhip!.secret ?? '';
+                    const ssecret = FlyingFishConfig.getInstance().get()!.himhip!.secret ?? '';
 
                     if (secret === ssecret) {
                         return true;

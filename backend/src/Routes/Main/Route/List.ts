@@ -16,7 +16,7 @@ import {
     RouteVariable,
     StatusCodes
 } from 'flyingfish_schemas';
-import {Config} from '../../../inc/Config/Config.js';
+import {FlyingFishConfig} from '../../../Application/Config/FlyingFishConfig.js';
 
 /**
  * List
@@ -239,7 +239,7 @@ export class List {
 
         // defaults ----------------------------------------------------------------------------------------------------
 
-        const dnsserverport = Config.getInstance().get()?.dnsserver?.port || 5333;
+        const dnsserverport = FlyingFishConfig.getInstance().get()?.dnsserver?.port || 5333;
 
         return {
             statusCode: StatusCodes.OK,

@@ -1,7 +1,7 @@
 import {ServiceAbstract} from 'figtree';
 import {ServiceStatus} from 'figtree-schemas';
 import {Logger} from 'flyingfish_core';
-import {Config} from '../../inc/Config/Config.js';
+import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {NginxAccessLog} from '../../inc/Nginx/NginxAccessLog.js';
 import {NginxConfigBuilder} from '../../inc/Nginx/NginxConfigBuilder.js';
 import {NginxProcess} from '../../inc/Nginx/NginxProcess.js';
@@ -119,7 +119,7 @@ export class NginxService extends ServiceAbstract {
         // `main.ts` did this right before starting the service). The
         // sub-components only read `NginxServer.getInstance()` inside methods,
         // so doing it here — the first thing in start() — is early enough.
-        const nginxConfig = Config.getInstance().get()?.nginx;
+        const nginxConfig = FlyingFishConfig.getInstance().get()?.nginx;
 
         if (nginxConfig) {
             NginxServer.getInstance({
