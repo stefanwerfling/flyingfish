@@ -2,7 +2,8 @@ name: CI
 
 # Quality gate for the overhaul (refactoring phase 1):
 # - Typecheck (tsc --noEmit) across all TypeScript service workspaces
-# - Network-free unit tests (only backend/test/**, no DB/external APIs)
+# - Network-free unit tests (backend/test/**, excluding integration)
+# - Integration tests against a MariaDB service (backend/test/integration/**)
 # - ESLint over backend/src + backend/test (must be error-free)
 # ESLint runs in eslintrc legacy mode (ESLINT_USE_FLAT_CONFIG=false) until it is
 # migrated to flat config. Warnings (e.g. TODO markers) do not fail the build.
@@ -72,11 +73,12 @@ jobs:
       - name: Provide bootstrap env
         run: cp setup/.env .env
 
-      # Only backend/test/** (convention: network-free tests under test/ at src level).
-      # The legacy integration tests under backend/tests/** (NoIp/IpLocate, real
-      # network) are intentionally excluded.
-      - name: Run network-free backend tests
-        run: npm test --workspace=backend -- test/
+      # Only backend/test/** (convention: network-free tests under test/ at src level),
+      # excluding backend/test/integration/** (those need a database, see the
+      # integration job). The legacy tests under backend/tests/** (NoIp/IpLocate,
+      # real network) are intentionally excluded too.
+      - name: Run network-free unit tests
+        run: npm test --workspace=backend -- test/ --testPathIgnorePatterns integration
 
   lint:
     name: ESLint (backend)
@@ -101,3 +103,48 @@ jobs:
         env:
           ESLINT_USE_FLAT_CONFIG: 'false'
         run: npx eslint src test --ext .ts
+
+  integration:
+    name: Integration tests (MariaDB)
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:lts
+        env:
+          MARIADB_ROOT_PASSWORD: test
+          MARIADB_DATABASE: flyingfish
+        ports:
+          - 13306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build shared libraries
+        run: |
+          npm run build --workspace=schemas
+          npm run build --workspace=core
+
+      # Runs against the MariaDB service above; the dbHarness applies the migrations.
+      # Serial (--runInBand) because the suites share one database.
+      - name: Run integration tests
+        working-directory: backend
+        env:
+          FF_TEST_DB_HOST: 127.0.0.1
+          FF_TEST_DB_PORT: '13306'
+          FF_TEST_DB_USER: root
+          FF_TEST_DB_PASSWORD: test
+          FF_TEST_DB_NAME: flyingfish
+        run: npm test -- test/integration/ --runInBand
