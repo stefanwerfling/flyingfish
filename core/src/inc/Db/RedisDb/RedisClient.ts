@@ -148,4 +148,24 @@ export class RedisClient {
         await this._client.publish(channel, data);
     }
 
+    /**
+     * Create a dedicated, connected duplicate of the underlying client.
+     *
+     * Consumers that need their own connection (e.g. a session store) use this so
+     * they do not interfere with this client's usage (a subscriber connection, for
+     * example, cannot run regular commands).
+     * @returns {RedisClientType}
+     */
+    public async duplicateConnection(): Promise<RedisClientType> {
+        const duplicate: RedisClientType = this._client.duplicate();
+
+        duplicate.on('error', (err) => {
+            Logger.getLogger().error('RedisClient::duplicateConnection::error: Redis Client Error', err);
+        });
+
+        await duplicate.connect();
+
+        return duplicate;
+    }
+
 }

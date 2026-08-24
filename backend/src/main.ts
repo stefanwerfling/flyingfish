@@ -1,4 +1,5 @@
 import exitHook from 'async-exit-hook';
+import RedisStore from 'connect-redis';
 import {
     Args,
     DBEntitiesLoader,
@@ -225,6 +226,17 @@ import {User as UserController} from './Routes/Main/User.js';
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    // Session store: use Redis when available so sessions survive restarts and can
+    // be shared across instances; fall back to the in-memory store otherwise.
+    let sessionStore: RedisStore | undefined;
+
+    if (RedisClient.hasInstance()) {
+        sessionStore = new RedisStore({
+            client: await RedisClient.getInstance().duplicateConnection(),
+            prefix: 'ff:sess:'
+        });
+    }
+
     const mServer = new HttpServer({
         realm: 'FlyingFish',
         port: aport,
@@ -232,7 +244,8 @@ import {User as UserController} from './Routes/Main/User.js';
             secret: session_secret,
             cookie_path: session_cookie_path,
             ssl_path: ssl_path,
-            max_age: session_cookie_max_age
+            max_age: session_cookie_max_age,
+            store: sessionStore
         },
         routes: [
             new LoginController(),

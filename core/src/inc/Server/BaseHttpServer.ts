@@ -28,6 +28,7 @@ export type BaseHttpServerOptionSession = {
     ssl_path: string;
     cookie_path: string;
     secret: string;
+    store?: session.Store;
 };
 
 /**
@@ -160,7 +161,7 @@ export class BaseHttpServer {
                     proxy: true,
                     resave: true,
                     saveUninitialized: true,
-                    store: new session.MemoryStore(),
+                    store: this._session.store ?? new session.MemoryStore(),
                     cookie: {
                         path: this._session.cookie_path,
                         secure: this._session.ssl_path !== '',
