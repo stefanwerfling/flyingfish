@@ -2,16 +2,28 @@
  * API integration tests for the Route controller (supertest + real MariaDB).
  *
  * Covers the auth guard, schema validation and - via a domain + listen fixture
- * built through the API - a full HTTP route round-trip (save -> list -> delete),
- * a route with a proxy_pass location, and the "listen required" / "duplicate
- * route" guards.
+ * built through the API - full HTTP and stream route round-trips
+ * (save -> list -> delete), an HTTP route with a proxy_pass location, a stream
+ * route with an upstream, and the "listen required" / "duplicate route" guards.
  *
- * Stream routes (which need an ssh fixture graph) are limited to schema
- * validation here.
+ * Stream routes are exercised via the upstream destination type (DB-only); the
+ * ssh_l/ssh_r destination types (which build an ssh user/port graph) are not
+ * covered here.
  *
  * Runs against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import {DomainData, ListenData, Location, RouteData, RouteHttpSave, StatusCodes} from 'flyingfish_schemas';
+import {
+    DomainData,
+    ListenData,
+    Location,
+    NginxStreamDestinationType,
+    NginxStreamSshR,
+    RouteData,
+    RouteHttpSave,
+    RouteStreamSave,
+    StatusCodes,
+    UpStream
+} from 'flyingfish_schemas';
 import request from 'supertest';
 import {Domain} from '../../src/Routes/Main/Domain.js';
 import {Listen} from '../../src/Routes/Main/Listen.js';
@@ -87,6 +99,34 @@ const httpRoute = (domainId: number, listenId: number, locations: Location[] = [
             x_frame_options: '',
             wellknown_disabled: false,
             variables: []
+        }
+    };
+};
+
+const upstreamServer = (): UpStream => {
+    return {
+        id: 0,
+        address: '127.0.0.1',
+        port: 9000,
+        proxy_protocol_out: false
+    };
+};
+
+const streamRoute = (domainId: number, listenId: number, upstreams: UpStream[] = [upstreamServer()]): RouteStreamSave => {
+    return {
+        domainid: domainId,
+        stream: {
+            id: 0,
+            listen_id: listenId,
+            destination_type: NginxStreamDestinationType.upstream,
+            destination_listen_id: 0,
+            alias_name: '',
+            index: 0,
+            isdefault: false,
+            use_as_default: false,
+            load_balancing_algorithm: '',
+            ssh_r_type: NginxStreamSshR.none,
+            upstreams: upstreams
         }
     };
 };
@@ -203,5 +243,49 @@ describe('Route API (integration)', () => {
         const second = await agent.post('/json/route/http/save').send(httpRoute(domainId, listenId));
         expect(second.body.statusCode).toBe(StatusCodes.INTERNAL_ERROR);
         expect(second.body.msg).toBe('Listen route by domain already in used!');
+    });
+
+    test('stream save requires a selected listen', async() => {
+        const agent = await loginAgent(routes);
+        const {domainId} = await createFixtures(agent);
+
+        const res = await agent.post('/json/route/stream/save').send(streamRoute(domainId, 0));
+
+        expect(res.body.statusCode).toBe(StatusCodes.INTERNAL_ERROR);
+        expect(res.body.msg).toBe('Please select a listen!');
+    });
+
+    test('full stream route round-trip with an upstream: save, list, delete', async() => {
+        const agent = await loginAgent(routes);
+        const {domainId, listenId} = await createFixtures(agent);
+
+        const save = await agent.post('/json/route/stream/save').send(streamRoute(domainId, listenId));
+        expect(save.body.statusCode).toBe(StatusCodes.OK);
+
+        const list = await agent.get('/json/route/list');
+        const domainRoute = findDomainRoute(list.body.list);
+        expect(domainRoute.streams).toHaveLength(1);
+        expect(domainRoute.streams[0].listen_id).toBe(listenId);
+        expect(domainRoute.streams[0].upstreams).toHaveLength(1);
+        expect(domainRoute.streams[0].upstreams[0].port).toBe(9000);
+
+        const streamId = domainRoute.streams[0].id;
+        const del = await agent.post('/json/route/stream/delete').send({id: streamId});
+        expect(del.body.statusCode).toBe(StatusCodes.OK);
+
+        const after = await agent.get('/json/route/list');
+        expect(findDomainRoute(after.body.list).streams).toHaveLength(0);
+    });
+
+    test('stream save rejects a duplicate stream for the same listen + domain', async() => {
+        const agent = await loginAgent(routes);
+        const {domainId, listenId} = await createFixtures(agent);
+
+        const first = await agent.post('/json/route/stream/save').send(streamRoute(domainId, listenId));
+        expect(first.body.statusCode).toBe(StatusCodes.OK);
+
+        const second = await agent.post('/json/route/stream/save').send(streamRoute(domainId, listenId));
+        expect(second.body.statusCode).toBe(StatusCodes.INTERNAL_ERROR);
+        expect(second.body.msg).toBe('You can only add one stream by this listen to this domain!');
     });
 });
