@@ -7,12 +7,12 @@ import {Session} from '../Session.js';
 /**
  * DefaultRouteHandlerGet
  */
-export type DefaultRouteHandlerGet = (request: Request, response: Response) => void;
+export type DefaultRouteHandlerGet = (request: Request, response: Response) => Promise<void> | void;
 
 /**
  * DefaultRouteHandlerPost
  */
-export type DefaultRouteHandlerPost = (request: Request, response: Response) => void;
+export type DefaultRouteHandlerPost = (request: Request, response: Response) => Promise<void> | void;
 
 /**
  * DefaultRoute
@@ -97,17 +97,20 @@ export class DefaultRoute {
      * @protected
      */
     protected _get(path: string, handler: DefaultRouteHandlerGet): void {
-        try {
-            this._routes.get(path, async(req, res) => {
-                try {
-                    handler(req, res);
-                } catch (ie) {
-                    Logger.getLogger().error('DefaultRoute::_get: Exception intern, path can not call: %s', path);
+        this._routes.get(path, async(req, res) => {
+            try {
+                await handler(req, res);
+            } catch (error) {
+                Logger.getLogger().error('DefaultRoute::_get: unhandled exception for path: %s', path, {error});
+
+                if (!res.headersSent) {
+                    res.status(500).json({
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: 'Internal server error'
+                    } as DefaultReturn);
                 }
-            });
-        } catch (e) {
-            Logger.getLogger().error('DefaultRoute::_get: Exception extern, path can not call: %', path);
-        }
+            }
+        });
     }
 
     /**
@@ -117,17 +120,20 @@ export class DefaultRoute {
      * @protected
      */
     protected _post(path: string, handler: DefaultRouteHandlerPost): void {
-        try {
-            this._routes.post(path, async(req, res) => {
-                try {
-                    handler(req, res);
-                } catch (ie) {
-                    Logger.getLogger().error('DefaultRoute::_post: Exception intern, path can not call: %s', path);
+        this._routes.post(path, async(req, res) => {
+            try {
+                await handler(req, res);
+            } catch (error) {
+                Logger.getLogger().error('DefaultRoute::_post: unhandled exception for path: %s', path, {error});
+
+                if (!res.headersSent) {
+                    res.status(500).json({
+                        statusCode: StatusCodes.INTERNAL_ERROR,
+                        msg: 'Internal server error'
+                    } as DefaultReturn);
                 }
-            });
-        } catch (e) {
-            Logger.getLogger().error('DefaultRoute::_post: Exception extern, path can not call: %s', path);
-        }
+            }
+        });
     }
 
 }
