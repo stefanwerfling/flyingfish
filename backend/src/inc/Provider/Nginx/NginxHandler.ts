@@ -1,7 +1,7 @@
 import {Logger} from 'flyingfish_core';
 import got from 'got';
 import {NginxStatus, NginxStatusResult} from '../../Nginx/NginxStatus.js';
-import {NginxService} from '../../../Service/NginxService.js';
+import {NginxConfigBuilder} from '../../Nginx/NginxConfigBuilder.js';
 
 /**
  * NginxHandler
@@ -15,7 +15,7 @@ export class NginxHandler {
     public async getStatus(listenPort: number): Promise<NginxStatusResult|null> {
         try {
             const response = await got({
-                url: `http://127.0.0.1:${listenPort}${NginxService.LOCATION_STATUS}`
+                url: `http://127.0.0.1:${listenPort}${NginxConfigBuilder.LOCATION_STATUS}`
             });
 
             if (response.body) {
