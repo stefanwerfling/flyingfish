@@ -1,4 +1,4 @@
-import {BackendApp, HttpService, Logger, MariaDBService, RedisDBService} from 'figtree';
+import {BackendApp, BaseHttpServer, Logger, MariaDBService, RedisDBService} from 'figtree';
 import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
 import {PluginManager, PluginServiceNames} from 'flyingfish_core';
 import path from 'path';
@@ -11,6 +11,7 @@ import {CoreDBInitHook} from './Db/MariaDb/CoreDBInitHook.js';
 import {DBLoader} from './Db/MariaDb/DBLoader.js';
 import {FirstInitSetupHook} from './Db/MariaDb/FirstInitSetupHook.js';
 import {RouteLoader} from './Routes/RouteLoader.js';
+import {FlyingFishHttpService} from './Server/FlyingFishHttpService.js';
 import {BlacklistService} from './Service/BlacklistService.js';
 import {DynDnsService} from './Service/DynDnsService.js';
 import {HowIsMyPublicIpService} from './Service/HowIsMyPublicIpService.js';
@@ -116,7 +117,14 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
             this._serviceManager.add(new InfluxDbService());
         }
 
-        this._serviceManager.add(new HttpService(RouteLoader));
+        // HTTP server with the FlyingFish Redis-backed session store. When Redis
+        // is configured, depend on the `redis` service so the session store gets
+        // a connected client (else it falls back to the in-memory store).
+        this._serviceManager.add(new FlyingFishHttpService(
+            RouteLoader,
+            undefined,
+            config?.db?.redis?.url ? [ 'redis' ] : undefined
+        ));
 
         // NginxService keeps its singleton (the nginx reload route +
         // SslCertService call reload() on demand).
@@ -155,13 +163,16 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         // reaches `HimHIP.getData()` (consumed by UpnpNat/DynDns). figtree's
         // RedisDBService owns the connect/registerChannels/disconnect lifecycle
         // (its start() throws when redis config is missing, so gate on the url).
-        //
-        // TODO(figtree gap): the former `main.ts` also did
-        // `HimHIP.registerEvent(d => HttpServer.setListenHost(d.hostip))` so the
-        // HTTP->HTTPS redirect points at the real host IP. figtree's
-        // `BaseHttpServer._listenHost` is protected with no public setter — this
-        // needs a `setListenHost()` seam in figtree before it can be restored.
         if (config?.db?.redis?.url) {
+            // Point the HTTP->HTTPS redirect at the real host IP as HimHIP
+            // reports it, replacing the former main.ts `setListenHost` wiring
+            // (uses figtree's new `BaseHttpServer.setListenHost()` seam).
+            HimHIP.registerEvent((data): void => {
+                if (data !== null) {
+                    BaseHttpServer.setListenHost(data.hostip);
+                }
+            });
+
             this._serviceManager.add(new RedisDBService([ new HimHIP() ]));
         }
     }
