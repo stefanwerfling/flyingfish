@@ -128,9 +128,10 @@ export class NginxConfig {
     }
 
     /**
-     * create conf file for nginx
+     * Build the full nginx config as a string: modules, top-level variables, the
+     * stream block and the http block. Pure - no file I/O, so it can be tested.
      */
-    public create(): string|null {
+    public generate(): string {
         let buffer = '';
 
         this._modules.forEach((value) => {
@@ -157,7 +158,14 @@ export class NginxConfig {
             buffer += this._http.generate();
         }
 
-        fs.writeFileSync(this._confFile, buffer, {flag: 'w+'});
+        return buffer;
+    }
+
+    /**
+     * create conf file for nginx
+     */
+    public create(): string|null {
+        fs.writeFileSync(this._confFile, this.generate(), {flag: 'w+'});
 
         return this._confFile;
     }

@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NginxConfig :: generate assembles modules, variables, stream and http (no file I/O) 1`] = `
+"load_module /usr/lib/nginx/modules/ngx_stream_js_module.so;
+
+user root;
+worker_processes auto;
+pid /run/nginx.pid;
+error_log /var/log/nginx/error.log;
+
+events {
+	worker_connections 4096;
+}
+
+stream {
+
+	upstream stream_to_8080 {
+		server 127.0.0.1:8080;
+	}
+
+}
+
+http {
+
+	server {
+		listen 80;
+		server_name example.com;
+	}
+
+}
+"
+`;
