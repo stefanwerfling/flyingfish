@@ -101,7 +101,16 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
                 undefined,
                 {
                     migrationsRun: true,
-                    synchronize: false
+                    synchronize: false,
+                    // Auto-baseline: databases from the former synchronize:true era
+                    // (the `user` table exists but no `migrations` table yet) get
+                    // InitialSchema stamped as applied instead of re-created, so
+                    // existing v1.1.x installs upgrade without a schema clash.
+                    baseline: {
+                        legacyTable: 'user',
+                        migrationName: 'InitialSchema1787961600000',
+                        timestamp: 1787961600000
+                    }
                 },
                 [ new CoreDBInitHook(), new FirstInitSetupHook() ]
             )

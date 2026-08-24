@@ -6,7 +6,13 @@ import {DomainDB, DomainServiceDB} from 'flyingfish_core';
 import {closeTestDb, initTestDb, resetTestDb} from './dbHarness.js';
 
 describe('Domain repository (integration)', () => {
-    beforeAll(initTestDb);
+    // Reset once after init so this file is isolated from data any earlier test
+    // file seeded into the shared database (e.g. DBSetup.firstInit); afterEach
+    // then keeps the tests within this file isolated from each other.
+    beforeAll(async() => {
+        await initTestDb();
+        await resetTestDb();
+    });
     afterEach(resetTestDb);
     afterAll(closeTestDb);
 
