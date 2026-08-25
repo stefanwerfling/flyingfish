@@ -173,8 +173,6 @@ services:
         NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
     container_name: flyingfish_himhip
     environment:
-      FLYINGFISH_SECRET: "${HIMHIP_SECRET}"
-      FLYINGFISH_SERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
     network_mode: host
