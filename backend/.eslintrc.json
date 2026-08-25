@@ -22,6 +22,18 @@
   "ignorePatterns": [
     "src/inc/Db/MariaDb/migrations/**"
   ],
+  "overrides": [
+    {
+      // CoreConfigBridge is the one place allowed to import flyingfish_core's
+      // Config, to seat the core singleton and delegate to FlyingFishConfig.
+      "files": [
+        "src/Application/Config/CoreConfigBridge.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
   "rules": {
     // eslint typescript rules
     "@typescript-eslint/adjacent-overload-signatures": "error",
@@ -156,6 +168,24 @@
     "no-extra-parens": "off",
     "no-implicit-coercion": "error",
     "no-invalid-this": "off",
+    // core<->backend boundary: config is fully migrated to FlyingFishConfig.
+    // Backend code must not import flyingfish_core's Config; only CoreConfigBridge
+    // (see overrides) may seat the core Config singleton. Extend importNames as
+    // further core framework concerns migrate onto figtree.
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "flyingfish_core",
+            "importNames": [
+              "Config"
+            ],
+            "message": "Use FlyingFishConfig (Application/Config/FlyingFishConfig) as the backend config source of truth; core consumers read it via the seated CoreConfigBridge."
+          }
+        ]
+      }
+    ],
     "no-magic-numbers": "off",
     "no-mixed-operators": "error",
     "no-multiple-empty-lines": [
