@@ -141,6 +141,13 @@ export class HubRegistry {
     }
 
     /**
+     * Remove all registered parts.
+     */
+    public clear(): void {
+        this._parts.clear();
+    }
+
+    /**
      * Re-evaluate the health state of every part from the heartbeat age.
      * @param {number} now
      */

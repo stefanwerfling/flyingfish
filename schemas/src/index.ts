@@ -399,3 +399,7 @@ export {
     SchemaCapabilityManifest,
     CapabilityManifest
 } from './Hub/CapabilityManifest.js';
+export {
+    SchemaRegistryInstanceRequest,
+    RegistryInstanceRequest
+} from './Hub/Registry.js';

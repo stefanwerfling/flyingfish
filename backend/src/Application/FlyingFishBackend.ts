@@ -21,6 +21,7 @@ import {IpService} from './Service/IpService.js';
 import {NginxService} from './Service/NginxService.js';
 import {SslCertService} from './Service/SslCertService.js';
 import {UpnpNatService} from './Service/UpnpNatService.js';
+import {HubRegistryService} from './Hub/HubRegistryService.js';
 import {NginxStatusService} from './Service/NginxStatusService.js';
 
 /**
@@ -142,6 +143,10 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         this._serviceManager.add(new NginxStatusService());
         this._serviceManager.add(new IpLocationService());
         this._serviceManager.add(new BlacklistService());
+
+        // Hub registry (v2 modular architecture): in-memory, no DB dependency.
+        // Keeps its singleton so the registry routes reach the same instance.
+        this._serviceManager.add(HubRegistryService.getInstance());
 
         // HowIsMyPublicIpService and IpService keep their singletons (consumers
         // read them on demand), so register those same instances here.

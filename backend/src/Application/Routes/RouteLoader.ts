@@ -10,6 +10,7 @@ import {IpAccess as IpAccessController} from '../../Routes/Main/IpAccess.js';
 import {Listen as ListenController} from '../../Routes/Main/Listen.js';
 import {Login as LoginController} from '../../Routes/Main/Login.js';
 import {Nginx as NginxController} from '../../Routes/Main/Nginx.js';
+import {Registry as RegistryController} from '../../Routes/Main/Registry.js';
 import {Route as RouteController} from '../../Routes/Main/Route.js';
 import {Settings as SettingsController} from '../../Routes/Main/Settings.js';
 import {Ssh as SshController} from '../../Routes/Main/Ssh.js';
@@ -48,6 +49,7 @@ export class RouteLoader extends HttpRouteLoader {
             new SshController(),
             new SettingsController(),
             new CredentialController(),
+            new RegistryController(),
 
             new HimHipUpdateController()
         ];
