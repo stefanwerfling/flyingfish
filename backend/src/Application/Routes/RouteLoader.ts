@@ -1,5 +1,4 @@
 import {HttpRouteLoader, IDefaultRoute} from 'figtree';
-import {Update as HimHipUpdateController} from '../../Routes/HimHip/Update.js';
 import {Credential as CredentialController} from '../../Routes/Main/Credential.js';
 import {Dashboard as DashboardController} from '../../Routes/Main/Dashboard.js';
 import {Domain as DomainController} from '../../Routes/Main/Domain.js';
@@ -49,9 +48,7 @@ export class RouteLoader extends HttpRouteLoader {
             new SshController(),
             new SettingsController(),
             new CredentialController(),
-            new RegistryController(),
-
-            new HimHipUpdateController()
+            new RegistryController()
         ];
     }
 

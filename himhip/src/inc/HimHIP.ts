@@ -2,7 +2,6 @@ import arp from '@network-utils/arp-lookup';
 import {Ets} from 'ets';
 import {Logger, RedisChannel, RedisChannels, RedisClient} from 'flyingfish_core';
 import {HimHIPData, HimHIPUpdate, SchemaHimHIPUpdate} from 'flyingfish_schemas';
-import got from 'got';
 import {Vts} from 'vts';
 import {IpRoute} from './IpRoute.js';
 
@@ -89,45 +88,12 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
     }
 
     /**
-     * Send the data over http Endpoint
-     * @param {string} reciverUrl
-     * @param {string} secret
-     * @param {HimHIPData} data
-     * @returns {boolean}
-     * @protected
-     */
-    protected static async _sendHttpEndpoint(reciverUrl: string, secret: string, data: HimHIPData): Promise<boolean> {
-        const response = await got({
-            url: reciverUrl,
-            headers: {
-                secret: secret,
-                gatewaymac: data.gatewaymac,
-                network: data.network,
-                gateway: data.gateway,
-                interface: data.interface,
-                hostip: data.hostip
-            }
-        });
-
-        if (response.statusCode !== 200) {
-            Logger.getLogger().error('HimHip::_sendHttpEndpoint: response return failed');
-
-            if (response.body) {
-                Logger.getLogger().error(response.body);
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * update
-     * @param {string} reciverUrl
-     * @param {string} secret
+     * Collect the host/gateway data and publish it to the backend over the Redis
+     * channel. Redis is the only transport (the legacy HTTP endpoint was removed
+     * in phase 3); without a Redis instance this is a logged no-op.
      */
-    public static async update(reciverUrl: string, secret: string): Promise<void> {
+    public static async update(): Promise<void> {
         // eslint-disable-next-line no-useless-assignment
         let data: HimHIPData|null = null;
 
@@ -144,25 +110,14 @@ export class HimHIP extends RedisChannel<HimHIPUpdate> {
             return;
         }
 
-        // when redis instance work use new commincation way -----------------------------------------------------------
         try {
-            if (await HimHIP._sendDataToChannel(data)) {
-                return;
+            if (!await HimHIP._sendDataToChannel(data)) {
+                Logger.getLogger().error('HimHip::update: no redis instance, host information not sent.');
             }
         } catch (e) {
             Logger.getLogger().error('HimHip::update: error can not send information over channel to server.');
             Logger.getLogger().error(Ets.formate(e, true, true));
         }
-
-        // send data over old way (https express) ----------------------------------------------------------------------
-
-        try {
-            await HimHIP._sendHttpEndpoint(reciverUrl, secret, data);
-        } catch (e) {
-            Logger.getLogger().error('HimHip::update: error can not send information to server: %s', reciverUrl);
-            Logger.getLogger().error(Ets.formate(e, true, true));
-        }
-
     }
 
 }

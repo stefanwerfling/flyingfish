@@ -1,5 +1,4 @@
 import {scheduleJob} from 'node-schedule';
-import * as path from 'path';
 import {Args, Logger, RedisClient, RedisSubscribe} from 'flyingfish_core';
 import {Config} from './inc/Config/Config.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
@@ -46,13 +45,7 @@ import {HimHIP} from './inc/HimHIP.js';
     // scheduler -------------------------------------------------------------------------------------------------------
 
     scheduleJob('*/1 * * * *', async() => {
-        await HimHIP.update(
-            path.join(
-                `${config.server_protocol}://${config.server_host}:${config.server_port}`,
-                config.url_path
-            ).replace(':/', '://'),
-            config.secret
-        );
+        await HimHIP.update();
     });
 
 })();

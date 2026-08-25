@@ -2,8 +2,6 @@ import rateLimit from 'express-rate-limit';
 import {BaseHttpServer, FileHelper, Logger, Session} from 'flyingfish_core';
 import {SchemaRequestData} from 'flyingfish_schemas';
 import helmet from 'helmet';
-import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
-import {ServiceAuth} from './ServiceAuth.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
 
 /**
@@ -50,13 +48,6 @@ export class HttpServer extends BaseHttpServer {
                     if (SchemaRequestData.validate(request, []) && Session.isUserLogin(request.session)) {
                         return true;
                     }
-                } else if (request.url.indexOf('/himhip/') === 0) {
-                    const secret = request.header('secret') ?? '';
-                    const ssecret = FlyingFishConfig.getInstance().get()!.himhip!.secret ?? '';
-
-                    if (ServiceAuth.verifySecret(secret, ssecret)) {
-                        return true;
-                    }
                 }
 
                 return false;
@@ -64,8 +55,6 @@ export class HttpServer extends BaseHttpServer {
             limit: async(request) => {
                 if (request.url.indexOf('/json/') === 0) {
                     return 100;
-                } else if (request.url.indexOf('/himhip/') === 0) {
-                    return Number.MAX_SAFE_INTEGER;
                 }
 
                 // File access for html/js/img etc. allow ever.
