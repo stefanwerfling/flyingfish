@@ -1,6 +1,13 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {SchemaSettingsList} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {
+    DefaultReturn,
+    SchemaDefaultReturn,
+    SchemaSettingsList,
+    SchemaSettingsResponse,
+    SettingsResponse
+} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {List} from './Settings/List.js';
 import {Save} from './Settings/Save.js';
 
@@ -12,24 +19,29 @@ export class Settings extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/settings/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getList());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<SettingsResponse> => {
+                return List.getList();
+            },
+            {
+                description: 'Read the settings list',
+                responseBodySchema: SchemaSettingsResponse
             }
         );
 
         this._post(
             '/json/settings/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaSettingsList, req.body, res)) {
-                        res.status(200).json(await Save.saveSettings(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Save.saveSettings(data.body!);
+            },
+            {
+                description: 'Save the settings list',
+                bodySchema: SchemaSettingsList,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
