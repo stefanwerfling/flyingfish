@@ -1,14 +1,13 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
-import {ServiceAbstract} from 'figtree';
+import {Logger, ServiceAbstract} from 'figtree';
 import {ServiceStatus} from 'figtree-schemas';
 import {
     DnsRecordBase,
     DomainRecordDB,
     DomainRecordServiceDB,
     DomainServiceDB,
-    IDnsServer,
-    Logger
+    IDnsServer
 } from 'flyingfish_core';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';

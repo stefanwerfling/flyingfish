@@ -1,11 +1,10 @@
 import DNS from 'dns2';
-import {ServiceJobAbstract} from 'figtree';
+import {Logger, ServiceJobAbstract} from 'figtree';
 import {
     DateHelper,
     DomainRecordServiceDB, DomainServiceDB, DynDnsClientDB,
     DynDnsClientDomainServiceDB,
-    DynDnsClientServiceDB, GatewayIdentifierServiceDB,
-    Logger
+    DynDnsClientServiceDB, GatewayIdentifierServiceDB
 } from 'flyingfish_core';
 import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
 import {DynDnsProviders} from '../../inc/Provider/DynDnsProviders.js';

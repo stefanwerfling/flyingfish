@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {CoreConfigBridge} from './src/Application/Config/CoreConfigBridge';
 import {FlyingFishConfig} from './src/Application/Config/FlyingFishConfig';
 
@@ -41,13 +41,14 @@ beforeAll(async() => {
     // -----------------------------------------------------------------------------------------------------------------
 
     // Seat the flyingfish_core Config singleton with the bridge (whose `get()`
-    // delegates to FlyingFishConfig). core's Logger reads its config through this
-    // singleton, so it must exist before load().
+    // delegates to FlyingFishConfig). flyingfish_core's own classes still log
+    // through core's Logger, which reads its config through this singleton, so it
+    // must exist before load().
     CoreConfigBridge.seat();
 
     // Since the figtree migration, the configuration is loaded into
     // FlyingFishConfig (figtree's Config singleton); the backend Config.get()
-    // delegates there. Load and configure it directly so core's Logger sees a
+    // delegates there. Load and configure it directly so the loggers see a
     // writable log dir instead of falling back to /var/log/flyingfish/.
     await FlyingFishConfig.getInstance().load(null, true);
     const config = FlyingFishConfig.getInstance().get();

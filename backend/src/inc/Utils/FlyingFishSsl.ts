@@ -1,4 +1,4 @@
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import * as Path from 'path';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
 import {OpenSslCnf} from '../OpenSSL/OpenSslCnf.js';

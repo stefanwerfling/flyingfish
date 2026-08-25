@@ -2,9 +2,9 @@ import {
     DynDnsClientHostsOptions,
     DynDnsClientUpdateOptions,
     DynDnsClientUpdateResult,
-    IDynDnsClient,
-    Logger
+    IDynDnsClient
 } from 'flyingfish_core';
+import {Logger} from 'figtree';
 import got from 'got';
 
 /**

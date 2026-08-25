@@ -41,7 +41,7 @@ concerns that figtree also provides:
 | Providers (`ProviderType`, `BaseProviders`, `ICredential*`, `ISslCert*`, `IDynDnsClient`) | domain | keep in core |
 | DNS record types (`inc/Dns`) | domain | keep in core |
 | `Config` | framework dup | **backend migrated → FlyingFishConfig** (enforced) |
-| `Logger` | framework dup | still used by all apps; migrate to figtree Logger later |
+| `Logger` | framework dup | **backend migrated → figtree Logger** (enforced); ddns/ssh/himhip still use core Logger |
 | `DBHelper` | framework dup | backend co-inits it via `CoreDBInitHook`; figtree owns migrations |
 | `DefaultRoute`, `BaseHttpServer`, `USHttpServer`, `Session` | framework dup | backend routes still extend core `DefaultRoute` |
 | `PluginManager`, `PluginServiceNames` | framework dup | bridged in the backend boot |
@@ -68,6 +68,11 @@ boundary already achieved and prevents regressions:
   source of truth is `Application/Config/FlyingFishConfig`; core consumers read
   it through the seated `Application/Config/CoreConfigBridge` (the single file
   exempted from the rule).
+- **`Logger` from `flyingfish_core` is banned in backend.** Backend logs through
+  figtree's `Logger` (`import {Logger} from 'figtree'`), which is the logger the
+  figtree boot already initialises and which reads `FlyingFishConfig` directly.
+  `flyingfish_core`'s own classes keep logging through core `Logger`; that stays
+  until `ddnsserver`/`sshserver`/`himhip` migrate onto figtree.
 
 As each further framework concern is migrated off core in the backend, add its
 export name(s) to that rule's `importNames` list to lock the migration in.

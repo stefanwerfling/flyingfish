@@ -1,4 +1,5 @@
-import {FileHelper, Logger} from 'flyingfish_core';
+import {FileHelper} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import fs, {createWriteStream} from 'fs';
 import got from 'got';
 import * as stream from 'stream';

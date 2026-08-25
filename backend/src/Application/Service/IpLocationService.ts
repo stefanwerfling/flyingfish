@@ -1,10 +1,9 @@
-import {ServiceJobAbstract} from 'figtree';
+import {Logger, ServiceJobAbstract} from 'figtree';
 import {
     IpBlacklistServiceDB,
     IpLocationDB,
     IpLocationServiceDB,
-    IpWhitelistServiceDB,
-    Logger
+    IpWhitelistServiceDB
 } from 'flyingfish_core';
 import {IpLocateIo} from '../../inc/Provider/IpLocate/IpLocateIo.js';
 import {Settings as GlobalSettings} from '../../inc/Settings/Settings.js';

@@ -1,6 +1,5 @@
-import {ServiceAbstract} from 'figtree';
+import {ServiceAbstract, Logger} from 'figtree';
 import {ServiceStatus} from 'figtree-schemas';
-import {Logger} from 'flyingfish_core';
 import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {NginxAccessLog} from '../../inc/Nginx/NginxAccessLog.js';
 import {NginxConfigBuilder} from '../../inc/Nginx/NginxConfigBuilder.js';

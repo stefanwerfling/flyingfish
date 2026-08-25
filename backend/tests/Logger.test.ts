@@ -1,4 +1,4 @@
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {SchemaMatchers} from '../src/types/ExpectSchema';
 import 'jest-expect-message';
 

@@ -1,5 +1,5 @@
 import {ChildProcess, exec, spawn} from 'child_process';
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import * as fs from 'fs';
 import path from 'path';
 import {NginxConfig} from './NginxConfig.js';

@@ -1,5 +1,4 @@
-import {ServiceJobAbstract} from 'figtree';
-import {Logger} from 'flyingfish_core';
+import {ServiceJobAbstract, Logger} from 'figtree';
 import {IpBlacklist, IpBlacklistCheck} from '../../inc/Analysis/Ip/IpBlacklist.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 

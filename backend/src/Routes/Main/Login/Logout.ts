@@ -1,4 +1,4 @@
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {DefaultReturn, SessionData, StatusCodes} from 'flyingfish_schemas';
 
 /**

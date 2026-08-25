@@ -1,5 +1,5 @@
 import DNS from 'dns2';
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 
 /**
  * IpBlacklistCheck

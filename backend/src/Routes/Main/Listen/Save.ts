@@ -4,8 +4,8 @@ import {
     NginxListenVariableContextType,
     StatusCodes
 } from 'flyingfish_schemas';
+import {Logger} from 'figtree';
 import {
-    Logger,
     NginxListenDB,
     NginxListenServiceDB, NginxListenVariableDB, NginxListenVariableServiceDB
 } from 'flyingfish_core';

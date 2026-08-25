@@ -2,9 +2,9 @@ import {
     CredentialLocationServiceDB,
     CredentialServiceDB,
     ICredentialAuthBasic,
-    Logger,
     NginxLocationServiceDB
 } from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {CredentialSchemaBasic} from 'flyingfish_schemas';
 import {CredentialProviders} from '../Provider/CredentialProvider/CredentialProviders.js';
 

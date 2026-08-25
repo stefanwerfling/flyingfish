@@ -1,6 +1,6 @@
 import {Ets} from 'ets';
-import {ServiceJobAbstract} from 'figtree';
-import {DomainServiceDB, FileHelper, Logger, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
+import {ServiceJobAbstract, Logger} from 'figtree';
+import {DomainServiceDB, FileHelper, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import got from 'got';

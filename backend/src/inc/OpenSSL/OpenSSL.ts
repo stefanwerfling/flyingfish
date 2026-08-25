@@ -1,5 +1,6 @@
 import {spawn} from 'child_process';
-import {FileHelper, Logger, SimpleProcessAwait} from 'flyingfish_core';
+import {FileHelper, SimpleProcessAwait} from 'flyingfish_core';
+import {Logger} from 'figtree';
 
 /**
  * OpenSSL

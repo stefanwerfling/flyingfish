@@ -3,9 +3,9 @@ import {
     DefaultRoute,
     IpBlacklistServiceDB,
     IpWhitelistServiceDB,
-    Logger,
     NginxListenServiceDB
 } from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {NginxListenAddressCheckType} from 'flyingfish_schemas';
 
 /**

@@ -3,13 +3,13 @@ import {randomBytes} from 'node:crypto';
 import {
     DomainDB,
     DomainServiceDB,
-    Logger,
     NginxUpstreamDB,
     UserDB,
     UserServiceDB,
     NginxUpstreamServiceDB,
     NginxStreamDB, NginxStreamServiceDB, NginxListenServiceDB, NginxListenDB
 } from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {
     NginxListenCategory,
     NginxListenProtocol,

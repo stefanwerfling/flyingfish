@@ -1,5 +1,5 @@
-import {ServiceJobAbstract} from 'figtree';
-import {GatewayIdentifierServiceDB, Logger, NatPortServiceDB, NginxListenServiceDB} from 'flyingfish_core';
+import {ServiceJobAbstract, Logger} from 'figtree';
+import {GatewayIdentifierServiceDB, NatPortServiceDB, NginxListenServiceDB} from 'flyingfish_core';
 import {NatStatus} from 'flyingfish_schemas';
 import Ping from 'ping';
 import {UpnpNatCache} from '../../inc/Cache/UpnpNatCache.js';

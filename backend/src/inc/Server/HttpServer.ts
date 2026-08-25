@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
-import {BaseHttpServer, FileHelper, Logger, Session} from 'flyingfish_core';
+import {BaseHttpServer, FileHelper, Session} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {SchemaRequestData} from 'flyingfish_schemas';
 import helmet from 'helmet';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';

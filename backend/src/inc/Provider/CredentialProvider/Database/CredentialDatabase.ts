@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import {CredentialUserServiceDB, Logger, ICredential, ICredentialAuthBasic} from 'flyingfish_core';
+import {CredentialUserServiceDB, ICredential, ICredentialAuthBasic} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {CredentialSchemaTypes} from 'flyingfish_schemas';
 
 /**

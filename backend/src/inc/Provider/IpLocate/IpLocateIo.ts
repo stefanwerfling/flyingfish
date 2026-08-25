@@ -1,4 +1,4 @@
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import got from 'got';
 import {ExtractSchemaResultType, Vts} from 'vts';
 

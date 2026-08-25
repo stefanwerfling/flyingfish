@@ -1,11 +1,10 @@
-import {ServiceJobAbstract} from 'figtree';
+import {Logger, ServiceJobAbstract} from 'figtree';
 import {
     DateHelper,
     IpBlacklistCategoryDB,
     IpBlacklistCategoryServiceDB,
     IpBlacklistDB, IpBlacklistMaintainerDB, IpBlacklistMaintainerServiceDB,
-    IpBlacklistServiceDB, IpListMaintainerDB, IpListMaintainerServiceDB,
-    Logger
+    IpBlacklistServiceDB, IpListMaintainerDB, IpListMaintainerServiceDB
 } from 'flyingfish_core';
 import {Firehol} from '../../inc/Provider/Firehol/Firehol.js';
 import {Settings as GlobalSettings} from '../../inc/Settings/Settings.js';

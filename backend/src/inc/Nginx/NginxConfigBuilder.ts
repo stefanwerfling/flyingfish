@@ -2,7 +2,6 @@ import {Ets} from 'ets';
 import {
     DomainServiceDB,
     FileHelper,
-    Logger,
     NginxHttpDB,
     NginxHttpServiceDB,
     NginxHttpVariableDB,
@@ -21,6 +20,7 @@ import {
     SshPortServiceDB,
     SslCertBundel
 } from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {
     NginxHttpVariableContextType,
     NginxListenCategory,

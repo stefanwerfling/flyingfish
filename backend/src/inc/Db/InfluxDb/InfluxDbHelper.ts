@@ -1,5 +1,5 @@
 import {HttpError, InfluxDB, ParameterizedQuery, Point, QueryApi, WriteApi} from '@influxdata/influxdb-client';
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {hostname} from 'node:os';
 
 /**

@@ -1,5 +1,5 @@
-import {RedisChannel} from 'figtree';
-import {Logger, RedisChannels} from 'flyingfish_core';
+import {RedisChannel, Logger} from 'figtree';
+import {RedisChannels} from 'flyingfish_core';
 import {HimHIPData, SchemaHimHIPData} from 'flyingfish_schemas';
 
 export type onEventDataUpdate = (data: HimHIPData|null) => void;
