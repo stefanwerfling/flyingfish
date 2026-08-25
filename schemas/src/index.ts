@@ -376,3 +376,23 @@ export {SchemaConfigOptionsSshServer, ConfigOptionsSshServer} from './SshServer/
 // DdnsServer
 export {SchemaFlyingFishArgsDdnsServer, FlyingFishArgsDdnsServer} from './DdnsServer/Env/Args.js';
 export {SchemaDdnsServerConfigOptions, DdnsServerConfigOptions} from './DdnsServer/Config/Config.js';
+
+// Hub — Capability Manifest (v2 modular architecture)
+export {
+    CapabilityUiRenderType,
+    SchemaPartDescriptor,
+    PartDescriptor,
+    SchemaCapabilityApiAction,
+    CapabilityApiAction,
+    SchemaCapabilityUiMenu,
+    SchemaCapabilityUiPage,
+    SchemaCapabilityUiDialog,
+    SchemaCapabilityUiWidget,
+    SchemaCapabilityUi,
+    SchemaCapabilityConfig,
+    SchemaCapabilityHealth,
+    SchemaCapability,
+    Capability,
+    SchemaCapabilityManifest,
+    CapabilityManifest
+} from './Hub/CapabilityManifest.js';
