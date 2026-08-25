@@ -43,7 +43,8 @@ concerns that figtree also provides:
 | `Config` | framework dup | **backend migrated → FlyingFishConfig** (enforced) |
 | `Logger` | framework dup | **backend migrated → figtree Logger** (enforced); ddns/ssh/himhip still use core Logger |
 | `DBHelper` | framework dup | backend co-inits it via `CoreDBInitHook`; figtree owns migrations |
-| `DefaultRoute`, `BaseHttpServer`, `USHttpServer`, `Session` | framework dup | backend routes still extend core `DefaultRoute` |
+| `DefaultRoute` | framework dup | **main-API routes migrated → figtree DefaultRoute** (enforced); the two njs control routes still use core `DefaultRoute` (mounted on core `USHttpServer`) |
+| `BaseHttpServer`, `USHttpServer`, `Session` | framework dup | the nginx-control server (`NginxControlHttpServer`) still extends core `USHttpServer`; migrating it frees the last core `DefaultRoute` users |
 | `PluginManager`, `PluginServiceNames` | framework dup | bridged in the backend boot |
 | `RedisClient` | framework dup | **backend migrated → figtree RedisClient** (enforced); this is the singleton `RedisDBService` actually connects |
 | `RedisChannel`, `RedisSubscribe` | framework dup | backend already imports figtree's `RedisChannel` (HimHIP/SshConfigChannel); himhip still uses core |
@@ -84,6 +85,14 @@ boundary already achieved and prevents regressions:
   figtree's `FileHelper`; the directory ops `mkdir`/`directoryExist` live on
   figtree's `DirHelper` (core kept them on `FileHelper`). `SimpleProcessAwait`
   has no figtree equivalent and stays on core.
+- **`DefaultRoute` from `flyingfish_core` is banned in backend.** The main-API
+  controllers extend figtree's schema-driven `DefaultRoute` and gate auth with
+  `Application/Server/FlyingFishRouteCheckUserLogin` (a `checkUserLogin`
+  function that mirrors core's old `isUserLogin`; `isFlyingFishUserLogin` is its
+  no-response predicate for routes that branch on login state). The two njs
+  control routes (`src/Routes/Njs/*`) are exempted via an `overrides` entry
+  because they mount on the core `USHttpServer`; they migrate when that server
+  moves onto figtree's `HttpServer`.
 
 As each further framework concern is migrated off core in the backend, add its
 export name(s) to that rule's `importNames` list to lock the migration in.

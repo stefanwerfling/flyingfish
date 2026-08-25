@@ -1,6 +1,17 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {SchemaCapabilityManifest, SchemaRegistryInstanceRequest, StatusCodes} from 'flyingfish_schemas';
+import {
+    DefaultReturn,
+    RegistryPartsResponse,
+    RegistryUiContributionsResponse,
+    SchemaCapabilityManifest,
+    SchemaDefaultReturn,
+    SchemaRegistryInstanceRequest,
+    SchemaRegistryPartsResponse,
+    SchemaRegistryUiContributionsResponse,
+    StatusCodes
+} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {HubRegistryService} from '../../Application/Hub/HubRegistryService.js';
 
 /**
@@ -19,82 +30,94 @@ export class Registry extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._post(
             '/json/registry/register',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaCapabilityManifest, req.body, res)) {
-                        HubRegistryService.getInstance().getRegistry().register(req.body);
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                HubRegistryService.getInstance().getRegistry().register(data.body!);
 
-                        res.status(200).json({statusCode: StatusCodes.OK});
-                    }
-                }
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Register a part with the hub registry',
+                bodySchema: SchemaCapabilityManifest,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/registry/heartbeat',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaRegistryInstanceRequest, req.body, res)) {
-                        const known = HubRegistryService.getInstance().getRegistry().heartbeat(req.body.instanceId);
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                const known = HubRegistryService.getInstance().getRegistry().heartbeat(data.body!.instanceId);
 
-                        res.status(200).json({
-                            statusCode: known ? StatusCodes.OK : StatusCodes.INTERNAL_ERROR
-                        });
-                    }
-                }
+                return {
+                    statusCode: known ? StatusCodes.OK : StatusCodes.INTERNAL_ERROR
+                };
+            },
+            {
+                description: 'Heartbeat for a registered part',
+                bodySchema: SchemaRegistryInstanceRequest,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/registry/bye',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaRegistryInstanceRequest, req.body, res)) {
-                        HubRegistryService.getInstance().getRegistry().bye(req.body.instanceId);
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                HubRegistryService.getInstance().getRegistry().bye(data.body!.instanceId);
 
-                        res.status(200).json({statusCode: StatusCodes.OK});
-                    }
-                }
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Deregister a part from the hub registry',
+                bodySchema: SchemaRegistryInstanceRequest,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._get(
             '/json/registry/parts',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    const list = HubRegistryService.getInstance().getRegistry().list().map((part) => {
-                        return {
-                            id: part.manifest.part.id,
-                            name: part.manifest.part.name,
-                            instanceId: part.manifest.part.instanceId,
-                            status: part.status,
-                            registeredAt: part.registeredAt,
-                            lastHeartbeat: part.lastHeartbeat,
-                            capabilities: part.manifest.capabilities.map((capability) => capability.key)
-                        };
-                    });
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<RegistryPartsResponse> => {
+                const list = HubRegistryService.getInstance().getRegistry().list().map((part) => {
+                    return {
+                        id: part.manifest.part.id,
+                        name: part.manifest.part.name,
+                        instanceId: part.manifest.part.instanceId,
+                        status: part.status,
+                        registeredAt: part.registeredAt,
+                        lastHeartbeat: part.lastHeartbeat,
+                        capabilities: part.manifest.capabilities.map((capability) => capability.key)
+                    };
+                });
 
-                    res.status(200).json({statusCode: StatusCodes.OK, list: list});
-                }
+                return {statusCode: StatusCodes.OK, list: list};
+            },
+            {
+                description: 'Read the registered parts list',
+                responseBodySchema: SchemaRegistryPartsResponse
             }
         );
 
         this._get(
             '/json/registry/ui-contributions',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    const ui = HubRegistryService.getInstance().getRegistry().uiContributions();
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<RegistryUiContributionsResponse> => {
+                const ui = HubRegistryService.getInstance().getRegistry().uiContributions();
 
-                    res.status(200).json({
-                        statusCode: StatusCodes.OK,
-                        menu: ui.menu,
-                        pages: ui.pages,
-                        widgets: ui.widgets
-                    });
-                }
+                return {
+                    statusCode: StatusCodes.OK,
+                    menu: ui.menu,
+                    pages: ui.pages,
+                    widgets: ui.widgets
+                };
+            },
+            {
+                description: 'Read the aggregated UI contributions',
+                responseBodySchema: SchemaRegistryUiContributionsResponse
             }
         );
 

@@ -29,3 +29,20 @@ export const FlyingFishRouteCheckUserLogin: DefaultRouteCheckUserLogin = async(
 
     return false;
 };
+
+/**
+ * isFlyingFishUserLogin
+ *
+ * Pure predicate variant of the login check (no response is sent). Mirrors the
+ * former core `DefaultRoute.isUserLogin(req, res, false)`: it only reports
+ * whether a logged-in user is present. Used by routes that answer 200 either way
+ * and branch on the login state inside the handler (e.g. the dashboard and the
+ * /json/islogin probe) instead of gating with FlyingFishRouteCheckUserLogin.
+ */
+export const isFlyingFishUserLogin = (request: Request): boolean => {
+    if (SchemaRequestData.validate(request, [])) {
+        return request.session.user?.isLogin === true;
+    }
+
+    return false;
+};

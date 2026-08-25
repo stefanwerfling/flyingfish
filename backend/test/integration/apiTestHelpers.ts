@@ -9,7 +9,8 @@ import * as bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import express, {Express} from 'express';
 import session from 'express-session';
-import {DefaultRoute, UserDB, UserServiceDB} from 'flyingfish_core';
+import {DefaultRoute} from 'figtree';
+import {UserDB, UserServiceDB} from 'flyingfish_core';
 import request from 'supertest';
 import {Login} from '../../src/Routes/Main/Login.js';
 
