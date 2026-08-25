@@ -7,7 +7,7 @@
  *
  * Runs against a real MariaDB via the dbHarness (needed for the login flow).
  */
-import {StatusCodes} from 'flyingfish_schemas';
+import {SchemaRegistryPartsResponse, SchemaRegistryUiContributionsResponse, StatusCodes} from 'flyingfish_schemas';
 import request from 'supertest';
 import {HubRegistryService} from '../../src/Application/Hub/HubRegistryService.js';
 import {buildDnsCapabilityManifest} from '../../src/inc/Dns/DnsCapabilityManifest.js';
@@ -43,12 +43,14 @@ describe('Registry API (integration)', () => {
         expect(reg.body.statusCode).toBe(StatusCodes.OK);
 
         const parts = await agent.get('/json/registry/parts');
+        expect(SchemaRegistryPartsResponse.validate(parts.body, [])).toBe(true);
         expect(parts.body.list).toHaveLength(1);
         expect(parts.body.list[0].instanceId).toBe('dns-1');
         expect(parts.body.list[0].status).toBe('online');
         expect(parts.body.list[0].capabilities).toContain('dns-server');
 
         const ui = await agent.get('/json/registry/ui-contributions');
+        expect(SchemaRegistryUiContributionsResponse.validate(ui.body, [])).toBe(true);
         expect(ui.body.menu.map((entry: {id: string;}) => entry.id)).toContain('dns');
         expect(ui.body.pages.map((entry: {id: string;}) => entry.id)).toContain('dns-records');
     });

@@ -401,5 +401,11 @@ export {
 } from './Hub/CapabilityManifest.js';
 export {
     SchemaRegistryInstanceRequest,
-    RegistryInstanceRequest
+    RegistryInstanceRequest,
+    SchemaRegistryPartSummary,
+    RegistryPartSummary,
+    SchemaRegistryPartsResponse,
+    RegistryPartsResponse,
+    SchemaRegistryUiContributionsResponse,
+    RegistryUiContributionsResponse
 } from './Hub/Registry.js';
