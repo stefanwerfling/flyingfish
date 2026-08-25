@@ -1,6 +1,15 @@
-import {DefaultRoute} from 'flyingfish_core';
 import {Router} from 'express';
-import {SchemaDynDnsServerData} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {
+    DefaultReturn,
+    DynDnsServerListResponse,
+    DynDnsServerNotInDomainResponse,
+    SchemaDefaultReturn,
+    SchemaDynDnsServerData,
+    SchemaDynDnsServerListResponse,
+    SchemaDynDnsServerNotInDomainResponse
+} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {Delete} from './DynDnsServer/Delete.js';
 import {DomainList} from './DynDnsServer/DomainList.js';
 import {List} from './DynDnsServer/List.js';
@@ -14,42 +23,55 @@ export class DynDnsServer extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/dyndnsserver/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getList());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<DynDnsServerListResponse> => {
+                return List.getList();
+            },
+            {
+                description: 'Read the DynDNS server list',
+                responseBodySchema: SchemaDynDnsServerListResponse
             }
         );
 
+        // Intentionally public (no auth): the DynDNS updater queries it unauthenticated.
         this._get(
             '/json/dyndnsserver/domain/list',
-            async(req, res) => {
-                res.status(200).json(await DomainList.getDomains());
+            false,
+            async(): Promise<DynDnsServerNotInDomainResponse> => {
+                return DomainList.getDomains();
+            },
+            {
+                description: 'Read the domains not assigned to a DynDNS server',
+                responseBodySchema: SchemaDynDnsServerNotInDomainResponse
             }
         );
 
         this._post(
             '/json/dyndnsserver/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaDynDnsServerData, req.body, res)) {
-                        res.status(200).json(await Save.saveUser(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Save.saveUser(data.body!);
+            },
+            {
+                description: 'Save a DynDNS server',
+                bodySchema: SchemaDynDnsServerData,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/dyndnsserver/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaDynDnsServerData, req.body, res)) {
-                        res.status(200).json(await Delete.deleteUser(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Delete.deleteUser(data.body!);
+            },
+            {
+                description: 'Delete a DynDNS server',
+                bodySchema: SchemaDynDnsServerData,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 

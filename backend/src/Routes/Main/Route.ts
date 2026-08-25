@@ -1,11 +1,16 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
+import {DefaultRoute} from 'figtree';
 import {
+    DefaultReturn,
+    RoutesResponse,
+    SchemaDefaultReturn,
     SchemaRouteHttpDelete,
     SchemaRouteHttpSave,
     SchemaRouteStreamDelete,
-    SchemaRouteStreamSave
+    SchemaRouteStreamSave,
+    SchemaRoutesResponse
 } from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {Delete as DeleteHttp} from './Route/Http/Delete.js';
 import {Delete as DeleteStream} from './Route/Stream/Delete.js';
 import {List} from './Route/List.js';
@@ -20,57 +25,68 @@ export class Route extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/route/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getRoutes());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<RoutesResponse> => {
+                return List.getRoutes();
+            },
+            {
+                description: 'Read the route list',
+                responseBodySchema: SchemaRoutesResponse
             }
         );
 
         this._post(
             '/json/route/stream/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaRouteStreamSave, req.body, res)) {
-                        res.status(200).json(await SaveStream.saveStreamRoute(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return SaveStream.saveStreamRoute(data.body!);
+            },
+            {
+                description: 'Save a stream route',
+                bodySchema: SchemaRouteStreamSave,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/route/stream/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaRouteStreamDelete, req.body, res)) {
-                        res.status(200).json(await DeleteStream.deleteStreamRoute(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return DeleteStream.deleteStreamRoute(data.body!);
+            },
+            {
+                description: 'Delete a stream route',
+                bodySchema: SchemaRouteStreamDelete,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/route/http/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaRouteHttpSave, req.body, res)) {
-                        res.status(200).json(await SaveHttp.saveHttpRoute(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return SaveHttp.saveHttpRoute(data.body!);
+            },
+            {
+                description: 'Save an HTTP route',
+                bodySchema: SchemaRouteHttpSave,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/route/http/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaRouteHttpDelete, req.body, res)) {
-                        res.status(200).json(await DeleteHttp.deleteHttpRoute(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return DeleteHttp.deleteHttpRoute(data.body!);
+            },
+            {
+                description: 'Delete an HTTP route',
+                bodySchema: SchemaRouteHttpDelete,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 

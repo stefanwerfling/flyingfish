@@ -1,6 +1,19 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {SchemaCredential, SchemaCredentialUser, SchemaCredentialUsersRequest} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {
+    CredentialProviderResponse,
+    CredentialResponse,
+    CredentialUsersResponse,
+    DefaultReturn,
+    SchemaCredential,
+    SchemaCredentialProviderResponse,
+    SchemaCredentialResponse,
+    SchemaCredentialUser,
+    SchemaCredentialUsersRequest,
+    SchemaCredentialUsersResponse,
+    SchemaDefaultReturn
+} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {List} from './Credential/List.js';
 import {Provider} from './Credential/Provider.js';
 import {Save} from './Credential/Save.js';
@@ -15,70 +28,67 @@ export class Credential extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/credential/provider/list',
-            async(
-                req,
-                res
-            ) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Provider.getProviders());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<CredentialProviderResponse> => {
+                return Provider.getProviders();
+            },
+            {
+                description: 'Read the credential provider list',
+                responseBodySchema: SchemaCredentialProviderResponse
             }
         );
 
         this._get(
             '/json/credential/list',
-            async(
-                req,
-                res
-            ) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getCredentials());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<CredentialResponse> => {
+                return List.getCredentials();
+            },
+            {
+                description: 'Read the credential list',
+                responseBodySchema: SchemaCredentialResponse
             }
         );
 
         this._post(
             '/json/credential/save',
-            async(
-                req,
-                res
-            ) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaCredential, req.body, res)) {
-                        res.status(200).json(await Save.saveCredential(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Save.saveCredential(data.body!);
+            },
+            {
+                description: 'Save a credential',
+                bodySchema: SchemaCredential,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/credential/user/list',
-            async(
-                req,
-                res
-            ) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaCredentialUsersRequest, req.body, res)) {
-                        res.status(200).json(await UserList.getUsers(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<CredentialUsersResponse> => {
+                return UserList.getUsers(data.body!);
+            },
+            {
+                description: 'Read the credential user list',
+                bodySchema: SchemaCredentialUsersRequest,
+                responseBodySchema: SchemaCredentialUsersResponse
             }
         );
 
         this._post(
             '/json/credential/user/save',
-            async(
-                req,
-                res
-            ) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaCredentialUser, req.body, res)) {
-                        res.status(200).json(await UserSave.saveUser(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return UserSave.saveUser(data.body!);
+            },
+            {
+                description: 'Save a credential user',
+                bodySchema: SchemaCredentialUser,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 

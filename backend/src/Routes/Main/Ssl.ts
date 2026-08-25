@@ -1,6 +1,18 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {SchemaSslDetailsRequest, SchemaSslListWildcardRequest} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {
+    DefaultReturn,
+    SchemaDefaultReturn,
+    SchemaSslDetailsRequest,
+    SchemaSslDetailsResponse,
+    SchemaSslListWildcardRequest,
+    SchemaSslListWildcardResponse,
+    SchemaSslProvidersResponse,
+    SslDetailsResponse,
+    SslListWildcardResponse,
+    SslProvidersResponse
+} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {Details} from './Ssl/Details.js';
 import {ListWildcard} from './Ssl/ListWildcard.js';
 import {Providers} from './Ssl/Providers.js';
@@ -14,44 +26,54 @@ export class Ssl extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/ssl/provider/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Providers.getProviders());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<SslProvidersResponse> => {
+                return Providers.getProviders();
+            },
+            {
+                description: 'Read the SSL provider list',
+                responseBodySchema: SchemaSslProvidersResponse
             }
         );
 
         this._post(
             '/json/ssl/cert/details',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaSslDetailsRequest, req.body, res)) {
-                        res.status(200).json(await Details.getCertDetails(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<SslDetailsResponse> => {
+                return Details.getCertDetails(data.body!);
+            },
+            {
+                description: 'Read certificate details',
+                bodySchema: SchemaSslDetailsRequest,
+                responseBodySchema: SchemaSslDetailsResponse
             }
         );
 
         this._get(
             '/json/ssl/run/service',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Run.rundService());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<DefaultReturn> => {
+                return Run.rundService();
+            },
+            {
+                description: 'Run the SSL certificate service',
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/ssl/cert/wildcards',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaSslListWildcardRequest, req.body, res)) {
-                        res.status(200).json(await ListWildcard.getAllCertforWildcard(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<SslListWildcardResponse> => {
+                return ListWildcard.getAllCertforWildcard(data.body!);
+            },
+            {
+                description: 'Read all certificates usable for a wildcard',
+                bodySchema: SchemaSslListWildcardRequest,
+                responseBodySchema: SchemaSslListWildcardResponse
             }
         );
 
