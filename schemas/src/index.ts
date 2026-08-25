@@ -409,3 +409,8 @@ export {
     SchemaRegistryUiContributionsResponse,
     RegistryUiContributionsResponse
 } from './Hub/Registry.js';
+export {
+    SshConfigChangeAction,
+    SchemaSshConfigChanged,
+    SshConfigChanged
+} from './Hub/SshConfigChanged.js';

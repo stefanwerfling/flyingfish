@@ -1,5 +1,6 @@
 import {NginxStreamServiceDB, NginxUpstreamServiceDB} from 'flyingfish_core';
-import {DefaultReturn, RouteStreamDelete, StatusCodes} from 'flyingfish_schemas';
+import {DefaultReturn, RouteStreamDelete, SshConfigChangeAction, StatusCodes} from 'flyingfish_schemas';
+import {SshConfigChannel} from '../../../../inc/Ssh/SshConfigChannel.js';
 import {Save} from './Save.js';
 
 /**
@@ -36,6 +37,10 @@ export class Delete {
                         msg: 'SSH Server is currently in use, please remove Ssh port outgoning link!'
                     };
                 }
+
+                // Notify consumers (ssh server) that the SSH port was removed, so a
+                // long-lived tunnel can be closed. Best-effort IPC (no-op without Redis).
+                await SshConfigChannel.publish(stream.sshport_id, SshConfigChangeAction.deleted);
             }
 
             // delete upstreams ------------------------------------------------------------------------------------

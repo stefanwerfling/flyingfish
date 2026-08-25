@@ -12,8 +12,10 @@ import {
     NginxStreamDestinationType, NginxStreamSshR,
     RouteStreamSave,
     RouteStreamSSH,
+    SshConfigChangeAction,
     StatusCodes
 } from 'flyingfish_schemas';
+import {SshConfigChannel} from '../../../../inc/Ssh/SshConfigChannel.js';
 
 /**
  * SaveStream
@@ -356,6 +358,12 @@ export class Save {
 
                 index++;
             }
+        }
+
+        // Notify consumers (ssh server) that an SSH port/user config changed, so
+        // long-lived tunnels can be reloaded. Best-effort IPC (no-op without Redis).
+        if (aStream.sshport_id > 0) {
+            await SshConfigChannel.publish(aStream.sshport_id, SshConfigChangeAction.saved);
         }
 
         return {
