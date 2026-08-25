@@ -1,5 +1,7 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
+import {DefaultRoute} from 'figtree';
+import {DefaultReturn, SchemaDefaultReturn} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {Reload} from './Nginx/Reload.js';
 
 /**
@@ -10,13 +12,16 @@ export class Nginx extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/nginx/reload',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Reload.reload());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<DefaultReturn> => {
+                return Reload.reload();
+            },
+            {
+                description: 'Reload the nginx service',
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
