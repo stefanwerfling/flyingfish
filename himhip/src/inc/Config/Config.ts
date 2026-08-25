@@ -7,7 +7,6 @@ import {
     SchemaConfigOptionsHimHip
 } from 'flyingfish_schemas';
 
-
 /**
  * env duty
  */
@@ -109,7 +108,7 @@ export class Config extends ConfigCore<ConfigOptionsHimHip> {
 
             if (process.env[ENV_OPTIONAL.SERVER_PORT]) {
                 config.server_port = parseInt(
-                    process.env[ENV_OPTIONAL.SERVER_HOST] ??
+                    process.env[ENV_OPTIONAL.SERVER_PORT] ??
                     `${Config.DEFAULT_SERVER_PORT}`, 10
                 );
             }
