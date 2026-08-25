@@ -56,6 +56,11 @@ export const SchemaCapabilityUiMenu = Vts.object({
 });
 
 /**
+ * CapabilityUiMenu
+ */
+export type CapabilityUiMenu = ExtractSchemaResultType<typeof SchemaCapabilityUiMenu>;
+
+/**
  * A page contributed by a capability.
  */
 export const SchemaCapabilityUiPage = Vts.object({
@@ -66,6 +71,11 @@ export const SchemaCapabilityUiPage = Vts.object({
     ref: Vts.optional(Vts.string()),
     permissions: Vts.array(Vts.string())
 });
+
+/**
+ * CapabilityUiPage
+ */
+export type CapabilityUiPage = ExtractSchemaResultType<typeof SchemaCapabilityUiPage>;
 
 /**
  * A dialog contributed by a capability (schema-rendered).
@@ -82,6 +92,11 @@ export const SchemaCapabilityUiWidget = Vts.object({
     dashboardSlot: Vts.string(),
     ref: Vts.string()
 });
+
+/**
+ * CapabilityUiWidget
+ */
+export type CapabilityUiWidget = ExtractSchemaResultType<typeof SchemaCapabilityUiWidget>;
 
 /**
  * The UI contributions of a capability.
