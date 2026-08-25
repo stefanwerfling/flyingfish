@@ -25,8 +25,6 @@ export enum ENV_OPTIONAL {
     SSHSERVER_IP = 'FLYINGFISH_SSHSERVER_IP',
     DOCKER_INSIDE = 'FLYINGFISH_DOCKER_INSIDE',
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
-    HIMHIP_USE = 'FLYINGFISH_HIMHIP_USE',
-    HIMHIP_SECRET = 'FLYINGFISH_HIMHIP_SECRET',
     FF_LIBPATH = 'FLYINGFISH_LIBPATH'
 }
 
@@ -62,8 +60,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
     public static readonly DEFAULT_DYNDNSSERVER_ENABLE = false;
     public static readonly DEFAULT_SSHSERVER_IP = '10.103.0.4';
     public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
-    public static readonly DEFAULT_HIMHIP_USE = true;
-    public static readonly DEFAULT_HIMHIP_SECRET = '';
     public static readonly DEFAULT_REDIS_URL = 'redis://10.103.0.7:6379';
 
     /**
@@ -133,10 +129,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
                 nginx: {
                     config: FlyingFishConfig.DEFAULT_NGINX_CONFIG,
                     prefix: FlyingFishConfig.DEFAULT_NGINX_PREFIX
-                },
-                himhip: {
-                    use: FlyingFishConfig.DEFAULT_HIMHIP_USE,
-                    secret: FlyingFishConfig.DEFAULT_HIMHIP_SECRET
                 }
             };
         }
@@ -153,7 +145,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
         config = this._loadEnvSshserver(config);
         config = this._loadEnvDocker(config);
         config = this._loadEnvLogging(config);
-        config = this._loadEnvHimhip(config);
 
         // ff ----------------------------------------------------------------------------------------------------------
 
@@ -399,31 +390,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
             config.logging = {
                 level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
             };
-        }
-
-        return config;
-    }
-
-    /**
-     * Load HimHIP env.
-     * @param {BackendConfigOptions} config
-     * @return {BackendConfigOptions}
-     * @protected
-     */
-    protected _loadEnvHimhip(config: BackendConfigOptions): BackendConfigOptions {
-        if (!config.himhip) {
-            config.himhip = {
-                use: FlyingFishConfig.DEFAULT_HIMHIP_USE,
-                secret: FlyingFishConfig.DEFAULT_HIMHIP_SECRET
-            };
-        }
-
-        if (process.env[ENV_OPTIONAL.HIMHIP_USE]) {
-            config.himhip.use = process.env[ENV_OPTIONAL.HIMHIP_USE] === '1';
-        }
-
-        if (process.env[ENV_OPTIONAL.HIMHIP_SECRET]) {
-            config.himhip.secret = process.env[ENV_OPTIONAL.HIMHIP_SECRET];
         }
 
         return config;
