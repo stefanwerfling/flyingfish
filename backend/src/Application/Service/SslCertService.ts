@@ -1,6 +1,6 @@
 import {Ets} from 'ets';
-import {ServiceJobAbstract, Logger} from 'figtree';
-import {DomainServiceDB, FileHelper, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
+import {DirHelper, FileHelper, Logger, ServiceJobAbstract} from 'figtree';
+import {DomainServiceDB, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
 import fs from 'fs/promises';
 import got from 'got';
@@ -77,7 +77,7 @@ export class SslCertService extends ServiceJobAbstract {
     protected async _requestDomainCheckReachability(domain: string): Promise<boolean> {
         const wellKnownFf = Path.join(NginxServer.getInstance().getWellKnownPath(), 'flyingfish');
 
-        if (!await FileHelper.directoryExist(wellKnownFf)) {
+        if (!await DirHelper.directoryExist(wellKnownFf)) {
             Logger.getLogger().silly(
                 'Create wellknown directory by domain: %s',
                 domain,
@@ -86,7 +86,7 @@ export class SslCertService extends ServiceJobAbstract {
                 }
             );
 
-            await FileHelper.mkdir(wellKnownFf, true);
+            await DirHelper.mkdir(wellKnownFf, true);
         }
 
         const checkFile = Path.join(wellKnownFf, 'check.json');

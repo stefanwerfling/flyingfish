@@ -1,4 +1,4 @@
-import {FileHelper} from 'flyingfish_core';
+import {FileHelper} from 'figtree';
 import fs from 'fs/promises';
 
 /**

@@ -47,7 +47,8 @@ concerns that figtree also provides:
 | `PluginManager`, `PluginServiceNames` | framework dup | bridged in the backend boot |
 | `RedisClient`, `RedisChannel(s)`, `RedisSubscribe` | framework dup | used by backend + himhip |
 | `Utils.DateHelper` | shared util | **backend migrated → figtree DateHelper** (enforced); `getCurrentDbTime()` → figtree `getCurrentTime()` |
-| `Crypto` (`CertificateHelper`, `JwkHelper`), remaining `Utils` (`FileHelper` — needs figtree `mkdir`/`directoryExist`; `SimpleProcessAwait` — absent in figtree) | shared util | evaluate: figtree vs keep |
+| `Utils.FileHelper` | shared util | **backend migrated → figtree FileHelper** (enforced); `mkdir`/`directoryExist` → figtree `DirHelper` |
+| `Crypto` (`CertificateHelper`, `JwkHelper`), remaining `Utils` (`SimpleProcessAwait` — absent in figtree) | shared util | evaluate: figtree vs keep |
 
 ## Target end-state
 
@@ -76,9 +77,11 @@ boundary already achieved and prevents regressions:
   until `ddnsserver`/`sshserver`/`himhip` migrate onto figtree.
 - **`DateHelper` from `flyingfish_core` is banned in backend.** Backend uses
   figtree's `DateHelper`; core's `getCurrentDbTime()` maps to figtree's
-  `getCurrentTime()` (identical: `Date.now()/1000`). `FileHelper` is not banned
-  yet — figtree's `FileHelper` still lacks `mkdir`/`directoryExist`, so that
-  migration waits on extending figtree.
+  `getCurrentTime()` (identical: `Date.now()/1000`).
+- **`FileHelper` from `flyingfish_core` is banned in backend.** Backend uses
+  figtree's `FileHelper`; the directory ops `mkdir`/`directoryExist` live on
+  figtree's `DirHelper` (core kept them on `FileHelper`). `SimpleProcessAwait`
+  has no figtree equivalent and stays on core.
 
 As each further framework concern is migrated off core in the backend, add its
 export name(s) to that rule's `importNames` list to lock the migration in.

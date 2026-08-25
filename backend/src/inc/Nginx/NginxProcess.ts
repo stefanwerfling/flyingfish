@@ -1,5 +1,4 @@
-import {FileHelper} from 'flyingfish_core';
-import {Logger} from 'figtree';
+import {FileHelper, Logger} from 'figtree';
 import fs from 'fs/promises';
 import path from 'path';
 import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
