@@ -32,37 +32,6 @@
       "rules": {
         "no-restricted-imports": "off"
       }
-    },
-    {
-      // The two nginx-control (njs) routes still extend flyingfish_core's
-      // DefaultRoute because they are mounted on the core USHttpServer
-      // (NginxControlHttpServer), a separate server not yet migrated onto
-      // figtree's HttpServer. Everything else stays banned here; only
-      // DefaultRoute is allowed until that server migrates.
-      "files": [
-        "src/Routes/Njs/AddressAccess.ts",
-        "src/Routes/Njs/AuthBasic.ts"
-      ],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "flyingfish_core",
-                "importNames": [
-                  "Config",
-                  "Logger",
-                  "DateHelper",
-                  "FileHelper",
-                  "RedisClient"
-                ],
-                "message": "Backend reads these framework concerns from figtree, not flyingfish_core. (DefaultRoute is still allowed in this njs route pending the USHttpServer -> figtree migration.)"
-              }
-            ]
-          }
-        ]
-      }
     }
   ],
   "rules": {
@@ -215,9 +184,10 @@
               "DateHelper",
               "FileHelper",
               "RedisClient",
-              "DefaultRoute"
+              "DefaultRoute",
+              "USHttpServer"
             ],
-            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger/DateHelper/FileHelper/RedisClient/DefaultRoute -> import from 'figtree'. Notes: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); FileHelper.mkdir/directoryExist live on figtree's DirHelper; the RedisChannels enum (FlyingFish channel names) stays in core; routes use figtree's schema-driven DefaultRoute with FlyingFishRouteCheckUserLogin."
+            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger/DateHelper/FileHelper/RedisClient/DefaultRoute/USHttpServer -> import from 'figtree'. Notes: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); FileHelper.mkdir/directoryExist live on figtree's DirHelper; the RedisChannels enum (FlyingFish channel names) stays in core; routes use figtree's schema-driven DefaultRoute with FlyingFishRouteCheckUserLogin."
           }
         ]
       }

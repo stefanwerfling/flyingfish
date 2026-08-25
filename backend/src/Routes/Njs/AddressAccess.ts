@@ -1,11 +1,11 @@
 import {Response, Router} from 'express';
+import {DefaultRoute, Logger} from 'figtree';
+import {DefaultHandlerReturn, HandlerResultType} from 'figtree-schemas';
 import {
-    DefaultRoute,
     IpBlacklistServiceDB,
     IpWhitelistServiceDB,
     NginxListenServiceDB
 } from 'flyingfish_core';
-import {Logger} from 'figtree';
 import {NginxListenAddressCheckType} from 'flyingfish_schemas';
 
 /**
@@ -157,10 +157,13 @@ export class AddressAccess extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
+        // nginx auth_request subrequest: no user-login gate (this IS the access
+        // check), and `access` sends the empty 200/401 response itself.
         this._get(
             '/njs/address_access',
-            async(req, res) => {
+            false,
+            async(req, res): Promise<DefaultHandlerReturn> => {
                 await this.access(
                     res,
                     req.header('listen_id') ?? '',
@@ -168,6 +171,11 @@ export class AddressAccess extends DefaultRoute {
                     req.header('remote_addr') ?? '',
                     req.header('type') ?? ''
                 );
+
+                return {type: HandlerResultType.handled};
+            },
+            {
+                description: 'nginx access check (blacklist/whitelist) for a listen'
             }
         );
 

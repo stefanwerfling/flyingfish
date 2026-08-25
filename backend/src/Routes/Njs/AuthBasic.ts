@@ -1,6 +1,6 @@
 import {Response, Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {Logger} from 'figtree';
+import {DefaultRoute, Logger} from 'figtree';
+import {DefaultHandlerReturn, HandlerResultType} from 'figtree-schemas';
 import {Credential} from '../../inc/Credential/Credential.js';
 import {BasicAuthParser} from '../../inc/Server/BasicAuthParser.js';
 
@@ -57,15 +57,23 @@ export class AuthBasic extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
+        // nginx auth_request subrequest: no user-login gate (this IS the basic-auth
+        // check), and `check` sends the empty 200/500 response itself.
         this._get(
             '/njs/auth_basic',
-            async(req, res) => {
+            false,
+            async(req, res): Promise<DefaultHandlerReturn> => {
                 await this.check(
                     res,
                     req.header('location_id') ?? '',
                     req.header('authheader') ?? ''
                 );
+
+                return {type: HandlerResultType.handled};
+            },
+            {
+                description: 'nginx basic-auth check for a location'
             }
         );
 

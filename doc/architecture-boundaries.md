@@ -43,8 +43,9 @@ concerns that figtree also provides:
 | `Config` | framework dup | **backend migrated → FlyingFishConfig** (enforced) |
 | `Logger` | framework dup | **backend migrated → figtree Logger** (enforced); ddns/ssh/himhip still use core Logger |
 | `DBHelper` | framework dup | backend co-inits it via `CoreDBInitHook`; figtree owns migrations |
-| `DefaultRoute` | framework dup | **main-API routes migrated → figtree DefaultRoute** (enforced); the two njs control routes still use core `DefaultRoute` (mounted on core `USHttpServer`) |
-| `BaseHttpServer`, `USHttpServer`, `Session` | framework dup | the nginx-control server (`NginxControlHttpServer`) still extends core `USHttpServer`; migrating it frees the last core `DefaultRoute` users |
+| `DefaultRoute` | framework dup | **all backend routes migrated → figtree DefaultRoute** (enforced), main-API and njs control routes |
+| `USHttpServer` | framework dup | **migrated → figtree USHttpServer** (enforced); `NginxControlHttpServer` extends it |
+| `BaseHttpServer`, `Session` | framework dup | still referenced by `inc/Server/HttpServer.ts`; migrate with the main HTTP server layer |
 | `PluginManager`, `PluginServiceNames` | framework dup | bridged in the backend boot |
 | `RedisClient` | framework dup | **backend migrated → figtree RedisClient** (enforced); this is the singleton `RedisDBService` actually connects |
 | `RedisChannel`, `RedisSubscribe` | framework dup | backend already imports figtree's `RedisChannel` (HimHIP/SshConfigChannel); himhip still uses core |
@@ -89,10 +90,15 @@ boundary already achieved and prevents regressions:
   controllers extend figtree's schema-driven `DefaultRoute` and gate auth with
   `Application/Server/FlyingFishRouteCheckUserLogin` (a `checkUserLogin`
   function that mirrors core's old `isUserLogin`; `isFlyingFishUserLogin` is its
-  no-response predicate for routes that branch on login state). The two njs
-  control routes (`src/Routes/Njs/*`) are exempted via an `overrides` entry
-  because they mount on the core `USHttpServer`; they migrate when that server
-  moves onto figtree's `HttpServer`.
+  no-response predicate for routes that branch on login state). The njs control
+  routes (`src/Routes/Njs/*`) use the same figtree `DefaultRoute` and answer the
+  nginx `auth_request` subrequests via the handled marker.
+- **`USHttpServer` from `flyingfish_core` is banned in backend.**
+  `NginxControlHttpServer` (the internal nginx-control unix socket) extends
+  figtree's `USHttpServer`. It passes no `session` option so no session
+  middleware runs on that socket; figtree's options type currently marks
+  `session` required even though the runtime guards it, so the constructor casts
+  the options (figtree should make `BaseHttpServerOptions.session` optional).
 
 As each further framework concern is migrated off core in the backend, add its
 export name(s) to that rule's `importNames` list to lock the migration in.
