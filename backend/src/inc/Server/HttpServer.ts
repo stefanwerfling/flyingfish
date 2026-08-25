@@ -3,6 +3,7 @@ import {BaseHttpServer, FileHelper, Logger, Session} from 'flyingfish_core';
 import {SchemaRequestData} from 'flyingfish_schemas';
 import helmet from 'helmet';
 import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
+import {ServiceAuth} from './ServiceAuth.js';
 import {FlyingFishSsl} from '../Utils/FlyingFishSsl.js';
 
 /**
@@ -53,7 +54,7 @@ export class HttpServer extends BaseHttpServer {
                     const secret = request.header('secret') ?? '';
                     const ssecret = FlyingFishConfig.getInstance().get()!.himhip!.secret ?? '';
 
-                    if (secret === ssecret) {
+                    if (ServiceAuth.verifySecret(secret, ssecret)) {
                         return true;
                     }
                 }

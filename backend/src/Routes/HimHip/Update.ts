@@ -2,6 +2,7 @@ import {Response, Router} from 'express';
 import {DefaultRoute} from 'flyingfish_core';
 import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
+import {ServiceAuth} from '../../inc/Server/ServiceAuth.js';
 
 /**
  * Update
@@ -30,7 +31,7 @@ export class Update extends DefaultRoute {
         const configHimHip = FlyingFishConfig.getInstance().get()?.himhip;
 
         if (configHimHip && configHimHip.use) {
-            if (configHimHip.secret === hSecret) {
+            if (ServiceAuth.verifySecret(hSecret, configHimHip.secret)) {
                 HimHIP.setData({
                     gatewaymac: hGatewaymac,
                     network: hNetwork,
