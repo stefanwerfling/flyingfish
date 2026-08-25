@@ -1,4 +1,5 @@
 import {Logger} from 'flyingfish_core';
+import {SshConfigChangeAction} from 'flyingfish_schemas';
 import fs from 'fs';
 import path from 'path';
 import ssh2, {ClientInfo, Connection, Server as Ssh2Server} from 'ssh2';
@@ -111,6 +112,57 @@ export class SshServer {
             aclient.close(false);
             this._clients.delete(aclient.getIdent());
         });
+    }
+
+    /**
+     * selectAffected
+     * Pure helper: pick the clients whose forward belongs to the given ssh port.
+     * @param {Iterable<SshClient>} clients
+     * @param {number} sshportId
+     * @returns {SshClient[]}
+     */
+    public static selectAffected(clients: Iterable<SshClient>, sshportId: number): SshClient[] {
+        const affected: SshClient[] = [];
+
+        for (const client of clients) {
+            if (client.getSshPortId() === sshportId) {
+                affected.push(client);
+            }
+        }
+
+        return affected;
+    }
+
+    /**
+     * handleConfigChange
+     * React to a backend SSH config change (phase 3, IPC): close every active
+     * connection whose forward belongs to the changed ssh port. On 'saved' the
+     * config (port/user/destination) may have changed, on 'deleted' it is gone -
+     * either way the long-lived tunnel is stale, so it is dropped; a peer that
+     * still wants it reconnects and re-reads the fresh config.
+     * @param {number} sshportId
+     * @param {SshConfigChangeAction} action
+     * @returns {number} number of affected connections closed
+     */
+    public handleConfigChange(sshportId: number, action: SshConfigChangeAction): number {
+        // Snapshot first: endConnection() triggers the connection 'close' handler
+        // which deletes the client from the map we are iterating.
+        const affected = SshServer.selectAffected(this._clients.values(), sshportId);
+
+        for (const client of affected) {
+            client.endConnection(`ssh config ${action} (sshportId: ${sshportId})`);
+        }
+
+        if (affected.length > 0) {
+            Logger.getLogger().info(
+                'SshServer::handleConfigChange: closed %d connection(s) for sshportId %d (action: %s)',
+                affected.length,
+                sshportId,
+                action
+            );
+        }
+
+        return affected.length;
     }
 
     /**

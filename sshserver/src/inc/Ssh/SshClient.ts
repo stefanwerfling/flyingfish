@@ -26,6 +26,7 @@ export enum SshClientForwardType {
  * SshClientForwardPort
  */
 export type SshClientForwardPort = {
+    sshportId: number;
     port: number;
     destination?: string;
     type: SshClientForwardType;
@@ -163,6 +164,7 @@ export class SshClient {
 
                     if (aport) {
                         this._forwardPort = {
+                            sshportId: aport.id,
                             port: aport.port,
                             type: aport.forwardType === 'R' ? SshClientForwardType.R : SshClientForwardType.L,
                             destination: aport.destinationAddress
@@ -281,6 +283,33 @@ export class SshClient {
      */
     public getForwardPort(): SshClientForwardPort|undefined {
         return this._forwardPort;
+    }
+
+    /**
+     * getSshPortId
+     * The id of the SshPort (DB) this client authenticated with, or undefined
+     * when the client has not been authenticated yet.
+     * @returns {number|undefined}
+     */
+    public getSshPortId(): number|undefined {
+        return this._forwardPort?.sshportId;
+    }
+
+    /**
+     * endConnection
+     * Ends the client connection so a stale/changed forward is torn down; a peer
+     * that wants the tunnel back reconnects and re-reads the fresh config. The
+     * server's connection 'close' handler performs the forward cleanup.
+     * @param {string} reason
+     */
+    public endConnection(reason: string): void {
+        Logger.getLogger().info(
+            'SshClient::endConnection: closing connection (sshportId: %s): %s',
+            this._forwardPort?.sshportId,
+            reason
+        );
+
+        this._clientConnection.end();
     }
 
     /**

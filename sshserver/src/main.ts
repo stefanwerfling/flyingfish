@@ -1,8 +1,9 @@
-import {Args, DBHelper, Logger, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {Args, DBHelper, Logger, RedisClient, RedisSubscribe, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {SchemaFlyingFishArgsSshServer} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
+import {SshConfigChangedChannel} from './inc/Ipc/SshConfigChangedChannel.js';
 import {SshServer} from './inc/Ssh/SshServer.js';
 
 /**
@@ -90,6 +91,31 @@ import {SshServer} from './inc/Ssh/SshServer.js';
     const server = await SshServer.getInstance({
         hostKeysPath: tconfig.flyingfish_sshpath
     });
+
+    // Redis IPC subscriber (phase 3): react to backend SSH config changes so
+    // long-lived tunnels are reloaded. Optional - without a Redis URL the ssh
+    // server just keeps relying on the shared DB (read on connect).
+    if (tconfig.db.redis && tconfig.db.redis.url) {
+        try {
+            const redisSubscribe = RedisSubscribe.getInstance({
+                url: tconfig.db.redis.url,
+                password: tconfig.db.redis.password
+            }, true);
+
+            const redisClient = RedisClient.getInstance();
+            await redisClient.connect();
+
+            await redisSubscribe.connect();
+            await redisSubscribe.registerChannels([
+                new SshConfigChangedChannel(server)
+            ]);
+
+            Logger.getLogger().info('SSH config-change IPC subscriber connected.');
+        } catch (error) {
+            // Non-fatal: the ssh server must still serve tunnels without Redis.
+            Logger.getLogger().error('Error while connecting to the mem-database', error);
+        }
+    }
 
     server.listen();
 

@@ -87,6 +87,19 @@ export class Config extends ConfigCore<ConfigOptionsSshServer> {
                 Config.DEFAULT_DB_MYSQL_PORT;
         }
 
+        // db redis (optional) -------------------------------------------------------------------------------------
+        // Enables the SSH config-change IPC subscriber; absent means DB-only.
+
+        if (process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]) {
+            config.db.redis = {
+                url: process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]
+            };
+
+            if (process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD]) {
+                config.db.redis.password = process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD];
+            }
+        }
+
         if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
             config.logging = {
                 level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
