@@ -1,4 +1,5 @@
-import {DateHelper, IpWhitelistDB, IpWhitelistServiceDB} from 'flyingfish_core';
+import {DateHelper} from 'figtree';
+import {IpWhitelistDB, IpWhitelistServiceDB} from 'flyingfish_core';
 import {IpAccessWhiteSaveRequest, IpAccessWhiteSaveResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -20,7 +21,7 @@ export class Save {
         entrie.ip = data.ip;
         entrie.disabled = data.disabled;
         entrie.description = data.description;
-        entrie.last_update = DateHelper.getCurrentDbTime();
+        entrie.last_update = DateHelper.getCurrentTime();
 
         await IpWhitelistServiceDB.getInstance().save(entrie);
 

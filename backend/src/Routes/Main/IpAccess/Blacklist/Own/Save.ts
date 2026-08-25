@@ -1,4 +1,5 @@
-import {DateHelper, IpBlacklistDB, IpBlacklistServiceDB} from 'flyingfish_core';
+import {DateHelper} from 'figtree';
+import {IpBlacklistDB, IpBlacklistServiceDB} from 'flyingfish_core';
 import {IpAccessBlackListOwnSaveRequest, IpAccessBlackListOwnSaveResponse, StatusCodes} from 'flyingfish_schemas';
 
 /**
@@ -21,7 +22,7 @@ export class Save {
         entrie.disabled = data.disabled;
         entrie.description = data.description;
         entrie.is_imported = false;
-        entrie.last_update = DateHelper.getCurrentDbTime();
+        entrie.last_update = DateHelper.getCurrentTime();
 
         await IpBlacklistServiceDB.getInstance().save(entrie);
 

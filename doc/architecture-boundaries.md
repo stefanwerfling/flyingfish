@@ -46,7 +46,8 @@ concerns that figtree also provides:
 | `DefaultRoute`, `BaseHttpServer`, `USHttpServer`, `Session` | framework dup | backend routes still extend core `DefaultRoute` |
 | `PluginManager`, `PluginServiceNames` | framework dup | bridged in the backend boot |
 | `RedisClient`, `RedisChannel(s)`, `RedisSubscribe` | framework dup | used by backend + himhip |
-| `Crypto` (`CertificateHelper`, `JwkHelper`), `Utils` (`FileHelper`, `DateHelper`, …) | shared util | evaluate: figtree vs keep |
+| `Utils.DateHelper` | shared util | **backend migrated → figtree DateHelper** (enforced); `getCurrentDbTime()` → figtree `getCurrentTime()` |
+| `Crypto` (`CertificateHelper`, `JwkHelper`), remaining `Utils` (`FileHelper` — needs figtree `mkdir`/`directoryExist`; `SimpleProcessAwait` — absent in figtree) | shared util | evaluate: figtree vs keep |
 
 ## Target end-state
 
@@ -73,6 +74,11 @@ boundary already achieved and prevents regressions:
   figtree boot already initialises and which reads `FlyingFishConfig` directly.
   `flyingfish_core`'s own classes keep logging through core `Logger`; that stays
   until `ddnsserver`/`sshserver`/`himhip` migrate onto figtree.
+- **`DateHelper` from `flyingfish_core` is banned in backend.** Backend uses
+  figtree's `DateHelper`; core's `getCurrentDbTime()` maps to figtree's
+  `getCurrentTime()` (identical: `Date.now()/1000`). `FileHelper` is not banned
+  yet — figtree's `FileHelper` still lacks `mkdir`/`directoryExist`, so that
+  migration waits on extending figtree.
 
 As each further framework concern is migrated off core in the backend, add its
 export name(s) to that rule's `importNames` list to lock the migration in.

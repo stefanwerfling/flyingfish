@@ -1,7 +1,6 @@
 import DNS from 'dns2';
-import {Logger, ServiceJobAbstract} from 'figtree';
+import {DateHelper, Logger, ServiceJobAbstract} from 'figtree';
 import {
-    DateHelper,
     DomainRecordServiceDB, DomainServiceDB, DynDnsClientDB,
     DynDnsClientDomainServiceDB,
     DynDnsClientServiceDB, GatewayIdentifierServiceDB
@@ -205,7 +204,7 @@ export class DynDnsService extends ServiceJobAbstract {
                                                 record.dvalue = myIp;
                                         }
 
-                                        record.last_update = DateHelper.getCurrentDbTime();
+                                        record.last_update = DateHelper.getCurrentTime();
 
                                         await DomainRecordServiceDB.getInstance().save(record);
 

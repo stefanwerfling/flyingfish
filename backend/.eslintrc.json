@@ -180,9 +180,10 @@
             "name": "flyingfish_core",
             "importNames": [
               "Config",
-              "Logger"
+              "Logger",
+              "DateHelper"
             ],
-            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger -> import {Logger} from 'figtree'."
+            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger/DateHelper -> import from 'figtree'. Note: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime()."
           }
         ]
       }

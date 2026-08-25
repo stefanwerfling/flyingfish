@@ -1,6 +1,5 @@
-import {Logger, ServiceJobAbstract} from 'figtree';
+import {DateHelper, Logger, ServiceJobAbstract} from 'figtree';
 import {
-    DateHelper,
     IpBlacklistCategoryDB,
     IpBlacklistCategoryServiceDB,
     IpBlacklistDB, IpBlacklistMaintainerDB, IpBlacklistMaintainerServiceDB,
@@ -66,7 +65,7 @@ export class BlacklistService extends ServiceJobAbstract {
 
         await GlobalSettings.setSetting(
             GlobalSettings.BLACKLIST_IMPORTER_LASTUPDATE,
-            `${DateHelper.getCurrentDbTime()}`
+            `${DateHelper.getCurrentTime()}`
         );
 
         // -------------------------------------------------------------------------------------------------------------
@@ -150,7 +149,7 @@ export class BlacklistService extends ServiceJobAbstract {
 
                     // update blacklist entry --------------------------------------------------------------------------
 
-                    ipBlacklistEntry!.last_update = DateHelper.getCurrentDbTime();
+                    ipBlacklistEntry!.last_update = DateHelper.getCurrentTime();
 
                     await IpBlacklistServiceDB.getInstance().save(ipBlacklistEntry);
                 }
