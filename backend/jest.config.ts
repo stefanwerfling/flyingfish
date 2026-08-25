@@ -2,6 +2,10 @@ import type { JestConfigWithTsJest } from 'ts-jest';
 
 const config: JestConfigWithTsJest = {
     verbose: true,
+    // The MariaDB integration suites run in parallel against one database, so a
+    // beforeAll (connect + migrate) can exceed jest's 5s default under DB
+    // contention. Unit tests are unaffected (this is a ceiling, not a delay).
+    testTimeout: 30000,
     transform: {
         '^.+\\.ts?$': [
             'ts-jest',

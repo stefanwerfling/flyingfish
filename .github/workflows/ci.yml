@@ -139,8 +139,9 @@ jobs:
 
       # Runs against the MariaDB service above; the dbHarness applies the migrations.
       # Parallel: each jest worker uses its own database (<name>_<worker id>),
-      # created on demand, so the suites don't share state. maxWorkers is capped
-      # to keep the MariaDB connection count well within limits.
+      # created on demand, so the suites don't share state. maxWorkers is kept
+      # low (2) so the shared MariaDB service isn't over-contended on CI runners
+      # (a higher hook timeout in jest.config absorbs the remaining contention).
       - name: Run integration tests
         working-directory: backend
         env:
@@ -149,4 +150,4 @@ jobs:
           FF_TEST_DB_USER: root
           FF_TEST_DB_PASSWORD: test
           FF_TEST_DB_NAME: flyingfish
-        run: npm test -- test/integration/ --maxWorkers=4
+        run: npm test -- test/integration/ --maxWorkers=2
