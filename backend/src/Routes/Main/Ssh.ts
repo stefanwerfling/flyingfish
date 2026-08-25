@@ -1,5 +1,7 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
+import {DefaultRoute} from 'figtree';
+import {SchemaSshPortListResponse, SshPortListResponse} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {List} from './Ssh/List.js';
 
 /**
@@ -10,13 +12,16 @@ export class Ssh extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/ssh/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getList());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<SshPortListResponse> => {
+                return List.getList();
+            },
+            {
+                description: 'Read the SSH port list',
+                responseBodySchema: SchemaSshPortListResponse
             }
         );
 

@@ -1,6 +1,14 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {SchemaListenData, SchemaListenDelete} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {
+    DefaultReturn,
+    ListenResponse,
+    SchemaDefaultReturn,
+    SchemaListenData,
+    SchemaListenDelete,
+    SchemaListenResponse
+} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {Delete} from './Listen/Delete.js';
 import {List} from './Listen/List.js';
 import {Save} from './Listen/Save.js';
@@ -13,35 +21,42 @@ export class Listen extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/listen/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getListens());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<ListenResponse> => {
+                return List.getListens();
+            },
+            {
+                description: 'Read the listen list',
+                responseBodySchema: SchemaListenResponse
             }
         );
 
         this._post(
             '/json/listen/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaListenData, req.body, res)) {
-                        res.status(200).json(await Save.saveListen(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Save.saveListen(data.body!);
+            },
+            {
+                description: 'Save a listen',
+                bodySchema: SchemaListenData,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/listen/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaListenDelete, req.body, res)) {
-                        res.status(200).json(await Delete.deleteListen(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Delete.deleteListen(data.body!);
+            },
+            {
+                description: 'Delete a listen',
+                bodySchema: SchemaListenDelete,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 

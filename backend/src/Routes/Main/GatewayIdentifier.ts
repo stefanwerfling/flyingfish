@@ -1,6 +1,16 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {SchemaGatewayIdentifierDelete, SchemaGatewayIdentifierEntry} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {
+    DefaultReturn,
+    GatewayIdentifierListResponse,
+    GatewayIdentifierSaveResponse,
+    SchemaDefaultReturn,
+    SchemaGatewayIdentifierDelete,
+    SchemaGatewayIdentifierEntry,
+    SchemaGatewayIdentifierListResponse,
+    SchemaGatewayIdentifierSaveResponse
+} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {Delete} from './GatewayIdentifier/Delete.js';
 import {List} from './GatewayIdentifier/List.js';
 import {Save} from './GatewayIdentifier/Save.js';
@@ -13,35 +23,42 @@ export class GatewayIdentifier extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/gatewayidentifier/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getList());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<GatewayIdentifierListResponse> => {
+                return List.getList();
+            },
+            {
+                description: 'Read the gateway identifier list',
+                responseBodySchema: SchemaGatewayIdentifierListResponse
             }
         );
 
         this._post(
             '/json/gatewayidentifier/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaGatewayIdentifierEntry, req.body, res)) {
-                        res.status(200).json(await Save.save(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<GatewayIdentifierSaveResponse> => {
+                return Save.save(data.body!);
+            },
+            {
+                description: 'Save a gateway identifier',
+                bodySchema: SchemaGatewayIdentifierEntry,
+                responseBodySchema: SchemaGatewayIdentifierSaveResponse
             }
         );
 
         this._post(
             '/json/gatewayidentifier/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaGatewayIdentifierDelete, req.body, res)) {
-                        res.status(200).json(await Delete.delete(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Delete.delete(data.body!);
+            },
+            {
+                description: 'Delete a gateway identifier',
+                bodySchema: SchemaGatewayIdentifierDelete,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
