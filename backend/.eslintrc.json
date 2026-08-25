@@ -182,9 +182,10 @@
               "Config",
               "Logger",
               "DateHelper",
-              "FileHelper"
+              "FileHelper",
+              "RedisClient"
             ],
-            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger/DateHelper/FileHelper -> import from 'figtree'. Notes: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); FileHelper.mkdir/directoryExist live on figtree's DirHelper."
+            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger/DateHelper/FileHelper/RedisClient -> import from 'figtree'. Notes: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); FileHelper.mkdir/directoryExist live on figtree's DirHelper; the RedisChannels enum (FlyingFish channel names) stays in core."
           }
         ]
       }

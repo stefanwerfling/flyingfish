@@ -45,7 +45,9 @@ concerns that figtree also provides:
 | `DBHelper` | framework dup | backend co-inits it via `CoreDBInitHook`; figtree owns migrations |
 | `DefaultRoute`, `BaseHttpServer`, `USHttpServer`, `Session` | framework dup | backend routes still extend core `DefaultRoute` |
 | `PluginManager`, `PluginServiceNames` | framework dup | bridged in the backend boot |
-| `RedisClient`, `RedisChannel(s)`, `RedisSubscribe` | framework dup | used by backend + himhip |
+| `RedisClient` | framework dup | **backend migrated → figtree RedisClient** (enforced); this is the singleton `RedisDBService` actually connects |
+| `RedisChannel`, `RedisSubscribe` | framework dup | backend already imports figtree's `RedisChannel` (HimHIP/SshConfigChannel); himhip still uses core |
+| `RedisChannels` (enum of FlyingFish channel names) | **domain** | keep in core — the channel-name set is FlyingFish's, not framework |
 | `Utils.DateHelper` | shared util | **backend migrated → figtree DateHelper** (enforced); `getCurrentDbTime()` → figtree `getCurrentTime()` |
 | `Utils.FileHelper` | shared util | **backend migrated → figtree FileHelper** (enforced); `mkdir`/`directoryExist` → figtree `DirHelper` |
 | `Crypto` (`CertificateHelper`, `JwkHelper`), remaining `Utils` (`SimpleProcessAwait` — absent in figtree) | shared util | evaluate: figtree vs keep |
