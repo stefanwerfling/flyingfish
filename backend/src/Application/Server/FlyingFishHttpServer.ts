@@ -33,4 +33,27 @@ export class FlyingFishHttpServer extends HttpServer {
         return super._getSessionStore();
     }
 
+    /**
+     * FlyingFish's Content-Security-Policy. Restores the policy the backend
+     * shipped before the figtree migration (which the old inc/Server/HttpServer
+     * carried): `script-src 'self'` only (no unsafe-inline) and `font-src`
+     * allowing `data:` URIs. figtree's default is more permissive on scripts and
+     * drops `data:` fonts, so it is overridden here.
+     * @return {Record<string, string[]>}
+     * @protected
+     */
+    protected override _getCspDirectives(): Record<string, string[]> {
+        return {
+            defaultSrc: ['\'self\''],
+            connectSrc: ['\'self\''],
+            frameSrc: ['\'self\''],
+            childSrc: ['\'self\''],
+            scriptSrc: ['\'self\''],
+            styleSrc: ['\'self\'', '\'unsafe-inline\''],
+            fontSrc: ['\'self\'', 'data:'],
+            imgSrc: ['\'self\'', 'https: data:'],
+            baseUri: ['\'self\'']
+        };
+    }
+
 }

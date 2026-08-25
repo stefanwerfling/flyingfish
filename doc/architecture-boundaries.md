@@ -45,7 +45,7 @@ concerns that figtree also provides:
 | `DBHelper` | framework dup | backend co-inits it via `CoreDBInitHook`; figtree owns migrations |
 | `DefaultRoute` | framework dup | **all backend routes migrated → figtree DefaultRoute** (enforced), main-API and njs control routes |
 | `USHttpServer` | framework dup | **migrated → figtree USHttpServer** (enforced); `NginxControlHttpServer` extends it |
-| `BaseHttpServer`, `Session` | framework dup | still referenced by `inc/Server/HttpServer.ts`; migrate with the main HTTP server layer |
+| `BaseHttpServer`, `Session` | framework dup | **removed from backend** (enforced); the dead `inc/Server/HttpServer.ts` was deleted — the live server is `FlyingFishHttpServer` on figtree's `HttpServer` |
 | `PluginManager`, `PluginServiceNames` | framework dup | bridged in the backend boot |
 | `RedisClient` | framework dup | **backend migrated → figtree RedisClient** (enforced); this is the singleton `RedisDBService` actually connects |
 | `RedisChannel`, `RedisSubscribe` | framework dup | backend already imports figtree's `RedisChannel` (HimHIP/SshConfigChannel); himhip still uses core |
@@ -99,6 +99,13 @@ boundary already achieved and prevents regressions:
   middleware runs on that socket; figtree's options type currently marks
   `session` required even though the runtime guards it, so the constructor casts
   the options (figtree should make `BaseHttpServerOptions.session` optional).
+- **`BaseHttpServer` and `Session` from `flyingfish_core` are banned in
+  backend.** The only user was the dead `inc/Server/HttpServer.ts`, now deleted.
+  The live HTTP server is `Application/Server/FlyingFishHttpServer` (extends
+  figtree's `HttpServer`, which already provides helmet + CSP + the `/json/`
+  rate-limiter). `FlyingFishHttpServer` overrides `_getCspDirectives()` to keep
+  FlyingFish's pre-migration policy (`script-src 'self'`, `font-src` with
+  `data:`) instead of figtree's more permissive default.
 
 As each further framework concern is migrated off core in the backend, add its
 export name(s) to that rule's `importNames` list to lock the migration in.

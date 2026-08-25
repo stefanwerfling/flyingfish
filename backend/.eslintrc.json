@@ -185,9 +185,11 @@
               "FileHelper",
               "RedisClient",
               "DefaultRoute",
-              "USHttpServer"
+              "USHttpServer",
+              "BaseHttpServer",
+              "Session"
             ],
-            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger/DateHelper/FileHelper/RedisClient/DefaultRoute/USHttpServer -> import from 'figtree'. Notes: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); FileHelper.mkdir/directoryExist live on figtree's DirHelper; the RedisChannels enum (FlyingFish channel names) stays in core; routes use figtree's schema-driven DefaultRoute with FlyingFishRouteCheckUserLogin."
+            "message": "Backend reads framework concerns from figtree, not flyingfish_core: Config -> FlyingFishConfig (via the seated CoreConfigBridge); Logger/DateHelper/FileHelper/RedisClient/DefaultRoute/USHttpServer/BaseHttpServer/Session -> import from 'figtree'. Notes: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); FileHelper.mkdir/directoryExist live on figtree's DirHelper; the RedisChannels enum (FlyingFish channel names) stays in core; routes use figtree's schema-driven DefaultRoute with FlyingFishRouteCheckUserLogin; the HTTP server is FlyingFishHttpServer extending figtree's HttpServer."
           }
         ]
       }
