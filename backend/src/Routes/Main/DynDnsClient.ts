@@ -1,6 +1,17 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
-import {SchemaDynDnsClientData, SchemaDynDnsClientDelete, SchemaDynDnsClientDomainRunRequest} from 'flyingfish_schemas';
+import {DefaultRoute} from 'figtree';
+import {
+    DefaultReturn,
+    DynDnsClientListResponse,
+    DynDnsClientProviderListResponse,
+    SchemaDefaultReturn,
+    SchemaDynDnsClientData,
+    SchemaDynDnsClientDelete,
+    SchemaDynDnsClientDomainRunRequest,
+    SchemaDynDnsClientListResponse,
+    SchemaDynDnsClientProviderListResponse
+} from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {Delete} from './DynDnsClient/Delete.js';
 import {List} from './DynDnsClient/List.js';
 import {Providers} from './DynDnsClient/Providers.js';
@@ -15,64 +26,79 @@ export class DynDnsClient extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/dyndnsclient/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await List.getList());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<DynDnsClientListResponse> => {
+                return List.getList();
+            },
+            {
+                description: 'Read the DynDNS client list',
+                responseBodySchema: SchemaDynDnsClientListResponse
             }
         );
 
         this._get(
             '/json/dyndnsclient/provider/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Providers.getProviders());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<DynDnsClientProviderListResponse> => {
+                return Providers.getProviders();
+            },
+            {
+                description: 'Read the DynDNS client provider list',
+                responseBodySchema: SchemaDynDnsClientProviderListResponse
             }
         );
 
         this._post(
             '/json/dyndnsclient/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaDynDnsClientData, req.body, res)) {
-                        res.status(200).json(await Save.saveClient(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Save.saveClient(data.body!);
+            },
+            {
+                description: 'Save a DynDNS client',
+                bodySchema: SchemaDynDnsClientData,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/dyndnsclient/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaDynDnsClientDelete, req.body, res)) {
-                        res.status(200).json(await Delete.deleteClient(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Delete.deleteClient(data.body!);
+            },
+            {
+                description: 'Delete a DynDNS client',
+                bodySchema: SchemaDynDnsClientDelete,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._get(
             '/json/dyndnsclient/run/service',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await Run.rundService());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<DefaultReturn> => {
+                return Run.rundService();
+            },
+            {
+                description: 'Run the DynDNS client service',
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 
         this._post(
             '/json/dyndnsclient/run/client',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaDynDnsClientDomainRunRequest, req.body, res)) {
-                        res.status(200).json(await Run.runClient(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return Run.runClient(data.body!);
+            },
+            {
+                description: 'Run a single DynDNS client',
+                bodySchema: SchemaDynDnsClientDomainRunRequest,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 

@@ -1,10 +1,31 @@
 import {Router} from 'express';
-import {DefaultRoute} from 'flyingfish_core';
+import {DefaultRoute} from 'figtree';
 import {
+    IpAccessBlackDeleteResponse,
+    IpAccessBlackListImportSaveResponse,
+    IpAccessBlackListImportsResponse,
+    IpAccessBlackListOwnSaveResponse,
+    IpAccessBlackListOwnsResponse,
+    IpAccessMaintainerResponse,
+    IpAccessWhiteDeleteResponse,
+    IpAccessWhiteListResponse,
+    IpAccessWhiteSaveResponse,
     SchemaIpAccessBlackDeleteRequest,
+    SchemaIpAccessBlackDeleteResponse,
     SchemaIpAccessBlackListImportSaveRequest,
-    SchemaIpAccessBlackListOwnSaveRequest, SchemaIpAccessWhiteDeleteRequest, SchemaIpAccessWhiteSaveRequest
+    SchemaIpAccessBlackListImportSaveResponse,
+    SchemaIpAccessBlackListImportsResponse,
+    SchemaIpAccessBlackListOwnSaveRequest,
+    SchemaIpAccessBlackListOwnSaveResponse,
+    SchemaIpAccessBlackListOwnsResponse,
+    SchemaIpAccessMaintainerResponse,
+    SchemaIpAccessWhiteDeleteRequest,
+    SchemaIpAccessWhiteDeleteResponse,
+    SchemaIpAccessWhiteListResponse,
+    SchemaIpAccessWhiteSaveRequest,
+    SchemaIpAccessWhiteSaveResponse
 } from 'flyingfish_schemas';
+import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {List as ListBlacklistImport} from './IpAccess/Blacklist/Import/List.js';
 import {Save as SaveBlacklistImport} from './IpAccess/Blacklist/Import/Save.js';
 import {Delete as DeleteBlackListOwn} from './IpAccess/Blacklist/Own/Delete.js';
@@ -23,95 +44,117 @@ export class IpAccess extends DefaultRoute {
     /**
      * getExpressRouter
      */
-    public getExpressRouter(): Router {
+    public override getExpressRouter(): Router {
         this._get(
             '/json/ipaccess/maintainer/list',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await ListMantainer.getMaintainerList());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<IpAccessMaintainerResponse> => {
+                return ListMantainer.getMaintainerList();
+            },
+            {
+                description: 'Read the IP blacklist maintainer list',
+                responseBodySchema: SchemaIpAccessMaintainerResponse
             }
         );
 
         this._get(
             '/json/ipaccess/blacklist/imports',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await ListBlacklistImport.getBlackListImports());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<IpAccessBlackListImportsResponse> => {
+                return ListBlacklistImport.getBlackListImports();
+            },
+            {
+                description: 'Read the imported blacklist entries',
+                responseBodySchema: SchemaIpAccessBlackListImportsResponse
             }
         );
 
         this._post(
             '/json/ipaccess/blacklist/import/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaIpAccessBlackListImportSaveRequest, req.body, res)) {
-                        res.status(200).json(await SaveBlacklistImport.saveBlackListImport(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<IpAccessBlackListImportSaveResponse> => {
+                return SaveBlacklistImport.saveBlackListImport(data.body!);
+            },
+            {
+                description: 'Save an imported blacklist entry',
+                bodySchema: SchemaIpAccessBlackListImportSaveRequest,
+                responseBodySchema: SchemaIpAccessBlackListImportSaveResponse
             }
         );
 
         this._get(
             '/json/ipaccess/blacklist/owns',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await ListBlacklistOwn.getBlackListOwns());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<IpAccessBlackListOwnsResponse> => {
+                return ListBlacklistOwn.getBlackListOwns();
+            },
+            {
+                description: 'Read the own blacklist entries',
+                responseBodySchema: SchemaIpAccessBlackListOwnsResponse
             }
         );
 
         this._post(
             '/json/ipaccess/blacklist/own/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaIpAccessBlackListOwnSaveRequest, req.body, res)) {
-                        res.status(200).json(await SaveBlacklistOwn.saveBlackListOwn(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<IpAccessBlackListOwnSaveResponse> => {
+                return SaveBlacklistOwn.saveBlackListOwn(data.body!);
+            },
+            {
+                description: 'Save an own blacklist entry',
+                bodySchema: SchemaIpAccessBlackListOwnSaveRequest,
+                responseBodySchema: SchemaIpAccessBlackListOwnSaveResponse
             }
         );
 
         this._post(
             '/json/ipaccess/blacklist/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaIpAccessBlackDeleteRequest, req.body, res)) {
-                        res.status(200).json(await DeleteBlackListOwn.deleteBlacklist(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<IpAccessBlackDeleteResponse> => {
+                return DeleteBlackListOwn.deleteBlacklist(data.body!);
+            },
+            {
+                description: 'Delete a blacklist entry',
+                bodySchema: SchemaIpAccessBlackDeleteRequest,
+                responseBodySchema: SchemaIpAccessBlackDeleteResponse
             }
         );
 
         this._get(
             '/json/ipaccess/whitelist',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    res.status(200).json(await ListWhitelist.getWhiteList());
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<IpAccessWhiteListResponse> => {
+                return ListWhitelist.getWhiteList();
+            },
+            {
+                description: 'Read the whitelist entries',
+                responseBodySchema: SchemaIpAccessWhiteListResponse
             }
         );
 
         this._post(
             '/json/ipaccess/whitelist/save',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaIpAccessWhiteSaveRequest, req.body, res)) {
-                        res.status(200).json(await SaveWhitelist.saveWhiteList(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<IpAccessWhiteSaveResponse> => {
+                return SaveWhitelist.saveWhiteList(data.body!);
+            },
+            {
+                description: 'Save a whitelist entry',
+                bodySchema: SchemaIpAccessWhiteSaveRequest,
+                responseBodySchema: SchemaIpAccessWhiteSaveResponse
             }
         );
 
         this._post(
             '/json/ipaccess/whitelist/delete',
-            async(req, res) => {
-                if (this.isUserLogin(req, res)) {
-                    if (this.isSchemaValidate(SchemaIpAccessWhiteDeleteRequest, req.body, res)) {
-                        res.status(200).json(await DeleteWhitelist.deleteWhitelist(req.body));
-                    }
-                }
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<IpAccessWhiteDeleteResponse> => {
+                return DeleteWhitelist.deleteWhitelist(data.body!);
+            },
+            {
+                description: 'Delete a whitelist entry',
+                bodySchema: SchemaIpAccessWhiteDeleteRequest,
+                responseBodySchema: SchemaIpAccessWhiteDeleteResponse
             }
         );
 
