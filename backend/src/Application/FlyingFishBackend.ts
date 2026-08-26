@@ -7,7 +7,7 @@ import {CoreConfigBridge} from './Config/CoreConfigBridge.js';
 import {Dns2Server} from '../inc/Dns/Dns2Server.js';
 import {HimHIP} from '../inc/HimHIP/HimHIP.js';
 import {FlyingFishConfig} from './Config/FlyingFishConfig.js';
-import {CoreDBInitHook} from './Db/MariaDb/CoreDBInitHook.js';
+import {CoreDBConnectHook} from './Db/MariaDb/CoreDBConnectHook.js';
 import {DBLoader} from './Db/MariaDb/DBLoader.js';
 import {FirstInitSetupHook} from './Db/MariaDb/FirstInitSetupHook.js';
 import {RouteLoader} from './Routes/RouteLoader.js';
@@ -113,7 +113,7 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
                         timestamp: 1787961600000
                     }
                 },
-                [ new CoreDBInitHook(), new FirstInitSetupHook() ]
+                [ new CoreDBConnectHook(), new FirstInitSetupHook() ]
             )
         );
 

@@ -12,7 +12,8 @@
  * database (reset between tests keeps them isolated).
  */
 import {DataSource} from 'typeorm';
-import {DBEntitiesLoader, DBHelper, PluginManager} from 'flyingfish_core';
+import {DBHelper} from 'figtree';
+import {DBEntitiesLoader, PluginManager} from 'flyingfish_core';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => {
@@ -88,7 +89,7 @@ export const initTestDb = async(): Promise<void> => {
  * Truncate all data tables (keeps the schema and the migrations record).
  */
 export const resetTestDb = async(): Promise<void> => {
-    const dataSource = DBHelper.getDataSource();
+    const dataSource = await DBHelper.getDataSource();
 
     await dataSource.query('SET FOREIGN_KEY_CHECKS = 0');
 
@@ -114,7 +115,7 @@ export const closeTestDb = async(): Promise<void> => {
         return;
     }
 
-    await DBHelper.getDataSource().destroy();
+    await (await DBHelper.getDataSource()).destroy();
     // eslint-disable-next-line require-atomic-updates -- module-level init guard for tests, no real race
     initialized = false;
 };

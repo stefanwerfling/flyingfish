@@ -2,7 +2,7 @@
  * Integration tests for the TypeORM migration setup (refactoring phase 4).
  * Run against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper} from 'figtree';
 import {closeTestDb, initTestDb} from './dbHarness.js';
 
 describe('DB migrations (integration)', () => {
@@ -10,7 +10,7 @@ describe('DB migrations (integration)', () => {
     afterAll(closeTestDb);
 
     test('the initial migration creates the full schema and is recorded', async() => {
-        const dataSource = DBHelper.getDataSource();
+        const dataSource = await DBHelper.getDataSource();
 
         const tableCount = Number((await dataSource.query(
             'SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE()'
@@ -25,7 +25,7 @@ describe('DB migrations (integration)', () => {
     });
 
     test('auto-baseline stamps the initial migration on a legacy schema (no re-run)', async() => {
-        const dataSource = DBHelper.getDataSource();
+        const dataSource = await DBHelper.getDataSource();
 
         // Simulate a legacy install: the schema exists but the migrations table is gone.
         await dataSource.query('DROP TABLE `migrations`');

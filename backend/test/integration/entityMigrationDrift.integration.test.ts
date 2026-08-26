@@ -10,7 +10,7 @@
  *
  * Runs against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import {DBHelper} from 'flyingfish_core';
+import {DBHelper} from 'figtree';
 import {closeTestDb, initTestDb} from './dbHarness.js';
 
 /**
@@ -32,7 +32,7 @@ describe('entity <-> migration schema drift (integration)', () => {
     afterAll(closeTestDb);
 
     test('entities match the migration-built schema (no unexpected drift)', async() => {
-        const dataSource = DBHelper.getDataSource();
+        const dataSource = await DBHelper.getDataSource();
 
         // The schema builder computes the DDL that would be needed to bring the
         // database in line with the entity metadata. Empty (modulo known-benign
