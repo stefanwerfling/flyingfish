@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import {Logger} from 'figtree';
-import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {DBHelper, Logger} from 'figtree';
+import {SshPortDB, SshUserDB} from 'flyingfish_core';
 import {AuthContext, ClientInfo, Connection, ServerChannel, Session, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
 import {ISshClientForward} from './SshClientForward.js';
 import {SshClientForwardL} from './SshClientForwardL.js';
@@ -132,7 +132,7 @@ export class SshClient {
      */
     public async _authentication(ctx: AuthContext): Promise<void> {
         if (ctx.method === 'password') {
-            const sshUserRepository = DBHelper.getRepository(SshUserDB);
+            const sshUserRepository = await DBHelper.getRepository(SshUserDB);
             const user = await sshUserRepository.findOne({
                 where: {
                     username: ctx.username,
@@ -156,7 +156,7 @@ export class SshClient {
                         username: user.username
                     };
 
-                    const sshPortRepository = DBHelper.getRepository(SshPortDB);
+                    const sshPortRepository = await DBHelper.getRepository(SshPortDB);
                     const aport = await sshPortRepository.findOne({
                         where: {
                             ssh_user_id: user.id

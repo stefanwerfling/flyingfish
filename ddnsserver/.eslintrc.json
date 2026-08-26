@@ -164,9 +164,10 @@
               "Logger",
               "DateHelper",
               "Args",
-              "BaseHttpServer"
+              "BaseHttpServer",
+              "DBHelper"
             ],
-            "message": "ddnsserver reads framework concerns from figtree, not flyingfish_core: Config/Logger/DateHelper/Args/BaseHttpServer -> import from 'figtree'. Note: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); the HttpServer extends figtree's BaseHttpServer and adds helmet/CSP/rate-limit in the _initExpressUsePre hook. DBHelper, the *DB/*ServiceDB domain layer, IPHelper and the core DefaultRoute stay on core."
+            "message": "ddnsserver reads framework concerns from figtree, not flyingfish_core: Config/Logger/DateHelper/Args/BaseHttpServer/DBHelper -> import from 'figtree'. Note: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); the HttpServer extends figtree's BaseHttpServer and adds helmet/CSP/rate-limit in the _initExpressUsePre hook; DBHelper.init() is figtree's and DBService.connect() caches its DataSource for the core services. The *DB/*ServiceDB domain layer, IPHelper and the core DefaultRoute stay on core."
           }
         ]
       }

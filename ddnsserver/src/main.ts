@@ -1,6 +1,6 @@
-import {Args, Logger} from 'figtree';
+import {Args, DBHelper, Logger} from 'figtree';
 import {
-    DBHelper,
+    DBService,
     DomainDB,
     DomainRecordDB,
     DynDnsServerDomainDB,
@@ -85,6 +85,9 @@ import {Update as UpdateController} from './Routes/Main/Update.js';
             migrationsRun: false,
             synchronize: false
         });
+
+        // Cache the initialized DataSource for the flyingfish_core services.
+        await DBService.connect();
     } catch (error) {
         Logger.getLogger().error('Error while connecting to the database', error);
         return;

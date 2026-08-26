@@ -1,5 +1,5 @@
-import {Args, Logger, RedisClient, RedisSubscribe} from 'figtree';
-import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {Args, DBHelper, Logger, RedisClient, RedisSubscribe} from 'figtree';
+import {DBService, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {SchemaFlyingFishArgsSshServer} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import path from 'path';
@@ -82,6 +82,9 @@ import {SshServer} from './inc/Ssh/SshServer.js';
             migrationsRun: false,
             synchronize: false
         });
+
+        // Cache the initialized DataSource for the flyingfish_core services.
+        await DBService.connect();
     } catch (error) {
         Logger.getLogger().error('Error while connecting to the database', error);
         return;

@@ -171,9 +171,10 @@
               "RedisChannel",
               "FileHelper",
               "CertificateHelper",
-              "CertificateHelperKeyType"
+              "CertificateHelperKeyType",
+              "DBHelper"
             ],
-            "message": "sshserver reads framework concerns from figtree, not flyingfish_core: Config/Logger/Args/RedisClient/RedisSubscribe/RedisChannel/FileHelper/CertificateHelper/CertificateHelperKeyType -> import from 'figtree'. Note: the RedisChannels enum (FlyingFish channel names), DBHelper and the SshPortDB/SshUserDB entities stay on core."
+            "message": "sshserver reads framework concerns from figtree, not flyingfish_core: Config/Logger/Args/RedisClient/RedisSubscribe/RedisChannel/FileHelper/CertificateHelper/CertificateHelperKeyType/DBHelper -> import from 'figtree'. Note: DBHelper.init() is figtree's and DBService.connect() caches its DataSource for the core services. The RedisChannels enum (FlyingFish channel names) and the SshPortDB/SshUserDB entities stay on core."
           }
         ]
       }
