@@ -26,7 +26,10 @@ export class Update extends DefaultRoute {
             let ips: string[] = [];
 
             if (req.params.ip) {
-                ips = req.params.ip.split(',');
+                // express 5 types route params as string | string[] (repeated
+                // segments); this endpoint carries a single comma-separated value.
+                const ipParam = Array.isArray(req.params.ip) ? req.params.ip.join(',') : req.params.ip;
+                ips = ipParam.split(',');
                 Logger.getLogger().silly('Update::setNicUpdate: set ip by param, by user: %d', session.user.userid);
             } else if (iIp) {
                 if (typeof iIp === 'string') {
@@ -61,7 +64,9 @@ export class Update extends DefaultRoute {
             let hostnames: string[] = [];
 
             if (req.params.hostname) {
-                hostnames = req.params.hostname.split(',');
+                const hostnameParam = Array.isArray(req.params.hostname) ?
+                    req.params.hostname.join(',') : req.params.hostname;
+                hostnames = hostnameParam.split(',');
 
                 Logger.getLogger().silly('Update::setNicUpdate: check hostname: %s by user: %d', dynDomains.join(','), session.user.userid);
             } else {
@@ -125,6 +130,10 @@ export class Update extends DefaultRoute {
      * @param response
      */
     public static async setUpdate(req: Request, response: Response): Promise<void> {
+        // The generic /update endpoint is not implemented yet; answer explicitly
+        // instead of leaving the request hanging.
+        Logger.getLogger().silly('Update::setUpdate: not implemented, url: %s', req.url);
+        response.status(501).send('Not implemented');
     }
 
     /**
@@ -193,8 +202,7 @@ export class Update extends DefaultRoute {
                 req,
                 res
             ) => {
-                // TODO
-                Update.setUpdate(req, res);
+                await Update.setUpdate(req, res);
             }
         );
 

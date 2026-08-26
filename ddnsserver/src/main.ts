@@ -105,7 +105,7 @@ import {Update as UpdateController} from './Routes/Main/Update.js';
         port: aport,
         session: {
             secret: session_secret,
-            ssl_path,
+            ssl_path: ssl_path,
             cookie_path: session_cookie_path,
             max_age: session_cookie_max_age
         },
