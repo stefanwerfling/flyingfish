@@ -1,6 +1,6 @@
+import {Config as ConfigCore} from 'figtree';
 import process from 'process';
 import {FlyingFishArgs} from '../Env/Args.js';
-import {Config as ConfigCore} from 'flyingfish_core';
 import {
     ConfigOptionsHimHip,
     ENV_OPTIONAL_DB,
@@ -24,9 +24,11 @@ export class Config extends ConfigCore<ConfigOptionsHimHip> {
     /**
      * getInstance
      */
-    public static getInstance(): Config {
+    public static override getInstance(): Config {
         if (!ConfigCore._instance) {
-            ConfigCore._instance = new Config(SchemaConfigOptionsHimHip);
+            const instance = new Config(SchemaConfigOptionsHimHip);
+            instance.setAppName('flyingfish');
+            ConfigCore._instance = instance;
         }
 
         return ConfigCore._instance as Config;

@@ -1,4 +1,4 @@
-import {Config as ConfigCore} from 'flyingfish_core';
+import {Config as ConfigCore} from 'figtree';
 import {DdnsServerConfigOptions, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaDdnsServerConfigOptions} from 'flyingfish_schemas';
 import path from 'path';
 import process from 'process';
@@ -15,14 +15,26 @@ export enum ENV_OPTIONAL {
  */
 export class Config extends ConfigCore<DdnsServerConfigOptions> {
 
+    /**
+     * DEFAULTS
+     *
+     * FlyingFish infrastructure defaults previously carried by
+     * flyingfish_core's `Config`, re-declared here now that this Config
+     * extends figtree's generic `Config`.
+     */
+    public static readonly DEFAULT_DB_MYSQL_HOST = '10.103.0.2';
+    public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
+    public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
     public static readonly DEFAULT_HTTPSERVER_PORT = 3000;
 
     /**
      * getInstance
      */
-    public static getInstance(): Config {
+    public static override getInstance(): Config {
         if (!ConfigCore._instance) {
-            ConfigCore._instance = new Config(SchemaDdnsServerConfigOptions);
+            const instance = new Config(SchemaDdnsServerConfigOptions);
+            instance.setAppName('flyingfish');
+            ConfigCore._instance = instance;
         }
 
         return ConfigCore._instance as Config;
@@ -33,7 +45,7 @@ export class Config extends ConfigCore<DdnsServerConfigOptions> {
      * @param aConfig
      * @protected
      */
-    protected _loadEnv(aConfig: DdnsServerConfigOptions | null): DdnsServerConfigOptions | null {
+    protected override _loadEnv(aConfig: DdnsServerConfigOptions | null): DdnsServerConfigOptions | null {
         let config = aConfig;
 
         // defaults ----------------------------------------------------------------------------------------------------
@@ -107,7 +119,7 @@ export class Config extends ConfigCore<DdnsServerConfigOptions> {
      * @param config
      * @protected
      */
-    protected _setDefaults(config: DdnsServerConfigOptions | null): DdnsServerConfigOptions | null {
+    protected override _setDefaults(config: DdnsServerConfigOptions | null): DdnsServerConfigOptions | null {
         if (config === null) {
             return null;
         }

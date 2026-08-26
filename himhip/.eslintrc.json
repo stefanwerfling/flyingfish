@@ -148,10 +148,10 @@
     "no-extra-parens": "off",
     "no-implicit-coercion": "error",
     "no-invalid-this": "off",
-    // core->figtree boundary: himhip reads framework concerns from figtree.
-    // Config stays on flyingfish_core (the schema-typed subclass is not yet
-    // portable to figtree's Config) and the RedisChannels enum (FlyingFish
-    // channel names) stays in core. Extend importNames as more concerns migrate.
+    // core->figtree boundary: himhip reads all framework concerns from figtree,
+    // including Config (ConfigOptionsHimHip is structurally assignable to
+    // figtree's ConfigOptions, so the figtree Logger reads the seated config).
+    // The RedisChannels enum (FlyingFish channel names) stays in core.
     "no-restricted-imports": [
       "error",
       {
@@ -159,13 +159,14 @@
           {
             "name": "flyingfish_core",
             "importNames": [
+              "Config",
               "Logger",
               "RedisClient",
               "RedisSubscribe",
               "RedisChannel",
               "Args"
             ],
-            "message": "himhip reads framework concerns from figtree, not flyingfish_core: Logger/RedisClient/RedisSubscribe/RedisChannel/Args -> import from 'figtree'. Note: the RedisChannels enum (FlyingFish channel names) stays in core, and Config still extends flyingfish_core's Config."
+            "message": "himhip reads framework concerns from figtree, not flyingfish_core: Config/Logger/RedisClient/RedisSubscribe/RedisChannel/Args -> import from 'figtree'. Note: the RedisChannels enum (FlyingFish channel names) stays in core."
           }
         ]
       }
