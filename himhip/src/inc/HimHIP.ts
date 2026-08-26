@@ -1,6 +1,7 @@
 import arp from '@network-utils/arp-lookup';
 import {Ets} from 'ets';
-import {Logger, RedisChannel, RedisChannels, RedisClient} from 'flyingfish_core';
+import {Logger, RedisChannel, RedisClient} from 'figtree';
+import {RedisChannels} from 'flyingfish_core';
 import {HimHIPData, HimHIPUpdate, SchemaHimHIPUpdate} from 'flyingfish_schemas';
 import {Vts} from 'vts';
 import {IpRoute} from './IpRoute.js';

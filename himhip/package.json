@@ -8,6 +8,7 @@
     "@types/node-schedule": "^2.1.7",
     "delay": "^6.0.0",
     "ets": "git+https://github.com/OpenSourcePKG/ets.git",
+    "figtree": "git+https://github.com/stefanwerfling/figtree.git",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
     "got": "^14.4.6",

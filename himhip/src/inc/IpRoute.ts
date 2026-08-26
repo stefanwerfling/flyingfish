@@ -1,5 +1,5 @@
 import {spawn} from 'child_process';
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 
 /**
  * IpRouteGet

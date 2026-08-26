@@ -1,5 +1,5 @@
 import {scheduleJob} from 'node-schedule';
-import {Args, Logger, RedisClient, RedisSubscribe} from 'flyingfish_core';
+import {Args, Logger, RedisClient, RedisSubscribe} from 'figtree';
 import {Config} from './inc/Config/Config.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {HimHIP} from './inc/HimHIP.js';
