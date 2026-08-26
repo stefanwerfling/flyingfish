@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import {BaseHttpServer} from 'flyingfish_core';
+import {BaseHttpServer} from 'figtree';
 import helmet from 'helmet';
 
 /**
@@ -8,11 +8,20 @@ import helmet from 'helmet';
 export class HttpServer extends BaseHttpServer {
 
     /**
-     * _initServer
+     * _initExpressUsePre
+     * Add FlyingFish's security middleware after figtree's body/cookie/session
+     * middleware and before the routes: helmet with a strict CSP and a rate
+     * limiter guarding the DDNS update endpoints. figtree's own `HttpServer`
+     * limiter only covers `/json/` and is skipped for logged-in users, so it
+     * does not fit this service — the limiter is wired up here.
      * @protected
      */
-    protected _initServer(): void {
-        super._initServer();
+    protected override _initExpressUsePre(): void {
+        super._initExpressUsePre();
+
+        if (this._express === undefined) {
+            throw new Error('Express isnt init!');
+        }
 
         this._express.use(helmet());
         this._express.use(helmet.contentSecurityPolicy({

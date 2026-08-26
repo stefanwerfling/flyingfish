@@ -44,6 +44,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
+    "figtree": "git+https://github.com/stefanwerfling/figtree.git",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
     "helmet": "^8.0.0",

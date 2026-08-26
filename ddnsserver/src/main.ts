@@ -1,11 +1,10 @@
+import {Args, Logger} from 'figtree';
 import {
-    Args,
     DBHelper,
     DomainDB,
     DomainRecordDB,
     DynDnsServerDomainDB,
-    DynDnsServerUserDB,
-    Logger
+    DynDnsServerUserDB
 } from 'flyingfish_core';
 import {SchemaFlyingFishArgsDdnsServer} from 'flyingfish_schemas';
 import fs from 'fs';
@@ -115,6 +114,7 @@ import {Update as UpdateController} from './Routes/Main/Update.js';
         ]
     });
 
-    // listen, start express server
-    await mServer.listen();
+    // set up middleware/routes and start the express server (figtree splits
+    // setup from listen; the former core BaseHttpServer did both in listen())
+    await mServer.setupAndListen();
 })();

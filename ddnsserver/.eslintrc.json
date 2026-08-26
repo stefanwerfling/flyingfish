@@ -148,6 +148,28 @@
     "no-extra-parens": "off",
     "no-implicit-coercion": "error",
     "no-invalid-this": "off",
+    // core->figtree boundary: ddnsserver reads framework concerns from figtree.
+    // Config stays on flyingfish_core (schema-typed subclass, same exception as
+    // the backend's CoreConfigBridge); DBHelper, the *DB entities/*ServiceDB
+    // domain services, IPHelper and the schema-driven core DefaultRoute stay on
+    // core for now. Extend importNames as more concerns migrate.
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "flyingfish_core",
+            "importNames": [
+              "Logger",
+              "DateHelper",
+              "Args",
+              "BaseHttpServer"
+            ],
+            "message": "ddnsserver reads framework concerns from figtree, not flyingfish_core: Logger/DateHelper/Args/BaseHttpServer -> import from 'figtree'. Note: figtree's DateHelper.getCurrentTime() replaces core's getCurrentDbTime(); the HttpServer extends figtree's BaseHttpServer and adds helmet/CSP/rate-limit in the _initExpressUsePre hook. Config, DBHelper, the *DB/*ServiceDB domain layer, IPHelper and the core DefaultRoute stay on core."
+          }
+        ]
+      }
+    ],
     "no-magic-numbers": "off",
     "no-mixed-operators": "error",
     "no-multiple-empty-lines": [

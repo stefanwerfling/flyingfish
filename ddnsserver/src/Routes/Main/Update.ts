@@ -1,13 +1,12 @@
 import * as bcrypt from 'bcrypt';
 import {Request, Response, Router} from 'express';
+import {DateHelper, Logger} from 'figtree';
 import {
-    DateHelper,
     DefaultRoute,
     DomainDB, DomainRecordServiceDB,
     DomainServiceDB,
     DynDnsServerDomainServiceDB,
-    DynDnsServerUserServiceDB, IPHelper,
-    Logger
+    DynDnsServerUserServiceDB, IPHelper
 } from 'flyingfish_core';
 import {SchemaRequestData, SessionData} from 'flyingfish_schemas';
 import auth from 'basic-auth';
@@ -91,7 +90,7 @@ export class Update extends DefaultRoute {
                         for await (const ip of ips) {
                             if (IPHelper.isIPv4(ip) && (record.dvalue !== ip)) {
                                 record.dvalue = ip;
-                                record.last_update = DateHelper.getCurrentDbTime();
+                                record.last_update = DateHelper.getCurrentTime();
 
                                 await DomainRecordServiceDB.getInstance().save(record);
                             }
@@ -100,7 +99,7 @@ export class Update extends DefaultRoute {
                         for await (const ip of ips) {
                             if (IPHelper.isIPv6(ip) && (record.dvalue !== ip)) {
                                 record.dvalue = ip;
-                                record.last_update = DateHelper.getCurrentDbTime();
+                                record.last_update = DateHelper.getCurrentTime();
 
                                 await DomainRecordServiceDB.getInstance().save(record);
                             }
