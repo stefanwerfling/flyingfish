@@ -21,7 +21,6 @@ export {
 export {JwkHelper} from './inc/Crypto/JwkHelper.js';
 
 // MariaDb
-export {DBHelper} from './inc/Db/MariaDb/DBHelper.js';
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
 export {DBBaseEntityUnid} from './inc/Db/MariaDb/DBBaseEntityUnid.js';
 export {DBService} from './inc/Db/MariaDb/DBService.js';

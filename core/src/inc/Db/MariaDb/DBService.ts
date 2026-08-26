@@ -1,6 +1,6 @@
-import {DeleteResult, EntityTarget, Repository} from 'typeorm';
+import {DataSource, DeleteResult, EntityTarget, Repository} from 'typeorm';
+import {DBHelper} from 'figtree';
 import {DBBaseEntityId} from './DBBaseEntityId.js';
-import {DBHelper} from './DBHelper.js';
 
 /**
  * DBService<DBBaseEntityId>
@@ -14,10 +14,28 @@ export abstract class DBService<T extends DBBaseEntityId> {
     protected static _instance = new Map<string, DBService<any>>();
 
     /**
+     * The DataSource all services read their repositories from. figtree's
+     * DBHelper exposes it asynchronously; it is resolved once by `connect()`
+     * (after `DBHelper.init()`) and cached, so repository access on the
+     * services stays synchronous.
+     * @protected
+     */
+    protected static _source: DataSource | null = null;
+
+    /**
      * repository for T
      * @private
      */
     protected readonly _repository: Repository<T>;
+
+    /**
+     * Resolve and cache the initialized DataSource from figtree's DBHelper.
+     * Call once at boot after `DBHelper.init()` and before any service is used.
+     * @param {string} [sourceName] - optional named source (defaults to the default source)
+     */
+    public static async connect(sourceName?: string): Promise<void> {
+        DBService._source = await DBHelper.getDataSource(sourceName);
+    }
 
     /**
      * getSingleInstance
@@ -49,7 +67,14 @@ export abstract class DBService<T extends DBBaseEntityId> {
      * @param target
      */
     public constructor(target: EntityTarget<T>) {
-        this._repository = DBHelper.getRepository(target);
+        if (DBService._source === null) {
+            throw new Error(
+                'DBService: DataSource not connected. Call DBService.connect() after DBHelper.init() ' +
+                'before using a service.'
+            );
+        }
+
+        this._repository = DBService._source.getRepository(target);
     }
 
     /**
