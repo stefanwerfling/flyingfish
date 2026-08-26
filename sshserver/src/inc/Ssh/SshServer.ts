@@ -1,4 +1,4 @@
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {SshConfigChangeAction} from 'flyingfish_schemas';
 import fs from 'fs';
 import path from 'path';

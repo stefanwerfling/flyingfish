@@ -1,4 +1,4 @@
-import {Logger} from 'flyingfish_core';
+import {Logger} from 'figtree';
 import {ServerChannel, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
 import {SshClient} from './SshClient.js';
 

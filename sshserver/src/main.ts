@@ -1,4 +1,5 @@
-import {Args, DBHelper, Logger, RedisClient, RedisSubscribe, SshPortDB, SshUserDB} from 'flyingfish_core';
+import {Args, Logger, RedisClient, RedisSubscribe} from 'figtree';
+import {DBHelper, SshPortDB, SshUserDB} from 'flyingfish_core';
 import {SchemaFlyingFishArgsSshServer} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import path from 'path';

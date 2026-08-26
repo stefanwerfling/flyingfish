@@ -1,7 +1,7 @@
+import {Config as ConfigCore} from 'figtree';
 import {ConfigOptionsSshServer, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaConfigOptionsSshServer} from 'flyingfish_schemas';
 import path from 'path';
 import process from 'process';
-import {Config as ConfigCore} from 'flyingfish_core';
 
 export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL'
@@ -9,20 +9,33 @@ export enum ENV_OPTIONAL {
 
 /**
  * Config
+ *
+ * Built on figtree's `Config`, typed with FlyingFish's own
+ * `ConfigOptionsSshServer` (structurally assignable to figtree's
+ * `ConfigOptions`). Seating this as figtree's `Config` singleton lets the
+ * figtree `Logger` read this service's `logging` settings. The FlyingFish
+ * infrastructure defaults (previously carried by flyingfish_core's `Config`)
+ * are re-declared here, and the app name keeps the former `/var/log/flyingfish`
+ * log path.
  */
 export class Config extends ConfigCore<ConfigOptionsSshServer> {
 
     /**
      * DEFAULTS
      */
+    public static readonly DEFAULT_DB_MYSQL_HOST = '10.103.0.2';
+    public static readonly DEFAULT_DB_MYSQL_PORT = 3306;
+    public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
     public static readonly DEFAULT_SSH_DIR = 'ssh';
 
     /**
      * getInstance
      */
-    public static getInstance(): Config {
+    public static override getInstance(): Config {
         if (!ConfigCore._instance) {
-            ConfigCore._instance = new Config(SchemaConfigOptionsSshServer);
+            const instance = new Config(SchemaConfigOptionsSshServer);
+            instance.setAppName('flyingfish');
+            ConfigCore._instance = instance;
         }
 
         return ConfigCore._instance as Config;
@@ -33,7 +46,7 @@ export class Config extends ConfigCore<ConfigOptionsSshServer> {
      * @param aConfig
      * @protected
      */
-    protected _loadEnv(aConfig: ConfigOptionsSshServer | null): ConfigOptionsSshServer | null {
+    protected override _loadEnv(aConfig: ConfigOptionsSshServer | null): ConfigOptionsSshServer | null {
         let config = aConfig;
 
         // defaults ------------------------------------------------------------------------------------------------
@@ -114,7 +127,7 @@ export class Config extends ConfigCore<ConfigOptionsSshServer> {
      * @param config
      * @protected
      */
-    protected _setDefaults(config: ConfigOptionsSshServer | null): ConfigOptionsSshServer | null {
+    protected override _setDefaults(config: ConfigOptionsSshServer | null): ConfigOptionsSshServer | null {
         if (config === null) {
             return null;
         }

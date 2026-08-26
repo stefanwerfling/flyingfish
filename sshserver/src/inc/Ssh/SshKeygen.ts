@@ -1,5 +1,5 @@
 import {spawn} from 'child_process';
-import {CertificateHelper, CertificateHelperKeyType, FileHelper, Logger} from 'flyingfish_core';
+import {CertificateHelper, CertificateHelperKeyType, FileHelper, Logger} from 'figtree';
 import fs from 'fs/promises';
 
 /**

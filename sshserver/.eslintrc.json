@@ -151,6 +151,33 @@
     "no-extra-parens": "off",
     "no-implicit-coercion": "error",
     "no-invalid-this": "off",
+    // core->figtree boundary: sshserver reads all framework concerns from
+    // figtree, including Config (its ConfigOptionsSshServer is structurally
+    // assignable to figtree's ConfigOptions, so the figtree Logger reads the
+    // seated config). DBHelper, the SshPortDB/SshUserDB entities and the
+    // RedisChannels enum (FlyingFish channel names) stay on core.
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "flyingfish_core",
+            "importNames": [
+              "Config",
+              "Logger",
+              "Args",
+              "RedisClient",
+              "RedisSubscribe",
+              "RedisChannel",
+              "FileHelper",
+              "CertificateHelper",
+              "CertificateHelperKeyType"
+            ],
+            "message": "sshserver reads framework concerns from figtree, not flyingfish_core: Config/Logger/Args/RedisClient/RedisSubscribe/RedisChannel/FileHelper/CertificateHelper/CertificateHelperKeyType -> import from 'figtree'. Note: the RedisChannels enum (FlyingFish channel names), DBHelper and the SshPortDB/SshUserDB entities stay on core."
+          }
+        ]
+      }
+    ],
     "no-magic-numbers": "off",
     "no-mixed-operators": "error",
     "no-multiple-empty-lines": [
