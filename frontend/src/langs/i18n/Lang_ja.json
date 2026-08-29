@@ -1,0 +1,16 @@
+{
+  "title": "FlyingFish",
+  "login_title": "<b>FlyingFish</b>",
+  "copyrightname": "<a href=\"https://github.com/stefanwerfling/flyingfish/\" target=\"_blank\">FlyingFish</a>",
+  "version": "v1.1.0",
+  "dahsboard_ip_blacklisted": "パブリックIPは、共通プロバイダのrDNSクエリでチェックされます。この情報は、電子メールサーバーを実行する場合に便利です。",
+  "listen_stream_proxytimeout": "<i>タイムアウト</i> クライアントまたはプロキシサーバー接続上の2つの連続した読み取りまたは書き込み操作間で設定します。 この時間内にデータが送信されない場合、接続は閉じられます。",
+  "listen_stream_proxyconnecttimeout": "プロキシサーバーとの接続を確立するためのタイムアウトを定義します。",
+  "route_default_route": "デフォルトのルートは編集できません。ストリームがプロキシサーバーに送るルートを視覚的に表現する役割を果たします。",
+  "route_stream_useasdefault": "リッスンごとに設定できるデフォルトのストリームは1つだけです。このストリームは、ドメインが特定できないときに listen で使用されます (e. を選択します。SSL以外のプロトコルです。このエントリは標準のリッスンではない場合にのみ考慮されます。",
+  "route_stream_loadbalancealg": "The load balancing algorithm is only used when there is more than one upstream.<br><br><b>Least connection</b>: This algorithm distributes the client's request to servers with the least active connections at a particular time. This will ensure that no one server is overworked while other servers have fewer active connections.<br><br><b>IP hash</b>: This algorithm hashes the IP address of the client sending the request with a hashing function and then sends the request to one of the servers for processing. Subsequent requests from the clients IP address are always sent to the same server.",
+  "route_http_http2": "http2プロトコルはSSL接続でのみ使用できます。この設定を解除するにはSSLを有効にしてください。",
+  "route_http_location_headerhostport": "ルーター上の異なるポートでのみ使用するポート!= 80,443",
+  "dyndns_client_edit_gateway": "クライアントはゲートウェイにバインドされ、ゲートウェイ内にある場合にのみ実行されます。 何も指定しない場合、クライアントは常に実行されます。",
+  "dyndns_client_edit_updatedomains": "指定されたドメインは内部的に更新され、レコード内の新しい IP が更新されます。"
+}
