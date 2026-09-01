@@ -1,5 +1,6 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
+import net from 'net';
 import {Logger, ServiceAbstract} from 'figtree';
 import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {
@@ -87,12 +88,17 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     protected override readonly _importance: ServiceImportance = ServiceImportance.Important;
 
     /**
-     * Whether the DNS sockets are currently bound (set after listen(), cleared
-     * on stop()). Backs healthCheck(); a socket-level liveness probe is a
-     * later refinement (dns2 does not expose the socket state cheaply).
+     * Whether listen() has been called and stop() has not (fast gate for
+     * healthCheck before the socket probe).
      * @protected
      */
     protected _listening: boolean = false;
+
+    /**
+     * The TCP/UDP port the server bound to; used by the healthCheck socket probe.
+     * @protected
+     */
+    protected _boundPort: number = 0;
 
     /**
      * Temp records for DNS record anwsers
@@ -456,12 +462,49 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     }
 
     /**
-     * Health check for the service monitor: healthy while the DNS sockets are
-     * bound.
+     * Health check for the service monitor: healthy while listen() is in effect
+     * AND the TCP DNS port still accepts a connection (dns2 listens TCP on the
+     * same port). A dead socket that never flipped `_listening` is caught by the
+     * probe, so an unhealthy DNS server triggers the monitor's restart.
      * @returns {Promise<boolean>}
      */
     public override async healthCheck(): Promise<boolean> {
-        return this._listening;
+        if (!this._listening) {
+            return false;
+        }
+
+        return Dns2Server._probeTcp('127.0.0.1', this._boundPort, 1000);
+    }
+
+    /**
+     * Open a short-lived TCP connection to test that something is listening on
+     * the port. Resolves true on connect, false on error/timeout; never throws.
+     * @param {string} host
+     * @param {number} port
+     * @param {number} timeoutMs
+     * @returns {Promise<boolean>}
+     * @protected
+     */
+    protected static _probeTcp(host: string, port: number, timeoutMs: number): Promise<boolean> {
+        return new Promise<boolean>((resolve): void => {
+            const socket = net.connect({host: host, port: port});
+            let settled = false;
+
+            const finish = (ok: boolean): void => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                socket.destroy();
+                resolve(ok);
+            };
+
+            socket.setTimeout(timeoutMs);
+            socket.once('connect', (): void => finish(true));
+            socket.once('timeout', (): void => finish(false));
+            socket.once('error', (): void => finish(false));
+        });
     }
 
     /**
@@ -483,6 +526,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
             tcp: port
         });
 
+        this._boundPort = port;
         this._listening = true;
 
         Logger.getLogger().info(
