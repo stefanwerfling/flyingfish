@@ -116,11 +116,11 @@ export {IPHelper} from './inc/Utils/IPHelper.js';
 export {SimpleProcessAwait} from './inc/Utils/SimpleProcessAwait.js';
 
 // PluginSystem
-export {PluginDefinition, SchemaPluginDefinition} from './inc/PluginSystem/PluginDefinition.js';
-export {APlugin} from './inc/PluginSystem/APlugin.js';
+// Plugin base classes now live in figtree; flyingfish_core re-exports them as the
+// plugin SDK surface so plugin authors keep a single import (Step 9.9.1).
+export {APlugin, APluginEvent, PluginInformation, PluginManager} from 'figtree';
+// PluginServiceNames stays here — it is a FlyingFish domain enum with no figtree equivalent.
 export {PluginServiceNames} from './inc/PluginSystem/PluginServiceNames.js';
-export {PluginInformation, PluginManager} from './inc/PluginSystem/PluginManager.js';
-export {APluginEvent} from './inc/PluginSystem/APluginEvent.js';
 
 // Provider
 export {ProviderType} from './inc/Provider/ProviderType.js';

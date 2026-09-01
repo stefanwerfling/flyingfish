@@ -89,7 +89,12 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         // `DBEntitiesLoader.loadEntities()` queries it for plugin-contributed
         // entities. This is replaced by figtree's `PluginService` later.
         try {
-            const pluginManager = new PluginManager(PluginServiceNames.backend, path.resolve());
+            // figtree's PluginManager scans the `figtree` package.json block by default;
+            // FlyingFish plugins declare their manifest under `flyingfish`, so pin pluginKey.
+            const pluginManager = new PluginManager(PluginServiceNames.backend, {
+                appPath: path.resolve(),
+                pluginKey: 'flyingfish'
+            });
             await pluginManager.start();
         } catch (error) {
             Logger.getLogger().error('FlyingFishBackend::_initServices: plugin manager could not load the plugins.', error);

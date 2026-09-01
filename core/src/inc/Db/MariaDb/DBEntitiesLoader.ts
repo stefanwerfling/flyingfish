@@ -1,4 +1,4 @@
-import {PluginManager} from '../../PluginSystem/PluginManager.js';
+import {PluginManager} from 'figtree';
 import {Credential} from './Entity/Credential.js';
 import {CredentialLocation} from './Entity/CredentialLocation.js';
 import {CredentialUser} from './Entity/CredentialUser.js';

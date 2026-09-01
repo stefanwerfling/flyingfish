@@ -16,14 +16,14 @@ export default class DemoPlugin extends APlugin {
     /**
      * onDisable
      */
-    public onDisable(): boolean {
+    public async onDisable(): Promise<boolean> {
         return false;
     }
 
     /**
      * onEnable
      */
-    public onEnable(): boolean {
+    public async onEnable(): Promise<boolean> {
         if (this.getPluginManager().getServiceName() === PluginServiceNames.backend) {
             // register Db table loads
             this.getPluginManager().registerEvents(new LoadDb(), this);

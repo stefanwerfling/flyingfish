@@ -16,17 +16,17 @@ export default class LetsEncrypt extends APlugin {
 
     /**
      * Disable the plugin.
-     * @returns {boolean}
+     * @returns {Promise<boolean>}
      */
-    public onDisable(): boolean {
+    public async onDisable(): Promise<boolean> {
         return false;
     }
 
     /**
      * Enable the plugin, create and register the event.
-     * @returns {boolean}
+     * @returns {Promise<boolean>}
      */
-    public onEnable(): boolean {
+    public async onEnable(): Promise<boolean> {
         if (this.getPluginManager().getServiceName() === PluginServiceNames.backend) {
             this.getPluginManager().registerEvents(new SslCertProviderLoader(), this);
         } else {
