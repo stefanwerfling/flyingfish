@@ -41,7 +41,7 @@ describe('Dashboard API (integration)', () => {
         const res = await agent.get('/json/dashboard/info');
         expect(res.body.statusCode).toBe(StatusCodes.OK);
         expect(res.body.ipblocks).toEqual([]);
-        // countBlocks() returns null (not 0) when there are no blocks yet.
-        expect(res.body.ipblock_count).toBeFalsy();
+        // countBlocks() reports 0 on an empty blacklist.
+        expect(res.body.ipblock_count).toBe(0);
     });
 });

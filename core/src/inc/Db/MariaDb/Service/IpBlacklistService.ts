@@ -173,7 +173,12 @@ export class IpBlacklistService extends DBService<IpBlacklist> {
         .getRawOne();
 
         if (count) {
-            return parseInt(count.total_count_blocks, 10) ?? 0;
+            // SUM() over an empty blacklist is NULL -> parseInt(null) is NaN, and
+            // `?? 0` does not catch NaN. Guard it so an empty table reports 0
+            // (NaN is neither a valid number for the response schema nor null).
+            const total = parseInt(count.total_count_blocks, 10);
+
+            return Number.isNaN(total) ? 0 : total;
         }
 
         return 0;
