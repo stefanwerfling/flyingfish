@@ -1,7 +1,7 @@
 import {RemoteInfo} from 'dgram';
 import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
 import {Logger, ServiceAbstract} from 'figtree';
-import {ServiceStatus} from 'figtree-schemas';
+import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {
     DnsRecordBase,
     DomainRecordDB,
@@ -79,6 +79,20 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      * @protected
      */
     protected _server;
+
+    /**
+     * Fault-isolation importance for the service monitor.
+     * @protected
+     */
+    protected override readonly _importance: ServiceImportance = ServiceImportance.Important;
+
+    /**
+     * Whether the DNS sockets are currently bound (set after listen(), cleared
+     * on stop()). Backs healthCheck(); a socket-level liveness probe is a
+     * later refinement (dns2 does not expose the socket state cheaply).
+     * @protected
+     */
+    protected _listening: boolean = false;
 
     /**
      * Temp records for DNS record anwsers
@@ -437,7 +451,17 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      */
     public override async stop(_forced: boolean = false): Promise<void> {
         await this._server.close();
+        this._listening = false;
         this._status = ServiceStatus.None;
+    }
+
+    /**
+     * Health check for the service monitor: healthy while the DNS sockets are
+     * bound.
+     * @returns {Promise<boolean>}
+     */
+    public override async healthCheck(): Promise<boolean> {
+        return this._listening;
     }
 
     /**
@@ -458,6 +482,8 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
             udp: port,
             tcp: port
         });
+
+        this._listening = true;
 
         Logger.getLogger().info(
             'Flingfish DNS listening on the TCP/UDP: %d',

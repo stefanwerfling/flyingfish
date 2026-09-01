@@ -1,5 +1,5 @@
 import {ServiceAbstract, Logger} from 'figtree';
-import {ServiceStatus} from 'figtree-schemas';
+import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {NginxAccessLog} from '../../inc/Nginx/NginxAccessLog.js';
 import {NginxConfigBuilder} from '../../inc/Nginx/NginxConfigBuilder.js';
@@ -69,6 +69,13 @@ export class NginxService extends ServiceAbstract {
      * @private
      */
     private _process: NginxProcess = new NginxProcess();
+
+    /**
+     * Fault-isolation importance: nginx is the reverse proxy, so the service
+     * monitor should health-check it and restart it on failure.
+     * @protected
+     */
+    protected override readonly _importance: ServiceImportance = ServiceImportance.Important;
 
     /**
      * Constructor.
@@ -155,6 +162,15 @@ export class NginxService extends ServiceAbstract {
         await this._accessLog.close();
 
         this._status = ServiceStatus.None;
+    }
+
+    /**
+     * Health check for the service monitor: healthy while the nginx process is
+     * running (it is a separate binary that can die independently).
+     * @returns {Promise<boolean>}
+     */
+    public override async healthCheck(): Promise<boolean> {
+        return this._process.isRun();
     }
 
     /**

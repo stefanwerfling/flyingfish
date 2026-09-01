@@ -1,4 +1,5 @@
 import {ServiceJobAbstract} from 'figtree';
+import {ServiceImportance} from 'figtree-schemas';
 import {HubRegistry} from './HubRegistry.js';
 
 /**
@@ -31,6 +32,12 @@ export class HubRegistryService extends ServiceJobAbstract {
      * @protected
      */
     protected readonly _registry: HubRegistry = new HubRegistry();
+
+    /**
+     * Fault-isolation importance for the service monitor.
+     * @protected
+     */
+    protected override readonly _importance: ServiceImportance = ServiceImportance.Important;
 
     /**
      * @returns {HubRegistryService}
