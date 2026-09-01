@@ -1,6 +1,7 @@
 import {BackendApp, BaseHttpServer, MariaDBService, PluginService, RedisDBService} from 'figtree';
 import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
 import {PluginServiceNames} from 'flyingfish_core';
+import os from 'os';
 import path from 'path';
 import {Schema} from 'vts';
 import {CoreConfigBridge} from './Config/CoreConfigBridge.js';
@@ -164,7 +165,7 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         // process) directly with the Hub registry. Standalone part containers
         // (ddns/ssh/himhip) POST their manifests over HTTP with the shared
         // registry secret instead.
-        registerColocatedParts(HubRegistryService.getInstance().getRegistry());
+        registerColocatedParts(HubRegistryService.getInstance().getRegistry(), os.hostname());
 
         // HowIsMyPublicIpService and IpService keep their singletons (consumers
         // read them on demand), so register those same instances here.

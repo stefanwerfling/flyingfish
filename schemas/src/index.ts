@@ -404,6 +404,7 @@ export {buildNginxCapabilityManifest} from './Hub/NginxCapabilityManifest.js';
 export {buildSshCapabilityManifest} from './Hub/SshCapabilityManifest.js';
 export {buildDynDnsCapabilityManifest} from './Hub/DynDnsCapabilityManifest.js';
 export {buildHimHIPCapabilityManifest} from './Hub/HimHIPCapabilityManifest.js';
+export {buildBackendCapabilityManifest} from './Hub/BackendCapabilityManifest.js';
 export {
     SchemaRegistryInstanceRequest,
     RegistryInstanceRequest,

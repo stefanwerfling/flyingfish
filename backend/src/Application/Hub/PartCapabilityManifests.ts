@@ -1,5 +1,6 @@
 import {
     CapabilityManifest,
+    buildBackendCapabilityManifest,
     buildDnsCapabilityManifest,
     buildDynDnsCapabilityManifest,
     buildHimHIPCapabilityManifest,
@@ -19,6 +20,7 @@ export type PartManifestBuilder = (instanceId: string) => CapabilityManifest;
  * register; keeps the per-part builders discoverable instead of orphaned.
  */
 export const partCapabilityManifestBuilders: Record<string, PartManifestBuilder> = {
+    backend: buildBackendCapabilityManifest,
     nginx: buildNginxCapabilityManifest,
     dns: buildDnsCapabilityManifest,
     ddns: buildDynDnsCapabilityManifest,
@@ -43,7 +45,7 @@ export const buildAllPartCapabilityManifests = (instanceIdPrefix: string = 'loca
  * self-POSTing over HTTP. Currently only the DNS server (Dns2Server). Extend
  * this as more parts stay co-located.
  */
-export const COLOCATED_PART_IDS: readonly string[] = ['dns'];
+export const COLOCATED_PART_IDS: readonly string[] = ['backend', 'dns'];
 
 /**
  * Register the co-located parts' manifests into the given Hub registry (called
