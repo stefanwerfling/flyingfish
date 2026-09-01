@@ -4,14 +4,14 @@ import {
     DomainDB,
     DomainRecordDB,
     DynDnsServerDomainDB,
-    DynDnsServerUserDB
+    DynDnsServerUserDB,
+    registerWithHub
 } from 'flyingfish_core';
 import {SchemaFlyingFishArgsDdnsServer, buildDynDnsCapabilityManifest} from 'flyingfish_schemas';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
-import {registerWithHub} from './inc/Hub/HubRegistryClient.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
 import {v4 as uuid} from 'uuid';
 import {Update as UpdateController} from './Routes/Main/Update.js';

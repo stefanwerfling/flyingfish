@@ -157,3 +157,6 @@ export {SslCertExistOptions} from './inc/Provider/SslCertProvider/SslCertExistOp
 // Dns
 export {IDnsServer} from './inc/Dns/IDnsServer.js';
 export {DnsRecordBase} from './inc/Dns/DnsRecordBase.js';
+
+// Hub
+export {registerWithHub} from './inc/Hub/HubRegistryClient.js';
