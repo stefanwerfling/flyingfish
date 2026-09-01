@@ -22,6 +22,7 @@ import {NginxService} from './Service/NginxService.js';
 import {SslCertService} from './Service/SslCertService.js';
 import {UpnpNatService} from './Service/UpnpNatService.js';
 import {HubRegistryService} from './Hub/HubRegistryService.js';
+import {registerColocatedParts} from './Hub/PartCapabilityManifests.js';
 import {NginxStatusService} from './Service/NginxStatusService.js';
 
 /**
@@ -158,6 +159,12 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         // Hub registry (v2 modular architecture): in-memory, no DB dependency.
         // Keeps its singleton so the registry routes reach the same instance.
         this._serviceManager.add(HubRegistryService.getInstance());
+
+        // Self-register the co-located parts (the DNS server runs in this
+        // process) directly with the Hub registry. Standalone part containers
+        // (ddns/ssh/himhip) POST their manifests over HTTP with the shared
+        // registry secret instead.
+        registerColocatedParts(HubRegistryService.getInstance().getRegistry());
 
         // HowIsMyPublicIpService and IpService keep their singletons (consumers
         // read them on demand), so register those same instances here.

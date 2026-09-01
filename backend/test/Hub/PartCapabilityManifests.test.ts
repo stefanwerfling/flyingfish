@@ -8,9 +8,12 @@
  * Network-free (pure schema/collection checks).
  */
 import {SchemaCapabilityManifest} from 'flyingfish_schemas';
+import {HubRegistry} from '../../src/Application/Hub/HubRegistry.js';
 import {
+    COLOCATED_PART_IDS,
     buildAllPartCapabilityManifests,
-    partCapabilityManifestBuilders
+    partCapabilityManifestBuilders,
+    registerColocatedParts
 } from '../../src/Application/Hub/PartCapabilityManifests.js';
 
 describe('Part capability manifests (set-level invariants)', () => {
@@ -57,6 +60,21 @@ describe('Part capability manifests (set-level invariants)', () => {
 
         for (const page of pages) {
             expect(menuIds.has(page.menuId)).toBe(true);
+        }
+    });
+
+    test('registerColocatedParts registers the in-process parts into a registry', () => {
+        const registry = new HubRegistry();
+
+        registerColocatedParts(registry, 'test');
+
+        expect(registry.list()).toHaveLength(COLOCATED_PART_IDS.length);
+
+        for (const id of COLOCATED_PART_IDS) {
+            const part = registry.get(`${id}@test`);
+
+            expect(part).toBeDefined();
+            expect(part?.manifest.part.id).toBe(id);
         }
     });
 });

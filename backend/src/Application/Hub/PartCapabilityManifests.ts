@@ -1,4 +1,5 @@
 import {CapabilityManifest} from 'flyingfish_schemas';
+import {HubRegistry} from './HubRegistry.js';
 import {buildDnsCapabilityManifest} from '../../inc/Dns/DnsCapabilityManifest.js';
 import {buildDynDnsCapabilityManifest} from '../../inc/DynDns/DynDnsCapabilityManifest.js';
 import {buildHimHIPCapabilityManifest} from '../../inc/HimHIP/HimHIPCapabilityManifest.js';
@@ -32,4 +33,28 @@ export const buildAllPartCapabilityManifests = (instanceIdPrefix: string = 'loca
     return Object.entries(partCapabilityManifestBuilders).map(
         ([id, build]) => build(`${instanceIdPrefix}-${id}`)
     );
+};
+
+/**
+ * Part ids that run in the backend process today (not in their own container),
+ * so the backend registers them with the Hub directly at boot instead of them
+ * self-POSTing over HTTP. Currently only the DNS server (Dns2Server). Extend
+ * this as more parts stay co-located.
+ */
+export const COLOCATED_PART_IDS: readonly string[] = ['dns'];
+
+/**
+ * Register the co-located parts' manifests into the given Hub registry (called
+ * once at backend boot). Each instance id is `<partId>@<prefix>`.
+ * @param {HubRegistry} registry - the app-wide Hub registry
+ * @param {string} instanceIdPrefix - suffix identifying this backend instance
+ */
+export const registerColocatedParts = (registry: HubRegistry, instanceIdPrefix: string = 'backend'): void => {
+    for (const id of COLOCATED_PART_IDS) {
+        const build = partCapabilityManifestBuilders[id];
+
+        if (build) {
+            registry.register(build(`${id}@${instanceIdPrefix}`));
+        }
+    }
 };
