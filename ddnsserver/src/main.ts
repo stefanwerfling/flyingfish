@@ -5,7 +5,7 @@ import {
     DomainRecordDB,
     DynDnsServerDomainDB,
     DynDnsServerUserDB,
-    registerWithHub
+    startHubRegistration
 } from 'flyingfish_core';
 import {SchemaFlyingFishArgsDdnsServer, buildDynDnsCapabilityManifest} from 'flyingfish_schemas';
 import fs from 'fs';
@@ -126,7 +126,7 @@ import {Update as UpdateController} from './Routes/Main/Update.js';
     // Announce this part to the Hub registry (v2 modular architecture). Optional:
     // without registry config the DynDNS server simply does not self-register.
     if (tConfig.registry) {
-        await registerWithHub(
+        await startHubRegistration(
             tConfig.registry.url,
             tConfig.registry.secret,
             buildDynDnsCapabilityManifest(`ddns@${os.hostname()}`)

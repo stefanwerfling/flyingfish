@@ -1,5 +1,5 @@
 import {Args, DBHelper, Logger, RedisClient, RedisSubscribe} from 'figtree';
-import {DBService, SshPortDB, SshUserDB, registerWithHub} from 'flyingfish_core';
+import {DBService, SshPortDB, SshUserDB, startHubRegistration} from 'flyingfish_core';
 import {SchemaFlyingFishArgsSshServer, buildSshCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import os from 'os';
@@ -127,7 +127,7 @@ import {SshServer} from './inc/Ssh/SshServer.js';
     // Announce this part to the Hub registry (v2 modular architecture). Optional:
     // without registry config the SSH server simply does not self-register.
     if (tconfig.registry) {
-        await registerWithHub(
+        await startHubRegistration(
             tconfig.registry.url,
             tconfig.registry.secret,
             buildSshCapabilityManifest(`ssh@${os.hostname()}`)

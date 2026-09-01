@@ -159,4 +159,11 @@ export {IDnsServer} from './inc/Dns/IDnsServer.js';
 export {DnsRecordBase} from './inc/Dns/DnsRecordBase.js';
 
 // Hub
-export {registerWithHub} from './inc/Hub/HubRegistryClient.js';
+export {
+    registerWithHub,
+    heartbeatHub,
+    byeHub,
+    startHubRegistration,
+    HubRegistrationHandle,
+    HubRegistrationOptions
+} from './inc/Hub/HubRegistryClient.js';
