@@ -1,7 +1,9 @@
 import {Args, DBHelper, Logger} from 'figtree';
-import {DBService, DomainDB, DomainRecordDB} from 'flyingfish_core';
+import {DBService, DomainDB, DomainRecordDB, startHubRegistration} from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
+import {buildDnsCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
+import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
@@ -85,6 +87,16 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
     // start server ----------------------------------------------------------------------------------------------------
 
     await Dns2Server.getInstance().listen();
+
+    // Announce this part to the Hub registry (v2 modular architecture). Optional:
+    // without registry config the DNS server simply does not self-register.
+    if (tConfig.registry) {
+        await startHubRegistration(
+            tConfig.registry.url,
+            tConfig.registry.secret,
+            buildDnsCapabilityManifest(`dns@${os.hostname()}`)
+        );
+    }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,
     // so report to stderr and exit non-zero (lets the container restart).

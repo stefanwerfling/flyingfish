@@ -8,7 +8,9 @@ import process from 'process';
  */
 export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
-    DNSSERVER_PORT = 'FLYINGFISH_DNSSERVER_PORT'
+    DNSSERVER_PORT = 'FLYINGFISH_DNSSERVER_PORT',
+    REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
+    REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET'
 }
 
 /**
@@ -114,6 +116,14 @@ export class Config extends ConfigCore<ConfigOptionsDnsServer> {
         if (process.env[ENV_OPTIONAL.LOGGING_LEVEL]) {
             config.logging = {
                 level: process.env[ENV_OPTIONAL.LOGGING_LEVEL]
+            };
+        }
+
+        // Hub registry (v2): both url and secret required to self-register.
+        if (process.env[ENV_OPTIONAL.REGISTRY_URL] && process.env[ENV_OPTIONAL.REGISTRY_SECRET]) {
+            config.registry = {
+                url: process.env[ENV_OPTIONAL.REGISTRY_URL]!,
+                secret: process.env[ENV_OPTIONAL.REGISTRY_SECRET]!
             };
         }
 
