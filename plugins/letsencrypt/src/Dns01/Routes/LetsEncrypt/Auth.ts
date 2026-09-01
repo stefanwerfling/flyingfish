@@ -41,7 +41,7 @@ export class Auth extends DefaultRoute {
                 data: req.value
             };
 
-            this._global.dnsServer.addTempDomain(domain, [record]);
+            await this._global.dnsServer.addTempDomain(domain, [record]);
 
             return true;
         }

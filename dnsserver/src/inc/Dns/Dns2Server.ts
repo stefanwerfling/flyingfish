@@ -18,13 +18,11 @@ import {
 import {Logger, ServiceAbstract} from 'figtree';
 import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {
-    DnsRecordBase,
+    AcmeDnsTempRecordServiceDB,
     DomainRecordDB,
     DomainRecordServiceDB,
-    DomainServiceDB,
-    IDnsServer
+    DomainServiceDB
 } from 'flyingfish_core';
-import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
 import {SchemaRecordSettingsTlSA} from './RecordType/TLSA.js';
@@ -48,10 +46,11 @@ type RemoteAddress = {
  *
  * Kept in `inc/Dns/` (not `Application/Service/`) because it is infrastructure
  * tightly coupled to its sibling `./RecordType/*` answer builders. Retains its
- * singleton accessor + `IDnsServer` interface: `SslCertService` (and DNS-record
- * routes) drive the temp-record API on demand via `getInstance()`.
+ * singleton accessor. The ACME DNS-01 temporary records are no longer held in
+ * memory: the backend writes them to the shared `acme_dns_temp_record` table and
+ * this server reads them at query time (DNS-server container extraction, 9.2.3).
  */
-export class Dns2Server extends ServiceAbstract implements IDnsServer {
+export class Dns2Server extends ServiceAbstract {
 
     /**
      * Name of the service.
@@ -99,18 +98,6 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      * @protected
      */
     protected _boundPort: number = 0;
-
-    /**
-     * Temp records for DNS record anwsers
-     * @protected
-     */
-    protected _tempRecords: Map<number, Map<string, DnsRecordBase>> = new Map<number, Map<string, DnsRecordBase>>();
-
-    /**
-     * Temp domains for DNS record anwsers
-     * @protected
-     */
-    protected _tempDomains: Map<string, DnsRecordBase[]> = new Map<string, DnsRecordBase[]>();
 
     /**
      * constructor
@@ -275,19 +262,8 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
                     }
                 }
 
-                if (question.class && question.type) {
-                    const answers = this._handleTmpRecords(
-                        domain.id,
-                        question.class,
-                        question.type
-                    );
-
-                    if (answers.length > 0) {
-                        response.answers.push(...answers);
-                    }
-                }
             } else {
-                const answers = this._handleTmpDomains(question.name);
+                const answers = await this._handleTmpDomains(question.name);
 
                 if (answers.length > 0) {
                     response.answers.push(...answers);
@@ -374,64 +350,27 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     }
 
     /**
-     * Handle the temporary records for a domain.
-     * @param {number} domainId
-     * @param {number} recordClass
-     * @param {number} [recordType]
-     * @protected
-     * @returns {PacketResource[]}
-     */
-    protected _handleTmpRecords(domainId: number, recordClass: number, recordType?: number): PacketResource[] {
-        const answers: PacketResource[] = [];
-
-        const tmpDomain = this._tempRecords.get(domainId);
-
-        if (tmpDomain) {
-            for (const [, record] of tmpDomain) {
-                if (recordClass !== record.class || recordType !== record.type) {
-                    continue;
-                }
-
-                switch (record.type) {
-                    case PacketTypes.TXT:
-                        answers.push(new PacketResource(
-                            record.name,
-                            new TXT(record.data),
-                            record.class,
-                            record.ttl
-                        ));
-                        break;
-                }
-            }
-        }
-
-        return answers;
-    }
-
-    /**
-     * Handle request tmp domain
+     * Handle request tmp domain: read the ACME DNS-01 temporary records for this
+     * name from the shared `acme_dns_temp_record` table (written by the backend).
      * @param {string} domainName
      * @protected
-     * @returns {PacketResource[]}
+     * @returns {Promise<PacketResource[]>}
      */
-    protected _handleTmpDomains(domainName: string): PacketResource[] {
+    protected async _handleTmpDomains(domainName: string): Promise<PacketResource[]> {
         const answers: PacketResource[] = [];
 
-        const domainRecords = this._tempDomains.get(domainName.toLowerCase());
+        const records = await AcmeDnsTempRecordServiceDB.getInstance().findByName(domainName.toLowerCase());
 
-        if (domainRecords) {
-            for (const record of domainRecords) {
-
-                switch (record.type) {
-                    case PacketTypes.TXT:
-                        answers.push(new PacketResource(
-                            domainName,
-                            new TXT(record.data),
-                            record.class,
-                            record.ttl
-                        ));
-                        break;
-                }
+        for (const record of records) {
+            switch (record.dtype) {
+                case PacketTypes.TXT:
+                    answers.push(new PacketResource(
+                        record.name,
+                        new TXT(record.dvalue),
+                        record.dclass,
+                        record.ttl
+                    ));
+                    break;
             }
         }
 
@@ -600,104 +539,6 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
                 class: 'Dns2Server::listen'
             }
         );
-    }
-
-    /**
-     * add a temporary record to a domain
-     * @param {number} domainId
-     * @param {DnsRecordBase} record
-     * @returns {string} temporary identification
-     */
-    public addTempRecord(
-        domainId: number,
-        record: DnsRecordBase
-    ): string {
-        const tmpId = uuid();
-
-        if(!this._tempRecords.has(domainId)) {
-            this._tempRecords.set(domainId, new Map<string, DnsRecordBase>());
-        }
-
-        const records = this._tempRecords.get(domainId)!;
-        records.set(tmpId, record);
-
-        Logger.getLogger().silly(
-            'Add temp record (%d) to domain-id: %d',
-            record.type,
-            domainId,
-            {
-                class: 'Dns2Server::addTempRecord'
-            }
-        );
-
-        this._tempRecords.set(domainId, records);
-
-        return tmpId;
-    }
-
-    /**
-     * remove all temporary record by domain id
-     * @param {number} domainId
-     * @returns {boolean}
-     */
-    public removeAllTemp(domainId: number): boolean {
-        return this._tempRecords.delete(domainId);
-    }
-
-    /**
-     * remove a temporary record by identification
-     * @param {string} tempId
-     * @returns {boolean}
-     */
-    public removeTempRecord(tempId: string): boolean {
-        for (const [domainId, records] of this._tempRecords) {
-            if (records.has(tempId)) {
-                const isDeleted = records.delete(tempId);
-
-                if (isDeleted) {
-                    this._tempRecords.set(domainId, records);
-                }
-
-                return isDeleted;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * add a temporary domain with records
-     * @param {string} domainName
-     * @param {DnsRecordBase[]} records
-     * @returns {boolean}
-     */
-    public addTempDomain(
-        domainName: string,
-        records: DnsRecordBase[]
-    ): boolean {
-        if (!this._tempDomains.has(domainName)) {
-            Logger.getLogger().silly(
-                'Add temp domain: $s',
-                domainName,
-                {
-                    class: 'Dns2Server::addTempDomain'
-                }
-            );
-
-            this._tempDomains.set(domainName, records);
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * remove temporary domain
-     * @param {string} domainName
-     * @returns {boolean}
-     */
-    public removeTempDomain(domainName: string): boolean {
-        return this._tempDomains.delete(domainName);
     }
 
 }

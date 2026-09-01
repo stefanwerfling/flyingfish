@@ -42,10 +42,11 @@ export const buildAllPartCapabilityManifests = (instanceIdPrefix: string = 'loca
 /**
  * Part ids that run in the backend process today (not in their own container),
  * so the backend registers them with the Hub directly at boot instead of them
- * self-POSTing over HTTP. Currently only the DNS server (Dns2Server). Extend
- * this as more parts stay co-located.
+ * self-POSTing over HTTP. The DNS server used to be co-located here, but it now
+ * runs in its own container and self-registers, so only the backend part itself
+ * stays co-located. Extend this as more parts stay co-located.
  */
-export const COLOCATED_PART_IDS: readonly string[] = ['backend', 'dns'];
+export const COLOCATED_PART_IDS: readonly string[] = ['backend'];
 
 /**
  * Register the co-located parts' manifests into the given Hub registry (called

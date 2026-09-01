@@ -8,7 +8,7 @@ import Path from 'path';
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors, Vts} from 'vts';
 import {Certificate} from '../../inc/Cert/Certificate.js';
-import {Dns2Server} from '../../inc/Dns/Dns2Server.js';
+import {AcmeDnsTempStore} from '../../inc/Dns/AcmeDnsTempStore.js';
 import {NginxServer} from '../../inc/Nginx/NginxServer.js';
 import {SslCertProviders} from '../../inc/Provider/SslCertProvider/SslCertProviders.js';
 import {NginxService} from './NginxService.js';
@@ -22,9 +22,11 @@ import {NginxService} from './NginxService.js';
  * scheduling, tick timing, error handling, health and restart.
  *
  * Dual role: KEEPS its singleton accessor because the SSL "run now" route reads
- * `isInProcess()` / calls `invokeUpdate()`. Depends on `mariadb`, `nginx`
- * (it reloads nginx) and `dnsserver` (ACME DNS-01 uses the Dns2Server temp
- * records) — so the scheduler only starts once those are up.
+ * `isInProcess()` / calls `invokeUpdate()`. Depends on `mariadb` and `nginx`
+ * (it reloads nginx) — so the scheduler only starts once those are up. ACME
+ * DNS-01 writes its temporary records to the shared `acme_dns_temp_record` table
+ * via `AcmeDnsTempStore` (the DNS server runs in its own container now), which
+ * the `mariadb` dependency already covers.
  *
  * NOTE: the overlap guard uses a distinct `_updateInProcess` flag — the base
  * `ServiceAbstract` already owns a protected `_inProcess` field, so the
@@ -64,7 +66,7 @@ export class SslCertService extends ServiceJobAbstract {
      * Constructor.
      */
     public constructor() {
-        super(SslCertService.NAME, [ 'mariadb', 'nginx', 'dnsserver' ]);
+        super(SslCertService.NAME, [ 'mariadb', 'nginx' ]);
         this._cron = '*/1 * * * *';
     }
 
@@ -399,7 +401,7 @@ export class SslCertService extends ServiceJobAbstract {
                                 wildcard: useWildcard,
                                 webRootPath: NginxServer.getInstance().getWebRootPath()
                             }, {
-                                dnsServer: Dns2Server.getInstance()
+                                dnsServer: AcmeDnsTempStore.getInstance()
                             });
                         } catch (eCreate) {
                             Logger.getLogger().error(
@@ -479,7 +481,7 @@ export class SslCertService extends ServiceJobAbstract {
                             wildcard: useWildcard,
                             webRootPath: NginxServer.getInstance().getWebRootPath()
                         }, {
-                            dnsServer: Dns2Server.getInstance()
+                            dnsServer: AcmeDnsTempStore.getInstance()
                         });
                     } catch (eCreate) {
                         Logger.getLogger().error(

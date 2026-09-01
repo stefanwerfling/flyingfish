@@ -1,14 +1,13 @@
 /**
  * Unit tests for the 9.2.5 fault-isolation slice: the ServiceImportance
- * classification of the FlyingFish-owned services and the two service health
- * checks (NginxService, Dns2Server). Network/DB-free.
+ * classification of the FlyingFish-owned services and their health checks
+ * (NginxService, FlyingFishHttpService). Network/DB-free. The DNS server moved
+ * to its own container (9.2.3), so its fault-isolation lives there now.
  */
 import {jest} from '@jest/globals';
-import net from 'net';
 import {ServiceImportance} from 'figtree-schemas';
 import {NginxProcess} from '../../src/inc/Nginx/NginxProcess.js';
 import {NginxService} from '../../src/Application/Service/NginxService.js';
-import {Dns2Server} from '../../src/inc/Dns/Dns2Server.js';
 import {HubRegistryService} from '../../src/Application/Hub/HubRegistryService.js';
 import {FlyingFishHttpService} from '../../src/Application/Server/FlyingFishHttpService.js';
 import {RouteLoader} from '../../src/Application/Routes/RouteLoader.js';
@@ -28,36 +27,6 @@ describe('Fault isolation (9.2.5)', () => {
         expect(await nginx.healthCheck()).toBe(false);
 
         isRun.mockRestore();
-    });
-
-    test('Dns2Server is Important and its health check probes the TCP port', async() => {
-        const dns = Dns2Server.getInstance();
-
-        expect(dns.getImportance()).toBe(ServiceImportance.Important);
-
-        // Not started yet -> unhealthy (fast gate before the probe).
-        expect(await dns.healthCheck()).toBe(false);
-
-        // A live TCP listener stands in for the bound DNS TCP socket.
-        const server = net.createServer();
-        const port = await new Promise<number>((resolve) => {
-            server.listen(0, '127.0.0.1', (): void => {
-                resolve((server.address() as net.AddressInfo).port);
-            });
-        });
-
-        const state = dns as unknown as {_listening: boolean; _boundPort: number;};
-        state._listening = true;
-        state._boundPort = port;
-        expect(await dns.healthCheck()).toBe(true);
-
-        // Socket gone -> probe fails -> unhealthy (would trigger a restart).
-        await new Promise<void>((resolve) => {
-            server.close((): void => {
-                resolve();
-            });
-        });
-        expect(await dns.healthCheck()).toBe(false);
     });
 
     test('HubRegistryService is Important', () => {
@@ -84,32 +53,6 @@ describe('Fault isolation (9.2.5)', () => {
         state._server = {close: close, getServer: (): null => null};
         state._releaseServer();
         expect(close).toHaveBeenCalledTimes(1);
-    });
-
-    test('Dns2Server.start is restart-safe: closes + recreates the server on restart', async() => {
-        const state = Dns2Server.getInstance() as unknown as {
-            _resetServer(): Promise<void>;
-            _listening: boolean;
-            _server: unknown;
-        };
-
-        // Not listening -> reset keeps the current server (no-op).
-        const before = state._server;
-        state._listening = false;
-        await state._resetServer();
-        expect(state._server).toBe(before);
-
-        // Leftover bound sockets from a prior start -> close old + recreate + clear flag.
-        const close = jest.fn(() => Promise.resolve());
-        const stale = {close: close};
-        state._server = stale;
-        state._listening = true;
-
-        await state._resetServer();
-
-        expect(close).toHaveBeenCalledTimes(1);
-        expect(state._listening).toBe(false);
-        expect(state._server).not.toBe(stale);
     });
 
     test('NginxService.start is restart-safe: releases leftover sub-servers', async() => {

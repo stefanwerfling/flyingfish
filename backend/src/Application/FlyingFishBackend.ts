@@ -5,7 +5,6 @@ import os from 'os';
 import path from 'path';
 import {Schema} from 'vts';
 import {CoreConfigBridge} from './Config/CoreConfigBridge.js';
-import {Dns2Server} from '../inc/Dns/Dns2Server.js';
 import {HimHIP} from '../inc/HimHIP/HimHIP.js';
 import {FlyingFishConfig} from './Config/FlyingFishConfig.js';
 import {CoreDBConnectHook} from './Db/MariaDb/CoreDBConnectHook.js';
@@ -172,12 +171,9 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         this._serviceManager.add(HowIsMyPublicIpService.getInstance());
         this._serviceManager.add(IpService.getInstance());
 
-        // Dns2Server keeps its singleton (SslCertService + DNS-record routes
-        // drive its temp-record API), so register that same instance here.
-        this._serviceManager.add(Dns2Server.getInstance());
-
         // SslCertService keeps its singleton (the SSL "run now" route reads it);
-        // depends on nginx + dnsserver (reload + ACME DNS-01).
+        // depends on nginx (reload). ACME DNS-01 now writes its temp records to
+        // the shared DB table read by the standalone DNS server container.
         this._serviceManager.add(SslCertService.getInstance());
 
         // Conditional services: the former main.ts only started these when the

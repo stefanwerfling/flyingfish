@@ -36,7 +36,7 @@ export class CleanUp extends DefaultRoute {
                 domain = `_acme-challenge.${domain}`;
             }
 
-            this._global.dnsServer.removeTempDomain(domain);
+            await this._global.dnsServer.removeTempDomain(domain);
 
             return true;
         }

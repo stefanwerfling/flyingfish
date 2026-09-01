@@ -1,5 +1,5 @@
 import {Args, DBHelper, Logger} from 'figtree';
-import {DBService, DomainDB, DomainRecordDB, startHubRegistration} from 'flyingfish_core';
+import {AcmeDnsTempRecordDB, DBService, DomainDB, DomainRecordDB, startHubRegistration} from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import {buildDnsCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
@@ -67,6 +67,7 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
             password: tConfig.db.mysql.password,
             database: tConfig.db.mysql.database,
             entities: [
+                AcmeDnsTempRecordDB,
                 DomainDB,
                 DomainRecordDB
             ],
