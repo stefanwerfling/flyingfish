@@ -1,6 +1,6 @@
-import {BackendApp, BaseHttpServer, Logger, MariaDBService, RedisDBService} from 'figtree';
+import {BackendApp, BaseHttpServer, MariaDBService, PluginService, RedisDBService} from 'figtree';
 import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
-import {PluginManager, PluginServiceNames} from 'flyingfish_core';
+import {PluginServiceNames} from 'flyingfish_core';
 import path from 'path';
 import {Schema} from 'vts';
 import {CoreConfigBridge} from './Config/CoreConfigBridge.js';
@@ -84,27 +84,33 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         // /var/log/flyingfish.
         CoreConfigBridge.seat();
 
-        // Strangler bridge: the flyingfish_core plugin manager must be
-        // initialized before the database service, because core's
-        // `DBEntitiesLoader.loadEntities()` queries it for plugin-contributed
-        // entities. This is replaced by figtree's `PluginService` later.
-        try {
-            // figtree's PluginManager scans the `figtree` package.json block by default;
-            // FlyingFish plugins declare their manifest under `flyingfish`, so pin pluginKey.
-            const pluginManager = new PluginManager(PluginServiceNames.backend, {
+        // Plugin subsystem as a managed service: PluginService owns the figtree
+        // PluginManager and runs scan/load in its start(). MariaDBService depends
+        // on it (see below) so plugins are loaded before core's
+        // `DBEntitiesLoader.loadEntities()` reads plugin-contributed entities.
+        // pluginKey is pinned to 'flyingfish' because FlyingFish plugins declare
+        // their manifest under the `flyingfish` package.json block (figtree
+        // defaults the key to 'figtree'). Individual plugin load failures stay
+        // non-fatal (PluginManager.load() catches per plugin); a scan failure
+        // (e.g. missing node_modules) fails this Critical service and blocks the
+        // dependent database boot.
+        this._serviceManager.add(new PluginService(
+            PluginServiceNames.backend,
+            undefined,
+            undefined,
+            {
                 appPath: path.resolve(),
                 pluginKey: 'flyingfish'
-            });
-            await pluginManager.start();
-        } catch (error) {
-            Logger.getLogger().error('FlyingFishBackend::_initServices: plugin manager could not load the plugins.', error);
-        }
+            }
+        ));
 
         this._serviceManager.add(
             new MariaDBService(
                 DBLoader,
                 undefined,
-                undefined,
+                // Start after the plugin service so plugin-contributed entities
+                // are registered before loadEntities() runs.
+                [ PluginService.NAME ],
                 {
                     migrationsRun: true,
                     synchronize: false,
