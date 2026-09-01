@@ -12,6 +12,7 @@ import {
 } from 'flyingfish_schemas';
 import {DefaultRoute} from 'figtree';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
+import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {HubRegistryService} from '../../Application/Hub/HubRegistryService.js';
 
 /**
@@ -21,9 +22,10 @@ import {HubRegistryService} from '../../Application/Hub/HubRegistryService.js';
  * pilot). Parts register/heartbeat/deregister; the frontend reads the aggregated
  * UI contributions and the parts list.
  *
- * NOTE: all endpoints are user-login guarded for now. The part-facing
- * register/heartbeat/bye endpoints will move to PKI service-cert auth over the
- * mTLS-WSS transport in a later pilot stage.
+ * NOTE: the part-facing register/heartbeat/bye endpoints authenticate either
+ * with the shared registry secret (ServiceAuth seam, step 5.3) or a user login;
+ * they will move to PKI service-cert auth over the mTLS-WSS transport in a later
+ * pilot stage. The read endpoints (parts, ui-contributions) stay user-login only.
  */
 export class Registry extends DefaultRoute {
 
@@ -33,7 +35,7 @@ export class Registry extends DefaultRoute {
     public override getExpressRouter(): Router {
         this._post(
             '/json/registry/register',
-            FlyingFishRouteCheckUserLogin,
+            FlyingFishRouteCheckServiceOrUserLogin,
             async(_req, _res, data): Promise<DefaultReturn> => {
                 HubRegistryService.getInstance().getRegistry().register(data.body!);
 
@@ -48,7 +50,7 @@ export class Registry extends DefaultRoute {
 
         this._post(
             '/json/registry/heartbeat',
-            FlyingFishRouteCheckUserLogin,
+            FlyingFishRouteCheckServiceOrUserLogin,
             async(_req, _res, data): Promise<DefaultReturn> => {
                 const known = HubRegistryService.getInstance().getRegistry().heartbeat(data.body!.instanceId);
 
@@ -65,7 +67,7 @@ export class Registry extends DefaultRoute {
 
         this._post(
             '/json/registry/bye',
-            FlyingFishRouteCheckUserLogin,
+            FlyingFishRouteCheckServiceOrUserLogin,
             async(_req, _res, data): Promise<DefaultReturn> => {
                 HubRegistryService.getInstance().getRegistry().bye(data.body!.instanceId);
 

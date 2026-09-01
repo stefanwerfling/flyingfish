@@ -46,6 +46,13 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
     dnsserver: Vts.optional(Vts.object({
         port: Vts.optional(Vts.number())
     })),
+    // Hub registry (v2 modular architecture): the shared secret parts use to
+    // authenticate their self-registration (ServiceAuth seam, step 5.3). Interim
+    // until per-service PKI/mTLS (epic 9.4) replaces it. Shared across the
+    // backend and the part containers via FLYINGFISH_REGISTRY_SECRET.
+    registry: Vts.optional(Vts.object({
+        secret: Vts.optional(Vts.string())
+    })),
     himpip: Vts.optional(Vts.object({
         provider: Vts.string()
     })),

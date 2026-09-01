@@ -18,6 +18,7 @@ export enum ENV_OPTIONAL {
     NGINX_PREFIX = 'FLYINGFISH_NGINX_PREFIX',
     NGINX_MODULE_MODE_DYN = 'FLYINGFISH_NGINX_MODULE_MODE_DYN',
     NGINX_SECRET = 'FLYINGFISH_NGINX_SECRET',
+    REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
     DYNDNSSERVER_PORT = 'FLYINGFISH_DYNDNSSERVER_PORT',
     DYNDNSSERVER_IP = 'FLYINGFISH_DYNDNSSERVER_IP',
     DYNDNSSERVER_SCHEMA = 'FLYINGFISH_DYNDNSSERVER_SCHEMA',
@@ -426,6 +427,21 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
             if (!config.nginx.secret) {
                 config.nginx.secret = uuid().replaceAll('-', '');
             }
+        }
+
+        // Hub registry secret: shared with the part containers via env, else a
+        // generated fallback so the backend always has an expected secret to
+        // verify part self-registration against (ServiceAuth seam, step 5.3).
+        if (!config.registry) {
+            config.registry = {};
+        }
+
+        if (process.env[ENV_OPTIONAL.REGISTRY_SECRET]) {
+            config.registry.secret = process.env[ENV_OPTIONAL.REGISTRY_SECRET];
+        }
+
+        if (!config.registry.secret) {
+            config.registry.secret = uuid().replaceAll('-', '');
         }
 
         if (!config.dnsserver) {

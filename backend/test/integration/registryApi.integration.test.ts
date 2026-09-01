@@ -9,18 +9,30 @@
  */
 import {SchemaRegistryPartsResponse, SchemaRegistryUiContributionsResponse, StatusCodes} from 'flyingfish_schemas';
 import request from 'supertest';
+import {FlyingFishConfig} from '../../src/Application/Config/FlyingFishConfig.js';
 import {HubRegistryService} from '../../src/Application/Hub/HubRegistryService.js';
+import {REGISTRY_SECRET_HEADER} from '../../src/Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {buildDnsCapabilityManifest} from '../../src/inc/Dns/DnsCapabilityManifest.js';
 import {Registry} from '../../src/Routes/Main/Registry.js';
 import {buildApiApp, loginAgent} from './apiTestHelpers.js';
 import {closeTestDb, initTestDb, resetTestDb} from './dbHarness.js';
 
 const routes = [new Registry()];
+const TEST_REGISTRY_SECRET = 'test-registry-secret';
 
 describe('Registry API (integration)', () => {
     beforeAll(async() => {
         await initTestDb();
         await resetTestDb();
+
+        // Seat a known registry secret so the ServiceAuth self-registration path
+        // can be exercised without a login session.
+        const config = FlyingFishConfig.getInstance().get();
+
+        if (config) {
+            config.registry = {secret: TEST_REGISTRY_SECRET};
+            FlyingFishConfig.getInstance().set(config);
+        }
     });
     beforeEach(() => {
         HubRegistryService.getInstance().getRegistry().clear();
@@ -34,6 +46,26 @@ describe('Registry API (integration)', () => {
         .send(buildDnsCapabilityManifest('dns-1'));
 
         expect(res.body.statusCode).toBe(StatusCodes.UNAUTHORIZED);
+    });
+
+    test('register authenticates via the registry secret header (no session)', async() => {
+        const res = await request(buildApiApp(routes))
+        .post('/json/registry/register')
+        .set(REGISTRY_SECRET_HEADER, TEST_REGISTRY_SECRET)
+        .send(buildDnsCapabilityManifest('dns-secret-1'));
+
+        expect(res.body.statusCode).toBe(StatusCodes.OK);
+        expect(HubRegistryService.getInstance().getRegistry().get('dns-secret-1')).toBeDefined();
+    });
+
+    test('register rejects a wrong registry secret', async() => {
+        const res = await request(buildApiApp(routes))
+        .post('/json/registry/register')
+        .set(REGISTRY_SECRET_HEADER, 'wrong-secret')
+        .send(buildDnsCapabilityManifest('dns-secret-2'));
+
+        expect(res.body.statusCode).toBe(StatusCodes.UNAUTHORIZED);
+        expect(HubRegistryService.getInstance().getRegistry().get('dns-secret-2')).toBeUndefined();
     });
 
     test('register then list and ui-contributions reflect the part', async() => {
