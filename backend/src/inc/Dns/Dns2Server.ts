@@ -427,7 +427,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      */
     public override async start(): Promise<void> {
         this._status = ServiceStatus.Progress;
-        this.listen();
+        await this.listen();
         this._status = ServiceStatus.Success;
     }
 
@@ -443,7 +443,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     /**
      * start server listen
      */
-    public listen(): void {
+    public async listen(): Promise<void> {
         let port = FlyingFishConfig.DEFAULT_DNSSERVER_PORT;
 
         const dnsserver = FlyingFishConfig.getInstance().get()?.dnsserver;
@@ -454,7 +454,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
             }
         }
 
-        this._server.listen({
+        await this._server.listen({
             udp: port,
             tcp: port
         });
