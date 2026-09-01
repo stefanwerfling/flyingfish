@@ -13,7 +13,7 @@
  */
 import {DataSource} from 'typeorm';
 import {DBHelper} from 'figtree';
-import {DBEntitiesLoader, PluginManager} from 'flyingfish_core';
+import {DBEntitiesLoader, DBService, PluginManager} from 'flyingfish_core';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => {
@@ -81,6 +81,12 @@ export const initTestDb = async(): Promise<void> => {
         migrationName: 'InitialSchema1787961600000',
         timestamp: 1787961600000
     });
+
+    // Cache the figtree DataSource on flyingfish_core's DBService, exactly as the
+    // real boot does via CoreDBConnectHook. Without this every *ServiceDB throws
+    // "DataSource not connected".
+    await DBService.connect();
+
     // eslint-disable-next-line require-atomic-updates -- module-level init guard for tests, no real race
     initialized = true;
 };
