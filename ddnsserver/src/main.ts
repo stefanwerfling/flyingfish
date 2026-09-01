@@ -6,10 +6,12 @@ import {
     DynDnsServerDomainDB,
     DynDnsServerUserDB
 } from 'flyingfish_core';
-import {SchemaFlyingFishArgsDdnsServer} from 'flyingfish_schemas';
+import {SchemaFlyingFishArgsDdnsServer, buildDynDnsCapabilityManifest} from 'flyingfish_schemas';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
+import {registerWithHub} from './inc/Hub/HubRegistryClient.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
 import {v4 as uuid} from 'uuid';
 import {Update as UpdateController} from './Routes/Main/Update.js';
@@ -120,6 +122,16 @@ import {Update as UpdateController} from './Routes/Main/Update.js';
     // set up middleware/routes and start the express server (figtree splits
     // setup from listen; the former core BaseHttpServer did both in listen())
     await mServer.setupAndListen();
+
+    // Announce this part to the Hub registry (v2 modular architecture). Optional:
+    // without registry config the DynDNS server simply does not self-register.
+    if (tConfig.registry) {
+        await registerWithHub(
+            tConfig.registry.url,
+            tConfig.registry.secret,
+            buildDynDnsCapabilityManifest(`ddns@${os.hostname()}`)
+        );
+    }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,
     // so report to stderr and exit non-zero (lets the container restart).
