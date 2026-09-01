@@ -1,17 +1,9 @@
-import {DnsAnswer} from 'dns2';
 import {Vts} from 'vts';
 
 /**
- * DnsAnswerTlSA
+ * TLSA certificate usage field.
  * see https://www.dynu.com/Resources/DNS-Records/TLSA-Record
  */
-export interface DnsAnswerTlSA extends DnsAnswer {
-    certificate_usage?: number;
-    selector?: number;
-    matching_type?: number;
-    certificate_association_data?: string;
-}
-
 export enum TLSACertificateUsage {
     CERTIFICATE_AUTHORITY_CONSTRAINT = '0',
     SERVICE_AUTHORITY_CONSTRAINT = '1',

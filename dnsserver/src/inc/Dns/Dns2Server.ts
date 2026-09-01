@@ -1,6 +1,20 @@
-import {RemoteInfo} from 'dgram';
-import DNS, {DnsAnswer, DnsQuestion, DnsRequest, DnsResponse} from 'dns2';
 import net from 'net';
+import {
+    A,
+    AAAA,
+    CNAME,
+    DNS,
+    DnsServer,
+    MX,
+    NS,
+    Packet,
+    PacketQuestion,
+    PacketResource,
+    PacketType,
+    PacketTypes,
+    TLSA,
+    TXT
+} from 'dns2ts';
 import {Logger, ServiceAbstract} from 'figtree';
 import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {
@@ -13,43 +27,29 @@ import {
 import {v4 as uuid} from 'uuid';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
-import {DnsAnswerMX} from './RecordType/MX.js';
-import {DnsAnswerNS} from './RecordType/NS.js';
-import {DnsAnswerTlSA, SchemaRecordSettingsTlSA, TLSACertificateUsage} from './RecordType/TLSA.js';
-import {DnsAnswerTXT} from './RecordType/TXT.js';
+import {SchemaRecordSettingsTlSA} from './RecordType/TLSA.js';
 
 /**
- * DnsQuestionExt
+ * Remote peer address/port extracted from a request handler client.
  */
-interface DnsQuestionExt extends DnsQuestion {
-    class?: number;
-    type?: number;
-}
-
-/**
- * TYPE_EXT
- * see https://de.wikipedia.org/wiki/Resource_Record
- */
-export const TYPE_EXT = {
-    TLSA: 52
+type RemoteAddress = {
+    address: string;
+    port: number;
 };
 
 /**
  * Dns2Server
  *
  * Authoritative DNS server (TCP/UDP) that answers from the domain-record tables
- * and serves temporary records for the ACME DNS-01 challenge. Migrated onto
- * figtree's `ServiceAbstract` as a lifecycle service: the framework owns
- * start/stop, health and restart, replacing the former bare `listen()` call
- * that the old `main.ts` invoked by hand.
+ * and serves temporary records for the ACME DNS-01 challenge. Built on the
+ * `dns2ts` library (the TypeScript rewrite of dns2, own types, zero runtime
+ * deps) and migrated onto figtree's `ServiceAbstract` as a lifecycle service:
+ * the framework owns start/stop, health and restart.
  *
  * Kept in `inc/Dns/` (not `Application/Service/`) because it is infrastructure
  * tightly coupled to its sibling `./RecordType/*` answer builders. Retains its
  * singleton accessor + `IDnsServer` interface: `SslCertService` (and DNS-record
  * routes) drive the temp-record API on demand via `getInstance()`.
- *
- * Registered by `FlyingFishBackend` with a dependency on the `mariadb` service
- * so it only listens once the database is up.
  */
 export class Dns2Server extends ServiceAbstract implements IDnsServer {
 
@@ -79,7 +79,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      * server
      * @protected
      */
-    protected _server!: ReturnType<typeof DNS.createServer>;
+    protected _server!: DnsServer;
 
     /**
      * Fault-isolation importance for the service monitor.
@@ -122,20 +122,20 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     }
 
     /**
-     * Create (or recreate) the dns2 server object with the request handler.
+     * Create (or recreate) the dns2ts server object with the request handler.
      * Used by the constructor and by the restart-safe reset in start().
      * @protected
      */
     protected _createServer(): void {
-        this._server = DNS.createServer({
+        this._server = new DnsServer({
             udp: true,
             tcp: true,
             handle: async(
-                request: DnsRequest,
-                send: (response: DnsResponse) => void,
-                rinfo: RemoteInfo
-            ) => {
-                const response = await this._handleRequest(request, rinfo);
+                request: Packet,
+                send: (response: Packet | Buffer | (Packet | Buffer)[]) => void,
+                client: unknown
+            ): Promise<void> => {
+                const response = await this._handleRequest(request, client);
 
                 if (response) {
                     send(response);
@@ -145,42 +145,55 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     }
 
     /**
-     * Handle for dns requests
-     * @param {DnsRequest} request
-     * @param rinfo
+     * Build an answer resource for the queried name/class from a typed record.
+     * @param {PacketQuestion} question
+     * @param {PacketType} record
+     * @param {number} ttl
      * @protected
-     * @returns {DnsResponse|null}
+     * @returns {PacketResource}
+     */
+    protected _answer(question: PacketQuestion, record: PacketType, ttl: number): PacketResource {
+        return Packet.createResourceFromQuestion(question, record, ttl);
+    }
+
+    /**
+     * Handle for dns requests
+     * @param {Packet} request
+     * @param {unknown} client - remote info (dgram.RemoteInfo) or socket, protocol dependent
+     * @protected
+     * @returns {Promise<Packet|null>}
      */
     protected async _handleRequest(
-        request: DnsRequest,
-        rinfo: RemoteInfo
-    ): Promise<DnsResponse|null> {
+        request: Packet,
+        client: unknown
+    ): Promise<Packet|null> {
+        const remote = Dns2Server._remoteAddress(client);
+
         try {
-            const response = DNS.Packet.createResponseFromRequest(request);
+            const response = Packet.createResponseFromRequest(request);
             const [question] = request.questions;
-            const questionExt = question as DnsQuestionExt;
 
             Logger.getLogger().info(
                 `Request by ID: ${request.header.id}`,
                 {
                     class: 'Dns2Server::_handleRequest',
                     question: request.questions[0],
-                    remote_address: rinfo.address,
-                    remote_port: rinfo.port,
+                    remote_address: remote.address,
+                    remote_port: remote.port,
                     requestid: request.header.id
                 }
             );
 
-            const domain = await DomainServiceDB.getInstance().findByName(questionExt.name.toLowerCase());
+            const domain = await DomainServiceDB.getInstance().findByName(question.name.toLowerCase());
 
             if (domain) {
                 let records: DomainRecordDB[];
 
-                if (questionExt.class && questionExt.type) {
+                if (question.class && question.type) {
                     records = await DomainRecordServiceDB.getInstance().findAllBy(
                         domain.id,
-                        questionExt.class,
-                        questionExt.type
+                        question.class,
+                        question.type
                     );
                 } else {
                     records = await DomainRecordServiceDB.getInstance().findAllByDomain(domain.id);
@@ -206,69 +219,42 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
                     const settingsErrors: SchemaErrors = [];
 
                     switch (record.dtype) {
-                        case DNS.Packet.TYPE.TXT:
-                            response.answers.push({
-                                name: questionExt.name,
-                                type: record.dtype,
-                                class: record.dclass,
-                                ttl: record.ttl,
-                                data: record.dvalue
-                            } as DnsAnswerTXT);
+                        case PacketTypes.TXT:
+                            response.answers.push(this._answer(question, new TXT(record.dvalue), record.ttl));
                             break;
 
-                        case DNS.Packet.TYPE.A:
-                        case DNS.Packet.TYPE.AAAA:
-                            response.answers.push({
-                                name: questionExt.name,
-                                type: record.dtype,
-                                class: record.dclass,
-                                ttl: record.ttl,
-                                address: record.dvalue
-                            });
+                        case PacketTypes.A:
+                            response.answers.push(this._answer(question, new A(record.dvalue), record.ttl));
                             break;
 
-                        case DNS.Packet.TYPE.NS:
-                            response.answers.push({
-                                name: questionExt.name,
-                                type: record.dtype,
-                                class: record.dclass,
-                                ttl: record.ttl,
-                                ns: record.dvalue
-                            } as DnsAnswerNS);
+                        case PacketTypes.AAAA:
+                            response.answers.push(this._answer(question, new AAAA(record.dvalue), record.ttl));
                             break;
 
-                        case DNS.Packet.TYPE.MX:
-                            response.answers.push({
-                                name: questionExt.name,
-                                type: record.dtype,
-                                class: record.dclass,
-                                ttl: record.ttl,
-                                exchange: record.dvalue
-                            } as DnsAnswerMX);
+                        case PacketTypes.NS:
+                            response.answers.push(this._answer(question, new NS(record.dvalue), record.ttl));
                             break;
 
-                        case DNS.Packet.TYPE.CNAME:
-                            response.answers.push({
-                                name: questionExt.name,
-                                type: record.dtype,
-                                class: record.dclass,
-                                ttl: record.ttl,
-                                domain: record.dvalue
-                            });
+                        case PacketTypes.MX:
+                            response.answers.push(this._answer(question, new MX(record.dvalue), record.ttl));
                             break;
 
-                        case TYPE_EXT.TLSA:
+                        case PacketTypes.CNAME:
+                            response.answers.push(this._answer(question, new CNAME(record.dvalue), record.ttl));
+                            break;
+
+                        case PacketTypes.TLSA:
                             if (recordSettings && SchemaRecordSettingsTlSA.validate(recordSettings, settingsErrors)) {
-                                response.answers.push({
-                                    name: questionExt.name,
-                                    type: record.dtype,
-                                    class: record.dclass,
-                                    ttl: record.ttl,
-                                    certificate_usage: parseInt(recordSettings.certificate_usage, 10) ?? TLSACertificateUsage.DOMAIN_ISSUED_CERTIFICATE,
-                                    selector: parseInt(recordSettings.selector, 10),
-                                    matching_type: parseInt(recordSettings.matching_type, 10),
-                                    certificate_association_data: record.dvalue
-                                } as DnsAnswerTlSA);
+                                response.answers.push(this._answer(
+                                    question,
+                                    new TLSA(
+                                        parseInt(recordSettings.certificate_usage, 10),
+                                        parseInt(recordSettings.selector, 10),
+                                        parseInt(recordSettings.matching_type, 10),
+                                        record.dvalue
+                                    ),
+                                    record.ttl
+                                ));
                             }
                             break;
                     }
@@ -289,11 +275,11 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
                     }
                 }
 
-                if (questionExt.class && questionExt.type) {
+                if (question.class && question.type) {
                     const answers = this._handleTmpRecords(
                         domain.id,
-                        questionExt.class,
-                        questionExt.type
+                        question.class,
+                        question.type
                     );
 
                     if (answers.length > 0) {
@@ -301,12 +287,12 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
                     }
                 }
             } else {
-                const answers = this._handleTmpDomains(questionExt.name);
+                const answers = this._handleTmpDomains(question.name);
 
                 if (answers.length > 0) {
                     response.answers.push(...answers);
                 } else {
-                    const resolverAnswers = await this._handleResolver(questionExt.name, questionExt.type);
+                    const resolverAnswers = await this._handleResolver(question.name, question.type);
 
                     if (resolverAnswers.length > 0) {
                         response.answers.push(...resolverAnswers);
@@ -328,8 +314,8 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
         } catch {
             Logger.getLogger().info(
                 'Faild to processing the dns question by: %s:%d',
-                rinfo.address,
-                rinfo.port,
+                remote.address,
+                remote.port,
                 {
                     class: 'Dns2Server::_handleRequest:',
                     requestid: request.header.id
@@ -350,15 +336,53 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     }
 
     /**
+     * Best-effort extraction of the remote address/port for logging. The request
+     * handler's client is protocol dependent (dgram.RemoteInfo for UDP, a socket
+     * for TCP), so read both shapes defensively and never throw.
+     * @param {unknown} client
+     * @protected
+     * @returns {RemoteAddress}
+     */
+    protected static _remoteAddress(client: unknown): RemoteAddress {
+        if (client && typeof client === 'object') {
+            const info = client as {
+                address?: unknown;
+                port?: unknown;
+                remoteAddress?: unknown;
+                remotePort?: unknown;
+            };
+
+            if (typeof info.address === 'string' && typeof info.port === 'number') {
+                return {
+                    address: info.address,
+                    port: info.port
+                };
+            }
+
+            if (typeof info.remoteAddress === 'string' && typeof info.remotePort === 'number') {
+                return {
+                    address: info.remoteAddress,
+                    port: info.remotePort
+                };
+            }
+        }
+
+        return {
+            address: 'unknown',
+            port: 0
+        };
+    }
+
+    /**
      * Handle the temporary records for a domain.
      * @param {number} domainId
      * @param {number} recordClass
-     * @param {[number]} recordType
+     * @param {number} [recordType]
      * @protected
-     * @returns {DnsAnswer[]}
+     * @returns {PacketResource[]}
      */
-    protected _handleTmpRecords(domainId: number, recordClass: number, recordType?: number): DnsAnswer[] {
-        const answers: DnsAnswer[] = [];
+    protected _handleTmpRecords(domainId: number, recordClass: number, recordType?: number): PacketResource[] {
+        const answers: PacketResource[] = [];
 
         const tmpDomain = this._tempRecords.get(domainId);
 
@@ -369,14 +393,13 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
                 }
 
                 switch (record.type) {
-                    case DNS.Packet.TYPE.TXT:
-                        answers.push({
-                            name: record.name,
-                            type: record.type,
-                            class: record.class,
-                            ttl: record.ttl,
-                            data: record.data
-                        } as DnsAnswerTXT);
+                    case PacketTypes.TXT:
+                        answers.push(new PacketResource(
+                            record.name,
+                            new TXT(record.data),
+                            record.class,
+                            record.ttl
+                        ));
                         break;
                 }
             }
@@ -389,10 +412,10 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      * Handle request tmp domain
      * @param {string} domainName
      * @protected
-     * @returns {DnsAnswer[]}
+     * @returns {PacketResource[]}
      */
-    protected _handleTmpDomains(domainName: string): DnsAnswer[] {
-        const answers: DnsAnswer[] = [];
+    protected _handleTmpDomains(domainName: string): PacketResource[] {
+        const answers: PacketResource[] = [];
 
         const domainRecords = this._tempDomains.get(domainName.toLowerCase());
 
@@ -400,14 +423,13 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
             for (const record of domainRecords) {
 
                 switch (record.type) {
-                    case DNS.Packet.TYPE.TXT:
-                        answers.push({
-                            name: domainName,
-                            type: record.type,
-                            class: record.class,
-                            ttl: record.ttl,
-                            data: record.data
-                        } as DnsAnswerTXT);
+                    case PacketTypes.TXT:
+                        answers.push(new PacketResource(
+                            domainName,
+                            new TXT(record.data),
+                            record.class,
+                            record.ttl
+                        ));
                         break;
                 }
             }
@@ -416,28 +438,36 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
         return answers;
     }
 
-    protected async _handleResolver(domainName: string, recordType?: number): Promise<DnsAnswer[]> {
-        const answers: DnsAnswer[] = [];
+    /**
+     * Resolve a name upstream when it is not served locally. Placeholder: the
+     * upstream answers are not yet mapped back into the response.
+     * @param {string} domainName
+     * @param {number} [recordType]
+     * @protected
+     * @returns {Promise<PacketResource[]>}
+     */
+    protected async _handleResolver(domainName: string, recordType?: number): Promise<PacketResource[]> {
+        const answers: PacketResource[] = [];
 
         const resolver = new DNS();
 
-        let result: DNS.DnsResponse | null = null;
+        let result: Packet | null = null;
 
         if (recordType) {
             switch (recordType) {
-                case DNS.Packet.TYPE.A:
+                case PacketTypes.A:
                     result = await resolver.resolveA(domainName);
                     break;
 
-                case DNS.Packet.TYPE.AAAA:
+                case PacketTypes.AAAA:
                     result = await resolver.resolveAAAA(domainName);
                     break;
 
-                case DNS.Packet.TYPE.MX:
+                case PacketTypes.MX:
                     result = await resolver.resolveMX(domainName);
                     break;
 
-                case DNS.Packet.TYPE.CNAME:
+                case PacketTypes.CNAME:
                     result = await resolver.resolveCNAME(domainName);
                     break;
             }
@@ -464,7 +494,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     /**
      * Restart-safe reset: the monitor re-invokes start() on an unhealthy server
      * without a prior stop(), so if a previous start left the sockets bound
-     * (possibly dead) close them and recreate the dns2 server before listen()
+     * (possibly dead) close them and recreate the dns2ts server before listen()
      * re-binds. No-op on the initial start.
      * @protected
      */
@@ -497,7 +527,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
 
     /**
      * Health check for the service monitor: healthy while listen() is in effect
-     * AND the TCP DNS port still accepts a connection (dns2 listens TCP on the
+     * AND the TCP DNS port still accepts a connection (dns2ts listens TCP on the
      * same port). A dead socket that never flipped `_listening` is caught by the
      * probe, so an unhealthy DNS server triggers the monitor's restart.
      * @returns {Promise<boolean>}
