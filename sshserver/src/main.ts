@@ -1,7 +1,8 @@
 import {Args, DBHelper, Logger, RedisClient, RedisSubscribe} from 'figtree';
-import {DBService, SshPortDB, SshUserDB} from 'flyingfish_core';
-import {SchemaFlyingFishArgsSshServer} from 'flyingfish_schemas';
+import {DBService, SshPortDB, SshUserDB, registerWithHub} from 'flyingfish_core';
+import {SchemaFlyingFishArgsSshServer, buildSshCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
+import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {SshConfigChangedChannel} from './inc/Ipc/SshConfigChangedChannel.js';
@@ -122,6 +123,16 @@ import {SshServer} from './inc/Ssh/SshServer.js';
     }
 
     server.listen();
+
+    // Announce this part to the Hub registry (v2 modular architecture). Optional:
+    // without registry config the SSH server simply does not self-register.
+    if (tconfig.registry) {
+        await registerWithHub(
+            tconfig.registry.url,
+            tconfig.registry.secret,
+            buildSshCapabilityManifest(`ssh@${os.hostname()}`)
+        );
+    }
 
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,

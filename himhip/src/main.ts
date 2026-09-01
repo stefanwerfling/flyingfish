@@ -1,5 +1,8 @@
 import {scheduleJob} from 'node-schedule';
 import {Args, Logger, RedisClient, RedisSubscribe} from 'figtree';
+import {registerWithHub} from 'flyingfish_core';
+import {buildHimHIPCapabilityManifest} from 'flyingfish_schemas';
+import os from 'os';
 import {Config} from './inc/Config/Config.js';
 import {SchemaFlyingFishArgs} from './inc/Env/Args.js';
 import {HimHIP} from './inc/HimHIP.js';
@@ -47,6 +50,16 @@ import {HimHIP} from './inc/HimHIP.js';
     scheduleJob('*/1 * * * *', async() => {
         await HimHIP.update();
     });
+
+    // Announce this part to the Hub registry (v2 modular architecture). Optional:
+    // without registry config the HimHIP service simply does not self-register.
+    if (config.registry) {
+        await registerWithHub(
+            config.registry.url,
+            config.registry.secret,
+            buildHimHIPCapabilityManifest(`himhip@${os.hostname()}`)
+        );
+    }
 
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,
