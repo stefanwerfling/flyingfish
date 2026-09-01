@@ -10,6 +10,8 @@ import {NginxProcess} from '../../src/inc/Nginx/NginxProcess.js';
 import {NginxService} from '../../src/Application/Service/NginxService.js';
 import {Dns2Server} from '../../src/inc/Dns/Dns2Server.js';
 import {HubRegistryService} from '../../src/Application/Hub/HubRegistryService.js';
+import {FlyingFishHttpService} from '../../src/Application/Server/FlyingFishHttpService.js';
+import {RouteLoader} from '../../src/Application/Routes/RouteLoader.js';
 
 describe('Fault isolation (9.2.5)', () => {
     test('NginxService is Important and its health check follows the nginx process', async() => {
@@ -60,6 +62,28 @@ describe('Fault isolation (9.2.5)', () => {
 
     test('HubRegistryService is Important', () => {
         expect(HubRegistryService.getInstance().getImportance()).toBe(ServiceImportance.Important);
+    });
+
+    test('FlyingFishHttpService is Important, health-checks listening, and is restart-safe', async() => {
+        const http = new FlyingFishHttpService(RouteLoader);
+        const state = http as unknown as {_server: unknown; _releaseServer(): void;};
+
+        expect(http.getImportance()).toBe(ServiceImportance.Important);
+
+        // No server yet -> unhealthy.
+        expect(await http.healthCheck()).toBe(false);
+
+        // Listening -> healthy; not listening -> unhealthy.
+        state._server = {getServer: (): {listening: boolean;} => ({listening: true})};
+        expect(await http.healthCheck()).toBe(true);
+        state._server = {getServer: (): {listening: boolean;} => ({listening: false})};
+        expect(await http.healthCheck()).toBe(false);
+
+        // Restart-safe: a leftover server is closed before re-listen.
+        const close = jest.fn();
+        state._server = {close: close, getServer: (): null => null};
+        state._releaseServer();
+        expect(close).toHaveBeenCalledTimes(1);
     });
 
     test('Dns2Server.start is restart-safe: closes + recreates the server on restart', async() => {
