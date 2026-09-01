@@ -28,6 +28,7 @@ export {ADBTableLoaderOnLoadEvent} from './inc/Db/MariaDb/ADBTableLoaderOnLoadEv
 export {DBEntitiesLoader} from './inc/Db/MariaDb/DBEntitiesLoader.js';
 
 // MariaDb Entity
+export {AcmeDnsTempRecord as AcmeDnsTempRecordDB} from './inc/Db/MariaDb/Entity/AcmeDnsTempRecord.js';
 export {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential.js';
 export {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser.js';
 export {CredentialLocation as CredentialLocationDB} from './inc/Db/MariaDb/Entity/CredentialLocation.js';
@@ -58,6 +59,7 @@ export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';
 export {User as UserDB} from './inc/Db/MariaDb/Entity/User.js';
 
 // MariaDb Service
+export {AcmeDnsTempRecordService as AcmeDnsTempRecordServiceDB} from './inc/Db/MariaDb/Service/AcmeDnsTempRecordService.js';
 export {CredentialService as CredentialServiceDB} from './inc/Db/MariaDb/Service/CredentialService.js';
 export {CredentialUserService as CredentialUserServiceDB} from './inc/Db/MariaDb/Service/CredentialUserService.js';
 export {CredentialLocationService as CredentialLocationServiceDB} from './inc/Db/MariaDb/Service/CredentialLocationService.js';

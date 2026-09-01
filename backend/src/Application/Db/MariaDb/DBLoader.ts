@@ -1,5 +1,6 @@
 import {DBLoader as CoreDBLoader, DBLoaderType} from 'figtree';
 import {DBEntitiesLoader} from 'flyingfish_core';
+import {AddAcmeDnsTempRecord1788400000000} from '../../../inc/Db/MariaDb/migrations/1788400000000-AddAcmeDnsTempRecord.js';
 import {InitialSchema1787961600000} from '../../../inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 /**
@@ -26,7 +27,8 @@ export class DBLoader extends CoreDBLoader {
      */
     public static override loadMigrations(): ReturnType<DBLoaderType['loadMigrations']> {
         return [
-            InitialSchema1787961600000
+            InitialSchema1787961600000,
+            AddAcmeDnsTempRecord1788400000000
         ];
     }
 

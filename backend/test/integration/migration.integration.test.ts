@@ -27,8 +27,14 @@ describe('DB migrations (integration)', () => {
     test('auto-baseline stamps the initial migration on a legacy schema (no re-run)', async() => {
         const dataSource = await DBHelper.getDataSource();
 
-        // Simulate a legacy install: the schema exists but the migrations table is gone.
+        // Simulate a legacy install (v1.1.x, predating the migration system): the
+        // InitialSchema-era schema exists but the migrations table is gone. Such an
+        // install also predates every post-InitialSchema migration, so drop those
+        // tables too - the auto-baseline stamps InitialSchema and then runs the
+        // pending later migrations, which must be able to create their tables.
+        // (Add any future post-InitialSchema migration table to this list.)
         await dataSource.query('DROP TABLE `migrations`');
+        await dataSource.query('DROP TABLE `acme_dns_temp_record`');
 
         // Would throw (CREATE TABLE ... already exists) if the baseline did not stamp.
         await DBHelper.runMigrations(undefined, {

@@ -1,4 +1,5 @@
 import {PluginManager} from 'figtree';
+import {AcmeDnsTempRecord} from './Entity/AcmeDnsTempRecord.js';
 import {Credential} from './Entity/Credential.js';
 import {CredentialLocation} from './Entity/CredentialLocation.js';
 import {CredentialUser} from './Entity/CredentialUser.js';
@@ -42,6 +43,7 @@ export class DBEntitiesLoader {
     public static async loadEntities(): Promise<MixedList<Function | string | EntitySchema>> {
         // eslint-disable-next-line @typescript-eslint/ban-types
         const list: MixedList<Function | string | EntitySchema> = [
+            AcmeDnsTempRecord,
             Credential,
             CredentialUser,
             CredentialLocation,
