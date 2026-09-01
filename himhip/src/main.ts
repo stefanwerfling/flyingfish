@@ -48,4 +48,9 @@ import {HimHIP} from './inc/HimHIP.js';
         await HimHIP.update();
     });
 
-})();
+})().catch((error: unknown): void => {
+    // The logging framework may not be seated yet if boot fails this early,
+    // so report to stderr and exit non-zero (lets the container restart).
+    console.error('FlyingFish HimHIP service failed to start:', error);
+    process.exit(1);
+});

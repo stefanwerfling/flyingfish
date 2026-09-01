@@ -120,4 +120,9 @@ import {Update as UpdateController} from './Routes/Main/Update.js';
     // set up middleware/routes and start the express server (figtree splits
     // setup from listen; the former core BaseHttpServer did both in listen())
     await mServer.setupAndListen();
-})();
+})().catch((error: unknown): void => {
+    // The logging framework may not be seated yet if boot fails this early,
+    // so report to stderr and exit non-zero (lets the container restart).
+    console.error('FlyingFish DDNS server failed to start:', error);
+    process.exit(1);
+});

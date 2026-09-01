@@ -123,4 +123,9 @@ import {SshServer} from './inc/Ssh/SshServer.js';
 
     server.listen();
 
-})();
+})().catch((error: unknown): void => {
+    // The logging framework may not be seated yet if boot fails this early,
+    // so report to stderr and exit non-zero (lets the container restart).
+    console.error('FlyingFish SSH server failed to start:', error);
+    process.exit(1);
+});
