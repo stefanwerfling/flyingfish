@@ -5,8 +5,7 @@
  * (with an injected clock) and the aggregation of UI contributions from online
  * parts. Network-free.
  */
-import {CapabilityManifest} from 'flyingfish_schemas';
-import {buildDnsCapabilityManifest} from '../../src/inc/Dns/DnsCapabilityManifest.js';
+import {CapabilityManifest, buildDnsCapabilityManifest} from 'flyingfish_schemas';
 import {HubRegistry, RegistryPartStatus} from '../../src/Application/Hub/HubRegistry.js';
 
 describe('HubRegistry (in-memory skeleton)', () => {

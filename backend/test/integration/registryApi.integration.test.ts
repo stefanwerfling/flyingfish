@@ -7,12 +7,16 @@
  *
  * Runs against a real MariaDB via the dbHarness (needed for the login flow).
  */
-import {SchemaRegistryPartsResponse, SchemaRegistryUiContributionsResponse, StatusCodes} from 'flyingfish_schemas';
+import {
+    SchemaRegistryPartsResponse,
+    SchemaRegistryUiContributionsResponse,
+    StatusCodes,
+    buildDnsCapabilityManifest
+} from 'flyingfish_schemas';
 import request from 'supertest';
 import {FlyingFishConfig} from '../../src/Application/Config/FlyingFishConfig.js';
 import {HubRegistryService} from '../../src/Application/Hub/HubRegistryService.js';
 import {REGISTRY_SECRET_HEADER} from '../../src/Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
-import {buildDnsCapabilityManifest} from '../../src/inc/Dns/DnsCapabilityManifest.js';
 import {Registry} from '../../src/Routes/Main/Registry.js';
 import {buildApiApp, loginAgent} from './apiTestHelpers.js';
 import {closeTestDb, initTestDb, resetTestDb} from './dbHarness.js';
