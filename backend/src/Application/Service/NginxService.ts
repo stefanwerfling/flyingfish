@@ -115,10 +115,28 @@ export class NginxService extends ServiceAbstract {
     }
 
     /**
+     * Release still-open sub-servers so start() is safe to call as a restart.
+     * The service monitor re-invokes start() on an unhealthy service WITHOUT a
+     * prior stop(); the unhealthy trigger is a dead nginx process (isRun()
+     * false), so nginx is already gone and only the control + access-log servers
+     * stay alive and would collide on re-listen. Both closes are null-guarded,
+     * so this is a no-op on the initial start.
+     * @protected
+     */
+    protected async _releaseRunningServers(): Promise<void> {
+        await this._closeControl();
+        await this._accessLog.close();
+    }
+
+    /**
      * Start the nginx subsystem.
      */
     public override async start(): Promise<void> {
         this._status = ServiceStatus.Progress;
+
+        // Restart-safe: drop any sub-servers left over from a previous start
+        // before re-acquiring their ports (no-op on the initial start).
+        await this._releaseRunningServers();
 
         // Configure the NginxServer singleton with the config path/prefix from
         // the loaded configuration before anything touches it (the former

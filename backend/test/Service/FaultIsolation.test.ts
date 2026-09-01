@@ -42,4 +42,24 @@ describe('Fault isolation (9.2.5)', () => {
     test('HubRegistryService is Important', () => {
         expect(HubRegistryService.getInstance().getImportance()).toBe(ServiceImportance.Important);
     });
+
+    test('NginxService.start is restart-safe: releases leftover sub-servers', async() => {
+        const svc = NginxService.getInstance() as unknown as {
+            _releaseRunningServers(): Promise<void>;
+            _control: unknown;
+        };
+
+        // Fresh: no control server, access-log not started -> safe no-op.
+        await expect(svc._releaseRunningServers()).resolves.toBeUndefined();
+
+        // A control server left over from a previous start must be closed and
+        // dropped so the restart's re-listen does not collide.
+        const close = jest.fn();
+        svc._control = {close: close};
+
+        await svc._releaseRunningServers();
+
+        expect(close).toHaveBeenCalledTimes(1);
+        expect(svc._control).toBeNull();
+    });
 });
