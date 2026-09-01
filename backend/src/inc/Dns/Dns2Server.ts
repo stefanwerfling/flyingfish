@@ -79,7 +79,7 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      * server
      * @protected
      */
-    protected _server;
+    protected _server!: ReturnType<typeof DNS.createServer>;
 
     /**
      * Fault-isolation importance for the service monitor.
@@ -118,6 +118,15 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
     public constructor() {
         super(Dns2Server.NAME, [ 'mariadb' ]);
 
+        this._createServer();
+    }
+
+    /**
+     * Create (or recreate) the dns2 server object with the request handler.
+     * Used by the constructor and by the restart-safe reset in start().
+     * @protected
+     */
+    protected _createServer(): void {
         this._server = DNS.createServer({
             udp: true,
             tcp: true,
@@ -447,8 +456,33 @@ export class Dns2Server extends ServiceAbstract implements IDnsServer {
      */
     public override async start(): Promise<void> {
         this._status = ServiceStatus.Progress;
+        await this._resetServer();
         await this.listen();
         this._status = ServiceStatus.Success;
+    }
+
+    /**
+     * Restart-safe reset: the monitor re-invokes start() on an unhealthy server
+     * without a prior stop(), so if a previous start left the sockets bound
+     * (possibly dead) close them and recreate the dns2 server before listen()
+     * re-binds. No-op on the initial start.
+     * @protected
+     */
+    protected async _resetServer(): Promise<void> {
+        if (!this._listening) {
+            return;
+        }
+
+        try {
+            await this._server.close();
+        } catch {
+            Logger.getLogger().silly(
+                'Dns2Server::_resetServer: close before recreate failed (socket likely already down)'
+            );
+        }
+
+        this._listening = false;
+        this._createServer();
     }
 
     /**

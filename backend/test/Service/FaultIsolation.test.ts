@@ -62,6 +62,32 @@ describe('Fault isolation (9.2.5)', () => {
         expect(HubRegistryService.getInstance().getImportance()).toBe(ServiceImportance.Important);
     });
 
+    test('Dns2Server.start is restart-safe: closes + recreates the server on restart', async() => {
+        const state = Dns2Server.getInstance() as unknown as {
+            _resetServer(): Promise<void>;
+            _listening: boolean;
+            _server: unknown;
+        };
+
+        // Not listening -> reset keeps the current server (no-op).
+        const before = state._server;
+        state._listening = false;
+        await state._resetServer();
+        expect(state._server).toBe(before);
+
+        // Leftover bound sockets from a prior start -> close old + recreate + clear flag.
+        const close = jest.fn(() => Promise.resolve());
+        const stale = {close: close};
+        state._server = stale;
+        state._listening = true;
+
+        await state._resetServer();
+
+        expect(close).toHaveBeenCalledTimes(1);
+        expect(state._listening).toBe(false);
+        expect(state._server).not.toBe(stale);
+    });
+
     test('NginxService.start is restart-safe: releases leftover sub-servers', async() => {
         const svc = NginxService.getInstance() as unknown as {
             _releaseRunningServers(): Promise<void>;
