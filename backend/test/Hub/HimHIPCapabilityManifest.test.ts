@@ -5,8 +5,7 @@
  * SchemaCapabilityManifest and checks the minimal, UI-less/DB-less event-only
  * shape (Redis request/response channels). Network-free.
  */
-import {SchemaCapabilityManifest} from 'flyingfish_schemas';
-import {buildHimHIPCapabilityManifest} from '../../src/inc/HimHIP/HimHIPCapabilityManifest.js';
+import {SchemaCapabilityManifest, buildHimHIPCapabilityManifest} from 'flyingfish_schemas';
 
 describe('Capability manifest (HimHIP part)', () => {
     test('the HimHIP manifest validates against the schema', () => {

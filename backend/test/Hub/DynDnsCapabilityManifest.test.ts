@@ -5,8 +5,7 @@
  * SchemaCapabilityManifest and checks it carries both the public update
  * protocol and the admin management actions. Network-free.
  */
-import {SchemaCapabilityManifest} from 'flyingfish_schemas';
-import {buildDynDnsCapabilityManifest} from '../../src/inc/DynDns/DynDnsCapabilityManifest.js';
+import {SchemaCapabilityManifest, buildDynDnsCapabilityManifest} from 'flyingfish_schemas';
 
 describe('Capability manifest (DynDNS server part)', () => {
     test('the DynDNS manifest validates against the schema', () => {

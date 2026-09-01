@@ -5,8 +5,7 @@
  * SchemaCapabilityManifest and checks that malformed manifests are rejected.
  * Network-free (pure schema validation).
  */
-import {CapabilityUiRenderType, SchemaCapabilityManifest} from 'flyingfish_schemas';
-import {buildDnsCapabilityManifest} from '../../src/inc/Dns/DnsCapabilityManifest.js';
+import {CapabilityUiRenderType, SchemaCapabilityManifest, buildDnsCapabilityManifest} from 'flyingfish_schemas';
 
 describe('Capability manifest (DNS pilot)', () => {
     test('the DNS manifest validates against the schema', () => {

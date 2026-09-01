@@ -1,4 +1,4 @@
-import {CapabilityManifest} from 'flyingfish_schemas';
+import {CapabilityManifest} from './CapabilityManifest.js';
 
 /**
  * Capability manifest for the HimHIP part (v2 modular architecture).

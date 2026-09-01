@@ -1,4 +1,4 @@
-import {CapabilityManifest, CapabilityUiRenderType} from 'flyingfish_schemas';
+import {CapabilityManifest, CapabilityUiRenderType} from './CapabilityManifest.js';
 
 /**
  * Capability manifest for the nginx part (v2 modular architecture).

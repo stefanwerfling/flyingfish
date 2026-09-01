@@ -5,8 +5,7 @@
  * SchemaCapabilityManifest and checks the event-consumer shape (the
  * ssh_config_changed IPC channel) that DNS/nginx do not have. Network-free.
  */
-import {SchemaCapabilityManifest} from 'flyingfish_schemas';
-import {buildSshCapabilityManifest} from '../../src/inc/Ssh/SshCapabilityManifest.js';
+import {SchemaCapabilityManifest, buildSshCapabilityManifest} from 'flyingfish_schemas';
 
 describe('Capability manifest (SSH part)', () => {
     test('the SSH manifest validates against the schema', () => {

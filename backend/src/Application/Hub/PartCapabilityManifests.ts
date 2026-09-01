@@ -1,10 +1,12 @@
-import {CapabilityManifest} from 'flyingfish_schemas';
+import {
+    CapabilityManifest,
+    buildDnsCapabilityManifest,
+    buildDynDnsCapabilityManifest,
+    buildHimHIPCapabilityManifest,
+    buildNginxCapabilityManifest,
+    buildSshCapabilityManifest
+} from 'flyingfish_schemas';
 import {HubRegistry} from './HubRegistry.js';
-import {buildDnsCapabilityManifest} from '../../inc/Dns/DnsCapabilityManifest.js';
-import {buildDynDnsCapabilityManifest} from '../../inc/DynDns/DynDnsCapabilityManifest.js';
-import {buildHimHIPCapabilityManifest} from '../../inc/HimHIP/HimHIPCapabilityManifest.js';
-import {buildNginxCapabilityManifest} from '../../inc/Nginx/NginxCapabilityManifest.js';
-import {buildSshCapabilityManifest} from '../../inc/Ssh/SshCapabilityManifest.js';
 
 /**
  * Builds a capability manifest for one part instance.

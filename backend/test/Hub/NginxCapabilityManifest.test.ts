@@ -5,8 +5,7 @@
  * SchemaCapabilityManifest and checks the multi-capability shape (listen +
  * routing) plus the dependsOn wiring. Network-free (pure schema validation).
  */
-import {CapabilityUiRenderType, SchemaCapabilityManifest} from 'flyingfish_schemas';
-import {buildNginxCapabilityManifest} from '../../src/inc/Nginx/NginxCapabilityManifest.js';
+import {CapabilityUiRenderType, SchemaCapabilityManifest, buildNginxCapabilityManifest} from 'flyingfish_schemas';
 
 describe('Capability manifest (nginx part)', () => {
     test('the nginx manifest validates against the schema', () => {
