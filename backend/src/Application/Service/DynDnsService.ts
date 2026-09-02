@@ -1,4 +1,4 @@
-import DNS from 'dns2';
+import {A, DNS, PacketTypes} from 'dns2ts';
 import {DateHelper, Logger, ServiceJobAbstract} from 'figtree';
 import {
     DomainRecordServiceDB, DomainServiceDB, DynDnsClientDB,
@@ -144,7 +144,9 @@ export class DynDnsService extends ServiceJobAbstract {
 
                         if (result) {
                             for (const answer of result.answers) {
-                                if (answer.address !== undefined && answer.address === currentIp) {
+                                const rr = answer.packetType;
+
+                                if (rr instanceof A && rr.address === currentIp) {
                                     updateIp = false;
                                 }
                             }
@@ -196,8 +198,8 @@ export class DynDnsService extends ServiceJobAbstract {
                                 if (myIp) {
                                     for await (const record of records) {
                                         switch (record.dtype) {
-                                            case DNS.Packet.TYPE.TXT:
-                                            case DNS.Packet.TYPE.CNAME:
+                                            case PacketTypes.TXT:
+                                            case PacketTypes.CNAME:
                                                 continue;
 
                                             default:

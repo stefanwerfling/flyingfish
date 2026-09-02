@@ -1,4 +1,4 @@
-import DNS from 'dns2';
+import {DNS} from 'dns2ts';
 import {Logger} from 'figtree';
 
 /**
