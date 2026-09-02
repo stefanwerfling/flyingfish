@@ -9,6 +9,9 @@ import {createHash, timingSafeEqual} from 'crypto';
  * the single seam through which per-service PKI/mTLS auth will replace the shared
  * secret later. Callers pass the provided and the expected secret; the scattered
  * `provided === expected` checks (himhip, nginx) route through here instead.
+ *
+ * Lives in flyingfish_core so every part (backend Hub registry, the nginx
+ * control agent, …) shares the same verifier.
  */
 export class ServiceAuth {
 

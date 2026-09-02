@@ -97,6 +97,7 @@ export {RedisChannel} from './inc/Db/RedisDb/RedisChannel.js';
 
 // Server
 export {Session} from './inc/Server/Session.js';
+export {ServiceAuth} from './inc/Server/ServiceAuth.js';
 
 // Server Routes
 export {DefaultRoute, DefaultRouteHandlerGet, DefaultRouteHandlerPost} from './inc/Server/Routes/DefaultRoute.js';

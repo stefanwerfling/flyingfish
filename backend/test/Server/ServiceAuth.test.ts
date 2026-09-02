@@ -2,7 +2,7 @@
  * Unit tests for the ServiceAuth shared-secret verification (phase 3, step 5.3).
  * Network-free.
  */
-import {ServiceAuth} from '../../src/inc/Server/ServiceAuth.js';
+import {ServiceAuth} from 'flyingfish_core';
 
 describe('ServiceAuth.verifySecret', () => {
     test('accepts a matching secret', () => {
