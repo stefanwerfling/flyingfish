@@ -12,6 +12,8 @@ import {
     PacketResource,
     PacketType,
     PacketTypes,
+    ServerTcpOptions,
+    ServerUdpOptions,
     TLSA,
     TXT
 } from 'dns2ts';
@@ -25,6 +27,8 @@ import {
 } from 'flyingfish_core';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
+import {DnsProxyProtocolTcp} from './ProxyProtocolTcp.js';
+import {DnsProxyProtocolUdp} from './ProxyProtocolUdp.js';
 import {SchemaRecordSettingsTlSA} from './RecordType/TLSA.js';
 
 /**
@@ -114,9 +118,19 @@ export class Dns2Server extends ServiceAbstract {
      * @protected
      */
     protected _createServer(): void {
+        const proxyProtocol = Config.getInstance().get()?.dnsserver?.proxyProtocol === true;
+
+        const udp: boolean | ServerUdpOptions = proxyProtocol
+            ? {preRequest: new DnsProxyProtocolUdp()}
+            : true;
+
+        const tcp: boolean | ServerTcpOptions = proxyProtocol
+            ? {preConnection: new DnsProxyProtocolTcp()}
+            : true;
+
         this._server = new DnsServer({
-            udp: true,
-            tcp: true,
+            udp: udp,
+            tcp: tcp,
             handle: async(
                 request: Packet,
                 send: (response: Packet | Buffer | (Packet | Buffer)[]) => void,

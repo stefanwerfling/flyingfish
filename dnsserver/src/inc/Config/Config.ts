@@ -9,6 +9,7 @@ import process from 'process';
 export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
     DNSSERVER_PORT = 'FLYINGFISH_DNSSERVER_PORT',
+    DNSSERVER_PROXY_PROTOCOL = 'FLYINGFISH_DNSSERVER_PROXY_PROTOCOL',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET'
 }
@@ -109,6 +110,16 @@ export class Config extends ConfigCore<ConfigOptionsDnsServer> {
 
             config.dnsserver.port = parseInt(process.env[ENV_OPTIONAL.DNSSERVER_PORT]!, 10) ||
                 Config.DEFAULT_DNSSERVER_PORT;
+        }
+
+        // proxy protocol ----------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.DNSSERVER_PROXY_PROTOCOL]) {
+            if (!config.dnsserver) {
+                config.dnsserver = {};
+            }
+
+            config.dnsserver.proxyProtocol = process.env[ENV_OPTIONAL.DNSSERVER_PROXY_PROTOCOL] === '1';
         }
 
         // Logging -----------------------------------------------------------------------------------------------------
