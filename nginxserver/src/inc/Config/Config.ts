@@ -32,6 +32,12 @@ export class Config extends ConfigCore<ConfigOptionsNginxServer> {
     public static readonly DEFAULT_CONFIG_FILE = 'config.json';
 
     /**
+     * Port the control HTTP server (backend -> agent) listens on inside the
+     * nginx container.
+     */
+    public static readonly DEFAULT_CONTROL_PORT = 3000;
+
+    /**
      * getInstance
      */
     public static override getInstance(): Config {

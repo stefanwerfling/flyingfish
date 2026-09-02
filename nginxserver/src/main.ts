@@ -12,6 +12,9 @@ import {SchemaDefaultArgs} from 'figtree-schemas';
 import * as fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
+import {ControlHttpServer} from './inc/Server/ControlHttpServer.js';
+import {NginxProcessAgent} from './inc/Nginx/NginxProcessAgent.js';
+import {Control} from './Routes/Control.js';
 
 /**
  * Main
@@ -93,8 +96,28 @@ import {Config} from './inc/Config/Config.js';
         return;
     }
 
-    // The nginx control server + reload agent are wired in later slices (9.2.2).
-    Logger.getLogger().info('FlyingFish Nginx control service: database connected, awaiting control wiring.');
+    // Start the local nginx process and the control server the backend drives.
+    // (The njs access/auth control routes are wired in a later slice.)
+    const nginx = tConfig.nginx!;
+    const agent = new NginxProcessAgent(nginx.config, nginx.prefix);
+
+    agent.start();
+
+    const secret = nginx.secret ?? '';
+
+    if (secret === '') {
+        Logger.getLogger().warn(
+            'Nginx control: no nginx.secret configured — the control API will reject every call.'
+        );
+    }
+
+    const server = new ControlHttpServer(Config.DEFAULT_CONTROL_PORT, [
+        new Control(agent, secret)
+    ]);
+
+    await server.setupAndListen();
+
+    Logger.getLogger().info('FlyingFish Nginx control service listening on port %d', Config.DEFAULT_CONTROL_PORT);
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,
     // so report to stderr and exit non-zero (lets the container restart).
