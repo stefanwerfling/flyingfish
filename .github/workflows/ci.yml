@@ -40,7 +40,7 @@ jobs:
       - name: Typecheck TypeScript service workspaces
         run: |
           set -e
-          for w in schemas core backend ddnsserver dnsserver himhip sshserver; do
+          for w in schemas core backend ddnsserver dnsserver nginxserver himhip sshserver; do
             echo "::group::tsc --noEmit ${w}"
             npx tsc --noEmit -p "${w}/tsconfig.json"
             echo "::endgroup::"
