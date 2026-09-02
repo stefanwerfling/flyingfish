@@ -133,8 +133,6 @@ services:
     ports:
       - "443:443"
       - "80:80"
-      - "5333:53/udp"
-      - "5333:53/tcp"
       - "${HTTPSERVER_PORT}:${HTTPSERVER_PORT}"
       - "1900:1900"
       - "10901:10901"
@@ -304,6 +302,44 @@ services:
 #      - "ddnsserver/dist/main.js"
 #      - "ddnsserver/dist/main.js"
 #      - "--envargs=1"
+
+  dnsserver:
+    image: flyingfish_dns:v1.1.13
+    build:
+      context: ./
+      dockerfile: ./dnsserver/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
+    container_name: flyingfish_dns
+    volumes:
+      - ./dnsserver/dist:/opt/flyingfish/dnsserver/dist
+      - ./dnsserver/node_modules:/opt/flyingfish/dnsserver/node_modules
+      - ./dnsserver/package.json:/opt/flyingfish/dnsserver/package.json
+      - ./node_modules:/opt/flyingfish/node_modules
+      - ./package.json:/opt/flyingfish/package.json
+    environment:
+      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
+      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
+      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+    ports:
+      - "5333:5333/udp"
+      - "5333:5333/tcp"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.8
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      flyingfish:
+        condition: service_started
 
 #  vpnserver:
 #    image: flyingfish_vpn:v1.2
