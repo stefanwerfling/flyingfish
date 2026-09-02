@@ -22,7 +22,11 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
         prefix: Vts.string(),
         dhparamfile: Vts.optional(Vts.string()),
         module_mode_dyn: Vts.optional(Vts.boolean()),
-        secret: Vts.optional(Vts.string())
+        secret: Vts.optional(Vts.string()),
+        // When set, nginx runs in its own container (9.2.2): the backend drives
+        // start/stop/reload/test through the control agent at this URL instead of
+        // spawning nginx locally. Authed with `secret`.
+        remote_url: Vts.optional(Vts.string())
     })),
     sshserver: Vts.optional(Vts.object({
         ip: Vts.string()

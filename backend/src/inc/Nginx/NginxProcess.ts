@@ -18,9 +18,9 @@ export class NginxProcess {
     public async start(): Promise<void> {
         await this._ensureDhparam();
 
-        NginxServer.getInstance().start();
+        await NginxServer.getInstance().start();
 
-        if (NginxServer.getInstance().isRun()) {
+        if (await NginxServer.getInstance().isRun()) {
             Logger.getLogger().info('Nginx server is start', {
                 class: 'NginxProcess::start'
             });
@@ -30,12 +30,13 @@ export class NginxProcess {
     /**
      * Stop the nginx process.
      * @param {boolean} forced
+     * @returns {Promise<void>}
      */
-    public stop(forced: boolean): void {
-        if (NginxServer.getInstance().isRun()) {
-            NginxServer.getInstance().stop();
+    public async stop(forced: boolean): Promise<void> {
+        if (await NginxServer.getInstance().isRun()) {
+            await NginxServer.getInstance().stop();
         } else if (forced) {
-            NginxServer.getInstance().stop();
+            await NginxServer.getInstance().stop();
         }
     }
 
@@ -49,9 +50,9 @@ export class NginxProcess {
             });
         }
 
-        NginxServer.getInstance().reload();
+        await NginxServer.getInstance().reload();
 
-        if (NginxServer.getInstance().isRun()) {
+        if (await NginxServer.getInstance().isRun()) {
             Logger.getLogger().info('Nginx server is reload', {
                 class: 'NginxProcess::reload'
             });
@@ -60,9 +61,9 @@ export class NginxProcess {
 
     /**
      * Whether the nginx process is running.
-     * @returns {boolean}
+     * @returns {Promise<boolean>}
      */
-    public isRun(): boolean {
+    public isRun(): Promise<boolean> {
         return NginxServer.getInstance().isRun();
     }
 

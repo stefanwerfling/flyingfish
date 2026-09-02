@@ -148,7 +148,13 @@ export class NginxService extends ServiceAbstract {
         if (nginxConfig) {
             NginxServer.getInstance({
                 config: nginxConfig.config,
-                prefix: nginxConfig.prefix
+                prefix: nginxConfig.prefix,
+                // When a remote agent URL + secret are configured, nginx runs in
+                // its own container and the process control goes through the agent.
+                remote: nginxConfig.remote_url && nginxConfig.secret ? {
+                    url: nginxConfig.remote_url,
+                    secret: nginxConfig.secret
+                } : undefined
             });
         }
 
@@ -174,7 +180,7 @@ export class NginxService extends ServiceAbstract {
             class: 'NginxService::stop'
         });
 
-        this._process.stop(forced);
+        await this._process.stop(forced);
 
         await this._closeControl();
         await this._accessLog.close();

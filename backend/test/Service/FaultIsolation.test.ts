@@ -20,10 +20,10 @@ describe('Fault isolation (9.2.5)', () => {
 
         const isRun = jest.spyOn(NginxProcess.prototype, 'isRun');
 
-        isRun.mockReturnValue(true);
+        isRun.mockResolvedValue(true);
         expect(await nginx.healthCheck()).toBe(true);
 
-        isRun.mockReturnValue(false);
+        isRun.mockResolvedValue(false);
         expect(await nginx.healthCheck()).toBe(false);
 
         isRun.mockRestore();

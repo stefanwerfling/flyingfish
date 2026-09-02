@@ -3,6 +3,19 @@ import {Logger} from 'figtree';
 import * as fs from 'fs';
 import path from 'path';
 import {NginxConfig} from './NginxConfig.js';
+import {NginxControlClient} from './NginxControlClient.js';
+
+/**
+ * NginxServerRemoteOptions
+ *
+ * When set, nginx runs in its own container (9.2.2): start/stop/reload/test go
+ * to the control agent at `url` (authed with `secret`) instead of spawning nginx
+ * locally. The config is still written here (to the shared volume).
+ */
+export type NginxServerRemoteOptions = {
+    url: string;
+    secret: string;
+};
 
 /**
  * NginxServerOptions
@@ -10,6 +23,7 @@ import {NginxConfig} from './NginxConfig.js';
 export type NginxServerOptions = {
     config?: string;
     prefix?: string;
+    remote?: NginxServerRemoteOptions;
 };
 
 /**
@@ -75,12 +89,23 @@ export class NginxServer {
     protected _process: ChildProcess|null = null;
 
     /**
+     * Control client when nginx runs remotely (its own container); null in the
+     * local-spawn mode.
+     * @protected
+     */
+    protected _client: NginxControlClient|null = null;
+
+    /**
      * constructor
      * @param options
      */
     public constructor(options: NginxServerOptions = {}) {
         if (options.prefix && !fs.existsSync(options.prefix)) {
             throw new Error(`prefix path: ${options.prefix} does not exist`);
+        }
+
+        if (options.remote) {
+            this._client = new NginxControlClient(options.remote.url, options.remote.secret);
         }
 
         if (options.config) {
@@ -134,9 +159,15 @@ export class NginxServer {
     /**
      * start
      */
-    public start(): void {
+    public async start(): Promise<void> {
         if (this._config) {
             this._config.create();
+        }
+
+        if (this._client) {
+            await this._client.start();
+
+            return;
         }
 
         const args = this._getArguments();
@@ -169,7 +200,11 @@ export class NginxServer {
     /**
      * isRun
      */
-    public isRun(): boolean {
+    public async isRun(): Promise<boolean> {
+        if (this._client) {
+            return this._client.status();
+        }
+
         if (this._process) {
             if (this._process.exitCode === null) {
                 return true;
@@ -182,16 +217,28 @@ export class NginxServer {
     /**
      * stop
      */
-    public stop(): void {
+    public async stop(): Promise<void> {
+        if (this._client) {
+            await this._client.stop();
+
+            return;
+        }
+
         spawn(this._command, ['-s', 'stop']);
     }
 
     /**
      * reload
      */
-    public reload(): void {
+    public async reload(): Promise<void> {
         if (this._config) {
             this._config.create();
+        }
+
+        if (this._client) {
+            await this._client.reload();
+
+            return;
         }
 
         const args = this._getArguments();
@@ -220,6 +267,10 @@ export class NginxServer {
      * testConfig
      */
     public async testConfig(): Promise<boolean> {
+        if (this._client) {
+            return this._client.testConfig();
+        }
+
         const out = exec(`${this._command} -t`);
 
         return out.exitCode === 0;
