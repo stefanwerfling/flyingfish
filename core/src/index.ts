@@ -98,6 +98,10 @@ export {RedisChannel} from './inc/Db/RedisDb/RedisChannel.js';
 // Server
 export {Session} from './inc/Server/Session.js';
 export {ServiceAuth} from './inc/Server/ServiceAuth.js';
+export {BasicAuthData, BasicAuthParser} from './inc/Server/Njs/BasicAuthParser.js';
+
+// Nginx
+export {NGINX_CONTROL_UNIX_SOCKET_NAME, resolveNginxControlUnixSocketPath} from './inc/Nginx/NginxControlSocket.js';
 
 // Server Routes
 export {DefaultRoute, DefaultRouteHandlerGet, DefaultRouteHandlerPost} from './inc/Server/Routes/DefaultRoute.js';

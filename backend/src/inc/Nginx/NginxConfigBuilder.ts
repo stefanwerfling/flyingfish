@@ -45,9 +45,19 @@ import {NginxLogFormatJson} from './NginxLogFormatJson.js';
 import {NginxServer} from './NginxServer.js';
 import {NginxStreamServerVariables} from './NginxStreamServerVariables.js';
 import {SslCertProviders} from '../Provider/SslCertProvider/SslCertProviders.js';
-import {NginxControlHttpServer} from '../Server/NginxControlHttpServer.js';
 import {Settings} from '../Settings/Settings.js';
 import {SysLogServer} from '../SysLogServer/SysLogServer.js';
+
+/**
+ * Anything that can resolve to a running njs control server's unix socket
+ * path. Satisfied by the real `NginxControlHttpServer` (local nginx mode) and
+ * by a plain object carrying the pre-resolved remote-mode path (nginx running
+ * in its own container, control server lives there instead) — the builder
+ * only ever needs the path string.
+ */
+type NginxControlSocketSource = {
+    getUnixSocket(): string;
+};
 
 /**
  * HttpLocationCollect
@@ -193,7 +203,7 @@ export class NginxConfigBuilder {
     /**
      * Load settings and generate nginx config to file.
      */
-    public async build(syslog: SysLogServer | null, control: NginxControlHttpServer | null): Promise<void> {
+    public async build(syslog: SysLogServer | null, control: NginxControlSocketSource | null): Promise<void> {
         const conf = NginxServer.getInstance().getConf();
 
         if (conf === null) {

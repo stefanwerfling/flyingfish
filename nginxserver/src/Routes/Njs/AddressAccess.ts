@@ -1,0 +1,178 @@
+import {Request, Response, Router} from 'express';
+import {Logger} from 'figtree';
+import {DefaultRoute, IpBlacklistServiceDB, IpWhitelistServiceDB, NginxListenServiceDB} from 'flyingfish_core';
+import {NginxListenAddressCheckType} from 'flyingfish_schemas';
+
+/**
+ * AddressAccess
+ *
+ * njs `address_access` control route (blacklist/whitelist check for a
+ * listen), hosted here so it runs in the same container as nginx —
+ * mirrors the backend's local-mode route (backend/src/Routes/Njs/AddressAccess.ts).
+ */
+export class AddressAccess extends DefaultRoute {
+
+    /**
+     * access
+     * @param response
+     * @param listen_id
+     * @param realip_remote_addr
+     * @param remote_addr
+     * @param type
+     */
+    public async access(
+        response: Response,
+        listen_id: string,
+        realip_remote_addr: string,
+        remote_addr: string,
+        type: string
+    ): Promise<boolean> {
+        Logger.getLogger().info(
+            'AddressAccess::access: realip_remote_addr: %s remote_addr: %s type: %s',
+            realip_remote_addr,
+            remote_addr,
+            type
+        );
+
+        const listenId = parseInt(listen_id, 10) || 0;
+
+        if (realip_remote_addr) {
+            // global check (blacklist) --------------------------------------------------------------------------------
+            if ((listenId === 0) && await this._globalCheckBlacklist(realip_remote_addr)) {
+                response.status(200).send();
+                return true;
+            } else if ((listenId !== 0) && await this._listCheck(listenId, realip_remote_addr)) {
+                // listen check (blacklist & whitelist) ----------------------------------------------------------------
+                response.status(200).send();
+                return true;
+            }
+        } else {
+            Logger.getLogger().error('AddressAccess::access: realip_remote_addr is empty!');
+        }
+
+        response.status(401).send();
+
+        return false;
+    }
+
+    /**
+     * _globalCheckBlacklist
+     * @param realip_remote_addr
+     * @protected
+     */
+    protected async _globalCheckBlacklist(realip_remote_addr: string): Promise<boolean> {
+        const address = await IpBlacklistServiceDB.getInstance().findByIp(realip_remote_addr, false);
+
+        if (!address) {
+            Logger.getLogger().info('AddressAccess::_globalCheckBlacklist: Address(%s) not found in blacklist.', realip_remote_addr);
+
+            return true;
+        }
+
+        // update and not await
+        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).catch((error) => Logger.getLogger().error('AddressAccess: blacklist counter update failed', {error: error}));
+
+        Logger.getLogger().info('AddressAccess::_globalCheckBlacklist: Address(%s) found in blacklist!', realip_remote_addr);
+
+        return false;
+    }
+
+    /**
+     * _listCheck
+     * @param listenId
+     * @param realip_remote_addr
+     * @protected
+     */
+    protected async _listCheck(listenId: number, realip_remote_addr: string): Promise<boolean> {
+        const listen = await NginxListenServiceDB.getInstance().findOne(listenId);
+
+        if (listen) {
+            if (listen.enable_address_check) {
+                Logger.getLogger().silly('AddressAccess::_listCheck: Listen address check is enable ...');
+
+                switch (listen.address_check_type) {
+                    case NginxListenAddressCheckType.white:
+                        return this._listCheckWhiteList(listen.id, realip_remote_addr);
+
+                    default:
+                        return this._listCheckBlackList(listen.id, realip_remote_addr);
+                }
+            } else {
+                return true;
+            }
+        } else {
+            Logger.getLogger().warn('AddressAccess::_listCheck: Listen(%d) not found!', listenId);
+        }
+
+        return false;
+    }
+
+    /**
+     * _listCheckBlackList
+     * @param listenId
+     * @param realip_remote_addr
+     * @protected
+     */
+    protected async _listCheckBlackList(listenId: number, realip_remote_addr: string): Promise<boolean> {
+        const address = await IpBlacklistServiceDB.getInstance().findByIp(realip_remote_addr, false);
+
+        if (!address) {
+            Logger.getLogger().info('AddressAccess::_listCheckBlackList: Address(%s) not found in blacklist.', realip_remote_addr);
+
+            return true;
+        }
+
+        Logger.getLogger().info('AddressAccess::_listCheckBlackList: Address(%s) found in blacklist!', realip_remote_addr);
+
+        // update and not await
+        IpBlacklistServiceDB.getInstance().updateBlock(address.id, address.count_block + 1).catch((error) => Logger.getLogger().error('AddressAccess: blacklist counter update failed', {error: error}));
+
+        return false;
+    }
+
+    /**
+     * _listCheckWhiteList
+     * @param listenId
+     * @param realip_remote_addr
+     * @protected
+     */
+    protected async _listCheckWhiteList(listenId: number, realip_remote_addr: string): Promise<boolean> {
+        const address = await IpWhitelistServiceDB.getInstance().findByIp(realip_remote_addr, false);
+
+        if (address) {
+            Logger.getLogger().info('AddressAccess::_listCheckWhiteList: Address(%s) found in whitelist!', realip_remote_addr);
+
+            // update and not await
+            IpWhitelistServiceDB.getInstance().updateAccess(address.id, address.count_access + 1).catch((error) => Logger.getLogger().error('AddressAccess: whitelist counter update failed', {error: error}));
+
+            return true;
+        }
+
+        Logger.getLogger().info('AddressAccess::_listCheckWhiteList: Address(%s) not found in whitelist.', realip_remote_addr);
+
+        return false;
+    }
+
+    /**
+     * getExpressRouter
+     */
+    public override getExpressRouter(): Router {
+        // nginx auth_request subrequest: `access` sends the empty 200/401
+        // response itself, so the handler stays void.
+        this._get(
+            '/njs/address_access',
+            async(req: Request, res: Response): Promise<void> => {
+                await this.access(
+                    res,
+                    req.header('listen_id') ?? '',
+                    req.header('realip_remote_addr') ?? '',
+                    req.header('remote_addr') ?? '',
+                    req.header('type') ?? ''
+                );
+            }
+        );
+
+        return super.getExpressRouter();
+    }
+
+}

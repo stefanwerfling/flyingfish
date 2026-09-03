@@ -6,13 +6,16 @@ import {
     DBService,
     IpBlacklistDB,
     IpLocationDB,
-    IpWhitelistDB
+    IpWhitelistDB,
+    NginxListenDB,
+    NginxLocationDB
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import * as fs from 'fs';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {ControlHttpServer} from './inc/Server/ControlHttpServer.js';
+import {NjsControlHttpServer} from './inc/Server/NjsControlHttpServer.js';
 import {NginxProcessAgent} from './inc/Nginx/NginxProcessAgent.js';
 import {Control} from './Routes/Control.js';
 
@@ -80,7 +83,9 @@ import {Control} from './Routes/Control.js';
                 CredentialUserDB,
                 IpBlacklistDB,
                 IpLocationDB,
-                IpWhitelistDB
+                IpWhitelistDB,
+                NginxListenDB,
+                NginxLocationDB
             ],
             // This service is a consumer of the shared database; the backend owns
             // the schema and runs the migrations.
@@ -96,9 +101,14 @@ import {Control} from './Routes/Control.js';
         return;
     }
 
-    // Start the local nginx process and the control server the backend drives.
-    // (The njs access/auth control routes are wired in a later slice.)
+    // Start the njs control server first (the socket must exist before nginx,
+    // which references it in the generated config, starts) and the control
+    // server the backend drives.
     const nginx = tConfig.nginx!;
+
+    const njsControl = new NjsControlHttpServer(nginx.prefix);
+    await njsControl.listen();
+
     const agent = new NginxProcessAgent(nginx.config, nginx.prefix);
 
     agent.start();

@@ -1,4 +1,5 @@
 import {USHttpServer, USHttpServerOptions} from 'figtree';
+import {NGINX_CONTROL_UNIX_SOCKET_NAME} from 'flyingfish_core';
 
 import {AddressAccess as NjsAddressAccessController} from '../../Routes/Njs/AddressAccess.js';
 import {AuthBasic as NjsAuthBasicController} from '../../Routes/Njs/AuthBasic.js';
@@ -6,10 +7,16 @@ import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 
 /**
  * Nginx Control HTTP Server
+ *
+ * Only used in LOCAL nginx mode (nginx running in the backend container). In
+ * remote mode (nginx extracted into its own container) the equivalent server
+ * runs there instead — see nginxserver's NjsControlHttpServer — but both use
+ * the same socket name (NGINX_CONTROL_UNIX_SOCKET_NAME) so the generated
+ * nginx config's control URL is identical either way.
  */
 export class NginxControlHttpServer extends USHttpServer {
 
-    public static UNIX_ADDRESS = 'nginx_control';
+    public static UNIX_ADDRESS = NGINX_CONTROL_UNIX_SOCKET_NAME;
 
     /**
      * Constructor

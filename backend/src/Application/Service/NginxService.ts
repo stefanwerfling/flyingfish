@@ -1,5 +1,6 @@
 import {ServiceAbstract, Logger} from 'figtree';
 import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
+import {resolveNginxControlUnixSocketPath} from 'flyingfish_core';
 import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {NginxAccessLog} from '../../inc/Nginx/NginxAccessLog.js';
 import {NginxConfigBuilder} from '../../inc/Nginx/NginxConfigBuilder.js';
@@ -53,10 +54,20 @@ export class NginxService extends ServiceAbstract {
     private _accessLog: NginxAccessLog = new NginxAccessLog();
 
     /**
-     * Control server for ip checks.
+     * Control server for ip checks. Only created in local nginx mode — in
+     * remote mode the equivalent server runs in the nginx container itself
+     * (nginxserver's NjsControlHttpServer), so there's nothing to host here.
      * @private
      */
     private _control: NginxControlHttpServer | null = null;
+
+    /**
+     * Pre-resolved control-socket path used in remote nginx mode, where no
+     * local control server runs but the generated nginx config still needs
+     * the (identical, shared-socket-name) control URL.
+     * @private
+     */
+    private _remoteControlSocket: {getUnixSocket(): string;} | null = null;
 
     /**
      * Config builder (database -> nginx config).
@@ -91,14 +102,24 @@ export class NginxService extends ServiceAbstract {
      * @protected
      */
     private async _loadConfig(): Promise<void> {
-        await this._configBuilder.build(this._accessLog.getServer(), this._control);
+        await this._configBuilder.build(this._accessLog.getServer(), this._control ?? this._remoteControlSocket);
     }
 
     /**
-     * Start the control server.
+     * Start the control server — only in local nginx mode. In remote mode the
+     * njs control server runs in the nginx container instead, so we just
+     * pre-resolve the (shared-name) socket path for the config generator.
+     * @param {string} prefix
+     * @param {boolean} remote
      * @protected
      */
-    protected async _startControl(): Promise<void> {
+    protected async _startControl(prefix: string, remote: boolean): Promise<void> {
+        if (remote) {
+            const path = resolveNginxControlUnixSocketPath(prefix);
+            this._remoteControlSocket = {getUnixSocket: (): string => path};
+            return;
+        }
+
         this._control = new NginxControlHttpServer();
         await this._control.listen();
     }
@@ -108,6 +129,8 @@ export class NginxService extends ServiceAbstract {
      * @protected
      */
     protected async _closeControl(): Promise<void> {
+        this._remoteControlSocket = null;
+
         if (this._control) {
             this._control.close();
             this._control = null;
@@ -144,6 +167,7 @@ export class NginxService extends ServiceAbstract {
         // sub-components only read `NginxServer.getInstance()` inside methods,
         // so doing it here — the first thing in start() — is early enough.
         const nginxConfig = FlyingFishConfig.getInstance().get()?.nginx;
+        const isRemote = Boolean(nginxConfig?.remote_url && nginxConfig?.secret);
 
         if (nginxConfig) {
             NginxServer.getInstance({
@@ -151,15 +175,15 @@ export class NginxService extends ServiceAbstract {
                 prefix: nginxConfig.prefix,
                 // When a remote agent URL + secret are configured, nginx runs in
                 // its own container and the process control goes through the agent.
-                remote: nginxConfig.remote_url && nginxConfig.secret ? {
-                    url: nginxConfig.remote_url,
-                    secret: nginxConfig.secret
+                remote: isRemote ? {
+                    url: nginxConfig.remote_url!,
+                    secret: nginxConfig.secret!
                 } : undefined
             });
         }
 
         this._accessLog.start();
-        await this._startControl();
+        await this._startControl(nginxConfig?.prefix ?? '', isRemote);
         await this._loadConfig();
         await this._process.start();
 

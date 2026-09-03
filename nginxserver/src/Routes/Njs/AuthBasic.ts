@@ -1,11 +1,15 @@
-import {Response, Router} from 'express';
-import {DefaultRoute, Logger} from 'figtree';
-import {DefaultHandlerReturn, HandlerResultType} from 'figtree-schemas';
-import {BasicAuthParser} from 'flyingfish_core';
+import {Request, Response, Router} from 'express';
+import {Logger} from 'figtree';
+import {BasicAuthParser, DefaultRoute} from 'flyingfish_core';
 import {Credential} from '../../inc/Credential/Credential.js';
 
 /**
  * AuthBasic
+ *
+ * njs `auth_basic` control route, hosted here so it runs in the same
+ * container as nginx — mirrors the backend's local-mode route
+ * (backend/src/Routes/Njs/AuthBasic.ts). See Credential for the reduced
+ * (database-provider-only) credential check available in this container.
  */
 export class AuthBasic extends DefaultRoute {
 
@@ -58,22 +62,16 @@ export class AuthBasic extends DefaultRoute {
      * getExpressRouter
      */
     public override getExpressRouter(): Router {
-        // nginx auth_request subrequest: no user-login gate (this IS the basic-auth
-        // check), and `check` sends the empty 200/500 response itself.
+        // nginx auth_request subrequest: `check` sends the empty 200/500
+        // response itself, so the handler stays void.
         this._get(
             '/njs/auth_basic',
-            false,
-            async(req, res): Promise<DefaultHandlerReturn> => {
+            async(req: Request, res: Response): Promise<void> => {
                 await this.check(
                     res,
                     req.header('location_id') ?? '',
                     req.header('authheader') ?? ''
                 );
-
-                return {type: HandlerResultType.handled};
-            },
-            {
-                description: 'nginx basic-auth check for a location'
             }
         );
 
