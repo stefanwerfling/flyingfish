@@ -18,6 +18,7 @@ export enum ENV_OPTIONAL {
     NGINX_PREFIX = 'FLYINGFISH_NGINX_PREFIX',
     NGINX_MODULE_MODE_DYN = 'FLYINGFISH_NGINX_MODULE_MODE_DYN',
     NGINX_SECRET = 'FLYINGFISH_NGINX_SECRET',
+    NGINX_REMOTE_URL = 'FLYINGFISH_NGINX_REMOTE_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
     DYNDNSSERVER_PORT = 'FLYINGFISH_DYNDNSSERVER_PORT',
     DYNDNSSERVER_IP = 'FLYINGFISH_DYNDNSSERVER_IP',
@@ -307,6 +308,13 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
 
         if (process.env[ENV_OPTIONAL.NGINX_SECRET]) {
             config.nginx.secret = process.env[ENV_OPTIONAL.NGINX_SECRET];
+        }
+
+        // Nginx running in its own container (9.2.2): setting this switches
+        // NginxService to remote mode (process control via the agent instead
+        // of a local spawn) — see NginxServer's `remote` option.
+        if (process.env[ENV_OPTIONAL.NGINX_REMOTE_URL]) {
+            config.nginx.remote_url = process.env[ENV_OPTIONAL.NGINX_REMOTE_URL];
         }
 
         return config;
