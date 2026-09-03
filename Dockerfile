@@ -4,82 +4,21 @@ ENV FLYINGFISH_NGINX_MODULE_MODE_DYN="0"
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
-# nginx 1.30.x = current stable line (1.26 is EOL). 1.30.4 (2026-07-15).
-# Includes the fix for CVE-2025-23419 (TLSv1.3 SNI SSL session reuse).
-# Module versions chosen to match the line (njs 0.9.x, headers-more v0.40).
-ARG NGINX_VERSION="1.30.4"
-ARG HEADERS_MORE_VERSION="v0.40"
-ARG NJS_BRANCH="0.9.9"
 
+# nginx itself no longer builds/runs here (9.2.2 slice 5): it moved into its
+# own nginxserver image/container, which builds it (see nginxserver/Dockerfile,
+# kept version-locked to that one). This image keeps openssl (OpenSSL.ts spawns
+# it directly for CSR/CRT/dhparam) and certbot (the letsencrypt plugin spawns it
+# directly) - both are backend-side PKI/ACME tooling, independent of nginx.
 RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y dublin-traceroute
 RUN apt-get install -y iputils-ping
 RUN apt-get install -y openssl
-RUN apt-get install -y curl wget gnupg2 ca-certificates lsb-release debian-archive-keyring
+RUN apt-get install -y ca-certificates
 RUN apt install -y python3-pip python3-dev
 RUN apt install -y git
-
-RUN apt-get remove -y nginx nginx-common
-RUN cd ~ && wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && tar -zxvf nginx-$NGINX_VERSION.tar.gz
-RUN apt update -y
-RUN apt-get upgrade -y
-RUN apt-get install -y build-essential
-RUN apt-get install -y libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libxslt-dev
-RUN apt-get install -y mercurial
-RUN cd ~ && \
-    git clone --depth 1 --branch $NJS_BRANCH https://github.com/nginx/njs.git && \
-    cd ~/njs && \
-    ./configure && \
-    make
-
-RUN cd ~ && \
-     git clone --depth 1 -b $HEADERS_MORE_VERSION --single-branch https://github.com/openresty/headers-more-nginx-module.git \
-     && cd ~/headers-more-nginx-module \
-     && git submodule update --init
-
-RUN cd ~/nginx-$NGINX_VERSION && \
-    ./configure \
-    --sbin-path=/usr/bin/nginx \
-    --conf-path=/etc/nginx/nginx.conf \
-    --error-log-path=/var/log/nginx/error.log \
-    --http-log-path=/var/log/nginx/access.log \
-    --with-pcre \
-    --pid-path=/var/run/nginx.pid \
-    --with-compat \
-    --with-file-aio \
-    --with-threads \
-    --with-http_addition_module \
-    --with-http_auth_request_module \
-    --with-http_dav_module \
-    --with-http_flv_module \
-    --with-http_gunzip_module \
-    --with-http_gzip_static_module \
-    --with-http_mp4_module \
-    --with-http_random_index_module \
-    --with-http_realip_module \
-    --with-http_slice_module \
-    --with-http_ssl_module \
-    --with-http_sub_module \
-    --with-http_stub_status_module \
-    --with-http_v2_module \
-    --with-http_v3_module \
-    --with-http_secure_link_module \
-    --add-module=../njs/nginx \
-    --add-module=../headers-more-nginx-module/ \
-    --with-mail \
-    --with-mail_ssl_module \
-    --with-stream \
-    --with-stream_realip_module \
-    --with-stream_ssl_module \
-    --with-stream_ssl_preread_module \
-    --with-cc-opt="-I../quictls/build/include" \
-    --with-ld-opt="-L../quictls/build/lib" \
-    --modules-path=/usr/lib/nginx/modules/ &&\
-     make && \
-     make install
-
-RUN apt update && apt install -y certbot
+RUN apt install -y certbot
 RUN mkdir /etc/letsencrypt | true
 
 # Init App dirs --------------------------------------------------------------------------------------------------------
@@ -206,8 +145,8 @@ RUN npm install supervisor -g
 
 # defaults ports -------------------------------------------------------------------------------------------------------
 
-EXPOSE 80
-EXPOSE 443
+# 80/443 moved to the nginxserver image (9.2.2 slice 4/5) - this container no
+# longer builds/runs nginx by default.
 EXPOSE 3000
 
 # start main app -------------------------------------------------------------------------------------------------------
