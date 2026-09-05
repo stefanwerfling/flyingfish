@@ -24,7 +24,9 @@ export class OpenSSL {
 
         const process = spawn('openssl', args);
 
-        await SimpleProcessAwait.process(process);
+        // openssl dhparam streams its progress (dots/plus) to stderr - log it
+        // as debug instead of flooding the log with level=error noise.
+        await SimpleProcessAwait.process(process, 'debug');
 
         if (await FileHelper.fileExist(dhparamfile)) {
             return dhparamfile;

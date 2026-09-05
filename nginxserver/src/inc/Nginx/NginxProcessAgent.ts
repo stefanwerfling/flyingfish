@@ -76,8 +76,19 @@ export class NginxProcessAgent {
 
         process.stderr?.on('data', (buf: Buffer): void => {
             for (const entry of buf.toString().split('\n')) {
-                if (entry.trim() !== '') {
+                if (entry.trim() === '') {
+                    continue;
+                }
+
+                // nginx logs to stderr by design (error_log stderr notice) and
+                // stamps each line with its own severity - map it instead of
+                // flooding the log with level=error notices.
+                if ((/\[(?:emerg|alert|crit|error)\]/u).test(entry)) {
                     Logger.getLogger().error('NginxProcessAgent::stderr: %s', entry);
+                } else if (entry.includes('[warn]')) {
+                    Logger.getLogger().warn('NginxProcessAgent::stderr: %s', entry);
+                } else {
+                    Logger.getLogger().info('NginxProcessAgent::stderr: %s', entry);
                 }
             }
         });
