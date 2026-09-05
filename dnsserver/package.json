@@ -35,6 +35,7 @@
   "dependencies": {
     "dns2ts": "git+https://github.com/stefanwerfling/node-dns.git#ts",
     "figtree": "git+https://github.com/stefanwerfling/figtree.git",
+    "figtree-schemas": "git+https://github.com/stefanwerfling/figtree-schemas.git",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
     "mysql": "^2.18.1",

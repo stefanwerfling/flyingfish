@@ -35,6 +35,7 @@
     "bcrypt": "^5.1.1",
     "delay": "^6.0.0",
     "figtree": "git+https://github.com/stefanwerfling/figtree.git",
+    "figtree-schemas": "git+https://github.com/stefanwerfling/figtree-schemas.git",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
     "mysql": "^2.18.1",
