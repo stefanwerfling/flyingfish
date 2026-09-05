@@ -121,7 +121,9 @@ export class NginxService extends ServiceAbstract {
         }
 
         this._control = new NginxControlHttpServer();
-        await this._control.listen();
+        // setupAndListen, not listen(): USHttpServer.listen() throws before
+        // BaseHttpServer.setup() has created the express instance.
+        await this._control.setupAndListen();
     }
 
     /**

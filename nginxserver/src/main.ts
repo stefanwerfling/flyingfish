@@ -107,7 +107,7 @@ import {Control} from './Routes/Control.js';
     const nginx = tConfig.nginx!;
 
     const njsControl = new NjsControlHttpServer(nginx.prefix);
-    await njsControl.listen();
+    await njsControl.setupAndListen();
 
     const agent = new NginxProcessAgent(nginx.config, nginx.prefix);
 
