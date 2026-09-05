@@ -24,6 +24,13 @@ export type RegisteredPart = {
     status: RegistryPartStatus;
     registeredAt: number;
     lastHeartbeat: number;
+
+    /**
+     * In-process part (hosted by the backend itself). Colocated parts send no
+     * heartbeats - they are alive exactly as long as this process is - so the
+     * health evaluation must not age them into degraded/offline.
+     */
+    colocated: boolean;
 };
 
 /**
@@ -89,9 +96,10 @@ export class HubRegistry {
      * keeps the original registeredAt.
      * @param {CapabilityManifest} manifest
      * @param {number} now
+     * @param {boolean} colocated in-process part, exempt from heartbeat aging
      * @returns {RegisteredPart}
      */
-    public register(manifest: CapabilityManifest, now: number = Date.now()): RegisteredPart {
+    public register(manifest: CapabilityManifest, now: number = Date.now(), colocated: boolean = false): RegisteredPart {
         const errors: SchemaErrors = [];
 
         if (!SchemaCapabilityManifest.validate(manifest, errors)) {
@@ -104,7 +112,8 @@ export class HubRegistry {
             manifest: manifest,
             status: RegistryPartStatus.online,
             registeredAt: existing ? existing.registeredAt : now,
-            lastHeartbeat: now
+            lastHeartbeat: now,
+            colocated: colocated
         };
 
         this._parts.set(manifest.part.instanceId, part);
@@ -153,6 +162,11 @@ export class HubRegistry {
      */
     public evaluateHealth(now: number = Date.now()): void {
         for (const part of this._parts.values()) {
+            if (part.colocated) {
+                part.status = RegistryPartStatus.online;
+                continue;
+            }
+
             const age = now - part.lastHeartbeat;
 
             if (age > this._offlineAfterMs) {

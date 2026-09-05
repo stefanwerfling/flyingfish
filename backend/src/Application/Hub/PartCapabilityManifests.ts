@@ -59,7 +59,7 @@ export const registerColocatedParts = (registry: HubRegistry, instanceIdPrefix: 
         const build = partCapabilityManifestBuilders[id];
 
         if (build) {
-            registry.register(build(`${id}@${instanceIdPrefix}`));
+            registry.register(build(`${id}@${instanceIdPrefix}`), Date.now(), true);
         }
     }
 };

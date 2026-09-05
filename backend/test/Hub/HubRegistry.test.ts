@@ -62,6 +62,14 @@ describe('HubRegistry (in-memory skeleton)', () => {
         expect(registry.get('dns-1')?.status).toBe(RegistryPartStatus.offline);
     });
 
+    test('a colocated part never ages into degraded/offline', () => {
+        const registry = new HubRegistry({degradedAfterMs: 1000, offlineAfterMs: 2000});
+        registry.register(buildDnsCapabilityManifest('dns-1'), 0, true);
+
+        registry.evaluateHealth(3000);
+        expect(registry.get('dns-1')?.status).toBe(RegistryPartStatus.online);
+    });
+
     test('a heartbeat recovers an offline part to online', () => {
         const registry = new HubRegistry({degradedAfterMs: 1000, offlineAfterMs: 2000});
         registry.register(buildDnsCapabilityManifest('dns-1'), 0);
