@@ -3,10 +3,12 @@
  * Run against a real MariaDB via the dbHarness - see the CI integration job.
  */
 import {DBHelper} from 'figtree';
-import {closeTestDb, initTestDb} from './dbHarness.js';
+import {closeTestDb, initTestDbDedicated} from './dbHarness.js';
 
 describe('DB migrations (integration)', () => {
-    beforeAll(initTestDb);
+    // Dedicated DB: this suite drops/rebaselines the migrations table, which would
+    // desync the shared worker DB and break other files.
+    beforeAll(() => initTestDbDedicated('migration'));
     afterAll(closeTestDb);
 
     test('the initial migration creates the full schema and is recorded', async() => {

@@ -10,6 +10,12 @@
  * created on demand, so the integration suites can run in parallel without
  * sharing state. Within a worker the files run serially and reuse the same
  * database (reset between tests keeps them isolated).
+ *
+ * Suites that MUTATE the migrations table (drop/rebaseline it) must not run
+ * against that shared worker DB — they would desync it (a table exists but its
+ * migration is unrecorded) and break every other file in the worker. Such suites
+ * use `initTestDbDedicated(suffix)`, which gives them a DEDICATED, freshly
+ * dropped+recreated database (`<base>_<workerid>_<suffix>`).
  */
 import {DataSource} from 'typeorm';
 import {DBHelper} from 'figtree';
@@ -27,37 +33,56 @@ const connectionOptions = (): {type: 'mysql'; host: string; port: number; userna
     };
 };
 
-// A per-worker database name so parallel jest workers don't collide.
-const testDbName = `${process.env.FF_TEST_DB_NAME ?? 'flyingfish'}_${process.env.JEST_WORKER_ID ?? '1'}`;
+// The shared per-worker database name so parallel jest workers don't collide.
+const baseWorkerDbName = (): string =>
+    `${process.env.FF_TEST_DB_NAME ?? 'flyingfish'}_${process.env.JEST_WORKER_ID ?? '1'}`;
+
+// The database this file's harness is currently bound to (the shared worker DB
+// by default; a dedicated one when a suffix is passed to initTestDb).
+let activeDbName = baseWorkerDbName();
 
 let initialized = false;
 
 /**
- * The database name used by this worker's integration tests.
+ * The database name used by this file's integration tests.
  * @returns {string}
  */
-export const getTestDbName = (): string => testDbName;
+export const getTestDbName = (): string => activeDbName;
 
 /**
- * Create this worker's database if it does not exist yet (via a short-lived
- * bootstrap connection to information_schema).
+ * Create the active database (via a short-lived bootstrap connection to
+ * information_schema). Dedicated databases are dropped first so they always
+ * start fresh — safe because nothing else uses them.
+ * @param {boolean} fresh
  */
-const ensureDatabase = async(): Promise<void> => {
+const ensureDatabase = async(fresh: boolean): Promise<void> => {
     const bootstrap = new DataSource({...connectionOptions(), database: 'information_schema'});
     await bootstrap.initialize();
-    await bootstrap.query(`CREATE DATABASE IF NOT EXISTS \`${testDbName}\``);
+
+    if (fresh) {
+        await bootstrap.query(`DROP DATABASE IF EXISTS \`${activeDbName}\``);
+    }
+
+    await bootstrap.query(`CREATE DATABASE IF NOT EXISTS \`${activeDbName}\``);
     await bootstrap.destroy();
 };
 
 /**
- * Initialise the test database: connect and run migrations.
+ * Initialise the test database: connect and run migrations. A `suffix` switches
+ * to a dedicated, freshly recreated database instead of the shared worker one —
+ * required for suites that drop/rebaseline the migrations table.
+ * @param {string} [suffix]
  */
-export const initTestDb = async(): Promise<void> => {
+const initDb = async(suffix?: string): Promise<void> => {
     if (initialized) {
         return;
     }
 
-    await ensureDatabase();
+    if (suffix !== undefined) {
+        activeDbName = `${baseWorkerDbName()}_${suffix}`;
+    }
+
+    await ensureDatabase(suffix !== undefined);
 
     // The constructor registers the singleton; with no plugins started,
     // DBEntitiesLoader.loadEntities() returns just the core entities.
@@ -67,7 +92,7 @@ export const initTestDb = async(): Promise<void> => {
 
     await DBHelper.init({
         ...connectionOptions(),
-        database: testDbName,
+        database: activeDbName,
         entities: entities,
         migrations: [InitialSchema1787961600000, AddAcmeDnsTempRecord1788400000000],
         migrationsRun: false,
@@ -91,6 +116,20 @@ export const initTestDb = async(): Promise<void> => {
     // eslint-disable-next-line require-atomic-updates -- module-level init guard for tests, no real race
     initialized = true;
 };
+
+/**
+ * Initialise the shared per-worker test database. Deliberately zero-arg so it
+ * can be passed straight to `beforeAll` — jest injects its `done` callback into
+ * any hook function with a declared parameter, which must not reach `initDb`.
+ */
+export const initTestDb = async(): Promise<void> => initDb();
+
+/**
+ * Initialise a DEDICATED, freshly recreated database (`<base>_<workerid>_<suffix>`)
+ * for suites that drop/rebaseline the migrations table.
+ * @param {string} suffix
+ */
+export const initTestDbDedicated = async(suffix: string): Promise<void> => initDb(suffix);
 
 /**
  * Truncate all data tables (keeps the schema and the migrations record).

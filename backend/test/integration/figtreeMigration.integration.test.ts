@@ -10,7 +10,7 @@
 import {DBHelper as FigtreeDBHelper} from 'figtree';
 import {DBEntitiesLoader, PluginManager} from 'flyingfish_core';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
-import {closeTestDb, getTestDbName, initTestDb} from './dbHarness.js';
+import {closeTestDb, getTestDbName, initTestDbDedicated} from './dbHarness.js';
 
 const baseline = {
     legacyTable: 'user',
@@ -21,7 +21,8 @@ const baseline = {
 describe('figtree migration path (integration)', () => {
     beforeAll(async() => {
         // Ensure the schema exists (created via flyingfish_core DBHelper).
-        await initTestDb();
+        // Dedicated DB: this suite drops/rebaselines the migrations table.
+        await initTestDbDedicated('figtree');
 
         // figtree's DBHelper is a separate class/singleton from core's, so it
         // needs its own connection to the same test database.
