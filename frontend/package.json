@@ -17,7 +17,7 @@
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
     "admin-lte": "^3.2.0",
-    "bambooo": "git+https://github.com/stefanwerfling/bambooo.git",
+    "bambooo": "git+https://github.com/stefanwerfling/bambooo.git#86f1d9b5a79343f7a131ec6d994071e35290740a",
     "css-loader": "^7.1.2",
     "eslint": "^9.21.0",
     "eslint-plugin-import": "^2.31.0",
