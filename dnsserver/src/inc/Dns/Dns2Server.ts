@@ -172,6 +172,13 @@ export class Dns2Server extends ServiceAbstract {
 
         try {
             const response = Packet.createResponseFromRequest(request);
+
+            // dns2ts's createResponseFromRequest copies only the header, not the
+            // question section - strict resolvers (node/c-ares: EBADRESP) reject
+            // replies whose question section does not echo the query. Mirror it
+            // here until dns2ts does this itself.
+            response.questions = [...request.questions];
+
             const [question] = request.questions;
 
             Logger.getLogger().info(
