@@ -46,6 +46,11 @@ RUN rm package-lock.json | true
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
+# npm 10 (bundled with node:22) crashes while preparing the figtree git
+# dependency (arborist "edgesOut" TypeError on its git peer dependencies);
+# npm 11 fixes this. npm 12 is not an option yet: it refuses git
+# dependencies (allow-git defaults to "none") and blocks install scripts.
+RUN npm install -g npm@11
 RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
 
 WORKDIR /opt/flyingfish/schemas
