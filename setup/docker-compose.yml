@@ -133,6 +133,15 @@ services:
       options:
         max-size: "500k"
         max-file: "50"
+    healthcheck:
+      # Gates the part containers below (they trust this cert via
+      # NODE_EXTRA_CA_CERTS, see 9.2.1) - only mark this container healthy once
+      # the self-signed cert has actually been generated/persisted.
+      test: [ "CMD", "test", "-f", "/var/lib/flyingfish/ssl/server.crt" ]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+      start_period: 10s
     depends_on:
       mariadb:
         condition: service_healthy
@@ -175,12 +184,17 @@ services:
   himhip:
     image: stefanwerfling/flyingfish_himip:latest
     container_name: flyingfish_himhip
+    volumes:
+      # Read-only: only needs the backend's self-signed cert to trust it over
+      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
+      - flyingfish:/var/lib/flyingfish:ro
     environment:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
       FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
     network_mode: host
     cap_add:
       - ALL
@@ -193,13 +207,16 @@ services:
       redis:
         condition: service_healthy
       flyingfish:
-        condition: service_started
+        condition: service_healthy
 
   sshremote:
     image: stefanwerfling/flyingfish_ssh:latest
     container_name: flyingfish_ssh
     volumes:
       - flyingfishSsh:/opt/app/ssh:rw
+      # Read-only: only needs the backend's self-signed cert to trust it over
+      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
+      - flyingfish:/var/lib/flyingfish:ro
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -210,6 +227,7 @@ services:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
     ports:
       - "2222:22"
     networks:
@@ -226,11 +244,15 @@ services:
       redis:
         condition: service_healthy
       flyingfish:
-        condition: service_started
+        condition: service_healthy
 
   ddnsserver:
     image: stefanwerfling/flyingfish_ddns:latest
     container_name: flyingfish_ddns
+    volumes:
+      # Read-only: only needs the backend's self-signed cert to trust it over
+      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
+      - flyingfish:/var/lib/flyingfish:ro
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -238,6 +260,7 @@ services:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
     networks:
       flyingfishNet:
         ipv4_address: 10.103.0.6
@@ -252,11 +275,15 @@ services:
       redis:
         condition: service_healthy
       flyingfish:
-        condition: service_started
+        condition: service_healthy
 
   dnsserver:
     image: stefanwerfling/flyingfish_dns:latest
     container_name: flyingfish_dns
+    volumes:
+      # Read-only: only needs the backend's self-signed cert to trust it over
+      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
+      - flyingfish:/var/lib/flyingfish:ro
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -264,6 +291,7 @@ services:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
     ports:
       - "5333:5333/udp"
       - "5333:5333/tcp"
@@ -279,7 +307,7 @@ services:
       mariadb:
         condition: service_healthy
       flyingfish:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
   flyingfishDbData:
