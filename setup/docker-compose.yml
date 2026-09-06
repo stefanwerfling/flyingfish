@@ -98,6 +98,10 @@ services:
   flyingfish:
     image: stefanwerfling/flyingfish:latest
     container_name: flyingfish_service
+    # Explicit so the container's own os.hostname() (used in the self-signed
+    # cert's subjectAltName, see figtree) matches the compose-DNS name the
+    # part containers use in REGISTRY_URL - not a random container id.
+    hostname: flyingfish
     volumes:
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
       - flyingfish:/var/lib/flyingfish:rw

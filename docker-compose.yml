@@ -103,6 +103,10 @@ services:
       args:
         NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
     container_name: flyingfish_service
+    # Explicit so the container's own os.hostname() (used in the self-signed
+    # cert's subjectAltName, see figtree) matches the compose-DNS name the
+    # part containers use in REGISTRY_URL - not a random container id.
+    hostname: flyingfish
     volumes:
       - ./nginx:/opt/flyingfish/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
