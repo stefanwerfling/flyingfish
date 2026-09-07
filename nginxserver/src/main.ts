@@ -8,10 +8,13 @@ import {
     IpLocationDB,
     IpWhitelistDB,
     NginxListenDB,
-    NginxLocationDB
+    NginxLocationDB,
+    startHubRegistration
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
+import {buildNginxCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
+import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {ControlHttpServer} from './inc/Server/ControlHttpServer.js';
@@ -128,6 +131,17 @@ import {Control} from './Routes/Control.js';
     await server.setupAndListen();
 
     Logger.getLogger().info('FlyingFish Nginx control service listening on port %d', Config.DEFAULT_CONTROL_PORT);
+
+    // Announce this part to the Hub registry (v2 modular architecture). Optional:
+    // without registry config the nginx control service simply does not
+    // self-register.
+    if (tConfig.registry) {
+        await startHubRegistration(
+            tConfig.registry.url,
+            tConfig.registry.secret,
+            buildNginxCapabilityManifest(`nginx@${os.hostname()}`)
+        );
+    }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,
     // so report to stderr and exit non-zero (lets the container restart).

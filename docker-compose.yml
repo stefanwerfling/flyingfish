@@ -187,6 +187,9 @@ services:
     volumes:
       - ./nginx:/opt/flyingfish/nginx:rw
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
+      # Read-only: only needs the backend's self-signed cert to trust it over
+      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
+      - flyingfish:/var/lib/flyingfish:ro
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -195,6 +198,7 @@ services:
       FLYINGFISH_NGINX_SECRET: "${NGINX_SECRET}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
     ports:
       - "443:443"
       - "80:80"
@@ -210,7 +214,7 @@ services:
       mariadb:
         condition: service_healthy
       flyingfish:
-        condition: service_started
+        condition: service_healthy
 
   himhip:
     image: flyingfish_himip:v1.1.13
