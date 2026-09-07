@@ -221,7 +221,10 @@ services:
     image: stefanwerfling/flyingfish_ssh:latest
     container_name: flyingfish_ssh
     volumes:
-      - flyingfishSsh:/opt/app/ssh:rw
+      # /var/lib/flyingfish is mounted read-only below (CA cert trust) - this
+      # nested mount at the actual SSH host-key path (flyingfish_sshpath default,
+      # see sshserver/inc/Config/Config.ts) takes precedence and stays writable.
+      - flyingfishSsh:/var/lib/flyingfish/ssh:rw
       # Read-only: only needs the backend's self-signed cert to trust it over
       # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
       - flyingfish:/var/lib/flyingfish:ro

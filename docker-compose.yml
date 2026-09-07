@@ -284,7 +284,10 @@ services:
         NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
     container_name: flyingfish_ssh
     volumes:
-      - flyingfishSsh:/opt/flyingfish/ssh:rw
+      # /var/lib/flyingfish is mounted read-only below (CA cert trust) - this
+      # nested mount at the actual SSH host-key path (flyingfish_sshpath default,
+      # see sshserver/inc/Config/Config.ts) takes precedence and stays writable.
+      - flyingfishSsh:/var/lib/flyingfish/ssh:rw
       - ./sshserver/dist:/opt/flyingfish/sshserver/dist
       - ./sshserver/node_modules:/opt/flyingfish/sshserver/node_modules
       - ./sshserver/package.json:/opt/flyingfish/sshserver/package.json
