@@ -19,6 +19,26 @@ export {
     CertificateHelper
 } from './inc/Crypto/CertificateHelper.js';
 export {JwkHelper} from './inc/Crypto/JwkHelper.js';
+export {
+    PkiKeyAlgorithm,
+    PkiKeyPair,
+    PkiKeyPairPem,
+    PkiSanType,
+    PkiSanEntry,
+    PkiNameConstraints,
+    PkiIssuer,
+    PkiCaCertOptions,
+    PkiLeafCertOptions,
+    PkiCertificateBuilder
+} from './inc/Crypto/PkiCertificateBuilder.js';
+export {
+    PkiCaPurpose,
+    PkiCaNode,
+    PkiIssuedLeaf,
+    PkiCaTreeResult,
+    PkiCaTreeOptions,
+    PkiCaTree
+} from './inc/Pki/PkiCaTree.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
