@@ -39,6 +39,19 @@ export {
     PkiCaTreeOptions,
     PkiCaTree
 } from './inc/Pki/PkiCaTree.js';
+export {
+    PkiClock,
+    PkiBootstrapToken,
+    PkiBootstrapTokenOptions,
+    PkiBootstrapTokenStore
+} from './inc/Pki/PkiBootstrapTokenStore.js';
+export {
+    PkiEnrollmentStatus,
+    PkiEnrollmentInput,
+    PkiIssuedCertificate,
+    PkiEnrollmentRequest,
+    PkiEnrollmentService
+} from './inc/Pki/PkiEnrollment.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';

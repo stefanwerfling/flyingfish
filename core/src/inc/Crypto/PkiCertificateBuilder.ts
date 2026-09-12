@@ -409,6 +409,57 @@ export class PkiCertificateBuilder {
     }
 
     /**
+     * Create a PKCS#10 certificate signing request (CSR). A node generates its
+     * key pair locally and produces a CSR that proves possession of the private
+     * key (the CSR is self-signed); only the CSR travels to the CA, the private
+     * key never leaves the node (EST simpleenroll, PKI-Design §3).
+     * @param subject - the requested subject distinguished name, RFC 4514 form
+     * @param keyPair - the requester's own key pair
+     * @param algorithm - the signature algorithm, Ed25519 by default
+     */
+    public static async createCsr(
+        subject: string,
+        keyPair: PkiKeyPair,
+        algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
+    ): Promise<string> {
+        const csr = await x509.Pkcs10CertificateRequestGenerator.create({
+            name: subject,
+            keys: keyPair as unknown as webcrypto.CryptoKeyPair,
+            signingAlgorithm: PkiCertificateBuilder._signingAlgorithm(algorithm)
+        });
+
+        return csr.toString('pem');
+    }
+
+    /**
+     * Verify a CSR's self-signature, i.e. that the requester actually holds the
+     * private key for the public key in the CSR (proof of possession).
+     * @param csr - the CSR PEM
+     */
+    public static async verifyCsr(csr: string): Promise<boolean> {
+        return new x509.Pkcs10CertificateRequest(csr).verify();
+    }
+
+    /**
+     * Extract the public key from a CSR as a WebCrypto key (for signing the
+     * issued certificate against it).
+     * @param csr - the CSR PEM
+     */
+    public static async getCsrPublicKey(csr: string): Promise<webcrypto.CryptoKey> {
+        const publicKey = await new x509.Pkcs10CertificateRequest(csr).publicKey.export();
+
+        return publicKey as unknown as webcrypto.CryptoKey;
+    }
+
+    /**
+     * Get the requested subject distinguished name from a CSR.
+     * @param csr - the CSR PEM
+     */
+    public static getCsrSubject(csr: string): string {
+        return new x509.Pkcs10CertificateRequest(csr).subject;
+    }
+
+    /**
      * Verify that a certificate was signed by the given issuer (signature only -
      * this does not check validity dates, revocation or the full chain).
      * @param certificate - the certificate PEM to check
