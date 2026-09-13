@@ -1,5 +1,17 @@
 import {Args, DBHelper, Logger, RedisClient, RedisSubscribe} from 'figtree';
-import {DBService, SshPortDB, SshUserDB, startHubRegistration} from 'flyingfish_core';
+import {
+    DBService,
+    PkiBootstrapSocketClient,
+    PkiCaPurpose,
+    PkiClientIdentity,
+    PkiNodeClient,
+    PkiNodeEnroller,
+    PkiNodeFileStore,
+    PkiNodeHttpTransport,
+    SshPortDB,
+    SshUserDB,
+    startHubRegistration
+} from 'flyingfish_core';
 import {SchemaFlyingFishArgsSshServer, buildSshCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
 import os from 'os';
@@ -124,13 +136,54 @@ import {SshServer} from './inc/Ssh/SshServer.js';
 
     server.listen();
 
+    // Node PKI (v2 own-PKI epic 9.4): opt-in enroll + auto-renew of this part's
+    // own service certificate, BEFORE Hub registration so the registration can
+    // authenticate over mTLS with it. Optional and non-fatal — without pki config
+    // the SSH server simply runs without a node certificate.
+    let nodeIdentity: PkiClientIdentity | undefined;
+
+    if (tconfig.pki) {
+        try {
+            const store = new PkiNodeFileStore(
+                tconfig.pki.storeDir ?? tconfig.flyingfish_libpath ?? Config.DEFAULT_FF_DIR
+            );
+
+            const bootstrapSocket = tconfig.pki.bootstrapSocket;
+            const bootstrapTokenProvider = bootstrapSocket
+                ? (): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken()
+                : undefined;
+
+            const enroller = new PkiNodeEnroller(
+                new PkiNodeClient(new PkiNodeHttpTransport(tconfig.pki.url)),
+                store,
+                {
+                    bootstrapToken: tconfig.pki.bootstrapToken,
+                    bootstrapTokenProvider: bootstrapTokenProvider,
+                    purpose: PkiCaPurpose.service,
+                    commonName: tconfig.pki.commonName ?? `ssh@${os.hostname()}`
+                }
+            );
+
+            const identity = await enroller.ensure();
+
+            nodeIdentity = {cert: identity.certificate, key: identity.privateKey};
+
+            Logger.getLogger().info(`Node PKI identity ready (nodeUid ${identity.nodeUid})`);
+        } catch (error) {
+            Logger.getLogger().error('Node PKI enrollment failed (continuing without a node certificate)', error);
+        }
+    }
+
     // Announce this part to the Hub registry (v2 modular architecture). Optional:
-    // without registry config the SSH server simply does not self-register.
+    // without registry config the SSH server simply does not self-register. When a
+    // node certificate was obtained above, the registration authenticates over
+    // mTLS with it instead of relying on the shared secret alone.
     if (tconfig.registry) {
         await startHubRegistration(
             tconfig.registry.url,
             tconfig.registry.secret,
-            buildSshCapabilityManifest(`ssh@${os.hostname()}`)
+            buildSshCapabilityManifest(`ssh@${os.hostname()}`),
+            {identity: nodeIdentity}
         );
     }
 

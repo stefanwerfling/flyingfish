@@ -1,6 +1,15 @@
 import {scheduleJob} from 'node-schedule';
 import {Args, Logger, RedisClient, RedisSubscribe} from 'figtree';
-import {startHubRegistration} from 'flyingfish_core';
+import {
+    PkiBootstrapSocketClient,
+    PkiCaPurpose,
+    PkiClientIdentity,
+    PkiNodeClient,
+    PkiNodeEnroller,
+    PkiNodeFileStore,
+    PkiNodeHttpTransport,
+    startHubRegistration
+} from 'flyingfish_core';
 import {buildHimHIPCapabilityManifest} from 'flyingfish_schemas';
 import os from 'os';
 import {Config} from './inc/Config/Config.js';
@@ -51,13 +60,54 @@ import {HimHIP} from './inc/HimHIP.js';
         await HimHIP.update();
     });
 
+    // Node PKI (v2 own-PKI epic 9.4): opt-in enroll + auto-renew of this part's
+    // own service certificate, BEFORE Hub registration so the registration can
+    // authenticate over mTLS with it. Optional and non-fatal — without pki config
+    // the HimHIP service simply runs without a node certificate.
+    let nodeIdentity: PkiClientIdentity | undefined;
+
+    if (config.pki) {
+        try {
+            const store = new PkiNodeFileStore(
+                config.pki.storeDir ?? Config.DEFAULT_FF_DIR
+            );
+
+            const bootstrapSocket = config.pki.bootstrapSocket;
+            const bootstrapTokenProvider = bootstrapSocket
+                ? (): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken()
+                : undefined;
+
+            const enroller = new PkiNodeEnroller(
+                new PkiNodeClient(new PkiNodeHttpTransport(config.pki.url)),
+                store,
+                {
+                    bootstrapToken: config.pki.bootstrapToken,
+                    bootstrapTokenProvider: bootstrapTokenProvider,
+                    purpose: PkiCaPurpose.service,
+                    commonName: config.pki.commonName ?? `himhip@${os.hostname()}`
+                }
+            );
+
+            const identity = await enroller.ensure();
+
+            nodeIdentity = {cert: identity.certificate, key: identity.privateKey};
+
+            Logger.getLogger().info(`Node PKI identity ready (nodeUid ${identity.nodeUid})`);
+        } catch (error) {
+            Logger.getLogger().error('Node PKI enrollment failed (continuing without a node certificate)', error);
+        }
+    }
+
     // Announce this part to the Hub registry (v2 modular architecture). Optional:
-    // without registry config the HimHIP service simply does not self-register.
+    // without registry config the HimHIP service simply does not self-register. When
+    // a node certificate was obtained above, the registration authenticates over
+    // mTLS with it instead of relying on the shared secret alone.
     if (config.registry) {
         await startHubRegistration(
             config.registry.url,
             config.registry.secret,
-            buildHimHIPCapabilityManifest(`himhip@${os.hostname()}`)
+            buildHimHIPCapabilityManifest(`himhip@${os.hostname()}`),
+            {identity: nodeIdentity}
         );
     }
 

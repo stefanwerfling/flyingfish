@@ -12,7 +12,11 @@ export enum ENV_OPTIONAL {
     NGINX_CONFIG = 'FLYINGFISH_NGINX_CONFIG',
     NGINX_SECRET = 'FLYINGFISH_NGINX_SECRET',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
-    REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET'
+    REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
+    PKI_URL = 'FLYINGFISH_PKI_URL',
+    PKI_BOOTSTRAP_TOKEN = 'FLYINGFISH_PKI_BOOTSTRAP_TOKEN',
+    PKI_BOOTSTRAP_SOCKET = 'FLYINGFISH_PKI_BOOTSTRAP_SOCKET',
+    PKI_STORE_DIR = 'FLYINGFISH_PKI_STORE_DIR'
 }
 
 /**
@@ -136,6 +140,21 @@ export class Config extends ConfigCore<ConfigOptionsNginxServer> {
             config.registry = {
                 url: process.env[ENV_OPTIONAL.REGISTRY_URL]!,
                 secret: process.env[ENV_OPTIONAL.REGISTRY_SECRET]!
+            };
+        }
+
+        // Node PKI (v2): url + a bootstrap token OR a bootstrap socket to fetch one
+        // from are required to enroll; store dir optional.
+        const pkiUrl = process.env[ENV_OPTIONAL.PKI_URL];
+        const pkiToken = process.env[ENV_OPTIONAL.PKI_BOOTSTRAP_TOKEN];
+        const pkiSocket = process.env[ENV_OPTIONAL.PKI_BOOTSTRAP_SOCKET];
+
+        if (pkiUrl && (pkiToken || pkiSocket)) {
+            config.pki = {
+                url: pkiUrl,
+                bootstrapToken: pkiToken,
+                bootstrapSocket: pkiSocket,
+                storeDir: process.env[ENV_OPTIONAL.PKI_STORE_DIR]
             };
         }
 
