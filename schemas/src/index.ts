@@ -428,6 +428,12 @@ export {
     PkiCaCertsResponse
 } from './Pki/Enrollment.js';
 export {
+    SchemaPkiCaNodeEntry,
+    PkiCaNodeEntry,
+    SchemaPkiCaTreeResponse,
+    PkiCaTreeResponse
+} from './Pki/CaTree.js';
+export {
     SchemaRegistryInstanceRequest,
     RegistryInstanceRequest,
     SchemaRegistryPartSummary,

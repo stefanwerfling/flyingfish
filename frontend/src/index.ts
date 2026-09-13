@@ -14,6 +14,7 @@ import {Routes as RoutesPage} from './inc/Pages/Routes.js';
 import {Settings as SettingsPage} from './inc/Pages/Settings.js';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat.js';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway.js';
+import {Pki as PkiPage} from './inc/Pages/Pki.js';
 import {Registry as RegistryPage} from './inc/Pages/Registry.js';
 import {Users as UsersPage} from './inc/Pages/Users.js';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator.js';
@@ -216,6 +217,14 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                         icon: 'fa-solid fa-diagram-project',
                         onClick: (): void => {
                             loadPage(new RegistryPage());
+                        }
+                    },
+                    {
+                        title: 'PKI',
+                        name: 'pki',
+                        icon: 'fa-solid fa-lock',
+                        onClick: (): void => {
+                            loadPage(new PkiPage());
                         }
                     }
                 ]
