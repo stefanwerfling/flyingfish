@@ -55,6 +55,15 @@ export {
 } from './inc/Pki/PkiEnrollment.js';
 export {PkiRenewal} from './inc/Pki/PkiRenewal.js';
 export {PkiRevocationEntry, PkiRevocationList} from './inc/Pki/PkiRevocationList.js';
+export {
+    PkiNodeIdentity,
+    PkiNodeEnrollRequest,
+    PkiNodeRenewRequest,
+    PkiNodeEnrollResult,
+    PkiNodeTransport,
+    PkiNodeEnrollOptions,
+    PkiNodeClient
+} from './inc/Pki/PkiNodeClient.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
