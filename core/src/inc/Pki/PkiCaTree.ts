@@ -1,3 +1,4 @@
+import * as x509 from '@peculiar/x509';
 import {
     PkiCaCertOptions,
     PkiCertificateBuilder,
@@ -199,6 +200,48 @@ export class PkiCaTree {
             certificate: certificate,
             keyPair: await PkiCertificateBuilder.exportKeyPair(leafKeys)
         };
+    }
+
+    /**
+     * Roll (renew) a purpose Intermediate CA: mint a fresh Intermediate with a
+     * NEW key, signed by the existing Root, keeping the purpose's common name and
+     * name constraints. Used for scheduled rotation (design: Intermediate 1-3y)
+     * or after a suspected key compromise. The old Intermediate stays valid until
+     * its leaves expire (overlap); new leaves are issued from the returned node.
+     * Trust is unchanged — both Intermediates chain to the same Root (own-PKI
+     * epic 9.4.3-E).
+     * @param root - the existing Root CA node (certificate + PEM private key)
+     * @param purpose - the purpose whose Intermediate to roll
+     * @param options - organization / validity / algorithm overrides
+     */
+    public static async rollIntermediate(
+        root: PkiCaNode,
+        purpose: PkiCaPurpose,
+        options: PkiCaTreeOptions = {}
+    ): Promise<PkiCaNode> {
+        const algorithm = options.algorithm ?? PkiKeyAlgorithm.ed25519;
+        const validityDays = options.intermediateValidityDays ?? DEFAULT_INTERMEDIATE_VALIDITY_DAYS;
+        // Derive the organization from the Root's subject so the rolled Intermediate
+        // keeps the exact same subject as the one it replaces (the Root carries the
+        // O=), unless the caller overrides it.
+        const organization = options.organization ?? PkiCaTree._organizationOf(root.certificate);
+
+        const rootIssuer: PkiIssuer = {
+            certificate: root.certificate,
+            privateKey: await PkiCertificateBuilder.importPrivateKey(root.privateKey, algorithm)
+        };
+
+        return PkiCaTree._createIntermediate(purpose, organization, validityDays, rootIssuer, algorithm);
+    }
+
+    /**
+     * The organization (O=) from a certificate's subject, or the default.
+     * @param certificate - the certificate PEM
+     */
+    private static _organizationOf(certificate: string): string {
+        const organizations = new x509.X509Certificate(certificate).subjectName.getField('O');
+
+        return organizations.length > 0 ? organizations[0] : DEFAULT_ORGANIZATION;
     }
 
     /**
