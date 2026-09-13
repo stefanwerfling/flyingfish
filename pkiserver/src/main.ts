@@ -4,7 +4,9 @@ import {
     DBService,
     EnrollmentRequestDB,
     IssuedCertificateDB,
+    PkiBootstrapSocketServer,
     PkiBootstrapTokenStore,
+    PkiCaPurpose,
     PkiEnrollmentService,
     startHubRegistration
 } from 'flyingfish_core';
@@ -104,7 +106,29 @@ const DEFAULT_ORGANIZATION = 'FlyingFish';
     const organization = tConfig.pkiserver?.organization ?? DEFAULT_ORGANIZATION;
     const tree = await store.loadOrCreate(organization);
 
-    const service = new PkiEnrollmentService(tree, new PkiBootstrapTokenStore());
+    const tokens = new PkiBootstrapTokenStore();
+    const service = new PkiEnrollmentService(tree, tokens);
+
+    // Local bootstrap-token vending over a unix socket (9.4.3-D): co-located parts
+    // fetch a single-use, short-TTL, auto-approve service token here (trust by
+    // co-location) and then enroll over HTTP. Optional — without a socket path the
+    // pkiserver just does not vend bootstrap tokens.
+    const BOOTSTRAP_TOKEN_TTL_MS = 60000;
+
+    if (tConfig.pkiserver?.bootstrapSocket) {
+        const bootstrapServer = new PkiBootstrapSocketServer(
+            tConfig.pkiserver.bootstrapSocket,
+            (): string => tokens.issue({
+                purpose: PkiCaPurpose.service,
+                autoApprove: true,
+                ttlMs: BOOTSTRAP_TOKEN_TTL_MS
+            }).token
+        );
+
+        await bootstrapServer.listen();
+
+        Logger.getLogger().info(`PKI bootstrap socket listening on ${tConfig.pkiserver.bootstrapSocket}`);
+    }
 
     // start server ----------------------------------------------------------------------------------------------------
 

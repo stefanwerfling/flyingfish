@@ -10,6 +10,7 @@ export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
     PKISERVER_PORT = 'FLYINGFISH_PKISERVER_PORT',
     PKISERVER_ORGANIZATION = 'FLYINGFISH_PKISERVER_ORGANIZATION',
+    PKISERVER_BOOTSTRAP_SOCKET = 'FLYINGFISH_PKISERVER_BOOTSTRAP_SOCKET',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET'
 }
@@ -120,6 +121,16 @@ export class Config extends ConfigCore<ConfigOptionsPkiServer> {
             }
 
             config.pkiserver.organization = process.env[ENV_OPTIONAL.PKISERVER_ORGANIZATION];
+        }
+
+        // pki bootstrap socket ----------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.PKISERVER_BOOTSTRAP_SOCKET]) {
+            if (!config.pkiserver) {
+                config.pkiserver = {};
+            }
+
+            config.pkiserver.bootstrapSocket = process.env[ENV_OPTIONAL.PKISERVER_BOOTSTRAP_SOCKET];
         }
 
         // Logging -----------------------------------------------------------------------------------------------------

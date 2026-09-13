@@ -5,10 +5,13 @@ import {PkiNodeFileStore} from './PkiNodeFileStore.js';
 import {PkiSanEntry} from '../Crypto/PkiCertificateBuilder.js';
 
 /**
- * What a part needs to obtain and keep its identity.
+ * What a part needs to obtain and keep its identity. The bootstrap token can be
+ * a static string or fetched lazily at enroll time via a provider (e.g. the
+ * unix-socket bootstrap client) — exactly one of the two must be given.
  */
 export type PkiNodeEnrollerOptions = {
-    bootstrapToken: string;
+    bootstrapToken?: string;
+    bootstrapTokenProvider?: () => Promise<string>;
     purpose: PkiCaPurpose;
     commonName: string;
     sans?: PkiSanEntry[];
@@ -58,8 +61,16 @@ export class PkiNodeEnroller {
         const existing = await this._store.load();
 
         if (existing === null) {
+            const bootstrapToken = this._options.bootstrapTokenProvider
+                ? await this._options.bootstrapTokenProvider()
+                : this._options.bootstrapToken;
+
+            if (bootstrapToken === undefined) {
+                throw new Error('PkiNodeEnroller: no bootstrap token or provider configured');
+            }
+
             const enrolled = await this._client.enroll({
-                bootstrapToken: this._options.bootstrapToken,
+                bootstrapToken: bootstrapToken,
                 purpose: this._options.purpose,
                 commonName: this._options.commonName,
                 sans: this._options.sans,

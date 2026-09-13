@@ -123,6 +123,27 @@ describe('PkiNodeEnroller (v2, 9.4.3-D)', () => {
         expect(reused.certificate).toBe(first.certificate);
     });
 
+    test('enrolls using a bootstrap token provider (fetched lazily at enroll time)', async() => {
+        const tokens = new PkiBootstrapTokenStore();
+        const service = new PkiEnrollmentService(tree, tokens);
+
+        const store = new PkiNodeFileStore(tmpDir);
+        const client = new PkiNodeClient(makeTransport(service));
+
+        // no static token — the provider mints one when enroll actually runs
+        const enroller = new PkiNodeEnroller(client, store, {
+            bootstrapTokenProvider: (): Promise<string> =>
+                Promise.resolve(tokens.issue({purpose: PkiCaPurpose.service, autoApprove: true}).token),
+            purpose: PkiCaPurpose.service,
+            commonName: 'dns@node-1'
+        });
+
+        const identity = await enroller.ensure();
+
+        expect(identity.nodeUid).toBeTruthy();
+        expect((await store.load())?.nodeUid).toBe(identity.nodeUid);
+    });
+
     test('renews when due (~2/3), rotating the key but keeping the nodeUid', async() => {
         const tokens = new PkiBootstrapTokenStore();
         const service = new PkiEnrollmentService(tree, tokens);

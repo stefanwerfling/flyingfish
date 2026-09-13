@@ -4,6 +4,7 @@ import {
     DBService,
     DomainDB,
     DomainRecordDB,
+    PkiBootstrapSocketClient,
     PkiCaPurpose,
     PkiNodeClient,
     PkiNodeEnroller,
@@ -119,11 +120,17 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
                 tConfig.pki.storeDir ?? tConfig.flyingfish_libpath ?? Config.DEFAULT_FF_DIR
             );
 
+            const bootstrapSocket = tConfig.pki.bootstrapSocket;
+            const bootstrapTokenProvider = bootstrapSocket
+                ? (): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken()
+                : undefined;
+
             const enroller = new PkiNodeEnroller(
                 new PkiNodeClient(new PkiNodeHttpTransport(tConfig.pki.url)),
                 store,
                 {
                     bootstrapToken: tConfig.pki.bootstrapToken,
+                    bootstrapTokenProvider: bootstrapTokenProvider,
                     purpose: PkiCaPurpose.service,
                     commonName: tConfig.pki.commonName ?? `dns@${os.hostname()}`
                 }

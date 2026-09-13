@@ -67,6 +67,8 @@ export {
 export {PkiNodeFileStore} from './inc/Pki/PkiNodeFileStore.js';
 export {PkiNodeEnrollerOptions, PkiNodeEnroller} from './inc/Pki/PkiNodeEnroller.js';
 export {PkiNodeHttpTransport} from './inc/Pki/PkiNodeHttpTransport.js';
+export {PkiBootstrapTokenIssuer, PkiBootstrapSocketServer} from './inc/Pki/PkiBootstrapSocketServer.js';
+export {PkiBootstrapSocketClient} from './inc/Pki/PkiBootstrapSocketClient.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';

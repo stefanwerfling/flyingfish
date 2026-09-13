@@ -27,7 +27,10 @@ export const SchemaConfigOptionsDnsServer = SchemaConfigOptions.extend({
     // volume, the shared flyingfish volume is mounted read-only in the parts).
     pki: Vts.optional(Vts.object({
         url: Vts.string(),
-        bootstrapToken: Vts.string(),
+        // Either a static bootstrap token or a bootstrap socket to fetch one from
+        // (co-located trust, 9.4.3-D); at least one is needed to enroll.
+        bootstrapToken: Vts.optional(Vts.string()),
+        bootstrapSocket: Vts.optional(Vts.string()),
         storeDir: Vts.optional(Vts.string()),
         commonName: Vts.optional(Vts.string())
     })),
