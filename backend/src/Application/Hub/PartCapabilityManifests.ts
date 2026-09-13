@@ -5,6 +5,7 @@ import {
     buildDynDnsCapabilityManifest,
     buildHimHIPCapabilityManifest,
     buildNginxCapabilityManifest,
+    buildPkiCapabilityManifest,
     buildSshCapabilityManifest
 } from 'flyingfish_schemas';
 import {HubRegistry} from './HubRegistry.js';
@@ -25,7 +26,8 @@ export const partCapabilityManifestBuilders: Record<string, PartManifestBuilder>
     dns: buildDnsCapabilityManifest,
     ddns: buildDynDnsCapabilityManifest,
     ssh: buildSshCapabilityManifest,
-    himhip: buildHimHIPCapabilityManifest
+    himhip: buildHimHIPCapabilityManifest,
+    pki: buildPkiCapabilityManifest
 };
 
 /**

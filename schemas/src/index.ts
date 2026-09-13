@@ -407,6 +407,25 @@ export {buildSshCapabilityManifest} from './Hub/SshCapabilityManifest.js';
 export {buildDynDnsCapabilityManifest} from './Hub/DynDnsCapabilityManifest.js';
 export {buildHimHIPCapabilityManifest} from './Hub/HimHIPCapabilityManifest.js';
 export {buildBackendCapabilityManifest} from './Hub/BackendCapabilityManifest.js';
+export {buildPkiCapabilityManifest} from './Hub/PkiCapabilityManifest.js';
+
+// PKI (EST-style enrollment endpoints, own-PKI epic 9.4)
+export {
+    PkiSanTypeVts,
+    PkiEnrollmentStatusVts,
+    SchemaPkiSanEntry,
+    PkiSanEntryWire,
+    SchemaPkiEnrollRequest,
+    PkiEnrollRequest,
+    SchemaPkiIssuedCertificate,
+    PkiIssuedCertificateWire,
+    SchemaPkiEnrollResponse,
+    PkiEnrollResponse,
+    SchemaPkiEnrollDecision,
+    PkiEnrollDecision,
+    SchemaPkiCaCertsResponse,
+    PkiCaCertsResponse
+} from './Pki/Enrollment.js';
 export {
     SchemaRegistryInstanceRequest,
     RegistryInstanceRequest,
