@@ -20,7 +20,8 @@ import {
     PkiCaTreeResult,
     PkiCertificateBuilder,
     PkiEnrollmentStatus,
-    PkiEnrollmentService
+    PkiEnrollmentService,
+    PkiRevocationList
 } from 'flyingfish_core';
 import {closeTestDb, initTestDb, resetTestDb} from './dbHarness.js';
 
@@ -147,5 +148,41 @@ describe('PKI enrollment persistence (integration)', () => {
 
         expect(foundRequest?.status).toBe('issued');
         expect(foundRequest?.issued_certificate_id).toBe(issued.id);
+    });
+
+    test('an issued certificate can be revoked and the allowlist rebuilds from it', async() => {
+        const issued = new IssuedCertificateDB();
+        issued.ca_id = 0;
+        issued.node_uid = 'uid-revoke';
+        issued.purpose = 'service';
+        issued.common_name = 'node-r.internal';
+        issued.certificate = 'LEAF-PEM';
+        issued.chain = '[]';
+        issued.issued_at = 0;
+        issued.expires_at = 0;
+        await issued.save();
+
+        // fresh rows default to not-revoked
+        expect(issued.revoked).toBe(false);
+
+        issued.revoked = true;
+        issued.revoked_at = 1234;
+        await issued.save();
+
+        const found = await IssuedCertificateDB.findOne({where: {node_uid: 'uid-revoke'}});
+
+        expect(found?.revoked).toBe(true);
+        expect(found?.revoked_at).toBe(1234);
+
+        // the Hub allowlist is rebuilt from the durable revoked rows
+        const revokedRows = await IssuedCertificateDB.find({where: {revoked: true}});
+        const allowlist = new PkiRevocationList();
+
+        allowlist.load(revokedRows.map((row) => {
+            return {nodeUid: row.node_uid, revokedAt: row.revoked_at};
+        }));
+
+        expect(allowlist.isRevoked('uid-revoke')).toBe(true);
+        expect(allowlist.isRevoked('uid-not-revoked')).toBe(false);
     });
 });

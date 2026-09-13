@@ -86,4 +86,22 @@ export class IssuedCertificate extends DBBaseEntityId {
     })
     public expires_at!: number;
 
+    /**
+     * whether this certificate has been revoked (own-PKI epic 9.4, revocation
+     * 9.4.4). Short-lived leaves rely primarily on the real-time Hub allowlist;
+     * this is the durable record the allowlist is rebuilt from.
+     */
+    @Column({
+        default: false
+    })
+    public revoked!: boolean;
+
+    /**
+     * revocation timestamp (epoch ms); 0 if not revoked.
+     */
+    @Column({
+        default: 0
+    })
+    public revoked_at!: number;
+
 }

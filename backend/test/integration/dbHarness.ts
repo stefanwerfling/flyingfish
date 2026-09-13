@@ -21,6 +21,7 @@ import {DataSource} from 'typeorm';
 import {DBHelper} from 'figtree';
 import {DBEntitiesLoader, DBService, PluginManager} from 'flyingfish_core';
 import {AddAcmeDnsTempRecord1788400000000} from '../../src/inc/Db/MariaDb/migrations/1788400000000-AddAcmeDnsTempRecord.js';
+import {AddPkiRevocation1788600000000} from '../../src/inc/Db/MariaDb/migrations/1788600000000-AddPkiRevocation.js';
 import {AddPkiTables1788500000000} from '../../src/inc/Db/MariaDb/migrations/1788500000000-AddPkiTables.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
@@ -95,7 +96,12 @@ const initDb = async(suffix?: string): Promise<void> => {
         ...connectionOptions(),
         database: activeDbName,
         entities: entities,
-        migrations: [InitialSchema1787961600000, AddAcmeDnsTempRecord1788400000000, AddPkiTables1788500000000],
+        migrations: [
+            InitialSchema1787961600000,
+            AddAcmeDnsTempRecord1788400000000,
+            AddPkiTables1788500000000,
+            AddPkiRevocation1788600000000
+        ],
         migrationsRun: false,
         synchronize: false
     });
