@@ -11,7 +11,10 @@ export enum ENV_OPTIONAL {
     DNSSERVER_PORT = 'FLYINGFISH_DNSSERVER_PORT',
     DNSSERVER_PROXY_PROTOCOL = 'FLYINGFISH_DNSSERVER_PROXY_PROTOCOL',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
-    REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET'
+    REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
+    PKI_URL = 'FLYINGFISH_PKI_URL',
+    PKI_BOOTSTRAP_TOKEN = 'FLYINGFISH_PKI_BOOTSTRAP_TOKEN',
+    PKI_STORE_DIR = 'FLYINGFISH_PKI_STORE_DIR'
 }
 
 /**
@@ -135,6 +138,15 @@ export class Config extends ConfigCore<ConfigOptionsDnsServer> {
             config.registry = {
                 url: process.env[ENV_OPTIONAL.REGISTRY_URL]!,
                 secret: process.env[ENV_OPTIONAL.REGISTRY_SECRET]!
+            };
+        }
+
+        // Node PKI (v2): url + bootstrap token required to enroll; store dir optional.
+        if (process.env[ENV_OPTIONAL.PKI_URL] && process.env[ENV_OPTIONAL.PKI_BOOTSTRAP_TOKEN]) {
+            config.pki = {
+                url: process.env[ENV_OPTIONAL.PKI_URL]!,
+                bootstrapToken: process.env[ENV_OPTIONAL.PKI_BOOTSTRAP_TOKEN]!,
+                storeDir: process.env[ENV_OPTIONAL.PKI_STORE_DIR]
             };
         }
 

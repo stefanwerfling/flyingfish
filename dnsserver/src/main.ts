@@ -1,5 +1,16 @@
 import {Args, DBHelper, Logger} from 'figtree';
-import {AcmeDnsTempRecordDB, DBService, DomainDB, DomainRecordDB, startHubRegistration} from 'flyingfish_core';
+import {
+    AcmeDnsTempRecordDB,
+    DBService,
+    DomainDB,
+    DomainRecordDB,
+    PkiCaPurpose,
+    PkiNodeClient,
+    PkiNodeEnroller,
+    PkiNodeFileStore,
+    PkiNodeHttpTransport,
+    startHubRegistration
+} from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import {buildDnsCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
@@ -97,6 +108,33 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
             tConfig.registry.secret,
             buildDnsCapabilityManifest(`dns@${os.hostname()}`)
         );
+    }
+
+    // Node PKI (v2 own-PKI epic 9.4): opt-in enroll + auto-renew of this part's
+    // own service certificate. Optional and non-fatal — without pki config the
+    // DNS server simply runs without a node certificate.
+    if (tConfig.pki) {
+        try {
+            const store = new PkiNodeFileStore(
+                tConfig.pki.storeDir ?? tConfig.flyingfish_libpath ?? Config.DEFAULT_FF_DIR
+            );
+
+            const enroller = new PkiNodeEnroller(
+                new PkiNodeClient(new PkiNodeHttpTransport(tConfig.pki.url)),
+                store,
+                {
+                    bootstrapToken: tConfig.pki.bootstrapToken,
+                    purpose: PkiCaPurpose.service,
+                    commonName: tConfig.pki.commonName ?? `dns@${os.hostname()}`
+                }
+            );
+
+            const identity = await enroller.ensure();
+
+            Logger.getLogger().info(`Node PKI identity ready (nodeUid ${identity.nodeUid})`);
+        } catch (error) {
+            Logger.getLogger().error('Node PKI enrollment failed (continuing without a node certificate)', error);
+        }
     }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,

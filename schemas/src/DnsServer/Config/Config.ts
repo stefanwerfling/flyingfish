@@ -20,6 +20,17 @@ export const SchemaConfigOptionsDnsServer = SchemaConfigOptions.extend({
         url: Vts.string(),
         secret: Vts.string()
     })),
+    // Node PKI (v2 own-PKI epic 9.4, 9.4.3-D): opt-in enroll + auto-renew of this
+    // part's own service certificate. `url` is the pkiserver base URL,
+    // `bootstrapToken` authorizes the initial enrollment, `storeDir` is a writable
+    // path for the node identity (defaults to <libpath>/pki — set it to a writable
+    // volume, the shared flyingfish volume is mounted read-only in the parts).
+    pki: Vts.optional(Vts.object({
+        url: Vts.string(),
+        bootstrapToken: Vts.string(),
+        storeDir: Vts.optional(Vts.string()),
+        commonName: Vts.optional(Vts.string())
+    })),
     flyingfish_libpath: Vts.optional(Vts.string())
 });
 
