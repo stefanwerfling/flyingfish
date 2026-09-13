@@ -36,6 +36,7 @@ export {
     PkiCaNode,
     PkiIssuedLeaf,
     PkiCaTreeResult,
+    PkiRootRolloverResult,
     PkiCaTreeOptions,
     PkiCaTree
 } from './inc/Pki/PkiCaTree.js';

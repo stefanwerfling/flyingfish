@@ -498,6 +498,53 @@ export class PkiCertificateBuilder {
     }
 
     /**
+     * Cross-sign a CA: re-issue an existing CA certificate's subject + public key
+     * under a different issuer, so verifiers that trust the issuer can build a
+     * path to the subject CA (own-PKI epic 9.4.3-E, root rollover). Used to have
+     * the OLD root vouch for the NEW root's key during a root key rollover. The
+     * cross certificate keeps the subject's validity window and is itself a CA
+     * certificate (BasicConstraints CA:true).
+     * @param subjectCertificate - the CA certificate to cross-sign (its subject +
+     *                             public key are re-issued)
+     * @param issuer - the cross-signing CA (certificate + private key)
+     * @param algorithm - the issuer's signature algorithm (Ed25519 by default)
+     */
+    public static async createCrossSigned(
+        subjectCertificate: string,
+        issuer: PkiIssuer,
+        algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
+    ): Promise<string> {
+        const subjectCert = new x509.X509Certificate(subjectCertificate);
+        const issuerCert = new x509.X509Certificate(issuer.certificate);
+        const subjectPublicKey = await subjectCert.publicKey.export();
+
+        // A CA signs certificates and CRLs (disjoint bits, so OR is definitional).
+        // eslint-disable-next-line no-bitwise
+        const caKeyUsage = x509.KeyUsageFlags.keyCertSign | x509.KeyUsageFlags.cRLSign;
+
+        const extensions: x509.Extension[] = [
+            new x509.BasicConstraintsExtension(true, undefined, true),
+            new x509.KeyUsagesExtension(caKeyUsage, true),
+            await x509.SubjectKeyIdentifierExtension.create(subjectPublicKey),
+            await x509.AuthorityKeyIdentifierExtension.create(issuerCert.publicKey)
+        ];
+
+        const cert = await x509.X509CertificateGenerator.create({
+            serialNumber: PkiCertificateBuilder._randomSerial(),
+            subject: subjectCert.subject,
+            issuer: issuerCert.subject,
+            notBefore: new Date(),
+            notAfter: subjectCert.notAfter,
+            signingKey: issuer.privateKey as unknown as webcrypto.CryptoKey,
+            publicKey: subjectPublicKey,
+            signingAlgorithm: PkiCertificateBuilder._signingAlgorithm(algorithm),
+            extensions: extensions
+        });
+
+        return cert.toString('pem');
+    }
+
+    /**
      * Build a NameConstraints extension (critical) from permitted DNS/URI
      * subtrees, or null when nothing is constrained.
      * @param constraints - the permitted name spaces

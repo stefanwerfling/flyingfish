@@ -51,6 +51,16 @@ export type PkiCaTreeResult = {
 };
 
 /**
+ * The result of a root rollover: the new self-signed Root plus the cross
+ * certificate (the old Root's key vouching for the new Root's key) that lets
+ * verifiers still trusting the old Root build a path to the new one.
+ */
+export type PkiRootRolloverResult = {
+    root: PkiCaNode;
+    crossCertificate: string;
+};
+
+/**
  * Options for building a CA tree.
  */
 export type PkiCaTreeOptions = {
@@ -232,6 +242,56 @@ export class PkiCaTree {
         };
 
         return PkiCaTree._createIntermediate(purpose, organization, validityDays, rootIssuer, algorithm);
+    }
+
+    /**
+     * Roll (renew) the Root CA key: mint a new self-signed Root with a NEW key
+     * but the same subject, and cross-sign it with the old Root's key so verifiers
+     * that still trust the old Root can build a path to the new one during the
+     * transition (own-PKI epic 9.4.3-E). Intermediates are then re-issued under
+     * the new Root (via rollIntermediate). The old Root stays a valid trust anchor
+     * until it is retired from the trust stores.
+     * @param oldRoot - the current Root CA node (certificate + PEM private key)
+     * @param options - organization / validity / algorithm overrides
+     */
+    public static async rollRoot(
+        oldRoot: PkiCaNode,
+        options: PkiCaTreeOptions = {}
+    ): Promise<PkiRootRolloverResult> {
+        const algorithm = options.algorithm ?? PkiKeyAlgorithm.ed25519;
+        const organization = options.organization ?? PkiCaTree._organizationOf(oldRoot.certificate);
+        const validityDays = options.rootValidityDays ?? DEFAULT_ROOT_VALIDITY_DAYS;
+
+        const rootKeys = await PkiCertificateBuilder.generateKeyPair(algorithm);
+        const rootCert = await PkiCertificateBuilder.createRootCa({
+            subject: `CN=FlyingFish Root CA, O=${organization}`,
+            validityDays: validityDays,
+            pathLength: 1
+        }, rootKeys, algorithm);
+
+        const rootPem = await PkiCertificateBuilder.exportKeyPair(rootKeys);
+
+        const newRoot: PkiCaNode = {
+            certificate: rootCert,
+            privateKey: rootPem.privateKey,
+            publicKey: rootPem.publicKey
+        };
+
+        const oldRootIssuer: PkiIssuer = {
+            certificate: oldRoot.certificate,
+            privateKey: await PkiCertificateBuilder.importPrivateKey(oldRoot.privateKey, algorithm)
+        };
+
+        const crossCertificate = await PkiCertificateBuilder.createCrossSigned(
+            newRoot.certificate,
+            oldRootIssuer,
+            algorithm
+        );
+
+        return {
+            root: newRoot,
+            crossCertificate: crossCertificate
+        };
     }
 
     /**

@@ -73,4 +73,32 @@ describe('PKI intermediate rollover (v2, 9.4.3-E1)', () => {
         // rolling does not invalidate the old intermediate — both chain to the root
         expect(await PkiCertificateBuilder.verifyIssuedBy(old.certificate, tree.root.certificate)).toBe(true);
     });
+
+    test('rollRoot mints a new self-signed root with a rotated key + a cross cert', async() => {
+        const {root: newRoot, crossCertificate} = await PkiCaTree.rollRoot(tree.root);
+
+        // new root is self-signed, same subject, rotated key
+        expect(await PkiCertificateBuilder.verifyIssuedBy(newRoot.certificate, newRoot.certificate)).toBe(true);
+        expect(subjectOf(newRoot.certificate)).toBe(subjectOf(tree.root.certificate));
+        expect(publicKeyOf(newRoot.certificate)).not.toBe(publicKeyOf(tree.root.certificate));
+
+        // the cross cert is signed by the OLD root and vouches for the NEW root's
+        // subject + key (so old-root trusters can path to the new root)
+        expect(await PkiCertificateBuilder.verifyIssuedBy(crossCertificate, tree.root.certificate)).toBe(true);
+        expect(subjectOf(crossCertificate)).toBe(subjectOf(newRoot.certificate));
+        expect(publicKeyOf(crossCertificate)).toBe(publicKeyOf(newRoot.certificate));
+    });
+
+    test('after a root roll, new intermediates + leaves chain under the new root', async() => {
+        const {root: newRoot} = await PkiCaTree.rollRoot(tree.root);
+
+        const newIntermediate = await PkiCaTree.rollIntermediate(newRoot, PkiCaPurpose.service);
+        const leaf = await PkiCaTree.issueLeaf(newIntermediate, {
+            subject: 'CN=svc-new-root',
+            validityDays: 7
+        });
+
+        expect(await PkiCertificateBuilder.verifyIssuedBy(newIntermediate.certificate, newRoot.certificate)).toBe(true);
+        expect(await PkiCertificateBuilder.verifyIssuedBy(leaf.certificate, newIntermediate.certificate)).toBe(true);
+    });
 });
