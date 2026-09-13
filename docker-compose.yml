@@ -197,6 +197,12 @@ services:
       # Read-only: only needs the backend's self-signed cert to trust it over
       # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
       - flyingfish:/var/lib/flyingfish:ro
+      # Writable store for this node's own PKI identity (the shared flyingfish
+      # volume above is read-only), used when node PKI enrollment is enabled.
+      - flyingfishNginxPki:/var/lib/flyingfish-pki
+      # Shared bootstrap socket: the part fetches a single-use enrollment token
+      # from the pkiserver over this socket (trust by co-location, 9.4.3-D).
+      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -206,6 +212,11 @@ services:
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
       NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      # Node PKI (v2, 9.4.3-D): enroll + auto-renew of this part's own service
+      # cert; the bootstrap token is fetched over the shared unix socket.
+      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
     ports:
       - "443:443"
       - "80:80"
@@ -222,6 +233,8 @@ services:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
+      pkiserver:
+        condition: service_started
 
   himhip:
     image: flyingfish_himip:v1.1.13
@@ -235,12 +248,24 @@ services:
       # Read-only: only needs the backend's self-signed cert to trust it over
       # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
       - flyingfish:/var/lib/flyingfish:ro
+      # Writable store for this node's own PKI identity (the shared flyingfish
+      # volume above is read-only), used when node PKI enrollment is enabled.
+      - flyingfishHimhipPki:/var/lib/flyingfish-pki
+      # Shared bootstrap socket: the part fetches a single-use enrollment token
+      # from the pkiserver over this socket (trust by co-location, 9.4.3-D).
+      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
     environment:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
       NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      # Node PKI (v2, 9.4.3-D): enroll + auto-renew of this part's own service
+      # cert; the bootstrap token is fetched over the shared unix socket.
+      # network_mode: host - reach the host-published pkiserver via loopback.
+      FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
     network_mode: host
     # HimHIP only reads routes/ARP (ip route, arp) - NET_ADMIN is enough, not cap ALL.
     cap_add:
@@ -255,6 +280,8 @@ services:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
+      pkiserver:
+        condition: service_started
 
 #  iptable:
 #    image: flyingfish_iptable:v1.0
@@ -303,6 +330,12 @@ services:
       # Read-only: only needs the backend's self-signed cert to trust it over
       # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
       - flyingfish:/var/lib/flyingfish:ro
+      # Writable store for this node's own PKI identity (the shared flyingfish
+      # volume above is read-only), used when node PKI enrollment is enabled.
+      - flyingfishSshPki:/var/lib/flyingfish-pki
+      # Shared bootstrap socket: the part fetches a single-use enrollment token
+      # from the pkiserver over this socket (trust by co-location, 9.4.3-D).
+      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -314,6 +347,11 @@ services:
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
       NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      # Node PKI (v2, 9.4.3-D): enroll + auto-renew of this part's own service
+      # cert; the bootstrap token is fetched over the shared unix socket.
+      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
     ports:
       - "2222:22"
     networks:
@@ -331,6 +369,8 @@ services:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
+      pkiserver:
+        condition: service_started
 
   ddnsserver:
     image: flyingfish_ddns:v1.1.13
@@ -349,6 +389,12 @@ services:
       # Read-only: only needs the backend's self-signed cert to trust it over
       # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
       - flyingfish:/var/lib/flyingfish:ro
+      # Writable store for this node's own PKI identity (the shared flyingfish
+      # volume above is read-only), used when node PKI enrollment is enabled.
+      - flyingfishDdnsPki:/var/lib/flyingfish-pki
+      # Shared bootstrap socket: the part fetches a single-use enrollment token
+      # from the pkiserver over this socket (trust by co-location, 9.4.3-D).
+      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -357,6 +403,11 @@ services:
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
       NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      # Node PKI (v2, 9.4.3-D): enroll + auto-renew of this part's own service
+      # cert; the bootstrap token is fetched over the shared unix socket.
+      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
 #    ports:
 #      - "9229:9229"
     networks:
@@ -374,6 +425,8 @@ services:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
+      pkiserver:
+        condition: service_started
 #    command:
 #      - node
 #      - "--inspect-brk=0.0.0.0:9229"
@@ -544,6 +597,14 @@ volumes:
   flyingfishRedisData:
     driver: local
   flyingfishDnsPki:
+    driver: local
+  flyingfishDdnsPki:
+    driver: local
+  flyingfishSshPki:
+    driver: local
+  flyingfishNginxPki:
+    driver: local
+  flyingfishHimhipPki:
     driver: local
   flyingfishPkiBootstrap:
     driver: local
