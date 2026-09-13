@@ -17,7 +17,11 @@ export const SchemaConfigOptionsPkiServer = SchemaConfigOptions.extend({
         // Unix socket path for the local bootstrap-token vending server. When set,
         // co-located parts fetch a single-use enrollment token over this socket
         // (trust by co-location) instead of a pre-shared token (9.4.3-D).
-        bootstrapSocket: Vts.optional(Vts.string())
+        bootstrapSocket: Vts.optional(Vts.string()),
+        // File path (in a shared volume) to export the CA pool to (root +
+        // intermediates, JSON). The Hub reads it to seed its mTLS client CA
+        // without a boot-time HTTP dependency on the pkiserver (9.4 mTLS).
+        caExportFile: Vts.optional(Vts.string())
     })),
     // Hub registry (v2 modular architecture): where and with which shared secret
     // this part self-registers its capability manifest.

@@ -109,6 +109,22 @@ const DEFAULT_ORGANIZATION = 'FlyingFish';
     const tokens = new PkiBootstrapTokenStore();
     const service = new PkiEnrollmentService(tree, tokens);
 
+    // Export the CA pool (root + purpose intermediates) to a shared file so the
+    // Hub can seed its mTLS client CA by reading it — no boot-time HTTP dependency
+    // on the pkiserver, which sidesteps the backend<->pkiserver ordering cycle
+    // (9.4 mTLS). Written on every boot; the CA is stable across restarts.
+    if (tConfig.pkiserver?.caExportFile) {
+        const caPool = [
+            tree.root.certificate,
+            ...Object.values(PkiCaPurpose).map((purpose) => tree.intermediates[purpose].certificate)
+        ];
+
+        await fs.promises.mkdir(path.dirname(tConfig.pkiserver.caExportFile), {recursive: true});
+        await fs.promises.writeFile(tConfig.pkiserver.caExportFile, JSON.stringify(caPool));
+
+        Logger.getLogger().info(`PKI CA pool exported to ${tConfig.pkiserver.caExportFile}`);
+    }
+
     // Local bootstrap-token vending over a unix socket (9.4.3-D): co-located parts
     // fetch a single-use, short-TTL, auto-approve service token here (trust by
     // co-location) and then enroll over HTTP. Optional — without a socket path the

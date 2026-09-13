@@ -140,12 +140,13 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
             this._serviceManager.add(new InfluxDbService());
         }
 
-        // Node PKI (v2 own-PKI epic 9.4): fetch the CA chain + revocation list from
-        // the pkiserver so the HTTPS server's _createServer can seed the client CA
-        // (mTLS) and the registry guard can authenticate parts by their client
-        // certificate. Done before the HTTP server is added/started. Non-fatal.
-        if (config?.pki?.url) {
-            await PkiTrust.init(config.pki.url);
+        // Node PKI (v2 own-PKI epic 9.4): seed the CA pool (from the shared file the
+        // pkiserver writes) + the revocation list so the HTTPS server's
+        // _createServer can enable mTLS and the registry guard can authenticate
+        // parts by their client certificate. Before the HTTP server is added/
+        // started. Non-fatal (reading a file avoids a boot dependency on pkiserver).
+        if (config?.pki?.caFile || config?.pki?.url) {
+            await PkiTrust.init(config.pki.caFile, config.pki.url);
         }
 
         // HTTP server with the FlyingFish Redis-backed session store. When Redis

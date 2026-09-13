@@ -21,6 +21,7 @@ export enum ENV_OPTIONAL {
     NGINX_REMOTE_URL = 'FLYINGFISH_NGINX_REMOTE_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
     PKI_URL = 'FLYINGFISH_PKI_URL',
+    PKI_CA_FILE = 'FLYINGFISH_PKI_CA_FILE',
     DYNDNSSERVER_PORT = 'FLYINGFISH_DYNDNSSERVER_PORT',
     DYNDNSSERVER_IP = 'FLYINGFISH_DYNDNSSERVER_IP',
     DYNDNSSERVER_SCHEMA = 'FLYINGFISH_DYNDNSSERVER_SCHEMA',
@@ -453,11 +454,13 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
             config.registry.secret = uuid().replaceAll('-', '');
         }
 
-        // Node PKI (v2): the pkiserver URL the Hub authenticates part client
-        // certificates against (mTLS). Optional — without it the Hub keeps using
+        // Node PKI (v2, mTLS): the CA pool file (shared volume the pkiserver
+        // writes) the Hub seeds its client CA from, and the pkiserver URL to
+        // refresh the revocation list. Optional — without them the Hub keeps using
         // the shared registry secret only.
-        if (process.env[ENV_OPTIONAL.PKI_URL]) {
+        if (process.env[ENV_OPTIONAL.PKI_CA_FILE] || process.env[ENV_OPTIONAL.PKI_URL]) {
             config.pki = {
+                caFile: process.env[ENV_OPTIONAL.PKI_CA_FILE],
                 url: process.env[ENV_OPTIONAL.PKI_URL]
             };
         }

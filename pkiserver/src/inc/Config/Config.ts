@@ -11,6 +11,7 @@ export enum ENV_OPTIONAL {
     PKISERVER_PORT = 'FLYINGFISH_PKISERVER_PORT',
     PKISERVER_ORGANIZATION = 'FLYINGFISH_PKISERVER_ORGANIZATION',
     PKISERVER_BOOTSTRAP_SOCKET = 'FLYINGFISH_PKISERVER_BOOTSTRAP_SOCKET',
+    PKISERVER_CA_EXPORT_FILE = 'FLYINGFISH_PKISERVER_CA_EXPORT_FILE',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET'
 }
@@ -131,6 +132,16 @@ export class Config extends ConfigCore<ConfigOptionsPkiServer> {
             }
 
             config.pkiserver.bootstrapSocket = process.env[ENV_OPTIONAL.PKISERVER_BOOTSTRAP_SOCKET];
+        }
+
+        // pki CA export file ------------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.PKISERVER_CA_EXPORT_FILE]) {
+            if (!config.pkiserver) {
+                config.pkiserver = {};
+            }
+
+            config.pkiserver.caExportFile = process.env[ENV_OPTIONAL.PKISERVER_CA_EXPORT_FILE];
         }
 
         // Logging -----------------------------------------------------------------------------------------------------
