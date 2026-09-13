@@ -74,6 +74,7 @@ export {
     PkiClientCertVerifyOptions,
     PkiClientCertVerifier
 } from './inc/Pki/PkiClientCertVerifier.js';
+export {PkiHubTrust} from './inc/Pki/PkiHubTrust.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
