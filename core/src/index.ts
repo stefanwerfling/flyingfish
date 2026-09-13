@@ -231,5 +231,6 @@ export {
     byeHub,
     startHubRegistration,
     HubRegistrationHandle,
-    HubRegistrationOptions
+    HubRegistrationOptions,
+    PkiClientIdentity
 } from './inc/Hub/HubRegistryClient.js';

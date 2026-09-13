@@ -57,6 +57,12 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
     registry: Vts.optional(Vts.object({
         secret: Vts.optional(Vts.string())
     })),
+    // Node PKI (v2 own-PKI epic 9.4): the pkiserver base URL the Hub fetches the
+    // CA chain + revocation list from, to authenticate parts by their client
+    // certificate over mTLS (replaces the shared registry secret).
+    pki: Vts.optional(Vts.object({
+        url: Vts.string()
+    })),
     himpip: Vts.optional(Vts.object({
         provider: Vts.string()
     })),

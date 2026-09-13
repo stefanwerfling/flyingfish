@@ -6,6 +6,7 @@ import {
     DomainRecordDB,
     PkiBootstrapSocketClient,
     PkiCaPurpose,
+    PkiClientIdentity,
     PkiNodeClient,
     PkiNodeEnroller,
     PkiNodeFileStore,
@@ -101,19 +102,12 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
 
     await Dns2Server.getInstance().listen();
 
-    // Announce this part to the Hub registry (v2 modular architecture). Optional:
-    // without registry config the DNS server simply does not self-register.
-    if (tConfig.registry) {
-        await startHubRegistration(
-            tConfig.registry.url,
-            tConfig.registry.secret,
-            buildDnsCapabilityManifest(`dns@${os.hostname()}`)
-        );
-    }
-
     // Node PKI (v2 own-PKI epic 9.4): opt-in enroll + auto-renew of this part's
-    // own service certificate. Optional and non-fatal — without pki config the
-    // DNS server simply runs without a node certificate.
+    // own service certificate, BEFORE Hub registration so the registration can
+    // authenticate over mTLS with it. Optional and non-fatal — without pki config
+    // the DNS server simply runs without a node certificate.
+    let nodeIdentity: PkiClientIdentity | undefined;
+
     if (tConfig.pki) {
         try {
             const store = new PkiNodeFileStore(
@@ -138,10 +132,25 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
 
             const identity = await enroller.ensure();
 
+            nodeIdentity = {cert: identity.certificate, key: identity.privateKey};
+
             Logger.getLogger().info(`Node PKI identity ready (nodeUid ${identity.nodeUid})`);
         } catch (error) {
             Logger.getLogger().error('Node PKI enrollment failed (continuing without a node certificate)', error);
         }
+    }
+
+    // Announce this part to the Hub registry (v2 modular architecture). Optional:
+    // without registry config the DNS server simply does not self-register. When a
+    // node certificate was obtained above, the registration authenticates over
+    // mTLS with it instead of relying on the shared secret alone.
+    if (tConfig.registry) {
+        await startHubRegistration(
+            tConfig.registry.url,
+            tConfig.registry.secret,
+            buildDnsCapabilityManifest(`dns@${os.hostname()}`),
+            {identity: nodeIdentity}
+        );
     }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,

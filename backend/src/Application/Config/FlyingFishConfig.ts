@@ -20,6 +20,7 @@ export enum ENV_OPTIONAL {
     NGINX_SECRET = 'FLYINGFISH_NGINX_SECRET',
     NGINX_REMOTE_URL = 'FLYINGFISH_NGINX_REMOTE_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
+    PKI_URL = 'FLYINGFISH_PKI_URL',
     DYNDNSSERVER_PORT = 'FLYINGFISH_DYNDNSSERVER_PORT',
     DYNDNSSERVER_IP = 'FLYINGFISH_DYNDNSSERVER_IP',
     DYNDNSSERVER_SCHEMA = 'FLYINGFISH_DYNDNSSERVER_SCHEMA',
@@ -450,6 +451,15 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
 
         if (!config.registry.secret) {
             config.registry.secret = uuid().replaceAll('-', '');
+        }
+
+        // Node PKI (v2): the pkiserver URL the Hub authenticates part client
+        // certificates against (mTLS). Optional — without it the Hub keeps using
+        // the shared registry secret only.
+        if (process.env[ENV_OPTIONAL.PKI_URL]) {
+            config.pki = {
+                url: process.env[ENV_OPTIONAL.PKI_URL]
+            };
         }
 
         if (!config.dnsserver) {

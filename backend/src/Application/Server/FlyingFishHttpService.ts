@@ -1,5 +1,6 @@
 import {BaseHttpServerOptions, HttpServer, HttpService} from 'figtree';
 import {FlyingFishHttpServer} from './FlyingFishHttpServer.js';
+import {PkiTrust} from '../Hub/PkiTrust.js';
 
 /**
  * FlyingFishHttpService
@@ -21,6 +22,20 @@ export class FlyingFishHttpService extends HttpService {
      * @protected
      */
     protected override _createServer(options: BaseHttpServerOptions): HttpServer {
+        // Node PKI (v2, mTLS): when the Hub trust holds a CA chain (fetched from
+        // the pkiserver at boot), seed it as the client CA so the HTTPS server
+        // requests + verifies part client certificates. rejectUnauthorized stays
+        // false (optional mTLS) — the registry guard decides based on the captured
+        // peer certificate, and the admin UI keeps working without a client cert.
+        const trust = PkiTrust.get();
+
+        if (trust !== null && trust.getCaChain().length > 0) {
+            options.mtls = {
+                ca: trust.getCaChain(),
+                rejectUnauthorized: false
+            };
+        }
+
         return new FlyingFishHttpServer(options);
     }
 
