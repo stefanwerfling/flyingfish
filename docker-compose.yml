@@ -391,6 +391,9 @@ services:
       # Read-only: only needs the backend's self-signed cert to trust it over
       # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
       - flyingfish:/var/lib/flyingfish:ro
+      # Writable store for this node's own PKI identity (the shared flyingfish
+      # volume above is read-only), used when node PKI enrollment is enabled.
+      - flyingfishDnsPki:/var/lib/flyingfish-pki
     environment:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
@@ -399,6 +402,12 @@ services:
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
       NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      # Node PKI (v2, 9.4.3-D): opt-in enroll + auto-renew of this part's own
+      # service cert. Inert until PKI_BOOTSTRAP_TOKEN is set (enrollment needs a
+      # token; the store dir is a writable volume).
+      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_TOKEN: "${PKI_BOOTSTRAP_TOKEN}"
     ports:
       - "5333:5333/udp"
       - "5333:5333/tcp"
@@ -415,6 +424,8 @@ services:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
+      pkiserver:
+        condition: service_started
 
   pkiserver:
     image: flyingfish_pki:v1.1.13
@@ -513,6 +524,8 @@ volumes:
   flyingfishSsh:
     driver: local
   flyingfishRedisData:
+    driver: local
+  flyingfishDnsPki:
     driver: local
 
 networks:
