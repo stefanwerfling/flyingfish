@@ -76,6 +76,13 @@ export const buildPkiCapabilityManifest = (instanceId: string): CapabilityManife
                         method: 'GET',
                         path: '/pki/revoked',
                         responseSchema: 'SchemaPkiRevocationListResponse'
+                    },
+                    {
+                        action: 'pki-rotate-intermediate',
+                        method: 'POST',
+                        path: '/pki/rotate',
+                        requestSchema: 'SchemaPkiRotateRequest',
+                        responseSchema: 'SchemaDefaultReturn'
                     }
                 ],
                 config: {

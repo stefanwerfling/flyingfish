@@ -1,4 +1,5 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
+import {PkiCaPurposeVts} from './Enrollment.js';
 import {SchemaDefaultReturn} from '../Core/Server/Routes/DefaultReturn.js';
 
 /**
@@ -34,3 +35,17 @@ export const SchemaPkiCaTreeResponse = SchemaDefaultReturn.extend({
  * PkiCaTreeResponse
  */
 export type PkiCaTreeResponse = ExtractSchemaResultType<typeof SchemaPkiCaTreeResponse>;
+
+/**
+ * SchemaPkiRotateRequest — an admin trigger to rotate (roll) a purpose's
+ * intermediate CA (own-PKI epic 9.4.3-E3): mint a new intermediate under the
+ * root, adopt it for new issuance, and re-export the CA pool.
+ */
+export const SchemaPkiRotateRequest = Vts.object({
+    purpose: Vts.enum(PkiCaPurposeVts)
+});
+
+/**
+ * PkiRotateRequest
+ */
+export type PkiRotateRequest = ExtractSchemaResultType<typeof SchemaPkiRotateRequest>;

@@ -114,13 +114,7 @@ const DEFAULT_ORGANIZATION = 'FlyingFish';
     // on the pkiserver, which sidesteps the backend<->pkiserver ordering cycle
     // (9.4 mTLS). Written on every boot; the CA is stable across restarts.
     if (tConfig.pkiserver?.caExportFile) {
-        const caPool = [
-            tree.root.certificate,
-            ...Object.values(PkiCaPurpose).map((purpose) => tree.intermediates[purpose].certificate)
-        ];
-
-        await fs.promises.mkdir(path.dirname(tConfig.pkiserver.caExportFile), {recursive: true});
-        await fs.promises.writeFile(tConfig.pkiserver.caExportFile, JSON.stringify(caPool));
+        await store.exportCaPool(service.getCaPool(), tConfig.pkiserver.caExportFile);
 
         Logger.getLogger().info(`PKI CA pool exported to ${tConfig.pkiserver.caExportFile}`);
     }
@@ -164,7 +158,7 @@ const DEFAULT_ORGANIZATION = 'FlyingFish';
             max_age: session_cookie_max_age
         },
         routes: [
-            new Pki(service, store)
+            new Pki(service, store, tConfig.pkiserver?.caExportFile)
         ]
     });
 

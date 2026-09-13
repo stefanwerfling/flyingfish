@@ -18,6 +18,7 @@ import {
     SchemaPkiEnrollRequest,
     SchemaPkiRenewRequest,
     SchemaPkiRevokeRequest,
+    SchemaPkiRotateRequest,
     StatusCodes
 } from 'flyingfish_schemas';
 import {PkiStore} from '../../inc/Pki/PkiStore.js';
@@ -42,14 +43,21 @@ export class Pki extends DefaultRoute {
     private readonly _store: PkiStore;
 
     /**
+     * where to re-export the CA pool after a rotation (undefined = no export).
+     */
+    private readonly _caExportFile?: string;
+
+    /**
      * @param service - the enrollment service
      * @param store - the durable store
+     * @param caExportFile - CA pool export path (for re-export after rotation)
      */
-    public constructor(service: PkiEnrollmentService, store: PkiStore) {
+    public constructor(service: PkiEnrollmentService, store: PkiStore, caExportFile?: string) {
         super();
 
         this._service = service;
         this._store = store;
+        this._caExportFile = caExportFile;
 
         this._get('/health', (req, res): void => {
             res.status(200).json({statusCode: StatusCodes.OK});
@@ -81,6 +89,10 @@ export class Pki extends DefaultRoute {
 
         this._get('/pki/revoked', async(req, res): Promise<void> => {
             await this._revocationList(req, res);
+        });
+
+        this._post('/pki/rotate', async(req, res): Promise<void> => {
+            await this._rotate(req, res);
         });
     }
 
@@ -271,6 +283,39 @@ export class Pki extends DefaultRoute {
         };
 
         res.status(200).json(response);
+    }
+
+    /**
+     * POST /pki/rotate — roll a purpose intermediate: adopt a fresh intermediate
+     * into the live tree, persist it, and re-export the CA pool so the Hub trusts
+     * it (own-PKI epic 9.4.3-E3). Admin operation.
+     * @param req - the request
+     * @param res - the response
+     */
+    private async _rotate(req: Request, res: Response): Promise<void> {
+        if (!this.isSchemaValidate(SchemaPkiRotateRequest, req.body, res)) {
+            return;
+        }
+
+        const purpose = req.body.purpose as unknown as PkiCaPurpose;
+
+        try {
+            const rolled = await this._service.rotateIntermediate(purpose);
+            await this._store.saveIntermediate(rolled, purpose);
+
+            if (this._caExportFile !== undefined) {
+                await this._store.exportCaPool(this._service.getCaPool(), this._caExportFile);
+            }
+
+            res.status(200).json({statusCode: StatusCodes.OK});
+        } catch (error) {
+            Logger.getLogger().warn('Pki::_rotate: rotation failed: %s', `${error}`);
+
+            res.status(200).json({
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: `${error}`
+            });
+        }
     }
 
     /**

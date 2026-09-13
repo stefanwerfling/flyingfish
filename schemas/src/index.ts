@@ -434,7 +434,9 @@ export {
     SchemaPkiCaNodeEntry,
     PkiCaNodeEntry,
     SchemaPkiCaTreeResponse,
-    PkiCaTreeResponse
+    PkiCaTreeResponse,
+    SchemaPkiRotateRequest,
+    PkiRotateRequest
 } from './Pki/CaTree.js';
 export {
     SchemaPkiRevokeRequest,

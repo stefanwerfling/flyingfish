@@ -5,7 +5,7 @@
  * SchemaCapabilityManifest and checks the EST-style enrollment contract
  * (/pki/cacerts + /pki/enroll) and the certificate-tree db entities. Network-free.
  */
-import {SchemaCapabilityManifest, buildPkiCapabilityManifest} from 'flyingfish_schemas';
+import {SchemaCapabilityManifest, SchemaPkiRotateRequest, buildPkiCapabilityManifest} from 'flyingfish_schemas';
 
 describe('Capability manifest (PKI part)', () => {
     test('the PKI manifest validates against the schema', () => {
@@ -70,6 +70,19 @@ describe('Capability manifest (PKI part)', () => {
         expect(list?.method).toBe('GET');
         expect(list?.path).toBe('/pki/revoked');
         expect(list?.responseSchema).toBe('SchemaPkiRevocationListResponse');
+    });
+
+    test('exposes the intermediate rotation action + its request schema', () => {
+        const manifest = buildPkiCapabilityManifest('pki-instance-1');
+        const rotate = manifest.capabilities[0].api?.find((a) => a.action === 'pki-rotate-intermediate');
+
+        expect(rotate?.method).toBe('POST');
+        expect(rotate?.path).toBe('/pki/rotate');
+        expect(rotate?.requestSchema).toBe('SchemaPkiRotateRequest');
+
+        expect(SchemaPkiRotateRequest.validate({purpose: 'service'}, [])).toBe(true);
+        expect(SchemaPkiRotateRequest.validate({purpose: 'nope'}, [])).toBe(false);
+        expect(SchemaPkiRotateRequest.validate({}, [])).toBe(false);
     });
 
     test('declares the certificate-tree db entities', () => {

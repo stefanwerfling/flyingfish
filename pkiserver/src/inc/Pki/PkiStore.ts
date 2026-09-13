@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import path from 'path';
 import {Logger} from 'figtree';
 import {
     CaCertificateDB,
@@ -36,6 +38,18 @@ export class PkiStore {
     private readonly _caIdByPurpose: Map<PkiCaPurpose, number> = new Map();
 
     /**
+     * the persisted ca_certificate id of the Root, used as parent_ca_id when a
+     * rotated intermediate is added.
+     */
+    private _rootCaId: number = 0;
+
+    /**
+     * the CA tree's key algorithm, tracked so a rotated intermediate is persisted
+     * with the same algorithm.
+     */
+    private _algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519;
+
+    /**
      * Load the CA tree from the database, creating and persisting it on first
      * boot (the ceremony). Returns the in-memory tree the enrollment service
      * issues from.
@@ -67,6 +81,8 @@ export class PkiStore {
     private async _persistTree(tree: PkiCaTreeResult): Promise<void> {
         const now = Date.now();
 
+        this._algorithm = tree.algorithm;
+
         const rootRow = new CaCertificateDB();
         rootRow.parent_ca_id = 0;
         rootRow.ca_type = 'root';
@@ -78,6 +94,8 @@ export class PkiStore {
         rootRow.public_key = tree.root.publicKey;
         rootRow.created_at = now;
         await rootRow.save();
+
+        this._rootCaId = rootRow.id;
 
         // The purpose intermediates are independent of each other (all linked to
         // the already-saved Root), so persist them concurrently.
@@ -110,14 +128,21 @@ export class PkiStore {
             throw new Error('PkiStore: ca_certificate has rows but no root CA');
         }
 
+        this._rootCaId = rootRow.id;
+        this._algorithm = rootRow.algorithm as PkiKeyAlgorithm;
+
         const intermediates = {} as Record<PkiCaPurpose, PkiCaNode>;
 
         for (const purpose of Object.values(PkiCaPurpose)) {
-            const row = rows.find((entry) => entry.ca_type === 'intermediate' && entry.purpose === purpose);
+            // A rotated purpose can have several intermediate rows — pick the
+            // newest (highest created_at) so the current intermediate is loaded.
+            const purposeRows = rows.filter((entry) => entry.ca_type === 'intermediate' && entry.purpose === purpose);
 
-            if (!row) {
+            if (purposeRows.length === 0) {
                 throw new Error(`PkiStore: no persisted intermediate CA for purpose ${purpose}`);
             }
+
+            const row = purposeRows.reduce((newest, entry) => entry.created_at > newest.created_at ? entry : newest);
 
             intermediates[purpose] = {
                 certificate: row.certificate,
@@ -210,6 +235,40 @@ export class PkiStore {
         await row.save();
 
         return row.id;
+    }
+
+    /**
+     * Persist a rotated intermediate CA as a NEW ca_certificate row (the old row
+     * stays for overlap) and point subsequent issued-cert links at it (own-PKI
+     * epic 9.4.3-E3). On the next boot _rebuildTree loads the newest per purpose.
+     * @param node - the rolled intermediate node
+     * @param purpose - its CA purpose
+     */
+    public async saveIntermediate(node: PkiCaNode, purpose: PkiCaPurpose): Promise<void> {
+        const row = new CaCertificateDB();
+        row.parent_ca_id = this._rootCaId;
+        row.ca_type = 'intermediate';
+        row.purpose = purpose;
+        row.subject = `FlyingFish ${purpose} Intermediate CA`;
+        row.algorithm = this._algorithm;
+        row.certificate = node.certificate;
+        row.private_key = node.privateKey;
+        row.public_key = node.publicKey;
+        row.created_at = Date.now();
+        await row.save();
+
+        this._caIdByPurpose.set(purpose, row.id);
+    }
+
+    /**
+     * Write the CA pool (Root + intermediates) to a file for the Hub to read
+     * (mTLS client CA). Called at boot and after a rotation.
+     * @param pool - the CA certificate PEMs
+     * @param filePath - the export file path
+     */
+    public async exportCaPool(pool: string[], filePath: string): Promise<void> {
+        await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
+        await fs.promises.writeFile(filePath, JSON.stringify(pool));
     }
 
 }

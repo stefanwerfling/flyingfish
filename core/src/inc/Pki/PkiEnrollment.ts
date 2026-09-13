@@ -1,6 +1,6 @@
 import {webcrypto} from 'crypto';
 import {PkiCertificateBuilder, PkiSanEntry} from '../Crypto/PkiCertificateBuilder.js';
-import {PkiCaPurpose, PkiCaTreeResult} from './PkiCaTree.js';
+import {PkiCaNode, PkiCaPurpose, PkiCaTree, PkiCaTreeResult} from './PkiCaTree.js';
 import {PkiBootstrapTokenStore, PkiClock} from './PkiBootstrapTokenStore.js';
 
 const DEFAULT_LEAF_VALIDITY_DAYS = 7;
@@ -269,6 +269,35 @@ export class PkiEnrollmentService {
         return [
             this._tree.intermediates[purpose].certificate,
             this._tree.root.certificate
+        ];
+    }
+
+    /**
+     * Rotate a purpose intermediate at runtime (own-PKI epic 9.4.3-E3): roll it
+     * (new key under the same root) and adopt it into the live tree, so
+     * subsequent enrollments issue from the new intermediate. The old one stays
+     * valid for its existing leaves (overlap). The caller persists the new
+     * intermediate and re-exports the CA pool.
+     * @param purpose - the purpose whose intermediate to rotate
+     */
+    public async rotateIntermediate(purpose: PkiCaPurpose): Promise<PkiCaNode> {
+        const rolled = await PkiCaTree.rollIntermediate(this._tree.root, purpose, {
+            algorithm: this._tree.algorithm
+        });
+
+        this._tree.intermediates[purpose] = rolled;
+
+        return rolled;
+    }
+
+    /**
+     * The full CA pool (Root + all purpose intermediates) as PEMs — what the Hub
+     * seeds its mTLS client CA from; re-exported after a rotation.
+     */
+    public getCaPool(): string[] {
+        return [
+            this._tree.root.certificate,
+            ...Object.values(PkiCaPurpose).map((purpose) => this._tree.intermediates[purpose].certificate)
         ];
     }
 

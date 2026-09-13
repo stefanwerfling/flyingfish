@@ -6,10 +6,12 @@
  */
 import * as x509 from '@peculiar/x509';
 import {
+    PkiBootstrapTokenStore,
     PkiCaPurpose,
     PkiCaTree,
     PkiCaTreeResult,
-    PkiCertificateBuilder
+    PkiCertificateBuilder,
+    PkiEnrollmentService
 } from 'flyingfish_core';
 
 /**
@@ -100,5 +102,35 @@ describe('PKI intermediate rollover (v2, 9.4.3-E1)', () => {
 
         expect(await PkiCertificateBuilder.verifyIssuedBy(newIntermediate.certificate, newRoot.certificate)).toBe(true);
         expect(await PkiCertificateBuilder.verifyIssuedBy(leaf.certificate, newIntermediate.certificate)).toBe(true);
+    });
+});
+
+describe('runtime intermediate rotation (v2, 9.4.3-E3)', () => {
+    test('rotateIntermediate swaps the live intermediate; new enrollments use it', async() => {
+        const localTree = await PkiCaTree.create({organization: 'FlyingFishTest'});
+        const tokens = new PkiBootstrapTokenStore();
+        const service = new PkiEnrollmentService(localTree, tokens);
+
+        const oldIntermediate = service.getCaChain(PkiCaPurpose.service)[0];
+
+        const rolled = await service.rotateIntermediate(PkiCaPurpose.service);
+
+        // the live chain now uses the rolled intermediate
+        expect(service.getCaChain(PkiCaPurpose.service)[0]).toBe(rolled.certificate);
+        expect(service.getCaChain(PkiCaPurpose.service)[0]).not.toBe(oldIntermediate);
+
+        // a new enrollment issues from the rolled intermediate
+        const {token} = tokens.issue({purpose: PkiCaPurpose.service, autoApprove: true});
+        const keys = await PkiCertificateBuilder.generateKeyPair();
+        const csr = await PkiCertificateBuilder.createCsr('CN=after-rotate', keys);
+        const request = await service.enroll({csr: csr, bootstrapToken: token, commonName: 'after-rotate'});
+
+        expect(await PkiCertificateBuilder.verifyIssuedBy(request.issued!.certificate, rolled.certificate)).toBe(true);
+
+        // the CA pool now carries the rolled intermediate (root + 3 intermediates)
+        const pool = service.getCaPool();
+
+        expect(pool).toHaveLength(4);
+        expect(pool).toContain(rolled.certificate);
     });
 });
