@@ -6,6 +6,7 @@ import {
     PkiEnrollmentInput,
     PkiEnrollmentRequest,
     PkiEnrollmentService,
+    PkiRenewalInput,
     PkiSanEntry
 } from 'flyingfish_core';
 import {
@@ -13,6 +14,7 @@ import {
     PkiEnrollResponse,
     SchemaPkiEnrollDecision,
     SchemaPkiEnrollRequest,
+    SchemaPkiRenewRequest,
     StatusCodes
 } from 'flyingfish_schemas';
 import {PkiStore} from '../../inc/Pki/PkiStore.js';
@@ -56,6 +58,10 @@ export class Pki extends DefaultRoute {
 
         this._post('/pki/enroll', async(req, res): Promise<void> => {
             await this._enroll(req, res);
+        });
+
+        this._post('/pki/renew', async(req, res): Promise<void> => {
+            await this._renew(req, res);
         });
 
         this._post('/pki/enroll/approve', async(req, res): Promise<void> => {
@@ -111,6 +117,43 @@ export class Pki extends DefaultRoute {
             res.status(200).json(Pki._toResponse(request));
         } catch (error) {
             Logger.getLogger().warn('Pki::_enroll: enrollment rejected: %s', `${error}`);
+
+            res.status(200).json({
+                statusCode: StatusCodes.INTERNAL_ERROR,
+                msg: `${error}`
+            });
+        }
+    }
+
+    /**
+     * POST /pki/renew — EST simple-reenroll: issue a fresh leaf for an existing
+     * node from a new CSR (key rotation), keeping the stable nodeUid, and persist
+     * the new issued certificate. Re-enrollment is authenticated by the node's
+     * current certificate at the transport (mTLS), so no bootstrap token.
+     * @param req - the request
+     * @param res - the response
+     */
+    private async _renew(req: Request, res: Response): Promise<void> {
+        if (!this.isSchemaValidate(SchemaPkiRenewRequest, req.body, res)) {
+            return;
+        }
+
+        const input: PkiRenewalInput = {
+            nodeUid: req.body.nodeUid,
+            purpose: req.body.purpose as unknown as PkiCaPurpose,
+            csr: req.body.csr,
+            commonName: req.body.commonName,
+            sans: req.body.sans as unknown as PkiSanEntry[] | undefined,
+            validityDays: req.body.validityDays
+        };
+
+        try {
+            const request = await this._service.renew(input);
+            await this._store.persistEnrollment(request);
+
+            res.status(200).json(Pki._toResponse(request));
+        } catch (error) {
+            Logger.getLogger().warn('Pki::_renew: renewal rejected: %s', `${error}`);
 
             res.status(200).json({
                 statusCode: StatusCodes.INTERNAL_ERROR,

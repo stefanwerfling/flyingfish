@@ -8,7 +8,8 @@ import {
     SchemaPkiCaCertsResponse,
     SchemaPkiEnrollDecision,
     SchemaPkiEnrollRequest,
-    SchemaPkiEnrollResponse
+    SchemaPkiEnrollResponse,
+    SchemaPkiRenewRequest
 } from 'flyingfish_schemas';
 
 describe('PKI enrollment wire schemas', () => {
@@ -93,6 +94,31 @@ describe('PKI enrollment wire schemas', () => {
 
         expect(valid).toBe(true);
         expect(errors).toEqual([]);
+    });
+
+    test('a renew request (nodeUid + purpose + csr) validates', () => {
+        const errors: unknown[] = [];
+
+        const valid = SchemaPkiRenewRequest.validate({
+            nodeUid: 'uid-1',
+            purpose: 'service',
+            csr: 'csr-pem',
+            commonName: 'node-a.internal'
+        }, errors);
+
+        expect(valid).toBe(true);
+        expect(errors).toEqual([]);
+    });
+
+    test('a renew request with an unknown purpose is rejected', () => {
+        const valid = SchemaPkiRenewRequest.validate({
+            nodeUid: 'uid-1',
+            purpose: 'wat',
+            csr: 'csr-pem',
+            commonName: 'node-a.internal'
+        }, []);
+
+        expect(valid).toBe(false);
     });
 
     test('an approve/reject decision validates on requestId', () => {

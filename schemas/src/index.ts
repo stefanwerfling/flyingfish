@@ -414,6 +414,7 @@ export {buildPkiCapabilityManifest} from './Hub/PkiCapabilityManifest.js';
 export {
     PkiSanTypeVts,
     PkiEnrollmentStatusVts,
+    PkiCaPurposeVts,
     SchemaPkiSanEntry,
     PkiSanEntryWire,
     SchemaPkiEnrollRequest,
@@ -422,6 +423,8 @@ export {
     PkiIssuedCertificateWire,
     SchemaPkiEnrollResponse,
     PkiEnrollResponse,
+    SchemaPkiRenewRequest,
+    PkiRenewRequest,
     SchemaPkiEnrollDecision,
     PkiEnrollDecision,
     SchemaPkiCaCertsResponse,

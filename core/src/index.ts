@@ -48,10 +48,12 @@ export {
 export {
     PkiEnrollmentStatus,
     PkiEnrollmentInput,
+    PkiRenewalInput,
     PkiIssuedCertificate,
     PkiEnrollmentRequest,
     PkiEnrollmentService
 } from './inc/Pki/PkiEnrollment.js';
+export {PkiRenewal} from './inc/Pki/PkiRenewal.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';

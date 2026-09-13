@@ -44,6 +44,13 @@ export const buildPkiCapabilityManifest = (instanceId: string): CapabilityManife
                         responseSchema: 'SchemaPkiEnrollResponse'
                     },
                     {
+                        action: 'pki-renew',
+                        method: 'POST',
+                        path: '/pki/renew',
+                        requestSchema: 'SchemaPkiRenewRequest',
+                        responseSchema: 'SchemaPkiEnrollResponse'
+                    },
+                    {
                         action: 'pki-enroll-approve',
                         method: 'POST',
                         path: '/pki/enroll/approve',

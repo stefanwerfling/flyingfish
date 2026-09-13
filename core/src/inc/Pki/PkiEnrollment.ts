@@ -47,6 +47,46 @@ export type PkiEnrollmentInput = {
 };
 
 /**
+ * The input a node submits to renew an existing certificate: its stable
+ * identity (nodeUid + purpose) plus a fresh CSR. A new CSR means a new key pair,
+ * so renewal rotates the key while keeping the identity. Re-enrollment is
+ * authenticated by the current certificate at the transport (mTLS), not by a
+ * bootstrap token, so none is required here.
+ */
+export type PkiRenewalInput = {
+    /**
+     * The stable node identity assigned at first enrollment (kept across
+     * renewals so the flyingfish://<purpose>/<nodeUid> SAN stays constant).
+     */
+    nodeUid: string;
+
+    /**
+     * The CA purpose the node is enrolled under.
+     */
+    purpose: PkiCaPurpose;
+
+    /**
+     * The new PKCS#10 CSR PEM (new key = rotation; proves possession).
+     */
+    csr: string;
+
+    /**
+     * The common name for the renewed certificate's subject.
+     */
+    commonName: string;
+
+    /**
+     * Additional subject alternative names beyond the identity URI.
+     */
+    sans?: PkiSanEntry[];
+
+    /**
+     * Leaf validity in days. Defaults to 7.
+     */
+    validityDays?: number;
+};
+
+/**
  * An issued certificate plus its chain and the stable node identity assigned to
  * it.
  */
@@ -144,6 +184,39 @@ export class PkiEnrollmentService {
         }
 
         return request;
+    }
+
+    /**
+     * Renew an existing node's certificate: issue a new leaf under the same
+     * purpose intermediate, keeping the stable nodeUid (so the
+     * flyingfish://<purpose>/<nodeUid> identity is unchanged) but taking the key
+     * from the freshly submitted CSR (key rotation). Renewal issues immediately
+     * — the node already proved itself at first enrollment and re-authenticates
+     * with its current certificate at the transport. Throws on a CSR that fails
+     * proof of possession.
+     * @param input - the renewal input
+     */
+    public async renew(input: PkiRenewalInput): Promise<PkiEnrollmentRequest> {
+        if (!await PkiCertificateBuilder.verifyCsr(input.csr)) {
+            throw new Error('PkiEnrollmentService: CSR proof-of-possession failed');
+        }
+
+        const request: PkiEnrollmentRequest = {
+            id: webcrypto.randomUUID(),
+            status: PkiEnrollmentStatus.pending,
+            purpose: input.purpose,
+            // The identity is stable across renewals — reuse the existing nodeUid.
+            nodeUid: input.nodeUid,
+            commonName: input.commonName,
+            sans: input.sans ?? [],
+            validityDays: input.validityDays ?? DEFAULT_LEAF_VALIDITY_DAYS,
+            csr: input.csr,
+            createdAt: this._clock()
+        };
+
+        this._requests.set(request.id, request);
+
+        return this._issue(request);
     }
 
     /**

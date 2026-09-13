@@ -23,6 +23,16 @@ export enum PkiEnrollmentStatusVts {
 }
 
 /**
+ * CA purpose on the wire. Mirrors the core `PkiCaPurpose`; kept as an own enum
+ * because the schemas package must not depend on flyingfish_core.
+ */
+export enum PkiCaPurposeVts {
+    cluster = 'cluster',
+    service = 'service',
+    device = 'device'
+}
+
+/**
  * SchemaPkiSanEntry — a single subject-alternative-name entry a node requests
  * beyond its assigned identity URI.
  */
@@ -85,6 +95,27 @@ export const SchemaPkiEnrollResponse = SchemaDefaultReturn.extend({
  * PkiEnrollResponse
  */
 export type PkiEnrollResponse = ExtractSchemaResultType<typeof SchemaPkiEnrollResponse>;
+
+/**
+ * SchemaPkiRenewRequest — the EST simple-reenroll body: the stable node identity
+ * (nodeUid + purpose) plus a fresh CSR (new key = rotation). Re-enrollment is
+ * authenticated by the current certificate at the transport, so it carries no
+ * bootstrap token. The response reuses SchemaPkiEnrollResponse (an issued
+ * request keeping the same nodeUid).
+ */
+export const SchemaPkiRenewRequest = Vts.object({
+    nodeUid: Vts.string(),
+    purpose: Vts.enum(PkiCaPurposeVts),
+    csr: Vts.string(),
+    commonName: Vts.string(),
+    sans: Vts.optional(Vts.array(SchemaPkiSanEntry)),
+    validityDays: Vts.optional(Vts.number())
+});
+
+/**
+ * PkiRenewRequest
+ */
+export type PkiRenewRequest = ExtractSchemaResultType<typeof SchemaPkiRenewRequest>;
 
 /**
  * SchemaPkiEnrollDecision — an admin approve/reject decision referencing a

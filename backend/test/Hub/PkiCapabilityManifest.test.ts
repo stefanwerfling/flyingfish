@@ -47,6 +47,16 @@ describe('Capability manifest (PKI part)', () => {
         expect(enroll?.responseSchema).toBe('SchemaPkiEnrollResponse');
     });
 
+    test('exposes the EST re-enroll (renew) POST action', () => {
+        const manifest = buildPkiCapabilityManifest('pki-instance-1');
+        const renew = manifest.capabilities[0].api?.find((a) => a.action === 'pki-renew');
+
+        expect(renew?.method).toBe('POST');
+        expect(renew?.path).toBe('/pki/renew');
+        expect(renew?.requestSchema).toBe('SchemaPkiRenewRequest');
+        expect(renew?.responseSchema).toBe('SchemaPkiEnrollResponse');
+    });
+
     test('declares the certificate-tree db entities', () => {
         const manifest = buildPkiCapabilityManifest('pki-instance-1');
 
