@@ -57,6 +57,21 @@ describe('Capability manifest (PKI part)', () => {
         expect(renew?.responseSchema).toBe('SchemaPkiEnrollResponse');
     });
 
+    test('exposes the revoke + revocation-list actions', () => {
+        const manifest = buildPkiCapabilityManifest('pki-instance-1');
+        const api = manifest.capabilities[0].api;
+
+        const revoke = api?.find((a) => a.action === 'pki-revoke');
+        expect(revoke?.method).toBe('POST');
+        expect(revoke?.path).toBe('/pki/revoke');
+        expect(revoke?.requestSchema).toBe('SchemaPkiRevokeRequest');
+
+        const list = api?.find((a) => a.action === 'pki-revocation-list');
+        expect(list?.method).toBe('GET');
+        expect(list?.path).toBe('/pki/revoked');
+        expect(list?.responseSchema).toBe('SchemaPkiRevocationListResponse');
+    });
+
     test('declares the certificate-tree db entities', () => {
         const manifest = buildPkiCapabilityManifest('pki-instance-1');
 

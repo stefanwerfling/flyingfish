@@ -2,6 +2,7 @@ import {Request, Response} from 'express';
 import {Logger} from 'figtree';
 import {
     DefaultRoute,
+    IssuedCertificateDB,
     PkiCaPurpose,
     PkiEnrollmentInput,
     PkiEnrollmentRequest,
@@ -12,9 +13,11 @@ import {
 import {
     PkiCaCertsResponse,
     PkiEnrollResponse,
+    PkiRevocationListResponse,
     SchemaPkiEnrollDecision,
     SchemaPkiEnrollRequest,
     SchemaPkiRenewRequest,
+    SchemaPkiRevokeRequest,
     StatusCodes
 } from 'flyingfish_schemas';
 import {PkiStore} from '../../inc/Pki/PkiStore.js';
@@ -70,6 +73,14 @@ export class Pki extends DefaultRoute {
 
         this._post('/pki/enroll/reject', async(req, res): Promise<void> => {
             await this._reject(req, res);
+        });
+
+        this._post('/pki/revoke', async(req, res): Promise<void> => {
+            await this._revoke(req, res);
+        });
+
+        this._get('/pki/revoked', async(req, res): Promise<void> => {
+            await this._revocationList(req, res);
         });
     }
 
@@ -210,6 +221,56 @@ export class Pki extends DefaultRoute {
                 msg: `${error}`
             });
         }
+    }
+
+    /**
+     * POST /pki/revoke — revoke a node identity: mark every issued certificate
+     * carrying that nodeUid revoked (covers the node's renewals). Idempotent.
+     * The durable rows are what the real-time Hub allowlist is rebuilt from.
+     * @param req - the request
+     * @param res - the response
+     */
+    private async _revoke(req: Request, res: Response): Promise<void> {
+        if (!this.isSchemaValidate(SchemaPkiRevokeRequest, req.body, res)) {
+            return;
+        }
+
+        await IssuedCertificateDB.update(
+            {node_uid: req.body.nodeUid},
+            {revoked: true, revoked_at: Date.now()}
+        );
+
+        res.status(200).json({statusCode: StatusCodes.OK});
+    }
+
+    /**
+     * GET /pki/revoked — the revoked node identities (deduplicated by nodeUid,
+     * keeping the earliest revocation time). The Hub polls this to rebuild its
+     * real-time allowlist.
+     * @param req - the request
+     * @param res - the response
+     */
+    private async _revocationList(req: Request, res: Response): Promise<void> {
+        const rows = await IssuedCertificateDB.find({where: {revoked: true}});
+
+        const earliest = new Map<string, number>();
+
+        for (const row of rows) {
+            const seen = earliest.get(row.node_uid);
+
+            if (seen === undefined || row.revoked_at < seen) {
+                earliest.set(row.node_uid, row.revoked_at);
+            }
+        }
+
+        const response: PkiRevocationListResponse = {
+            statusCode: StatusCodes.OK,
+            list: Array.from(earliest.entries()).map(([nodeUid, revokedAt]) => {
+                return {nodeUid: nodeUid, revokedAt: revokedAt};
+            })
+        };
+
+        res.status(200).json(response);
     }
 
     /**

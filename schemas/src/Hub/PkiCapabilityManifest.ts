@@ -63,6 +63,19 @@ export const buildPkiCapabilityManifest = (instanceId: string): CapabilityManife
                         path: '/pki/enroll/reject',
                         requestSchema: 'SchemaPkiEnrollDecision',
                         responseSchema: 'SchemaDefaultReturn'
+                    },
+                    {
+                        action: 'pki-revoke',
+                        method: 'POST',
+                        path: '/pki/revoke',
+                        requestSchema: 'SchemaPkiRevokeRequest',
+                        responseSchema: 'SchemaDefaultReturn'
+                    },
+                    {
+                        action: 'pki-revocation-list',
+                        method: 'GET',
+                        path: '/pki/revoked',
+                        responseSchema: 'SchemaPkiRevocationListResponse'
                     }
                 ],
                 config: {

@@ -437,6 +437,14 @@ export {
     PkiCaTreeResponse
 } from './Pki/CaTree.js';
 export {
+    SchemaPkiRevokeRequest,
+    PkiRevokeRequest,
+    SchemaPkiRevocationEntry,
+    PkiRevocationEntryWire,
+    SchemaPkiRevocationListResponse,
+    PkiRevocationListResponse
+} from './Pki/Revocation.js';
+export {
     SchemaRegistryInstanceRequest,
     RegistryInstanceRequest,
     SchemaRegistryPartSummary,
