@@ -62,6 +62,7 @@ export {DBEntitiesLoader} from './inc/Db/MariaDb/DBEntitiesLoader.js';
 
 // MariaDb Entity
 export {AcmeDnsTempRecord as AcmeDnsTempRecordDB} from './inc/Db/MariaDb/Entity/AcmeDnsTempRecord.js';
+export {CaCertificate as CaCertificateDB} from './inc/Db/MariaDb/Entity/CaCertificate.js';
 export {Credential as CredentialDB} from './inc/Db/MariaDb/Entity/Credential.js';
 export {CredentialUser as CredentialUserDB} from './inc/Db/MariaDb/Entity/CredentialUser.js';
 export {CredentialLocation as CredentialLocationDB} from './inc/Db/MariaDb/Entity/CredentialLocation.js';
@@ -71,6 +72,7 @@ export {DynDnsClient as DynDnsClientDB} from './inc/Db/MariaDb/Entity/DynDnsClie
 export {DynDnsClientDomain as DynDnsClientDomainDB} from './inc/Db/MariaDb/Entity/DynDnsClientDomain.js';
 export {DynDnsServerDomain as DynDnsServerDomainDB} from './inc/Db/MariaDb/Entity/DynDnsServerDomain.js';
 export {DynDnsServerUser as DynDnsServerUserDB} from './inc/Db/MariaDb/Entity/DynDnsServerUser.js';
+export {EnrollmentRequest as EnrollmentRequestDB} from './inc/Db/MariaDb/Entity/EnrollmentRequest.js';
 export {GatewayIdentifier as GatewayIdentifierDB} from './inc/Db/MariaDb/Entity/GatewayIdentifier.js';
 export {IpBlacklist as IpBlacklistDB} from './inc/Db/MariaDb/Entity/IpBlacklist.js';
 export {IpBlacklistCategory as IpBlacklistCategoryDB} from './inc/Db/MariaDb/Entity/IpBlacklistCategory.js';
@@ -78,6 +80,7 @@ export {IpBlacklistMaintainer as IpBlacklistMaintainerDB} from './inc/Db/MariaDb
 export {IpListMaintainer as IpListMaintainerDB} from './inc/Db/MariaDb/Entity/IpListMaintainer.js';
 export {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js';
 export {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
+export {IssuedCertificate as IssuedCertificateDB} from './inc/Db/MariaDb/Entity/IssuedCertificate.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
 export {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 export {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
