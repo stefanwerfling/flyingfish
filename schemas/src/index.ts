@@ -378,6 +378,7 @@ export {SchemaFlyingFishArgsDdnsServer, FlyingFishArgsDdnsServer} from './DdnsSe
 export {SchemaDdnsServerConfigOptions, DdnsServerConfigOptions} from './DdnsServer/Config/Config.js';
 export {SchemaConfigOptionsDnsServer, ConfigOptionsDnsServer} from './DnsServer/Config/Config.js';
 export {SchemaConfigOptionsNginxServer, ConfigOptionsNginxServer} from './NginxServer/Config/Config.js';
+export {SchemaConfigOptionsPkiServer, ConfigOptionsPkiServer} from './PkiServer/Config/Config.js';
 
 // Hub — Capability Manifest (v2 modular architecture)
 export {

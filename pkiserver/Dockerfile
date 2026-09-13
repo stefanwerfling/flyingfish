@@ -1,0 +1,73 @@
+FROM node:22-bookworm-slim
+
+ARG NPM_REGISTRY="https://registry.npmjs.org/"
+
+RUN apt-get update -y
+RUN apt-get upgrade -y
+RUN apt-get install -y git
+
+RUN mkdir -p /opt/flyingfish
+RUN mkdir -p /opt/flyingfish/schemas
+RUN mkdir -p /opt/flyingfish/core
+RUN mkdir -p /opt/flyingfish/pkiserver
+RUN mkdir -p /opt/flyingfish/pkiserver/dist
+RUN mkdir -p /opt/flyingfish/pkiserver/node_modules
+RUN mkdir -p /var/lib/flyingfish
+
+# Copy Schemas ---------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/flyingfish/schemas
+COPY ./schemas/ ./
+
+RUN rm -R node_modules | true
+RUN rm -R dist | true
+RUN rm package-lock.json | true
+
+# Copy Core ------------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/flyingfish/core
+COPY ./core/ ./
+
+RUN rm -R node_modules | true
+RUN rm -R dist | true
+RUN rm package-lock.json | true
+
+# Copy pkiserver -------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/flyingfish/pkiserver
+COPY ./pkiserver ./
+
+RUN rm -R Dockerfile | true
+RUN rm -R node_modules | true
+RUN rm -R dist | true
+RUN rm package-lock.json | true
+
+# Install --------------------------------------------------------------------------------------------------------------
+
+WORKDIR /opt/flyingfish
+COPY ./package.json ./
+# npm 10 (bundled with node:22) crashes while preparing the figtree git
+# dependency (arborist "edgesOut" TypeError on its git peer dependencies);
+# npm 11 fixes this. npm 12 is not an option yet: it refuses git
+# dependencies (allow-git defaults to "none") and blocks install scripts.
+RUN npm install -g npm@11
+RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
+
+WORKDIR /opt/flyingfish/schemas
+RUN npm run build
+
+WORKDIR /opt/flyingfish/core
+RUN npm run build
+
+WORKDIR /opt/flyingfish/pkiserver
+RUN npm run build
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+RUN npm install supervisor -g
+
+EXPOSE 5334/tcp
+
+WORKDIR /opt/flyingfish
+
+CMD [ "node",  "pkiserver/dist/main.js", "--envargs=1"]
