@@ -416,6 +416,47 @@ services:
       flyingfish:
         condition: service_healthy
 
+  pkiserver:
+    image: flyingfish_pki:v1.1.13
+    build:
+      context: ./
+      dockerfile: ./pkiserver/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
+    container_name: flyingfish_pki
+    volumes:
+      - ./pkiserver/dist:/opt/flyingfish/pkiserver/dist
+      - ./pkiserver/node_modules:/opt/flyingfish/pkiserver/node_modules
+      - ./pkiserver/package.json:/opt/flyingfish/pkiserver/package.json
+      - ./node_modules:/opt/flyingfish/node_modules
+      - ./package.json:/opt/flyingfish/package.json
+      # Read-only: only needs the backend's self-signed cert to trust it over
+      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
+      - flyingfish:/var/lib/flyingfish:ro
+    environment:
+      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
+      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
+      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+    ports:
+      - "5334:5334/tcp"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      flyingfish:
+        condition: service_healthy
+
 #  vpnserver:
 #    image: flyingfish_vpn:v1.2
 #    build:
