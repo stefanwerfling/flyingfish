@@ -77,6 +77,51 @@ export class X509Signer {
     }
 
     /**
+     * Sign a TBSCertList and return the complete CertificateList (CRL) DER.
+     * @param tbsCertList - the encoded TBSCertList
+     * @param signingKey - the issuer's private key
+     * @param algorithm - the signature algorithm
+     */
+    public static async signCrl(
+        tbsCertList: Uint8Array,
+        signingKey: webcrypto.CryptoKey,
+        algorithm: X509SignAlgorithm
+    ): Promise<Uint8Array> {
+        const signature = await X509Signer._sign(tbsCertList, signingKey, algorithm);
+
+        return X509Der.certificateList(tbsCertList, X509Signer.signatureAlgorithm(algorithm), signature);
+    }
+
+    /**
+     * Verify a CRL's signature over its TBSCertList using the issuer's public key.
+     * @param crlDer - the CertificateList DER
+     * @param issuerPublicKey - the issuer's public key
+     * @param algorithm - the signature algorithm
+     */
+    public static async verifyCrl(
+        crlDer: Uint8Array,
+        issuerPublicKey: webcrypto.CryptoKey,
+        algorithm: X509SignAlgorithm
+    ): Promise<boolean> {
+        try {
+            const crl = DerReader.parse(crlDer);
+
+            if (crl.children.length < 3) {
+                return false;
+            }
+
+            return await X509Signer._verify(
+                crl.children[0].raw,
+                DerReader.toBitString(crl.children[2]).bytes,
+                issuerPublicKey,
+                algorithm
+            );
+        } catch {
+            return false;
+        }
+    }
+
+    /**
      * Sign bytes, returning the signature in its X.509 form (Ed25519 raw / ECDSA
      * DER SEQUENCE{r,s}).
      * @param data - the bytes to sign

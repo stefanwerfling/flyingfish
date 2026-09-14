@@ -21,8 +21,15 @@ export {
 export {JwkHelper} from './inc/Crypto/JwkHelper.js';
 export {Der} from './inc/Crypto/asn1/Der.js';
 export {DerNode, DerReader} from './inc/Crypto/asn1/DerReader.js';
-export {X509RdnAttribute, X509TbsFields, X509Der} from './inc/Crypto/asn1/X509Der.js';
+export {
+    X509RdnAttribute,
+    X509TbsFields,
+    X509CrlEntry,
+    X509TbsCertListFields,
+    X509Der
+} from './inc/Crypto/asn1/X509Der.js';
 export {X509SignAlgorithm, X509Signer} from './inc/Crypto/asn1/X509Signer.js';
+export {X509Crl} from './inc/Crypto/asn1/X509Crl.js';
 export {
     PkiKeyAlgorithm,
     PkiKeyPair,

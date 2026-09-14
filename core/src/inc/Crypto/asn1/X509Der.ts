@@ -26,6 +26,28 @@ export type X509TbsFields = {
     extensions?: Uint8Array;
 };
 
+/**
+ * One CRL entry: the revoked certificate's serial number (raw magnitude bytes)
+ * and when it was revoked.
+ */
+export type X509CrlEntry = {
+    serialNumber: Uint8Array;
+    revocationDate: Date;
+};
+
+/**
+ * The fields of a TBSCertList (the to-be-signed CRL body). The issuer is passed
+ * already DER-encoded (a Name); the signature AlgorithmIdentifier must match the
+ * outer one.
+ */
+export type X509TbsCertListFields = {
+    signatureAlgorithm: Uint8Array;
+    issuer: Uint8Array;
+    thisUpdate: Date;
+    nextUpdate?: Date;
+    entries: X509CrlEntry[];
+};
+
 const UTC_TIME_YEAR_LIMIT = 2050;
 
 /**
@@ -144,6 +166,49 @@ export class X509Der {
         signature: Uint8Array
     ): Uint8Array {
         return Der.sequence([tbsCertificate, signatureAlgorithm, Der.bitString(signature)]);
+    }
+
+    /**
+     * TBSCertList (v2 CRL body) ::= SEQUENCE { version INTEGER (v2=1), signature
+     * AlgorithmIdentifier, issuer Name, thisUpdate Time, nextUpdate Time OPTIONAL,
+     * revokedCertificates SEQUENCE OF SEQUENCE{ userCertificate INTEGER,
+     * revocationDate Time } OPTIONAL }.
+     * @param fields - the TBSCertList fields
+     */
+    public static tbsCertList(fields: X509TbsCertListFields): Uint8Array {
+        const items = [
+            Der.integer(1),
+            fields.signatureAlgorithm,
+            fields.issuer,
+            X509Der._time(fields.thisUpdate)
+        ];
+
+        if (fields.nextUpdate !== undefined) {
+            items.push(X509Der._time(fields.nextUpdate));
+        }
+
+        if (fields.entries.length > 0) {
+            items.push(Der.sequence(fields.entries.map((entry) => {
+                return Der.sequence([Der.integerFromBytes(entry.serialNumber), X509Der._time(entry.revocationDate)]);
+            })));
+        }
+
+        return Der.sequence(items);
+    }
+
+    /**
+     * CertificateList ::= SEQUENCE { tbsCertList, signatureAlgorithm, signature
+     * BIT STRING } — the signed CRL.
+     * @param tbsCertList - the encoded TBSCertList
+     * @param signatureAlgorithm - the encoded AlgorithmIdentifier
+     * @param signature - the raw signature bytes
+     */
+    public static certificateList(
+        tbsCertList: Uint8Array,
+        signatureAlgorithm: Uint8Array,
+        signature: Uint8Array
+    ): Uint8Array {
+        return Der.sequence([tbsCertList, signatureAlgorithm, Der.bitString(signature)]);
     }
 
     /**
