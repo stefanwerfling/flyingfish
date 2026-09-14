@@ -24,6 +24,7 @@
     "ddnsserver",
     "dnsserver",
     "nginxserver",
+    "pkiserver",
     "plugins",
     "vpn"
   ],
