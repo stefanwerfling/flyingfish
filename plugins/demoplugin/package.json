@@ -26,7 +26,6 @@
     "typeorm": "0.3.20"
   },
   "devDependencies": {
-    "@types/node-forge": "git+https://github.com/stefanwerfling/node-forge-types.git",
     "@stylistic/eslint-plugin-ts": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",

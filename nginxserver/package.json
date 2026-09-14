@@ -37,7 +37,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "express": "^5.1.0",
-    "figtree": "git+https://github.com/stefanwerfling/figtree.git",
+    "figtree": "git+https://github.com/stefanwerfling/figtree.git#7fc89a42704acadcd59bb9484f682179647c7415",
     "figtree-schemas": "git+https://github.com/stefanwerfling/figtree-schemas.git",
     "flyingfish_core": "file:../core",
     "flyingfish_schemas": "file:../schemas",
