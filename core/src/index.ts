@@ -14,7 +14,6 @@ export {Logger} from './inc/Logger/Logger.js';
 // Crypto
 export {
     CertificateHelperKeyType,
-    CertificateHelperAttr,
     CertificateHelperKeyPair,
     CertificateHelper
 } from './inc/Crypto/CertificateHelper.js';
