@@ -23,6 +23,7 @@ const PERMITTED_SUBTREES_TAG = 0xa0;
 const DNS_NAME_TAG = 0x82;
 const URI_NAME_TAG = 0x86;
 
+const TBS_SERIAL_INDEX = 1;
 const TBS_ISSUER_INDEX = 3;
 const TBS_VALIDITY_INDEX = 4;
 const TBS_SUBJECT_INDEX = 5;
@@ -81,6 +82,15 @@ export class X509Reader {
             notBefore: DerReader.toDate(validity.children[0]),
             notAfter: DerReader.toDate(validity.children[1])
         };
+    }
+
+    /**
+     * The certificate's serial number as raw magnitude bytes (the INTEGER content,
+     * as {@link X509Der.integerFromBytes} expects for a CRL entry).
+     * @param certificateDer - the certificate DER
+     */
+    public static serialNumber(certificateDer: Uint8Array): Uint8Array {
+        return X509Reader._tbs(certificateDer).children[TBS_SERIAL_INDEX].content;
     }
 
     /**

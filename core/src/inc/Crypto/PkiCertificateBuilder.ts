@@ -2,6 +2,7 @@ import {webcrypto} from 'crypto';
 import {DerReader} from './asn1/DerReader.js';
 import {Pem} from './asn1/Pem.js';
 import {X509Chain} from './asn1/X509Chain.js';
+import {X509Crl} from './asn1/X509Crl.js';
 import {X509Der} from './asn1/X509Der.js';
 import {X509Ext} from './asn1/X509Ext.js';
 import {X509Name} from './asn1/X509Name.js';
@@ -153,6 +154,24 @@ export type PkiLeafCertOptions = {
      * 16-byte serial is generated when omitted.
      */
     serialNumber?: string;
+};
+
+/**
+ * One entry for a certificate revocation list: the revoked certificate (PEM, its
+ * serial number is read out) and when it was revoked.
+ */
+export type PkiCrlEntry = {
+    certificate: string;
+    revocationDate: Date;
+};
+
+/**
+ * Options for {@link PkiCertificateBuilder.createCrl}: the validity window of the
+ * list itself (defaults: thisUpdate now, no nextUpdate).
+ */
+export type PkiCrlOptions = {
+    thisUpdate?: Date;
+    nextUpdate?: Date;
 };
 
 const CA_KEY_USAGE = [X509Ext.KU_KEY_CERT_SIGN, X509Ext.KU_CRL_SIGN];
@@ -505,6 +524,90 @@ export class PkiCertificateBuilder {
         });
 
         return Pem.encode(Pem.CERTIFICATE, await X509Signer.signCertificate(tbs, issuer.privateKey, PkiCertificateBuilder._signAlgorithm(algorithm)));
+    }
+
+    /**
+     * Create a signed certificate revocation list (CRL) for the given revoked
+     * certificates, signed by the issuing CA. This is the own-PKI-lib CRL backup
+     * (own-pki-lib slice 5 / roadmap 9.4.4-E) — the primary revocation path stays
+     * the Hub's real-time allowlist; the CRL is the portable, verifier-agnostic
+     * fallback.
+     * @param issuerCertificate - the issuing CA certificate PEM
+     * @param issuerPrivateKey - the issuing CA private key
+     * @param entries - the revoked certificates + revocation dates
+     * @param algorithm - the CA signature algorithm, Ed25519 by default
+     * @param options - the CRL validity window
+     */
+    public static async createCrl(
+        issuerCertificate: string,
+        issuerPrivateKey: webcrypto.CryptoKey,
+        entries: PkiCrlEntry[],
+        algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519,
+        options: PkiCrlOptions = {}
+    ): Promise<string> {
+        const signAlgorithm = PkiCertificateBuilder._signAlgorithm(algorithm);
+
+        const tbs = X509Der.tbsCertList({
+            signatureAlgorithm: X509Signer.signatureAlgorithm(signAlgorithm),
+            issuer: X509Reader.subjectName(Pem.decode(issuerCertificate)),
+            thisUpdate: options.thisUpdate ?? new Date(),
+            nextUpdate: options.nextUpdate,
+            entries: entries.map((entry) => ({
+                serialNumber: X509Reader.serialNumber(Pem.decode(entry.certificate)),
+                revocationDate: entry.revocationDate
+            }))
+        });
+
+        return Pem.encode(Pem.CRL, await X509Signer.signCrl(tbs, issuerPrivateKey, signAlgorithm));
+    }
+
+    /**
+     * Verify a CRL's signature against the issuing CA certificate.
+     * @param crl - the CRL PEM
+     * @param issuerCertificate - the issuing CA certificate PEM
+     * @param algorithm - the CA signature algorithm, Ed25519 by default
+     */
+    public static async verifyCrl(
+        crl: string,
+        issuerCertificate: string,
+        algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
+    ): Promise<boolean> {
+        const issuerKey = await PkiCertificateBuilder._importPublicKey(
+            X509Reader.subjectPublicKeyInfo(Pem.decode(issuerCertificate))
+        );
+
+        return X509Signer.verifyCrl(Pem.decode(crl, Pem.CRL), issuerKey, PkiCertificateBuilder._signAlgorithm(algorithm));
+    }
+
+    /**
+     * The revoked serial numbers listed in a CRL (normalized hex).
+     * @param crl - the CRL PEM
+     */
+    public static listRevokedSerials(crl: string): string[] {
+        return X509Crl.listRevokedSerials(Pem.decode(crl, Pem.CRL));
+    }
+
+    /**
+     * Whether a certificate's serial number is listed as revoked in a CRL.
+     * @param crl - the CRL PEM
+     * @param certificate - the certificate PEM to check
+     */
+    public static isCertificateRevoked(crl: string, certificate: string): boolean {
+        return X509Crl.isSerialRevoked(Pem.decode(crl, Pem.CRL), PkiCertificateBuilder.getCertSerialHex(certificate));
+    }
+
+    /**
+     * A certificate's serial number as normalized hex (lower-case, leading zeros
+     * stripped) — the same normalization {@link X509Crl} applies, so it matches
+     * {@link PkiCertificateBuilder.listRevokedSerials}.
+     * @param certificate - the certificate PEM
+     */
+    public static getCertSerialHex(certificate: string): string {
+        const hex = Array.from(X509Reader.serialNumber(Pem.decode(certificate)))
+        .map((byte) => byte.toString(HEX_RADIX).padStart(2, '0'))
+        .join('');
+
+        return hex.replace(/^0+/u, '') || '0';
     }
 
     /**

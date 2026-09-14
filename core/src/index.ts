@@ -44,6 +44,8 @@ export {
     PkiIssuer,
     PkiCaCertOptions,
     PkiLeafCertOptions,
+    PkiCrlEntry,
+    PkiCrlOptions,
     PkiCertificateBuilder
 } from './inc/Crypto/PkiCertificateBuilder.js';
 export {

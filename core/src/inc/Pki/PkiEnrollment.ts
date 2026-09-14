@@ -1,5 +1,5 @@
 import {webcrypto} from 'crypto';
-import {PkiCertificateBuilder, PkiSanEntry} from '../Crypto/PkiCertificateBuilder.js';
+import {PkiCertificateBuilder, PkiCrlEntry, PkiCrlOptions, PkiSanEntry} from '../Crypto/PkiCertificateBuilder.js';
 import {PkiCaNode, PkiCaPurpose, PkiCaTree, PkiCaTreeResult} from './PkiCaTree.js';
 import {PkiBootstrapTokenStore, PkiClock} from './PkiBootstrapTokenStore.js';
 
@@ -299,6 +299,23 @@ export class PkiEnrollmentService {
             this._tree.root.certificate,
             ...Object.values(PkiCaPurpose).map((purpose) => this._tree.intermediates[purpose].certificate)
         ];
+    }
+
+    /**
+     * Sign a certificate revocation list for a purpose, from its intermediate CA
+     * (own-PKI epic 9.4.4-E CRL backup). The caller supplies the revoked leaves
+     * (the pkiserver reads them from issued_certificate WHERE revoked); the CRL is
+     * signed by the purpose intermediate so any verifier can check it against the
+     * exported CA pool.
+     * @param purpose - the CA purpose whose intermediate signs the CRL
+     * @param entries - the revoked certificates + revocation dates
+     * @param options - the CRL validity window
+     */
+    public async signCrl(purpose: PkiCaPurpose, entries: PkiCrlEntry[], options: PkiCrlOptions = {}): Promise<string> {
+        const intermediate = this._tree.intermediates[purpose];
+        const key = await PkiCertificateBuilder.importPrivateKey(intermediate.privateKey, this._tree.algorithm);
+
+        return PkiCertificateBuilder.createCrl(intermediate.certificate, key, entries, this._tree.algorithm, options);
     }
 
     /**
