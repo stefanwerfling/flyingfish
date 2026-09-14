@@ -20,6 +20,7 @@ export {
 } from './inc/Crypto/CertificateHelper.js';
 export {JwkHelper} from './inc/Crypto/JwkHelper.js';
 export {Der} from './inc/Crypto/asn1/Der.js';
+export {DerNode, DerReader} from './inc/Crypto/asn1/DerReader.js';
 export {
     PkiKeyAlgorithm,
     PkiKeyPair,
