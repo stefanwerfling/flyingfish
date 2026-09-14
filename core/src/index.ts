@@ -31,6 +31,7 @@ export {
 export {X509SignAlgorithm, X509Signer} from './inc/Crypto/asn1/X509Signer.js';
 export {X509Crl} from './inc/Crypto/asn1/X509Crl.js';
 export {Pem, PemBlock} from './inc/Crypto/asn1/Pem.js';
+export {X509GeneralNameType, X509GeneralName, X509Ext} from './inc/Crypto/asn1/X509Ext.js';
 export {
     PkiKeyAlgorithm,
     PkiKeyPair,
