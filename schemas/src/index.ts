@@ -444,7 +444,9 @@ export {
     SchemaPkiRevocationEntry,
     PkiRevocationEntryWire,
     SchemaPkiRevocationListResponse,
-    PkiRevocationListResponse
+    PkiRevocationListResponse,
+    SchemaPkiCrlResponse,
+    PkiCrlResponse
 } from './Pki/Revocation.js';
 export {
     SchemaRegistryInstanceRequest,

@@ -12,6 +12,7 @@ import {
 } from 'flyingfish_core';
 import {
     PkiCaCertsResponse,
+    PkiCrlResponse,
     PkiEnrollResponse,
     PkiRevocationListResponse,
     SchemaPkiEnrollDecision,
@@ -89,6 +90,10 @@ export class Pki extends DefaultRoute {
 
         this._get('/pki/revoked', async(req, res): Promise<void> => {
             await this._revocationList(req, res);
+        });
+
+        this._get('/pki/crl', async(req, res): Promise<void> => {
+            await this._crl(req, res);
         });
 
         this._post('/pki/rotate', async(req, res): Promise<void> => {
@@ -280,6 +285,31 @@ export class Pki extends DefaultRoute {
             list: Array.from(earliest.entries()).map(([nodeUid, revokedAt]) => {
                 return {nodeUid: nodeUid, revokedAt: revokedAt};
             })
+        };
+
+        res.status(200).json(response);
+    }
+
+    /**
+     * GET /pki/crl?purpose=service — a CA-signed CRL over the revoked certificates
+     * of that purpose (own-PKI epic 9.4.4-E), signed by the purpose intermediate so
+     * any verifier can check it against the exported CA pool. The portable backup
+     * to the Hub's real-time allowlist.
+     * @param req - the request
+     * @param res - the response
+     */
+    private async _crl(req: Request, res: Response): Promise<void> {
+        const purpose = this._parsePurpose(req.query.purpose);
+        const rows = await IssuedCertificateDB.find({where: {revoked: true, purpose: purpose}});
+
+        const crl = await this._service.signCrl(purpose, rows.map((row) => {
+            return {certificate: row.certificate, revocationDate: new Date(row.revoked_at)};
+        }));
+
+        const response: PkiCrlResponse = {
+            statusCode: StatusCodes.OK,
+            purpose: purpose,
+            crl: crl
         };
 
         res.status(200).json(response);

@@ -78,6 +78,12 @@ export const buildPkiCapabilityManifest = (instanceId: string): CapabilityManife
                         responseSchema: 'SchemaPkiRevocationListResponse'
                     },
                     {
+                        action: 'pki-crl',
+                        method: 'GET',
+                        path: '/pki/crl',
+                        responseSchema: 'SchemaPkiCrlResponse'
+                    },
+                    {
                         action: 'pki-rotate-intermediate',
                         method: 'POST',
                         path: '/pki/rotate',

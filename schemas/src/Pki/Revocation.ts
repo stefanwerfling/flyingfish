@@ -42,3 +42,18 @@ export const SchemaPkiRevocationListResponse = SchemaDefaultReturn.extend({
  * PkiRevocationListResponse
  */
 export type PkiRevocationListResponse = ExtractSchemaResultType<typeof SchemaPkiRevocationListResponse>;
+
+/**
+ * SchemaPkiCrlResponse — a CA-signed certificate revocation list (CRL) for a
+ * purpose, PEM-encoded (own-PKI epic 9.4.4-E). The portable, verifier-agnostic
+ * revocation backup; the real-time Hub allowlist stays the primary path.
+ */
+export const SchemaPkiCrlResponse = SchemaDefaultReturn.extend({
+    purpose: Vts.string(),
+    crl: Vts.string()
+});
+
+/**
+ * PkiCrlResponse
+ */
+export type PkiCrlResponse = ExtractSchemaResultType<typeof SchemaPkiCrlResponse>;
