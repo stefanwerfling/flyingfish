@@ -2,12 +2,15 @@
 
 /**
  * A parsed DER value: the raw tag byte, whether it is constructed, its raw
- * content bytes, and (for constructed values) the parsed children.
+ * content bytes, the complete TLV bytes (tag+length+content, e.g. for
+ * re-verifying a signed TBS structure), and the parsed children (for constructed
+ * values).
  */
 export type DerNode = {
     tag: number;
     constructed: boolean;
     content: Uint8Array;
+    raw: Uint8Array;
     children: DerNode[];
 };
 
@@ -196,7 +199,13 @@ export class DerReader {
         }
 
         return {
-            node: {tag: tag, constructed: constructed, content: content, children: children},
+            node: {
+                tag: tag,
+                constructed: constructed,
+                content: content,
+                raw: bytes.subarray(offset, next),
+                children: children
+            },
             next: next
         };
     }
