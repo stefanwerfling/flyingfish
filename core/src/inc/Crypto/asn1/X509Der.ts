@@ -212,6 +212,43 @@ export class X509Der {
     }
 
     /**
+     * CertificationRequestInfo ::= SEQUENCE { version INTEGER (0), subject Name,
+     * subjectPKInfo SubjectPublicKeyInfo, attributes [0] IMPLICIT SET OF }. The
+     * attributes default to empty (`[0]` with no content), which is all the
+     * FlyingFish enrollment CSR needs (the CA assigns the SANs).
+     * @param subject - the encoded subject Name
+     * @param subjectPublicKeyInfo - the SPKI (from a WebCrypto spki export)
+     * @param attributes - the encoded [0] attributes, empty by default
+     */
+    public static certificationRequestInfo(
+        subject: Uint8Array,
+        subjectPublicKeyInfo: Uint8Array,
+        attributes?: Uint8Array
+    ): Uint8Array {
+        return Der.sequence([
+            Der.integer(0),
+            subject,
+            subjectPublicKeyInfo,
+            attributes ?? Der.explicit(0, new Uint8Array(0))
+        ]);
+    }
+
+    /**
+     * CertificationRequest (PKCS#10) ::= SEQUENCE { certificationRequestInfo,
+     * signatureAlgorithm, signature BIT STRING } — the signed CSR.
+     * @param certificationRequestInfo - the encoded CertificationRequestInfo
+     * @param signatureAlgorithm - the encoded AlgorithmIdentifier
+     * @param signature - the raw signature bytes
+     */
+    public static certificationRequest(
+        certificationRequestInfo: Uint8Array,
+        signatureAlgorithm: Uint8Array,
+        signature: Uint8Array
+    ): Uint8Array {
+        return Der.sequence([certificationRequestInfo, signatureAlgorithm, Der.bitString(signature)]);
+    }
+
+    /**
      * Encode a Time as UTCTime or GeneralizedTime per the RFC 5280 year rule.
      * @param date - the time
      */

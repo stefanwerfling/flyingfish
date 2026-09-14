@@ -1,6 +1,6 @@
 import {webcrypto} from 'crypto';
 import {Der} from './Der.js';
-import {DerReader} from './DerReader.js';
+import {DerNode, DerReader} from './DerReader.js';
 import {X509Der} from './X509Der.js';
 
 /**
@@ -122,6 +122,92 @@ export class X509Signer {
     }
 
     /**
+     * Sign a CSR: build the CertificationRequestInfo for the subject + public key
+     * and self-sign it (proof of possession), returning the CertificationRequest
+     * (PKCS#10) DER.
+     * @param subject - the encoded subject Name
+     * @param subjectPublicKeyInfo - the subject's SPKI (WebCrypto spki export)
+     * @param signingKey - the subject's own private key
+     * @param algorithm - the signature algorithm
+     */
+    public static async signCsr(
+        subject: Uint8Array,
+        subjectPublicKeyInfo: Uint8Array,
+        signingKey: webcrypto.CryptoKey,
+        algorithm: X509SignAlgorithm
+    ): Promise<Uint8Array> {
+        const cri = X509Der.certificationRequestInfo(subject, subjectPublicKeyInfo);
+        const signature = await X509Signer._sign(cri, signingKey, algorithm);
+
+        return X509Der.certificationRequest(cri, X509Signer.signatureAlgorithm(algorithm), signature);
+    }
+
+    /**
+     * Verify a CSR's proof of possession: the request is self-signed by the key
+     * it carries. The algorithm is taken from the CSR's signature AlgorithmId.
+     * @param csrDer - the CertificationRequest (PKCS#10) DER
+     */
+    public static async verifyCsr(csrDer: Uint8Array): Promise<boolean> {
+        try {
+            const csr = DerReader.parse(csrDer);
+
+            if (csr.children.length < 3) {
+                return false;
+            }
+
+            const algorithm = X509Signer._algorithmFromSigAlg(csr.children[1]);
+
+            if (algorithm === null) {
+                return false;
+            }
+
+            const cri = csr.children[0];
+            const publicKey = await X509Signer._importPublicKey(cri.children[2].raw, algorithm);
+            const signature = DerReader.toBitString(csr.children[2]).bytes;
+
+            return await X509Signer._verify(cri.raw, signature, publicKey, algorithm);
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Verify that a certificate was signed by the given issuer certificate
+     * (signature only). Extracts the issuer's public key from its SPKI and the
+     * algorithm from the subject certificate's signature AlgorithmId. Assumes v3
+     * certificates (a version [0] field). The own-lib equivalent of the
+     * @peculiar verifyIssuedBy the CA-tree/enrollment code will migrate onto.
+     * @param certificateDer - the certificate to check
+     * @param issuerCertificateDer - the alleged issuer's certificate
+     */
+    public static async verifyIssuedBy(
+        certificateDer: Uint8Array,
+        issuerCertificateDer: Uint8Array
+    ): Promise<boolean> {
+        try {
+            const cert = DerReader.parse(certificateDer);
+
+            if (cert.children.length < 3) {
+                return false;
+            }
+
+            const algorithm = X509Signer._algorithmFromSigAlg(cert.children[1]);
+            const issuerSpki = X509Signer._spkiOf(issuerCertificateDer);
+
+            if (algorithm === null || issuerSpki === null) {
+                return false;
+            }
+
+            const publicKey = await X509Signer._importPublicKey(issuerSpki, algorithm);
+            const signature = DerReader.toBitString(cert.children[2]).bytes;
+
+            return await X509Signer._verify(cert.children[0].raw, signature, publicKey, algorithm);
+        } catch {
+            return false;
+        }
+    }
+
+    /**
      * Sign bytes, returning the signature in its X.509 form (Ed25519 raw / ECDSA
      * DER SEQUENCE{r,s}).
      * @param data - the bytes to sign
@@ -166,6 +252,53 @@ export class X509Signer {
         }
 
         return {name: 'Ed25519'};
+    }
+
+    /**
+     * The own-lib signature algorithm named by a parsed AlgorithmIdentifier node
+     * (its first child OID), or null if unknown.
+     * @param signatureAlgorithm - the parsed AlgorithmIdentifier node
+     */
+    private static _algorithmFromSigAlg(signatureAlgorithm: DerNode): X509SignAlgorithm | null {
+        const oid = DerReader.toOidString(signatureAlgorithm.children[0]);
+
+        if (oid === ED25519_SIG_OID) {
+            return 'ed25519';
+        }
+
+        if (oid === ECDSA_SHA256_SIG_OID) {
+            return 'p256';
+        }
+
+        return null;
+    }
+
+    /**
+     * The SubjectPublicKeyInfo (full TLV) of a v3 certificate: TBSCertificate
+     * child index 6 (version [0], serial, signature, issuer, validity, subject,
+     * SPKI, extensions [3]). Returns null on a shape that is not a v3 certificate.
+     * @param certificateDer - the certificate DER
+     */
+    private static _spkiOf(certificateDer: Uint8Array): Uint8Array | null {
+        const tbs = DerReader.parse(certificateDer).children[0];
+
+        return tbs.children.length >= 7 ? tbs.children[6].raw : null;
+    }
+
+    /**
+     * Import a public key from its SubjectPublicKeyInfo DER for verification.
+     * @param subjectPublicKeyInfo - the SPKI DER
+     * @param algorithm - the key's signature algorithm
+     */
+    private static _importPublicKey(
+        subjectPublicKeyInfo: Uint8Array,
+        algorithm: X509SignAlgorithm
+    ): Promise<webcrypto.CryptoKey> {
+        const params: webcrypto.EcKeyImportParams | webcrypto.Algorithm = algorithm === 'p256'
+            ? {name: 'ECDSA', namedCurve: 'P-256'}
+            : {name: 'Ed25519'};
+
+        return webcrypto.subtle.importKey('spki', subjectPublicKeyInfo, params, false, ['verify']);
     }
 
     /**
