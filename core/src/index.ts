@@ -33,6 +33,8 @@ export {X509Crl} from './inc/Crypto/asn1/X509Crl.js';
 export {Pem, PemBlock} from './inc/Crypto/asn1/Pem.js';
 export {X509GeneralNameType, X509GeneralName, X509Ext} from './inc/Crypto/asn1/X509Ext.js';
 export {X509Chain} from './inc/Crypto/asn1/X509Chain.js';
+export {X509Name} from './inc/Crypto/asn1/X509Name.js';
+export {X509Validity, X509BasicConstraints, X509Reader} from './inc/Crypto/asn1/X509Reader.js';
 export {
     PkiKeyAlgorithm,
     PkiKeyPair,
