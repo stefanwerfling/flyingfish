@@ -1,16 +1,12 @@
-// reflect-metadata is required by @peculiar/x509 (it uses tsyringe internally).
-// TypeORM pulls it in too, but importing it here keeps this module self-contained.
-import 'reflect-metadata';
 import {webcrypto} from 'crypto';
-import {AsnConvert} from '@peculiar/asn1-schema';
-import {
-    GeneralName,
-    GeneralSubtree,
-    GeneralSubtrees,
-    NameConstraints,
-    id_ce_nameConstraints
-} from '@peculiar/asn1-x509';
-import * as x509 from '@peculiar/x509';
+import {DerReader} from './asn1/DerReader.js';
+import {Pem} from './asn1/Pem.js';
+import {X509Chain} from './asn1/X509Chain.js';
+import {X509Der} from './asn1/X509Der.js';
+import {X509Ext} from './asn1/X509Ext.js';
+import {X509Name} from './asn1/X509Name.js';
+import {X509Reader} from './asn1/X509Reader.js';
+import {X509SignAlgorithm, X509Signer} from './asn1/X509Signer.js';
 
 /**
  * Supported key algorithms for the FlyingFish PKI. Ed25519 is the primary
@@ -159,9 +155,11 @@ export type PkiLeafCertOptions = {
     serialNumber?: string;
 };
 
-// The WebCrypto provider @peculiar/x509 signs/verifies with. Node's WebCrypto
-// supports Ed25519 and ECDSA P-256 natively, so no polyfill provider is needed.
-x509.cryptoProvider.set(webcrypto as unknown as Crypto);
+const CA_KEY_USAGE = [X509Ext.KU_KEY_CERT_SIGN, X509Ext.KU_CRL_SIGN];
+const LEAF_KEY_USAGE = [X509Ext.KU_DIGITAL_SIGNATURE];
+const SERIAL_BYTES = 16;
+const HEX_RADIX = 16;
+const OID_EC_PUBLIC_KEY = '1.2.840.10045.2.1';
 
 /**
  * Builds X.509 v3 certificates for the FlyingFish internal PKI (CA tree, mTLS
@@ -170,24 +168,18 @@ x509.cryptoProvider.set(webcrypto as unknown as Crypto);
  * carries no CA-tree, enrollment or persistence domain logic (those layers,
  * roadmap 9.4.1/9.4.2/9.4.6, sit on top of it).
  *
- * Public TLS for internet-facing domains stays with Let's Encrypt; this PKI is
- * for internal/private trust only (PKI-Design, "Abgrenzung").
+ * Built on the FlyingFish own PKI library (own-pki-lib slice 7) — no third-party
+ * X.509 dependency. Public TLS for internet-facing domains stays with Let's
+ * Encrypt; this PKI is for internal/private trust only (PKI-Design, "Abgrenzung").
  */
 export class PkiCertificateBuilder {
 
     /**
-     * The signature algorithm each key algorithm signs with.
+     * The own-lib signature algorithm for a key algorithm.
      * @param algorithm - the key algorithm
      */
-    private static _signingAlgorithm(algorithm: PkiKeyAlgorithm): webcrypto.EcdsaParams | webcrypto.Algorithm {
-        if (algorithm === PkiKeyAlgorithm.p256) {
-            return {
-                name: 'ECDSA',
-                hash: 'SHA-256'
-            };
-        }
-
-        return {name: PkiKeyAlgorithm.ed25519};
+    private static _signAlgorithm(algorithm: PkiKeyAlgorithm): X509SignAlgorithm {
+        return algorithm === PkiKeyAlgorithm.p256 ? 'p256' : 'ed25519';
     }
 
     /**
@@ -230,12 +222,12 @@ export class PkiCertificateBuilder {
      * @param keyPair - the key pair to export
      */
     public static async exportKeyPair(keyPair: PkiKeyPair): Promise<PkiKeyPairPem> {
-        const publicDer = await webcrypto.subtle.exportKey('spki', keyPair.publicKey);
-        const privateDer = await webcrypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+        const publicDer = new Uint8Array(await webcrypto.subtle.exportKey('spki', keyPair.publicKey));
+        const privateDer = new Uint8Array(await webcrypto.subtle.exportKey('pkcs8', keyPair.privateKey));
 
         return {
-            publicKey: PkiCertificateBuilder._toPem(publicDer, 'PUBLIC KEY'),
-            privateKey: PkiCertificateBuilder._toPem(privateDer, 'PRIVATE KEY')
+            publicKey: Pem.encode('PUBLIC KEY', publicDer),
+            privateKey: Pem.encode('PRIVATE KEY', privateDer)
         };
     }
 
@@ -248,11 +240,9 @@ export class PkiCertificateBuilder {
         pem: string,
         algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
     ): Promise<webcrypto.CryptoKey> {
-        const der = PkiCertificateBuilder._fromPem(pem);
-
         return webcrypto.subtle.importKey(
             'pkcs8',
-            der,
+            Pem.decode(pem),
             PkiCertificateBuilder._keyGenAlgorithm(algorithm) as webcrypto.EcKeyImportParams,
             true,
             ['sign']
@@ -272,26 +262,20 @@ export class PkiCertificateBuilder {
         keyPair: PkiKeyPair,
         algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
     ): Promise<string> {
-        // A CA signs certificates and CRLs. keyCertSign and cRLSign are disjoint
-        // bits, so combining them is a bitwise OR by definition.
-        // eslint-disable-next-line no-bitwise
-        const caKeyUsage = x509.KeyUsageFlags.keyCertSign | x509.KeyUsageFlags.cRLSign;
+        const subject = X509Der.distinguishedName(X509Name.parse(options.subject));
+        const spki = new Uint8Array(await webcrypto.subtle.exportKey('spki', keyPair.publicKey));
 
-        const cert = await x509.X509CertificateGenerator.createSelfSigned({
-            serialNumber: options.serialNumber ?? PkiCertificateBuilder._randomSerial(),
-            name: options.subject,
-            notBefore: new Date(),
-            notAfter: PkiCertificateBuilder._notAfter(options.validityDays),
-            keys: keyPair as unknown as webcrypto.CryptoKeyPair,
-            signingAlgorithm: PkiCertificateBuilder._signingAlgorithm(algorithm),
-            extensions: [
-                new x509.BasicConstraintsExtension(true, options.pathLength, true),
-                new x509.KeyUsagesExtension(caKeyUsage, true),
-                await x509.SubjectKeyIdentifierExtension.create(keyPair.publicKey)
-            ]
-        });
+        const extensions = X509Der.extensions([
+            X509Ext.basicConstraints(true, options.pathLength, true),
+            X509Ext.keyUsage(CA_KEY_USAGE, true),
+            X509Ext.subjectKeyIdentifier(await X509Ext.keyIdentifier(keyPair.publicKey))
+        ]);
 
-        return cert.toString('pem');
+        return PkiCertificateBuilder._sign(
+            {issuer: subject, subject: subject, spki: spki, extensions: extensions, options: options},
+            keyPair.privateKey,
+            algorithm
+        );
     }
 
     /**
@@ -309,39 +293,34 @@ export class PkiCertificateBuilder {
         issuer: PkiIssuer,
         algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
     ): Promise<string> {
-        const issuerCert = new x509.X509Certificate(issuer.certificate);
+        const issuerDer = Pem.decode(issuer.certificate);
+        const subject = X509Der.distinguishedName(X509Name.parse(options.subject));
+        const spki = new Uint8Array(await webcrypto.subtle.exportKey('spki', subjectPublicKey));
 
-        // A CA signs certificates and CRLs. keyCertSign and cRLSign are disjoint
-        // bits, so combining them is a bitwise OR by definition.
-        // eslint-disable-next-line no-bitwise
-        const caKeyUsage = x509.KeyUsageFlags.keyCertSign | x509.KeyUsageFlags.cRLSign;
-
-        const extensions: x509.Extension[] = [
-            new x509.BasicConstraintsExtension(true, options.pathLength, true),
-            new x509.KeyUsagesExtension(caKeyUsage, true),
-            await x509.SubjectKeyIdentifierExtension.create(subjectPublicKey),
-            await x509.AuthorityKeyIdentifierExtension.create(issuerCert.publicKey)
+        const items = [
+            X509Ext.basicConstraints(true, options.pathLength, true),
+            X509Ext.keyUsage(CA_KEY_USAGE, true),
+            X509Ext.subjectKeyIdentifier(await X509Ext.keyIdentifier(subjectPublicKey)),
+            X509Ext.authorityKeyIdentifier(await X509Ext.keyIdentifierFromSpki(X509Reader.subjectPublicKeyInfo(issuerDer)))
         ];
 
-        const nameConstraints = PkiCertificateBuilder._nameConstraintsExtension(options.nameConstraints);
+        const nameConstraints = PkiCertificateBuilder._nameConstraints(options.nameConstraints);
 
         if (nameConstraints !== null) {
-            extensions.push(nameConstraints);
+            items.push(nameConstraints);
         }
 
-        const cert = await x509.X509CertificateGenerator.create({
-            serialNumber: options.serialNumber ?? PkiCertificateBuilder._randomSerial(),
-            subject: options.subject,
-            issuer: issuerCert.subject,
-            notBefore: new Date(),
-            notAfter: PkiCertificateBuilder._notAfter(options.validityDays),
-            signingKey: issuer.privateKey as unknown as webcrypto.CryptoKey,
-            publicKey: subjectPublicKey as unknown as webcrypto.CryptoKey,
-            signingAlgorithm: PkiCertificateBuilder._signingAlgorithm(algorithm),
-            extensions: extensions
-        });
-
-        return cert.toString('pem');
+        return PkiCertificateBuilder._sign(
+            {
+                issuer: X509Reader.subjectName(issuerDer),
+                subject: subject,
+                spki: spki,
+                extensions: X509Der.extensions(items),
+                options: options
+            },
+            issuer.privateKey,
+            algorithm
+        );
     }
 
     /**
@@ -359,53 +338,46 @@ export class PkiCertificateBuilder {
         issuer: PkiIssuer,
         algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
     ): Promise<string> {
-        const issuerCert = new x509.X509Certificate(issuer.certificate);
+        const issuerDer = Pem.decode(issuer.certificate);
+        const subject = X509Der.distinguishedName(X509Name.parse(options.subject));
+        const spki = new Uint8Array(await webcrypto.subtle.exportKey('spki', subjectPublicKey));
 
-        const eku: x509.ExtendedKeyUsageType[] = [];
+        const items = [
+            X509Ext.basicConstraints(false, undefined, true),
+            X509Ext.keyUsage(LEAF_KEY_USAGE, true),
+            X509Ext.subjectKeyIdentifier(await X509Ext.keyIdentifier(subjectPublicKey)),
+            X509Ext.authorityKeyIdentifier(await X509Ext.keyIdentifierFromSpki(X509Reader.subjectPublicKeyInfo(issuerDer)))
+        ];
+
+        const eku: string[] = [];
 
         if (options.clientAuth ?? true) {
-            eku.push(x509.ExtendedKeyUsage.clientAuth);
+            eku.push(X509Ext.EKU_CLIENT_AUTH);
         }
 
         if (options.serverAuth ?? true) {
-            eku.push(x509.ExtendedKeyUsage.serverAuth);
+            eku.push(X509Ext.EKU_SERVER_AUTH);
         }
 
-        const extensions: x509.Extension[] = [
-            new x509.BasicConstraintsExtension(false, undefined, true),
-            new x509.KeyUsagesExtension(x509.KeyUsageFlags.digitalSignature, true),
-            await x509.SubjectKeyIdentifierExtension.create(subjectPublicKey),
-            await x509.AuthorityKeyIdentifierExtension.create(issuerCert.publicKey)
-        ];
-
         if (eku.length > 0) {
-            extensions.push(new x509.ExtendedKeyUsageExtension(eku, false));
+            items.push(X509Ext.extendedKeyUsage(eku, false));
         }
 
         if (options.san && options.san.length > 0) {
-            extensions.push(
-                new x509.SubjectAlternativeNameExtension(
-                    options.san.map((entry) => ({
-                        type: entry.type,
-                        value: entry.value
-                    }))
-                )
-            );
+            items.push(X509Ext.subjectAltName(options.san.map((entry) => ({type: entry.type, value: entry.value}))));
         }
 
-        const cert = await x509.X509CertificateGenerator.create({
-            serialNumber: options.serialNumber ?? PkiCertificateBuilder._randomSerial(),
-            subject: options.subject,
-            issuer: issuerCert.subject,
-            notBefore: new Date(),
-            notAfter: PkiCertificateBuilder._notAfter(options.validityDays),
-            signingKey: issuer.privateKey as unknown as webcrypto.CryptoKey,
-            publicKey: subjectPublicKey as unknown as webcrypto.CryptoKey,
-            signingAlgorithm: PkiCertificateBuilder._signingAlgorithm(algorithm),
-            extensions: extensions
-        });
-
-        return cert.toString('pem');
+        return PkiCertificateBuilder._sign(
+            {
+                issuer: X509Reader.subjectName(issuerDer),
+                subject: subject,
+                spki: spki,
+                extensions: X509Der.extensions(items),
+                options: options
+            },
+            issuer.privateKey,
+            algorithm
+        );
     }
 
     /**
@@ -422,13 +394,16 @@ export class PkiCertificateBuilder {
         keyPair: PkiKeyPair,
         algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
     ): Promise<string> {
-        const csr = await x509.Pkcs10CertificateRequestGenerator.create({
-            name: subject,
-            keys: keyPair as unknown as webcrypto.CryptoKeyPair,
-            signingAlgorithm: PkiCertificateBuilder._signingAlgorithm(algorithm)
-        });
+        const spki = new Uint8Array(await webcrypto.subtle.exportKey('spki', keyPair.publicKey));
 
-        return csr.toString('pem');
+        const csr = await X509Signer.signCsr(
+            X509Der.distinguishedName(X509Name.parse(subject)),
+            spki,
+            keyPair.privateKey,
+            PkiCertificateBuilder._signAlgorithm(algorithm)
+        );
+
+        return Pem.encode(Pem.CERTIFICATE_REQUEST, csr);
     }
 
     /**
@@ -437,7 +412,7 @@ export class PkiCertificateBuilder {
      * @param csr - the CSR PEM
      */
     public static async verifyCsr(csr: string): Promise<boolean> {
-        return new x509.Pkcs10CertificateRequest(csr).verify();
+        return X509Signer.verifyCsr(Pem.decode(csr, Pem.CERTIFICATE_REQUEST));
     }
 
     /**
@@ -446,9 +421,9 @@ export class PkiCertificateBuilder {
      * @param csr - the CSR PEM
      */
     public static async getCsrPublicKey(csr: string): Promise<webcrypto.CryptoKey> {
-        const publicKey = await new x509.Pkcs10CertificateRequest(csr).publicKey.export();
-
-        return publicKey as unknown as webcrypto.CryptoKey;
+        return PkiCertificateBuilder._importPublicKey(
+            X509Reader.csrSubjectPublicKeyInfo(Pem.decode(csr, Pem.CERTIFICATE_REQUEST))
+        );
     }
 
     /**
@@ -456,7 +431,7 @@ export class PkiCertificateBuilder {
      * @param csr - the CSR PEM
      */
     public static getCsrSubject(csr: string): string {
-        return new x509.Pkcs10CertificateRequest(csr).subject;
+        return X509Name.format(X509Reader.csrSubjectAttributes(Pem.decode(csr, Pem.CERTIFICATE_REQUEST)));
     }
 
     /**
@@ -469,13 +444,7 @@ export class PkiCertificateBuilder {
         certificate: string,
         issuerCertificate: string
     ): Promise<boolean> {
-        const cert = new x509.X509Certificate(certificate);
-        const issuer = new x509.X509Certificate(issuerCertificate);
-
-        return cert.verify({
-            publicKey: await issuer.publicKey.export(),
-            signatureOnly: true
-        });
+        return X509Signer.verifyIssuedBy(Pem.decode(certificate), Pem.decode(issuerCertificate));
     }
 
     /**
@@ -488,13 +457,12 @@ export class PkiCertificateBuilder {
         leafCertificate: string,
         caCertificates: string[]
     ): Promise<string[]> {
-        const leaf = new x509.X509Certificate(leafCertificate);
-        const cas = caCertificates.map((pem) => new x509.X509Certificate(pem));
+        const chain = await X509Chain.build(
+            Pem.decode(leafCertificate),
+            caCertificates.map((pem) => Pem.decode(pem))
+        );
 
-        const builder = new x509.X509ChainBuilder({certificates: cas});
-        const chain = await builder.build(leaf);
-
-        return chain.map((cert) => cert.toString('pem'));
+        return chain.map((der) => Pem.encode(Pem.CERTIFICATE, der));
     }
 
     /**
@@ -514,71 +482,93 @@ export class PkiCertificateBuilder {
         issuer: PkiIssuer,
         algorithm: PkiKeyAlgorithm = PkiKeyAlgorithm.ed25519
     ): Promise<string> {
-        const subjectCert = new x509.X509Certificate(subjectCertificate);
-        const issuerCert = new x509.X509Certificate(issuer.certificate);
-        const subjectPublicKey = await subjectCert.publicKey.export();
+        const subjectDer = Pem.decode(subjectCertificate);
+        const issuerDer = Pem.decode(issuer.certificate);
+        const subjectSpki = X509Reader.subjectPublicKeyInfo(subjectDer);
 
-        // A CA signs certificates and CRLs (disjoint bits, so OR is definitional).
-        // eslint-disable-next-line no-bitwise
-        const caKeyUsage = x509.KeyUsageFlags.keyCertSign | x509.KeyUsageFlags.cRLSign;
+        const extensions = X509Der.extensions([
+            X509Ext.basicConstraints(true, undefined, true),
+            X509Ext.keyUsage(CA_KEY_USAGE, true),
+            X509Ext.subjectKeyIdentifier(await X509Ext.keyIdentifierFromSpki(subjectSpki)),
+            X509Ext.authorityKeyIdentifier(await X509Ext.keyIdentifierFromSpki(X509Reader.subjectPublicKeyInfo(issuerDer)))
+        ]);
 
-        const extensions: x509.Extension[] = [
-            new x509.BasicConstraintsExtension(true, undefined, true),
-            new x509.KeyUsagesExtension(caKeyUsage, true),
-            await x509.SubjectKeyIdentifierExtension.create(subjectPublicKey),
-            await x509.AuthorityKeyIdentifierExtension.create(issuerCert.publicKey)
-        ];
-
-        const cert = await x509.X509CertificateGenerator.create({
-            serialNumber: PkiCertificateBuilder._randomSerial(),
-            subject: subjectCert.subject,
-            issuer: issuerCert.subject,
+        const tbs = X509Der.tbsCertificate({
+            serialNumber: PkiCertificateBuilder._randomSerialBytes(),
+            signatureAlgorithm: X509Signer.signatureAlgorithm(PkiCertificateBuilder._signAlgorithm(algorithm)),
+            issuer: X509Reader.subjectName(issuerDer),
             notBefore: new Date(),
-            notAfter: subjectCert.notAfter,
-            signingKey: issuer.privateKey as unknown as webcrypto.CryptoKey,
-            publicKey: subjectPublicKey,
-            signingAlgorithm: PkiCertificateBuilder._signingAlgorithm(algorithm),
+            notAfter: X509Reader.validity(subjectDer).notAfter,
+            subject: X509Reader.subjectName(subjectDer),
+            subjectPublicKeyInfo: subjectSpki,
             extensions: extensions
         });
 
-        return cert.toString('pem');
+        return Pem.encode(Pem.CERTIFICATE, await X509Signer.signCertificate(tbs, issuer.privateKey, PkiCertificateBuilder._signAlgorithm(algorithm)));
     }
 
     /**
-     * Build a NameConstraints extension (critical) from permitted DNS/URI
-     * subtrees, or null when nothing is constrained.
-     * @param constraints - the permitted name spaces
+     * Assemble the TBSCertificate for the common create* paths, sign it and wrap
+     * the result in a PEM certificate.
+     * @param parts - issuer/subject Names, SPKI, extensions and validity options
+     * @param signingKey - the issuer's private key
+     * @param algorithm - the signature algorithm
      */
-    private static _nameConstraintsExtension(
-        constraints?: PkiNameConstraints
-    ): x509.Extension | null {
-        if (!constraints) {
-            return null;
-        }
+    private static async _sign(
+        parts: {
+            issuer: Uint8Array;
+            subject: Uint8Array;
+            spki: Uint8Array;
+            extensions: Uint8Array;
+            options: {validityDays: number; serialNumber?: string;};
+        },
+        signingKey: webcrypto.CryptoKey,
+        algorithm: PkiKeyAlgorithm
+    ): Promise<string> {
+        const signAlgorithm = PkiCertificateBuilder._signAlgorithm(algorithm);
 
-        const subtrees: GeneralSubtree[] = [];
-
-        for (const dns of constraints.permittedDns ?? []) {
-            subtrees.push(new GeneralSubtree({base: new GeneralName({dNSName: dns})}));
-        }
-
-        for (const uri of constraints.permittedUri ?? []) {
-            subtrees.push(new GeneralSubtree({base: new GeneralName({uniformResourceIdentifier: uri})}));
-        }
-
-        if (subtrees.length === 0) {
-            return null;
-        }
-
-        const nameConstraints = new NameConstraints({
-            permittedSubtrees: new GeneralSubtrees(subtrees)
+        const tbs = X509Der.tbsCertificate({
+            serialNumber: PkiCertificateBuilder._serialBytes(parts.options.serialNumber),
+            signatureAlgorithm: X509Signer.signatureAlgorithm(signAlgorithm),
+            issuer: parts.issuer,
+            notBefore: new Date(),
+            notAfter: PkiCertificateBuilder._notAfter(parts.options.validityDays),
+            subject: parts.subject,
+            subjectPublicKeyInfo: parts.spki,
+            extensions: parts.extensions
         });
 
-        return new x509.Extension(
-            id_ce_nameConstraints,
-            true,
-            AsnConvert.serialize(nameConstraints)
-        );
+        return Pem.encode(Pem.CERTIFICATE, await X509Signer.signCertificate(tbs, signingKey, signAlgorithm));
+    }
+
+    /**
+     * Import a public key from its SubjectPublicKeyInfo, detecting the algorithm
+     * from the SPKI (Ed25519 or ECDSA P-256).
+     * @param spki - the SubjectPublicKeyInfo DER
+     */
+    private static _importPublicKey(spki: Uint8Array): Promise<webcrypto.CryptoKey> {
+        const algorithmOid = DerReader.toOidString(DerReader.parse(spki).children[0].children[0]);
+        const params: webcrypto.EcKeyImportParams | webcrypto.Algorithm = algorithmOid === OID_EC_PUBLIC_KEY
+            ? {name: 'ECDSA', namedCurve: 'P-256'}
+            : {name: 'Ed25519'};
+
+        return webcrypto.subtle.importKey('spki', spki, params, true, ['verify']);
+    }
+
+    /**
+     * Build a NameConstraints extension from permitted DNS/URI subtrees, or null
+     * when nothing is constrained.
+     * @param constraints - the permitted name spaces
+     */
+    private static _nameConstraints(constraints?: PkiNameConstraints): Uint8Array | null {
+        const dns = constraints?.permittedDns ?? [];
+        const uri = constraints?.permittedUri ?? [];
+
+        if (dns.length === 0 && uri.length === 0) {
+            return null;
+        }
+
+        return X509Ext.nameConstraints(dns, uri, true);
     }
 
     /**
@@ -593,37 +583,25 @@ export class PkiCertificateBuilder {
     }
 
     /**
-     * A cryptographically random 16-byte serial number as a hex string.
+     * The serial-number magnitude bytes from an optional hex string, or a fresh
+     * random 16-byte serial.
+     * @param serialHex - the serial number as a hex string, if given
      */
-    private static _randomSerial(): string {
-        const bytes = webcrypto.getRandomValues(new Uint8Array(16));
+    private static _serialBytes(serialHex?: string): Uint8Array {
+        if (serialHex === undefined) {
+            return PkiCertificateBuilder._randomSerialBytes();
+        }
 
-        return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+        const pairs = serialHex.match(/.{1,2}/gu) ?? [];
+
+        return Uint8Array.from(pairs.map((pair) => parseInt(pair, HEX_RADIX)));
     }
 
     /**
-     * Wrap DER bytes in a PEM envelope.
-     * @param der - the DER-encoded bytes
-     * @param label - the PEM label, e.g. 'PRIVATE KEY'
+     * A cryptographically random 16-byte serial number.
      */
-    private static _toPem(der: ArrayBuffer, label: string): string {
-        const base64 = Buffer.from(der).toString('base64');
-        const lines = base64.match(/.{1,64}/gu) ?? [];
-
-        return `-----BEGIN ${label}-----\n${lines.join('\n')}\n-----END ${label}-----\n`;
-    }
-
-    /**
-     * Strip a PEM envelope back to DER bytes.
-     * @param pem - the PEM string
-     */
-    private static _fromPem(pem: string): Uint8Array {
-        const base64 = pem
-        .replace(/-----BEGIN [^-]+-----/u, '')
-        .replace(/-----END [^-]+-----/u, '')
-        .replace(/\s+/gu, '');
-
-        return new Uint8Array(Buffer.from(base64, 'base64'));
+    private static _randomSerialBytes(): Uint8Array {
+        return webcrypto.getRandomValues(new Uint8Array(SERIAL_BYTES));
     }
 
 }

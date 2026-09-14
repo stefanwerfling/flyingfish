@@ -1,6 +1,7 @@
-import * as x509 from '@peculiar/x509';
+import {Pem} from '../Crypto/asn1/Pem.js';
+import {X509Chain} from '../Crypto/asn1/X509Chain.js';
+import {X509Reader} from '../Crypto/asn1/X509Reader.js';
 import {PkiCaPurpose} from './PkiCaTree.js';
-import {PkiCertificateBuilder} from '../Crypto/PkiCertificateBuilder.js';
 import {PkiRevocationList} from './PkiRevocationList.js';
 
 const IDENTITY_URI = /^flyingfish:\/\/([a-z]+)\/(.+)$/u;
@@ -36,7 +37,8 @@ export type PkiClientCertVerifyOptions = {
  * who it is by presenting a certificate this CA issued; the Hub verifies the
  * chain, the validity window and (optionally) that the identity is not revoked,
  * then reads the stable node identity from the SAN. Pure crypto — no network, no
- * clock of its own — so it is deterministic and testable.
+ * clock of its own — so it is deterministic and testable. Built on the FlyingFish
+ * own PKI library (own-pki-lib slice 7).
  */
 export class PkiClientCertVerifier {
 
@@ -53,25 +55,21 @@ export class PkiClientCertVerifier {
         caChain: string[],
         options: PkiClientCertVerifyOptions = {}
     ): Promise<PkiVerifiedIdentity | null> {
-        let cert: x509.X509Certificate;
+        let certDer: Uint8Array;
 
         try {
-            cert = new x509.X509Certificate(clientCertPem);
+            certDer = Pem.decode(clientCertPem);
         } catch {
             return null;
         }
 
         const now = options.now ?? Date.now();
 
-        if (now < cert.notBefore.getTime() || now > cert.notAfter.getTime()) {
+        if (!await PkiClientCertVerifier._isValid(certDer, caChain, now)) {
             return null;
         }
 
-        if (!await PkiClientCertVerifier._verifyChain(clientCertPem, caChain)) {
-            return null;
-        }
-
-        const identity = PkiClientCertVerifier._identityFromSan(cert);
+        const identity = PkiClientCertVerifier._identityFromSan(certDer);
 
         if (identity === null) {
             return null;
@@ -85,63 +83,33 @@ export class PkiClientCertVerifier {
     }
 
     /**
-     * Verify the leaf chains, link by link, up to a self-signed root that is in
-     * the trusted CA pool.
-     * @param leafPem - the leaf certificate PEM
+     * Whether the certificate is within its validity window and chains to a
+     * trusted, self-signed root in the CA pool. Any parse error means invalid.
+     * @param certDer - the leaf certificate DER
      * @param caChain - the trusted CA certificate PEMs
+     * @param now - the instant to check validity against (epoch ms)
      */
-    private static async _verifyChain(leafPem: string, caChain: string[]): Promise<boolean> {
+    private static async _isValid(certDer: Uint8Array, caChain: string[], now: number): Promise<boolean> {
         try {
-            const chain = await PkiCertificateBuilder.buildChain(leafPem, caChain);
+            const validity = X509Reader.validity(certDer);
 
-            if (chain.length < 2) {
+            if (now < validity.notBefore.getTime() || now > validity.notAfter.getTime()) {
                 return false;
             }
 
-            // every certificate must be signed by the next one up the chain
-            const links = chain.slice(0, -1).map((cert, index) => {
-                return {cert: cert, issuer: chain[index + 1]};
-            });
-
-            const linkResults = await Promise.all(
-                links.map((link) => PkiCertificateBuilder.verifyIssuedBy(link.cert, link.issuer))
-            );
-
-            if (linkResults.some((ok) => !ok)) {
-                return false;
-            }
-
-            // the top of the chain must be a self-signed root present in the pool
-            const root = chain[chain.length - 1];
-            const rootSelfSigned = await PkiCertificateBuilder.verifyIssuedBy(root, root);
-
-            return rootSelfSigned && PkiClientCertVerifier._poolContains(caChain, root);
+            return await X509Chain.verify(certDer, caChain.map((pem) => Pem.decode(pem)));
         } catch {
             return false;
         }
     }
 
     /**
-     * Whether the CA pool contains the given certificate (by DER equality).
-     * @param caChain - the trusted CA certificate PEMs
-     * @param certPem - the certificate PEM to look for
-     */
-    private static _poolContains(caChain: string[], certPem: string): boolean {
-        const target = Buffer.from(new x509.X509Certificate(certPem).rawData).toString('base64');
-
-        return caChain.some((pem) => {
-            return Buffer.from(new x509.X509Certificate(pem).rawData).toString('base64') === target;
-        });
-    }
-
-    /**
      * Extract the FlyingFish node identity from the certificate's SAN URIs, or
      * null if none carries a valid flyingfish://<purpose>/<nodeUid> value.
-     * @param cert - the parsed certificate
+     * @param certDer - the leaf certificate DER
      */
-    private static _identityFromSan(cert: x509.X509Certificate): PkiVerifiedIdentity | null {
-        const san = cert.getExtension(x509.SubjectAlternativeNameExtension);
-        const values = (san?.names.toJSON() ?? []).map((name) => name.value);
+    private static _identityFromSan(certDer: Uint8Array): PkiVerifiedIdentity | null {
+        const values = X509Reader.subjectAltNames(certDer).filter((entry) => entry.type === 'url').map((entry) => entry.value);
         const purposes = Object.values(PkiCaPurpose) as string[];
 
         for (const value of values) {

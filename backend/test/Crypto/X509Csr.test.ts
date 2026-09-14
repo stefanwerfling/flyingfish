@@ -1,14 +1,14 @@
 /**
  * Unit tests for the rest of own-pki-lib slice 5: the PKCS#10 CSR (sign + verify)
  * and verifyIssuedBy (the signature-only chain primitive the CA-tree/enrollment
- * code migrates onto in slice 7). CSRs our library builds are CROSS-VERIFIED by
- * @peculiar/x509 (the reference we intend to drop); our own verifyCsr agrees and
- * rejects tampering. verifyIssuedBy accepts a certificate against its real issuer
- * and rejects an impostor. Network-free (Node WebCrypto).
+ * code migrates onto in slice 7). A CSR our library builds carries its subject and
+ * its self-signature (proof of possession) verifies; a tampered CSR is rejected.
+ * verifyIssuedBy accepts a certificate against its real issuer and rejects an
+ * impostor. (Also cross-verified by @peculiar + openssl before that dependency was
+ * dropped.) Network-free (Node WebCrypto).
  */
-import * as x509 from '@peculiar/x509';
 import {webcrypto} from 'crypto';
-import {X509Der, X509Signer, X509SignAlgorithm} from 'flyingfish_core';
+import {X509Der, X509Name, X509Reader, X509Signer, X509SignAlgorithm} from 'flyingfish_core';
 
 /**
  * Generate a key pair and its SPKI export for a signature algorithm.
@@ -53,18 +53,14 @@ const buildRoot = async(
 };
 
 describe('own PKI CSR + issuance (own-pki-lib slice 5)', () => {
-    test('an Ed25519 CSR we build is accepted by @peculiar and our own verify', async() => {
+    test('an Ed25519 CSR we build carries the subject and verifies (proof of possession)', async() => {
         const {keys, spki} = await generate('ed25519');
         const subject = X509Der.distinguishedName([{oid: '2.5.4.3', value: 'flyingfish-nginx-01'}]);
 
         const csrDer = await X509Signer.signCsr(subject, spki, keys.privateKey, 'ed25519');
 
-        // cross-verify the proof of possession with the reference implementation
-        const reference = new x509.Pkcs10CertificateRequest(csrDer);
-        expect(await reference.verify()).toBe(true);
-        expect(reference.subject).toContain('flyingfish-nginx-01');
-
-        // our own verifier agrees (algorithm auto-detected from the CSR)
+        // the subject reads back and the self-signature (proof of possession) verifies
+        expect(X509Name.format(X509Reader.csrSubjectAttributes(csrDer))).toContain('CN=flyingfish-nginx-01');
         expect(await X509Signer.verifyCsr(csrDer)).toBe(true);
     });
 
@@ -73,9 +69,6 @@ describe('own PKI CSR + issuance (own-pki-lib slice 5)', () => {
         const subject = X509Der.distinguishedName([{oid: '2.5.4.3', value: 'flyingfish-dns-01'}]);
 
         const csrDer = await X509Signer.signCsr(subject, spki, keys.privateKey, 'p256');
-
-        const reference = new x509.Pkcs10CertificateRequest(csrDer);
-        expect(await reference.verify()).toBe(true);
 
         expect(await X509Signer.verifyCsr(csrDer)).toBe(true);
     });

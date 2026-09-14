@@ -7,8 +7,9 @@
  * blocks issuance). Issued leaves carry the assigned flyingfish://<purpose>/
  * <nodeUid> identity and chain to the Root. Network-free (Node WebCrypto).
  */
-import * as x509 from '@peculiar/x509';
 import {
+    Pem,
+    X509Reader,
     PkiBootstrapTokenStore,
     PkiCaPurpose,
     PkiCaTree,
@@ -98,9 +99,7 @@ describe('PKI enrollment (v2, EST-style)', () => {
             expect(request.status).toBe(PkiEnrollmentStatus.issued);
             expect(request.issued?.chain).toHaveLength(3);
 
-            const cert = new x509.X509Certificate(request.issued!.certificate);
-            const san = cert.getExtension(x509.SubjectAlternativeNameExtension);
-            const sanValues = (san?.names.toJSON() ?? []).map((n) => n.value);
+            const sanValues = X509Reader.subjectAltNames(Pem.decode(request.issued!.certificate)).map((entry) => entry.value);
 
             expect(sanValues).toContain(`flyingfish://service/${request.nodeUid}`);
             expect(await PkiCertificateBuilder.verifyIssuedBy(

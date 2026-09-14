@@ -8,10 +8,7 @@
  * chains to the Root but does not verify under a sibling intermediate (purpose
  * isolation). Network-free (Node WebCrypto).
  */
-import {AsnConvert} from '@peculiar/asn1-schema';
-import {NameConstraints, id_ce_nameConstraints} from '@peculiar/asn1-x509';
-import * as x509 from '@peculiar/x509';
-import {PkiCaPurpose, PkiCaTree, PkiCaTreeResult, PkiCertificateBuilder} from 'flyingfish_core';
+import {Pem, PkiCaPurpose, PkiCaTree, PkiCaTreeResult, PkiCertificateBuilder, X509Name, X509Reader} from 'flyingfish_core';
 
 describe('PkiCaTree (v2 PKI CA hierarchy)', () => {
     let tree: PkiCaTreeResult;
@@ -21,12 +18,12 @@ describe('PkiCaTree (v2 PKI CA hierarchy)', () => {
     });
 
     test('the Root is a self-signed CA with pathLength 1', async() => {
-        const root = new x509.X509Certificate(tree.root.certificate);
-        const bc = root.getExtension(x509.BasicConstraintsExtension);
+        const rootDer = Pem.decode(tree.root.certificate);
+        const bc = X509Reader.basicConstraints(rootDer);
 
         expect(bc?.ca).toBe(true);
         expect(bc?.pathLength).toBe(1);
-        expect(root.subject).toContain('CN=FlyingFish Root CA');
+        expect(X509Name.format(X509Reader.subjectAttributes(rootDer))).toContain('CN=FlyingFish Root CA');
         expect(await PkiCertificateBuilder.verifyIssuedBy(tree.root.certificate, tree.root.certificate)).toBe(true);
     });
 
@@ -42,10 +39,10 @@ describe('PkiCaTree (v2 PKI CA hierarchy)', () => {
         [PkiCaPurpose.device, 'flyingfish://device/']
     ])('the %s Intermediate is a pathLen-0 CA, signed by the Root, constrained to %s', async(purpose, namespace) => {
         const node = tree.intermediates[purpose];
-        const cert = new x509.X509Certificate(node.certificate);
+        const certDer = Pem.decode(node.certificate);
 
         // CA with no further CA below it.
-        const bc = cert.getExtension(x509.BasicConstraintsExtension);
+        const bc = X509Reader.basicConstraints(certDer);
         expect(bc?.ca).toBe(true);
         expect(bc?.pathLength).toBe(0);
 
@@ -53,15 +50,9 @@ describe('PkiCaTree (v2 PKI CA hierarchy)', () => {
         expect(await PkiCertificateBuilder.verifyIssuedBy(node.certificate, tree.root.certificate)).toBe(true);
 
         // Name-constrained to its own namespace.
-        const ncExt = cert.extensions.find((ext) => ext.type === id_ce_nameConstraints);
-        expect(ncExt).toBeDefined();
-
-        const nameConstraints = AsnConvert.parse(ncExt!.value, NameConstraints);
-        const permittedUris = (nameConstraints.permittedSubtrees ?? [])
-        .map((subtree) => subtree.base.uniformResourceIdentifier)
-        .filter((uri): uri is string => typeof uri === 'string');
-
-        expect(permittedUris).toContain(namespace);
+        const nameConstraints = X509Reader.nameConstraints(certDer);
+        expect(nameConstraints).not.toBeNull();
+        expect(nameConstraints?.permittedUri).toContain(namespace);
     });
 
     test('a leaf issued under the service Intermediate chains to the Root', async() => {

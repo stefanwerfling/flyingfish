@@ -1,11 +1,9 @@
 /**
  * Unit tests for the own-PKI PEM codec (own-pki-lib slice 6). A DER our library
- * produces round-trips through PEM byte-for-byte; the PEM we emit is parsed by the
- * reference we intend to drop (@peculiar/x509) and, conversely, we decode the PEM
- * @peculiar emits. decodeAll reads a multi-block bundle and the label filter
- * selects the right block. Network-free (Node WebCrypto).
+ * produces round-trips through PEM byte-for-byte; decode tolerates foreign
+ * formatting (CRLF, unwrapped lines); decodeAll reads a multi-block bundle and the
+ * label filter selects the right block. Network-free (Node WebCrypto).
  */
-import * as x509 from '@peculiar/x509';
 import {webcrypto} from 'crypto';
 import {Pem, X509Der, X509Signer} from 'flyingfish_core';
 
@@ -44,15 +42,14 @@ describe('own PKI PEM codec (own-pki-lib slice 6)', () => {
         expect(Buffer.from(Pem.decode(pem)).equals(Buffer.from(der))).toBe(true);
     });
 
-    test('the PEM we emit is parsed by @peculiar, and we decode @peculiar\'s PEM', async() => {
+    test('decode tolerates foreign PEM formatting (CRLF, a single unwrapped line)', async() => {
         const der = await buildCert('FlyingFish Service Intermediate CA');
+        const base64 = Buffer.from(der).toString('base64');
 
-        // @peculiar parses the PEM our codec emits, back to the same DER
-        const reference = new x509.X509Certificate(Pem.encode(Pem.CERTIFICATE, der));
-        expect(Buffer.from(new Uint8Array(reference.rawData)).equals(Buffer.from(der))).toBe(true);
+        // one unwrapped base64 line with CRLF endings, as other tools emit
+        const foreign = `-----BEGIN CERTIFICATE-----\r\n${base64}\r\n-----END CERTIFICATE-----\r\n`;
 
-        // conversely we decode the PEM @peculiar emits, back to the same DER
-        expect(Buffer.from(Pem.decode(reference.toString('pem'))).equals(Buffer.from(der))).toBe(true);
+        expect(Buffer.from(Pem.decode(foreign)).equals(Buffer.from(der))).toBe(true);
     });
 
     test('decodeAll reads every block in a bundle and the label filter selects one', async() => {

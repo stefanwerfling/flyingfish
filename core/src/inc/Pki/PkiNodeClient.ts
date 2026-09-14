@@ -1,4 +1,5 @@
-import * as x509 from '@peculiar/x509';
+import {Pem} from '../Crypto/asn1/Pem.js';
+import {X509Reader} from '../Crypto/asn1/X509Reader.js';
 import {PkiCertificateBuilder, PkiKeyAlgorithm, PkiSanEntry} from '../Crypto/PkiCertificateBuilder.js';
 import {PkiCaPurpose} from './PkiCaTree.js';
 import {PkiRenewal} from './PkiRenewal.js';
@@ -177,7 +178,7 @@ export class PkiNodeClient {
         commonName: string,
         privateKey: string
     ): PkiNodeIdentity {
-        const cert = new x509.X509Certificate(result.certificate);
+        const validity = X509Reader.validity(Pem.decode(result.certificate));
 
         return {
             nodeUid: result.nodeUid,
@@ -186,8 +187,8 @@ export class PkiNodeClient {
             privateKey: privateKey,
             certificate: result.certificate,
             chain: result.chain,
-            issuedAt: cert.notBefore.getTime(),
-            expiresAt: cert.notAfter.getTime()
+            issuedAt: validity.notBefore.getTime(),
+            expiresAt: validity.notAfter.getTime()
         };
     }
 

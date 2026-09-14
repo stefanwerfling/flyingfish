@@ -2,15 +2,12 @@
  * Unit tests for the own-PKI reading layer (own-pki-lib slice 7c): X509Name (RFC
  * 4514 DN string <-> attributes, and reading a Name out of DER) and X509Reader
  * (validity, subject attributes, SPKI, BasicConstraints, SubjectAltName off a
- * certificate / CSR). Read back against certificates the own library builds and
- * cross-checked against the reference we are dropping (@peculiar/x509). These are
- * the reads the PKI consumers need so they can drop @peculiar. Network-free.
+ * certificate / CSR). Read back against certificates the own library builds — the
+ * values read out equal the values that went in. These are the reads the PKI
+ * consumers need so they can drop @peculiar. Network-free.
  */
-import * as x509 from '@peculiar/x509';
 import {webcrypto} from 'crypto';
 import {X509Der, X509Ext, X509Name, X509Reader, X509Signer} from 'flyingfish_core';
-
-x509.cryptoProvider.set(webcrypto as unknown as Crypto);
 
 const NOT_BEFORE = new Date(Date.UTC(2026, 0, 1));
 const NOT_AFTER = new Date(Date.UTC(2039, 0, 1));
@@ -34,13 +31,13 @@ describe('own PKI reading layer (own-pki-lib slice 7c)', () => {
             {oid: '2.5.4.10', value: 'FlyingFish'}
         ]);
 
-        // the encoded Name is what @peculiar reads back, and X509Name reads it too
+        // the encoded Name round-trips back to the same attributes
         const nameDer = X509Der.distinguishedName(attributes);
         expect(X509Name.getField(X509Name.fromDer(nameDer), '2.5.4.10')).toEqual(['FlyingFish']);
         expect(X509Name.format(X509Name.fromDer(nameDer))).toContain('CN=FlyingFish Root CA');
     });
 
-    test('X509Reader reads validity, subject O, SPKI and BasicConstraints (vs @peculiar)', async() => {
+    test('X509Reader reads validity, subject O, SPKI and BasicConstraints', async() => {
         const {keys, spki} = await generate();
         const name = X509Der.distinguishedName(X509Name.parse('CN=Root, O=FlyingFish'));
 
@@ -56,24 +53,18 @@ describe('own PKI reading layer (own-pki-lib slice 7c)', () => {
         });
 
         const certDer = await X509Signer.signCertificate(tbs, keys.privateKey, 'ed25519');
-        const reference = new x509.X509Certificate(certDer);
 
         const validity = X509Reader.validity(certDer);
         expect(validity.notBefore.getTime()).toBe(NOT_BEFORE.getTime());
-        expect(validity.notBefore.getTime()).toBe(reference.notBefore.getTime());
-        expect(validity.notAfter.getTime()).toBe(reference.notAfter.getTime());
+        expect(validity.notAfter.getTime()).toBe(NOT_AFTER.getTime());
 
         expect(X509Name.getField(X509Reader.subjectAttributes(certDer), '2.5.4.10')).toEqual(['FlyingFish']);
         expect(Buffer.from(X509Reader.subjectPublicKeyInfo(certDer)).equals(Buffer.from(spki))).toBe(true);
 
-        const bc = X509Reader.basicConstraints(certDer);
-        const referenceBc = reference.getExtension(x509.BasicConstraintsExtension);
-        expect(bc).toEqual({ca: true, pathLength: 2});
-        expect(bc?.ca).toBe(referenceBc?.ca);
-        expect(bc?.pathLength).toBe(referenceBc?.pathLength);
+        expect(X509Reader.basicConstraints(certDer)).toEqual({ca: true, pathLength: 2});
     });
 
-    test('X509Reader reads SAN entries incl. the identity URI (vs @peculiar), and a leaf BC', async() => {
+    test('X509Reader reads SAN entries incl. the identity URI, and a leaf BC', async() => {
         const {keys, spki} = await generate();
         const name = X509Der.distinguishedName(X509Name.parse('CN=nginx, O=FlyingFish'));
 
@@ -96,17 +87,11 @@ describe('own PKI reading layer (own-pki-lib slice 7c)', () => {
         });
 
         const certDer = await X509Signer.signCertificate(tbs, keys.privateKey, 'ed25519');
-        const reference = new x509.X509Certificate(certDer);
 
         const san = X509Reader.subjectAltNames(certDer);
         const urls = san.filter((entry) => entry.type === 'url').map((entry) => entry.value);
         expect(urls).toEqual(['flyingfish://node/uuid-1']);
         expect(san.filter((entry) => entry.type === 'ip')).toHaveLength(2);
-
-        // @peculiar reads the same identity URI back
-        const referenceSan = reference.getExtension(x509.SubjectAlternativeNameExtension);
-        const referenceValues = (referenceSan?.names.toJSON() ?? []).map((entry) => entry.value);
-        expect(referenceValues).toContain('flyingfish://node/uuid-1');
 
         expect(X509Reader.basicConstraints(certDer)).toEqual({ca: false, pathLength: null});
     });

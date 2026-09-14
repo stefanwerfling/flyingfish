@@ -1,4 +1,6 @@
-import * as x509 from '@peculiar/x509';
+import {Pem} from '../Crypto/asn1/Pem.js';
+import {X509Name} from '../Crypto/asn1/X509Name.js';
+import {X509Reader} from '../Crypto/asn1/X509Reader.js';
 import {
     PkiCaCertOptions,
     PkiCertificateBuilder,
@@ -299,7 +301,7 @@ export class PkiCaTree {
      * @param certificate - the certificate PEM
      */
     private static _organizationOf(certificate: string): string {
-        const organizations = new x509.X509Certificate(certificate).subjectName.getField('O');
+        const organizations = X509Name.getField(X509Reader.subjectAttributes(Pem.decode(certificate)), '2.5.4.10');
 
         return organizations.length > 0 ? organizations[0] : DEFAULT_ORGANIZATION;
     }

@@ -3,15 +3,10 @@
  * three-level tree (root -> intermediate -> leaf) is built with the own library,
  * then X509Chain.build assembles the ordered chain from an UNORDERED pool and
  * X509Chain.verify accepts a leaf that chains to a trusted root while rejecting a
- * missing root, a wrong root and a broken link. The assembled ordering is
- * cross-checked against the reference we are dropping (@peculiar's X509ChainBuilder)
- * over the same DER certificates. Network-free (Node WebCrypto).
+ * missing root, a wrong root and a broken link. Network-free (Node WebCrypto).
  */
-import * as x509 from '@peculiar/x509';
 import {webcrypto} from 'crypto';
 import {X509Chain, X509Der, X509Ext, X509Signer} from 'flyingfish_core';
-
-x509.cryptoProvider.set(webcrypto as unknown as Crypto);
 
 type Ca = {name: Uint8Array; keys: webcrypto.CryptoKeyPair; certDer: Uint8Array;};
 
@@ -92,18 +87,6 @@ describe('own PKI chain builder (own-pki-lib slice 7b)', () => {
         expect(Buffer.from(chain[0]).equals(Buffer.from(leafDer))).toBe(true);
         expect(Buffer.from(chain[1]).equals(Buffer.from(intermediate.certDer))).toBe(true);
         expect(Buffer.from(chain[2]).equals(Buffer.from(root.certDer))).toBe(true);
-    });
-
-    test('the assembled ordering matches @peculiar X509ChainBuilder', async() => {
-        const cas = [intermediate.certDer, root.certDer].map((der) => new x509.X509Certificate(der));
-        const reference = await new x509.X509ChainBuilder({certificates: cas}).build(new x509.X509Certificate(leafDer));
-
-        const ours = await X509Chain.build(leafDer, [root.certDer, intermediate.certDer]);
-
-        expect(ours).toHaveLength(reference.length);
-        reference.forEach((cert, index) => {
-            expect(Buffer.from(ours[index]).equals(Buffer.from(new Uint8Array(cert.rawData)))).toBe(true);
-        });
     });
 
     test('verify accepts a leaf that chains to a trusted root', async() => {

@@ -7,8 +7,10 @@
  * flyingfish://node/<uuid> identity URI) and the chain assembly. Network-free:
  * everything runs against Node's built-in WebCrypto.
  */
-import * as x509 from '@peculiar/x509';
-import {PkiCertificateBuilder, PkiKeyAlgorithm} from 'flyingfish_core';
+import {Pem, PkiCertificateBuilder, PkiKeyAlgorithm, X509Name, X509Reader} from 'flyingfish_core';
+
+const EKU_SERVER_AUTH = '1.3.6.1.5.5.7.3.1';
+const EKU_CLIENT_AUTH = '1.3.6.1.5.5.7.3.2';
 
 describe('PkiCertificateBuilder (v2 PKI crypto primitive)', () => {
     test('generates an Ed25519 key pair and exports it to PEM', async() => {
@@ -92,7 +94,7 @@ describe('PkiCertificateBuilder (v2 PKI crypto primitive)', () => {
         expect(chain).toHaveLength(3);
 
         // Chain is ordered leaf-first.
-        const subjects = chain.map((pem) => new x509.X509Certificate(pem).subject);
+        const subjects = chain.map((pem) => X509Name.format(X509Reader.subjectAttributes(Pem.decode(pem))));
 
         expect(subjects[0]).toContain('CN=leaf');
         expect(subjects[2]).toContain('CN=Root');
@@ -106,8 +108,7 @@ describe('PkiCertificateBuilder (v2 PKI crypto primitive)', () => {
             pathLength: 2
         }, rootKeys);
 
-        const cert = new x509.X509Certificate(rootPem);
-        const bc = cert.getExtension(x509.BasicConstraintsExtension);
+        const bc = X509Reader.basicConstraints(Pem.decode(rootPem));
 
         expect(bc?.ca).toBe(true);
         expect(bc?.pathLength).toBe(2);
@@ -131,22 +132,20 @@ describe('PkiCertificateBuilder (v2 PKI crypto primitive)', () => {
             ]
         }, leafKeys.publicKey, {certificate: rootPem, privateKey: rootKeys.privateKey});
 
-        const cert = new x509.X509Certificate(leafPem);
+        const leafDer = Pem.decode(leafPem);
 
-        const eku = cert.getExtension(x509.ExtendedKeyUsageExtension);
-        expect(eku?.usages).toContain(x509.ExtendedKeyUsage.clientAuth);
-        expect(eku?.usages).toContain(x509.ExtendedKeyUsage.serverAuth);
+        const eku = X509Reader.extendedKeyUsage(leafDer);
+        expect(eku).toContain(EKU_CLIENT_AUTH);
+        expect(eku).toContain(EKU_SERVER_AUTH);
 
-        const san = cert.getExtension(x509.SubjectAlternativeNameExtension);
-        const sanNames = san?.names.toJSON() ?? [];
-        const sanValues = sanNames.map((n) => n.value);
+        const sanValues = X509Reader.subjectAltNames(leafDer).map((entry) => entry.value);
 
         expect(sanValues).toContain('flyingfish://node/uuid-1');
         expect(sanValues).toContain('192.0.2.10');
         expect(sanValues).toContain('2001:db8::10');
 
         // basicConstraints must mark the leaf as a non-CA.
-        expect(cert.getExtension(x509.BasicConstraintsExtension)?.ca).toBe(false);
+        expect(X509Reader.basicConstraints(leafDer)?.ca).toBe(false);
     });
 
     test('supports the ECDSA P-256 fallback end to end', async() => {

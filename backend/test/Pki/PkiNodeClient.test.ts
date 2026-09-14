@@ -7,8 +7,9 @@
  * issued leaf chains to the CA; renewal rotates the key while keeping the stable
  * nodeUid; needsRenew flips at ~2/3 of the lifetime.
  */
-import * as x509 from '@peculiar/x509';
 import {
+    Pem,
+    X509Reader,
     PkiBootstrapTokenStore,
     PkiCaPurpose,
     PkiCaTree,
@@ -25,9 +26,7 @@ import {
  * @param pem - the certificate PEM
  */
 const publicKeyOf = (pem: string): string => {
-    const cert = new x509.X509Certificate(pem);
-
-    return Buffer.from(cert.publicKey.rawData).toString('base64');
+    return Buffer.from(X509Reader.subjectPublicKeyInfo(Pem.decode(pem))).toString('base64');
 };
 
 describe('PkiNodeClient (v2, 9.4.3-D core)', () => {

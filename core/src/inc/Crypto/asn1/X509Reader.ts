@@ -16,6 +16,12 @@ const BYTE_BITS = 8;
 
 const OID_BASIC_CONSTRAINTS = '2.5.29.19';
 const OID_SUBJECT_ALT_NAME = '2.5.29.17';
+const OID_EXT_KEY_USAGE = '2.5.29.37';
+const OID_NAME_CONSTRAINTS = '2.5.29.30';
+
+const PERMITTED_SUBTREES_TAG = 0xa0;
+const DNS_NAME_TAG = 0x82;
+const URI_NAME_TAG = 0x86;
 
 const TBS_ISSUER_INDEX = 3;
 const TBS_VALIDITY_INDEX = 4;
@@ -45,6 +51,14 @@ export type X509Validity = {
 export type X509BasicConstraints = {
     ca: boolean;
     pathLength: number | null;
+};
+
+/**
+ * A certificate's permitted NameConstraints subtrees.
+ */
+export type X509NameConstraints = {
+    permittedDns: string[];
+    permittedUri: string[];
 };
 
 /**
@@ -138,6 +152,48 @@ export class X509Reader {
     }
 
     /**
+     * The certificate's ExtendedKeyUsage OIDs, or an empty list if absent.
+     * @param certificateDer - the certificate DER
+     */
+    public static extendedKeyUsage(certificateDer: Uint8Array): string[] {
+        const value = X509Reader._extensionValue(certificateDer, OID_EXT_KEY_USAGE);
+
+        if (value === null) {
+            return [];
+        }
+
+        return DerReader.parse(value).children.map((oid) => DerReader.toOidString(oid));
+    }
+
+    /**
+     * The certificate's permitted NameConstraints subtrees, or null if absent.
+     * @param certificateDer - the certificate DER
+     */
+    public static nameConstraints(certificateDer: Uint8Array): X509NameConstraints | null {
+        const value = X509Reader._extensionValue(certificateDer, OID_NAME_CONSTRAINTS);
+
+        if (value === null) {
+            return null;
+        }
+
+        const permitted = DerReader.parse(value).children.find((child) => child.tag === PERMITTED_SUBTREES_TAG);
+        const result: X509NameConstraints = {permittedDns: [], permittedUri: []};
+
+        for (const subtree of permitted?.children ?? []) {
+            const base = subtree.children[0];
+            const text = new TextDecoder().decode(base.content);
+
+            if (base.tag === DNS_NAME_TAG) {
+                result.permittedDns.push(text);
+            } else if (base.tag === URI_NAME_TAG) {
+                result.permittedUri.push(text);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * The raw DER of a CSR's subject Name.
      * @param csrDer - the CertificationRequest DER
      */
@@ -221,13 +277,49 @@ export class X509Reader {
             throw new Error(`X509Reader: invalid IP address length ${bytes.length}`);
         }
 
-        const groups: string[] = [];
+        const groups: number[] = [];
 
         for (let index = 0; index < IPV6_LENGTH; index += HEX_GROUP) {
-            groups.push((((bytes[index] << BYTE_BITS) | bytes[index + 1]) >>> 0).toString(HEX_RADIX));
+            groups.push(((bytes[index] << BYTE_BITS) | bytes[index + 1]) >>> 0);
         }
 
-        return groups.join(':');
+        return X509Reader._compressIpv6(groups);
+    }
+
+    /**
+     * Format eight 16-bit groups as a canonical IPv6 literal (RFC 5952): the
+     * longest run of two or more zero groups collapses to `::`.
+     * @param groups - the eight 16-bit groups
+     */
+    private static _compressIpv6(groups: number[]): string {
+        let bestStart = -1;
+        let bestLength = 0;
+        let runStart = -1;
+        let runLength = 0;
+
+        for (let index = 0; index < groups.length; index += 1) {
+            if (groups[index] !== 0) {
+                runStart = -1;
+                runLength = 0;
+                continue;
+            }
+
+            runStart = runStart === -1 ? index : runStart;
+            runLength += 1;
+
+            if (runLength > bestLength) {
+                bestLength = runLength;
+                bestStart = runStart;
+            }
+        }
+
+        const hex = groups.map((group) => group.toString(HEX_RADIX));
+
+        if (bestLength < 2) {
+            return hex.join(':');
+        }
+
+        return `${hex.slice(0, bestStart).join(':')}::${hex.slice(bestStart + bestLength).join(':')}`;
     }
 
 }

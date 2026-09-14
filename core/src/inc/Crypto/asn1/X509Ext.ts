@@ -191,8 +191,17 @@ export class X509Ext {
      * @param publicKey - the public key
      */
     public static async keyIdentifier(publicKey: webcrypto.CryptoKey): Promise<Uint8Array> {
-        const spki = new Uint8Array(await webcrypto.subtle.exportKey('spki', publicKey));
-        const subjectPublicKey = DerReader.toBitString(DerReader.parse(spki).children[1]).bytes;
+        return X509Ext.keyIdentifierFromSpki(new Uint8Array(await webcrypto.subtle.exportKey('spki', publicKey)));
+    }
+
+    /**
+     * The key identifier for a key given its SubjectPublicKeyInfo DER (RFC 5280
+     * method 1), for when only the encoded key is at hand (e.g. an issuer read out
+     * of its certificate).
+     * @param subjectPublicKeyInfo - the SPKI DER
+     */
+    public static async keyIdentifierFromSpki(subjectPublicKeyInfo: Uint8Array): Promise<Uint8Array> {
+        const subjectPublicKey = DerReader.toBitString(DerReader.parse(subjectPublicKeyInfo).children[1]).bytes;
         const hash = await webcrypto.subtle.digest('SHA-1', subjectPublicKey);
 
         return new Uint8Array(hash);

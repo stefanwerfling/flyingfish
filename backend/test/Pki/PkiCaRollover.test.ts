@@ -4,8 +4,10 @@
  * and the rolled intermediate chain to the root (overlap), and leaves issued from
  * the rolled one still build a full chain. Network-free (Node WebCrypto).
  */
-import * as x509 from '@peculiar/x509';
 import {
+    Pem,
+    X509Name,
+    X509Reader,
     PkiBootstrapTokenStore,
     PkiCaPurpose,
     PkiCaTree,
@@ -19,7 +21,7 @@ import {
  * @param pem - the certificate PEM
  */
 const publicKeyOf = (pem: string): string => {
-    return Buffer.from(new x509.X509Certificate(pem).publicKey.rawData).toString('base64');
+    return Buffer.from(X509Reader.subjectPublicKeyInfo(Pem.decode(pem))).toString('base64');
 };
 
 /**
@@ -27,7 +29,7 @@ const publicKeyOf = (pem: string): string => {
  * @param pem - the certificate PEM
  */
 const subjectOf = (pem: string): string => {
-    return new x509.X509Certificate(pem).subject;
+    return X509Name.format(X509Reader.subjectAttributes(Pem.decode(pem)));
 };
 
 describe('PKI intermediate rollover (v2, 9.4.3-E1)', () => {

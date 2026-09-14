@@ -1,11 +1,10 @@
 /**
- * Unit tests for the own-PKI signer (own-pki-lib slice 4). The key validation:
- * a certificate our library builds + signs is CROSS-VERIFIED by @peculiar/x509
- * (the reference implementation we intend to drop) — for Ed25519 and for ECDSA
- * P-256 (which exercises the P1363<->DER signature conversion). Our own
- * verifyCertificate agrees, and a tampered signature is rejected. Network-free.
+ * Unit tests for the own-PKI signer (own-pki-lib slice 4): a certificate our
+ * library builds + signs verifies under the signer's public key — for Ed25519 and
+ * for ECDSA P-256 (which exercises the P1363<->DER signature conversion) — and a
+ * tampered signature is rejected. (These certificates were also cross-verified by
+ * @peculiar/x509 and openssl before that dependency was dropped.) Network-free.
  */
-import * as x509 from '@peculiar/x509';
 import {webcrypto} from 'crypto';
 import {X509Der, X509Signer, X509SignAlgorithm} from 'flyingfish_core';
 
@@ -42,22 +41,14 @@ const buildSelfSigned = async(
 };
 
 describe('own PKI signer (own-pki-lib slice 4)', () => {
-    test('an Ed25519 cert we sign is accepted by @peculiar and our own verify', async() => {
+    test('an Ed25519 cert we sign verifies under its public key', async() => {
         const {keys, certDer} = await buildSelfSigned('ed25519');
 
-        // cross-verify with the reference implementation (@peculiar/x509)
-        const reference = new x509.X509Certificate(certDer);
-        expect(await reference.verify({publicKey: keys.publicKey, signatureOnly: true})).toBe(true);
-
-        // our own verifier agrees
         expect(await X509Signer.verifyCertificate(certDer, keys.publicKey, 'ed25519')).toBe(true);
     });
 
-    test('an ECDSA P-256 cert we sign is accepted by @peculiar (P1363<->DER)', async() => {
+    test('an ECDSA P-256 cert we sign verifies (P1363<->DER)', async() => {
         const {keys, certDer} = await buildSelfSigned('p256');
-
-        const reference = new x509.X509Certificate(certDer);
-        expect(await reference.verify({publicKey: keys.publicKey, signatureOnly: true})).toBe(true);
 
         expect(await X509Signer.verifyCertificate(certDer, keys.publicKey, 'p256')).toBe(true);
     });

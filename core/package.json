@@ -39,9 +39,6 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@peculiar/asn1-schema": "^2.9.4",
-    "@peculiar/asn1-x509": "^2.9.4",
-    "@peculiar/x509": "^2.1.0",
     "cookie-parser": "^1.4.7",
     "ets": "git+https://github.com/OpenSourcePKG/ets.git",
     "express": "^5.1.0",

@@ -6,8 +6,9 @@
  * takes a fresh key from the new CSR (key rotation) and still chains to its
  * purpose intermediate. Network-free (Node WebCrypto).
  */
-import * as x509 from '@peculiar/x509';
 import {
+    Pem,
+    X509Reader,
     PkiBootstrapTokenStore,
     PkiCaPurpose,
     PkiCaTree,
@@ -33,10 +34,7 @@ const makeCsr = async(commonName: string): Promise<string> => {
  * @param pem - the certificate PEM
  */
 const sanValues = (pem: string): string[] => {
-    const cert = new x509.X509Certificate(pem);
-    const san = cert.getExtension(x509.SubjectAlternativeNameExtension);
-
-    return (san?.names.toJSON() ?? []).map((name) => name.value);
+    return X509Reader.subjectAltNames(Pem.decode(pem)).map((entry) => entry.value);
 };
 
 /**
@@ -44,9 +42,7 @@ const sanValues = (pem: string): string[] => {
  * @param pem - the certificate PEM
  */
 const publicKeyOf = (pem: string): string => {
-    const cert = new x509.X509Certificate(pem);
-
-    return Buffer.from(cert.publicKey.rawData).toString('base64');
+    return Buffer.from(X509Reader.subjectPublicKeyInfo(Pem.decode(pem))).toString('base64');
 };
 
 describe('PKI renewal (v2, 9.4.3)', () => {
