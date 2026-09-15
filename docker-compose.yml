@@ -539,6 +539,53 @@ services:
       flyingfish:
         condition: service_healthy
 
+  clusterserver:
+    image: flyingfish_cluster:v1.1.13
+    build:
+      context: ./
+      dockerfile: ./clusterserver/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
+    container_name: flyingfish_cluster
+    volumes:
+      - ./clusterserver/dist:/opt/flyingfish/clusterserver/dist
+      - ./clusterserver/node_modules:/opt/flyingfish/clusterserver/node_modules
+      - ./clusterserver/package.json:/opt/flyingfish/clusterserver/package.json
+      - ./node_modules:/opt/flyingfish/node_modules
+      - ./package.json:/opt/flyingfish/package.json
+      # Read-only: only needs the backend's self-signed cert to trust it over
+      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS).
+      - flyingfish:/var/lib/flyingfish:ro
+      # Writable node identity (the shared flyingfish volume is read-only).
+      - flyingfishClusterPki:/var/lib/flyingfish-pki
+      # Shared bootstrap socket: fetch a single-use cluster enrollment token.
+      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
+    environment:
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
+      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      # Node PKI (cluster identity, 9.5.9): enroll under the cluster CA purpose;
+      # the bootstrap token is fetched from the pkiserver over the shared socket.
+      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
+    ports:
+      - "5335:5335/tcp"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.11
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      flyingfish:
+        condition: service_healthy
+      pkiserver:
+        condition: service_started
+
 #  vpnserver:
 #    image: flyingfish_vpn:v1.2
 #    build:
@@ -605,6 +652,8 @@ volumes:
   flyingfishNginxPki:
     driver: local
   flyingfishHimhipPki:
+    driver: local
+  flyingfishClusterPki:
     driver: local
   flyingfishPkiBootstrap:
     driver: local
