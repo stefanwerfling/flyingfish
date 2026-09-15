@@ -105,6 +105,11 @@ export {
     ClusterPeerHandler,
     ClusterTlsPeerTransport
 } from './inc/Cluster/ClusterTlsPeerTransport.js';
+export {
+    ClusterPeerInfo,
+    ClusterPeerRoster,
+    ClusterMembership
+} from './inc/Cluster/ClusterMembership.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
