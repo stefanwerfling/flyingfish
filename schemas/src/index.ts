@@ -379,6 +379,8 @@ export {SchemaDdnsServerConfigOptions, DdnsServerConfigOptions} from './DdnsServ
 export {SchemaConfigOptionsDnsServer, ConfigOptionsDnsServer} from './DnsServer/Config/Config.js';
 export {SchemaConfigOptionsNginxServer, ConfigOptionsNginxServer} from './NginxServer/Config/Config.js';
 export {SchemaConfigOptionsPkiServer, ConfigOptionsPkiServer} from './PkiServer/Config/Config.js';
+export {SchemaConfigOptionsClusterServer, ConfigOptionsClusterServer} from './ClusterServer/Config/Config.js';
+export {SchemaClusterStatusResponse, ClusterStatusResponse} from './ClusterServer/Status.js';
 
 // Hub — Capability Manifest (v2 modular architecture)
 export {
@@ -409,6 +411,7 @@ export {buildDynDnsCapabilityManifest} from './Hub/DynDnsCapabilityManifest.js';
 export {buildHimHIPCapabilityManifest} from './Hub/HimHIPCapabilityManifest.js';
 export {buildBackendCapabilityManifest} from './Hub/BackendCapabilityManifest.js';
 export {buildPkiCapabilityManifest} from './Hub/PkiCapabilityManifest.js';
+export {buildClusterCapabilityManifest} from './Hub/ClusterCapabilityManifest.js';
 
 // PKI (EST-style enrollment endpoints, own-PKI epic 9.4)
 export {
