@@ -26,6 +26,7 @@
     "nginxserver",
     "clusterserver",
     "clusterquic",
+    "clustertun",
     "pkiserver",
     "plugins",
     "vpn"

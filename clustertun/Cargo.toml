@@ -1,0 +1,23 @@
+[package]
+name = "clustertun"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "FlyingFish cluster TUN datapath — native binding (rust-tun) behind IClusterTunDevice"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", default-features = false, features = ["napi9"] }
+napi-derive = "2"
+tun = { version = "0.6", features = ["async"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "io-util", "sync"] }
+anyhow = "1"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true

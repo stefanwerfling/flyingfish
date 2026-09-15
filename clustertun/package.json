@@ -1,0 +1,26 @@
+{
+  "name": "flyingfish_clustertun",
+  "version": "0.1.0",
+  "description": "FlyingFish cluster TUN datapath — native binding (rust-tun)",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "GPL-3.0-or-later",
+  "author": "Stefan Werfling",
+  "napi": {
+    "name": "clustertun",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "aarch64-unknown-linux-gnu"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "test": "node --test test/*.mjs"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.4"
+  }
+}

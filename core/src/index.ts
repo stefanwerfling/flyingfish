@@ -136,6 +136,8 @@ export {
     ClusterDatapathStats,
     ClusterDatapath
 } from './inc/Cluster/ClusterDatapath.js';
+export {TunNativeDevice, TunNativeBinding} from './inc/Cluster/ClusterTunNativeBinding.js';
+export {NativeTunDevice} from './inc/Cluster/NativeTunDevice.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
