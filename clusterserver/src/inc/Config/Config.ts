@@ -14,7 +14,10 @@ export enum ENV_OPTIONAL {
     PKI_URL = 'FLYINGFISH_PKI_URL',
     PKI_BOOTSTRAP_TOKEN = 'FLYINGFISH_PKI_BOOTSTRAP_TOKEN',
     PKI_BOOTSTRAP_SOCKET = 'FLYINGFISH_PKI_BOOTSTRAP_SOCKET',
-    PKI_STORE_DIR = 'FLYINGFISH_PKI_STORE_DIR'
+    PKI_STORE_DIR = 'FLYINGFISH_PKI_STORE_DIR',
+    CLUSTER_PEER_PORT = 'FLYINGFISH_CLUSTER_PEER_PORT',
+    CLUSTER_ADVERTISE_HOST = 'FLYINGFISH_CLUSTER_ADVERTISE_HOST',
+    CLUSTER_SYNC_INTERVAL_MS = 'FLYINGFISH_CLUSTER_SYNC_INTERVAL_MS'
 }
 
 /**
@@ -98,6 +101,20 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
                 bootstrapToken: pkiToken,
                 bootstrapSocket: pkiSocket,
                 storeDir: process.env[ENV_OPTIONAL.PKI_STORE_DIR]
+            };
+        }
+
+        // Mesh peer transport (9.5.1): where the peer transport listens and the host
+        // it advertises to the Hub roster.
+        const peerPort = process.env[ENV_OPTIONAL.CLUSTER_PEER_PORT];
+        const advertiseHost = process.env[ENV_OPTIONAL.CLUSTER_ADVERTISE_HOST];
+        const syncIntervalMs = process.env[ENV_OPTIONAL.CLUSTER_SYNC_INTERVAL_MS];
+
+        if (peerPort || advertiseHost || syncIntervalMs) {
+            config.cluster = {
+                peerPort: peerPort ? parseInt(peerPort, 10) : undefined,
+                advertiseHost: advertiseHost,
+                syncIntervalMs: syncIntervalMs ? parseInt(syncIntervalMs, 10) : undefined
             };
         }
 

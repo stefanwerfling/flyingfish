@@ -1,9 +1,12 @@
 import {Router} from 'express';
 import {
+    ClusterPeersResponse,
     DefaultReturn,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaCapabilityManifest,
+    SchemaClusterAnnounceRequest,
+    SchemaClusterPeersResponse,
     SchemaDefaultReturn,
     SchemaRegistryInstanceRequest,
     SchemaRegistryPartsResponse,
@@ -120,6 +123,40 @@ export class Registry extends DefaultRoute {
             {
                 description: 'Read the aggregated UI contributions',
                 responseBodySchema: SchemaRegistryUiContributionsResponse
+            }
+        );
+
+        this._post(
+            '/json/registry/cluster/announce',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                HubRegistryService.getInstance().getClusterPeers().announce(
+                    data.body!.nodeUid,
+                    data.body!.host,
+                    data.body!.port
+                );
+
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Announce a cluster node peer endpoint to the hub',
+                bodySchema: SchemaClusterAnnounceRequest,
+                responseBodySchema: SchemaDefaultReturn
+            }
+        );
+
+        this._get(
+            '/json/registry/cluster/peers',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<ClusterPeersResponse> => {
+                return {
+                    statusCode: StatusCodes.OK,
+                    list: HubRegistryService.getInstance().getClusterPeers().peers()
+                };
+            },
+            {
+                description: 'Read the cluster peer roster',
+                responseBodySchema: SchemaClusterPeersResponse
             }
         );
 

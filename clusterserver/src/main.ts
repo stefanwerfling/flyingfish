@@ -1,5 +1,8 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
+    ClusterMembership,
+    ClusterTlsPeerTransport,
+    HubClusterPeerRoster,
     PkiBootstrapSocketClient,
     PkiCaPurpose,
     PkiClientIdentity,
@@ -7,6 +10,7 @@ import {
     PkiNodeEnroller,
     PkiNodeFileStore,
     PkiNodeHttpTransport,
+    PkiNodeIdentity,
     startHubRegistration
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
@@ -20,6 +24,8 @@ import {HttpServer} from './inc/Server/HttpServer.js';
 import {Cluster, ClusterNodeStatus} from './Routes/Main/Cluster.js';
 
 const SESSION_MAX_AGE = 6000000;
+const DEFAULT_PEER_PORT = 5336;
+const DEFAULT_SYNC_INTERVAL_MS = 30000;
 
 /**
  * Main
@@ -83,6 +89,7 @@ const SESSION_MAX_AGE = 6000000;
     };
 
     let nodeIdentity: PkiClientIdentity | undefined;
+    let enrolledIdentity: PkiNodeIdentity | undefined;
 
     if (tConfig.pki) {
         try {
@@ -108,6 +115,7 @@ const SESSION_MAX_AGE = 6000000;
 
             const identity = await enroller.ensure();
 
+            enrolledIdentity = identity;
             nodeIdentity = {cert: identity.certificate, key: identity.privateKey};
             status.nodeUid = identity.nodeUid;
             status.enrolled = true;
@@ -148,6 +156,53 @@ const SESSION_MAX_AGE = 6000000;
             buildClusterCapabilityManifest(`cluster@${os.hostname()}`),
             {identity: nodeIdentity}
         );
+    }
+
+    // Mesh peer transport (Cluster/Mesh epic 9.5.1): with a cluster node identity
+    // and the Hub registry both present, bring up the authenticated peer transport,
+    // announce our endpoint to the Hub roster and periodically sync — dialing the
+    // other cluster nodes so every pair holds exactly one channel. Best-effort and
+    // non-fatal: without either an identity or the registry the control part still
+    // runs, just without the mesh.
+    if (enrolledIdentity && tConfig.registry) {
+        try {
+            const transport = new ClusterTlsPeerTransport({
+                certificate: enrolledIdentity.certificate,
+                privateKey: enrolledIdentity.privateKey,
+                caChain: enrolledIdentity.chain
+            });
+
+            const membership = new ClusterMembership(transport, enrolledIdentity.nodeUid);
+            const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
+
+            const roster = new HubClusterPeerRoster({
+                hubUrl: tConfig.registry.url,
+                selfNodeUid: enrolledIdentity.nodeUid,
+                secret: tConfig.registry.secret
+            });
+
+            const advertiseHost = tConfig.cluster?.advertiseHost ?? os.hostname();
+            const syncIntervalMs = tConfig.cluster?.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS;
+
+            // Refresh our announcement (TTL) and re-sync the membership on a fixed
+            // interval; both are best-effort so a transient Hub outage is not fatal.
+            const syncOnce = async(): Promise<void> => {
+                await roster.announce(advertiseHost, peerPort);
+                await membership.sync(roster);
+            };
+
+            await syncOnce();
+
+            setInterval((): void => {
+                syncOnce().catch((error: unknown): void => {
+                    Logger.getLogger().warn('Cluster mesh sync failed (will retry next interval)', error);
+                });
+            }, syncIntervalMs).unref();
+
+            Logger.getLogger().info(`Cluster mesh transport listening on peer port ${peerPort} (advertising ${advertiseHost})`);
+        } catch (error) {
+            Logger.getLogger().error('Cluster mesh transport failed to start (continuing without the mesh)', error);
+        }
     }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,

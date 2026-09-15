@@ -12,6 +12,14 @@ export const SchemaConfigOptionsClusterServer = SchemaConfigOptions.extend({
     clusterserver: Vts.optional(Vts.object({
         port: Vts.optional(Vts.number())
     })),
+    // Mesh peer transport (Cluster/Mesh epic 9.5.1): where this node's authenticated
+    // peer transport listens and the host/port it advertises to the Hub roster so the
+    // other cluster nodes can dial it. Only active once a node PKI identity exists.
+    cluster: Vts.optional(Vts.object({
+        peerPort: Vts.optional(Vts.number()),
+        advertiseHost: Vts.optional(Vts.string()),
+        syncIntervalMs: Vts.optional(Vts.number())
+    })),
     // Hub registry (v2 modular architecture): where and with which shared secret
     // this node self-registers its capability manifest (authenticated over mTLS
     // once the node PKI identity below is obtained).

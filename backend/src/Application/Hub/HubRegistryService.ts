@@ -1,5 +1,6 @@
 import {ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {ServiceImportance} from 'figtree-schemas';
+import {ClusterPeerDirectory} from './ClusterPeerDirectory.js';
 import {HubRegistry} from './HubRegistry.js';
 
 /**
@@ -34,6 +35,12 @@ export class HubRegistryService extends ServiceJobAbstract {
     protected readonly _registry: HubRegistry = new HubRegistry();
 
     /**
+     * The app-wide cluster peer directory (Cluster/Mesh epic 9.5.1).
+     * @protected
+     */
+    protected readonly _clusterPeers: ClusterPeerDirectory = new ClusterPeerDirectory();
+
+    /**
      * Fault-isolation importance for the service monitor.
      * @protected
      */
@@ -63,6 +70,13 @@ export class HubRegistryService extends ServiceJobAbstract {
      */
     public getRegistry(): HubRegistry {
         return this._registry;
+    }
+
+    /**
+     * @returns {ClusterPeerDirectory} the app-wide cluster peer directory
+     */
+    public getClusterPeers(): ClusterPeerDirectory {
+        return this._clusterPeers;
     }
 
     /**

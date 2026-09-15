@@ -381,6 +381,14 @@ export {SchemaConfigOptionsNginxServer, ConfigOptionsNginxServer} from './NginxS
 export {SchemaConfigOptionsPkiServer, ConfigOptionsPkiServer} from './PkiServer/Config/Config.js';
 export {SchemaConfigOptionsClusterServer, ConfigOptionsClusterServer} from './ClusterServer/Config/Config.js';
 export {SchemaClusterStatusResponse, ClusterStatusResponse} from './ClusterServer/Status.js';
+export {
+    SchemaClusterPeer,
+    ClusterPeer,
+    SchemaClusterAnnounceRequest,
+    ClusterAnnounceRequest,
+    SchemaClusterPeersResponse,
+    ClusterPeersResponse
+} from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)
 export {

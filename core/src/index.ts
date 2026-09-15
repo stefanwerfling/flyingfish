@@ -110,6 +110,11 @@ export {
     ClusterPeerRoster,
     ClusterMembership
 } from './inc/Cluster/ClusterMembership.js';
+export {
+    ClusterFetch,
+    HubClusterPeerRosterOptions,
+    HubClusterPeerRoster
+} from './inc/Cluster/HubClusterPeerRoster.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
