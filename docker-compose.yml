@@ -586,6 +586,62 @@ services:
       pkiserver:
         condition: service_started
 
+  clusterdatapath:
+    image: flyingfish_datapath:v1.0.0
+    build:
+      context: ./
+      dockerfile: ./clusterdatapath/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
+    container_name: flyingfish_datapath
+    # The data plane needs a TUN device for L3 forwarding.
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./clusterdatapath/dist:/opt/flyingfish/clusterdatapath/dist
+      - ./clusterdatapath/node_modules:/opt/flyingfish/clusterdatapath/node_modules
+      - ./clusterdatapath/package.json:/opt/flyingfish/clusterdatapath/package.json
+      - ./node_modules:/opt/flyingfish/node_modules
+      - ./package.json:/opt/flyingfish/package.json
+      # Read-only: the backend's self-signed cert for HTTPS registry trust.
+      - flyingfish:/var/lib/flyingfish:ro
+      # Writable node identity (its own cluster PKI identity).
+      - flyingfishDatapathPki:/var/lib/flyingfish-pki
+      # Shared bootstrap socket: fetch a single-use cluster enrollment token.
+      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
+    environment:
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
+      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      # Node PKI (own cluster identity, 9.5.9).
+      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
+      # Mesh data plane (9.5.1): QUIC transport, this node's overlay IP, and the
+      # host address peers dial it at (its flyingfishNet IP).
+      FLYINGFISH_CLUSTER_TRANSPORT: "quic"
+      FLYINGFISH_CLUSTER_ADVERTISE_HOST: "10.103.0.12"
+      FLYINGFISH_CLUSTER_OVERLAY_IP: "10.42.0.11"
+      FLYINGFISH_CLUSTER_OVERLAY_NETMASK: "255.255.0.0"
+    ports:
+      - "5337:5337/tcp"
+    networks:
+      flyingfishNet:
+        ipv4_address: 10.103.0.12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      flyingfish:
+        condition: service_healthy
+      pkiserver:
+        condition: service_started
+
 #  vpnserver:
 #    image: flyingfish_vpn:v1.2
 #    build:
@@ -654,6 +710,8 @@ volumes:
   flyingfishHimhipPki:
     driver: local
   flyingfishClusterPki:
+    driver: local
+  flyingfishDatapathPki:
     driver: local
   flyingfishPkiBootstrap:
     driver: local

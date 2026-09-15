@@ -15,6 +15,10 @@ clusterquic/target
 clusterquic/*.node
 clusterquic/index.js
 clusterquic/index.d.ts
+clustertun/target
+clustertun/*.node
+clustertun/index.js
+clustertun/index.d.ts
 
 # Local image exports (multiple GB) - never needed in the build context
 *.tar

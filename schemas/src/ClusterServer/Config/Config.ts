@@ -12,10 +12,14 @@ export const SchemaConfigOptionsClusterServer = SchemaConfigOptions.extend({
     clusterserver: Vts.optional(Vts.object({
         port: Vts.optional(Vts.number())
     })),
-    // Mesh peer transport (Cluster/Mesh epic 9.5.1): where this node's authenticated
-    // peer transport listens and the host/port it advertises to the Hub roster so the
-    // other cluster nodes can dial it. Only active once a node PKI identity exists.
+    // Mesh peer transport (Cluster/Mesh epic 9.5.1). The data plane lives in the
+    // dedicated clusterdatapath node now, so clusterserver is control-only by
+    // default: it only joins the mesh when `mesh` is explicitly true (kept for
+    // testing / a combined node). When active, it announces its peer endpoint to
+    // the Hub roster so other cluster nodes can dial it.
     cluster: Vts.optional(Vts.object({
+        // Opt clusterserver into the data-plane mesh (default off — control-only).
+        mesh: Vts.optional(Vts.boolean()),
         // Peer transport wire: 'tls' (raw TCP-TLS, the default) or 'wss' (WebSocket
         // over HTTPS/443 — the NAT-/firewall-friendly fallback). Both authenticate
         // identically with the cluster node-cert.

@@ -34,11 +34,12 @@ export interface TunNativeDevice {
 }
 
 /**
- * The native addon module: `TunDevice.open(name)` creates and brings up a TUN
- * interface (requires CAP_NET_ADMIN).
+ * The native addon module: `TunDevice.open(name, address?, netmask?)` creates and
+ * brings up a TUN interface, optionally assigning the overlay IP (requires
+ * CAP_NET_ADMIN).
  */
 export interface TunNativeBinding {
     TunDevice: {
-        open(name: string): TunNativeDevice;
+        open(name: string, address?: string, netmask?: string): TunNativeDevice;
     };
 }

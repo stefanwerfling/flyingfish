@@ -380,6 +380,7 @@ export {SchemaConfigOptionsDnsServer, ConfigOptionsDnsServer} from './DnsServer/
 export {SchemaConfigOptionsNginxServer, ConfigOptionsNginxServer} from './NginxServer/Config/Config.js';
 export {SchemaConfigOptionsPkiServer, ConfigOptionsPkiServer} from './PkiServer/Config/Config.js';
 export {SchemaConfigOptionsClusterServer, ConfigOptionsClusterServer} from './ClusterServer/Config/Config.js';
+export {SchemaConfigOptionsClusterDatapath, ConfigOptionsClusterDatapath} from './ClusterDatapath/Config/Config.js';
 export {SchemaClusterStatusResponse, ClusterStatusResponse} from './ClusterServer/Status.js';
 export {
     SchemaClusterPeer,

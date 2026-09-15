@@ -25,6 +25,7 @@
     "dnsserver",
     "nginxserver",
     "clusterserver",
+    "clusterdatapath",
     "clusterquic",
     "clustertun",
     "pkiserver",

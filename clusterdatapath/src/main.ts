@@ -1,11 +1,15 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
+    ClusterDatapath,
     ClusterMembership,
+    ClusterPeerInfo,
     ClusterQuicPeerTransport,
+    ClusterRouteTable,
     ClusterTlsPeerTransport,
     ClusterWssPeerTransport,
     HubClusterPeerRoster,
     IClusterPeerTransport,
+    NativeTunDevice,
     PkiBootstrapSocketClient,
     PkiCaPurpose,
     PkiClientIdentity,
@@ -22,17 +26,22 @@ import * as fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {v4 as uuid} from 'uuid';
-import {Config} from './inc/Config/Config.js';
 import {QuicBindingLoader} from './inc/Cluster/QuicBindingLoader.js';
+import {TunBindingLoader} from './inc/Cluster/TunBindingLoader.js';
+import {Config} from './inc/Config/Config.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
-import {Cluster, ClusterNodeStatus} from './Routes/Main/Cluster.js';
+import {Datapath, DatapathNodeStatus} from './Routes/Main/Datapath.js';
 
 const SESSION_MAX_AGE = 6000000;
 const DEFAULT_PEER_PORT = 5336;
 const DEFAULT_SYNC_INTERVAL_MS = 30000;
+const DEFAULT_TUN_NAME = 'ff0';
+const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
 
 /**
- * Main
+ * Main — the cluster data-plane node: its own PKI cluster identity, mesh peer
+ * transport, and (in its privileged container) a TUN device the ClusterDatapath
+ * bridges to the peer channels for L3 forwarding.
  */
 (async(): Promise<void> => {
     const argv = Args.get(SchemaDefaultArgs);
@@ -77,21 +86,24 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
 
     Logger.getLogger();
 
-    Logger.getLogger().info('Start FlyingFish Cluster Server ...');
+    Logger.getLogger().info('Start FlyingFish Cluster Datapath ...');
 
-    // Node PKI (Cluster/Mesh epic 9.5.9): enroll + auto-renew this node's own
-    // cluster certificate under the `cluster` CA purpose, BEFORE Hub registration
-    // so the registration authenticates over mTLS with it. Optional and non-fatal
-    // — without pki config the cluster node simply runs without an identity yet.
-    const commonName = tConfig.pki?.commonName ?? `cluster@${os.hostname()}`;
+    const commonName = tConfig.pki?.commonName ?? `datapath@${os.hostname()}`;
+    const overlayIp = tConfig.cluster?.overlayIp ?? '';
 
-    const status: ClusterNodeStatus = {
+    const status: DatapathNodeStatus = {
         nodeUid: '',
-        purpose: PkiCaPurpose.cluster,
-        commonName: commonName,
-        enrolled: false
+        overlayIp: overlayIp,
+        transport: tConfig.cluster?.transport ?? 'tls',
+        enrolled: false,
+        tunActive: false,
+        tunIfName: '',
+        peers: (): string[] => []
     };
 
+    // Node PKI (Cluster/Mesh epic 9.5.9): enroll + auto-renew this node's own
+    // cluster certificate under the `cluster` CA purpose — its verifiable mesh
+    // identity. Optional and non-fatal.
     let nodeIdentity: PkiClientIdentity | undefined;
     let enrolledIdentity: PkiNodeIdentity | undefined;
 
@@ -124,15 +136,15 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             status.nodeUid = identity.nodeUid;
             status.enrolled = true;
 
-            Logger.getLogger().info(`Cluster node PKI identity ready (nodeUid ${identity.nodeUid})`);
+            Logger.getLogger().info(`Cluster datapath PKI identity ready (nodeUid ${identity.nodeUid})`);
         } catch (error) {
-            Logger.getLogger().error('Cluster node PKI enrollment failed (continuing without a node certificate)', error);
+            Logger.getLogger().error('Cluster datapath PKI enrollment failed (continuing without a node certificate)', error);
         }
     }
 
     // start server ----------------------------------------------------------------------------------------------------
 
-    const aport = tConfig.clusterserver?.port ?? Config.DEFAULT_CLUSTERSERVER_PORT;
+    const aport = tConfig.clusterdatapath?.port ?? Config.DEFAULT_CLUSTERDATAPATH_PORT;
 
     const mServer = new HttpServer({
         realm: 'FlyingFish',
@@ -144,33 +156,26 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             max_age: SESSION_MAX_AGE
         },
         routes: [
-            new Cluster(status)
+            new Datapath(status)
         ]
     });
 
     await mServer.setupAndListen();
 
-    // Announce this node to the Hub registry. Optional: without registry config the
-    // cluster node simply does not self-register. When a node certificate was
-    // obtained above, the registration authenticates over mTLS with it.
+    // Announce this node to the Hub registry (part list). Optional.
     if (tConfig.registry) {
         await startHubRegistration(
             tConfig.registry.url,
             tConfig.registry.secret,
-            buildClusterCapabilityManifest(`cluster@${os.hostname()}`),
+            buildClusterCapabilityManifest(`datapath@${os.hostname()}`),
             {identity: nodeIdentity}
         );
     }
 
-    // Mesh peer transport (Cluster/Mesh epic 9.5.1): with a cluster node identity
-    // and the Hub registry both present, bring up the authenticated peer transport,
-    // announce our endpoint to the Hub roster and periodically sync — dialing the
-    // other cluster nodes so every pair holds exactly one channel. Best-effort and
-    // non-fatal: without either an identity or the registry the control part still
-    // runs, just without the mesh. The data plane lives in the dedicated
-    // clusterdatapath node, so clusterserver only joins the mesh when explicitly
-    // opted in (cluster.mesh) — it is control-only by default.
-    if (enrolledIdentity && tConfig.registry && tConfig.cluster?.mesh === true) {
+    // Mesh data plane (Cluster/Mesh epic 9.5.1): with a cluster identity and the
+    // Hub registry, bring up the peer transport, the L3 datapath over a TUN device,
+    // and the announce/sync loop that keeps the roster + routes current.
+    if (enrolledIdentity && tConfig.registry) {
         try {
             const transportOptions = {
                 certificate: enrolledIdentity.certificate,
@@ -178,12 +183,6 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 caChain: enrolledIdentity.chain
             };
 
-            // Pick the peer transport wire. 'quic' is the NAT-friendly, connection-
-            // migrating primary over our own native binding; 'wss' carries the channel
-            // over HTTPS/443; 'tls' (default) is the raw TCP-TLS transport. All three
-            // authenticate identically with the cluster node-cert. If 'quic' is
-            // selected but the native binding is unavailable (not built for this
-            // platform), fall back to TLS rather than dropping out of the mesh.
             let transportName = tConfig.cluster?.transport ?? 'tls';
             let transport: IClusterPeerTransport;
 
@@ -204,7 +203,40 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 transport = new ClusterTlsPeerTransport(transportOptions);
             }
 
+            status.transport = transportName;
+
             const membership = new ClusterMembership(transport, enrolledIdentity.nodeUid);
+            const routeTable = new ClusterRouteTable();
+
+            status.peers = (): string[] => membership.peers();
+
+            // Bring up the TUN device + L3 datapath. Optional: without the native
+            // binding (or CAP_NET_ADMIN) the node still runs the mesh, just without
+            // packet forwarding.
+            const tunBinding = TunBindingLoader.load();
+
+            if (tunBinding !== null && overlayIp.length > 0) {
+                try {
+                    const tunName = tConfig.cluster?.tunName ?? DEFAULT_TUN_NAME;
+                    const netmask = tConfig.cluster?.overlayNetmask ?? DEFAULT_OVERLAY_NETMASK;
+                    const nativeTun = tunBinding.TunDevice.open(tunName, overlayIp, netmask);
+                    const tun = new NativeTunDevice(nativeTun);
+
+                    const datapath = new ClusterDatapath(tun, routeTable, (nodeUid) => membership.getChannel(nodeUid));
+                    membership.onPeer((channel) => datapath.attachPeer(channel));
+                    datapath.start();
+
+                    status.tunActive = true;
+                    status.tunIfName = nativeTun.ifName;
+
+                    Logger.getLogger().info(`Cluster datapath TUN ${nativeTun.ifName} up (overlay ${overlayIp})`);
+                } catch (error) {
+                    Logger.getLogger().error('Cluster datapath TUN device failed to open (mesh runs without L3 forwarding)', error);
+                }
+            } else {
+                Logger.getLogger().warn('Cluster datapath running without a TUN device (no binding or no overlay IP)');
+            }
+
             const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
 
             const roster = new HubClusterPeerRoster({
@@ -216,29 +248,33 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             const advertiseHost = tConfig.cluster?.advertiseHost ?? os.hostname();
             const syncIntervalMs = tConfig.cluster?.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS;
 
-            // Refresh our announcement (TTL) and re-sync the membership on a fixed
-            // interval; both are best-effort so a transient Hub outage is not fatal.
+            // Announce our endpoint + overlay IP, refresh the route table from the
+            // roster, then dial the un-connected peers. Best-effort each interval.
             const syncOnce = async(): Promise<void> => {
-                await roster.announce(advertiseHost, peerPort);
-                await membership.sync(roster);
+                await roster.announce(advertiseHost, peerPort, overlayIp.length > 0 ? overlayIp : undefined);
+
+                const peers: ClusterPeerInfo[] = await roster.list();
+                routeTable.applyRoster(peers);
+
+                await membership.sync({list: (): Promise<ClusterPeerInfo[]> => Promise.resolve(peers)});
             };
 
             await syncOnce();
 
             setInterval((): void => {
                 syncOnce().catch((error: unknown): void => {
-                    Logger.getLogger().warn('Cluster mesh sync failed (will retry next interval)', error);
+                    Logger.getLogger().warn('Cluster datapath sync failed (will retry next interval)', error);
                 });
             }, syncIntervalMs).unref();
 
-            Logger.getLogger().info(`Cluster mesh transport (${transportName}) listening on peer port ${peerPort} (advertising ${advertiseHost})`);
+            Logger.getLogger().info(`Cluster datapath mesh (${transportName}) listening on peer port ${peerPort} (advertising ${advertiseHost})`);
         } catch (error) {
-            Logger.getLogger().error('Cluster mesh transport failed to start (continuing without the mesh)', error);
+            Logger.getLogger().error('Cluster datapath mesh failed to start (continuing without the mesh)', error);
         }
     }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,
     // so report to stderr and exit non-zero (lets the container restart).
-    console.error('FlyingFish cluster server failed to start:', error);
+    console.error('FlyingFish cluster datapath failed to start:', error);
     process.exit(1);
 });

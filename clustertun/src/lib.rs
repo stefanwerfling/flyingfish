@@ -68,14 +68,27 @@ pub struct TunDevice {
 #[napi]
 impl TunDevice {
     /// Open (create) a TUN device with the given interface name and bring it up.
-    /// Requires CAP_NET_ADMIN; fails cleanly otherwise.
+    /// Optionally assign the overlay IP (address + netmask) so the kernel routes
+    /// the overlay subnet into it. Requires CAP_NET_ADMIN; fails cleanly otherwise.
     /// @param name - the TUN interface name (e.g. "ff0")
+    /// @param address - the overlay IP to assign, e.g. "10.42.0.1" (optional)
+    /// @param netmask - the overlay netmask, e.g. "255.255.0.0" (optional)
     #[napi(factory)]
-    pub fn open(name: String) -> napi::Result<TunDevice> {
+    pub fn open(name: String, address: Option<String>, netmask: Option<String>) -> napi::Result<TunDevice> {
         runtime()
             .block_on(async move {
                 let mut config = tun::Configuration::default();
-                config.name(&name).up();
+                config.name(&name);
+
+                if let Some(address) = address.as_deref() {
+                    config.address(address);
+                }
+
+                if let Some(netmask) = netmask.as_deref() {
+                    config.netmask(netmask);
+                }
+
+                config.up();
 
                 let device = tun::create_as_async(&config).map_err(|e| anyhow!(e.to_string()))?;
                 let (reader, writer) = tokio::io::split(device);

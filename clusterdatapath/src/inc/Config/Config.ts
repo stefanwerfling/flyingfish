@@ -1,5 +1,5 @@
 import {Config as ConfigCore} from '@stefanwerfling/figtree';
-import {ConfigOptionsClusterServer, SchemaConfigOptionsClusterServer} from 'flyingfish_schemas';
+import {ConfigOptionsClusterDatapath, SchemaConfigOptionsClusterDatapath} from 'flyingfish_schemas';
 import path from 'path';
 import process from 'process';
 
@@ -8,32 +8,34 @@ import process from 'process';
  */
 export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
-    CLUSTERSERVER_PORT = 'FLYINGFISH_CLUSTERSERVER_PORT',
+    CLUSTERDATAPATH_PORT = 'FLYINGFISH_CLUSTERDATAPATH_PORT',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
     PKI_URL = 'FLYINGFISH_PKI_URL',
     PKI_BOOTSTRAP_TOKEN = 'FLYINGFISH_PKI_BOOTSTRAP_TOKEN',
     PKI_BOOTSTRAP_SOCKET = 'FLYINGFISH_PKI_BOOTSTRAP_SOCKET',
     PKI_STORE_DIR = 'FLYINGFISH_PKI_STORE_DIR',
-    CLUSTER_MESH = 'FLYINGFISH_CLUSTER_MESH',
     CLUSTER_TRANSPORT = 'FLYINGFISH_CLUSTER_TRANSPORT',
     CLUSTER_PEER_PORT = 'FLYINGFISH_CLUSTER_PEER_PORT',
     CLUSTER_ADVERTISE_HOST = 'FLYINGFISH_CLUSTER_ADVERTISE_HOST',
-    CLUSTER_SYNC_INTERVAL_MS = 'FLYINGFISH_CLUSTER_SYNC_INTERVAL_MS'
+    CLUSTER_SYNC_INTERVAL_MS = 'FLYINGFISH_CLUSTER_SYNC_INTERVAL_MS',
+    CLUSTER_OVERLAY_IP = 'FLYINGFISH_CLUSTER_OVERLAY_IP',
+    CLUSTER_OVERLAY_NETMASK = 'FLYINGFISH_CLUSTER_OVERLAY_NETMASK',
+    CLUSTER_TUN_NAME = 'FLYINGFISH_CLUSTER_TUN_NAME'
 }
 
 /**
- * Config — the cluster control part is database-free, so its config only needs an
- * HTTP port plus the optional Hub registry and node PKI blocks.
+ * Config — the cluster data-plane node is database-free; its config needs an HTTP
+ * port plus the Hub registry, node PKI and mesh (transport + overlay/TUN) blocks.
  */
-export class Config extends ConfigCore<ConfigOptionsClusterServer> {
+export class Config extends ConfigCore<ConfigOptionsClusterDatapath> {
 
     /**
      * FlyingFish infrastructure defaults, re-declared here now that this Config
      * extends figtree's generic `Config`.
      */
     public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
-    public static readonly DEFAULT_CLUSTERSERVER_PORT = 5335;
+    public static readonly DEFAULT_CLUSTERDATAPATH_PORT = 5337;
     public static readonly DEFAULT_CONFIG_FILE = 'config.json';
 
     /**
@@ -41,7 +43,7 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
      */
     public static override getInstance(): Config {
         if (!ConfigCore._instance) {
-            const instance = new Config(SchemaConfigOptionsClusterServer);
+            const instance = new Config(SchemaConfigOptionsClusterDatapath);
             instance.setAppName('flyingfish');
             ConfigCore._instance = instance;
         }
@@ -54,26 +56,26 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
      * @param aConfig
      * @protected
      */
-    protected override _loadEnv(aConfig: ConfigOptionsClusterServer | null): ConfigOptionsClusterServer | null {
+    protected override _loadEnv(aConfig: ConfigOptionsClusterDatapath | null): ConfigOptionsClusterDatapath | null {
         let config = aConfig;
 
         if (config === null) {
             config = {
-                clusterserver: {
-                    port: Config.DEFAULT_CLUSTERSERVER_PORT
+                clusterdatapath: {
+                    port: Config.DEFAULT_CLUSTERDATAPATH_PORT
                 }
             };
         }
 
-        // cluster server port -----------------------------------------------------------------------------------------
+        // data-plane HTTP port ----------------------------------------------------------------------------------------
 
-        if (process.env[ENV_OPTIONAL.CLUSTERSERVER_PORT]) {
-            if (!config.clusterserver) {
-                config.clusterserver = {};
+        if (process.env[ENV_OPTIONAL.CLUSTERDATAPATH_PORT]) {
+            if (!config.clusterdatapath) {
+                config.clusterdatapath = {};
             }
 
-            config.clusterserver.port = parseInt(process.env[ENV_OPTIONAL.CLUSTERSERVER_PORT]!, 10) ||
-                Config.DEFAULT_CLUSTERSERVER_PORT;
+            config.clusterdatapath.port = parseInt(process.env[ENV_OPTIONAL.CLUSTERDATAPATH_PORT]!, 10) ||
+                Config.DEFAULT_CLUSTERDATAPATH_PORT;
         }
 
         // Logging -----------------------------------------------------------------------------------------------------
@@ -84,7 +86,7 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
             };
         }
 
-        // Hub registry (v2): both url and secret required to self-register.
+        // Hub registry (v2): both url and secret required to announce.
         if (process.env[ENV_OPTIONAL.REGISTRY_URL] && process.env[ENV_OPTIONAL.REGISTRY_SECRET]) {
             config.registry = {
                 url: process.env[ENV_OPTIONAL.REGISTRY_URL]!,
@@ -106,20 +108,24 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
             };
         }
 
-        // Mesh peer transport (9.5.1): control-only by default; opt in with mesh=1.
-        const mesh = process.env[ENV_OPTIONAL.CLUSTER_MESH];
+        // Mesh data plane: transport wire, peer endpoint + overlay/TUN.
         const transport = process.env[ENV_OPTIONAL.CLUSTER_TRANSPORT];
         const peerPort = process.env[ENV_OPTIONAL.CLUSTER_PEER_PORT];
         const advertiseHost = process.env[ENV_OPTIONAL.CLUSTER_ADVERTISE_HOST];
         const syncIntervalMs = process.env[ENV_OPTIONAL.CLUSTER_SYNC_INTERVAL_MS];
+        const overlayIp = process.env[ENV_OPTIONAL.CLUSTER_OVERLAY_IP];
+        const overlayNetmask = process.env[ENV_OPTIONAL.CLUSTER_OVERLAY_NETMASK];
+        const tunName = process.env[ENV_OPTIONAL.CLUSTER_TUN_NAME];
 
-        if (mesh || transport || peerPort || advertiseHost || syncIntervalMs) {
+        if (transport || peerPort || advertiseHost || syncIntervalMs || overlayIp || overlayNetmask || tunName) {
             config.cluster = {
-                mesh: mesh === '1' || mesh === 'true',
                 transport: transport,
                 peerPort: peerPort ? parseInt(peerPort, 10) : undefined,
                 advertiseHost: advertiseHost,
-                syncIntervalMs: syncIntervalMs ? parseInt(syncIntervalMs, 10) : undefined
+                syncIntervalMs: syncIntervalMs ? parseInt(syncIntervalMs, 10) : undefined,
+                overlayIp: overlayIp,
+                overlayNetmask: overlayNetmask,
+                tunName: tunName
             };
         }
 
@@ -131,7 +137,7 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
      * @param config
      * @protected
      */
-    protected override _setDefaults(config: ConfigOptionsClusterServer | null): ConfigOptionsClusterServer | null {
+    protected override _setDefaults(config: ConfigOptionsClusterDatapath | null): ConfigOptionsClusterDatapath | null {
         if (config === null) {
             return null;
         }
@@ -140,9 +146,9 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
             config.flyingfish_libpath = Config.DEFAULT_FF_DIR;
         }
 
-        if (!config.clusterserver) {
-            config.clusterserver = {
-                port: Config.DEFAULT_CLUSTERSERVER_PORT
+        if (!config.clusterdatapath) {
+            config.clusterdatapath = {
+                port: Config.DEFAULT_CLUSTERDATAPATH_PORT
             };
         }
 
