@@ -16,6 +16,10 @@ export const SchemaConfigOptionsClusterServer = SchemaConfigOptions.extend({
     // peer transport listens and the host/port it advertises to the Hub roster so the
     // other cluster nodes can dial it. Only active once a node PKI identity exists.
     cluster: Vts.optional(Vts.object({
+        // Peer transport wire: 'tls' (raw TCP-TLS, the default) or 'wss' (WebSocket
+        // over HTTPS/443 — the NAT-/firewall-friendly fallback). Both authenticate
+        // identically with the cluster node-cert.
+        transport: Vts.optional(Vts.string()),
         peerPort: Vts.optional(Vts.number()),
         advertiseHost: Vts.optional(Vts.string()),
         syncIntervalMs: Vts.optional(Vts.number())

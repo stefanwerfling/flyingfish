@@ -2,7 +2,9 @@ import {Args, Logger} from '@stefanwerfling/figtree';
 import {
     ClusterMembership,
     ClusterTlsPeerTransport,
+    ClusterWssPeerTransport,
     HubClusterPeerRoster,
+    IClusterPeerTransport,
     PkiBootstrapSocketClient,
     PkiCaPurpose,
     PkiClientIdentity,
@@ -166,11 +168,18 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
     // runs, just without the mesh.
     if (enrolledIdentity && tConfig.registry) {
         try {
-            const transport = new ClusterTlsPeerTransport({
+            const transportOptions = {
                 certificate: enrolledIdentity.certificate,
                 privateKey: enrolledIdentity.privateKey,
                 caChain: enrolledIdentity.chain
-            });
+            };
+
+            // 'wss' carries the peer channel over HTTPS/443 (NAT-/firewall-friendly);
+            // 'tls' (default) uses the raw TCP-TLS transport. Both authenticate the
+            // same way with the cluster node-cert.
+            const transport: IClusterPeerTransport = tConfig.cluster?.transport === 'wss'
+                ? new ClusterWssPeerTransport(transportOptions)
+                : new ClusterTlsPeerTransport(transportOptions);
 
             const membership = new ClusterMembership(transport, enrolledIdentity.nodeUid);
             const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
@@ -199,7 +208,8 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 });
             }, syncIntervalMs).unref();
 
-            Logger.getLogger().info(`Cluster mesh transport listening on peer port ${peerPort} (advertising ${advertiseHost})`);
+            const transportName = tConfig.cluster?.transport === 'wss' ? 'wss' : 'tls';
+            Logger.getLogger().info(`Cluster mesh transport (${transportName}) listening on peer port ${peerPort} (advertising ${advertiseHost})`);
         } catch (error) {
             Logger.getLogger().error('Cluster mesh transport failed to start (continuing without the mesh)', error);
         }

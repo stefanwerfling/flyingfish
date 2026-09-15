@@ -1,23 +1,8 @@
 import * as tls from 'tls';
-import {Pem} from '../Crypto/asn1/Pem.js';
-import {PkiCaPurpose} from '../Pki/PkiCaTree.js';
-import {PkiClientCertVerifier, PkiVerifiedIdentity} from '../Pki/PkiClientCertVerifier.js';
+import {ClusterPeerAuthenticator} from './ClusterPeerAuthenticator.js';
 import {ClusterPeerChannel} from './ClusterPeerChannel.js';
-
-/**
- * Options for {@link ClusterTlsPeerTransport}: this node's own cluster identity
- * (certificate + private key) and the trusted cluster CA chain to verify peers.
- */
-export type ClusterPeerTransportOptions = {
-    certificate: string;
-    privateKey: string;
-    caChain: string[];
-};
-
-/**
- * Called with each newly-accepted, authenticated inbound peer channel.
- */
-export type ClusterPeerHandler = (channel: ClusterPeerChannel) => void;
+import {ClusterPeerHandler, ClusterPeerTransportOptions, IClusterPeerTransport} from './ClusterPeerTransport.js';
+import {TlsSocketDuplex} from './TlsSocketDuplex.js';
 
 /**
  * The first cluster transport (Cluster/Mesh epic 9.5.1): a node↔node mutually
@@ -29,7 +14,7 @@ export type ClusterPeerHandler = (channel: ClusterPeerChannel) => void;
  * plug into later; rejectUnauthorized is off because identity is checked here
  * against the cluster SAN (not just chain validity) via {@link PkiClientCertVerifier}.
  */
-export class ClusterTlsPeerTransport {
+export class ClusterTlsPeerTransport implements IClusterPeerTransport {
 
     private readonly _options: ClusterPeerTransportOptions;
 
@@ -87,12 +72,12 @@ export class ClusterTlsPeerTransport {
                 ca: this._options.caChain,
                 rejectUnauthorized: false
             }, (): void => {
-                ClusterTlsPeerTransport._authenticate(socket, this._options.caChain).then((identity): void => {
+                ClusterPeerAuthenticator.authenticate(socket, this._options.caChain).then((identity): void => {
                     if (identity === null) {
                         socket.destroy();
                         reject(new Error('ClusterTlsPeerTransport: peer identity not trusted'));
                     } else {
-                        resolve(new ClusterPeerChannel(socket, identity));
+                        resolve(new ClusterPeerChannel(new TlsSocketDuplex(socket), identity));
                     }
                 }).catch(reject);
             });
@@ -125,37 +110,14 @@ export class ClusterTlsPeerTransport {
      * @param onPeer - the accepted-peer handler
      */
     private static async _admit(socket: tls.TLSSocket, caChain: string[], onPeer: ClusterPeerHandler): Promise<void> {
-        const identity = await ClusterTlsPeerTransport._authenticate(socket, caChain);
+        const identity = await ClusterPeerAuthenticator.authenticate(socket, caChain);
 
         if (identity === null) {
             socket.destroy();
             return;
         }
 
-        onPeer(new ClusterPeerChannel(socket, identity));
-    }
-
-    /**
-     * Verify the socket's peer certificate against the cluster CA chain and return
-     * its identity, but only for a cluster-purpose identity (a service/device cert
-     * cannot join the mesh). Returns null otherwise.
-     * @param socket - the TLS socket
-     * @param caChain - the trusted cluster CA chain
-     */
-    private static async _authenticate(socket: tls.TLSSocket, caChain: string[]): Promise<PkiVerifiedIdentity | null> {
-        const peer = socket.getPeerCertificate();
-
-        if (peer === null || peer.raw === undefined || peer.raw.length === 0) {
-            return null;
-        }
-
-        const identity = await PkiClientCertVerifier.verify(Pem.encode(Pem.CERTIFICATE, new Uint8Array(peer.raw)), caChain);
-
-        if (identity === null || identity.purpose !== PkiCaPurpose.cluster) {
-            return null;
-        }
-
-        return identity;
+        onPeer(new ClusterPeerChannel(new TlsSocketDuplex(socket), identity));
     }
 
 }

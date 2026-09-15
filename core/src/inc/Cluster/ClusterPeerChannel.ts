@@ -1,5 +1,5 @@
-import * as tls from 'tls';
 import {PkiVerifiedIdentity} from '../Pki/PkiClientCertVerifier.js';
+import {ClusterByteDuplex} from './ClusterByteDuplex.js';
 
 const LENGTH_PREFIX_BYTES = 4;
 
@@ -15,14 +15,17 @@ export type ClusterPeerCloseHandler = () => void;
 
 /**
  * A bidirectional, length-framed message channel to one authenticated cluster
- * peer (Cluster/Mesh epic 9.5.1). It wraps the mutually-authenticated TLS socket
- * from {@link ClusterTlsPeerTransport} and carries the peer's verified cluster
- * identity. Messages are framed with a 4-byte big-endian length prefix so the
- * stream is split back into discrete messages regardless of TCP segmentation.
+ * peer (Cluster/Mesh epic 9.5.1). It rides on a {@link ClusterByteDuplex} — the
+ * mutually-authenticated TLS socket of the TCP transport or the WebSocket of the
+ * WSS/443 transport — and carries the peer's verified cluster identity. Messages
+ * are framed with a 4-byte big-endian length prefix so the byte stream is split
+ * back into discrete messages regardless of TCP segmentation (the framing is
+ * harmless over an already message-framed WebSocket, keeping the channel identical
+ * across transports).
  */
 export class ClusterPeerChannel {
 
-    private readonly _socket: tls.TLSSocket;
+    private readonly _duplex: ClusterByteDuplex;
 
     private readonly _identity: PkiVerifiedIdentity;
 
@@ -33,21 +36,21 @@ export class ClusterPeerChannel {
     private _closeHandler: ClusterPeerCloseHandler | null = null;
 
     /**
-     * @param socket - the authenticated TLS socket to the peer
+     * @param duplex - the authenticated byte duplex to the peer
      * @param identity - the peer's verified cluster identity
      */
-    public constructor(socket: tls.TLSSocket, identity: PkiVerifiedIdentity) {
-        this._socket = socket;
+    public constructor(duplex: ClusterByteDuplex, identity: PkiVerifiedIdentity) {
+        this._duplex = duplex;
         this._identity = identity;
 
-        this._socket.on('data', (chunk: Buffer): void => this._onData(chunk));
-        this._socket.on('close', (): void => {
+        this._duplex.onData((chunk: Buffer): void => this._onData(chunk));
+        this._duplex.onClose((): void => {
             if (this._closeHandler !== null) {
                 this._closeHandler();
             }
         });
-        this._socket.on('error', (): void => {
-            this._socket.destroy();
+        this._duplex.onError((): void => {
+            this._duplex.destroy();
         });
     }
 
@@ -66,7 +69,7 @@ export class ClusterPeerChannel {
         const header = Buffer.alloc(LENGTH_PREFIX_BYTES);
         header.writeUInt32BE(message.length, 0);
 
-        this._socket.write(Buffer.concat([header, Buffer.from(message)]));
+        this._duplex.write(Buffer.concat([header, Buffer.from(message)]));
     }
 
     /**
@@ -89,7 +92,7 @@ export class ClusterPeerChannel {
      * Close the channel.
      */
     public close(): void {
-        this._socket.end();
+        this._duplex.end();
     }
 
     /**

@@ -30,6 +30,7 @@
     "@types/express-session": "^1.18.1",
     "@stylistic/eslint-plugin-ts": "^4.1.0",
     "@types/node": "^22.13.5",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
     "eslint": "^9.21.0",
@@ -49,6 +50,7 @@
     "typeorm": "0.3.20",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",
     "winston": "^3.17.0",
+    "ws": "^8.18.3",
     "winston-daily-rotate-file": "^5.0.0"
   }
 }

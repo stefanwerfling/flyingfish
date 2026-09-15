@@ -1,5 +1,5 @@
 import {ClusterPeerChannel} from './ClusterPeerChannel.js';
-import {ClusterTlsPeerTransport} from './ClusterTlsPeerTransport.js';
+import {IClusterPeerTransport} from './ClusterPeerTransport.js';
 
 /**
  * One discoverable cluster peer: its stable nodeUid and where to reach its peer
@@ -22,7 +22,8 @@ export type ClusterPeerRoster = {
 
 /**
  * Maintains this node's live set of connected cluster peers (Cluster/Mesh epic
- * 9.5.1, peer discovery). It owns a {@link ClusterTlsPeerTransport}: inbound
+ * 9.5.1, peer discovery). It owns an {@link IClusterPeerTransport} (TCP-TLS or
+ * WSS/443): inbound
  * authenticated peers are tracked, and on {@link ClusterMembership.sync} the
  * roster is fetched and outbound connections are opened. To avoid two channels
  * per pair (both nodes dialing each other), a node only dials peers whose nodeUid
@@ -32,7 +33,7 @@ export type ClusterPeerRoster = {
  */
 export class ClusterMembership {
 
-    private readonly _transport: ClusterTlsPeerTransport;
+    private readonly _transport: IClusterPeerTransport;
 
     private readonly _selfNodeUid: string;
 
@@ -42,7 +43,7 @@ export class ClusterMembership {
      * @param transport - this node's peer transport
      * @param selfNodeUid - this node's own cluster nodeUid
      */
-    public constructor(transport: ClusterTlsPeerTransport, selfNodeUid: string) {
+    public constructor(transport: IClusterPeerTransport, selfNodeUid: string) {
         this._transport = transport;
         this._selfNodeUid = selfNodeUid;
     }

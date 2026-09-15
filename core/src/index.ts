@@ -95,6 +95,9 @@ export {
 export {PkiHubTrust} from './inc/Pki/PkiHubTrust.js';
 
 // Cluster / Mesh (9.5)
+export {ClusterByteDuplex} from './inc/Cluster/ClusterByteDuplex.js';
+export {TlsSocketDuplex} from './inc/Cluster/TlsSocketDuplex.js';
+export {WebSocketByteDuplex} from './inc/Cluster/WebSocketByteDuplex.js';
 export {
     ClusterPeerMessageHandler,
     ClusterPeerCloseHandler,
@@ -103,8 +106,11 @@ export {
 export {
     ClusterPeerTransportOptions,
     ClusterPeerHandler,
-    ClusterTlsPeerTransport
-} from './inc/Cluster/ClusterTlsPeerTransport.js';
+    IClusterPeerTransport
+} from './inc/Cluster/ClusterPeerTransport.js';
+export {ClusterPeerAuthenticator} from './inc/Cluster/ClusterPeerAuthenticator.js';
+export {ClusterTlsPeerTransport} from './inc/Cluster/ClusterTlsPeerTransport.js';
+export {ClusterWssPeerTransport} from './inc/Cluster/ClusterWssPeerTransport.js';
 export {
     ClusterPeerInfo,
     ClusterPeerRoster,
