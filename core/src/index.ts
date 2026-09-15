@@ -94,6 +94,18 @@ export {
 } from './inc/Pki/PkiClientCertVerifier.js';
 export {PkiHubTrust} from './inc/Pki/PkiHubTrust.js';
 
+// Cluster / Mesh (9.5)
+export {
+    ClusterPeerMessageHandler,
+    ClusterPeerCloseHandler,
+    ClusterPeerChannel
+} from './inc/Cluster/ClusterPeerChannel.js';
+export {
+    ClusterPeerTransportOptions,
+    ClusterPeerHandler,
+    ClusterTlsPeerTransport
+} from './inc/Cluster/ClusterTlsPeerTransport.js';
+
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
 export {DBBaseEntityUnid} from './inc/Db/MariaDb/DBBaseEntityUnid.js';
