@@ -25,6 +25,7 @@
     "dnsserver",
     "nginxserver",
     "clusterserver",
+    "clusterquic",
     "pkiserver",
     "plugins",
     "vpn"

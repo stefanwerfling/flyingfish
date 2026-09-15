@@ -1,6 +1,7 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
     ClusterMembership,
+    ClusterQuicPeerTransport,
     ClusterTlsPeerTransport,
     ClusterWssPeerTransport,
     HubClusterPeerRoster,
@@ -22,6 +23,7 @@ import os from 'os';
 import path from 'path';
 import {v4 as uuid} from 'uuid';
 import {Config} from './inc/Config/Config.js';
+import {QuicBindingLoader} from './inc/Cluster/QuicBindingLoader.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
 import {Cluster, ClusterNodeStatus} from './Routes/Main/Cluster.js';
 
@@ -174,12 +176,31 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 caChain: enrolledIdentity.chain
             };
 
-            // 'wss' carries the peer channel over HTTPS/443 (NAT-/firewall-friendly);
-            // 'tls' (default) uses the raw TCP-TLS transport. Both authenticate the
-            // same way with the cluster node-cert.
-            const transport: IClusterPeerTransport = tConfig.cluster?.transport === 'wss'
-                ? new ClusterWssPeerTransport(transportOptions)
-                : new ClusterTlsPeerTransport(transportOptions);
+            // Pick the peer transport wire. 'quic' is the NAT-friendly, connection-
+            // migrating primary over our own native binding; 'wss' carries the channel
+            // over HTTPS/443; 'tls' (default) is the raw TCP-TLS transport. All three
+            // authenticate identically with the cluster node-cert. If 'quic' is
+            // selected but the native binding is unavailable (not built for this
+            // platform), fall back to TLS rather than dropping out of the mesh.
+            let transportName = tConfig.cluster?.transport ?? 'tls';
+            let transport: IClusterPeerTransport;
+
+            if (transportName === 'quic') {
+                const quicBinding = QuicBindingLoader.load();
+
+                if (quicBinding === null) {
+                    Logger.getLogger().warn('QUIC binding unavailable — falling back to the TLS peer transport');
+                    transportName = 'tls';
+                    transport = new ClusterTlsPeerTransport(transportOptions);
+                } else {
+                    transport = new ClusterQuicPeerTransport(transportOptions, quicBinding);
+                }
+            } else if (transportName === 'wss') {
+                transport = new ClusterWssPeerTransport(transportOptions);
+            } else {
+                transportName = 'tls';
+                transport = new ClusterTlsPeerTransport(transportOptions);
+            }
 
             const membership = new ClusterMembership(transport, enrolledIdentity.nodeUid);
             const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
@@ -208,7 +229,6 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 });
             }, syncIntervalMs).unref();
 
-            const transportName = tConfig.cluster?.transport === 'wss' ? 'wss' : 'tls';
             Logger.getLogger().info(`Cluster mesh transport (${transportName}) listening on peer port ${peerPort} (advertising ${advertiseHost})`);
         } catch (error) {
             Logger.getLogger().error('Cluster mesh transport failed to start (continuing without the mesh)', error);
