@@ -39,7 +39,7 @@ describe('PKI bootstrap socket (v2, 9.4.3-D)', () => {
 
         server = new PkiBootstrapSocketServer(
             socketPath,
-            (): string => tokens.issue({purpose: PkiCaPurpose.service, autoApprove: true}).token
+            (purpose: string): string => tokens.issue({purpose: (purpose as PkiCaPurpose) || PkiCaPurpose.service, autoApprove: true}).token
         );
         await server.listen();
 
@@ -55,7 +55,7 @@ describe('PKI bootstrap socket (v2, 9.4.3-D)', () => {
 
         server = new PkiBootstrapSocketServer(
             socketPath,
-            (): string => tokens.issue({purpose: PkiCaPurpose.service, autoApprove: true}).token
+            (purpose: string): string => tokens.issue({purpose: (purpose as PkiCaPurpose) || PkiCaPurpose.service, autoApprove: true}).token
         );
         await server.listen();
 
@@ -64,6 +64,20 @@ describe('PKI bootstrap socket (v2, 9.4.3-D)', () => {
         const second = await client.fetchToken();
 
         expect(first).not.toBe(second);
+    });
+
+    test('the server vends a token for the requested purpose (co-location trust)', async() => {
+        const tokens = new PkiBootstrapTokenStore();
+
+        server = new PkiBootstrapSocketServer(
+            socketPath,
+            (purpose: string): string => tokens.issue({purpose: (purpose as PkiCaPurpose) || PkiCaPurpose.service, autoApprove: true}).token
+        );
+        await server.listen();
+
+        const token = await new PkiBootstrapSocketClient(socketPath).fetchToken(PkiCaPurpose.cluster);
+
+        expect(tokens.consume(token)?.purpose).toBe(PkiCaPurpose.cluster);
     });
 
     test('fetchToken retries then fails when nothing is listening', async() => {

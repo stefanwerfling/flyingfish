@@ -2,9 +2,15 @@ import * as fs from 'fs';
 import * as net from 'net';
 
 /**
- * Issues one fresh bootstrap token (called once per socket connection).
+ * Issues one fresh bootstrap token for the requested CA purpose (called once per
+ * socket connection). The purpose is the client's request; the issuer validates
+ * it (co-location trust — a part that reaches the socket may pick its purpose).
  */
-export type PkiBootstrapTokenIssuer = () => string;
+export type PkiBootstrapTokenIssuer = (purpose: string) => string;
+
+// If the client sends no purpose line within this window, vend with an empty
+// purpose (the issuer then applies its default). Guards against a stuck client.
+const PURPOSE_READ_TIMEOUT_MS = 2000;
 
 /**
  * Local unix-socket bootstrap-token vending server (own-PKI epic 9.4, 9.4.3-D).
@@ -43,11 +49,44 @@ export class PkiBootstrapSocketServer {
         await this._unlinkIfExists();
 
         this._server = net.createServer((socket: net.Socket): void => {
-            try {
-                socket.end(`${this._issue()}\n`);
-            } catch {
+            let data = '';
+            let vended = false;
+
+            const vend = (purpose: string): void => {
+                if (vended) {
+                    return;
+                }
+
+                vended = true;
+
+                try {
+                    socket.end(`${this._issue(purpose)}\n`);
+                } catch {
+                    socket.destroy();
+                }
+            };
+
+            // The client sends "<purpose>\n" first; vend a token for it. Fall back
+            // to an empty purpose (issuer default) if nothing arrives in time.
+            const timer = setTimeout((): void => vend(''), PURPOSE_READ_TIMEOUT_MS);
+
+            socket.setEncoding('utf-8');
+
+            socket.on('data', (chunk: string): void => {
+                data += chunk;
+
+                const newline = data.indexOf('\n');
+
+                if (newline !== -1) {
+                    clearTimeout(timer);
+                    vend(data.slice(0, newline).trim());
+                }
+            });
+
+            socket.on('error', (): void => {
+                clearTimeout(timer);
                 socket.destroy();
-            }
+            });
         });
 
         const server = this._server;

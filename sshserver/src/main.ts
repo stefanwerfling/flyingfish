@@ -150,7 +150,7 @@ import {SshServer} from './inc/Ssh/SshServer.js';
 
             const bootstrapSocket = tconfig.pki.bootstrapSocket;
             const bootstrapTokenProvider = bootstrapSocket
-                ? (): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken()
+                ? (purpose: PkiCaPurpose): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken(purpose)
                 : undefined;
 
             const enroller = new PkiNodeEnroller(

@@ -126,10 +126,15 @@ const DEFAULT_ORGANIZATION = 'FlyingFish';
     const BOOTSTRAP_TOKEN_TTL_MS = 60000;
 
     if (tConfig.pkiserver?.bootstrapSocket) {
+        // Co-location trust: a part that reaches the socket may request its CA
+        // purpose (service / cluster / device); an unknown/empty purpose falls
+        // back to the service purpose (the common part case).
+        const purposes = Object.values(PkiCaPurpose) as string[];
+
         const bootstrapServer = new PkiBootstrapSocketServer(
             tConfig.pkiserver.bootstrapSocket,
-            (): string => tokens.issue({
-                purpose: PkiCaPurpose.service,
+            (purpose: string): string => tokens.issue({
+                purpose: purposes.includes(purpose) ? purpose as PkiCaPurpose : PkiCaPurpose.service,
                 autoApprove: true,
                 ttlMs: BOOTSTRAP_TOKEN_TTL_MS
             }).token

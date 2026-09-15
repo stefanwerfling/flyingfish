@@ -92,7 +92,7 @@ const SESSION_MAX_AGE = 6000000;
 
             const bootstrapSocket = tConfig.pki.bootstrapSocket;
             const bootstrapTokenProvider = bootstrapSocket
-                ? (): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken()
+                ? (purpose: PkiCaPurpose): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken(purpose)
                 : undefined;
 
             const enroller = new PkiNodeEnroller(

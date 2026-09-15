@@ -116,7 +116,7 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
 
             const bootstrapSocket = tConfig.pki.bootstrapSocket;
             const bootstrapTokenProvider = bootstrapSocket
-                ? (): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken()
+                ? (purpose: PkiCaPurpose): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken(purpose)
                 : undefined;
 
             const enroller = new PkiNodeEnroller(

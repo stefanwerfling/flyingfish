@@ -39,17 +39,19 @@ export class PkiBootstrapSocketClient {
     }
 
     /**
-     * Fetch a bootstrap token, retrying on connection failure (the pkiserver may
-     * not have bound the socket yet). Throws if no token arrives within the
-     * retry budget.
+     * Fetch a bootstrap token for a CA purpose, retrying on connection failure
+     * (the pkiserver may not have bound the socket yet). The requested purpose is
+     * sent to the server, which vends a token for it (co-location trust). Throws
+     * if no token arrives within the retry budget.
+     * @param purpose - the CA purpose to request a token for (empty = server default)
      */
-    public async fetchToken(): Promise<string> {
+    public async fetchToken(purpose: string = ''): Promise<string> {
         let lastError: unknown = null;
 
         for (let attempt = 0; attempt < this._retries; attempt++) {
             try {
                 // eslint-disable-next-line no-await-in-loop -- sequential retry
-                return await this._connectOnce();
+                return await this._connectOnce(purpose);
             } catch (error) {
                 lastError = error;
 
@@ -62,9 +64,11 @@ export class PkiBootstrapSocketClient {
     }
 
     /**
-     * A single connect-read-close attempt.
+     * A single connect-write-read-close attempt: send the requested purpose line,
+     * then read the vended token.
+     * @param purpose - the CA purpose to request
      */
-    private async _connectOnce(): Promise<string> {
+    private async _connectOnce(purpose: string): Promise<string> {
         return new Promise<string>((resolve, reject): void => {
             const socket = net.createConnection(this._path);
             let data = '';
@@ -75,6 +79,10 @@ export class PkiBootstrapSocketClient {
             }, this._timeoutMs);
 
             socket.setEncoding('utf-8');
+
+            socket.on('connect', (): void => {
+                socket.write(`${purpose}\n`);
+            });
 
             socket.on('data', (chunk: string): void => {
                 data += chunk;

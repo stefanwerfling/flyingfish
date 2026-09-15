@@ -11,7 +11,7 @@ import {PkiSanEntry} from '../Crypto/PkiCertificateBuilder.js';
  */
 export type PkiNodeEnrollerOptions = {
     bootstrapToken?: string;
-    bootstrapTokenProvider?: () => Promise<string>;
+    bootstrapTokenProvider?: (purpose: PkiCaPurpose) => Promise<string>;
     purpose: PkiCaPurpose;
     commonName: string;
     sans?: PkiSanEntry[];
@@ -62,7 +62,7 @@ export class PkiNodeEnroller {
 
         if (existing === null) {
             const bootstrapToken = this._options.bootstrapTokenProvider
-                ? await this._options.bootstrapTokenProvider()
+                ? await this._options.bootstrapTokenProvider(this._options.purpose)
                 : this._options.bootstrapToken;
 
             if (bootstrapToken === undefined) {

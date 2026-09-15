@@ -74,7 +74,7 @@ import {HimHIP} from './inc/HimHIP.js';
 
             const bootstrapSocket = config.pki.bootstrapSocket;
             const bootstrapTokenProvider = bootstrapSocket
-                ? (): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken()
+                ? (purpose: PkiCaPurpose): Promise<string> => new PkiBootstrapSocketClient(bootstrapSocket).fetchToken(purpose)
                 : undefined;
 
             const enroller = new PkiNodeEnroller(
