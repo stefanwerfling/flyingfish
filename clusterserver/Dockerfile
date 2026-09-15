@@ -4,11 +4,14 @@ ARG NPM_REGISTRY="https://registry.npmjs.org/"
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
-RUN apt-get install -y git
+# git for the git npm deps; curl + build-essential for building the native QUIC
+# addon (rustup installer + a C toolchain for the ring crypto crate).
+RUN apt-get install -y git curl build-essential
 
 RUN mkdir -p /opt/flyingfish
 RUN mkdir -p /opt/flyingfish/schemas
 RUN mkdir -p /opt/flyingfish/core
+RUN mkdir -p /opt/flyingfish/clusterquic
 RUN mkdir -p /opt/flyingfish/clusterserver
 RUN mkdir -p /opt/flyingfish/clusterserver/dist
 RUN mkdir -p /opt/flyingfish/clusterserver/node_modules
@@ -30,6 +33,16 @@ COPY ./core/ ./
 
 RUN rm -R node_modules | true
 RUN rm -R dist | true
+RUN rm package-lock.json | true
+
+# Copy clusterquic (native QUIC addon) ---------------------------------------------------------------------------------
+
+WORKDIR /opt/flyingfish/clusterquic
+COPY ./clusterquic/ ./
+
+RUN rm -R node_modules | true
+RUN rm -R target | true
+RUN rm -f ./*.node index.js index.d.ts | true
 RUN rm package-lock.json | true
 
 # Copy clusterserver ---------------------------------------------------------------------------------------------------
@@ -58,6 +71,16 @@ RUN npm run build
 
 WORKDIR /opt/flyingfish/core
 RUN npm run build
+
+# Build the native QUIC addon for THIS image's platform. Install the Rust
+# toolchain, build (napi build targets the host triple, so a multi-arch
+# `docker buildx` produces the right .node per arch), then remove the toolchain +
+# Cargo cache in the SAME layer so ~1GB of Rust does not bloat the final image.
+WORKDIR /opt/flyingfish/clusterquic
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal \
+    && . /root/.cargo/env \
+    && npm run build \
+    && rm -rf target /root/.rustup /root/.cargo
 
 WORKDIR /opt/flyingfish/clusterserver
 RUN npm run build

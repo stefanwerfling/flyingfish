@@ -8,6 +8,14 @@
 **/dist
 **/*.tsbuildinfo
 
+# Native addon build output (the clusterquic Rust addon is rebuilt inside the
+# image; its Cargo target/ and *.node prebuilds are huge and must not be sent
+# as build context)
+clusterquic/target
+clusterquic/*.node
+clusterquic/index.js
+clusterquic/index.d.ts
+
 # Local image exports (multiple GB) - never needed in the build context
 *.tar
 
