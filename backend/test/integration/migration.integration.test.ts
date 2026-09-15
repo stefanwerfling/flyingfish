@@ -2,7 +2,7 @@
  * Integration tests for the TypeORM migration setup (refactoring phase 4).
  * Run against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import {DBHelper} from 'figtree';
+import {DBHelper} from '@stefanwerfling/figtree';
 import {closeTestDb, initTestDbDedicated} from './dbHarness.js';
 
 describe('DB migrations (integration)', () => {

@@ -7,7 +7,7 @@
  *
  * Runs against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import {DBHelper as FigtreeDBHelper} from 'figtree';
+import {DBHelper as FigtreeDBHelper} from '@stefanwerfling/figtree';
 import {DBEntitiesLoader, PluginManager} from 'flyingfish_core';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 import {closeTestDb, getTestDbName, initTestDbDedicated} from './dbHarness.js';

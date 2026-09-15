@@ -5,7 +5,7 @@
  * stub SshServer, so no Redis and no ssh2 connection are involved. The core
  * Config is seated with a writable log dir so the Logger stays off /var/log.
  */
-import {Config, Logger} from 'figtree';
+import {Config, Logger} from '@stefanwerfling/figtree';
 import {SchemaSshConfigChanged, SshConfigChangeAction} from 'flyingfish_schemas';
 import {SshConfigChangedChannel} from '../../src/inc/Ipc/SshConfigChangedChannel.js';
 import {SshServer} from '../../src/inc/Ssh/SshServer.js';

@@ -8,7 +8,7 @@
  */
 import express, {Express, Router} from 'express';
 import session from 'express-session';
-import {DefaultRoute} from 'figtree';
+import {DefaultRoute} from '@stefanwerfling/figtree';
 import {DefaultReturn, SchemaDefaultReturn, StatusCodes} from 'flyingfish_schemas';
 import request from 'supertest';
 

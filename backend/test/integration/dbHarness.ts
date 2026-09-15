@@ -18,7 +18,7 @@
  * dropped+recreated database (`<base>_<workerid>_<suffix>`).
  */
 import {DataSource} from 'typeorm';
-import {DBHelper} from 'figtree';
+import {DBHelper} from '@stefanwerfling/figtree';
 import {DBEntitiesLoader, DBService, PluginManager} from 'flyingfish_core';
 import {AddAcmeDnsTempRecord1788400000000} from '../../src/inc/Db/MariaDb/migrations/1788400000000-AddAcmeDnsTempRecord.js';
 import {AddPkiRevocation1788600000000} from '../../src/inc/Db/MariaDb/migrations/1788600000000-AddPkiRevocation.js';

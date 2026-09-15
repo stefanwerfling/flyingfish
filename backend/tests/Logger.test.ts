@@ -1,4 +1,4 @@
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {SchemaMatchers} from '../src/types/ExpectSchema';
 import 'jest-expect-message';
 

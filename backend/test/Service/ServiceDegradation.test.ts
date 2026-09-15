@@ -6,7 +6,7 @@
  * figtree ever changes this, the FF ServiceImportance classification silently
  * loses its meaning - this test guards it. Network/DB-free.
  */
-import {ServiceAbstract, ServiceManager} from 'figtree';
+import {ServiceAbstract, ServiceManager} from '@stefanwerfling/figtree';
 import {ServiceImportance} from 'figtree-schemas';
 
 /**

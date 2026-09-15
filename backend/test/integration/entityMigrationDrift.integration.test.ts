@@ -10,7 +10,7 @@
  *
  * Runs against a real MariaDB via the dbHarness - see the CI integration job.
  */
-import {DBHelper} from 'figtree';
+import {DBHelper} from '@stefanwerfling/figtree';
 import {closeTestDb, initTestDb} from './dbHarness.js';
 
 /**

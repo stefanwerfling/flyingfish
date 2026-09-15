@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {CoreConfigBridge} from './src/Application/Config/CoreConfigBridge';
 import {FlyingFishConfig} from './src/Application/Config/FlyingFishConfig';
 
