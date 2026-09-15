@@ -17,7 +17,7 @@ import {
     TLSA,
     TXT
 } from 'dns2ts';
-import {Logger, ServiceAbstract} from 'figtree';
+import {Logger, ServiceAbstract} from '@stefanwerfling/figtree';
 import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {
     AcmeDnsTempRecordServiceDB,

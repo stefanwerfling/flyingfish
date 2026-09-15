@@ -1,5 +1,5 @@
 import {DNS} from 'dns2ts';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 
 /**
  * IpBlacklistCheck

@@ -1,5 +1,5 @@
 import RedisStore from 'connect-redis';
-import {HttpServer, RedisClient} from 'figtree';
+import {HttpServer, RedisClient} from '@stefanwerfling/figtree';
 import {Store} from 'express-session';
 
 /**

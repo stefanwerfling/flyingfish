@@ -1,4 +1,4 @@
-import {ServiceJobAbstract} from 'figtree';
+import {ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {ServiceImportance} from 'figtree-schemas';
 import {HubRegistry} from './HubRegistry.js';
 

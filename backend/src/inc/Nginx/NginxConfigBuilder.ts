@@ -19,7 +19,7 @@ import {
     SshPortServiceDB,
     SslCertBundel
 } from 'flyingfish_core';
-import {FileHelper, Logger} from 'figtree';
+import {FileHelper, Logger} from '@stefanwerfling/figtree';
 import {
     NginxHttpVariableContextType,
     NginxListenCategory,

@@ -1,4 +1,4 @@
-import {Config as ConfigCore} from 'figtree';
+import {Config as ConfigCore} from '@stefanwerfling/figtree';
 import path from 'path';
 import process from 'process';
 import {FlyingFishArgs} from '../Env/Args.js';

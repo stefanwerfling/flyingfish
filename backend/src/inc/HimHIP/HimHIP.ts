@@ -1,4 +1,4 @@
-import {RedisChannel, Logger} from 'figtree';
+import {RedisChannel, Logger} from '@stefanwerfling/figtree';
 import {RedisChannels} from 'flyingfish_core';
 import {HimHIPData, SchemaHimHIPData} from 'flyingfish_schemas';
 

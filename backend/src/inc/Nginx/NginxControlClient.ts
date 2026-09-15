@@ -1,4 +1,4 @@
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 
 /**
  * Header carrying the shared nginx control secret. Must match the nginx control

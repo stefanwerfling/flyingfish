@@ -1,5 +1,5 @@
 import {Response, Router} from 'express';
-import {DefaultRoute, Logger} from 'figtree';
+import {DefaultRoute, Logger} from '@stefanwerfling/figtree';
 import {DefaultHandlerReturn, HandlerResultType} from 'figtree-schemas';
 import {
     IpBlacklistServiceDB,

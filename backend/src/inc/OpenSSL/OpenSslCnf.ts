@@ -1,4 +1,4 @@
-import {FileHelper} from 'figtree';
+import {FileHelper} from '@stefanwerfling/figtree';
 import fs from 'fs/promises';
 
 /**

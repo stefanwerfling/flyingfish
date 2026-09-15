@@ -1,5 +1,5 @@
 import {DataSource, DeleteResult, EntityTarget, Repository} from 'typeorm';
-import {DBHelper} from 'figtree';
+import {DBHelper} from '@stefanwerfling/figtree';
 import {DBBaseEntityId} from './DBBaseEntityId.js';
 
 /**

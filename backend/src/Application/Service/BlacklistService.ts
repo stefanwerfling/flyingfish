@@ -1,4 +1,4 @@
-import {DateHelper, Logger, ServiceJobAbstract} from 'figtree';
+import {DateHelper, Logger, ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {
     IpBlacklistCategoryDB,
     IpBlacklistCategoryServiceDB,

@@ -1,4 +1,4 @@
-import {DBSetupHook} from 'figtree';
+import {DBSetupHook} from '@stefanwerfling/figtree';
 import {DBSetup} from '../../../inc/Db/MariaDb/DBSetup.js';
 
 /**

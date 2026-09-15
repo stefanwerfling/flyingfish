@@ -1,4 +1,4 @@
-import {ServiceJobAbstract, Logger} from 'figtree';
+import {ServiceJobAbstract, Logger} from '@stefanwerfling/figtree';
 import {GatewayIdentifierServiceDB, NatPortServiceDB, NginxListenServiceDB} from 'flyingfish_core';
 import {NatStatus} from 'flyingfish_schemas';
 import Ping from 'ping';

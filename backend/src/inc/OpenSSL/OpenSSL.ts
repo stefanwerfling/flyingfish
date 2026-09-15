@@ -1,5 +1,5 @@
 import {spawn} from 'child_process';
-import {FileHelper, Logger} from 'figtree';
+import {FileHelper, Logger} from '@stefanwerfling/figtree';
 import {SimpleProcessAwait} from 'flyingfish_core';
 
 /**

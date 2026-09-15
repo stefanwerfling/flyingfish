@@ -1,5 +1,5 @@
 import {scheduleJob} from 'node-schedule';
-import {Args, Logger, RedisClient, RedisSubscribe} from 'figtree';
+import {Args, Logger, RedisClient, RedisSubscribe} from '@stefanwerfling/figtree';
 import {
     PkiBootstrapSocketClient,
     PkiCaPurpose,

@@ -59,7 +59,7 @@
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "fast-xml-parser": "^5.0.8",
-    "figtree": "git+https://github.com/stefanwerfling/figtree.git#7fc89a42704acadcd59bb9484f682179647c7415",
+    "@stefanwerfling/figtree": "git+https://github.com/stefanwerfling/figtree.git",
     "figtree-schemas": "git+https://github.com/stefanwerfling/figtree-schemas.git",
     "flyingfish_core": "file:../core",
     "flyingfish_plugin_letsencrypt": "file:../plugins/letsencrypt",

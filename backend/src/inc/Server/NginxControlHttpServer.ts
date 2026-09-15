@@ -1,4 +1,4 @@
-import {USHttpServer, USHttpServerOptions} from 'figtree';
+import {USHttpServer, USHttpServerOptions} from '@stefanwerfling/figtree';
 import {NGINX_CONTROL_UNIX_SOCKET_NAME} from 'flyingfish_core';
 
 import {AddressAccess as NjsAddressAccessController} from '../../Routes/Njs/AddressAccess.js';

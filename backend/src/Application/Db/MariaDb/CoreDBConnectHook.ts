@@ -1,4 +1,4 @@
-import {DBSetupHook} from 'figtree';
+import {DBSetupHook} from '@stefanwerfling/figtree';
 import {DBService} from 'flyingfish_core';
 
 /**

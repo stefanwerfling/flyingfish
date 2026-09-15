@@ -1,4 +1,4 @@
-import {ServiceJobAbstract} from 'figtree';
+import {ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {NginxListenServiceDB} from 'flyingfish_core';
 import {NginxListenCategory, NginxListenTypes} from 'flyingfish_schemas';
 

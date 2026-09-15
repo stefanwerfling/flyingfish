@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import {BaseHttpServer} from 'figtree';
+import {BaseHttpServer} from '@stefanwerfling/figtree';
 import helmet from 'helmet';
 
 /**

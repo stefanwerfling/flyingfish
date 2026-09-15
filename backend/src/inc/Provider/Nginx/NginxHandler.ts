@@ -1,4 +1,4 @@
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import got from 'got';
 import {NginxStatus, NginxStatusResult} from '../../Nginx/NginxStatus.js';
 import {NginxConfigBuilder} from '../../Nginx/NginxConfigBuilder.js';

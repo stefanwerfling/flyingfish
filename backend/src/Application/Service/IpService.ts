@@ -1,4 +1,4 @@
-import {ServiceJobAbstract, Logger} from 'figtree';
+import {ServiceJobAbstract, Logger} from '@stefanwerfling/figtree';
 import {IpBlacklist, IpBlacklistCheck} from '../../inc/Analysis/Ip/IpBlacklist.js';
 import {HowIsMyPublicIpService} from './HowIsMyPublicIpService.js';
 

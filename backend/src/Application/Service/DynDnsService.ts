@@ -1,5 +1,5 @@
 import {A, DNS, PacketTypes} from 'dns2ts';
-import {DateHelper, Logger, ServiceJobAbstract} from 'figtree';
+import {DateHelper, Logger, ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {
     DomainRecordServiceDB, DomainServiceDB, DynDnsClientDB,
     DynDnsClientDomainServiceDB,

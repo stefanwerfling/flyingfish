@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import {DefaultRouteCheckUserLogin} from 'figtree';
+import {DefaultRouteCheckUserLogin} from '@stefanwerfling/figtree';
 import {DefaultReturn, SchemaRequestData, StatusCodes} from 'flyingfish_schemas';
 
 /**

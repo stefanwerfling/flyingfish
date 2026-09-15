@@ -1,4 +1,4 @@
-import {Args, DBHelper, Logger, RedisClient, RedisSubscribe} from 'figtree';
+import {Args, DBHelper, Logger, RedisClient, RedisSubscribe} from '@stefanwerfling/figtree';
 import {
     DBService,
     PkiBootstrapSocketClient,

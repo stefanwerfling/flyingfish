@@ -1,4 +1,4 @@
-import {PluginManager} from 'figtree';
+import {PluginManager} from '@stefanwerfling/figtree';
 import {AcmeDnsTempRecord} from './Entity/AcmeDnsTempRecord.js';
 import {CaCertificate} from './Entity/CaCertificate.js';
 import {Credential} from './Entity/Credential.js';

@@ -1,4 +1,4 @@
-import {ServiceAbstract} from 'figtree';
+import {ServiceAbstract} from '@stefanwerfling/figtree';
 import {ServiceStatus} from 'figtree-schemas';
 import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {InfluxDbHelper} from '../../inc/Db/InfluxDb/InfluxDbHelper.js';

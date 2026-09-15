@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {PkiHubTrust} from 'flyingfish_core';
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;

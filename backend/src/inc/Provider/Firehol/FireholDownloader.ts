@@ -1,4 +1,4 @@
-import {FileHelper, Logger} from 'figtree';
+import {FileHelper, Logger} from '@stefanwerfling/figtree';
 import fs, {createWriteStream} from 'fs';
 import got from 'got';
 import * as stream from 'stream';

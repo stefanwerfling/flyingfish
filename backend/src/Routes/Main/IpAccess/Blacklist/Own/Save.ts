@@ -1,4 +1,4 @@
-import {DateHelper} from 'figtree';
+import {DateHelper} from '@stefanwerfling/figtree';
 import {IpBlacklistDB, IpBlacklistServiceDB} from 'flyingfish_core';
 import {IpAccessBlackListOwnSaveRequest, IpAccessBlackListOwnSaveResponse, StatusCodes} from 'flyingfish_schemas';
 

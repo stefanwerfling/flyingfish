@@ -1,4 +1,4 @@
-import {RedisClient, Logger} from 'figtree';
+import {RedisClient, Logger} from '@stefanwerfling/figtree';
 import {RedisChannels} from 'flyingfish_core';
 import {SchemaSshConfigChanged, SshConfigChangeAction, SshConfigChanged} from 'flyingfish_schemas';
 

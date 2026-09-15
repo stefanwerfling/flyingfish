@@ -1,4 +1,4 @@
-import {ServiceJobAbstract, Logger} from 'figtree';
+import {ServiceJobAbstract, Logger} from '@stefanwerfling/figtree';
 import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {HowIsMyPublicIpProviders} from '../../inc/Provider/HowIsMyPublicIpProviders.js';
 import {DynDnsService} from './DynDnsService.js';

@@ -1,4 +1,4 @@
-import {APluginEvent} from 'figtree';
+import {APluginEvent} from '@stefanwerfling/figtree';
 import {EntitySchema} from 'typeorm';
 
 /**

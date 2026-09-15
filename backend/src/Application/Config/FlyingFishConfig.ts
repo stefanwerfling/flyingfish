@@ -1,4 +1,4 @@
-import {Config, ConfigBackend} from 'figtree';
+import {Config, ConfigBackend} from '@stefanwerfling/figtree';
 import {BackendConfigOptions, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaBackendConfigOptions} from 'flyingfish_schemas';
 import path from 'path';
 import * as process from 'process';

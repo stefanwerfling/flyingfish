@@ -1,4 +1,4 @@
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {ServerChannel, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
 import {SshClient} from './SshClient.js';
 

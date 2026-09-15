@@ -1,7 +1,7 @@
 /**
  * AbuseipdbReport
  */
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import got from 'got';
 
 /**

@@ -1,4 +1,4 @@
-import {ServiceAbstract, Logger} from 'figtree';
+import {ServiceAbstract, Logger} from '@stefanwerfling/figtree';
 import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {resolveNginxControlUnixSocketPath} from 'flyingfish_core';
 import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';

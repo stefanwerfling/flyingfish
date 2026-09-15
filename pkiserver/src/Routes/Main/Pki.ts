@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {
     DefaultRoute,
     IssuedCertificateDB,

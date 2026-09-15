@@ -1,4 +1,4 @@
-import {Config as ConfigCore} from 'figtree';
+import {Config as ConfigCore} from '@stefanwerfling/figtree';
 import {ConfigOptionsSshServer, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaConfigOptionsSshServer} from 'flyingfish_schemas';
 import path from 'path';
 import process from 'process';

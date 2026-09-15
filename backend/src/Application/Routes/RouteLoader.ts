@@ -1,4 +1,4 @@
-import {HttpRouteLoader, IDefaultRoute} from 'figtree';
+import {HttpRouteLoader, IDefaultRoute} from '@stefanwerfling/figtree';
 import {Credential as CredentialController} from '../../Routes/Main/Credential.js';
 import {Dashboard as DashboardController} from '../../Routes/Main/Dashboard.js';
 import {Domain as DomainController} from '../../Routes/Main/Domain.js';

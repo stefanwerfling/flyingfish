@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import {DBHelper, Logger} from 'figtree';
+import {DBHelper, Logger} from '@stefanwerfling/figtree';
 import {SshPortDB, SshUserDB} from 'flyingfish_core';
 import {AuthContext, ClientInfo, Connection, ServerChannel, Session, TcpipBindInfo, TcpipRequestInfo} from 'ssh2';
 import {ISshClientForward} from './SshClientForward.js';

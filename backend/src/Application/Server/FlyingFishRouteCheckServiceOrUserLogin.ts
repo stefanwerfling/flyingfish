@@ -1,6 +1,6 @@
 import {Request, Response} from 'express';
 import {TLSSocket} from 'tls';
-import {DefaultRouteCheckUserLogin} from 'figtree';
+import {DefaultRouteCheckUserLogin} from '@stefanwerfling/figtree';
 import {ServiceAuth} from 'flyingfish_core';
 import {FlyingFishConfig} from '../Config/FlyingFishConfig.js';
 import {FlyingFishRouteCheckUserLogin} from './FlyingFishRouteCheckUserLogin.js';

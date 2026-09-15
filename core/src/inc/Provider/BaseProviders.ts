@@ -1,5 +1,5 @@
 import {ProviderEntry} from 'flyingfish_schemas';
-import {PluginManager} from 'figtree';
+import {PluginManager} from '@stefanwerfling/figtree';
 import {AProviderOnLoadEvent} from './AProviderOnLoadEvent.js';
 import {IProvider} from './IProvider.js';
 import {ProviderType} from './ProviderType.js';

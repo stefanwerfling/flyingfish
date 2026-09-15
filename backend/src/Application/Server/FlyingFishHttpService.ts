@@ -1,4 +1,4 @@
-import {BaseHttpServerOptions, HttpServer, HttpService} from 'figtree';
+import {BaseHttpServerOptions, HttpServer, HttpService} from '@stefanwerfling/figtree';
 import {FlyingFishHttpServer} from './FlyingFishHttpServer.js';
 import {PkiTrust} from '../Hub/PkiTrust.js';
 

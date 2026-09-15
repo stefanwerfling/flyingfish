@@ -1,5 +1,5 @@
 import {spawn} from 'child_process';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 
 /**
  * IpRouteGet

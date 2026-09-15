@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {Request, Response, Router} from 'express';
-import {DateHelper, Logger} from 'figtree';
+import {DateHelper, Logger} from '@stefanwerfling/figtree';
 import {
     DefaultRoute,
     DomainDB, DomainRecordServiceDB,

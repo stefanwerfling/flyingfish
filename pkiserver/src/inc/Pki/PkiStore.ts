@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {
     CaCertificateDB,
     EnrollmentRequestDB,

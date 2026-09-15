@@ -1,4 +1,4 @@
-import {DateHelper} from 'figtree';
+import {DateHelper} from '@stefanwerfling/figtree';
 import {IpWhitelistDB, IpWhitelistServiceDB} from 'flyingfish_core';
 import {IpAccessWhiteSaveRequest, IpAccessWhiteSaveResponse, StatusCodes} from 'flyingfish_schemas';
 

@@ -202,7 +202,7 @@ export {SimpleProcessAwait} from './inc/Utils/SimpleProcessAwait.js';
 // PluginSystem
 // Plugin base classes now live in figtree; flyingfish_core re-exports them as the
 // plugin SDK surface so plugin authors keep a single import (Step 9.9.1).
-export {APlugin, APluginEvent, PluginInformation, PluginManager} from 'figtree';
+export {APlugin, APluginEvent, PluginInformation, PluginManager} from '@stefanwerfling/figtree';
 // PluginServiceNames stays here — it is a FlyingFish domain enum with no figtree equivalent.
 export {PluginServiceNames} from './inc/PluginSystem/PluginServiceNames.js';
 

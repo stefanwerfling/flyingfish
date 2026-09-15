@@ -42,7 +42,7 @@
     "ets": "git+https://github.com/OpenSourcePKG/ets.git",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
-    "figtree": "git+https://github.com/stefanwerfling/figtree.git#7fc89a42704acadcd59bb9484f682179647c7415",
+    "@stefanwerfling/figtree": "git+https://github.com/stefanwerfling/figtree.git",
     "flyingfish_schemas": "file:../schemas",
     "redis": "^4.7.0",
     "reflect-metadata": "^0.2.2",

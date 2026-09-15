@@ -1,5 +1,5 @@
 import {Ets} from 'ets';
-import {DirHelper, FileHelper, Logger, ServiceJobAbstract} from 'figtree';
+import {DirHelper, FileHelper, Logger, ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {DomainServiceDB, NginxHttpDB, NginxHttpServiceDB} from 'flyingfish_core';
 import {DomainCheckReachability, SchemaDomainCheckReachability} from 'flyingfish_schemas';
 import fs from 'fs/promises';

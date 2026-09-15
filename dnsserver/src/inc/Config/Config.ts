@@ -1,4 +1,4 @@
-import {Config as ConfigCore} from 'figtree';
+import {Config as ConfigCore} from '@stefanwerfling/figtree';
 import {ConfigOptionsDnsServer, ENV_DUTY_DB, ENV_OPTIONAL_DB, SchemaConfigOptionsDnsServer} from 'flyingfish_schemas';
 import path from 'path';
 import process from 'process';

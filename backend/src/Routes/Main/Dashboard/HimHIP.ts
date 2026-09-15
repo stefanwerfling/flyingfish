@@ -1,4 +1,4 @@
-import {RedisClient} from 'figtree';
+import {RedisClient} from '@stefanwerfling/figtree';
 import {RedisChannels} from 'flyingfish_core';
 import {DefaultReturn, HimHIPUpdate, StatusCodes} from 'flyingfish_schemas';
 

@@ -1,4 +1,4 @@
-import {DBLoader as CoreDBLoader, DBLoaderType} from 'figtree';
+import {DBLoader as CoreDBLoader, DBLoaderType} from '@stefanwerfling/figtree';
 import {DBEntitiesLoader} from 'flyingfish_core';
 import {AddAcmeDnsTempRecord1788400000000} from '../../../inc/Db/MariaDb/migrations/1788400000000-AddAcmeDnsTempRecord.js';
 import {AddPkiRevocation1788600000000} from '../../../inc/Db/MariaDb/migrations/1788600000000-AddPkiRevocation.js';

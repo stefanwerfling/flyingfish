@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {CredentialUserServiceDB} from 'flyingfish_core';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 
 /**
  * CredentialDatabase

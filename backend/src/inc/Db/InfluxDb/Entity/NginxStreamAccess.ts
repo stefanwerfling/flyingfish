@@ -1,5 +1,5 @@
 import {flux, Point} from '@influxdata/influxdb-client';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {JsonLogAccessStream} from '../../../Nginx/NginxLogFormatJson.js';
 import {InfluxDbHelper} from '../InfluxDbHelper.js';
 import moment from 'moment';

@@ -1,4 +1,4 @@
-import {Args, DBHelper, Logger} from 'figtree';
+import {Args, DBHelper, Logger} from '@stefanwerfling/figtree';
 import {
     DBService,
     DomainDB,

@@ -1,5 +1,5 @@
 import AdmZip from 'adm-zip';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {unlink} from 'fs/promises';
 import path from 'path';
 import {IpSetParser} from '../../Utils/IpSetParser.js';

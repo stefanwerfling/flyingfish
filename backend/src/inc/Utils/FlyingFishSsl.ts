@@ -1,4 +1,4 @@
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import * as Path from 'path';
 import {OpenSSL} from '../OpenSSL/OpenSSL.js';
 import {OpenSslCnf} from '../OpenSSL/OpenSslCnf.js';

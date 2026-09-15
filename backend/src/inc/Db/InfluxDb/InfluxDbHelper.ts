@@ -1,5 +1,5 @@
 import {HttpError, InfluxDB, ParameterizedQuery, Point, QueryApi, WriteApi} from '@influxdata/influxdb-client';
-import {Logger} from 'figtree';
+import {Logger} from '@stefanwerfling/figtree';
 import {hostname} from 'node:os';
 
 /**

@@ -1,4 +1,4 @@
-import {BaseHttpServer, BaseHttpServerOptions} from 'figtree';
+import {BaseHttpServer, BaseHttpServerOptions} from '@stefanwerfling/figtree';
 import {DefaultRoute} from 'flyingfish_core';
 
 /**

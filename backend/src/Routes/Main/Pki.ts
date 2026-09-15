@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import {PkiCaTreeResponse, SchemaPkiCaTreeResponse, StatusCodes} from 'flyingfish_schemas';
-import {DefaultRoute} from 'figtree';
+import {DefaultRoute} from '@stefanwerfling/figtree';
 import {CaCertificateDB} from 'flyingfish_core';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 

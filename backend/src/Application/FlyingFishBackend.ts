@@ -1,4 +1,4 @@
-import {BackendApp, BaseHttpServer, MariaDBService, PluginService, RedisDBService} from 'figtree';
+import {BackendApp, BaseHttpServer, MariaDBService, PluginService, RedisDBService} from '@stefanwerfling/figtree';
 import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
 import {PluginServiceNames} from 'flyingfish_core';
 import os from 'os';
