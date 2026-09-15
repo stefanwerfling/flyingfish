@@ -44,6 +44,7 @@ export class PkiTrust {
         if (pkiUrl) {
             try {
                 await trust.refreshRevocation();
+                await trust.refreshCrl();
             } catch (error) {
                 Logger.getLogger().warn('PkiTrust: initial revocation refresh failed', error);
             }
@@ -52,6 +53,9 @@ export class PkiTrust {
                 PkiTrust._timer = setInterval((): void => {
                     trust.refreshRevocation().catch((error: unknown): void => {
                         Logger.getLogger().warn('PkiTrust: periodic revocation refresh failed', error);
+                    });
+                    trust.refreshCrl().catch((error: unknown): void => {
+                        Logger.getLogger().warn('PkiTrust: periodic CRL refresh failed', error);
                     });
                 }, REFRESH_INTERVAL_MS);
 

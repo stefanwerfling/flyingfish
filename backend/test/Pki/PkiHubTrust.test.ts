@@ -56,4 +56,22 @@ describe('PkiHubTrust (v2, 9.4 mTLS / 9.4.4-D)', () => {
 
         expect(await trust.authenticate(leaf)).toBeNull();
     });
+
+    test('authenticate denies via the CRL fallback even with an empty allowlist (9.4.4-E)', async() => {
+        const crl = await service.signCrl(PkiCaPurpose.service, [{certificate: leaf, revocationDate: new Date(Date.UTC(2026, 0, 2))}]);
+        const trust = new PkiHubTrust('http://pki:5334');
+        trust.load(caChain, []);
+        trust.loadCrl(PkiCaPurpose.service, crl);
+
+        expect(await trust.authenticate(leaf)).toBeNull();
+    });
+
+    test('authenticate still accepts when the CRL does not list the cert', async() => {
+        const crl = await service.signCrl(PkiCaPurpose.service, []);
+        const trust = new PkiHubTrust('http://pki:5334');
+        trust.load(caChain, []);
+        trust.loadCrl(PkiCaPurpose.service, crl);
+
+        expect((await trust.authenticate(leaf))?.nodeUid).toBe(nodeUid);
+    });
 });
