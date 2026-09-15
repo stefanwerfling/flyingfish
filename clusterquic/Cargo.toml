@@ -1,0 +1,25 @@
+[package]
+name = "clusterquic"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "FlyingFish cluster QUIC transport — native binding (quinn + rustls) behind IClusterPeerTransport"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", default-features = false, features = ["napi9"] }
+napi-derive = "2"
+quinn = { version = "0.11", default-features = false, features = ["runtime-tokio", "rustls-ring", "log"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+rcgen = { version = "0.13", default-features = false, features = ["pem", "ring"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+anyhow = "1"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
