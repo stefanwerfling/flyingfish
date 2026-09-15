@@ -39,10 +39,11 @@ export class ClusterPeerDirectory {
      * @param nodeUid - the peer's stable nodeUid
      * @param host - the peer transport host
      * @param port - the peer transport port
+     * @param overlayIp - the peer's overlay IP inside the mesh (datapath nodes)
      * @param now - the current time (epoch ms)
      */
-    public announce(nodeUid: string, host: string, port: number, now: number = Date.now()): void {
-        this._peers.set(nodeUid, {nodeUid: nodeUid, host: host, port: port, announcedAt: now});
+    public announce(nodeUid: string, host: string, port: number, overlayIp?: string, now: number = Date.now()): void {
+        this._peers.set(nodeUid, {nodeUid: nodeUid, host: host, port: port, overlayIp: overlayIp, announcedAt: now});
     }
 
     /**
@@ -56,7 +57,7 @@ export class ClusterPeerDirectory {
             if (now - record.announcedAt > this._ttlMs) {
                 this._peers.delete(nodeUid);
             } else {
-                fresh.push({nodeUid: record.nodeUid, host: record.host, port: record.port});
+                fresh.push({nodeUid: record.nodeUid, host: record.host, port: record.port, overlayIp: record.overlayIp});
             }
         }
 

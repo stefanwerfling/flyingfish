@@ -133,7 +133,8 @@ export class Registry extends DefaultRoute {
                 HubRegistryService.getInstance().getClusterPeers().announce(
                     data.body!.nodeUid,
                     data.body!.host,
-                    data.body!.port
+                    data.body!.port,
+                    data.body!.overlayIp
                 );
 
                 return {statusCode: StatusCodes.OK};

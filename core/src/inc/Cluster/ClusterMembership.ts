@@ -2,13 +2,14 @@ import {ClusterPeerChannel} from './ClusterPeerChannel.js';
 import {IClusterPeerTransport} from './ClusterPeerTransport.js';
 
 /**
- * One discoverable cluster peer: its stable nodeUid and where to reach its peer
- * transport.
+ * One discoverable cluster peer: its stable nodeUid, where to reach its peer
+ * transport, and (for datapath nodes) its overlay IP inside the mesh.
  */
 export type ClusterPeerInfo = {
     nodeUid: string;
     host: string;
     port: number;
+    overlayIp?: string;
 };
 
 /**

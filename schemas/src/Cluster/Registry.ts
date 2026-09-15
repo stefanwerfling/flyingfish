@@ -9,7 +9,10 @@ import {SchemaDefaultReturn} from '../Core/Server/Routes/DefaultReturn.js';
 export const SchemaClusterPeer = Vts.object({
     nodeUid: Vts.string(),
     host: Vts.string(),
-    port: Vts.number()
+    port: Vts.number(),
+    // The node's overlay IP inside the mesh (datapath nodes only); the route table
+    // maps it to the nodeUid so packets are forwarded to the owning peer.
+    overlayIp: Vts.optional(Vts.string())
 });
 
 /**

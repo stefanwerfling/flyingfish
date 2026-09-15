@@ -148,6 +148,23 @@ describe('ClusterRouteTable', () => {
         routes.clear();
         expect(routes.size()).toBe(0);
     });
+
+    test('applyRoster rebuilds routes from peers with an overlay IP', () => {
+        const routes = new ClusterRouteTable();
+        routes.set('10.42.0.9', 'stale-node');
+
+        routes.applyRoster([
+            {nodeUid: 'node-b', overlayIp: '10.42.0.2'},
+            {nodeUid: 'node-c', overlayIp: '10.42.0.3'},
+            {nodeUid: 'node-no-overlay'}
+        ]);
+
+        expect(routes.lookup('10.42.0.2')).toBe('node-b');
+        expect(routes.lookup('10.42.0.3')).toBe('node-c');
+        // the peer without an overlay IP contributes no route, and the stale route is gone
+        expect(routes.size()).toBe(2);
+        expect(routes.lookup('10.42.0.9')).toBeUndefined();
+    });
 });
 
 describe('ClusterDatapath (routing against a fake TUN)', () => {

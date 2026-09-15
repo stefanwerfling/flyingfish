@@ -55,15 +55,16 @@ export class HubClusterPeerRoster implements ClusterPeerRoster {
      * Announce this node's peer-transport endpoint to the Hub.
      * @param host - the peer transport host other nodes reach this node at
      * @param port - the peer transport port
+     * @param overlayIp - this node's overlay IP inside the mesh (datapath nodes)
      */
-    public async announce(host: string, port: number): Promise<void> {
+    public async announce(host: string, port: number, overlayIp?: string): Promise<void> {
         await this._fetch(`${this._hubUrl}/json/registry/cluster/announce`, {
             method: 'POST',
             headers: {
                 'content-type': 'application/json',
                 [HEADER_REGISTRY_SECRET]: this._secret
             },
-            body: JSON.stringify({nodeUid: this._selfNodeUid, host: host, port: port})
+            body: JSON.stringify({nodeUid: this._selfNodeUid, host: host, port: port, overlayIp: overlayIp})
         });
     }
 

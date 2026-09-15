@@ -36,6 +36,22 @@ export class ClusterRouteTable {
     }
 
     /**
+     * Rebuild the whole table from a peer roster: every peer that has an overlay IP
+     * becomes a route to its nodeUid, and any route no longer in the roster is
+     * dropped. The roster is the source of truth, so this is called after each sync.
+     * @param peers - the current peer roster
+     */
+    public applyRoster(peers: readonly {nodeUid: string; overlayIp?: string;}[]): void {
+        this._nodeByIp.clear();
+
+        for (const peer of peers) {
+            if (peer.overlayIp !== undefined && peer.overlayIp.length > 0) {
+                this._nodeByIp.set(peer.overlayIp, peer.nodeUid);
+            }
+        }
+    }
+
+    /**
      * The number of routes currently held.
      */
     public size(): number {
