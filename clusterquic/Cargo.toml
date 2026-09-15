@@ -14,8 +14,10 @@ napi = { version = "2", default-features = false, features = ["napi9"] }
 napi-derive = "2"
 quinn = { version = "0.11", default-features = false, features = ["runtime-tokio", "rustls-ring", "log"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+rustls-pemfile = "2"
 rcgen = { version = "0.13", default-features = false, features = ["pem", "ring"] }
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+pem = "3"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "net", "sync", "io-util"] }
 anyhow = "1"
 
 [build-dependencies]

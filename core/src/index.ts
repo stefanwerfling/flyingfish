@@ -112,6 +112,13 @@ export {ClusterPeerAuthenticator} from './inc/Cluster/ClusterPeerAuthenticator.j
 export {ClusterTlsPeerTransport} from './inc/Cluster/ClusterTlsPeerTransport.js';
 export {ClusterWssPeerTransport} from './inc/Cluster/ClusterWssPeerTransport.js';
 export {
+    QuicNativePeer,
+    QuicNativeTransport,
+    QuicNativeBinding
+} from './inc/Cluster/ClusterQuicNativeBinding.js';
+export {QuicStreamDuplex} from './inc/Cluster/QuicStreamDuplex.js';
+export {ClusterQuicPeerTransport} from './inc/Cluster/ClusterQuicPeerTransport.js';
+export {
     ClusterPeerInfo,
     ClusterPeerRoster,
     ClusterMembership
