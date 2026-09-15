@@ -39,6 +39,8 @@ export class ClusterMembership {
 
     private readonly _peers: Map<string, ClusterPeerChannel> = new Map();
 
+    private _peerListener: ((channel: ClusterPeerChannel) => void) | null = null;
+
     /**
      * @param transport - this node's peer transport
      * @param selfNodeUid - this node's own cluster nodeUid
@@ -77,6 +79,16 @@ export class ClusterMembership {
                 // best-effort: an unreachable peer is retried on the next sync
             }
         }));
+    }
+
+    /**
+     * Observe each newly-connected peer channel (inbound or outbound). Set this
+     * before {@link ClusterMembership.start} so no peer is missed; the L3 datapath
+     * ({@link ClusterDatapath}) uses it to attach its inbound message handler.
+     * @param listener - called with each accepted peer channel
+     */
+    public onPeer(listener: (channel: ClusterPeerChannel) => void): void {
+        this._peerListener = listener;
     }
 
     /**
@@ -128,6 +140,10 @@ export class ClusterMembership {
                 this._peers.delete(nodeUid);
             }
         });
+
+        if (this._peerListener !== null) {
+            this._peerListener(channel);
+        }
     }
 
 }

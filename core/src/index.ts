@@ -121,6 +121,14 @@ export {
     HubClusterPeerRosterOptions,
     HubClusterPeerRoster
 } from './inc/Cluster/HubClusterPeerRoster.js';
+export {Ipv4Header, Ipv4Packet} from './inc/Cluster/Ipv4Packet.js';
+export {ClusterRouteTable} from './inc/Cluster/ClusterRouteTable.js';
+export {IClusterTunDevice} from './inc/Cluster/ClusterTunDevice.js';
+export {
+    ClusterChannelProvider,
+    ClusterDatapathStats,
+    ClusterDatapath
+} from './inc/Cluster/ClusterDatapath.js';
 
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
