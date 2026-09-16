@@ -175,6 +175,10 @@ export {
     ClusterControl
 } from './inc/Cluster/ClusterControl.js';
 export {
+    ClusterControlMethodHandler,
+    ClusterControlRequestRouter
+} from './inc/Cluster/ClusterControlRequestRouter.js';
+export {
     ClusterGossipStateEntry,
     HubClusterGossipSyncOptions,
     HubClusterGossipSync

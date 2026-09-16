@@ -1,5 +1,7 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
+    ClusterControl,
+    ClusterControlRequestRouter,
     ClusterGossip,
     ClusterGossipStore,
     ClusterMembership,
@@ -219,13 +221,25 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             const gossipStore = new ClusterGossipStore(enrolledIdentity.nodeUid);
             const gossip = new ClusterGossip(gossipStore);
 
-            // Wire gossip onto every peer (set before start so none is missed).
+            // Cluster control (Cluster/Mesh epic 9.5.12, A+C): the synchronous cross-node
+            // write path rides its own Control mux sub-channel. Inbound requests are
+            // routed by method to the registered write handlers (registered in a later
+            // sub-slice); node A enforces before calling, node B trusts the mesh peer.
+            const control = new ClusterControl();
+            const controlRouter = new ClusterControlRequestRouter();
+            control.onRequest(controlRouter.handle);
+
+            // Wire gossip + control onto every peer (set before start so none is missed).
             membership.onPeer((channel) => {
                 const nodeUid = channel.identity.nodeUid;
                 const mux = new ClusterPeerMux(channel);
 
                 gossip.addPeer(nodeUid, mux.channel(ClusterMuxKind.Gossip));
-                mux.onClose((): void => gossip.removePeer(nodeUid));
+                control.addPeer(nodeUid, mux.channel(ClusterMuxKind.Control));
+                mux.onClose((): void => {
+                    gossip.removePeer(nodeUid);
+                    control.removePeer(nodeUid);
+                });
             });
 
             const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
