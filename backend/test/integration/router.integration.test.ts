@@ -15,7 +15,9 @@ import {
     NatPolicyServiceDB,
     NetworkInterfaceDB,
     NetworkInterfaceServiceDB,
-    PluginManager
+    PluginManager,
+    WanLeaseDB,
+    WanLeaseServiceDB
 } from 'flyingfish_core';
 import {AddAcmeDnsTempRecord1788400000000} from '../../src/inc/Db/MariaDb/migrations/1788400000000-AddAcmeDnsTempRecord.js';
 import {AddDomainClusterPriority1788700000000} from '../../src/inc/Db/MariaDb/migrations/1788700000000-AddDomainClusterPriority.js';
@@ -23,6 +25,7 @@ import {AddPkiRevocation1788600000000} from '../../src/inc/Db/MariaDb/migrations
 import {AddPkiTables1788500000000} from '../../src/inc/Db/MariaDb/migrations/1788500000000-AddPkiTables.js';
 import {AddRbacTables1788800000000} from '../../src/inc/Db/MariaDb/migrations/1788800000000-AddRbacTables.js';
 import {AddRouterTables1788900000000} from '../../src/inc/Db/MariaDb/migrations/1788900000000-AddRouterTables.js';
+import {AddWanLease1789000000000} from '../../src/inc/Db/MariaDb/migrations/1789000000000-AddWanLease.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -40,7 +43,8 @@ const ALL_MIGRATIONS: (new () => MigrationInterface)[] = [
     AddPkiRevocation1788600000000,
     AddDomainClusterPriority1788700000000,
     AddRbacTables1788800000000,
-    AddRouterTables1788900000000
+    AddRouterTables1788900000000,
+    AddWanLease1789000000000
 ];
 
 const KNOWN_BENIGN = [
@@ -92,6 +96,10 @@ describe('Pi-router schema (integration, real MariaDB)', () => {
 
         const applied = (await dataSource.query('SELECT name FROM migrations')).map((row: {name: string;}) => row.name);
         expect(applied).toContain('AddRouterTables1788900000000');
+
+        const wanLeaseTable = await dataSource.query('SHOW TABLES LIKE \'wan_lease\'');
+        expect(wanLeaseTable.length).toBe(1);
+        expect(applied).toContain('AddWanLease1789000000000');
     });
 
     test('the router entities match the migration-built schema (no unexpected drift)', async() => {
@@ -161,5 +169,28 @@ describe('Pi-router schema (integration, real MariaDB)', () => {
         expect(savedDhcp?.enable).toBe(true);
         expect(savedDhcp?.range_end).toBe('192.168.1.200');
         expect(savedDhcp?.lease_time).toBe(3600);
+
+        // wan lease: singleton report, upserted (as ff-wan would report)
+        expect(await WanLeaseServiceDB.getInstance().get()).toBeNull();
+        const lease = new WanLeaseDB();
+        lease.interface = 'eth0';
+        lease.ipv4_address = '203.0.113.10';
+        lease.ipv4_prefix = 24;
+        lease.gateway = '203.0.113.1';
+        lease.dns_servers = '203.0.113.1,8.8.8.8';
+        lease.ipv6_prefix = '2003:dead:beef::/64';
+        lease.lease_seconds = 86400;
+        lease.obtained = 1000;
+        await WanLeaseServiceDB.getInstance().save(lease);
+
+        const savedLease = await WanLeaseServiceDB.getInstance().get();
+        expect(savedLease?.ipv4_address).toBe('203.0.113.10');
+        expect(savedLease?.ipv6_prefix).toBe('2003:dead:beef::/64');
+
+        // re-report keeps a single row
+        savedLease!.ipv4_address = '203.0.113.11';
+        await WanLeaseServiceDB.getInstance().save(savedLease!);
+        expect(await WanLeaseServiceDB.getInstance().countAll()).toBe(1);
+        expect((await WanLeaseServiceDB.getInstance().get())?.ipv4_address).toBe('203.0.113.11');
     });
 });

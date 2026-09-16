@@ -41,6 +41,7 @@ import {Settings} from './Entity/Settings.js';
 import {SshPort} from './Entity/SshPort.js';
 import {SshUser} from './Entity/SshUser.js';
 import {User} from './Entity/User.js';
+import {WanLease} from './Entity/WanLease.js';
 import {EntitySchema, MixedList} from 'typeorm';
 import {ADBTableLoaderOnLoadEvent} from './ADBTableLoaderOnLoadEvent.js';
 
@@ -97,7 +98,8 @@ export class DBEntitiesLoader {
             Settings,
             SshPort,
             SshUser,
-            User
+            User,
+            WanLease
         ];
 
         // load entities from plugin -----------------------------------------------------------------------------------

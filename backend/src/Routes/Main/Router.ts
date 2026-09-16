@@ -8,7 +8,9 @@ import {
     NatPolicyServiceDB,
     NetworkInterfaceDB,
     NetworkInterfaceServiceDB,
-    resolveNftablesRouterConfig
+    resolveNftablesRouterConfig,
+    WanLeaseDB,
+    WanLeaseServiceDB
 } from 'flyingfish_core';
 import {
     DefaultReturn,
@@ -21,6 +23,7 @@ import {
     SchemaRouterIdRequest,
     SchemaRouterNetfilterConfigResponse,
     SchemaRouterOverviewResponse,
+    SchemaWanLeaseReport,
     StatusCodes
 } from 'flyingfish_schemas';
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
@@ -46,6 +49,7 @@ export class Router extends DefaultRoute {
             async(): Promise<RouterOverviewResponse> => {
                 const natPolicy = await NatPolicyServiceDB.getInstance().get();
                 const dhcpConfig = await DhcpServerConfigServiceDB.getInstance().get();
+                const wanLease = await WanLeaseServiceDB.getInstance().get();
 
                 return {
                     statusCode: StatusCodes.OK,
@@ -81,7 +85,17 @@ export class Router extends DefaultRoute {
                         hostname: entry.hostname,
                         expires: entry.expires,
                         interface: entry.interface
-                    }))
+                    })),
+                    wanLease: wanLease === null ? null : {
+                        interface: wanLease.interface,
+                        ipv4_address: wanLease.ipv4_address,
+                        ipv4_prefix: wanLease.ipv4_prefix,
+                        gateway: wanLease.gateway,
+                        dns_servers: wanLease.dns_servers,
+                        ipv6_prefix: wanLease.ipv6_prefix,
+                        lease_seconds: wanLease.lease_seconds,
+                        obtained: wanLease.obtained
+                    }
                 };
             },
             {
@@ -165,6 +179,25 @@ export class Router extends DefaultRoute {
                 responseBodySchema: SchemaRouterNetfilterConfigResponse
             }
         );
+
+        // The ff-wan part reports the DHCP lease it obtained on the WAN. ServiceOrUserLogin
+        // (the part authenticates with the registry secret / mTLS). Singleton per node;
+        // `obtained` is stamped server-side.
+        this._post('/json/router/wan-lease', FlyingFishRouteCheckServiceOrUserLogin, async(_req, _res, data): Promise<DefaultReturn> => {
+            const body = data.body!;
+            const entity = await WanLeaseServiceDB.getInstance().get() ?? new WanLeaseDB();
+            entity.interface = body.interface;
+            entity.ipv4_address = body.ipv4_address ?? '';
+            entity.ipv4_prefix = body.ipv4_prefix ?? 0;
+            entity.gateway = body.gateway ?? '';
+            entity.dns_servers = body.dns_servers ?? '';
+            entity.ipv6_prefix = body.ipv6_prefix ?? '';
+            entity.lease_seconds = body.lease_seconds ?? 0;
+            entity.obtained = Math.floor(Date.now() / 1000);
+            await WanLeaseServiceDB.getInstance().save(entity);
+
+            return {statusCode: StatusCodes.OK};
+        }, {description: 'ff-wan reports the WAN DHCP lease', bodySchema: SchemaWanLeaseReport, responseBodySchema: SchemaDefaultReturn});
 
         return super.getExpressRouter();
     }

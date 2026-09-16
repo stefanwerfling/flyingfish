@@ -80,6 +80,44 @@ export const SchemaDhcpLeaseEntry = Vts.object({
 export type DhcpLeaseEntry = ExtractSchemaResultType<typeof SchemaDhcpLeaseEntry>;
 
 /**
+ * The WAN DHCP lease as shown in the overview (read-only).
+ */
+export const SchemaWanLeaseEntry = Vts.object({
+    interface: Vts.string(),
+    ipv4_address: Vts.string(),
+    ipv4_prefix: Vts.number(),
+    gateway: Vts.string(),
+    dns_servers: Vts.string(),
+    ipv6_prefix: Vts.string(),
+    lease_seconds: Vts.number(),
+    obtained: Vts.number()
+});
+
+/**
+ * WanLeaseEntry
+ */
+export type WanLeaseEntry = ExtractSchemaResultType<typeof SchemaWanLeaseEntry>;
+
+/**
+ * The WAN lease report `ff-wan` posts after (re)obtaining the DHCP lease. `obtained` is
+ * stamped server-side.
+ */
+export const SchemaWanLeaseReport = Vts.object({
+    interface: Vts.string(),
+    ipv4_address: Vts.optional(Vts.string()),
+    ipv4_prefix: Vts.optional(Vts.number()),
+    gateway: Vts.optional(Vts.string()),
+    dns_servers: Vts.optional(Vts.string()),
+    ipv6_prefix: Vts.optional(Vts.string()),
+    lease_seconds: Vts.optional(Vts.number())
+});
+
+/**
+ * WanLeaseReport
+ */
+export type WanLeaseReport = ExtractSchemaResultType<typeof SchemaWanLeaseReport>;
+
+/**
  * An int-id request (delete an interface).
  */
 export const SchemaRouterIdRequest = Vts.object({
@@ -99,7 +137,8 @@ export const SchemaRouterOverviewResponse = SchemaDefaultReturn.extend({
     interfaces: Vts.array(SchemaNetworkInterfaceEntry),
     natPolicy: Vts.or([SchemaNatPolicyEntry, Vts.null()]),
     dhcpConfig: Vts.or([SchemaDhcpServerConfigEntry, Vts.null()]),
-    leases: Vts.array(SchemaDhcpLeaseEntry)
+    leases: Vts.array(SchemaDhcpLeaseEntry),
+    wanLease: Vts.or([SchemaWanLeaseEntry, Vts.null()])
 });
 
 /**

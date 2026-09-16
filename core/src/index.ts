@@ -301,6 +301,7 @@ export {NatPolicy as NatPolicyDB} from './inc/Db/MariaDb/Entity/NatPolicy.js';
 export {NetworkInterface as NetworkInterfaceDB} from './inc/Db/MariaDb/Entity/NetworkInterface.js';
 export {DhcpServerConfig as DhcpServerConfigDB} from './inc/Db/MariaDb/Entity/DhcpServerConfig.js';
 export {DhcpLease as DhcpLeaseDB} from './inc/Db/MariaDb/Entity/DhcpLease.js';
+export {WanLease as WanLeaseDB} from './inc/Db/MariaDb/Entity/WanLease.js';
 export {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 export {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 export {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
@@ -342,6 +343,7 @@ export {NatPolicyService as NatPolicyServiceDB} from './inc/Db/MariaDb/Service/N
 export {NetworkInterfaceService as NetworkInterfaceServiceDB} from './inc/Db/MariaDb/Service/NetworkInterfaceService.js';
 export {DhcpServerConfigService as DhcpServerConfigServiceDB} from './inc/Db/MariaDb/Service/DhcpServerConfigService.js';
 export {DhcpLeaseService as DhcpLeaseServiceDB} from './inc/Db/MariaDb/Service/DhcpLeaseService.js';
+export {WanLeaseService as WanLeaseServiceDB} from './inc/Db/MariaDb/Service/WanLeaseService.js';
 export {NginxHttpService as NginxHttpServiceDB} from './inc/Db/MariaDb/Service/NginxHttpService.js';
 export {NginxHttpVariableService as NginxHttpVariableServiceDB} from './inc/Db/MariaDb/Service/NginxHttpVariableService.js';
 export {NginxListenService as NginxListenServiceDB} from './inc/Db/MariaDb/Service/NginxListenService.js';
