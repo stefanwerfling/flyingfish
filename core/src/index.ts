@@ -256,6 +256,12 @@ export {NginxListenVariable as NginxListenVariableDB} from './inc/Db/MariaDb/Ent
 export {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
 export {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
 export {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
+export {RbacGroup as RbacGroupDB} from './inc/Db/MariaDb/Entity/RbacGroup.js';
+export {RbacPermission as RbacPermissionDB} from './inc/Db/MariaDb/Entity/RbacPermission.js';
+export {RbacRole as RbacRoleDB} from './inc/Db/MariaDb/Entity/RbacRole.js';
+export {RbacRoleAssignment as RbacRoleAssignmentDB} from './inc/Db/MariaDb/Entity/RbacRoleAssignment.js';
+export {RbacRolePermission as RbacRolePermissionDB} from './inc/Db/MariaDb/Entity/RbacRolePermission.js';
+export {RbacUserGroup as RbacUserGroupDB} from './inc/Db/MariaDb/Entity/RbacUserGroup.js';
 export {Settings as SettingsDB} from './inc/Db/MariaDb/Entity/Settings.js';
 export {SshUser as SshUserDB} from './inc/Db/MariaDb/Entity/SshUser.js';
 export {SshPort as SshPortDB} from './inc/Db/MariaDb/Entity/SshPort.js';

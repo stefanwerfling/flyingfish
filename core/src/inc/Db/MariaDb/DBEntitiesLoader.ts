@@ -27,6 +27,12 @@ import {NginxListenVariable} from './Entity/NginxListenVariable.js';
 import {NginxLocation} from './Entity/NginxLocation.js';
 import {NginxStream} from './Entity/NginxStream.js';
 import {NginxUpstream} from './Entity/NginxUpstream.js';
+import {RbacGroup} from './Entity/RbacGroup.js';
+import {RbacPermission} from './Entity/RbacPermission.js';
+import {RbacRole} from './Entity/RbacRole.js';
+import {RbacRoleAssignment} from './Entity/RbacRoleAssignment.js';
+import {RbacRolePermission} from './Entity/RbacRolePermission.js';
+import {RbacUserGroup} from './Entity/RbacUserGroup.js';
 import {Settings} from './Entity/Settings.js';
 import {SshPort} from './Entity/SshPort.js';
 import {SshUser} from './Entity/SshUser.js';
@@ -74,6 +80,12 @@ export class DBEntitiesLoader {
             NginxLocation,
             NginxStream,
             NginxUpstream,
+            RbacGroup,
+            RbacPermission,
+            RbacRole,
+            RbacRoleAssignment,
+            RbacRolePermission,
+            RbacUserGroup,
             Settings,
             SshPort,
             SshUser,
