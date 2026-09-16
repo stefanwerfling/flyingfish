@@ -1,0 +1,207 @@
+import {
+    Form, FormGroup, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch,
+    Element, ModalDialog, ModalDialogType, LangText
+} from 'bambooo';
+
+/**
+ * RouterInterfaceEditModal — add/edit a network interface (Pi-router epic, Phase 6):
+ * its MAC (stable identity), OS name, router role and IPv4 addressing.
+ */
+export class RouterInterfaceEditModal extends ModalDialog {
+
+    protected _id: number | null = null;
+
+    protected _inputMac: InputBottemBorderOnly2;
+
+    protected _inputName: InputBottemBorderOnly2;
+
+    protected _selectRole: SelectBottemBorderOnly2;
+
+    protected _selectIpv4Mode: SelectBottemBorderOnly2;
+
+    protected _inputIpv4Address: InputBottemBorderOnly2;
+
+    protected _inputIpv4Prefix: InputBottemBorderOnly2;
+
+    protected _switchDisable: Switch;
+
+    /**
+     * constructor
+     * @param elementObject
+     */
+    public constructor(elementObject: Element) {
+        super(elementObject, 'routerinterfacemodaldialog', ModalDialogType.large);
+
+        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
+        const form = new Form(bodyCard);
+
+        const groupMac = new FormGroup(form, 'MAC address');
+        this._inputMac = new InputBottemBorderOnly2(groupMac, 'ifacemac', InputType.text);
+
+        const groupName = new FormGroup(form, 'Interface name (informational)');
+        this._inputName = new InputBottemBorderOnly2(groupName, 'ifacename', InputType.text);
+
+        const groupRole = new FormGroup(form, 'Role');
+        this._selectRole = new SelectBottemBorderOnly2(groupRole);
+        this._selectRole.setValues([
+            {key: 'unassigned', value: 'Unassigned'},
+            {key: 'wan', value: 'WAN (uplink, DHCP client)'},
+            {key: 'lan', value: 'LAN (downlink, DHCP server)'}
+        ]);
+
+        const groupIpv4Mode = new FormGroup(form, 'IPv4 mode');
+        this._selectIpv4Mode = new SelectBottemBorderOnly2(groupIpv4Mode);
+        this._selectIpv4Mode.setValues([
+            {key: 'none', value: 'None'},
+            {key: 'dhcp', value: 'DHCP client'},
+            {key: 'static', value: 'Static'}
+        ]);
+
+        const groupIpv4Address = new FormGroup(form, 'IPv4 address (static)');
+        this._inputIpv4Address = new InputBottemBorderOnly2(groupIpv4Address, 'ifaceip', InputType.text);
+
+        const groupIpv4Prefix = new FormGroup(form, 'IPv4 prefix (CIDR, e.g. 24)');
+        this._inputIpv4Prefix = new InputBottemBorderOnly2(groupIpv4Prefix, 'ifaceprefix', InputType.number);
+
+        const groupDisable = new FormGroup(form, 'Disable');
+        this._switchDisable = new Switch(groupDisable, 'ifacedisable');
+
+        this.addButtonClose(new LangText('Close'));
+        this.addButtonSave(new LangText('Save changes'), true);
+    }
+
+    /**
+     * getId
+     */
+    public getId(): number | null {
+        return this._id;
+    }
+
+    /**
+     * setId
+     * @param id
+     */
+    public setId(id: number | null): void {
+        this._id = id;
+    }
+
+    /**
+     * setMac
+     * @param mac
+     */
+    public setMac(mac: string): void {
+        this._inputMac.setValue(mac);
+    }
+
+    /**
+     * getMac
+     */
+    public getMac(): string {
+        return this._inputMac.getValue();
+    }
+
+    /**
+     * setName
+     * @param name
+     */
+    public setName(name: string): void {
+        this._inputName.setValue(name);
+    }
+
+    /**
+     * getName
+     */
+    public getName(): string {
+        return this._inputName.getValue();
+    }
+
+    /**
+     * setRole
+     * @param role
+     */
+    public setRole(role: string): void {
+        this._selectRole.setSelectedValue(role);
+    }
+
+    /**
+     * getRole
+     */
+    public getRole(): string {
+        return this._selectRole.getSelectedValue();
+    }
+
+    /**
+     * setIpv4Mode
+     * @param mode
+     */
+    public setIpv4Mode(mode: string): void {
+        this._selectIpv4Mode.setSelectedValue(mode);
+    }
+
+    /**
+     * getIpv4Mode
+     */
+    public getIpv4Mode(): string {
+        return this._selectIpv4Mode.getSelectedValue();
+    }
+
+    /**
+     * setIpv4Address
+     * @param address
+     */
+    public setIpv4Address(address: string): void {
+        this._inputIpv4Address.setValue(address);
+    }
+
+    /**
+     * getIpv4Address
+     */
+    public getIpv4Address(): string {
+        return this._inputIpv4Address.getValue();
+    }
+
+    /**
+     * setIpv4Prefix
+     * @param prefix
+     */
+    public setIpv4Prefix(prefix: number): void {
+        this._inputIpv4Prefix.setValue(`${prefix}`);
+    }
+
+    /**
+     * getIpv4Prefix
+     */
+    public getIpv4Prefix(): number {
+        return parseInt(this._inputIpv4Prefix.getValue(), 10) || 0;
+    }
+
+    /**
+     * setDisable
+     * @param disable
+     */
+    public setDisable(disable: boolean): void {
+        this._switchDisable.setEnable(disable);
+    }
+
+    /**
+     * getDisable
+     */
+    public getDisable(): boolean {
+        return this._switchDisable.isEnable();
+    }
+
+    /**
+     * resetValues
+     */
+    public override resetValues(): void {
+        this.setId(null);
+        this.setMac('');
+        this.setName('');
+        this.setRole('unassigned');
+        this.setIpv4Mode('none');
+        this.setIpv4Address('');
+        this.setIpv4Prefix(0);
+        this.setDisable(false);
+    }
+
+}

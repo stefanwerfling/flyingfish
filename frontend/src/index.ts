@@ -11,6 +11,7 @@ import {DynDnsServer} from './inc/Pages/DynDnsServer.js';
 import {IpAccess} from './inc/Pages/IpAccess.js';
 import {Listens as ListensPage} from './inc/Pages/Listens.js';
 import {Routes as RoutesPage} from './inc/Pages/Routes.js';
+import {Router as RouterPage} from './inc/Pages/Router.js';
 import {Settings as SettingsPage} from './inc/Pages/Settings.js';
 import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat.js';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway.js';
@@ -119,6 +120,14 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                         name: 'upnpnat',
                         onClick: (): void => {
                             loadPage(new UpnpNatPage());
+                        }
+                    },
+                    {
+                        title: 'Router',
+                        icon: 'fa-solid fa-network-wired',
+                        name: 'router',
+                        onClick: (): void => {
+                            loadPage(new RouterPage());
                         }
                     }
                 ]
