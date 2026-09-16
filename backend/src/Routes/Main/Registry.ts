@@ -1,8 +1,9 @@
 import {Router} from 'express';
-import {aggregateClusterDomains, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
+import {aggregateClusterDomains, aggregateClusterNodes, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
 import {
     ClusterDomainsResponse,
     ClusterLocalStateResponse,
+    ClusterNodesResponse,
     ClusterPeersResponse,
     ClusterRoutesResponse,
     ClusterStateResponse,
@@ -14,6 +15,7 @@ import {
     SchemaClusterAnnounceRequest,
     SchemaClusterDomainsResponse,
     SchemaClusterLocalStateResponse,
+    SchemaClusterNodesResponse,
     SchemaClusterPeersResponse,
     SchemaClusterRoutesPublishRequest,
     SchemaClusterRoutesResponse,
@@ -278,6 +280,26 @@ export class Registry extends DefaultRoute {
             {
                 description: 'Which nodes manage each domain cluster-wide, with the active (live, highest-priority) node (HA / DNS failover view)',
                 responseBodySchema: SchemaClusterDomainsResponse
+            }
+        );
+
+        // Cluster node roster (9.5.12, Proxmox-style dashboard): the federated node
+        // list with each node's online/offline state, projected from the converged
+        // gossip aggregate (leaderless — no central directory). Read-only.
+        this._get(
+            '/json/registry/cluster/nodes',
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<ClusterNodesResponse> => {
+                const aggregate = HubRegistryService.getInstance().getClusterAggregate().entries();
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    list: aggregateClusterNodes(aggregate, Date.now())
+                };
+            },
+            {
+                description: 'The cluster-wide node roster with each node\'s online/offline state (Proxmox-style node dashboard)',
+                responseBodySchema: SchemaClusterNodesResponse
             }
         );
 

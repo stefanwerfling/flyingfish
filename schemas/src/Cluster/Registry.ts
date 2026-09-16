@@ -197,3 +197,37 @@ export const SchemaClusterDomainsResponse = SchemaDefaultReturn.extend({
  * ClusterDomainsResponse
  */
 export type ClusterDomainsResponse = ExtractSchemaResultType<typeof SchemaClusterDomainsResponse>;
+
+/**
+ * SchemaClusterNode — one node seen across the cluster (Cluster/Mesh epic 9.5.12,
+ * Proxmox-style node dashboard): its self-descriptor from the gossip node roster
+ * (reachable peer-transport endpoint) plus a derived online flag from its heartbeat.
+ */
+export const SchemaClusterNode = Vts.object({
+    nodeUid: Vts.string(),
+    host: Vts.string(),
+    port: Vts.number(),
+    // Epoch ms of this node's last gossip heartbeat.
+    lastHeartbeat: Vts.number(),
+    // True when the last heartbeat is within the stale window — the node dashboard's
+    // online/offline signal (same liveness that drives 9.5.14 DNS failover).
+    online: Vts.boolean()
+});
+
+/**
+ * ClusterNode
+ */
+export type ClusterNode = ExtractSchemaResultType<typeof SchemaClusterNode>;
+
+/**
+ * SchemaClusterNodesResponse — the cluster-wide node roster the Hub returns for the
+ * Proxmox-style node dashboard, each with its online/offline state.
+ */
+export const SchemaClusterNodesResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaClusterNode)
+});
+
+/**
+ * ClusterNodesResponse
+ */
+export type ClusterNodesResponse = ExtractSchemaResultType<typeof SchemaClusterNodesResponse>;

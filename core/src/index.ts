@@ -185,6 +185,10 @@ export {
     clusterLiveNodeUids
 } from './inc/Cluster/ClusterNodeLiveness.js';
 export {
+    ClusterNodeView,
+    aggregateClusterNodes
+} from './inc/Cluster/ClusterNodeAggregate.js';
+export {
     ClusterDomainActive,
     HubClusterDomainsClientOptions,
     HubClusterDomainsClient

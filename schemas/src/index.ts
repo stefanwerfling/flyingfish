@@ -425,7 +425,11 @@ export {
     SchemaClusterDomainNode,
     SchemaClusterDomainView,
     SchemaClusterDomainsResponse,
-    ClusterDomainsResponse
+    ClusterDomainsResponse,
+    SchemaClusterNode,
+    ClusterNode,
+    SchemaClusterNodesResponse,
+    ClusterNodesResponse
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)
