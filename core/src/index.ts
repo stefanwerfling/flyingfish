@@ -189,6 +189,15 @@ export {
     HubClusterDomainsClientOptions,
     HubClusterDomainsClient
 } from './inc/Cluster/HubClusterDomainsClient.js';
+
+// Rbac (9.5.13)
+export {
+    RbacResource,
+    RbacAssignment,
+    IRbacDataSource,
+    RBAC_PERMISSION_WILDCARD,
+    PermissionService
+} from './inc/Rbac/PermissionService.js';
 export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
