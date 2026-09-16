@@ -189,6 +189,15 @@ export {
     aggregateClusterNodes
 } from './inc/Cluster/ClusterNodeAggregate.js';
 export {
+    ClusterRbacGroup,
+    ClusterRbacRole,
+    ClusterRbacPermission,
+    ClusterRbacRolePermission,
+    ClusterRbacAssignment,
+    ClusterRbacView,
+    aggregateClusterRbac
+} from './inc/Cluster/ClusterRbacAggregate.js';
+export {
     ClusterDomainActive,
     HubClusterDomainsClientOptions,
     HubClusterDomainsClient

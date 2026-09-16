@@ -4,10 +4,18 @@ import {ClusterFetch} from './HubClusterPeerRoster.js';
  * One key→value pair exchanged between a clusterserver and its local Hub (Cluster/
  * Mesh epic 9.5.12 phase 2b): the Hub's publishable resources on the way in, the
  * converged cluster aggregate on the way back.
+ *
+ * `global` marks an entry whose key is already cluster-unique and must NOT be
+ * namespaced by the owning node's uid (Cluster/Mesh 9.5.12, A+C): per-node resources
+ * (domains) are namespaced `<nodeUid>/<key>` so each node's copy is distinct, but a
+ * genuinely SHARED resource keyed by a cluster-stable UUID (the RBAC policy tables)
+ * is published under one global key so every node writes THE same gossip key and the
+ * LWW store converges. Absent/false = per-node (namespaced).
  */
 export type ClusterGossipStateEntry = {
     key: string;
     value: unknown;
+    global?: boolean;
 };
 
 /**
@@ -67,7 +75,14 @@ export class HubClusterGossipSync {
 
         for (const entry of data.entries ?? []) {
             if (entry !== null && typeof entry === 'object' && typeof entry.key === 'string') {
-                entries.push({key: entry.key, value: entry.value});
+                const parsed: ClusterGossipStateEntry = {key: entry.key, value: entry.value};
+
+                // Carry the global flag only when set — absent means per-node (namespaced).
+                if (entry.global === true) {
+                    parsed.global = true;
+                }
+
+                entries.push(parsed);
             }
         }
 

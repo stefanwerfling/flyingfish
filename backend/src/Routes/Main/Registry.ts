@@ -1,10 +1,11 @@
 import {Router} from 'express';
-import {aggregateClusterDomains, aggregateClusterNodes, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
+import {aggregateClusterDomains, aggregateClusterNodes, aggregateClusterRbac, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
 import {
     ClusterDomainsResponse,
     ClusterLocalStateResponse,
     ClusterNodesResponse,
     ClusterPeersResponse,
+    ClusterRbacResponse,
     ClusterRoutesResponse,
     ClusterStateResponse,
     DefaultReturn,
@@ -16,6 +17,7 @@ import {
     SchemaClusterDomainsResponse,
     SchemaClusterLocalStateResponse,
     SchemaClusterNodesResponse,
+    SchemaClusterRbacResponse,
     SchemaClusterPeersResponse,
     SchemaClusterRoutesPublishRequest,
     SchemaClusterRoutesResponse,
@@ -300,6 +302,31 @@ export class Registry extends DefaultRoute {
             {
                 description: 'The cluster-wide node roster with each node\'s online/offline state (Proxmox-style node dashboard)',
                 responseBodySchema: SchemaClusterNodesResponse
+            }
+        );
+
+        // Cluster-global RBAC policy (9.5.12, A+C shared rights DB): the shared
+        // group/role/permission/grant tables aggregated from the gossip (each keyed by
+        // a cluster-stable UUID, published un-namespaced so the cluster shares one
+        // policy). Read-only; node-local memberships are not included.
+        this._get(
+            '/json/registry/cluster/rbac',
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<ClusterRbacResponse> => {
+                const view = aggregateClusterRbac(HubRegistryService.getInstance().getClusterAggregate().entries());
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    groups: view.groups,
+                    roles: view.roles,
+                    permissions: view.permissions,
+                    rolePermissions: view.rolePermissions,
+                    assignments: view.assignments
+                };
+            },
+            {
+                description: 'The cluster-wide shared RBAC policy (groups/roles/permissions/grants) aggregated from the gossip',
+                responseBodySchema: SchemaClusterRbacResponse
             }
         );
 

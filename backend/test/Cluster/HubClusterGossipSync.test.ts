@@ -58,12 +58,13 @@ describe('HubClusterGossipSync', () => {
     });
 
     test('integration: pulls the Hub local state and pushes an aggregate into the real Hub store', async() => {
-        // inject a fake domain source so the provider needs no database
+        // inject fake domain + RBAC sources so the provider needs no database
         const provider = new ClusterLocalStateProvider(
             async() => [
                 {id: 7, domainname: 'example.test', disable: false, fixdomain: false, recordless: false, parent_id: 0, cluster_priority: 0}
             ],
-            async() => undefined
+            async() => undefined,
+            async() => ({groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []})
         );
         const aggregate = new ClusterAggregateStore();
 

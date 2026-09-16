@@ -1,4 +1,12 @@
-import {DomainRecordServiceDB, DomainServiceDB} from 'flyingfish_core';
+import {
+    DomainRecordServiceDB,
+    DomainServiceDB,
+    RbacGroupServiceDB,
+    RbacPermissionServiceDB,
+    RbacRoleAssignmentServiceDB,
+    RbacRolePermissionServiceDB,
+    RbacRoleServiceDB
+} from 'flyingfish_core';
 import {ClusterStateEntry} from 'flyingfish_schemas';
 import os from 'os';
 
@@ -32,6 +40,26 @@ export type ClusterDomainSource = () => Promise<ClusterDomainLike[]>;
 export type ClusterDomainIpSource = (domainId: number) => Promise<string | undefined>;
 
 /**
+ * A snapshot of this Hub's RBAC POLICY tables (Cluster/Mesh epic 9.5.12, A+C shared
+ * rights DB). These five tables are cluster-global and keyed by cluster-stable UUIDs;
+ * `rbac_user_group` is deliberately absent — it is node-local (binds a local user to a
+ * global group) and is never gossiped. `resource_id` stays a node-local int.
+ */
+export type ClusterRbacPolicySnapshot = {
+    groups: {id: string; name: string; description: string; disable: boolean;}[];
+    roles: {id: string; name: string; description: string;}[];
+    permissions: {id: string; permission_key: string; description: string;}[];
+    rolePermissions: {id: string; role_id: string; permission_id: string;}[];
+    assignments: {id: string; group_id: string; role_id: string; resource_type: string; resource_id: number;}[];
+};
+
+/**
+ * Reads this Hub's RBAC policy tables; injectable so the provider is testable without
+ * a database.
+ */
+export type ClusterRbacPolicySource = () => Promise<ClusterRbacPolicySnapshot>;
+
+/**
  * Produces the resources this Hub publishes into the cluster gossip (Cluster/Mesh
  * epic 9.5.12): its local clusterserver pulls these, owns them (namespacing the keys
  * by its nodeUid) and gossips them so every node sees a federated view. Keys are
@@ -48,13 +76,17 @@ export class ClusterLocalStateProvider {
 
     private readonly _domainIp: ClusterDomainIpSource;
 
+    private readonly _rbacPolicy: ClusterRbacPolicySource;
+
     /**
      * @param domains - the domain source (defaults to the Hub's domain DB)
      * @param domainIp - the domain A-record IP source (defaults to the Hub's record DB)
+     * @param rbacPolicy - the RBAC policy source (defaults to the Hub's rbac_* DB)
      */
-    public constructor(domains?: ClusterDomainSource, domainIp?: ClusterDomainIpSource) {
+    public constructor(domains?: ClusterDomainSource, domainIp?: ClusterDomainIpSource, rbacPolicy?: ClusterRbacPolicySource) {
         this._domains = domains ?? ((): Promise<ClusterDomainLike[]> => DomainServiceDB.getInstance().findAll());
         this._domainIp = domainIp ?? ClusterLocalStateProvider._defaultDomainIp;
+        this._rbacPolicy = rbacPolicy ?? ClusterLocalStateProvider._defaultRbacPolicy;
     }
 
     /**
@@ -88,6 +120,32 @@ export class ClusterLocalStateProvider {
             });
         }
 
+        // The RBAC POLICY tables (Cluster/Mesh epic 9.5.12, A+C shared rights DB):
+        // published GLOBAL (not namespaced by node) so their cluster-stable UUID keys
+        // converge across the cluster into one shared policy. `rbac_user_group` is NOT
+        // published — it is node-local (binds local users to global groups).
+        const policy = await this._rbacPolicy();
+
+        for (const group of policy.groups) {
+            entries.push({key: `rbac_group:${group.id}`, value: group, global: true});
+        }
+
+        for (const role of policy.roles) {
+            entries.push({key: `rbac_role:${role.id}`, value: role, global: true});
+        }
+
+        for (const permission of policy.permissions) {
+            entries.push({key: `rbac_permission:${permission.id}`, value: permission, global: true});
+        }
+
+        for (const rolePermission of policy.rolePermissions) {
+            entries.push({key: `rbac_role_permission:${rolePermission.id}`, value: rolePermission, global: true});
+        }
+
+        for (const assignment of policy.assignments) {
+            entries.push({key: `rbac_role_assignment:${assignment.id}`, value: assignment, global: true});
+        }
+
         return entries;
     }
 
@@ -99,6 +157,34 @@ export class ClusterLocalStateProvider {
         const records = await DomainRecordServiceDB.getInstance().findAllByDomain(domainId);
 
         return records.find((record) => record.dtype === DNS_TYPE_A)?.dvalue;
+    }
+
+    /**
+     * Read this Hub's RBAC policy tables from the rbac_* DB services (mapped to plain
+     * summaries so no ORM state leaks into the gossip value).
+     */
+    private static async _defaultRbacPolicy(): Promise<ClusterRbacPolicySnapshot> {
+        const [groups, roles, permissions, rolePermissions, assignments] = await Promise.all([
+            RbacGroupServiceDB.getInstance().findAll(),
+            RbacRoleServiceDB.getInstance().findAll(),
+            RbacPermissionServiceDB.getInstance().findAll(),
+            RbacRolePermissionServiceDB.getInstance().findAll(),
+            RbacRoleAssignmentServiceDB.getInstance().findAll()
+        ]);
+
+        return {
+            groups: groups.map((group) => ({id: group.id, name: group.name, description: group.description, disable: group.disable})),
+            roles: roles.map((role) => ({id: role.id, name: role.name, description: role.description})),
+            permissions: permissions.map((permission) => ({id: permission.id, permission_key: permission.permission_key, description: permission.description})),
+            rolePermissions: rolePermissions.map((rolePermission) => ({id: rolePermission.id, role_id: rolePermission.role_id, permission_id: rolePermission.permission_id})),
+            assignments: assignments.map((assignment) => ({
+                id: assignment.id,
+                group_id: assignment.group_id,
+                role_id: assignment.role_id,
+                resource_type: assignment.resource_type,
+                resource_id: assignment.resource_id
+            }))
+        };
     }
 
 }

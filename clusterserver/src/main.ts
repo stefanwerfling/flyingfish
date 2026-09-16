@@ -276,7 +276,11 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 await membership.sync(roster);
 
                 for (const entry of await gossipSync.pullLocalState()) {
-                    gossipStore.setIfChanged(clusterGossipNamespaceKey(selfNodeUid, entry.key), entry.value);
+                    // Global entries (cluster-shared, UUID-keyed — the RBAC policy) keep
+                    // their key so every node converges on it; per-node resources are
+                    // namespaced by this node's uid (Cluster/Mesh 9.5.12, A+C).
+                    const storeKey = entry.global === true ? entry.key : clusterGossipNamespaceKey(selfNodeUid, entry.key);
+                    gossipStore.setIfChanged(storeKey, entry.value);
                 }
 
                 gossip.sync();

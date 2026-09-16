@@ -103,7 +103,12 @@ export type ClusterRoutesResponse = ExtractSchemaResultType<typeof SchemaCluster
  */
 export const SchemaClusterStateEntry = Vts.object({
     key: Vts.string(),
-    value: Vts.unknown()
+    value: Vts.unknown(),
+    // When true the key is already cluster-unique (a shared resource keyed by a
+    // cluster-stable UUID, e.g. the RBAC policy) and the owning clusterserver must NOT
+    // namespace it by nodeUid — so every node converges on the same gossip key
+    // (Cluster/Mesh epic 9.5.12, A+C). Absent = per-node (namespaced).
+    global: Vts.optional(Vts.boolean())
 });
 
 /**
@@ -231,3 +236,69 @@ export const SchemaClusterNodesResponse = SchemaDefaultReturn.extend({
  * ClusterNodesResponse
  */
 export type ClusterNodesResponse = ExtractSchemaResultType<typeof SchemaClusterNodesResponse>;
+
+/**
+ * The cluster-global RBAC POLICY tables (Cluster/Mesh epic 9.5.12, A+C shared rights
+ * DB): each keyed by a cluster-stable UUID, gossiped under a global key so the whole
+ * cluster shares one policy. `rbac_user_group` is node-local and not included.
+ */
+export const SchemaClusterRbacGroup = Vts.object({
+    id: Vts.string(),
+    name: Vts.string(),
+    description: Vts.string(),
+    disable: Vts.boolean()
+});
+
+/**
+ * SchemaClusterRbacRole
+ */
+export const SchemaClusterRbacRole = Vts.object({
+    id: Vts.string(),
+    name: Vts.string(),
+    description: Vts.string()
+});
+
+/**
+ * SchemaClusterRbacPermission
+ */
+export const SchemaClusterRbacPermission = Vts.object({
+    id: Vts.string(),
+    permission_key: Vts.string(),
+    description: Vts.string()
+});
+
+/**
+ * SchemaClusterRbacRolePermission
+ */
+export const SchemaClusterRbacRolePermission = Vts.object({
+    id: Vts.string(),
+    role_id: Vts.string(),
+    permission_id: Vts.string()
+});
+
+/**
+ * SchemaClusterRbacAssignment — the group→role grant; resource_id stays a node-local int.
+ */
+export const SchemaClusterRbacAssignment = Vts.object({
+    id: Vts.string(),
+    group_id: Vts.string(),
+    role_id: Vts.string(),
+    resource_type: Vts.string(),
+    resource_id: Vts.number()
+});
+
+/**
+ * SchemaClusterRbacResponse — the whole cluster-wide RBAC policy for the management UI.
+ */
+export const SchemaClusterRbacResponse = SchemaDefaultReturn.extend({
+    groups: Vts.array(SchemaClusterRbacGroup),
+    roles: Vts.array(SchemaClusterRbacRole),
+    permissions: Vts.array(SchemaClusterRbacPermission),
+    rolePermissions: Vts.array(SchemaClusterRbacRolePermission),
+    assignments: Vts.array(SchemaClusterRbacAssignment)
+});
+
+/**
+ * ClusterRbacResponse
+ */
+export type ClusterRbacResponse = ExtractSchemaResultType<typeof SchemaClusterRbacResponse>;
