@@ -48,7 +48,11 @@ export const SchemaConfigOptionsClusterDatapath = SchemaConfigOptions.extend({
         listenPort: Vts.number(),
         egressNodeUid: Vts.string(),
         targetHost: Vts.string(),
-        targetPort: Vts.number()
+        targetPort: Vts.number(),
+        // Preserve the client IP end-to-end (9.5.3): when true, the egress prepends a
+        // PROXY protocol v2 header to the backend connection (the backend must expect
+        // it, e.g. nginx `proxy_protocol`).
+        proxyProtocol: Vts.optional(Vts.boolean())
     }))),
     flyingfish_libpath: Vts.optional(Vts.string())
 });

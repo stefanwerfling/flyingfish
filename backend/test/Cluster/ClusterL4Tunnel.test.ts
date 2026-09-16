@@ -15,6 +15,7 @@ import {
     ClusterMuxKind,
     ClusterPeerChannel,
     ClusterPeerMux,
+    ClusterProxyProtocolV2,
     ClusterRouteTable,
     IClusterL4Dialer,
     IClusterL4Stream,
@@ -281,5 +282,81 @@ describe('ClusterL4 tunnel coexists with the L3 datapath on one muxed link', () 
 
         origin.close();
         egress.close();
+    });
+});
+
+describe('ClusterL4 tunnel preserves the client IP with PROXY protocol v2 (9.5.3)', () => {
+    let backend: Server;
+    let backendPort: number;
+    let firstBytes: Buffer;
+
+    beforeAll(async() => {
+        // a backend that captures the raw bytes of the one connection it accepts
+        backend = createServer((socket: Socket): void => {
+            const chunks: Buffer[] = [];
+            socket.on('data', (chunk: Buffer): void => {
+                chunks.push(chunk);
+                firstBytes = Buffer.concat(chunks);
+            });
+        });
+
+        await new Promise<void>((resolve): void => {
+            backend.listen(0, '127.0.0.1', (): void => resolve());
+        });
+
+        backendPort = (backend.address() as AddressInfo).port;
+        firstBytes = Buffer.alloc(0);
+    });
+
+    afterAll(async() => {
+        await new Promise<void>((resolve): void => {
+            backend.close((): void => resolve());
+        });
+    });
+
+    test('the backend receives a PROXY v2 header carrying the real client, then the payload', async() => {
+        const {muxA, muxB} = buildMuxPair();
+
+        const origin = new ClusterL4Session(muxA.channel(ClusterMuxKind.L4), noDial, true);
+        const egress = new ClusterL4Session(muxB.channel(ClusterMuxKind.L4), new ClusterL4TcpDialer(), false);
+
+        // ingress with proxyProtocol on: carry the accepted socket's endpoints as clientInfo
+        const listener = new ClusterL4TcpListener((stream: IClusterL4Stream, endpoints): void => {
+            const clientInfo = endpoints === undefined ? undefined : {
+                sourceHost: endpoints.source.host,
+                sourcePort: endpoints.source.port,
+                destHost: endpoints.destination.host,
+                destPort: endpoints.destination.port
+            };
+
+            origin.openStream({proto: ClusterL4Proto.Tcp, host: '127.0.0.1', port: backendPort}, stream, clientInfo);
+        });
+        const ingressPort = await listener.listen(0, '127.0.0.1');
+
+        const client = createConnection({host: '127.0.0.1', port: ingressPort});
+        await new Promise<void>((resolve): void => {
+            client.on('connect', (): void => resolve());
+        });
+
+        const clientPort = client.localPort ?? 0;
+        client.write(Buffer.from('PING'));
+
+        // header (28 bytes for TCP4) + the 4-byte payload
+        await waitFor((): boolean => firstBytes.length >= 28 + 4);
+
+        const header = ClusterProxyProtocolV2.decode(new Uint8Array(firstBytes));
+        expect(header).not.toBeNull();
+        expect(header!.source.host).toBe('127.0.0.1');
+        expect(header!.source.port).toBe(clientPort);
+        expect(header!.destination.host).toBe('127.0.0.1');
+        expect(header!.destination.port).toBe(ingressPort);
+
+        // the tunnelled payload follows the header untouched
+        expect(firstBytes.subarray(28).toString('utf8')).toBe('PING');
+
+        client.destroy();
+        origin.close();
+        egress.close();
+        await listener.close();
     });
 });

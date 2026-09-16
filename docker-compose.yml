@@ -630,9 +630,10 @@ services:
       # another cluster node. JSON array of rules; each binds a local ingress port
       # and forwards every connection over the mesh to egressNodeUid, which dials
       # targetHost:targetPort. Publish the listenPort under `ports` below to reach it
-      # from outside the container. Example (commented — set egressNodeUid to a real
-      # datapath nodeUid):
-      # FLYINGFISH_CLUSTER_TUNNELS: '[{"listenPort":6379,"egressNodeUid":"<peer-nodeUid>","targetHost":"10.0.0.5","targetPort":6379}]'
+      # from outside the container. Add "proxyProtocol":true to prepend a PROXY
+      # protocol v2 header so the backend sees the real client IP (9.5.3). Example
+      # (commented — set egressNodeUid to a real datapath nodeUid):
+      # FLYINGFISH_CLUSTER_TUNNELS: '[{"listenPort":6379,"egressNodeUid":"<peer-nodeUid>","targetHost":"10.0.0.5","targetPort":6379,"proxyProtocol":true}]'
     ports:
       - "5337:5337/tcp"
     networks:

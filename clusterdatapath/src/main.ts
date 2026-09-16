@@ -287,8 +287,20 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                 }
 
                 const target = {proto: ClusterL4Proto.Tcp, host: rule.targetHost, port: rule.targetPort};
-                const listener = new ClusterL4TcpListener((stream: IClusterL4Stream): void => {
-                    l4Tunnel.open(rule.egressNodeUid, target, stream);
+                const listener = new ClusterL4TcpListener((stream: IClusterL4Stream, endpoints): void => {
+                    // Preserve the client IP (9.5.3): when the rule asks for it and the
+                    // socket reported its endpoints, carry them so the egress emits a
+                    // PROXY protocol v2 header to the backend.
+                    const clientInfo = rule.proxyProtocol === true && endpoints !== undefined
+                        ? {
+                            sourceHost: endpoints.source.host,
+                            sourcePort: endpoints.source.port,
+                            destHost: endpoints.destination.host,
+                            destPort: endpoints.destination.port
+                        }
+                        : undefined;
+
+                    l4Tunnel.open(rule.egressNodeUid, target, stream, clientInfo);
                 });
 
                 try {
