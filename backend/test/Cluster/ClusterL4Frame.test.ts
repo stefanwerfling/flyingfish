@@ -36,9 +36,9 @@ describe('ClusterL4Frame', () => {
 
     test('OpenAck round-trips the ok flag both ways', () => {
         expect(ClusterL4Frame.decode(ClusterL4Frame.encodeOpenAck(7, true)))
-            .toEqual({op: ClusterL4Op.OpenAck, streamId: 7, ok: true});
+        .toEqual({op: ClusterL4Op.OpenAck, streamId: 7, ok: true});
         expect(ClusterL4Frame.decode(ClusterL4Frame.encodeOpenAck(7, false)))
-            .toEqual({op: ClusterL4Op.OpenAck, streamId: 7, ok: false});
+        .toEqual({op: ClusterL4Op.OpenAck, streamId: 7, ok: false});
     });
 
     test('Data round-trips an arbitrary payload including empty', () => {
@@ -55,7 +55,7 @@ describe('ClusterL4Frame', () => {
 
     test('Close round-trips just the streamId', () => {
         expect(ClusterL4Frame.decode(ClusterL4Frame.encodeClose(0xdeadbeef)))
-            .toEqual({op: ClusterL4Op.Close, streamId: 0xdeadbeef});
+        .toEqual({op: ClusterL4Op.Close, streamId: 0xdeadbeef});
     });
 
     test('decode returns null for a frame shorter than the header', () => {
@@ -96,6 +96,6 @@ describe('ClusterL4Frame', () => {
 
     test('encodeOpen rejects a host longer than 255 bytes', () => {
         expect(() => ClusterL4Frame.encodeOpen(1, {proto: ClusterL4Proto.Tcp, host: 'a'.repeat(256), port: 80}))
-            .toThrow(/host exceeds/);
+        .toThrow(/host exceeds/u);
     });
 });
