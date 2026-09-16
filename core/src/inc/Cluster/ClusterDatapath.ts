@@ -1,13 +1,15 @@
-import {ClusterPeerChannel} from './ClusterPeerChannel.js';
+import {IClusterMessageChannel} from './ClusterMessageChannel.js';
 import {ClusterRouteTable} from './ClusterRouteTable.js';
 import {IClusterTunDevice} from './ClusterTunDevice.js';
 import {Ipv4Packet} from './Ipv4Packet.js';
 
 /**
- * Resolves a nodeUid to its currently-connected peer channel, or undefined if the
- * peer is not connected. {@link ClusterMembership.getChannel} satisfies this.
+ * Resolves a nodeUid to the message channel carrying its L3 packets, or undefined
+ * if the peer is not connected. A raw {@link ClusterPeerChannel} satisfies this
+ * directly ({@link ClusterMembership.getChannel}); when the peer link is muxed
+ * (9.5.2), pass the {@link ClusterMuxKind.Packet} sub-channel instead.
  */
-export type ClusterChannelProvider = (nodeUid: string) => ClusterPeerChannel | undefined;
+export type ClusterChannelProvider = (nodeUid: string) => IClusterMessageChannel | undefined;
 
 /**
  * Datapath counters for observability.
@@ -75,9 +77,9 @@ export class ClusterDatapath {
     /**
      * Attach a peer channel so its inbound packets are written to the TUN device.
      * Wire this from {@link ClusterMembership.onPeer} so every peer is bridged.
-     * @param channel - the authenticated peer channel
+     * @param channel - the authenticated peer channel (or its L3 mux sub-channel)
      */
-    public attachPeer(channel: ClusterPeerChannel): void {
+    public attachPeer(channel: IClusterMessageChannel): void {
         channel.onMessage((message: Uint8Array): void => {
             this._received += 1;
             this._tun.writePacket(message);

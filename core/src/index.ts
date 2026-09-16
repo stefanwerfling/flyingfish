@@ -128,6 +128,8 @@ export {
     HubClusterPeerRosterOptions,
     HubClusterPeerRoster
 } from './inc/Cluster/HubClusterPeerRoster.js';
+export {IClusterMessageChannel} from './inc/Cluster/ClusterMessageChannel.js';
+export {ClusterMuxKind, ClusterPeerMux} from './inc/Cluster/ClusterPeerMux.js';
 export {Ipv4Header, Ipv4Packet} from './inc/Cluster/Ipv4Packet.js';
 export {ClusterRouteTable} from './inc/Cluster/ClusterRouteTable.js';
 export {IClusterTunDevice} from './inc/Cluster/ClusterTunDevice.js';
