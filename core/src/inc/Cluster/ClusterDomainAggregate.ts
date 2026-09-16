@@ -16,6 +16,7 @@ export type ClusterDomainNode = {
     nodeUid: string;
     id: number;
     priority: number;
+    ip?: string;
     disable: boolean;
     fix: boolean;
     recordless: boolean;
@@ -38,6 +39,7 @@ type DomainEntryValue = {
     id?: unknown;
     name?: unknown;
     priority?: unknown;
+    ip?: unknown;
     disable?: unknown;
     fix?: unknown;
     recordless?: unknown;
@@ -82,6 +84,7 @@ export const aggregateClusterDomains = (entries: readonly ClusterGossipStateEntr
             nodeUid: parsed.nodeUid,
             id: toNumber(value.id),
             priority: toNumber(value.priority),
+            ip: typeof value.ip === 'string' ? value.ip : undefined,
             disable: value.disable === true,
             fix: value.fix === true,
             recordless: value.recordless === true,

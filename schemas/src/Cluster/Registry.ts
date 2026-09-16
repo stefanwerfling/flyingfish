@@ -161,6 +161,9 @@ export const SchemaClusterDomainNode = Vts.object({
     nodeUid: Vts.string(),
     id: Vts.number(),
     priority: Vts.number(),
+    // This node's A-record IP for the domain (what the DNS A record answers with when
+    // this node is active); optional if the node has no A record for it.
+    ip: Vts.optional(Vts.string()),
     disable: Vts.boolean(),
     fix: Vts.boolean(),
     recordless: Vts.boolean(),
@@ -176,7 +179,10 @@ export const SchemaClusterDomainView = Vts.object({
     nodes: Vts.array(SchemaClusterDomainNode),
     // The node whose IP the domain's DNS A record currently resolves to — the
     // highest-priority LIVE node — or null if none is live (9.5.14 failover).
-    activeNodeUid: Vts.or([Vts.string(), Vts.null()])
+    activeNodeUid: Vts.or([Vts.string(), Vts.null()]),
+    // That active node's A-record IP — what the domain's DNS A record should answer
+    // with right now — or null if there is no active node / no IP.
+    activeIp: Vts.or([Vts.string(), Vts.null()])
 });
 
 /**

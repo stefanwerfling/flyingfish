@@ -20,9 +20,9 @@ const nodeEntry = (nodeUid: string, heartbeatAgeMs: number): ClusterGossipStateE
     value: {nodeUid: nodeUid, host: '10.0.0.1', port: 5336, heartbeat: NOW - heartbeatAgeMs}
 });
 
-const domainEntry = (nodeUid: string, id: number, name: string, priority: number): ClusterGossipStateEntry => ({
+const domainEntry = (nodeUid: string, id: number, name: string, priority: number, ip: string): ClusterGossipStateEntry => ({
     key: clusterGossipNamespaceKey(nodeUid, `domain:${id}`),
-    value: {id: id, name: name, priority: priority, disable: false, fix: false, recordless: false, parentId: 0}
+    value: {id: id, name: name, priority: priority, ip: ip, disable: false, fix: false, recordless: false, parentId: 0}
 });
 
 describe('clusterLiveNodeUids', () => {
@@ -38,7 +38,7 @@ describe('clusterLiveNodeUids', () => {
 
     test('ignores non-node entries and descriptors without a heartbeat', () => {
         const live = clusterLiveNodeUids([
-            domainEntry('node-a', 1, 'x.test', 0),
+            domainEntry('node-a', 1, 'x.test', 0, '10.0.0.1'),
             {key: 'node:node-b', value: {nodeUid: 'node-b'}},
             {key: 'node:node-c', value: null}
         ], NOW, 90000);
@@ -52,24 +52,26 @@ describe('domain HA end-to-end (aggregate + liveness + failover resolve)', () =>
         const entries: ClusterGossipStateEntry[] = [
             nodeEntry('node-primary', 1000),
             nodeEntry('node-backup', 1000),
-            domainEntry('node-primary', 1, 'ha.test', 0),
-            domainEntry('node-backup', 2, 'ha.test', 10)
+            domainEntry('node-primary', 1, 'ha.test', 0, '203.0.113.1'),
+            domainEntry('node-backup', 2, 'ha.test', 10, '203.0.113.2')
         ];
 
         const [view] = aggregateClusterDomains(entries);
 
-        // both live → primary (priority 0) is active
+        // both live → primary (priority 0) is active; its IP is what the A record answers
         const active1 = resolveDomainActiveNode(view, clusterLiveNodeUids(entries, NOW, 90000));
         expect(active1?.nodeUid).toBe('node-primary');
+        expect(active1?.ip).toBe('203.0.113.1');
 
-        // primary heartbeat goes stale → failover to the backup
+        // primary heartbeat goes stale → failover to the backup, and the A-record IP follows
         const stale: ClusterGossipStateEntry[] = [
             nodeEntry('node-primary', 200000),
             nodeEntry('node-backup', 1000),
-            domainEntry('node-primary', 1, 'ha.test', 0),
-            domainEntry('node-backup', 2, 'ha.test', 10)
+            domainEntry('node-primary', 1, 'ha.test', 0, '203.0.113.1'),
+            domainEntry('node-backup', 2, 'ha.test', 10, '203.0.113.2')
         ];
         const active2 = resolveDomainActiveNode(view, clusterLiveNodeUids(stale, NOW, 90000));
         expect(active2?.nodeUid).toBe('node-backup');
+        expect(active2?.ip).toBe('203.0.113.2');
     });
 });

@@ -263,11 +263,16 @@ export class Registry extends DefaultRoute {
 
                 return {
                     statusCode: StatusCodes.OK,
-                    list: aggregateClusterDomains(aggregate).map((view) => ({
-                        name: view.name,
-                        nodes: view.nodes,
-                        activeNodeUid: resolveDomainActiveNode(view, live)?.nodeUid ?? null
-                    }))
+                    list: aggregateClusterDomains(aggregate).map((view) => {
+                        const active = resolveDomainActiveNode(view, live);
+
+                        return {
+                            name: view.name,
+                            nodes: view.nodes,
+                            activeNodeUid: active?.nodeUid ?? null,
+                            activeIp: active?.ip ?? null
+                        };
+                    })
                 };
             },
             {
