@@ -38,6 +38,18 @@ export const SchemaConfigOptionsClusterDatapath = SchemaConfigOptions.extend({
         overlayNetmask: Vts.optional(Vts.string()),
         tunName: Vts.optional(Vts.string())
     })),
+    // L4 tunnels (Cluster/Mesh epic 9.5.2): expose an arbitrary TCP/UDP service that
+    // lives on (or behind) another cluster node. Each rule binds a local ingress
+    // port and forwards every connection over the mesh to `egressNodeUid`, which
+    // dials `targetHost:targetPort`. Needs no TUN/privilege — it rides the peer link.
+    tunnels: Vts.optional(Vts.array(Vts.object({
+        proto: Vts.optional(Vts.string()),
+        listenHost: Vts.optional(Vts.string()),
+        listenPort: Vts.number(),
+        egressNodeUid: Vts.string(),
+        targetHost: Vts.string(),
+        targetPort: Vts.number()
+    }))),
     flyingfish_libpath: Vts.optional(Vts.string())
 });
 

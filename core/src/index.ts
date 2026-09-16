@@ -144,6 +144,7 @@ export {ClusterL4Session} from './inc/Cluster/ClusterL4Session.js';
 export {ClusterL4TcpStream} from './inc/Cluster/ClusterL4TcpStream.js';
 export {ClusterL4TcpDialer} from './inc/Cluster/ClusterL4TcpDialer.js';
 export {ClusterL4TcpListener} from './inc/Cluster/ClusterL4TcpListener.js';
+export {ClusterL4Tunnel} from './inc/Cluster/ClusterL4Tunnel.js';
 export {Ipv4Header, Ipv4Packet} from './inc/Cluster/Ipv4Packet.js';
 export {ClusterRouteTable} from './inc/Cluster/ClusterRouteTable.js';
 export {IClusterTunDevice} from './inc/Cluster/ClusterTunDevice.js';

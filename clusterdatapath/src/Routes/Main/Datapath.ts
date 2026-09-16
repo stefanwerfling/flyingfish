@@ -12,6 +12,7 @@ export type DatapathNodeStatus = {
     enrolled: boolean;
     tunActive: boolean;
     tunIfName: string;
+    l4Tunnels: number;
     peers(): string[];
 };
 
@@ -58,6 +59,7 @@ export class Datapath extends DefaultRoute {
             enrolled: this._status.enrolled,
             tunActive: this._status.tunActive,
             tunIfName: this._status.tunIfName,
+            l4Tunnels: this._status.l4Tunnels,
             peers: this._status.peers()
         });
     }

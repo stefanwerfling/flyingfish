@@ -21,7 +21,8 @@ export enum ENV_OPTIONAL {
     CLUSTER_SYNC_INTERVAL_MS = 'FLYINGFISH_CLUSTER_SYNC_INTERVAL_MS',
     CLUSTER_OVERLAY_IP = 'FLYINGFISH_CLUSTER_OVERLAY_IP',
     CLUSTER_OVERLAY_NETMASK = 'FLYINGFISH_CLUSTER_OVERLAY_NETMASK',
-    CLUSTER_TUN_NAME = 'FLYINGFISH_CLUSTER_TUN_NAME'
+    CLUSTER_TUN_NAME = 'FLYINGFISH_CLUSTER_TUN_NAME',
+    CLUSTER_TUNNELS = 'FLYINGFISH_CLUSTER_TUNNELS'
 }
 
 /**
@@ -127,6 +128,23 @@ export class Config extends ConfigCore<ConfigOptionsClusterDatapath> {
                 overlayNetmask: overlayNetmask,
                 tunName: tunName
             };
+        }
+
+        // L4 tunnels (9.5.2): a JSON array of rules, e.g.
+        // [{"listenPort":6379,"egressNodeUid":"<uid>","targetHost":"10.0.0.5","targetPort":6379}].
+        // Malformed JSON is ignored so it can never block the node from starting.
+        const tunnels = process.env[ENV_OPTIONAL.CLUSTER_TUNNELS];
+
+        if (tunnels) {
+            try {
+                const parsed: unknown = JSON.parse(tunnels);
+
+                if (Array.isArray(parsed)) {
+                    config.tunnels = parsed;
+                }
+            } catch {
+                // ignore malformed tunnel JSON; the node still runs without L4 tunnels
+            }
         }
 
         return config;

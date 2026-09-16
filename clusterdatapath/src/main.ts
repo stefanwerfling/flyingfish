@@ -1,13 +1,21 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
     ClusterDatapath,
+    ClusterL4Proto,
+    ClusterL4TcpDialer,
+    ClusterL4TcpListener,
+    ClusterL4Tunnel,
     ClusterMembership,
+    ClusterMuxKind,
     ClusterPeerInfo,
+    ClusterPeerMux,
     ClusterQuicPeerTransport,
     ClusterRouteTable,
     ClusterTlsPeerTransport,
     ClusterWssPeerTransport,
     HubClusterPeerRoster,
+    IClusterMessageChannel,
+    IClusterL4Stream,
     IClusterPeerTransport,
     NativeTunDevice,
     PkiBootstrapSocketClient,
@@ -98,6 +106,7 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
         enrolled: false,
         tunActive: false,
         tunIfName: '',
+        l4Tunnels: 0,
         peers: (): string[] => []
     };
 
@@ -210,9 +219,15 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
 
             status.peers = (): string[] => membership.peers();
 
+            // Each peer link is multiplexed (Cluster/Mesh epic 9.5.2): L3 packets and
+            // L4 tunnel streams share the one authenticated channel. The datapath
+            // sends outbound packets over the peer's L3 mux sub-channel, resolved here.
+            const packetByNode = new Map<string, IClusterMessageChannel>();
+
             // Bring up the TUN device + L3 datapath. Optional: without the native
-            // binding (or CAP_NET_ADMIN) the node still runs the mesh, just without
-            // packet forwarding.
+            // binding (or CAP_NET_ADMIN) the node still runs the mesh — and L4
+            // tunnels, which need no TUN — just without L3 packet forwarding.
+            let datapath: ClusterDatapath | undefined;
             const tunBinding = TunBindingLoader.load();
 
             if (tunBinding !== null && overlayIp.length > 0) {
@@ -222,8 +237,7 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                     const nativeTun = tunBinding.TunDevice.open(tunName, overlayIp, netmask);
                     const tun = new NativeTunDevice(nativeTun);
 
-                    const datapath = new ClusterDatapath(tun, routeTable, (nodeUid) => membership.getChannel(nodeUid));
-                    membership.onPeer((channel) => datapath.attachPeer(channel));
+                    datapath = new ClusterDatapath(tun, routeTable, (nodeUid) => packetByNode.get(nodeUid));
                     datapath.start();
 
                     status.tunActive = true;
@@ -236,6 +250,61 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
             } else {
                 Logger.getLogger().warn('Cluster datapath running without a TUN device (no binding or no overlay IP)');
             }
+
+            // L4 tunnel coordinator (Cluster/Mesh epic 9.5.2): one session per peer,
+            // dialing egress targets over TCP.
+            const l4Tunnel = new ClusterL4Tunnel(enrolledIdentity.nodeUid, new ClusterL4TcpDialer());
+
+            // Wire every peer channel (set before start so none is missed): multiplex
+            // it, feed the L3 sub-channel to the datapath and the L4 sub-channel to the
+            // tunnel, and tear both down when the link closes.
+            membership.onPeer((channel) => {
+                const nodeUid = channel.identity.nodeUid;
+                const mux = new ClusterPeerMux(channel);
+                const packetChannel = mux.channel(ClusterMuxKind.Packet);
+
+                packetByNode.set(nodeUid, packetChannel);
+
+                if (datapath !== undefined) {
+                    datapath.attachPeer(packetChannel);
+                }
+
+                l4Tunnel.addPeer(nodeUid, mux.channel(ClusterMuxKind.L4));
+
+                mux.onClose((): void => {
+                    packetByNode.delete(nodeUid);
+                    l4Tunnel.removePeer(nodeUid);
+                });
+            });
+
+            // Bind the configured L4 ingress listeners. TCP only for now; a UDP rule
+            // is skipped with a warning (the frame/engine already carry the proto).
+            const listeners = (await Promise.all((tConfig.tunnels ?? []).map(async(rule): Promise<ClusterL4TcpListener | null> => {
+                if ((rule.proto ?? 'tcp').toLowerCase() === 'udp') {
+                    Logger.getLogger().warn(`L4 tunnel on port ${rule.listenPort} skipped: UDP tunnels are not yet supported`);
+
+                    return null;
+                }
+
+                const target = {proto: ClusterL4Proto.Tcp, host: rule.targetHost, port: rule.targetPort};
+                const listener = new ClusterL4TcpListener((stream: IClusterL4Stream): void => {
+                    l4Tunnel.open(rule.egressNodeUid, target, stream);
+                });
+
+                try {
+                    const boundPort = await listener.listen(rule.listenPort, rule.listenHost);
+
+                    Logger.getLogger().info(`L4 tunnel ${rule.listenHost ?? '0.0.0.0'}:${boundPort} → ${rule.egressNodeUid} (${rule.targetHost}:${rule.targetPort})`);
+
+                    return listener;
+                } catch (error) {
+                    Logger.getLogger().error(`L4 tunnel failed to bind port ${rule.listenPort}`, error);
+
+                    return null;
+                }
+            }))).filter((listener): listener is ClusterL4TcpListener => listener !== null);
+
+            status.l4Tunnels = listeners.length;
 
             const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
 

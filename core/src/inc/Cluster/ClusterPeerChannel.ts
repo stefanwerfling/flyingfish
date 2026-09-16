@@ -33,7 +33,7 @@ export class ClusterPeerChannel {
 
     private _messageHandler: ClusterPeerMessageHandler | null = null;
 
-    private _closeHandler: ClusterPeerCloseHandler | null = null;
+    private readonly _closeHandlers: ClusterPeerCloseHandler[] = [];
 
     /**
      * @param duplex - the authenticated byte duplex to the peer
@@ -45,8 +45,8 @@ export class ClusterPeerChannel {
 
         this._duplex.onData((chunk: Buffer): void => this._onData(chunk));
         this._duplex.onClose((): void => {
-            if (this._closeHandler !== null) {
-                this._closeHandler();
+            for (const handler of this._closeHandlers) {
+                handler();
             }
         });
         this._duplex.onError((): void => {
@@ -81,11 +81,13 @@ export class ClusterPeerChannel {
     }
 
     /**
-     * Register the close handler.
+     * Register a close handler. Additive: every registered handler is invoked once
+     * when the channel closes, so independent subsystems on the same channel (peer
+     * membership tracking and the {@link ClusterPeerMux}) can each observe the close.
      * @param handler - called once when the channel closes
      */
     public onClose(handler: ClusterPeerCloseHandler): void {
-        this._closeHandler = handler;
+        this._closeHandlers.push(handler);
     }
 
     /**
