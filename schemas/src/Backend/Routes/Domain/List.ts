@@ -29,7 +29,10 @@ export const SchemaDomainData = Vts.object({
     recordless: Vts.boolean(),
     records: Vts.array(SchemaDomainRecord),
     disable: Vts.boolean(),
-    parent_id: Vts.number()
+    parent_id: Vts.number(),
+    // Cluster failover priority for this domain on this node (9.5.14): lower =
+    // primary. Optional so existing clients stay compatible until the UI sets it.
+    cluster_priority: Vts.optional(Vts.number())
 });
 
 /**

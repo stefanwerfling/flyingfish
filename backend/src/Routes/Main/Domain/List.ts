@@ -42,7 +42,8 @@ export class List {
                 recordless: domain.recordless,
                 disable: domain.disable,
                 records: recordList,
-                parent_id: domain.parent_id
+                parent_id: domain.parent_id,
+                cluster_priority: domain.cluster_priority
             });
         }
 

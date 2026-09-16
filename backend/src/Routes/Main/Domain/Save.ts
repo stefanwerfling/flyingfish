@@ -39,6 +39,7 @@ export class Save {
 
         aDomain.domainname = data.name.toLowerCase();
         aDomain.disable = data.disable;
+        aDomain.cluster_priority = data.cluster_priority ?? 0;
         aDomain.parent_id = await DomainServiceDB.getInstance().findParentId(data.name.toLowerCase());
 
         aDomain = await DomainServiceDB.getInstance().save(aDomain);

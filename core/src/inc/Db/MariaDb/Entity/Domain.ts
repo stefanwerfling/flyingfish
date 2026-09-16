@@ -49,4 +49,15 @@ export class Domain extends DBBaseEntityId {
     })
     public parent_id!: number;
 
+    /**
+     * Cluster failover priority for this domain on this node (Cluster/Mesh epic
+     * 9.5.14): lower = higher priority (the primary). The cluster's DNS A record
+     * follows the lowest-priority live node, so a domain fails over to the next node
+     * when its primary is down.
+     */
+    @Column({
+        default: 0
+    })
+    public cluster_priority!: number;
+
 }

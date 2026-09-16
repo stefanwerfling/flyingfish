@@ -12,6 +12,7 @@ export type ClusterDomainLike = {
     fixdomain: boolean;
     recordless: boolean;
     parent_id: number;
+    cluster_priority: number;
 };
 
 /**
@@ -53,10 +54,9 @@ export class ClusterLocalStateProvider {
                 value: {
                     id: domain.id,
                     name: domain.domainname,
-                    // Failover priority for this domain on this node (lower = primary).
-                    // Placeholder 0 until a per-domain priority DB field lands with the
-                    // HA/DNS-failover feature; the cluster domain view already orders by it.
-                    priority: 0,
+                    // Failover priority for this domain on this node (lower = primary),
+                    // 9.5.14; the cluster domain view orders nodes by it for DNS failover.
+                    priority: domain.cluster_priority,
                     disable: domain.disable,
                     fix: domain.fixdomain,
                     recordless: domain.recordless,
