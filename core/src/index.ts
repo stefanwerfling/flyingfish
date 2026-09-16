@@ -158,6 +158,10 @@ export {
     ClusterL4RouteReconciler
 } from './inc/Cluster/ClusterL4RouteReconciler.js';
 export {
+    HubClusterL4RouteProviderOptions,
+    HubClusterL4RouteProvider
+} from './inc/Cluster/HubClusterL4RouteProvider.js';
+export {
     ClusterProxyEndpoint,
     ClusterProxyProtocolV2Header,
     ClusterProxyProtocolV2

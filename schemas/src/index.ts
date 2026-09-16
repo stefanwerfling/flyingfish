@@ -388,7 +388,13 @@ export {
     SchemaClusterAnnounceRequest,
     ClusterAnnounceRequest,
     SchemaClusterPeersResponse,
-    ClusterPeersResponse
+    ClusterPeersResponse,
+    SchemaClusterL4Route,
+    ClusterL4Route,
+    SchemaClusterRoutesPublishRequest,
+    ClusterRoutesPublishRequest,
+    SchemaClusterRoutesResponse,
+    ClusterRoutesResponse
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

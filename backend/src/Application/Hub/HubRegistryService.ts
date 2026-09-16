@@ -1,5 +1,6 @@
 import {ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {ServiceImportance} from 'figtree-schemas';
+import {ClusterL4RouteDirectory} from './ClusterL4RouteDirectory.js';
 import {ClusterPeerDirectory} from './ClusterPeerDirectory.js';
 import {HubRegistry} from './HubRegistry.js';
 
@@ -41,6 +42,12 @@ export class HubRegistryService extends ServiceJobAbstract {
     protected readonly _clusterPeers: ClusterPeerDirectory = new ClusterPeerDirectory();
 
     /**
+     * The app-wide cluster L4 route directory (Cluster/Mesh epic 9.5.4).
+     * @protected
+     */
+    protected readonly _clusterRoutes: ClusterL4RouteDirectory = new ClusterL4RouteDirectory();
+
+    /**
      * Fault-isolation importance for the service monitor.
      * @protected
      */
@@ -77,6 +84,13 @@ export class HubRegistryService extends ServiceJobAbstract {
      */
     public getClusterPeers(): ClusterPeerDirectory {
         return this._clusterPeers;
+    }
+
+    /**
+     * @returns {ClusterL4RouteDirectory} the app-wide cluster L4 route directory
+     */
+    public getClusterRoutes(): ClusterL4RouteDirectory {
+        return this._clusterRoutes;
     }
 
     /**

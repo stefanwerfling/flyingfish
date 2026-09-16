@@ -1,12 +1,15 @@
 import {Router} from 'express';
 import {
     ClusterPeersResponse,
+    ClusterRoutesResponse,
     DefaultReturn,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaCapabilityManifest,
     SchemaClusterAnnounceRequest,
     SchemaClusterPeersResponse,
+    SchemaClusterRoutesPublishRequest,
+    SchemaClusterRoutesResponse,
     SchemaDefaultReturn,
     SchemaRegistryInstanceRequest,
     SchemaRegistryPartsResponse,
@@ -158,6 +161,39 @@ export class Registry extends DefaultRoute {
             {
                 description: 'Read the cluster peer roster',
                 responseBodySchema: SchemaClusterPeersResponse
+            }
+        );
+
+        this._post(
+            '/json/registry/cluster/routes/publish',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                HubRegistryService.getInstance().getClusterRoutes().publish(
+                    data.body!.nodeUid,
+                    data.body!.routes
+                );
+
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Publish the L4 routes a node owns to the cluster route model',
+                bodySchema: SchemaClusterRoutesPublishRequest,
+                responseBodySchema: SchemaDefaultReturn
+            }
+        );
+
+        this._get(
+            '/json/registry/cluster/routes',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<ClusterRoutesResponse> => {
+                return {
+                    statusCode: StatusCodes.OK,
+                    list: HubRegistryService.getInstance().getClusterRoutes().routes()
+                };
+            },
+            {
+                description: 'Read the cluster-wide L4 route set',
+                responseBodySchema: SchemaClusterRoutesResponse
             }
         );
 
