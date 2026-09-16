@@ -1,6 +1,8 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
     ClusterDatapath,
+    ClusterL4AcceptedEndpoints,
+    ClusterL4CompositeDialer,
     ClusterL4Proto,
     ClusterL4Route,
     ClusterL4RouteHandle,
@@ -8,6 +10,8 @@ import {
     ClusterL4TcpDialer,
     ClusterL4TcpListener,
     ClusterL4Tunnel,
+    ClusterL4UdpDialer,
+    ClusterL4UdpListener,
     ClusterMembership,
     ClusterMuxKind,
     ClusterPeerInfo,
@@ -259,8 +263,11 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
             }
 
             // L4 tunnel coordinator (Cluster/Mesh epic 9.5.2): one session per peer,
-            // dialing egress targets over TCP.
-            const l4Tunnel = new ClusterL4Tunnel(enrolledIdentity.nodeUid, new ClusterL4TcpDialer());
+            // dialing egress targets over TCP or UDP (composite dialer picks by proto).
+            const l4Tunnel = new ClusterL4Tunnel(
+                enrolledIdentity.nodeUid,
+                new ClusterL4CompositeDialer(new ClusterL4TcpDialer(), new ClusterL4UdpDialer())
+            );
 
             // Wire every peer channel (set before start so none is missed): multiplex
             // it, feed the L3 sub-channel to the datapath and the L4 sub-channel to the
@@ -300,20 +307,16 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                 proxyProtocol: rule.proxyProtocol
             }));
 
-            // Bind one route's ingress listener. TCP only for now; a UDP route is
-            // skipped (the frame/engine already carry the proto).
+            // Bind one route's ingress listener (TCP or UDP, per route.proto). Each
+            // accepted connection/flow opens a tunnelled stream to the egress peer.
             const bindRoute = async(route: ClusterL4Route): Promise<ClusterL4RouteHandle | null> => {
-                if (route.proto === ClusterL4Proto.Udp) {
-                    Logger.getLogger().warn(`L4 route ${route.id} skipped: UDP tunnels are not yet supported`);
+                const target = {proto: route.proto, host: route.targetHost, port: route.targetPort};
+                const isUdp = route.proto === ClusterL4Proto.Udp;
 
-                    return null;
-                }
-
-                const target = {proto: ClusterL4Proto.Tcp, host: route.targetHost, port: route.targetPort};
-                const listener = new ClusterL4TcpListener((stream: IClusterL4Stream, endpoints): void => {
-                    // Preserve the client IP (9.5.3): carry the socket endpoints when the
-                    // route asks for it, so the egress emits a PROXY protocol v2 header.
-                    const clientInfo = route.proxyProtocol === true && endpoints !== undefined
+                const onConnection = (stream: IClusterL4Stream, endpoints: ClusterL4AcceptedEndpoints | undefined): void => {
+                    // Preserve the client IP (9.5.3, TCP only): carry the socket endpoints
+                    // when the route asks for it, so the egress emits a PROXY v2 header.
+                    const clientInfo = !isUdp && route.proxyProtocol === true && endpoints !== undefined
                         ? {
                             sourceHost: endpoints.source.host,
                             sourcePort: endpoints.source.port,
@@ -323,12 +326,14 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                         : undefined;
 
                     l4Tunnel.open(route.egressNodeUid, target, stream, clientInfo);
-                });
+                };
+
+                const listener = isUdp ? new ClusterL4UdpListener(onConnection) : new ClusterL4TcpListener(onConnection);
 
                 try {
                     const boundPort = await listener.listen(route.listenPort, route.listenHost);
 
-                    Logger.getLogger().info(`L4 route ${route.id} ${route.listenHost ?? '0.0.0.0'}:${boundPort} → ${route.egressNodeUid} (${route.targetHost}:${route.targetPort})`);
+                    Logger.getLogger().info(`L4 route ${route.id} (${isUdp ? 'udp' : 'tcp'}) ${route.listenHost ?? '0.0.0.0'}:${boundPort} → ${route.egressNodeUid} (${route.targetHost}:${route.targetPort})`);
 
                     return {close: async(): Promise<void> => listener.close()};
                 } catch (error) {

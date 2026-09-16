@@ -5,13 +5,17 @@
  * server, and the echo comes back the same way. A second test proves an L3 overlay
  * packet and an L4 stream coexist on the one muxed peer link. Loopback only.
  */
+import {AddressInfo as UdpAddressInfo, createSocket, Socket as UdpSocket} from 'node:dgram';
 import {AddressInfo, createConnection, createServer, Server, Socket} from 'node:net';
 import {
     ClusterDatapath,
+    ClusterL4CompositeDialer,
     ClusterL4Proto,
     ClusterL4Session,
     ClusterL4TcpDialer,
     ClusterL4TcpListener,
+    ClusterL4UdpDialer,
+    ClusterL4UdpListener,
     ClusterMuxKind,
     ClusterPeerChannel,
     ClusterPeerMux,
@@ -355,6 +359,66 @@ describe('ClusterL4 tunnel preserves the client IP with PROXY protocol v2 (9.5.3
         expect(firstBytes.subarray(28).toString('utf8')).toBe('PING');
 
         client.destroy();
+        origin.close();
+        egress.close();
+        await listener.close();
+    });
+});
+
+describe('ClusterL4 tunnel end to end over UDP (real loopback datagrams)', () => {
+    let echo: UdpSocket;
+    let echoPort: number;
+
+    beforeAll(async() => {
+        echo = createSocket('udp4');
+        echo.on('message', (message: Buffer, rinfo): void => {
+            echo.send(message, rinfo.port, rinfo.address);
+        });
+
+        await new Promise<void>((resolve): void => {
+            echo.bind(0, '127.0.0.1', (): void => resolve());
+        });
+
+        echoPort = (echo.address() as UdpAddressInfo).port;
+    });
+
+    afterAll(async() => {
+        await new Promise<void>((resolve): void => {
+            echo.close((): void => resolve());
+        });
+    });
+
+    test('a client datagram is tunnelled to the UDP egress target and echoed back', async() => {
+        const {muxA, muxB} = buildMuxPair();
+
+        const origin = new ClusterL4Session(muxA.channel(ClusterMuxKind.L4), noDial, true);
+        const egress = new ClusterL4Session(
+            muxB.channel(ClusterMuxKind.L4),
+            new ClusterL4CompositeDialer(new ClusterL4TcpDialer(), new ClusterL4UdpDialer()),
+            false
+        );
+
+        const listener = new ClusterL4UdpListener((stream: IClusterL4Stream): void => {
+            origin.openStream({proto: ClusterL4Proto.Udp, host: '127.0.0.1', port: echoPort}, stream);
+        });
+        const ingressPort = await listener.listen(0, '127.0.0.1');
+
+        // a real UDP client sends a datagram to the ingress and awaits the echo
+        const received: string[] = [];
+        const client = createSocket('udp4');
+        client.on('message', (message: Buffer): void => {
+            received.push(message.toString('utf8'));
+        });
+        await new Promise<void>((resolve): void => {
+            client.bind(0, '127.0.0.1', (): void => resolve());
+        });
+
+        client.send(Buffer.from('hello-udp-tunnel'), ingressPort, '127.0.0.1');
+
+        await waitFor((): boolean => received.length === 1);
+        expect(received[0]).toBe('hello-udp-tunnel');
+
+        client.close();
         origin.close();
         egress.close();
         await listener.close();
