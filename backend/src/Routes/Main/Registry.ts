@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {aggregateClusterDomains} from 'flyingfish_core';
+import {aggregateClusterDomains, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
 import {
     ClusterDomainsResponse,
     ClusterLocalStateResponse,
@@ -258,13 +258,20 @@ export class Registry extends DefaultRoute {
             '/json/registry/cluster/domains',
             FlyingFishRouteCheckUserLogin,
             async(): Promise<ClusterDomainsResponse> => {
+                const aggregate = HubRegistryService.getInstance().getClusterAggregate().entries();
+                const live = clusterLiveNodeUids(aggregate, Date.now());
+
                 return {
                     statusCode: StatusCodes.OK,
-                    list: aggregateClusterDomains(HubRegistryService.getInstance().getClusterAggregate().entries())
+                    list: aggregateClusterDomains(aggregate).map((view) => ({
+                        name: view.name,
+                        nodes: view.nodes,
+                        activeNodeUid: resolveDomainActiveNode(view, live)?.nodeUid ?? null
+                    }))
                 };
             },
             {
-                description: 'Which nodes manage each domain cluster-wide (HA / DNS failover view)',
+                description: 'Which nodes manage each domain cluster-wide, with the active (live, highest-priority) node (HA / DNS failover view)',
                 responseBodySchema: SchemaClusterDomainsResponse
             }
         );

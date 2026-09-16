@@ -249,9 +249,20 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             const advertiseHost = tConfig.cluster?.advertiseHost ?? os.hostname();
             const syncIntervalMs = tConfig.cluster?.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS;
 
-            // Seed this node's own descriptor so the federated node roster emerges via
-            // gossip (no central directory).
-            gossipStore.set(`node:${selfNodeUid}`, {nodeUid: selfNodeUid, host: advertiseHost, port: peerPort});
+            // Seed this node's own descriptor (with a heartbeat) so the federated node
+            // roster + liveness emerge via gossip (no central directory). The heartbeat
+            // is refreshed each sync; peers treat a stale heartbeat as the node being
+            // down and fail domains over off it (9.5.14).
+            const heartbeat = (): void => {
+                gossipStore.set(`node:${selfNodeUid}`, {
+                    nodeUid: selfNodeUid,
+                    host: advertiseHost,
+                    port: peerPort,
+                    heartbeat: Date.now()
+                });
+            };
+
+            heartbeat();
 
             // Refresh our announcement (TTL), re-sync the membership, pull the Hub's
             // resources into the gossip store (owned by this node, keys namespaced by
@@ -259,6 +270,8 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             // aggregate back to the Hub — all best-effort so a transient outage is not
             // fatal.
             const syncOnce = async(): Promise<void> => {
+                heartbeat();
+
                 await roster.announce(advertiseHost, peerPort);
                 await membership.sync(roster);
 

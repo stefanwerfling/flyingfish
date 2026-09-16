@@ -173,7 +173,10 @@ export const SchemaClusterDomainNode = Vts.object({
  */
 export const SchemaClusterDomainView = Vts.object({
     name: Vts.string(),
-    nodes: Vts.array(SchemaClusterDomainNode)
+    nodes: Vts.array(SchemaClusterDomainNode),
+    // The node whose IP the domain's DNS A record currently resolves to — the
+    // highest-priority LIVE node — or null if none is live (9.5.14 failover).
+    activeNodeUid: Vts.or([Vts.string(), Vts.null()])
 });
 
 /**

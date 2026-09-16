@@ -180,6 +180,11 @@ export {
     resolveDomainActiveNode
 } from './inc/Cluster/ClusterDomainAggregate.js';
 export {
+    CLUSTER_NODE_KEY_PREFIX,
+    CLUSTER_NODE_STALE_MS,
+    clusterLiveNodeUids
+} from './inc/Cluster/ClusterNodeLiveness.js';
+export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
     clusterL4RouteAssignedTo,
