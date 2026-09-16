@@ -2,6 +2,9 @@ import {Args, Logger} from '@stefanwerfling/figtree';
 import {
     ClusterDatapath,
     ClusterL4Proto,
+    ClusterL4Route,
+    ClusterL4RouteHandle,
+    ClusterL4RouteReconciler,
     ClusterL4TcpDialer,
     ClusterL4TcpListener,
     ClusterL4Tunnel,
@@ -13,6 +16,7 @@ import {
     ClusterRouteTable,
     ClusterTlsPeerTransport,
     ClusterWssPeerTransport,
+    HubClusterL4RouteProvider,
     HubClusterPeerRoster,
     IClusterMessageChannel,
     IClusterL4Stream,
@@ -212,6 +216,7 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                 transport = new ClusterTlsPeerTransport(transportOptions);
             }
 
+            // eslint-disable-next-line require-atomic-updates -- single-run boot, no concurrent status writer yet
             status.transport = transportName;
 
             const membership = new ClusterMembership(transport, enrolledIdentity.nodeUid);
@@ -240,7 +245,9 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                     datapath = new ClusterDatapath(tun, routeTable, (nodeUid) => packetByNode.get(nodeUid));
                     datapath.start();
 
+                    // eslint-disable-next-line require-atomic-updates -- single-run boot, no concurrent status writer yet
                     status.tunActive = true;
+                    // eslint-disable-next-line require-atomic-updates -- single-run boot, no concurrent status writer yet
                     status.tunIfName = nativeTun.ifName;
 
                     Logger.getLogger().info(`Cluster datapath TUN ${nativeTun.ifName} up (overlay ${overlayIp})`);
@@ -277,21 +284,36 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                 });
             });
 
-            // Bind the configured L4 ingress listeners. TCP only for now; a UDP rule
-            // is skipped with a warning (the frame/engine already carry the proto).
-            const listeners = (await Promise.all((tConfig.tunnels ?? []).map(async(rule): Promise<ClusterL4TcpListener | null> => {
-                if ((rule.proto ?? 'tcp').toLowerCase() === 'udp') {
-                    Logger.getLogger().warn(`L4 tunnel on port ${rule.listenPort} skipped: UDP tunnels are not yet supported`);
+            // L4 routes (Cluster/Mesh epic 9.5.4): this node's configured tunnels become
+            // cluster-wide routes it owns and publishes; every node syncs the full set
+            // and the reconciler binds/unbinds ingress listeners to match — dynamic,
+            // cluster-managed routing (no restart to add/remove a service).
+            const localRoutes: ClusterL4Route[] = (tConfig.tunnels ?? []).map((rule): ClusterL4Route => ({
+                id: `${enrolledIdentity!.nodeUid}:${rule.listenHost ?? '*'}:${rule.listenPort}`,
+                proto: (rule.proto ?? 'tcp').toLowerCase() === 'udp' ? ClusterL4Proto.Udp : ClusterL4Proto.Tcp,
+                ingressNodeUid: enrolledIdentity!.nodeUid,
+                listenHost: rule.listenHost,
+                listenPort: rule.listenPort,
+                egressNodeUid: rule.egressNodeUid,
+                targetHost: rule.targetHost,
+                targetPort: rule.targetPort,
+                proxyProtocol: rule.proxyProtocol
+            }));
+
+            // Bind one route's ingress listener. TCP only for now; a UDP route is
+            // skipped (the frame/engine already carry the proto).
+            const bindRoute = async(route: ClusterL4Route): Promise<ClusterL4RouteHandle | null> => {
+                if (route.proto === ClusterL4Proto.Udp) {
+                    Logger.getLogger().warn(`L4 route ${route.id} skipped: UDP tunnels are not yet supported`);
 
                     return null;
                 }
 
-                const target = {proto: ClusterL4Proto.Tcp, host: rule.targetHost, port: rule.targetPort};
+                const target = {proto: ClusterL4Proto.Tcp, host: route.targetHost, port: route.targetPort};
                 const listener = new ClusterL4TcpListener((stream: IClusterL4Stream, endpoints): void => {
-                    // Preserve the client IP (9.5.3): when the rule asks for it and the
-                    // socket reported its endpoints, carry them so the egress emits a
-                    // PROXY protocol v2 header to the backend.
-                    const clientInfo = rule.proxyProtocol === true && endpoints !== undefined
+                    // Preserve the client IP (9.5.3): carry the socket endpoints when the
+                    // route asks for it, so the egress emits a PROXY protocol v2 header.
+                    const clientInfo = route.proxyProtocol === true && endpoints !== undefined
                         ? {
                             sourceHost: endpoints.source.host,
                             sourcePort: endpoints.source.port,
@@ -300,23 +322,28 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                         }
                         : undefined;
 
-                    l4Tunnel.open(rule.egressNodeUid, target, stream, clientInfo);
+                    l4Tunnel.open(route.egressNodeUid, target, stream, clientInfo);
                 });
 
                 try {
-                    const boundPort = await listener.listen(rule.listenPort, rule.listenHost);
+                    const boundPort = await listener.listen(route.listenPort, route.listenHost);
 
-                    Logger.getLogger().info(`L4 tunnel ${rule.listenHost ?? '0.0.0.0'}:${boundPort} → ${rule.egressNodeUid} (${rule.targetHost}:${rule.targetPort})`);
+                    Logger.getLogger().info(`L4 route ${route.id} ${route.listenHost ?? '0.0.0.0'}:${boundPort} → ${route.egressNodeUid} (${route.targetHost}:${route.targetPort})`);
 
-                    return listener;
+                    return {close: async(): Promise<void> => listener.close()};
                 } catch (error) {
-                    Logger.getLogger().error(`L4 tunnel failed to bind port ${rule.listenPort}`, error);
+                    Logger.getLogger().error(`L4 route ${route.id} failed to bind port ${route.listenPort}`, error);
 
                     return null;
                 }
-            }))).filter((listener): listener is ClusterL4TcpListener => listener !== null);
+            };
 
-            status.l4Tunnels = listeners.length;
+            const routeProvider = new HubClusterL4RouteProvider({
+                hubUrl: tConfig.registry.url,
+                selfNodeUid: enrolledIdentity.nodeUid,
+                secret: tConfig.registry.secret
+            });
+            const routeReconciler = new ClusterL4RouteReconciler(enrolledIdentity.nodeUid, bindRoute);
 
             const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
 
@@ -330,7 +357,9 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
             const syncIntervalMs = tConfig.cluster?.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS;
 
             // Announce our endpoint + overlay IP, refresh the route table from the
-            // roster, then dial the un-connected peers. Best-effort each interval.
+            // roster, dial the un-connected peers, then publish this node's L4 routes
+            // and reconcile ingress listeners against the cluster-wide set. Best-effort
+            // each interval.
             const syncOnce = async(): Promise<void> => {
                 await roster.announce(advertiseHost, peerPort, overlayIp.length > 0 ? overlayIp : undefined);
 
@@ -338,6 +367,10 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
                 routeTable.applyRoster(peers);
 
                 await membership.sync({list: (): Promise<ClusterPeerInfo[]> => Promise.resolve(peers)});
+
+                await routeProvider.publish(localRoutes);
+                await routeReconciler.reconcile(await routeProvider.list());
+                status.l4Tunnels = routeReconciler.activeCount();
             };
 
             await syncOnce();
