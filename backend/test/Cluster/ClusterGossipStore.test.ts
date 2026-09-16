@@ -42,6 +42,26 @@ describe('ClusterGossipStore (local writes)', () => {
         expect(second.version).toEqual({lamport: 2, nodeUid: 'node-a'});
         expect(store.lamport()).toBe(2);
     });
+
+    test('setIfChanged writes only on a real change (no version churn)', () => {
+        const store = new ClusterGossipStore('node-a');
+
+        expect(store.setIfChanged('k', {a: 1})).toBe(true);
+        expect(store.lamport()).toBe(1);
+
+        // same value (deep-equal) → no write, no bump
+        expect(store.setIfChanged('k', {a: 1})).toBe(false);
+        expect(store.lamport()).toBe(1);
+
+        // changed value → write + bump
+        expect(store.setIfChanged('k', {a: 2})).toBe(true);
+        expect(store.lamport()).toBe(2);
+
+        // a tombstoned key is revived by setIfChanged even with the old value
+        store.remove('k');
+        expect(store.setIfChanged('k', {a: 2})).toBe(true);
+        expect(store.has('k')).toBe(true);
+    });
 });
 
 describe('ClusterGossipStore (merge / convergence)', () => {

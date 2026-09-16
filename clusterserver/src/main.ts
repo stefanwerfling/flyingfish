@@ -8,6 +8,7 @@ import {
     ClusterQuicPeerTransport,
     ClusterTlsPeerTransport,
     ClusterWssPeerTransport,
+    HubClusterGossipSync,
     HubClusterPeerRoster,
     IClusterPeerTransport,
     PkiBootstrapSocketClient,
@@ -234,25 +235,39 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 secret: tConfig.registry.secret
             });
 
+            // Hub↔clusterserver config sync (9.5.12 phase 2b): pull this Hub's
+            // publishable resources into the gossip store, push the converged aggregate
+            // back for the frontend.
+            const gossipSync = new HubClusterGossipSync({
+                hubUrl: tConfig.registry.url,
+                selfNodeUid: enrolledIdentity.nodeUid,
+                secret: tConfig.registry.secret
+            });
+
+            const selfNodeUid = enrolledIdentity.nodeUid;
             const advertiseHost = tConfig.cluster?.advertiseHost ?? os.hostname();
             const syncIntervalMs = tConfig.cluster?.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS;
 
             // Seed this node's own descriptor so the federated node roster emerges via
-            // gossip (no central directory). The Hub↔clusterserver config sync (the
-            // real cluster state) plugs in next (9.5.12 phase 2b).
-            gossipStore.set(`node:${enrolledIdentity.nodeUid}`, {
-                nodeUid: enrolledIdentity.nodeUid,
-                host: advertiseHost,
-                port: peerPort
-            });
+            // gossip (no central directory).
+            gossipStore.set(`node:${selfNodeUid}`, {nodeUid: selfNodeUid, host: advertiseHost, port: peerPort});
 
-            // Refresh our announcement (TTL), re-sync the membership, then run a gossip
-            // anti-entropy round with the connected peers — all best-effort so a
-            // transient Hub outage is not fatal.
+            // Refresh our announcement (TTL), re-sync the membership, pull the Hub's
+            // resources into the gossip store (owned by this node, keys namespaced by
+            // nodeUid), run a gossip anti-entropy round, then push the converged
+            // aggregate back to the Hub — all best-effort so a transient outage is not
+            // fatal.
             const syncOnce = async(): Promise<void> => {
                 await roster.announce(advertiseHost, peerPort);
                 await membership.sync(roster);
+
+                for (const entry of await gossipSync.pullLocalState()) {
+                    gossipStore.setIfChanged(`${selfNodeUid}/${entry.key}`, entry.value);
+                }
+
                 gossip.sync();
+
+                await gossipSync.pushAggregate(gossipStore.liveEntries().map((entry) => ({key: entry.key, value: entry.value})));
             };
 
             await syncOnce();

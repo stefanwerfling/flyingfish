@@ -95,3 +95,59 @@ export const SchemaClusterRoutesResponse = SchemaDefaultReturn.extend({
  * ClusterRoutesResponse
  */
 export type ClusterRoutesResponse = ExtractSchemaResultType<typeof SchemaClusterRoutesResponse>;
+
+/**
+ * SchemaClusterStateEntry — one key→value pair of the gossiped cluster state
+ * (Cluster/Mesh epic 9.5.12). The value is arbitrary JSON (a hub descriptor, later a
+ * domain, …). Versions live only inside the gossip layer, not on the wire here.
+ */
+export const SchemaClusterStateEntry = Vts.object({
+    key: Vts.string(),
+    value: Vts.unknown()
+});
+
+/**
+ * ClusterStateEntry
+ */
+export type ClusterStateEntry = ExtractSchemaResultType<typeof SchemaClusterStateEntry>;
+
+/**
+ * SchemaClusterLocalStateResponse — the resources a Hub wants published into the
+ * cluster gossip; its local clusterserver pulls this and owns the entries (9.5.12
+ * phase 2b). Keys are Hub-relative; the clusterserver namespaces them by its nodeUid.
+ */
+export const SchemaClusterLocalStateResponse = SchemaDefaultReturn.extend({
+    entries: Vts.array(SchemaClusterStateEntry)
+});
+
+/**
+ * ClusterLocalStateResponse
+ */
+export type ClusterLocalStateResponse = ExtractSchemaResultType<typeof SchemaClusterLocalStateResponse>;
+
+/**
+ * SchemaClusterAggregatePublishRequest — a clusterserver pushes the converged
+ * cluster-wide gossip state back to its local Hub so the frontend can read it.
+ */
+export const SchemaClusterAggregatePublishRequest = Vts.object({
+    nodeUid: Vts.string(),
+    entries: Vts.array(SchemaClusterStateEntry)
+});
+
+/**
+ * ClusterAggregatePublishRequest
+ */
+export type ClusterAggregatePublishRequest = ExtractSchemaResultType<typeof SchemaClusterAggregatePublishRequest>;
+
+/**
+ * SchemaClusterStateResponse — the cluster-wide aggregate the Hub returns to the
+ * frontend (the federated view every node sees).
+ */
+export const SchemaClusterStateResponse = SchemaDefaultReturn.extend({
+    entries: Vts.array(SchemaClusterStateEntry)
+});
+
+/**
+ * ClusterStateResponse
+ */
+export type ClusterStateResponse = ExtractSchemaResultType<typeof SchemaClusterStateResponse>;

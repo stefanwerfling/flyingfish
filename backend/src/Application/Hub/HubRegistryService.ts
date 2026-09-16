@@ -1,5 +1,6 @@
 import {ServiceJobAbstract} from '@stefanwerfling/figtree';
 import {ServiceImportance} from 'figtree-schemas';
+import {ClusterAggregateStore} from './ClusterAggregateStore.js';
 import {ClusterL4RouteDirectory} from './ClusterL4RouteDirectory.js';
 import {ClusterPeerDirectory} from './ClusterPeerDirectory.js';
 import {HubRegistry} from './HubRegistry.js';
@@ -48,6 +49,13 @@ export class HubRegistryService extends ServiceJobAbstract {
     protected readonly _clusterRoutes: ClusterL4RouteDirectory = new ClusterL4RouteDirectory();
 
     /**
+     * The latest cluster-wide gossip aggregate pushed by the local clusterserver
+     * (Cluster/Mesh epic 9.5.12).
+     * @protected
+     */
+    protected readonly _clusterAggregate: ClusterAggregateStore = new ClusterAggregateStore();
+
+    /**
      * Fault-isolation importance for the service monitor.
      * @protected
      */
@@ -91,6 +99,13 @@ export class HubRegistryService extends ServiceJobAbstract {
      */
     public getClusterRoutes(): ClusterL4RouteDirectory {
         return this._clusterRoutes;
+    }
+
+    /**
+     * @returns {ClusterAggregateStore} the app-wide cluster gossip aggregate store
+     */
+    public getClusterAggregate(): ClusterAggregateStore {
+        return this._clusterAggregate;
     }
 
     /**

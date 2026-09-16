@@ -394,7 +394,15 @@ export {
     SchemaClusterRoutesPublishRequest,
     ClusterRoutesPublishRequest,
     SchemaClusterRoutesResponse,
-    ClusterRoutesResponse
+    ClusterRoutesResponse,
+    SchemaClusterStateEntry,
+    ClusterStateEntry,
+    SchemaClusterLocalStateResponse,
+    ClusterLocalStateResponse,
+    SchemaClusterAggregatePublishRequest,
+    ClusterAggregatePublishRequest,
+    SchemaClusterStateResponse,
+    ClusterStateResponse
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

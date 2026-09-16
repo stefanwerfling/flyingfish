@@ -69,6 +69,25 @@ export class ClusterGossipStore {
     }
 
     /**
+     * Write a key only if the value actually changed, so re-publishing unchanged
+     * upstream state (e.g. the Hub's snapshot each sync) does not churn the version
+     * and gossip needlessly. Returns whether it wrote.
+     * @param key - the entry key
+     * @param value - the value
+     */
+    public setIfChanged(key: string, value: unknown): boolean {
+        const current = this._entries.get(key);
+
+        if (current !== undefined && !current.deleted && JSON.stringify(current.value) === JSON.stringify(value)) {
+            return false;
+        }
+
+        this._stamp(key, value, false);
+
+        return true;
+    }
+
+    /**
      * Tombstone a key (a delete that propagates). Idempotent: always produces a fresh
      * tombstone version so the delete wins over an older value on every node.
      * @param key - the entry key

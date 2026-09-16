@@ -164,6 +164,11 @@ export {
 } from './inc/Cluster/ClusterGossipMessage.js';
 export {ClusterGossip} from './inc/Cluster/ClusterGossip.js';
 export {
+    ClusterGossipStateEntry,
+    HubClusterGossipSyncOptions,
+    HubClusterGossipSync
+} from './inc/Cluster/HubClusterGossipSync.js';
+export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
     clusterL4RouteAssignedTo,

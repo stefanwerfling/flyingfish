@@ -1,21 +1,27 @@
 import {Router} from 'express';
 import {
+    ClusterLocalStateResponse,
     ClusterPeersResponse,
     ClusterRoutesResponse,
+    ClusterStateResponse,
     DefaultReturn,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaCapabilityManifest,
+    SchemaClusterAggregatePublishRequest,
     SchemaClusterAnnounceRequest,
+    SchemaClusterLocalStateResponse,
     SchemaClusterPeersResponse,
     SchemaClusterRoutesPublishRequest,
     SchemaClusterRoutesResponse,
+    SchemaClusterStateResponse,
     SchemaDefaultReturn,
     SchemaRegistryInstanceRequest,
     SchemaRegistryPartsResponse,
     SchemaRegistryUiContributionsResponse,
     StatusCodes
 } from 'flyingfish_schemas';
+import {ClusterLocalStateProvider} from '../../Application/Hub/ClusterLocalStateProvider.js';
 import {DefaultRoute} from '@stefanwerfling/figtree';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
@@ -194,6 +200,54 @@ export class Registry extends DefaultRoute {
             {
                 description: 'Read the cluster-wide L4 route set',
                 responseBodySchema: SchemaClusterRoutesResponse
+            }
+        );
+
+        // Cluster gossip sync (9.5.12 phase 2b): the local clusterserver pulls this
+        // Hub's publishable resources, owns + gossips them, and pushes the converged
+        // cluster-wide aggregate back for the frontend to read.
+        this._get(
+            '/json/registry/cluster/local-state',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<ClusterLocalStateResponse> => {
+                return {
+                    statusCode: StatusCodes.OK,
+                    entries: new ClusterLocalStateProvider().entries()
+                };
+            },
+            {
+                description: 'Read this Hub\'s resources to publish into the cluster gossip',
+                responseBodySchema: SchemaClusterLocalStateResponse
+            }
+        );
+
+        this._post(
+            '/json/registry/cluster/aggregate',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                HubRegistryService.getInstance().getClusterAggregate().set(data.body!.entries);
+
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Push the converged cluster-wide gossip aggregate to this Hub',
+                bodySchema: SchemaClusterAggregatePublishRequest,
+                responseBodySchema: SchemaDefaultReturn
+            }
+        );
+
+        this._get(
+            '/json/registry/cluster/state',
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<ClusterStateResponse> => {
+                return {
+                    statusCode: StatusCodes.OK,
+                    entries: HubRegistryService.getInstance().getClusterAggregate().entries()
+                };
+            },
+            {
+                description: 'Read the cluster-wide aggregate view (federated, for the UI)',
+                responseBodySchema: SchemaClusterStateResponse
             }
         );
 
