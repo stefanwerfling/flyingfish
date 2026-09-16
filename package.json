@@ -28,6 +28,7 @@
     "clusterdatapath",
     "netfilter",
     "netfilternft",
+    "wan",
     "clusterquic",
     "clustertun",
     "pkiserver",

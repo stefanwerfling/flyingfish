@@ -325,6 +325,42 @@ services:
       pkiserver:
         condition: service_started
 
+  wan:
+    image: flyingfish_wan:v1.1.13
+    build:
+      context: ./
+      dockerfile: ./wan/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
+    container_name: flyingfish_wan
+    volumes:
+      - flyingfish:/var/lib/flyingfish:ro
+      - flyingfishWanPki:/var/lib/flyingfish-pki
+      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
+    environment:
+      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
+      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
+      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
+      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
+      FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
+      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
+      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
+    # host networking + NET_ADMIN: it runs the WAN DHCP client (udhcpc) directly on the
+    # host uplink interface, which needs the host network namespace.
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+    depends_on:
+      flyingfish:
+        condition: service_healthy
+      pkiserver:
+        condition: service_started
+
   sshremote:
     image: flyingfish_ssh:v1.1.13
     build:
@@ -739,6 +775,8 @@ volumes:
   flyingfishDatapathPki:
     driver: local
   flyingfishNetfilterPki:
+    driver: local
+  flyingfishWanPki:
     driver: local
   flyingfishPkiBootstrap:
     driver: local

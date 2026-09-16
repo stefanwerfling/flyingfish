@@ -188,6 +188,11 @@ export {
     resolveNftablesRouterConfig
 } from './inc/Router/NftablesRuleset.js';
 export {
+    WanLeaseFields,
+    netmaskToPrefix,
+    parseUdhcpcLease
+} from './inc/Router/DhcpLeaseParse.js';
+export {
     ClusterGossipStateEntry,
     HubClusterGossipSyncOptions,
     HubClusterGossipSync
