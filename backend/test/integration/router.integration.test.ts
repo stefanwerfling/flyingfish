@@ -6,7 +6,17 @@
  * rbac.integration.test.ts. Requires a MariaDB (FF_TEST_DB_*, integration job).
  */
 import {DataSource, MigrationInterface} from 'typeorm';
-import {DBEntitiesLoader, PluginManager} from 'flyingfish_core';
+import {
+    DBEntitiesLoader,
+    DBService,
+    DhcpServerConfigDB,
+    DhcpServerConfigServiceDB,
+    NatPolicyDB,
+    NatPolicyServiceDB,
+    NetworkInterfaceDB,
+    NetworkInterfaceServiceDB,
+    PluginManager
+} from 'flyingfish_core';
 import {AddAcmeDnsTempRecord1788400000000} from '../../src/inc/Db/MariaDb/migrations/1788400000000-AddAcmeDnsTempRecord.js';
 import {AddDomainClusterPriority1788700000000} from '../../src/inc/Db/MariaDb/migrations/1788700000000-AddDomainClusterPriority.js';
 import {AddPkiRevocation1788600000000} from '../../src/inc/Db/MariaDb/migrations/1788600000000-AddPkiRevocation.js';
@@ -61,9 +71,14 @@ describe('Pi-router schema (integration, real MariaDB)', () => {
         });
         await dataSource.initialize();
         await dataSource.runMigrations();
+        // Point flyingfish_core's DB services at this DataSource so the router services run
+        // their real production queries (same seam DBService.connect() sets).
+        (DBService as unknown as {_source: DataSource;})._source = dataSource;
     });
 
     afterAll(async() => {
+        (DBService as unknown as {_source: DataSource | null;})._source = null;
+
         if (dataSource?.isInitialized) {
             await dataSource.destroy();
         }
@@ -87,5 +102,64 @@ describe('Pi-router schema (integration, real MariaDB)', () => {
         .filter((query) => !KNOWN_BENIGN.includes(query));
 
         expect(unexpected).toEqual([]);
+    });
+
+    test('CRUD round-trip via the production services (interfaces by role/mac; singleton NAT/DHCP)', async() => {
+        // interfaces: create a WAN + a LAN, look them up by role and by MAC
+        const wan = new NetworkInterfaceDB();
+        wan.mac_address = 'aa:bb:cc:00:00:01';
+        wan.name = 'eth0';
+        wan.role = 'wan';
+        wan.ipv4_mode = 'dhcp';
+        await NetworkInterfaceServiceDB.getInstance().save(wan);
+
+        const lan = new NetworkInterfaceDB();
+        lan.mac_address = 'aa:bb:cc:00:00:02';
+        lan.name = 'eth1';
+        lan.role = 'lan';
+        lan.ipv4_mode = 'static';
+        lan.ipv4_address = '192.168.1.1';
+        lan.ipv4_prefix = 24;
+        await NetworkInterfaceServiceDB.getInstance().save(lan);
+
+        const wans = await NetworkInterfaceServiceDB.getInstance().findByRole('wan');
+        expect(wans.map((entry) => entry.mac_address)).toEqual(['aa:bb:cc:00:00:01']);
+
+        const byMac = await NetworkInterfaceServiceDB.getInstance().findByMac('aa:bb:cc:00:00:02');
+        expect(byMac?.role).toBe('lan');
+        expect(byMac?.ipv4_address).toBe('192.168.1.1');
+        expect(byMac?.ipv4_prefix).toBe(24);
+
+        // nat policy: singleton — get() null before, one row after repeated saves
+        expect(await NatPolicyServiceDB.getInstance().get()).toBeNull();
+        const nat = new NatPolicyDB();
+        nat.nat44_enabled = true;
+        nat.ipv6_mode = 'nat66';
+        nat.forward_enabled = true;
+        await NatPolicyServiceDB.getInstance().save(nat);
+
+        const savedNat = await NatPolicyServiceDB.getInstance().get();
+        expect(savedNat?.nat44_enabled).toBe(true);
+        expect(savedNat?.ipv6_mode).toBe('nat66');
+
+        // update the same singleton row (not a second row)
+        savedNat!.ipv6_mode = 'pd';
+        await NatPolicyServiceDB.getInstance().save(savedNat!);
+        expect(await NatPolicyServiceDB.getInstance().countAll()).toBe(1);
+        expect((await NatPolicyServiceDB.getInstance().get())?.ipv6_mode).toBe('pd');
+
+        // dhcp config: singleton
+        const dhcp = new DhcpServerConfigDB();
+        dhcp.enable = true;
+        dhcp.range_start = '192.168.1.100';
+        dhcp.range_end = '192.168.1.200';
+        dhcp.gateway = '192.168.1.1';
+        dhcp.dns_server = '192.168.1.1';
+        await DhcpServerConfigServiceDB.getInstance().save(dhcp);
+
+        const savedDhcp = await DhcpServerConfigServiceDB.getInstance().get();
+        expect(savedDhcp?.enable).toBe(true);
+        expect(savedDhcp?.range_end).toBe('192.168.1.200');
+        expect(savedDhcp?.lease_time).toBe(3600);
     });
 });

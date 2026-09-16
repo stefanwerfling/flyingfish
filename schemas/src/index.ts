@@ -372,6 +372,21 @@ export {
     RbacOverviewResponse
 } from './Backend/Routes/Rbac.js';
 
+export {
+    SchemaNetworkInterfaceEntry,
+    NetworkInterfaceEntry,
+    SchemaNatPolicyEntry,
+    NatPolicyEntry,
+    SchemaDhcpServerConfigEntry,
+    DhcpServerConfigEntry,
+    SchemaDhcpLeaseEntry,
+    DhcpLeaseEntry,
+    SchemaRouterIdRequest,
+    RouterIdRequest,
+    SchemaRouterOverviewResponse,
+    RouterOverviewResponse
+} from './Backend/Routes/Router.js';
+
 export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';
 
 export {NatStatus} from './Backend/NatPort/NatStatus.js';

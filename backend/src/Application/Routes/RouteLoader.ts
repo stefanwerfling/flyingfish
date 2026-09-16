@@ -12,6 +12,7 @@ import {Nginx as NginxController} from '../../Routes/Main/Nginx.js';
 import {Pki as PkiController} from '../../Routes/Main/Pki.js';
 import {Rbac as RbacController} from '../../Routes/Main/Rbac.js';
 import {Registry as RegistryController} from '../../Routes/Main/Registry.js';
+import {Router as RouterController} from '../../Routes/Main/Router.js';
 import {Route as RouteController} from '../../Routes/Main/Route.js';
 import {Settings as SettingsController} from '../../Routes/Main/Settings.js';
 import {Ssh as SshController} from '../../Routes/Main/Ssh.js';
@@ -52,7 +53,8 @@ export class RouteLoader extends HttpRouteLoader {
             new CredentialController(),
             new RegistryController(),
             new PkiController(),
-            new RbacController()
+            new RbacController(),
+            new RouterController()
         ];
     }
 
