@@ -130,6 +130,15 @@ export {
 } from './inc/Cluster/HubClusterPeerRoster.js';
 export {IClusterMessageChannel} from './inc/Cluster/ClusterMessageChannel.js';
 export {ClusterMuxKind, ClusterPeerMux} from './inc/Cluster/ClusterPeerMux.js';
+export {
+    ClusterL4Op,
+    ClusterL4Proto,
+    ClusterL4Target,
+    ClusterL4DecodedFrame,
+    ClusterL4Frame,
+    CLUSTER_L4_MAX_PORT,
+    CLUSTER_L4_MAX_HOST_BYTES
+} from './inc/Cluster/ClusterL4Frame.js';
 export {Ipv4Header, Ipv4Packet} from './inc/Cluster/Ipv4Packet.js';
 export {ClusterRouteTable} from './inc/Cluster/ClusterRouteTable.js';
 export {IClusterTunDevice} from './inc/Cluster/ClusterTunDevice.js';
