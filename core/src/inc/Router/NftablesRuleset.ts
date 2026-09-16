@@ -97,3 +97,46 @@ export const buildNftablesRuleset = (config: NftablesRouterConfig): NftablesRule
 
     return {ruleset: blocks.join('\n\n'), sysctls: sysctls};
 };
+
+/**
+ * A network interface as far as the resolver cares (its OS name, router role and
+ * enabled state) — the shape of the relevant {@link NetworkInterface} fields.
+ */
+export type NftablesInterfaceInput = {name: string; role: string; disable: boolean;};
+
+/**
+ * The NAT policy fields the resolver cares about — the shape of {@link NatPolicy}.
+ */
+export type NftablesPolicyInput = {nat44_enabled: boolean; ipv6_mode: string; forward_enabled: boolean;};
+
+/**
+ * The valid IPv6 modes; anything else resolves to `off` defensively.
+ */
+const IPV6_MODES = new Set(['off', 'nat66', 'pd']);
+
+/**
+ * Resolve the persisted router state (network interfaces + NAT policy) into the pure
+ * {@link NftablesRouterConfig} the ruleset generator consumes (Pi-router epic, Phase
+ * 2b). The WAN interface is the first enabled `wan`-role interface (empty if none); the
+ * LAN interfaces are all enabled `lan`-role interfaces. A null policy or an unknown
+ * ipv6 mode resolves to a safe all-off config. Pure — the backend feeds it the DB rows
+ * and serves the result to the `ff-netfilter` part.
+ * @param interfaces - the node's network interfaces
+ * @param policy - the node's NAT policy (or null if unset)
+ */
+export const resolveNftablesRouterConfig = (
+    interfaces: readonly NftablesInterfaceInput[],
+    policy: NftablesPolicyInput | null
+): NftablesRouterConfig => {
+    const enabled = interfaces.filter((iface) => !iface.disable);
+    const wan = enabled.find((iface) => iface.role === 'wan');
+    const ipv6Mode = policy !== null && IPV6_MODES.has(policy.ipv6_mode) ? policy.ipv6_mode : 'off';
+
+    return {
+        wanInterface: wan?.name ?? '',
+        lanInterfaces: enabled.filter((iface) => iface.role === 'lan').map((iface) => iface.name),
+        nat44: policy?.nat44_enabled ?? false,
+        ipv6Mode: ipv6Mode as NftablesRouterConfig['ipv6Mode'],
+        forward: policy?.forward_enabled ?? false
+    };
+};

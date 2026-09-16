@@ -106,3 +106,28 @@ export const SchemaRouterOverviewResponse = SchemaDefaultReturn.extend({
  * RouterOverviewResponse
  */
 export type RouterOverviewResponse = ExtractSchemaResultType<typeof SchemaRouterOverviewResponse>;
+
+/**
+ * The resolved netfilter config the `ff-netfilter` part pulls (Pi-router epic, Phase
+ * 2b): the WAN/LAN interface names + NAT/forward flags, from which the part builds and
+ * applies the nftables ruleset. `ipv6Mode` is one of `off` | `nat66` | `pd`.
+ */
+export const SchemaNftablesRouterConfig = Vts.object({
+    wanInterface: Vts.string(),
+    lanInterfaces: Vts.array(Vts.string()),
+    nat44: Vts.boolean(),
+    ipv6Mode: Vts.string(),
+    forward: Vts.boolean()
+});
+
+/**
+ * NftablesRouterConfigResponse — the resolved netfilter config for the part.
+ */
+export const SchemaRouterNetfilterConfigResponse = SchemaDefaultReturn.extend({
+    config: SchemaNftablesRouterConfig
+});
+
+/**
+ * RouterNetfilterConfigResponse
+ */
+export type RouterNetfilterConfigResponse = ExtractSchemaResultType<typeof SchemaRouterNetfilterConfigResponse>;

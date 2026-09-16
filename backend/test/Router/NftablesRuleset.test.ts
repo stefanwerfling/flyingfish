@@ -5,7 +5,7 @@
  * forwarding; forwarding off emits no forward chain/sysctls; a missing WAN skips NAT;
  * and each LAN interface gets its own forward rule. Pure/data-level, network-free.
  */
-import {buildNftablesRuleset, NftablesRouterConfig} from 'flyingfish_core';
+import {buildNftablesRuleset, NftablesRouterConfig, resolveNftablesRouterConfig} from 'flyingfish_core';
 
 const base: NftablesRouterConfig = {
     wanInterface: 'eth0',
@@ -84,5 +84,44 @@ describe('buildNftablesRuleset', () => {
 
         expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" accept');
         expect(result.ruleset).toContain('iifname "eth2" oifname "eth0" accept');
+    });
+});
+
+describe('resolveNftablesRouterConfig', () => {
+    test('resolves WAN/LAN from roles + policy flags, skipping disabled interfaces', () => {
+        const config = resolveNftablesRouterConfig(
+            [
+                {name: 'eth0', role: 'wan', disable: false},
+                {name: 'eth1', role: 'lan', disable: false},
+                {name: 'eth2', role: 'lan', disable: true},
+                {name: 'eth3', role: 'unassigned', disable: false}
+            ],
+            {nat44_enabled: true, ipv6_mode: 'pd', forward_enabled: true}
+        );
+
+        expect(config).toEqual({
+            wanInterface: 'eth0',
+            lanInterfaces: ['eth1'],
+            nat44: true,
+            ipv6Mode: 'pd',
+            forward: true
+        });
+    });
+
+    test('a null policy resolves to a safe all-off config', () => {
+        const config = resolveNftablesRouterConfig([{name: 'eth0', role: 'wan', disable: false}], null);
+
+        expect(config).toEqual({wanInterface: 'eth0', lanInterfaces: [], nat44: false, ipv6Mode: 'off', forward: false});
+    });
+
+    test('an unknown ipv6 mode falls back to off; no WAN role → empty wanInterface', () => {
+        const config = resolveNftablesRouterConfig(
+            [{name: 'eth1', role: 'lan', disable: false}],
+            {nat44_enabled: false, ipv6_mode: 'bogus', forward_enabled: true}
+        );
+
+        expect(config.ipv6Mode).toBe('off');
+        expect(config.wanInterface).toBe('');
+        expect(config.lanInterfaces).toEqual(['eth1']);
     });
 });

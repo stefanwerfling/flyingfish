@@ -182,7 +182,10 @@ export {
     NftablesRouterConfig,
     NftablesSysctl,
     NftablesRuleset,
-    buildNftablesRuleset
+    NftablesInterfaceInput,
+    NftablesPolicyInput,
+    buildNftablesRuleset,
+    resolveNftablesRouterConfig
 } from './inc/Router/NftablesRuleset.js';
 export {
     ClusterGossipStateEntry,

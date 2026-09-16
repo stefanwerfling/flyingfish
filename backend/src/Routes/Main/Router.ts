@@ -7,19 +7,23 @@ import {
     NatPolicyDB,
     NatPolicyServiceDB,
     NetworkInterfaceDB,
-    NetworkInterfaceServiceDB
+    NetworkInterfaceServiceDB,
+    resolveNftablesRouterConfig
 } from 'flyingfish_core';
 import {
     DefaultReturn,
+    RouterNetfilterConfigResponse,
     RouterOverviewResponse,
     SchemaDefaultReturn,
     SchemaDhcpServerConfigEntry,
     SchemaNatPolicyEntry,
     SchemaNetworkInterfaceEntry,
     SchemaRouterIdRequest,
+    SchemaRouterNetfilterConfigResponse,
     SchemaRouterOverviewResponse,
     StatusCodes
 } from 'flyingfish_schemas';
+import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPermission.js';
 
 /**
@@ -133,6 +137,34 @@ export class Router extends DefaultRoute {
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'Set the LAN DHCP server config', bodySchema: SchemaDhcpServerConfigEntry, responseBodySchema: SchemaDefaultReturn});
+
+        // The resolved netfilter config the ff-netfilter part pulls (it builds + applies
+        // the nftables ruleset from this). ServiceOrUserLogin: the part authenticates
+        // with the registry secret / mTLS, same as the cluster local-state endpoints.
+        this._get(
+            '/json/router/netfilter-config',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<RouterNetfilterConfigResponse> => {
+                const interfaces = await NetworkInterfaceServiceDB.getInstance().findAll();
+                const policy = await NatPolicyServiceDB.getInstance().get();
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    config: resolveNftablesRouterConfig(
+                        interfaces.map((entry) => ({name: entry.name, role: entry.role, disable: entry.disable})),
+                        policy === null ? null : {
+                            nat44_enabled: policy.nat44_enabled,
+                            ipv6_mode: policy.ipv6_mode,
+                            forward_enabled: policy.forward_enabled
+                        }
+                    )
+                };
+            },
+            {
+                description: 'The resolved netfilter config (WAN/LAN + NAT/forward flags) for the ff-netfilter part',
+                responseBodySchema: SchemaRouterNetfilterConfigResponse
+            }
+        );
 
         return super.getExpressRouter();
     }

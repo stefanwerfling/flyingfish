@@ -384,7 +384,10 @@ export {
     SchemaRouterIdRequest,
     RouterIdRequest,
     SchemaRouterOverviewResponse,
-    RouterOverviewResponse
+    RouterOverviewResponse,
+    SchemaNftablesRouterConfig,
+    SchemaRouterNetfilterConfigResponse,
+    RouterNetfilterConfigResponse
 } from './Backend/Routes/Router.js';
 
 export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';
