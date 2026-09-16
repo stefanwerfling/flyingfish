@@ -16,7 +16,12 @@ export enum ClusterMuxKind {
     /**
      * An L4 tunnel frame (connection open/data/close) for the L4 tunnel engine.
      */
-    L4 = 0x02
+    L4 = 0x02,
+
+    /**
+     * A cluster gossip message (state anti-entropy) for the gossip engine (9.5.12).
+     */
+    Gossip = 0x03
 
 }
 

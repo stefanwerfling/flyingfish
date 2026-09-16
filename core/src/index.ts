@@ -157,6 +157,13 @@ export {
     ClusterGossipStore
 } from './inc/Cluster/ClusterGossipStore.js';
 export {
+    ClusterGossipMessageType,
+    ClusterGossipDigestItem,
+    ClusterGossipMessage,
+    ClusterGossipCodec
+} from './inc/Cluster/ClusterGossipMessage.js';
+export {ClusterGossip} from './inc/Cluster/ClusterGossip.js';
+export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
     clusterL4RouteAssignedTo,

@@ -98,6 +98,15 @@ export class ClusterGossipStore {
     }
 
     /**
+     * The full entry (tombstone included) for a key, or undefined if unknown. Used by
+     * the gossip engine to answer a peer's request.
+     * @param key - the entry key
+     */
+    public entry(key: string): ClusterGossipEntry | undefined {
+        return this._entries.get(key);
+    }
+
+    /**
      * Every entry, tombstones included — what the gossip engine exchanges.
      */
     public entries(): ClusterGossipEntry[] {
