@@ -12,6 +12,7 @@ import {
     UserListResponse
 } from 'flyingfish_schemas';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
+import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPermission.js';
 import {Delete} from './User/Delete.js';
 import {Info} from './User/Info.js';
 import {List} from './User/List.js';
@@ -41,7 +42,7 @@ export class User extends DefaultRoute {
 
         this._get(
             '/json/user/list',
-            FlyingFishRouteCheckUserLogin,
+            requirePermission('user.manage'),
             async(): Promise<UserListResponse> => {
                 return List.getUserList();
             },
@@ -53,7 +54,7 @@ export class User extends DefaultRoute {
 
         this._post(
             '/json/user/save',
-            FlyingFishRouteCheckUserLogin,
+            requirePermission('user.manage'),
             async(_req, _res, data): Promise<DefaultReturn> => {
                 return Save.saveUser(data.body!);
             },
@@ -66,7 +67,7 @@ export class User extends DefaultRoute {
 
         this._post(
             '/json/user/delete',
-            FlyingFishRouteCheckUserLogin,
+            requirePermission('user.manage'),
             async(_req, _res, data): Promise<DefaultReturn> => {
                 return Delete.deleteUser(data.body!);
             },

@@ -198,6 +198,7 @@ export {
     RBAC_PERMISSION_WILDCARD,
     PermissionService
 } from './inc/Rbac/PermissionService.js';
+export {RbacDbDataSource} from './inc/Rbac/RbacDbDataSource.js';
 export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
@@ -306,6 +307,10 @@ export {SettingService as SettingServiceDB} from './inc/Db/MariaDb/Service/Setti
 export {SshPortService as SshPortServiceDB} from './inc/Db/MariaDb/Service/SshPortService.js';
 export {SshUserService as SshUserServiceDB} from './inc/Db/MariaDb/Service/SshUserService.js';
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/Service/UserService.js';
+export {RbacUserGroupService as RbacUserGroupServiceDB} from './inc/Db/MariaDb/Service/RbacUserGroupService.js';
+export {RbacRoleAssignmentService as RbacRoleAssignmentServiceDB} from './inc/Db/MariaDb/Service/RbacRoleAssignmentService.js';
+export {RbacRolePermissionService as RbacRolePermissionServiceDB} from './inc/Db/MariaDb/Service/RbacRolePermissionService.js';
+export {RbacPermissionService as RbacPermissionServiceDB} from './inc/Db/MariaDb/Service/RbacPermissionService.js';
 
 // RedisDb
 export {RedisClientOptions, RedisClient} from './inc/Db/RedisDb/RedisClient.js';
