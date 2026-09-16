@@ -9,7 +9,8 @@ import {
     aggregateClusterDomains,
     ClusterGossipStateEntry,
     clusterGossipNamespaceKey,
-    clusterGossipParseKey
+    clusterGossipParseKey,
+    resolveDomainActiveNode
 } from 'flyingfish_core';
 
 const domainEntry = (nodeUid: string, id: number, name: string, priority: number): ClusterGossipStateEntry => ({
@@ -63,5 +64,34 @@ describe('aggregateClusterDomains', () => {
         ]);
 
         expect(domains).toEqual([]);
+    });
+});
+
+describe('resolveDomainActiveNode (DNS failover)', () => {
+    const [view] = aggregateClusterDomains([
+        domainEntry('node-primary', 1, 'ha.test', 0),
+        domainEntry('node-backup', 2, 'ha.test', 10)
+    ]);
+
+    test('picks the primary (lowest priority) when it is live', () => {
+        expect(resolveDomainActiveNode(view, new Set(['node-primary', 'node-backup']))?.nodeUid).toBe('node-primary');
+    });
+
+    test('fails over to the next-priority live node when the primary is down', () => {
+        expect(resolveDomainActiveNode(view, new Set(['node-backup']))?.nodeUid).toBe('node-backup');
+    });
+
+    test('returns null when no managing node is live', () => {
+        expect(resolveDomainActiveNode(view, new Set(['someone-else']))).toBeNull();
+    });
+
+    test('skips a disabled node even if it is live and higher priority', () => {
+        const [disabledPrimary] = aggregateClusterDomains([
+            {key: clusterGossipNamespaceKey('node-primary', 'domain:1'),
+                value: {id: 1, name: 'ha.test', priority: 0, disable: true, fix: false, recordless: false, parentId: 0}},
+            domainEntry('node-backup', 2, 'ha.test', 10)
+        ]);
+
+        expect(resolveDomainActiveNode(disabledPrimary, new Set(['node-primary', 'node-backup']))?.nodeUid).toBe('node-backup');
     });
 });

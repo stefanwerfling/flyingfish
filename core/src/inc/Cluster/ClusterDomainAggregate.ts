@@ -97,3 +97,22 @@ export const aggregateClusterDomains = (entries: readonly ClusterGossipStateEntr
 
     return Array.from(byName.values());
 };
+
+/**
+ * Resolve the node that should currently manage a domain (Cluster/Mesh epic 9.5.14,
+ * DNS failover): the first node in priority order that is live and not disabled. When
+ * the primary (lowest priority) node is down, this returns the next-priority live node
+ * — so the domain's DNS A record can follow it. Returns null if no live node manages
+ * the domain. Pure — liveness is injected (from the gossip node roster / peer TTL).
+ * @param view - the domain's cluster view (nodes already priority-ordered)
+ * @param liveNodeUids - the set of currently-live node uids
+ */
+export const resolveDomainActiveNode = (view: ClusterDomainView, liveNodeUids: ReadonlySet<string>): ClusterDomainNode | null => {
+    for (const node of view.nodes) {
+        if (!node.disable && liveNodeUids.has(node.nodeUid)) {
+            return node;
+        }
+    }
+
+    return null;
+};

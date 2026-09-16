@@ -176,7 +176,8 @@ export {
 export {
     ClusterDomainNode,
     ClusterDomainView,
-    aggregateClusterDomains
+    aggregateClusterDomains,
+    resolveDomainActiveNode
 } from './inc/Cluster/ClusterDomainAggregate.js';
 export {
     ClusterL4Route,
