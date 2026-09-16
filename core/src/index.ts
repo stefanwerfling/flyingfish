@@ -164,6 +164,17 @@ export {
 } from './inc/Cluster/ClusterGossipMessage.js';
 export {ClusterGossip} from './inc/Cluster/ClusterGossip.js';
 export {
+    ClusterControlMessageType,
+    ClusterControlMessage,
+    ClusterControlCodec
+} from './inc/Cluster/ClusterControlMessage.js';
+export {
+    ClusterControlReply,
+    ClusterControlHandler,
+    CLUSTER_CONTROL_TIMEOUT_MS,
+    ClusterControl
+} from './inc/Cluster/ClusterControl.js';
+export {
     ClusterGossipStateEntry,
     HubClusterGossipSyncOptions,
     HubClusterGossipSync

@@ -21,7 +21,14 @@ export enum ClusterMuxKind {
     /**
      * A cluster gossip message (state anti-entropy) for the gossip engine (9.5.12).
      */
-    Gossip = 0x03
+    Gossip = 0x03,
+
+    /**
+     * A cluster control request/reply for the {@link ClusterControl} engine — the
+     * synchronous cross-node write path (Cluster/Mesh epic 9.5.12, A+C): node A asks
+     * node B to apply an authorized write and B answers OK/error.
+     */
+    Control = 0x04
 
 }
 
