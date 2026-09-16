@@ -145,6 +145,9 @@ export {ClusterL4Session} from './inc/Cluster/ClusterL4Session.js';
 export {ClusterL4TcpStream} from './inc/Cluster/ClusterL4TcpStream.js';
 export {ClusterL4TcpDialer} from './inc/Cluster/ClusterL4TcpDialer.js';
 export {ClusterL4AcceptedEndpoints, ClusterL4TcpListener} from './inc/Cluster/ClusterL4TcpListener.js';
+export {CLUSTER_L4_UDP_IDLE_MS, ClusterL4UdpStream} from './inc/Cluster/ClusterL4UdpStream.js';
+export {ClusterL4UdpDialer} from './inc/Cluster/ClusterL4UdpDialer.js';
+export {ClusterL4CompositeDialer} from './inc/Cluster/ClusterL4CompositeDialer.js';
 export {ClusterL4Tunnel} from './inc/Cluster/ClusterL4Tunnel.js';
 export {
     ClusterL4Route,
