@@ -237,6 +237,7 @@ export {NativeTunDevice} from './inc/Cluster/NativeTunDevice.js';
 // MariaDb
 export {DBBaseEntityId} from './inc/Db/MariaDb/DBBaseEntityId.js';
 export {DBBaseEntityUnid} from './inc/Db/MariaDb/DBBaseEntityUnid.js';
+export {DBBaseEntityUuid} from './inc/Db/MariaDb/DBBaseEntityUuid.js';
 export {DBService} from './inc/Db/MariaDb/DBService.js';
 export {ADBTableLoaderOnLoadEvent} from './inc/Db/MariaDb/ADBTableLoaderOnLoadEvent.js';
 export {DBEntitiesLoader} from './inc/Db/MariaDb/DBEntitiesLoader.js';

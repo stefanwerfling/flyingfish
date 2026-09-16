@@ -9,10 +9,11 @@ export type RbacResource = {
 
 /**
  * A role granted to (one of the user's) groups, with its scope. `resourceType` empty
- * (and `resourceId` 0) means a global grant.
+ * (and `resourceId` 0) means a global grant. `roleId` is a cluster-stable UUID (the
+ * policy is cluster-global); `resourceId` stays a node-local int resource id.
  */
 export type RbacAssignment = {
-    roleId: number;
+    roleId: string;
     resourceType: string;
     resourceId: number;
 };
@@ -24,22 +25,22 @@ export type RbacAssignment = {
 export interface IRbacDataSource {
 
     /**
-     * The ids of the groups a user belongs to.
-     * @param userId - the user id
+     * The ids (cluster-stable UUIDs) of the groups a user belongs to.
+     * @param userId - the local user id
      */
-    groupIdsForUser(userId: number): Promise<number[]>;
+    groupIdsForUser(userId: number): Promise<string[]>;
 
     /**
      * The role grants (with scope) of the given groups.
-     * @param groupIds - the group ids
+     * @param groupIds - the group ids (cluster-stable UUIDs)
      */
-    assignmentsForGroups(groupIds: number[]): Promise<RbacAssignment[]>;
+    assignmentsForGroups(groupIds: string[]): Promise<RbacAssignment[]>;
 
     /**
      * The permission keys held by the given roles.
-     * @param roleIds - the role ids
+     * @param roleIds - the role ids (cluster-stable UUIDs)
      */
-    permissionKeysForRoles(roleIds: number[]): Promise<string[]>;
+    permissionKeysForRoles(roleIds: string[]): Promise<string[]>;
 }
 
 /**
@@ -82,7 +83,7 @@ export class PermissionService {
         }
 
         const assignments = await this._source.assignmentsForGroups(groupIds);
-        const roleIds = new Set<number>();
+        const roleIds = new Set<string>();
 
         for (const assignment of assignments) {
             if (PermissionService._applies(assignment, resource)) {

@@ -2,15 +2,19 @@ import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaDefaultReturn} from '../../Core/Server/Routes/DefaultReturn.js';
 
 /**
- * RBAC management DTOs (epic 9.5.13, slice 4). id 0 on a save = create; otherwise
- * update. All management endpoints are gated by the `rbac.manage` permission.
+ * RBAC management DTOs (epic 9.5.13, slice 4). On a save an EMPTY id creates,
+ * otherwise updates: the POLICY entities (group/role/permission/assignment/
+ * rolePermission) are cluster-global and keyed by a UUID string, so their create
+ * sentinel is the empty string `''`; the node-local membership keeps its int id and a
+ * `0` create sentinel. All management endpoints are gated by the `rbac.manage`
+ * permission.
  */
 
 /**
- * A group.
+ * A group (cluster-global policy — UUID id).
  */
 export const SchemaRbacGroupEntry = Vts.object({
-    id: Vts.number(),
+    id: Vts.string(),
     name: Vts.string(),
     description: Vts.optional(Vts.string()),
     disable: Vts.optional(Vts.boolean())
@@ -22,10 +26,10 @@ export const SchemaRbacGroupEntry = Vts.object({
 export type RbacGroupEntry = ExtractSchemaResultType<typeof SchemaRbacGroupEntry>;
 
 /**
- * A role.
+ * A role (cluster-global policy — UUID id).
  */
 export const SchemaRbacRoleEntry = Vts.object({
-    id: Vts.number(),
+    id: Vts.string(),
     name: Vts.string(),
     description: Vts.optional(Vts.string())
 });
@@ -36,10 +40,10 @@ export const SchemaRbacRoleEntry = Vts.object({
 export type RbacRoleEntry = ExtractSchemaResultType<typeof SchemaRbacRoleEntry>;
 
 /**
- * A permission.
+ * A permission (cluster-global policy — UUID id).
  */
 export const SchemaRbacPermissionEntry = Vts.object({
-    id: Vts.number(),
+    id: Vts.string(),
     permission_key: Vts.string(),
     description: Vts.optional(Vts.string())
 });
@@ -50,12 +54,13 @@ export const SchemaRbacPermissionEntry = Vts.object({
 export type RbacPermissionEntry = ExtractSchemaResultType<typeof SchemaRbacPermissionEntry>;
 
 /**
- * A role grant to a group, optionally scoped to a resource.
+ * A role grant to a group, optionally scoped to a resource (cluster-global policy —
+ * UUID id/group_id/role_id; resource_id stays a node-local int).
  */
 export const SchemaRbacAssignmentEntry = Vts.object({
-    id: Vts.number(),
-    group_id: Vts.number(),
-    role_id: Vts.number(),
+    id: Vts.string(),
+    group_id: Vts.string(),
+    role_id: Vts.string(),
     resource_type: Vts.optional(Vts.string()),
     resource_id: Vts.optional(Vts.number())
 });
@@ -66,12 +71,13 @@ export const SchemaRbacAssignmentEntry = Vts.object({
 export type RbacAssignmentEntry = ExtractSchemaResultType<typeof SchemaRbacAssignmentEntry>;
 
 /**
- * A user↔group membership.
+ * A user↔group membership (node-local — int id + int user_id; group_id is the
+ * cluster-global group's UUID).
  */
 export const SchemaRbacMembershipEntry = Vts.object({
     id: Vts.number(),
     user_id: Vts.number(),
-    group_id: Vts.number()
+    group_id: Vts.string()
 });
 
 /**
@@ -80,12 +86,12 @@ export const SchemaRbacMembershipEntry = Vts.object({
 export type RbacMembershipEntry = ExtractSchemaResultType<typeof SchemaRbacMembershipEntry>;
 
 /**
- * A role↔permission binding.
+ * A role↔permission binding (cluster-global policy — UUID id/role_id/permission_id).
  */
 export const SchemaRbacRolePermissionEntry = Vts.object({
-    id: Vts.number(),
-    role_id: Vts.number(),
-    permission_id: Vts.number()
+    id: Vts.string(),
+    role_id: Vts.string(),
+    permission_id: Vts.string()
 });
 
 /**
@@ -94,16 +100,29 @@ export const SchemaRbacRolePermissionEntry = Vts.object({
 export type RbacRolePermissionEntry = ExtractSchemaResultType<typeof SchemaRbacRolePermissionEntry>;
 
 /**
- * An id-only request (delete).
+ * A UUID-id request — deletes a cluster-global policy entity (group/role/permission/
+ * assignment/rolePermission).
  */
 export const SchemaRbacIdRequest = Vts.object({
-    id: Vts.number()
+    id: Vts.string()
 });
 
 /**
  * RbacIdRequest
  */
 export type RbacIdRequest = ExtractSchemaResultType<typeof SchemaRbacIdRequest>;
+
+/**
+ * An int-id request — deletes a node-local membership (rbac_user_group).
+ */
+export const SchemaRbacMembershipIdRequest = Vts.object({
+    id: Vts.number()
+});
+
+/**
+ * RbacMembershipIdRequest
+ */
+export type RbacMembershipIdRequest = ExtractSchemaResultType<typeof SchemaRbacMembershipIdRequest>;
 
 /**
  * The whole RBAC picture for the management UI.

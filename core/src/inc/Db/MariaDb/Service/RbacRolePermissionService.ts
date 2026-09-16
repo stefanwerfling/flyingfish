@@ -21,11 +21,11 @@ export class RbacRolePermissionService extends DBService<RbacRolePermission> {
     }
 
     /**
-     * The permission ids held by any of the given roles.
-     * @param {number[]} roleIds
-     * @returns {number[]}
+     * The permission ids held by any of the given roles (cluster-stable UUIDs).
+     * @param {string[]} roleIds
+     * @returns {string[]}
      */
-    public async permissionIdsForRoles(roleIds: number[]): Promise<number[]> {
+    public async permissionIdsForRoles(roleIds: string[]): Promise<string[]> {
         if (roleIds.length === 0) {
             return [];
         }

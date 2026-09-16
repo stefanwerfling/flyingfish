@@ -202,18 +202,19 @@ describe('RBAC migration + seed + enforce (integration, real MariaDB)', () => {
 
     test('LIVE enforce: a resource-scoped grant applies only to its exact resource', async() => {
         // Build a non-admin chain: domain.write permission -> editor role -> Editors group,
-        // granted ONLY on domain id 5.
-        await dataSource.query('INSERT INTO `rbac_permission` (`permission_key`, `description`) VALUES (\'domain.write\', \'Edit a domain\')');
-        await dataSource.query('INSERT INTO `rbac_role` (`name`, `description`) VALUES (\'editor\', \'Domain editor\')');
-        await dataSource.query('INSERT INTO `rbac_group` (`name`, `description`, `disable`) VALUES (\'Editors\', \'Scoped editors\', 0)');
+        // granted ONLY on domain id 5. Policy tables are UUID-keyed with no DB default, so
+        // these raw inserts generate the id via UUID() (production saves generate it app-side).
+        await dataSource.query('INSERT INTO `rbac_permission` (`id`, `permission_key`, `description`) VALUES (UUID(), \'domain.write\', \'Edit a domain\')');
+        await dataSource.query('INSERT INTO `rbac_role` (`id`, `name`, `description`) VALUES (UUID(), \'editor\', \'Domain editor\')');
+        await dataSource.query('INSERT INTO `rbac_group` (`id`, `name`, `description`, `disable`) VALUES (UUID(), \'Editors\', \'Scoped editors\', 0)');
 
         const [perm] = await dataSource.query('SELECT id FROM `rbac_permission` WHERE `permission_key` = \'domain.write\'');
         const [role] = await dataSource.query('SELECT id FROM `rbac_role` WHERE `name` = \'editor\'');
         const [group] = await dataSource.query('SELECT id FROM `rbac_group` WHERE `name` = \'Editors\'');
 
-        await dataSource.query('INSERT INTO `rbac_role_permission` (`role_id`, `permission_id`) VALUES (?, ?)', [role.id, perm.id]);
+        await dataSource.query('INSERT INTO `rbac_role_permission` (`id`, `role_id`, `permission_id`) VALUES (UUID(), ?, ?)', [role.id, perm.id]);
         await dataSource.query(
-            'INSERT INTO `rbac_role_assignment` (`group_id`, `role_id`, `resource_type`, `resource_id`) VALUES (?, ?, \'domain\', 5)',
+            'INSERT INTO `rbac_role_assignment` (`id`, `group_id`, `role_id`, `resource_type`, `resource_id`) VALUES (UUID(), ?, ?, \'domain\', 5)',
             [group.id, role.id]
         );
 

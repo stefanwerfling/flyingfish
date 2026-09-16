@@ -14,14 +14,14 @@ export class RbacDbDataSource implements IRbacDataSource {
     /**
      * @inheritDoc
      */
-    public async groupIdsForUser(userId: number): Promise<number[]> {
+    public async groupIdsForUser(userId: number): Promise<string[]> {
         return RbacUserGroupService.getInstance().groupIdsForUser(userId);
     }
 
     /**
      * @inheritDoc
      */
-    public async assignmentsForGroups(groupIds: number[]): Promise<RbacAssignment[]> {
+    public async assignmentsForGroups(groupIds: string[]): Promise<RbacAssignment[]> {
         const rows = await RbacRoleAssignmentService.getInstance().findByGroups(groupIds);
 
         return rows.map((row) => ({
@@ -34,7 +34,7 @@ export class RbacDbDataSource implements IRbacDataSource {
     /**
      * @inheritDoc
      */
-    public async permissionKeysForRoles(roleIds: number[]): Promise<string[]> {
+    public async permissionKeysForRoles(roleIds: string[]): Promise<string[]> {
         const permissionIds = await RbacRolePermissionService.getInstance().permissionIdsForRoles(roleIds);
 
         return RbacPermissionService.getInstance().keysForIds(permissionIds);

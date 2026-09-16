@@ -1,11 +1,18 @@
-import {DataSource, DeleteResult, EntityTarget, Repository} from 'typeorm';
+import {DataSource, DeleteResult, EntityTarget, FindOptionsWhere, Repository} from 'typeorm';
 import {DBHelper} from '@stefanwerfling/figtree';
-import {DBBaseEntityId} from './DBBaseEntityId.js';
 
 /**
- * DBService<DBBaseEntityId>
+ * The minimal shape a DBService entity must have: an `id` primary key that is either a
+ * numeric autoincrement (DBBaseEntityId) or a cluster-stable UUID string
+ * (DBBaseEntityUuid, used by the RBAC policy entities). Widening from `number` to
+ * `number | string` lets one service base back both id kinds.
  */
-export abstract class DBService<T extends DBBaseEntityId> {
+type DBServiceEntity = {id: number | string;};
+
+/**
+ * DBService<DBServiceEntity>
+ */
+export abstract class DBService<T extends DBServiceEntity> {
 
     /**
      * instance
@@ -40,7 +47,7 @@ export abstract class DBService<T extends DBBaseEntityId> {
     /**
      * getSingleInstance
      */
-    protected static getSingleInstance<I extends DBBaseEntityId, S extends DBService<I>>(
+    protected static getSingleInstance<I extends DBServiceEntity, S extends DBService<I>>(
         tclass: new (tentrie: EntityTarget<I>) => S,
         tentrie: EntityTarget<I>,
         registerName: string
@@ -95,17 +102,15 @@ export abstract class DBService<T extends DBBaseEntityId> {
      * findOne
      * @param id
      */
-    public async findOne(id: number): Promise<T | null> {
-        const repository = this._repository as Repository<DBBaseEntityId>;
-
-        const result = await repository.findOne({
+    public async findOne(id: number | string): Promise<T | null> {
+        const result = await this._repository.findOne({
             where: {
                 id: id
-            }
+            } as FindOptionsWhere<T>
         });
 
         if (result) {
-            return result as T;
+            return result;
         }
 
         return null;
@@ -116,7 +121,7 @@ export abstract class DBService<T extends DBBaseEntityId> {
      * @param {number} id - ID from entry.
      * @returns {DeleteResult}
      */
-    public async remove(id: number): Promise<DeleteResult> {
+    public async remove(id: number | string): Promise<DeleteResult> {
         return this._repository.delete(id);
     }
 

@@ -13,25 +13,26 @@ import {IRbacDataSource, PermissionService, RbacAssignment} from 'flyingfish_cor
  * @param model - groups per user, assignments per group, permissions per role
  */
 const createSource = (model: {
-    userGroups: Record<number, number[]>;
-    groupAssignments: Record<number, RbacAssignment[]>;
-    rolePermissions: Record<number, string[]>;
+    userGroups: Record<number, string[]>;
+    groupAssignments: Record<string, RbacAssignment[]>;
+    rolePermissions: Record<string, string[]>;
 }): IRbacDataSource => ({
-    groupIdsForUser: async(userId: number): Promise<number[]> => model.userGroups[userId] ?? [],
-    assignmentsForGroups: async(groupIds: number[]): Promise<RbacAssignment[]> =>
+    groupIdsForUser: async(userId: number): Promise<string[]> => model.userGroups[userId] ?? [],
+    assignmentsForGroups: async(groupIds: string[]): Promise<RbacAssignment[]> =>
         groupIds.flatMap((groupId) => model.groupAssignments[groupId] ?? []),
-    permissionKeysForRoles: async(roleIds: number[]): Promise<string[]> =>
+    permissionKeysForRoles: async(roleIds: string[]): Promise<string[]> =>
         roleIds.flatMap((roleId) => model.rolePermissions[roleId] ?? [])
 });
 
-const globalGrant = (roleId: number): RbacAssignment => ({roleId: roleId, resourceType: '', resourceId: 0});
-const domainGrant = (roleId: number, domainId: number): RbacAssignment => ({roleId: roleId, resourceType: 'domain', resourceId: domainId});
+// Group/role ids are cluster-stable UUIDs (strings); resource ids stay node-local ints.
+const globalGrant = (roleId: string): RbacAssignment => ({roleId: roleId, resourceType: '', resourceId: 0});
+const domainGrant = (roleId: string, domainId: number): RbacAssignment => ({roleId: roleId, resourceType: 'domain', resourceId: domainId});
 
 describe('PermissionService.can', () => {
     test('superadmin: a global role with the * wildcard satisfies any check', async() => {
         const service = new PermissionService(createSource({
-            userGroups: {1: [10]},
-            groupAssignments: {10: [globalGrant(100)]},
+            userGroups: {1: ['10']},
+            groupAssignments: {10: [globalGrant('100')]},
             rolePermissions: {100: ['*']}
         }));
 
@@ -47,8 +48,8 @@ describe('PermissionService.can', () => {
 
     test('a global role grants exactly its permissions', async() => {
         const service = new PermissionService(createSource({
-            userGroups: {1: [10]},
-            groupAssignments: {10: [globalGrant(100)]},
+            userGroups: {1: ['10']},
+            groupAssignments: {10: [globalGrant('100')]},
             rolePermissions: {100: ['domain.read']}
         }));
 
@@ -58,8 +59,8 @@ describe('PermissionService.can', () => {
 
     test('a resource-scoped grant applies only to that resource, not others or unscoped checks', async() => {
         const service = new PermissionService(createSource({
-            userGroups: {1: [10]},
-            groupAssignments: {10: [domainGrant(200, 5)]},
+            userGroups: {1: ['10']},
+            groupAssignments: {10: [domainGrant('200', 5)]},
             rolePermissions: {200: ['domain.write']}
         }));
 
@@ -70,8 +71,8 @@ describe('PermissionService.can', () => {
 
     test('a global grant also covers a resource-scoped check', async() => {
         const service = new PermissionService(createSource({
-            userGroups: {1: [10]},
-            groupAssignments: {10: [globalGrant(100)]},
+            userGroups: {1: ['10']},
+            groupAssignments: {10: [globalGrant('100')]},
             rolePermissions: {100: ['domain.write']}
         }));
 
@@ -80,8 +81,8 @@ describe('PermissionService.can', () => {
 
     test('rights accumulate across a user\'s groups', async() => {
         const service = new PermissionService(createSource({
-            userGroups: {1: [10, 11]},
-            groupAssignments: {10: [globalGrant(100)], 11: [domainGrant(200, 7)]},
+            userGroups: {1: ['10', '11']},
+            groupAssignments: {10: [globalGrant('100')], 11: [domainGrant('200', 7)]},
             rolePermissions: {100: ['domain.read'], 200: ['domain.write']}
         }));
 

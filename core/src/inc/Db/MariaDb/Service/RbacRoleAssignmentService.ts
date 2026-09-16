@@ -22,11 +22,11 @@ export class RbacRoleAssignmentService extends DBService<RbacRoleAssignment> {
     }
 
     /**
-     * The role grants of the given groups.
-     * @param {number[]} groupIds
+     * The role grants of the given groups (cluster-stable group UUIDs).
+     * @param {string[]} groupIds
      * @returns {RbacRoleAssignment[]}
      */
-    public async findByGroups(groupIds: number[]): Promise<RbacRoleAssignment[]> {
+    public async findByGroups(groupIds: string[]): Promise<RbacRoleAssignment[]> {
         if (groupIds.length === 0) {
             return [];
         }

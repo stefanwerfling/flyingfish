@@ -21,22 +21,22 @@ export class RbacUserGroupService extends DBService<RbacUserGroup> {
     }
 
     /**
-     * The group ids a user belongs to.
+     * The group ids (cluster-stable UUIDs) a local user belongs to.
      * @param {number} userId
-     * @returns {number[]}
+     * @returns {string[]}
      */
-    public async groupIdsForUser(userId: number): Promise<number[]> {
+    public async groupIdsForUser(userId: number): Promise<string[]> {
         const rows = await this._repository.find({where: {user_id: userId}});
 
         return rows.map((row) => row.group_id);
     }
 
     /**
-     * The user ids belonging to any of the given groups.
-     * @param {number[]} groupIds
+     * The local user ids belonging to any of the given groups (cluster-stable UUIDs).
+     * @param {string[]} groupIds
      * @returns {number[]}
      */
-    public async userIdsForGroups(groupIds: number[]): Promise<number[]> {
+    public async userIdsForGroups(groupIds: string[]): Promise<number[]> {
         if (groupIds.length === 0) {
             return [];
         }

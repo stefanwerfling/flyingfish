@@ -22,6 +22,7 @@ import {
     SchemaRbacGroupEntry,
     SchemaRbacIdRequest,
     SchemaRbacMembershipEntry,
+    SchemaRbacMembershipIdRequest,
     SchemaRbacOverviewResponse,
     SchemaRbacPermissionEntry,
     SchemaRbacRoleEntry,
@@ -77,7 +78,7 @@ export class Rbac extends DefaultRoute {
 
         this._post('/json/rbac/group/save', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
             const body = data.body!;
-            const entity = body.id === 0 ? new RbacGroupDB() : await RbacGroupServiceDB.getInstance().findOne(body.id) ?? new RbacGroupDB();
+            const entity = body.id === '' ? new RbacGroupDB() : await RbacGroupServiceDB.getInstance().findOne(body.id) ?? new RbacGroupDB();
             entity.name = body.name;
             entity.description = body.description ?? '';
             entity.disable = body.disable ?? false;
@@ -88,7 +89,7 @@ export class Rbac extends DefaultRoute {
 
         this._post('/json/rbac/role/save', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
             const body = data.body!;
-            const entity = body.id === 0 ? new RbacRoleDB() : await RbacRoleServiceDB.getInstance().findOne(body.id) ?? new RbacRoleDB();
+            const entity = body.id === '' ? new RbacRoleDB() : await RbacRoleServiceDB.getInstance().findOne(body.id) ?? new RbacRoleDB();
             entity.name = body.name;
             entity.description = body.description ?? '';
             await RbacRoleServiceDB.getInstance().save(entity);
@@ -98,7 +99,7 @@ export class Rbac extends DefaultRoute {
 
         this._post('/json/rbac/permission/save', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
             const body = data.body!;
-            const entity = body.id === 0 ? new RbacPermissionDB() : await RbacPermissionServiceDB.getInstance().findOne(body.id) ?? new RbacPermissionDB();
+            const entity = body.id === '' ? new RbacPermissionDB() : await RbacPermissionServiceDB.getInstance().findOne(body.id) ?? new RbacPermissionDB();
             entity.permission_key = body.permission_key;
             entity.description = body.description ?? '';
             await RbacPermissionServiceDB.getInstance().save(entity);
@@ -108,7 +109,7 @@ export class Rbac extends DefaultRoute {
 
         this._post('/json/rbac/assignment/save', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
             const body = data.body!;
-            const entity = body.id === 0 ? new RbacRoleAssignmentDB() : await RbacRoleAssignmentServiceDB.getInstance().findOne(body.id) ?? new RbacRoleAssignmentDB();
+            const entity = body.id === '' ? new RbacRoleAssignmentDB() : await RbacRoleAssignmentServiceDB.getInstance().findOne(body.id) ?? new RbacRoleAssignmentDB();
             entity.group_id = body.group_id;
             entity.role_id = body.role_id;
             entity.resource_type = body.resource_type ?? '';
@@ -130,7 +131,7 @@ export class Rbac extends DefaultRoute {
 
         this._post('/json/rbac/rolepermission/save', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
             const body = data.body!;
-            const entity = body.id === 0 ? new RbacRolePermissionDB() : await RbacRolePermissionServiceDB.getInstance().findOne(body.id) ?? new RbacRolePermissionDB();
+            const entity = body.id === '' ? new RbacRolePermissionDB() : await RbacRolePermissionServiceDB.getInstance().findOne(body.id) ?? new RbacRolePermissionDB();
             entity.role_id = body.role_id;
             entity.permission_id = body.permission_id;
             await RbacRolePermissionServiceDB.getInstance().save(entity);
@@ -166,7 +167,7 @@ export class Rbac extends DefaultRoute {
             await RbacUserGroupServiceDB.getInstance().remove(data.body!.id);
 
             return {statusCode: StatusCodes.OK};
-        }, {description: 'Remove a user from a group', bodySchema: SchemaRbacIdRequest, responseBodySchema: SchemaDefaultReturn});
+        }, {description: 'Remove a user from a group', bodySchema: SchemaRbacMembershipIdRequest, responseBodySchema: SchemaDefaultReturn});
 
         this._post('/json/rbac/rolepermission/delete', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
             await RbacRolePermissionServiceDB.getInstance().remove(data.body!.id);

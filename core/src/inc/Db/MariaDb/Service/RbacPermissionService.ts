@@ -21,11 +21,11 @@ export class RbacPermissionService extends DBService<RbacPermission> {
     }
 
     /**
-     * The permission keys for the given permission ids.
-     * @param {number[]} ids
+     * The permission keys for the given permission ids (cluster-stable UUIDs).
+     * @param {string[]} ids
      * @returns {string[]}
      */
-    public async keysForIds(ids: number[]): Promise<string[]> {
+    public async keysForIds(ids: string[]): Promise<string[]> {
         if (ids.length === 0) {
             return [];
         }

@@ -366,6 +366,8 @@ export {
     RbacRolePermissionEntry,
     SchemaRbacIdRequest,
     RbacIdRequest,
+    SchemaRbacMembershipIdRequest,
+    RbacMembershipIdRequest,
     SchemaRbacOverviewResponse,
     RbacOverviewResponse
 } from './Backend/Routes/Rbac.js';
