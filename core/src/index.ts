@@ -307,6 +307,8 @@ export {SettingService as SettingServiceDB} from './inc/Db/MariaDb/Service/Setti
 export {SshPortService as SshPortServiceDB} from './inc/Db/MariaDb/Service/SshPortService.js';
 export {SshUserService as SshUserServiceDB} from './inc/Db/MariaDb/Service/SshUserService.js';
 export {UserService as UserServiceDB} from './inc/Db/MariaDb/Service/UserService.js';
+export {RbacGroupService as RbacGroupServiceDB} from './inc/Db/MariaDb/Service/RbacGroupService.js';
+export {RbacRoleService as RbacRoleServiceDB} from './inc/Db/MariaDb/Service/RbacRoleService.js';
 export {RbacUserGroupService as RbacUserGroupServiceDB} from './inc/Db/MariaDb/Service/RbacUserGroupService.js';
 export {RbacRoleAssignmentService as RbacRoleAssignmentServiceDB} from './inc/Db/MariaDb/Service/RbacRoleAssignmentService.js';
 export {RbacRolePermissionService as RbacRolePermissionServiceDB} from './inc/Db/MariaDb/Service/RbacRolePermissionService.js';

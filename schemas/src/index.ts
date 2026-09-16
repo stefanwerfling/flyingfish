@@ -351,6 +351,25 @@ export {
     UserListResponse
 } from './Backend/Routes/User/List.js';
 
+export {
+    SchemaRbacGroupEntry,
+    RbacGroupEntry,
+    SchemaRbacRoleEntry,
+    RbacRoleEntry,
+    SchemaRbacPermissionEntry,
+    RbacPermissionEntry,
+    SchemaRbacAssignmentEntry,
+    RbacAssignmentEntry,
+    SchemaRbacMembershipEntry,
+    RbacMembershipEntry,
+    SchemaRbacRolePermissionEntry,
+    RbacRolePermissionEntry,
+    SchemaRbacIdRequest,
+    RbacIdRequest,
+    SchemaRbacOverviewResponse,
+    RbacOverviewResponse
+} from './Backend/Routes/Rbac.js';
+
 export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';
 
 export {NatStatus} from './Backend/NatPort/NatStatus.js';

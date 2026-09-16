@@ -10,6 +10,7 @@ import {Listen as ListenController} from '../../Routes/Main/Listen.js';
 import {Login as LoginController} from '../../Routes/Main/Login.js';
 import {Nginx as NginxController} from '../../Routes/Main/Nginx.js';
 import {Pki as PkiController} from '../../Routes/Main/Pki.js';
+import {Rbac as RbacController} from '../../Routes/Main/Rbac.js';
 import {Registry as RegistryController} from '../../Routes/Main/Registry.js';
 import {Route as RouteController} from '../../Routes/Main/Route.js';
 import {Settings as SettingsController} from '../../Routes/Main/Settings.js';
@@ -50,7 +51,8 @@ export class RouteLoader extends HttpRouteLoader {
             new SettingsController(),
             new CredentialController(),
             new RegistryController(),
-            new PkiController()
+            new PkiController(),
+            new RbacController()
         ];
     }
 
