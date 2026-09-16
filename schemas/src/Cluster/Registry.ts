@@ -151,3 +151,40 @@ export const SchemaClusterStateResponse = SchemaDefaultReturn.extend({
  * ClusterStateResponse
  */
 export type ClusterStateResponse = ExtractSchemaResultType<typeof SchemaClusterStateResponse>;
+
+/**
+ * SchemaClusterDomainNode — one node's involvement with a domain (Cluster/Mesh epic
+ * 9.5.12): which node holds it and at what failover priority (lower = primary), for
+ * DNS-based high availability.
+ */
+export const SchemaClusterDomainNode = Vts.object({
+    nodeUid: Vts.string(),
+    id: Vts.number(),
+    priority: Vts.number(),
+    disable: Vts.boolean(),
+    fix: Vts.boolean(),
+    recordless: Vts.boolean(),
+    parentId: Vts.number()
+});
+
+/**
+ * SchemaClusterDomainView — a domain seen across the cluster: its name and every node
+ * that manages it, in failover priority order.
+ */
+export const SchemaClusterDomainView = Vts.object({
+    name: Vts.string(),
+    nodes: Vts.array(SchemaClusterDomainNode)
+});
+
+/**
+ * SchemaClusterDomainsResponse — which nodes manage each domain cluster-wide (for
+ * high-availability / DNS failover visibility).
+ */
+export const SchemaClusterDomainsResponse = SchemaDefaultReturn.extend({
+    list: Vts.array(SchemaClusterDomainView)
+});
+
+/**
+ * ClusterDomainsResponse
+ */
+export type ClusterDomainsResponse = ExtractSchemaResultType<typeof SchemaClusterDomainsResponse>;

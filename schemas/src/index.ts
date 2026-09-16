@@ -402,7 +402,11 @@ export {
     SchemaClusterAggregatePublishRequest,
     ClusterAggregatePublishRequest,
     SchemaClusterStateResponse,
-    ClusterStateResponse
+    ClusterStateResponse,
+    SchemaClusterDomainNode,
+    SchemaClusterDomainView,
+    SchemaClusterDomainsResponse,
+    ClusterDomainsResponse
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

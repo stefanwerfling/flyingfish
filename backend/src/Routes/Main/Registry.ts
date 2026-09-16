@@ -1,5 +1,7 @@
 import {Router} from 'express';
+import {aggregateClusterDomains} from 'flyingfish_core';
 import {
+    ClusterDomainsResponse,
     ClusterLocalStateResponse,
     ClusterPeersResponse,
     ClusterRoutesResponse,
@@ -10,6 +12,7 @@ import {
     SchemaCapabilityManifest,
     SchemaClusterAggregatePublishRequest,
     SchemaClusterAnnounceRequest,
+    SchemaClusterDomainsResponse,
     SchemaClusterLocalStateResponse,
     SchemaClusterPeersResponse,
     SchemaClusterRoutesPublishRequest,
@@ -212,7 +215,7 @@ export class Registry extends DefaultRoute {
             async(): Promise<ClusterLocalStateResponse> => {
                 return {
                     statusCode: StatusCodes.OK,
-                    entries: new ClusterLocalStateProvider().entries()
+                    entries: await new ClusterLocalStateProvider().entries()
                 };
             },
             {
@@ -248,6 +251,21 @@ export class Registry extends DefaultRoute {
             {
                 description: 'Read the cluster-wide aggregate view (federated, for the UI)',
                 responseBodySchema: SchemaClusterStateResponse
+            }
+        );
+
+        this._get(
+            '/json/registry/cluster/domains',
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<ClusterDomainsResponse> => {
+                return {
+                    statusCode: StatusCodes.OK,
+                    list: aggregateClusterDomains(HubRegistryService.getInstance().getClusterAggregate().entries())
+                };
+            },
+            {
+                description: 'Which nodes manage each domain cluster-wide (HA / DNS failover view)',
+                responseBodySchema: SchemaClusterDomainsResponse
             }
         );
 

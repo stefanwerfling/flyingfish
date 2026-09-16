@@ -169,6 +169,16 @@ export {
     HubClusterGossipSync
 } from './inc/Cluster/HubClusterGossipSync.js';
 export {
+    CLUSTER_GOSSIP_KEY_SEPARATOR,
+    clusterGossipNamespaceKey,
+    clusterGossipParseKey
+} from './inc/Cluster/ClusterGossipNamespace.js';
+export {
+    ClusterDomainNode,
+    ClusterDomainView,
+    aggregateClusterDomains
+} from './inc/Cluster/ClusterDomainAggregate.js';
+export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
     clusterL4RouteAssignedTo,

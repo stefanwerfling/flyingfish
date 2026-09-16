@@ -19,6 +19,7 @@ import {
     PkiNodeFileStore,
     PkiNodeHttpTransport,
     PkiNodeIdentity,
+    clusterGossipNamespaceKey,
     startHubRegistration
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
@@ -262,7 +263,7 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
                 await membership.sync(roster);
 
                 for (const entry of await gossipSync.pullLocalState()) {
-                    gossipStore.setIfChanged(`${selfNodeUid}/${entry.key}`, entry.value);
+                    gossipStore.setIfChanged(clusterGossipNamespaceKey(selfNodeUid, entry.key), entry.value);
                 }
 
                 gossip.sync();
