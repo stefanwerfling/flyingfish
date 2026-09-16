@@ -21,9 +21,11 @@ import {Logger, ServiceAbstract} from '@stefanwerfling/figtree';
 import {ServiceImportance, ServiceStatus} from 'figtree-schemas';
 import {
     AcmeDnsTempRecordServiceDB,
+    DnsCache,
     DomainRecordDB,
     DomainRecordServiceDB,
-    DomainServiceDB
+    DomainServiceDB,
+    ipInCidrRanges
 } from 'flyingfish_core';
 import {SchemaErrors} from 'vts';
 import {Config} from '../Config/Config.js';
@@ -111,6 +113,13 @@ export class Dns2Server extends ServiceAbstract {
      * @protected
      */
     protected _clusterActiveIps: Map<string, string> = new Map();
+
+    /**
+     * TTL cache for the LAN caching resolver (Pi-router epic, Phase 5): upstream answers
+     * keyed by `<name>|<type>`, so repeated internal lookups are served from memory.
+     * @protected
+     */
+    protected _resolverCache: DnsCache<PacketResource[]> = new DnsCache<PacketResource[]>();
 
     /**
      * constructor
@@ -313,10 +322,16 @@ export class Dns2Server extends ServiceAbstract {
                 if (answers.length > 0) {
                     response.answers.push(...answers);
                 } else {
-                    const resolverAnswers = await this._handleResolver(question.name, question.type);
+                    // LAN caching resolver (9.5, Phase 5): only recurse/serve-cache for
+                    // INTERNAL source addresses when enabled — never an open resolver.
+                    const resolver = Config.getInstance().get()?.dnsserver?.resolver;
 
-                    if (resolverAnswers.length > 0) {
-                        response.answers.push(...resolverAnswers);
+                    if (resolver?.enable === true && ipInCidrRanges(remote.address, resolver.internalRanges ?? [])) {
+                        const resolverAnswers = await this._handleResolver(question.name, question.type, resolver.upstream ?? []);
+
+                        if (resolverAnswers.length > 0) {
+                            response.answers.push(...resolverAnswers);
+                        }
                     }
                 }
             }
@@ -423,45 +438,60 @@ export class Dns2Server extends ServiceAbstract {
     }
 
     /**
-     * Resolve a name upstream when it is not served locally. Placeholder: the
-     * upstream answers are not yet mapped back into the response.
-     * @param {string} domainName
-     * @param {number} [recordType]
+     * Resolve a name upstream when it is not served locally (Pi-router epic, Phase 5,
+     * LAN caching resolver). Serves from the TTL cache on a hit; otherwise forwards to
+     * the upstream servers, caches the answers by the minimum answer TTL and returns
+     * them. Called ONLY for internal source addresses (gated by the caller), so it is
+     * never an open resolver.
+     * @param {string} domainName - the queried name
+     * @param {number} [recordType] - the record type (only A/AAAA/MX/CNAME are forwarded)
+     * @param {string[]} upstream - the upstream DNS servers (empty = system resolvers)
      * @protected
      * @returns {Promise<PacketResource[]>}
      */
-    protected async _handleResolver(domainName: string, recordType?: number): Promise<PacketResource[]> {
-        const answers: PacketResource[] = [];
+    protected async _handleResolver(domainName: string, recordType: number | undefined, upstream: string[]): Promise<PacketResource[]> {
+        if (!recordType) {
+            return [];
+        }
 
-        const resolver = new DNS();
+        const cacheKey = DnsCache.key(domainName, recordType);
+        const cached = this._resolverCache.get(cacheKey);
+
+        if (cached !== null) {
+            return cached;
+        }
+
+        const resolver = upstream.length > 0 ? new DNS({nameServers: upstream}) : new DNS();
 
         let result: Packet | null = null;
 
-        if (recordType) {
-            switch (recordType) {
-                case PacketTypes.A:
-                    result = await resolver.resolveA(domainName);
-                    break;
+        switch (recordType) {
+            case PacketTypes.A:
+                result = await resolver.resolveA(domainName);
+                break;
 
-                case PacketTypes.AAAA:
-                    result = await resolver.resolveAAAA(domainName);
-                    break;
+            case PacketTypes.AAAA:
+                result = await resolver.resolveAAAA(domainName);
+                break;
 
-                case PacketTypes.MX:
-                    result = await resolver.resolveMX(domainName);
-                    break;
+            case PacketTypes.MX:
+                result = await resolver.resolveMX(domainName);
+                break;
 
-                case PacketTypes.CNAME:
-                    result = await resolver.resolveCNAME(domainName);
-                    break;
-            }
+            case PacketTypes.CNAME:
+                result = await resolver.resolveCNAME(domainName);
+                break;
         }
 
-        if (result) {
-            // TODO
+        if (result === null || result.answers.length === 0) {
+            return [];
         }
 
-        return answers;
+        // Cache for the smallest answer TTL (so the cache never outlives a record).
+        const ttl = Math.max(1, Math.min(...result.answers.map((answer) => answer.ttl)));
+        this._resolverCache.set(cacheKey, result.answers, ttl);
+
+        return result.answers;
     }
 
     /**

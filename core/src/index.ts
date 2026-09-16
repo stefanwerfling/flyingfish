@@ -199,6 +199,12 @@ export {
     parseDnsmasqLeases
 } from './inc/Router/DnsmasqConfig.js';
 export {
+    ipToBytes,
+    ipInCidr,
+    ipInCidrRanges
+} from './inc/Router/IpCidr.js';
+export {DnsCache} from './inc/Router/DnsCache.js';
+export {
     ClusterGossipStateEntry,
     HubClusterGossipSyncOptions,
     HubClusterGossipSync

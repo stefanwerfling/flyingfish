@@ -10,6 +10,9 @@ export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
     DNSSERVER_PORT = 'FLYINGFISH_DNSSERVER_PORT',
     DNSSERVER_PROXY_PROTOCOL = 'FLYINGFISH_DNSSERVER_PROXY_PROTOCOL',
+    DNSSERVER_RESOLVER_ENABLE = 'FLYINGFISH_DNSSERVER_RESOLVER_ENABLE',
+    DNSSERVER_RESOLVER_INTERNAL_RANGES = 'FLYINGFISH_DNSSERVER_RESOLVER_INTERNAL_RANGES',
+    DNSSERVER_RESOLVER_UPSTREAM = 'FLYINGFISH_DNSSERVER_RESOLVER_UPSTREAM',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
     PKI_URL = 'FLYINGFISH_PKI_URL',
@@ -124,6 +127,27 @@ export class Config extends ConfigCore<ConfigOptionsDnsServer> {
             }
 
             config.dnsserver.proxyProtocol = process.env[ENV_OPTIONAL.DNSSERVER_PROXY_PROTOCOL] === '1';
+        }
+
+        // LAN caching resolver (Pi-router epic, Phase 5) ----------------------------------------------------------------
+
+        const resolverEnable = process.env[ENV_OPTIONAL.DNSSERVER_RESOLVER_ENABLE];
+        const resolverRanges = process.env[ENV_OPTIONAL.DNSSERVER_RESOLVER_INTERNAL_RANGES];
+        const resolverUpstream = process.env[ENV_OPTIONAL.DNSSERVER_RESOLVER_UPSTREAM];
+
+        if (resolverEnable || resolverRanges || resolverUpstream) {
+            if (!config.dnsserver) {
+                config.dnsserver = {};
+            }
+
+            const split = (value: string | undefined): string[] =>
+                (value ?? '').split(',').map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+
+            config.dnsserver.resolver = {
+                enable: resolverEnable === '1',
+                internalRanges: split(resolverRanges),
+                upstream: split(resolverUpstream)
+            };
         }
 
         // Logging -----------------------------------------------------------------------------------------------------

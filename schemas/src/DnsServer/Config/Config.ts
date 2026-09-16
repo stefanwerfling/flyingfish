@@ -12,7 +12,16 @@ export const SchemaConfigOptionsDnsServer = SchemaConfigOptions.extend({
         // Parse the PROXY protocol (v1/v2) on incoming DNS connections so the real
         // client IP (from a fronting nginx stream with `proxy_protocol on`) is used
         // instead of the proxy's IP. Only enable when actually behind such a proxy.
-        proxyProtocol: Vts.optional(Vts.boolean())
+        proxyProtocol: Vts.optional(Vts.boolean()),
+        // LAN caching resolver (Pi-router epic, Phase 5): when enabled, names not
+        // served authoritatively are resolved upstream, cached (by TTL) and returned —
+        // but ONLY for INTERNAL source addresses in `internalRanges` (CIDR list), so
+        // this is never an open resolver. `upstream` are the upstream DNS servers.
+        resolver: Vts.optional(Vts.object({
+            enable: Vts.optional(Vts.boolean()),
+            internalRanges: Vts.optional(Vts.array(Vts.string())),
+            upstream: Vts.optional(Vts.array(Vts.string()))
+        }))
     })),
     // Hub registry (v2 modular architecture): where and with which shared secret
     // this part self-registers its capability manifest (wired in a later slice).
