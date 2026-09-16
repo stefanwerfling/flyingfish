@@ -29,7 +29,8 @@ import {
     StatusCodes
 } from 'flyingfish_schemas';
 import {ClusterLocalStateProvider} from '../../Application/Hub/ClusterLocalStateProvider.js';
-import {DefaultRoute} from '@stefanwerfling/figtree';
+import {ClusterRbacConverger} from '../../Application/Hub/ClusterRbacConverger.js';
+import {DefaultRoute, Logger} from '@stefanwerfling/figtree';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {HubRegistryService} from '../../Application/Hub/HubRegistryService.js';
@@ -232,7 +233,17 @@ export class Registry extends DefaultRoute {
             '/json/registry/cluster/aggregate',
             FlyingFishRouteCheckServiceOrUserLogin,
             async(_req, _res, data): Promise<DefaultReturn> => {
-                HubRegistryService.getInstance().getClusterAggregate().set(data.body!.entries);
+                const entries = data.body!.entries;
+                HubRegistryService.getInstance().getClusterAggregate().set(entries);
+
+                // Converge the cluster-global RBAC policy into this node's local DB so
+                // LOCAL enforcement sees the shared rights DB (9.5.12, A+C option B).
+                // Best-effort: a converge failure must not fail the aggregate push.
+                try {
+                    await new ClusterRbacConverger().import(aggregateClusterRbac(entries));
+                } catch (error) {
+                    Logger.getLogger().warn('Cluster RBAC convergence failed (will retry on the next aggregate push)', error);
+                }
 
                 return {statusCode: StatusCodes.OK};
             },

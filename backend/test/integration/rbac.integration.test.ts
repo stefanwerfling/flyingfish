@@ -27,6 +27,7 @@ import {
     PluginManager,
     RbacDbDataSource
 } from 'flyingfish_core';
+import {ClusterRbacConverger} from '../../src/Application/Hub/ClusterRbacConverger.js';
 import {AddAcmeDnsTempRecord1788400000000} from '../../src/inc/Db/MariaDb/migrations/1788400000000-AddAcmeDnsTempRecord.js';
 import {AddDomainClusterPriority1788700000000} from '../../src/inc/Db/MariaDb/migrations/1788700000000-AddDomainClusterPriority.js';
 import {AddPkiRevocation1788600000000} from '../../src/inc/Db/MariaDb/migrations/1788600000000-AddPkiRevocation.js';
@@ -231,6 +232,42 @@ describe('RBAC migration + seed + enforce (integration, real MariaDB)', () => {
         expect(await permission.can(editorUserId, 'domain.write')).toBe(false);
         // a permission the role does not hold is denied even on the scoped resource
         expect(await permission.can(editorUserId, 'domain.delete', {type: 'domain', id: 5})).toBe(false);
+    });
+
+    test('CONVERGENCE: the gossiped cluster policy upserts into the local DB and is then locally enforceable', async() => {
+        // A policy authored on ANOTHER node (fresh UUIDs not in this DB), as it would
+        // arrive in the converged gossip aggregate.
+        const remotePolicy = {
+            groups: [{id: 'conv-g1', name: 'RemoteEditors', description: 'from node B', disable: false}],
+            roles: [{id: 'conv-r1', name: 'remote-editor', description: ''}],
+            permissions: [{id: 'conv-p1', permission_key: 'domain.read', description: ''}],
+            rolePermissions: [{id: 'conv-rp1', role_id: 'conv-r1', permission_id: 'conv-p1'}],
+            assignments: [{id: 'conv-a1', group_id: 'conv-g1', role_id: 'conv-r1', resource_type: '', resource_id: 0}]
+        };
+
+        await new ClusterRbacConverger().import(remotePolicy);
+
+        // every table upserted into the local DB, keyed by the cluster-stable UUID
+        const [group] = await dataSource.query('SELECT * FROM `rbac_group` WHERE `id` = ?', ['conv-g1']);
+        expect(group.name).toBe('RemoteEditors');
+        const [rolePerm] = await dataSource.query('SELECT * FROM `rbac_role_permission` WHERE `id` = ?', ['conv-rp1']);
+        expect(rolePerm.role_id).toBe('conv-r1');
+        const [assignment] = await dataSource.query('SELECT * FROM `rbac_role_assignment` WHERE `id` = ?', ['conv-a1']);
+        expect(assignment.group_id).toBe('conv-g1');
+
+        // re-importing the same UUID with changed fields UPSERTS (no duplicate row)
+        await new ClusterRbacConverger().import({...remotePolicy, groups: [{id: 'conv-g1', name: 'Renamed', description: 'x', disable: true}]});
+        const groups = await dataSource.query('SELECT * FROM `rbac_group` WHERE `id` = ?', ['conv-g1']);
+        expect(groups).toHaveLength(1);
+        expect(groups[0].name).toBe('Renamed');
+        expect(groups[0].disable).toBe(1);
+
+        // the converged policy is now enforceable LOCALLY for a local user bound to the group
+        const localUserId = 6001;
+        await dataSource.query('INSERT INTO `rbac_user_group` (`user_id`, `group_id`) VALUES (?, ?)', [localUserId, 'conv-g1']);
+        const permission = new PermissionService(new RbacDbDataSource());
+        expect(await permission.can(localUserId, 'domain.read')).toBe(true);
+        expect(await permission.can(localUserId, 'domain.write')).toBe(false);
     });
 });
 
