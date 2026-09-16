@@ -1,4 +1,4 @@
-import {ClusterL4Target} from './ClusterL4Frame.js';
+import {ClusterL4ClientInfo, ClusterL4Target} from './ClusterL4Frame.js';
 
 /**
  * A local L4 endpoint the tunnel pumps bytes through (Cluster/Mesh epic 9.5.2):
@@ -44,9 +44,12 @@ export interface IClusterL4Dialer {
 
     /**
      * Connect to the target and resolve a stream over it, or reject if the connect
-     * fails (the session then answers OpenAck(fail)).
+     * fails (the session then answers OpenAck(fail)). When `clientInfo` is given, the
+     * dialer preserves the original client endpoint on the backend connection (e.g. a
+     * PROXY protocol v2 header), Cluster/Mesh epic 9.5.3.
      * @param target - where to connect
+     * @param clientInfo - the original client endpoint to preserve, optional
      */
-    dial(target: ClusterL4Target): Promise<IClusterL4Stream>;
+    dial(target: ClusterL4Target, clientInfo?: ClusterL4ClientInfo): Promise<IClusterL4Stream>;
 
 }

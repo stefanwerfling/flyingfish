@@ -134,6 +134,7 @@ export {
     ClusterL4Op,
     ClusterL4Proto,
     ClusterL4Target,
+    ClusterL4ClientInfo,
     ClusterL4DecodedFrame,
     ClusterL4Frame,
     CLUSTER_L4_MAX_PORT,
@@ -143,7 +144,7 @@ export {IClusterL4Stream, IClusterL4Dialer} from './inc/Cluster/ClusterL4Stream.
 export {ClusterL4Session} from './inc/Cluster/ClusterL4Session.js';
 export {ClusterL4TcpStream} from './inc/Cluster/ClusterL4TcpStream.js';
 export {ClusterL4TcpDialer} from './inc/Cluster/ClusterL4TcpDialer.js';
-export {ClusterL4TcpListener} from './inc/Cluster/ClusterL4TcpListener.js';
+export {ClusterL4AcceptedEndpoints, ClusterL4TcpListener} from './inc/Cluster/ClusterL4TcpListener.js';
 export {ClusterL4Tunnel} from './inc/Cluster/ClusterL4Tunnel.js';
 export {
     ClusterProxyEndpoint,

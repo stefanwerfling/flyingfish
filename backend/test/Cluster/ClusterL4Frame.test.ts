@@ -98,4 +98,37 @@ describe('ClusterL4Frame', () => {
         expect(() => ClusterL4Frame.encodeOpen(1, {proto: ClusterL4Proto.Tcp, host: 'a'.repeat(256), port: 80}))
         .toThrow(/host exceeds/u);
     });
+
+    test('Open round-trips an optional clientInfo block (9.5.3)', () => {
+        const clientInfo = {sourceHost: '203.0.113.9', sourcePort: 51000, destHost: '10.0.0.1', destPort: 8080};
+        const frame = ClusterL4Frame.encodeOpen(3, {proto: ClusterL4Proto.Tcp, host: 'backend.local', port: 5432}, clientInfo);
+
+        expect(ClusterL4Frame.decode(frame)).toEqual({
+            op: ClusterL4Op.Open,
+            streamId: 3,
+            target: {proto: ClusterL4Proto.Tcp, host: 'backend.local', port: 5432},
+            clientInfo: clientInfo
+        });
+    });
+
+    test('an Open without clientInfo is byte-identical to the pre-9.5.3 form and decodes without it', () => {
+        const target = {proto: ClusterL4Proto.Tcp, host: '10.0.0.5', port: 80};
+        const frame = ClusterL4Frame.encodeOpen(3, target);
+
+        // no trailing clientInfo flag byte: frame is exactly header+fixed+host
+        expect(frame.length).toBe(5 + 4 + '10.0.0.5'.length);
+        const decoded = ClusterL4Frame.decode(frame);
+        expect(decoded).toEqual({op: ClusterL4Op.Open, streamId: 3, target: target});
+        expect((decoded as {clientInfo?: unknown;}).clientInfo).toBeUndefined();
+    });
+
+    test('a truncated clientInfo block is ignored rather than failing the frame', () => {
+        const clientInfo = {sourceHost: '203.0.113.9', sourcePort: 51000, destHost: '10.0.0.1', destPort: 8080};
+        const target = {proto: ClusterL4Proto.Tcp, host: 'h', port: 80};
+        const frame = ClusterL4Frame.encodeOpen(3, target, clientInfo);
+        // drop the last few bytes of the dest host — the block is now short
+        const decoded = ClusterL4Frame.decode(frame.subarray(0, frame.length - 3));
+
+        expect(decoded).toEqual({op: ClusterL4Op.Open, streamId: 3, target: target});
+    });
 });

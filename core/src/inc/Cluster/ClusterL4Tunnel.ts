@@ -1,5 +1,5 @@
 import {IClusterMessageChannel} from './ClusterMessageChannel.js';
-import {ClusterL4Target} from './ClusterL4Frame.js';
+import {ClusterL4ClientInfo, ClusterL4Target} from './ClusterL4Frame.js';
 import {ClusterL4Session} from './ClusterL4Session.js';
 import {IClusterL4Dialer, IClusterL4Stream} from './ClusterL4Stream.js';
 
@@ -67,8 +67,9 @@ export class ClusterL4Tunnel {
      * @param nodeUid - the egress peer's cluster nodeUid
      * @param target - where the egress should connect
      * @param local - the local (ingress) endpoint
+     * @param clientInfo - the original client endpoint to preserve, optional (9.5.3)
      */
-    public open(nodeUid: string, target: ClusterL4Target, local: IClusterL4Stream): boolean {
+    public open(nodeUid: string, target: ClusterL4Target, local: IClusterL4Stream, clientInfo?: ClusterL4ClientInfo): boolean {
         const session = this._sessions.get(nodeUid);
 
         if (session === undefined) {
@@ -77,7 +78,7 @@ export class ClusterL4Tunnel {
             return false;
         }
 
-        session.openStream(target, local);
+        session.openStream(target, local, clientInfo);
 
         return true;
     }

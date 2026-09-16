@@ -1,5 +1,5 @@
 import {IClusterMessageChannel} from './ClusterMessageChannel.js';
-import {ClusterL4Frame, ClusterL4Op, ClusterL4Target} from './ClusterL4Frame.js';
+import {ClusterL4ClientInfo, ClusterL4Frame, ClusterL4Op, ClusterL4Target} from './ClusterL4Frame.js';
 import {IClusterL4Dialer, IClusterL4Stream} from './ClusterL4Stream.js';
 
 /**
@@ -73,15 +73,16 @@ export class ClusterL4Session {
      * and closes the stream when the socket ends.
      * @param target - where the peer (egress) should connect
      * @param local - the local (ingress) endpoint
+     * @param clientInfo - the original client endpoint to preserve, optional (9.5.3)
      */
-    public openStream(target: ClusterL4Target, local: IClusterL4Stream): void {
+    public openStream(target: ClusterL4Target, local: IClusterL4Stream, clientInfo?: ClusterL4ClientInfo): void {
         const streamId = this._allocateStreamId();
 
         this._streams.set(streamId, {role: StreamRole.Origin, local: local, pending: [], closed: false});
 
         // Open must be the first frame for this id; wire the pumps only afterwards so
         // no Data can overtake it.
-        this._channel.send(ClusterL4Frame.encodeOpen(streamId, target));
+        this._channel.send(ClusterL4Frame.encodeOpen(streamId, target, clientInfo));
         this._wireLocal(streamId, local);
     }
 
@@ -121,7 +122,7 @@ export class ClusterL4Session {
 
         switch (frame.op) {
             case ClusterL4Op.Open:
-                this._onOpen(frame.streamId, frame.target);
+                this._onOpen(frame.streamId, frame.target, frame.clientInfo);
                 break;
 
             case ClusterL4Op.OpenAck:
@@ -146,8 +147,9 @@ export class ClusterL4Session {
      * OpenAck(ok) and flush any buffered Data; on failure answer OpenAck(fail).
      * @param streamId - the peer-chosen stream id
      * @param target - the target to dial
+     * @param clientInfo - the original client endpoint to preserve, optional (9.5.3)
      */
-    private _onOpen(streamId: number, target: ClusterL4Target): void {
+    private _onOpen(streamId: number, target: ClusterL4Target, clientInfo?: ClusterL4ClientInfo): void {
         if (this._streams.has(streamId)) {
             return;
         }
@@ -155,7 +157,7 @@ export class ClusterL4Session {
         const state: StreamState = {role: StreamRole.Target, local: null, pending: [], closed: false};
         this._streams.set(streamId, state);
 
-        this._dialer.dial(target).then((local: IClusterL4Stream): void => {
+        this._dialer.dial(target, clientInfo).then((local: IClusterL4Stream): void => {
             if (state.closed) {
                 local.close();
                 return;

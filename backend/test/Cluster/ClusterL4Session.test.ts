@@ -11,6 +11,7 @@
  * Fakes are factory functions (not classes) to keep one class per file.
  */
 import {
+    ClusterL4ClientInfo,
     ClusterL4DecodedFrame,
     ClusterL4Frame,
     ClusterL4Op,
@@ -46,6 +47,7 @@ type FakeStream = IClusterL4Stream & {
  */
 type FakeDialer = IClusterL4Dialer & {
     targets: ClusterL4Target[];
+    clientInfos: (ClusterL4ClientInfo | undefined)[];
     settle(): FakeStream;
     fail(): void;
 };
@@ -119,13 +121,16 @@ const createStream = (): FakeStream => {
  */
 const createDialer = (): FakeDialer => {
     const targets: ClusterL4Target[] = [];
+    const clientInfos: (ClusterL4ClientInfo | undefined)[] = [];
     let resolveDial: ((stream: IClusterL4Stream) => void) | null = null;
     let rejectDial: ((error: Error) => void) | null = null;
 
     return {
         targets: targets,
-        dial: async(target: ClusterL4Target): Promise<IClusterL4Stream> => {
+        clientInfos: clientInfos,
+        dial: async(target: ClusterL4Target, clientInfo?: ClusterL4ClientInfo): Promise<IClusterL4Stream> => {
             targets.push(target);
+            clientInfos.push(clientInfo);
 
             return new Promise<IClusterL4Stream>((resolve, reject): void => {
                 resolveDial = resolve;
@@ -250,6 +255,27 @@ describe('ClusterL4Session (target role)', () => {
         // and bytes read from the dialed socket go back as Data
         local.emit(new Uint8Array([7]));
         expect(channel.sent).toContainEqual({op: ClusterL4Op.Data, streamId: 2, data: new Uint8Array([7])});
+    });
+
+    test('origin forwards clientInfo into the Open frame; target passes it to the dialer (9.5.3)', async() => {
+        const clientInfo = {sourceHost: '203.0.113.9', sourcePort: 50000, destHost: '10.0.0.1', destPort: 8080};
+
+        // origin: clientInfo rides the Open frame
+        const originChannel = createChannel();
+        const origin = new ClusterL4Session(originChannel as never, createDialer(), true);
+        origin.openStream(target, createStream(), clientInfo);
+        expect(originChannel.sent[0]).toEqual({op: ClusterL4Op.Open, streamId: 2, target: target, clientInfo: clientInfo});
+
+        // target: the decoded clientInfo reaches dial()
+        const targetChannel = createChannel();
+        const dialer = createDialer();
+        const session = new ClusterL4Session(targetChannel as never, dialer, false);
+        targetChannel.deliver(ClusterL4Frame.encodeOpen(2, target, clientInfo));
+        dialer.settle();
+        await flush();
+
+        expect(dialer.clientInfos[0]).toEqual(clientInfo);
+        expect(session.streamCount()).toBe(1);
     });
 
     test('a failed dial answers OpenAck(fail) and opens no stream', async() => {
