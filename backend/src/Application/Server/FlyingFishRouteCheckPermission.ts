@@ -35,6 +35,20 @@ export const requirePermission = (permission: string): DefaultRouteCheckUserLogi
     };
 
 /**
+ * Whether the logged-in user of a request holds a permission (globally) — for
+ * in-handler checks that answer themselves (RBAC epic 9.5.13). Sends no response.
+ * @param request - the request
+ * @param permission - the required permission key
+ */
+export const hasPermission = async(request: Request, permission: string): Promise<boolean> => {
+    if (!SchemaRequestData.validate(request, []) || request.session.user?.isLogin !== true) {
+        return false;
+    }
+
+    return FlyingFishPermissions.getInstance().can(request.session.user.userid, permission);
+};
+
+/**
  * Whether the logged-in user of a request holds a permission on a specific resource
  * (RBAC epic 9.5.13) — for in-handler, resource-scoped checks (e.g. write on domain
  * <id>). Returns false (without sending a response) when not logged in or not allowed,
