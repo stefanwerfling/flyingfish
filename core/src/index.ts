@@ -147,6 +147,17 @@ export {ClusterL4TcpDialer} from './inc/Cluster/ClusterL4TcpDialer.js';
 export {ClusterL4AcceptedEndpoints, ClusterL4TcpListener} from './inc/Cluster/ClusterL4TcpListener.js';
 export {ClusterL4Tunnel} from './inc/Cluster/ClusterL4Tunnel.js';
 export {
+    ClusterL4Route,
+    CLUSTER_L4_ROUTE_ANY,
+    clusterL4RouteAssignedTo,
+    clusterL4RouteEqual
+} from './inc/Cluster/ClusterL4Route.js';
+export {
+    ClusterL4RouteHandle,
+    ClusterL4RouteBinder,
+    ClusterL4RouteReconciler
+} from './inc/Cluster/ClusterL4RouteReconciler.js';
+export {
     ClusterProxyEndpoint,
     ClusterProxyProtocolV2Header,
     ClusterProxyProtocolV2
