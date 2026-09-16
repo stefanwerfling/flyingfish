@@ -35,13 +35,18 @@ export class AddRbacTables1788800000000 implements MigrationInterface {
         await queryRunner.query("CREATE TABLE `rbac_role_permission` (`id` varchar(36) NOT NULL, `role_id` varchar(36) NOT NULL DEFAULT '', `permission_id` varchar(36) NOT NULL DEFAULT '', PRIMARY KEY (`id`)) ENGINE=InnoDB");
         await queryRunner.query("CREATE TABLE `rbac_role_assignment` (`id` varchar(36) NOT NULL, `group_id` varchar(36) NOT NULL DEFAULT '', `role_id` varchar(36) NOT NULL DEFAULT '', `resource_type` varchar(64) NOT NULL DEFAULT '', `resource_id` int NOT NULL DEFAULT '0', PRIMARY KEY (`id`)) ENGINE=InnoDB");
 
-        // Seed the backward-compatible full-admin baseline (UUID ids via UUID()).
-        await queryRunner.query("INSERT INTO `rbac_permission` (`id`, `permission_key`, `description`) VALUES (UUID(), '*', 'All permissions (superadmin wildcard)')");
-        await queryRunner.query("INSERT INTO `rbac_role` (`id`, `name`, `description`) VALUES (UUID(), 'superadmin', 'Full administrative access')");
-        await queryRunner.query("INSERT INTO `rbac_group` (`id`, `name`, `description`, `disable`) VALUES (UUID(), 'Administrators', 'Default full-admin group', 0)");
-        await queryRunner.query("INSERT INTO `rbac_role_permission` (`id`, `role_id`, `permission_id`) SELECT UUID(), r.`id`, p.`id` FROM `rbac_role` r, `rbac_permission` p WHERE r.`name` = 'superadmin' AND p.`permission_key` = '*'");
-        await queryRunner.query("INSERT INTO `rbac_role_assignment` (`id`, `group_id`, `role_id`, `resource_type`, `resource_id`) SELECT UUID(), g.`id`, r.`id`, '', 0 FROM `rbac_group` g, `rbac_role` r WHERE g.`name` = 'Administrators' AND r.`name` = 'superadmin'");
-        await queryRunner.query("INSERT INTO `rbac_user_group` (`user_id`, `group_id`) SELECT u.`id`, g.`id` FROM `user` u, `rbac_group` g WHERE g.`name` = 'Administrators'");
+        // Seed the backward-compatible full-admin baseline. The default POLICY rows use
+        // FIXED, well-known UUIDs (not UUID()) so every node in the cluster seeds THE
+        // SAME cluster-stable ids — the gossip then converges them to one logical row
+        // instead of N per-node duplicates (Cluster/Mesh epic 9.5.12, A+C shared rights
+        // DB; the default policy is a cluster singleton). rbac_user_group stays
+        // node-local (each node binds its own users to the shared Administrators group).
+        await queryRunner.query("INSERT INTO `rbac_permission` (`id`, `permission_key`, `description`) VALUES ('00000000-0000-4000-8000-000000000001', '*', 'All permissions (superadmin wildcard)')");
+        await queryRunner.query("INSERT INTO `rbac_role` (`id`, `name`, `description`) VALUES ('00000000-0000-4000-8000-000000000002', 'superadmin', 'Full administrative access')");
+        await queryRunner.query("INSERT INTO `rbac_group` (`id`, `name`, `description`, `disable`) VALUES ('00000000-0000-4000-8000-000000000003', 'Administrators', 'Default full-admin group', 0)");
+        await queryRunner.query("INSERT INTO `rbac_role_permission` (`id`, `role_id`, `permission_id`) VALUES ('00000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000001')");
+        await queryRunner.query("INSERT INTO `rbac_role_assignment` (`id`, `group_id`, `role_id`, `resource_type`, `resource_id`) VALUES ('00000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000002', '', 0)");
+        await queryRunner.query("INSERT INTO `rbac_user_group` (`user_id`, `group_id`) SELECT u.`id`, '00000000-0000-4000-8000-000000000003' FROM `user` u");
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {

@@ -158,6 +158,12 @@ describe('RBAC migration + seed + enforce (integration, real MariaDB)', () => {
         expect(group).toBeTruthy();
         expect(group.disable).toBe(0);
 
+        // the default policy uses FIXED cluster-singleton UUIDs so every node seeds the
+        // SAME ids and the gossip converges them to one logical row (not N duplicates)
+        expect(perm.id).toBe('00000000-0000-4000-8000-000000000001');
+        expect(role.id).toBe('00000000-0000-4000-8000-000000000002');
+        expect(group.id).toBe('00000000-0000-4000-8000-000000000003');
+
         // superadmin role holds the '*' permission
         const [rolePerm] = await dataSource.query(
             'SELECT * FROM `rbac_role_permission` WHERE `role_id` = ? AND `permission_id` = ?',
