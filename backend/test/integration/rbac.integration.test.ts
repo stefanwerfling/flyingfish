@@ -33,6 +33,7 @@ import {AddDomainClusterPriority1788700000000} from '../../src/inc/Db/MariaDb/mi
 import {AddPkiRevocation1788600000000} from '../../src/inc/Db/MariaDb/migrations/1788600000000-AddPkiRevocation.js';
 import {AddPkiTables1788500000000} from '../../src/inc/Db/MariaDb/migrations/1788500000000-AddPkiTables.js';
 import {AddRbacTables1788800000000} from '../../src/inc/Db/MariaDb/migrations/1788800000000-AddRbacTables.js';
+import {AddRouterTables1788900000000} from '../../src/inc/Db/MariaDb/migrations/1788900000000-AddRouterTables.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -50,7 +51,8 @@ const ALL_MIGRATIONS = [
     AddPkiTables1788500000000,
     AddPkiRevocation1788600000000,
     AddDomainClusterPriority1788700000000,
-    AddRbacTables1788800000000
+    AddRbacTables1788800000000,
+    AddRouterTables1788900000000
 ];
 
 // The chain WITHOUT the RBAC migration — used to seed a pre-existing user before the

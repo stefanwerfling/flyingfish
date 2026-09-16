@@ -288,6 +288,10 @@ export {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js'
 export {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
 export {IssuedCertificate as IssuedCertificateDB} from './inc/Db/MariaDb/Entity/IssuedCertificate.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
+export {NatPolicy as NatPolicyDB} from './inc/Db/MariaDb/Entity/NatPolicy.js';
+export {NetworkInterface as NetworkInterfaceDB} from './inc/Db/MariaDb/Entity/NetworkInterface.js';
+export {DhcpServerConfig as DhcpServerConfigDB} from './inc/Db/MariaDb/Entity/DhcpServerConfig.js';
+export {DhcpLease as DhcpLeaseDB} from './inc/Db/MariaDb/Entity/DhcpLease.js';
 export {NginxHttp as NginxHttpDB} from './inc/Db/MariaDb/Entity/NginxHttp.js';
 export {NginxHttpVariable as NginxHttpVariableDB} from './inc/Db/MariaDb/Entity/NginxHttpVariable.js';
 export {NginxListen as NginxListenDB} from './inc/Db/MariaDb/Entity/NginxListen.js';
@@ -325,6 +329,10 @@ export {IpListMaintainerService as IpListMaintainerServiceDB} from './inc/Db/Mar
 export {IpLocationService as IpLocationServiceDB} from './inc/Db/MariaDb/Service/IpLocationService.js';
 export {IpWhitelistService as IpWhitelistServiceDB} from './inc/Db/MariaDb/Service/IpWhitelistService.js';
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/Service/NatPortService.js';
+export {NatPolicyService as NatPolicyServiceDB} from './inc/Db/MariaDb/Service/NatPolicyService.js';
+export {NetworkInterfaceService as NetworkInterfaceServiceDB} from './inc/Db/MariaDb/Service/NetworkInterfaceService.js';
+export {DhcpServerConfigService as DhcpServerConfigServiceDB} from './inc/Db/MariaDb/Service/DhcpServerConfigService.js';
+export {DhcpLeaseService as DhcpLeaseServiceDB} from './inc/Db/MariaDb/Service/DhcpLeaseService.js';
 export {NginxHttpService as NginxHttpServiceDB} from './inc/Db/MariaDb/Service/NginxHttpService.js';
 export {NginxHttpVariableService as NginxHttpVariableServiceDB} from './inc/Db/MariaDb/Service/NginxHttpVariableService.js';
 export {NginxListenService as NginxListenServiceDB} from './inc/Db/MariaDb/Service/NginxListenService.js';

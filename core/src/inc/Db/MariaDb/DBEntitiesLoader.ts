@@ -4,6 +4,8 @@ import {CaCertificate} from './Entity/CaCertificate.js';
 import {Credential} from './Entity/Credential.js';
 import {CredentialLocation} from './Entity/CredentialLocation.js';
 import {CredentialUser} from './Entity/CredentialUser.js';
+import {DhcpLease} from './Entity/DhcpLease.js';
+import {DhcpServerConfig} from './Entity/DhcpServerConfig.js';
 import {Domain} from './Entity/Domain.js';
 import {DomainRecord} from './Entity/DomainRecord.js';
 import {DynDnsClient} from './Entity/DynDnsClient.js';
@@ -19,7 +21,9 @@ import {IpListMaintainer} from './Entity/IpListMaintainer.js';
 import {IpLocation} from './Entity/IpLocation.js';
 import {IpWhitelist} from './Entity/IpWhitelist.js';
 import {IssuedCertificate} from './Entity/IssuedCertificate.js';
+import {NatPolicy} from './Entity/NatPolicy.js';
 import {NatPort} from './Entity/NatPort.js';
+import {NetworkInterface} from './Entity/NetworkInterface.js';
 import {NginxHttp} from './Entity/NginxHttp.js';
 import {NginxHttpVariable} from './Entity/NginxHttpVariable.js';
 import {NginxListen} from './Entity/NginxListen.js';
@@ -57,6 +61,8 @@ export class DBEntitiesLoader {
             Credential,
             CredentialUser,
             CredentialLocation,
+            DhcpLease,
+            DhcpServerConfig,
             Domain,
             DomainRecord,
             DynDnsClient,
@@ -72,7 +78,9 @@ export class DBEntitiesLoader {
             IpLocation,
             IpWhitelist,
             IssuedCertificate,
+            NatPolicy,
             NatPort,
+            NetworkInterface,
             NginxHttp,
             NginxHttpVariable,
             NginxListen,
