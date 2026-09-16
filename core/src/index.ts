@@ -151,6 +151,12 @@ export {ClusterL4UdpListener} from './inc/Cluster/ClusterL4UdpListener.js';
 export {ClusterL4CompositeDialer} from './inc/Cluster/ClusterL4CompositeDialer.js';
 export {ClusterL4Tunnel} from './inc/Cluster/ClusterL4Tunnel.js';
 export {
+    ClusterGossipVersion,
+    ClusterGossipEntry,
+    clusterGossipVersionNewer,
+    ClusterGossipStore
+} from './inc/Cluster/ClusterGossipStore.js';
+export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
     clusterL4RouteAssignedTo,
