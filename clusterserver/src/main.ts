@@ -1,6 +1,10 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
+    ClusterGossip,
+    ClusterGossipStore,
     ClusterMembership,
+    ClusterMuxKind,
+    ClusterPeerMux,
     ClusterQuicPeerTransport,
     ClusterTlsPeerTransport,
     ClusterWssPeerTransport,
@@ -205,6 +209,23 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             }
 
             const membership = new ClusterMembership(transport, enrolledIdentity.nodeUid);
+
+            // Cluster gossip (Cluster/Mesh epic 9.5.12): each node gossips its state
+            // over the mesh's Gossip mux sub-channel; anti-entropy convergence gives
+            // every node the cluster-wide view with NO central Hub. Each peer channel
+            // is multiplexed (as for L3/L4) so gossip rides the one authenticated link.
+            const gossipStore = new ClusterGossipStore(enrolledIdentity.nodeUid);
+            const gossip = new ClusterGossip(gossipStore);
+
+            // Wire gossip onto every peer (set before start so none is missed).
+            membership.onPeer((channel) => {
+                const nodeUid = channel.identity.nodeUid;
+                const mux = new ClusterPeerMux(channel);
+
+                gossip.addPeer(nodeUid, mux.channel(ClusterMuxKind.Gossip));
+                mux.onClose((): void => gossip.removePeer(nodeUid));
+            });
+
             const peerPort = await membership.start(tConfig.cluster?.peerPort ?? DEFAULT_PEER_PORT);
 
             const roster = new HubClusterPeerRoster({
@@ -216,11 +237,22 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             const advertiseHost = tConfig.cluster?.advertiseHost ?? os.hostname();
             const syncIntervalMs = tConfig.cluster?.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS;
 
-            // Refresh our announcement (TTL) and re-sync the membership on a fixed
-            // interval; both are best-effort so a transient Hub outage is not fatal.
+            // Seed this node's own descriptor so the federated node roster emerges via
+            // gossip (no central directory). The Hub↔clusterserver config sync (the
+            // real cluster state) plugs in next (9.5.12 phase 2b).
+            gossipStore.set(`node:${enrolledIdentity.nodeUid}`, {
+                nodeUid: enrolledIdentity.nodeUid,
+                host: advertiseHost,
+                port: peerPort
+            });
+
+            // Refresh our announcement (TTL), re-sync the membership, then run a gossip
+            // anti-entropy round with the connected peers — all best-effort so a
+            // transient Hub outage is not fatal.
             const syncOnce = async(): Promise<void> => {
                 await roster.announce(advertiseHost, peerPort);
                 await membership.sync(roster);
+                gossip.sync();
             };
 
             await syncOnce();
