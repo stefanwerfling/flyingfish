@@ -5,7 +5,7 @@ export enum PluginServiceNames {
     backend = 'backend',
     ddnsserver = 'ddnsserver',
     himhip = 'himhip',
-    iptable = 'iptable',
+    netfilter = 'netfilter',
     sshserver = 'sshserver',
     vpn = 'vpn'
 }

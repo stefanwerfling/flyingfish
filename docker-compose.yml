@@ -283,32 +283,6 @@ services:
       pkiserver:
         condition: service_started
 
-#  iptable:
-#    image: flyingfish_iptable:v1.0
-#    build:
-#      context: ./iptable/
-#    container_name: flyingfish_iptable
-#    volumes:
-#      - ./iptable/dist:/opt/app/dist
-#      - ./iptable/node_modules:/opt/app/node_modules
-#      - ./iptable/package.json:/opt/app/package.json
-#    command:
-#      - node
-#      - "--inspect-brk=0.0.0.0:9229"
-#      - "dist/main.js"
-#      - "--reciverurl=https://10.103.0.3:3000/iptable/list"
-#      - "--secret=${IPTABLE_SECURE_TOKEN}"
-#    network_mode: host
-#    cap_add:
-#      - ALL
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "500k"
-#        max-file: "50"
-#    depends_on:
-#      - flyingfish
-
   sshremote:
     image: flyingfish_ssh:v1.1.13
     build:
