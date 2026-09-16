@@ -420,6 +420,7 @@ export {SchemaConfigOptionsNginxServer, ConfigOptionsNginxServer} from './NginxS
 export {SchemaConfigOptionsPkiServer, ConfigOptionsPkiServer} from './PkiServer/Config/Config.js';
 export {SchemaConfigOptionsClusterServer, ConfigOptionsClusterServer} from './ClusterServer/Config/Config.js';
 export {SchemaConfigOptionsClusterDatapath, ConfigOptionsClusterDatapath} from './ClusterDatapath/Config/Config.js';
+export {SchemaConfigOptionsNetfilter, ConfigOptionsNetfilter} from './Netfilter/Config/Config.js';
 export {SchemaClusterStatusResponse, ClusterStatusResponse} from './ClusterServer/Status.js';
 export {
     SchemaClusterPeer,
@@ -489,6 +490,7 @@ export {buildHimHIPCapabilityManifest} from './Hub/HimHIPCapabilityManifest.js';
 export {buildBackendCapabilityManifest} from './Hub/BackendCapabilityManifest.js';
 export {buildPkiCapabilityManifest} from './Hub/PkiCapabilityManifest.js';
 export {buildClusterCapabilityManifest} from './Hub/ClusterCapabilityManifest.js';
+export {buildNetfilterCapabilityManifest} from './Hub/NetfilterCapabilityManifest.js';
 
 // PKI (EST-style enrollment endpoints, own-PKI epic 9.4)
 export {

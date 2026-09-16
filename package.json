@@ -26,6 +26,8 @@
     "nginxserver",
     "clusterserver",
     "clusterdatapath",
+    "netfilter",
+    "netfilternft",
     "clusterquic",
     "clustertun",
     "pkiserver",

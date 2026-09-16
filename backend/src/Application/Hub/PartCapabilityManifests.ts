@@ -5,6 +5,7 @@ import {
     buildDnsCapabilityManifest,
     buildDynDnsCapabilityManifest,
     buildHimHIPCapabilityManifest,
+    buildNetfilterCapabilityManifest,
     buildNginxCapabilityManifest,
     buildPkiCapabilityManifest,
     buildSshCapabilityManifest
@@ -29,7 +30,8 @@ export const partCapabilityManifestBuilders: Record<string, PartManifestBuilder>
     ssh: buildSshCapabilityManifest,
     himhip: buildHimHIPCapabilityManifest,
     pki: buildPkiCapabilityManifest,
-    cluster: buildClusterCapabilityManifest
+    cluster: buildClusterCapabilityManifest,
+    netfilter: buildNetfilterCapabilityManifest
 };
 
 /**
