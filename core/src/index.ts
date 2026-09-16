@@ -179,6 +179,12 @@ export {
     ClusterControlRequestRouter
 } from './inc/Cluster/ClusterControlRequestRouter.js';
 export {
+    NftablesRouterConfig,
+    NftablesSysctl,
+    NftablesRuleset,
+    buildNftablesRuleset
+} from './inc/Router/NftablesRuleset.js';
+export {
     ClusterGossipStateEntry,
     HubClusterGossipSyncOptions,
     HubClusterGossipSync
