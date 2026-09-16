@@ -170,3 +170,55 @@ export const SchemaRouterNetfilterConfigResponse = SchemaDefaultReturn.extend({
  * RouterNetfilterConfigResponse
  */
 export type RouterNetfilterConfigResponse = ExtractSchemaResultType<typeof SchemaRouterNetfilterConfigResponse>;
+
+/**
+ * The resolved LAN DHCP config the `ff-lan` part pulls (Pi-router epic, Phase 4): the
+ * LAN interface + the DhcpServerConfig fields, from which the part builds the dnsmasq
+ * config. `lanInterface` is the first enabled `lan`-role interface (empty if none).
+ */
+export const SchemaRouterLanConfig = Vts.object({
+    lanInterface: Vts.string(),
+    enable: Vts.boolean(),
+    rangeStart: Vts.string(),
+    rangeEnd: Vts.string(),
+    leaseSeconds: Vts.number(),
+    gateway: Vts.string(),
+    dnsServer: Vts.string(),
+    domain: Vts.string(),
+    raEnable: Vts.boolean()
+});
+
+/**
+ * SchemaRouterLanConfigResponse — the resolved LAN DHCP config for the ff-lan part.
+ */
+export const SchemaRouterLanConfigResponse = SchemaDefaultReturn.extend({
+    config: SchemaRouterLanConfig
+});
+
+/**
+ * RouterLanConfigResponse
+ */
+export type RouterLanConfigResponse = ExtractSchemaResultType<typeof SchemaRouterLanConfigResponse>;
+
+/**
+ * One active LAN DHCP lease ff-lan reports.
+ */
+export const SchemaDhcpLeaseReportItem = Vts.object({
+    mac_address: Vts.string(),
+    ip_address: Vts.string(),
+    hostname: Vts.string(),
+    expires: Vts.number(),
+    interface: Vts.string()
+});
+
+/**
+ * The LAN DHCP lease report `ff-lan` posts (the full current lease set — a bulk replace).
+ */
+export const SchemaDhcpLeasesReport = Vts.object({
+    leases: Vts.array(SchemaDhcpLeaseReportItem)
+});
+
+/**
+ * DhcpLeasesReport
+ */
+export type DhcpLeasesReport = ExtractSchemaResultType<typeof SchemaDhcpLeasesReport>;

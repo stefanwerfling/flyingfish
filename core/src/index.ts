@@ -193,6 +193,12 @@ export {
     parseUdhcpcLease
 } from './inc/Router/DhcpLeaseParse.js';
 export {
+    DnsmasqConfig,
+    DnsmasqLease,
+    buildDnsmasqConfig,
+    parseDnsmasqLeases
+} from './inc/Router/DnsmasqConfig.js';
+export {
     ClusterGossipStateEntry,
     HubClusterGossipSyncOptions,
     HubClusterGossipSync

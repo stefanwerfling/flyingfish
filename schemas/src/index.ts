@@ -391,7 +391,13 @@ export {
     RouterOverviewResponse,
     SchemaNftablesRouterConfig,
     SchemaRouterNetfilterConfigResponse,
-    RouterNetfilterConfigResponse
+    RouterNetfilterConfigResponse,
+    SchemaRouterLanConfig,
+    SchemaRouterLanConfigResponse,
+    RouterLanConfigResponse,
+    SchemaDhcpLeaseReportItem,
+    SchemaDhcpLeasesReport,
+    DhcpLeasesReport
 } from './Backend/Routes/Router.js';
 
 export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';
@@ -426,6 +432,7 @@ export {SchemaConfigOptionsClusterServer, ConfigOptionsClusterServer} from './Cl
 export {SchemaConfigOptionsClusterDatapath, ConfigOptionsClusterDatapath} from './ClusterDatapath/Config/Config.js';
 export {SchemaConfigOptionsNetfilter, ConfigOptionsNetfilter} from './Netfilter/Config/Config.js';
 export {SchemaConfigOptionsWan, ConfigOptionsWan} from './Wan/Config/Config.js';
+export {SchemaConfigOptionsLan, ConfigOptionsLan} from './Lan/Config/Config.js';
 export {SchemaClusterStatusResponse, ClusterStatusResponse} from './ClusterServer/Status.js';
 export {
     SchemaClusterPeer,
@@ -497,6 +504,7 @@ export {buildPkiCapabilityManifest} from './Hub/PkiCapabilityManifest.js';
 export {buildClusterCapabilityManifest} from './Hub/ClusterCapabilityManifest.js';
 export {buildNetfilterCapabilityManifest} from './Hub/NetfilterCapabilityManifest.js';
 export {buildWanCapabilityManifest} from './Hub/WanCapabilityManifest.js';
+export {buildLanCapabilityManifest} from './Hub/LanCapabilityManifest.js';
 
 // PKI (EST-style enrollment endpoints, own-PKI epic 9.4)
 export {

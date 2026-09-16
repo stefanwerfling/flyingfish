@@ -29,6 +29,7 @@
     "netfilter",
     "netfilternft",
     "wan",
+    "lan",
     "clusterquic",
     "clustertun",
     "pkiserver",

@@ -1,6 +1,7 @@
 import {Router as ExpressRouter} from 'express';
 import {DefaultRoute} from '@stefanwerfling/figtree';
 import {
+    DhcpLeaseDB,
     DhcpServerConfigDB,
     DhcpServerConfigServiceDB,
     DhcpLeaseServiceDB,
@@ -14,13 +15,16 @@ import {
 } from 'flyingfish_core';
 import {
     DefaultReturn,
+    RouterLanConfigResponse,
     RouterNetfilterConfigResponse,
     RouterOverviewResponse,
     SchemaDefaultReturn,
+    SchemaDhcpLeasesReport,
     SchemaDhcpServerConfigEntry,
     SchemaNatPolicyEntry,
     SchemaNetworkInterfaceEntry,
     SchemaRouterIdRequest,
+    SchemaRouterLanConfigResponse,
     SchemaRouterNetfilterConfigResponse,
     SchemaRouterOverviewResponse,
     SchemaWanLeaseReport,
@@ -198,6 +202,55 @@ export class Router extends DefaultRoute {
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'ff-wan reports the WAN DHCP lease', bodySchema: SchemaWanLeaseReport, responseBodySchema: SchemaDefaultReturn});
+
+        // The resolved LAN DHCP config the ff-lan part pulls (it builds the dnsmasq config
+        // from this). ServiceOrUserLogin (registry secret / mTLS).
+        this._get(
+            '/json/router/lan-config',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<RouterLanConfigResponse> => {
+                const lans = (await NetworkInterfaceServiceDB.getInstance().findByRole('lan')).filter((entry) => !entry.disable);
+                const dhcp = await DhcpServerConfigServiceDB.getInstance().get();
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    config: {
+                        lanInterface: lans[0]?.name ?? '',
+                        enable: dhcp?.enable ?? false,
+                        rangeStart: dhcp?.range_start ?? '',
+                        rangeEnd: dhcp?.range_end ?? '',
+                        leaseSeconds: dhcp?.lease_time ?? 3600,
+                        gateway: dhcp?.gateway ?? '',
+                        dnsServer: dhcp?.dns_server ?? '',
+                        domain: dhcp?.domain ?? '',
+                        raEnable: dhcp?.ra_enable ?? false
+                    }
+                };
+            },
+            {
+                description: 'The resolved LAN DHCP config (interface + DhcpServerConfig) for the ff-lan part',
+                responseBodySchema: SchemaRouterLanConfigResponse
+            }
+        );
+
+        // ff-lan reports the current dnsmasq leases (a bulk replace of the read model).
+        // ServiceOrUserLogin (registry secret / mTLS).
+        this._post('/json/router/dhcp-leases', FlyingFishRouteCheckServiceOrUserLogin, async(_req, _res, data): Promise<DefaultReturn> => {
+            await DhcpLeaseServiceDB.getInstance().getRepository().clear();
+
+            for (const item of data.body!.leases) {
+                const lease = new DhcpLeaseDB();
+                lease.mac_address = item.mac_address;
+                lease.ip_address = item.ip_address;
+                lease.hostname = item.hostname;
+                lease.expires = item.expires;
+                lease.interface = item.interface;
+                // eslint-disable-next-line no-await-in-loop -- small lease set, sequential insert is fine
+                await DhcpLeaseServiceDB.getInstance().save(lease);
+            }
+
+            return {statusCode: StatusCodes.OK};
+        }, {description: 'ff-lan reports the active LAN DHCP leases (bulk replace)', bodySchema: SchemaDhcpLeasesReport, responseBodySchema: SchemaDefaultReturn});
 
         return super.getExpressRouter();
     }

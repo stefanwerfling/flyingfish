@@ -5,6 +5,7 @@ import {
     buildDnsCapabilityManifest,
     buildDynDnsCapabilityManifest,
     buildHimHIPCapabilityManifest,
+    buildLanCapabilityManifest,
     buildNetfilterCapabilityManifest,
     buildNginxCapabilityManifest,
     buildPkiCapabilityManifest,
@@ -33,7 +34,8 @@ export const partCapabilityManifestBuilders: Record<string, PartManifestBuilder>
     pki: buildPkiCapabilityManifest,
     cluster: buildClusterCapabilityManifest,
     netfilter: buildNetfilterCapabilityManifest,
-    wan: buildWanCapabilityManifest
+    wan: buildWanCapabilityManifest,
+    lan: buildLanCapabilityManifest
 };
 
 /**
