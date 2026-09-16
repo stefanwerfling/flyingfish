@@ -104,12 +104,32 @@ export class Dns2Server extends ServiceAbstract {
     protected _boundPort: number = 0;
 
     /**
+     * Cluster failover overrides (Cluster/Mesh epic 9.5.14): domain name (lowercase)
+     * → the IP the domain's A record should answer with right now (the active,
+     * highest-priority live node). Refreshed periodically from the Hub; when a queried
+     * A domain is in here, its IP wins over the local record so the domain fails over.
+     * @protected
+     */
+    protected _clusterActiveIps: Map<string, string> = new Map();
+
+    /**
      * constructor
      */
     public constructor() {
         super(Dns2Server.NAME, [ 'mariadb' ]);
 
         this._createServer();
+    }
+
+    /**
+     * Replace the cluster failover overrides (Cluster/Mesh epic 9.5.14): domain name
+     * (lowercase) → active node IP. Called by the node's periodic pull of the Hub's
+     * cluster-domains view; an empty map disables all overrides (falls back to local
+     * records).
+     * @param activeIps - lowercase domain name → active node IP
+     */
+    public setClusterActiveIps(activeIps: Map<string, string>): void {
+        this._clusterActiveIps = activeIps;
     }
 
     /**
@@ -231,9 +251,13 @@ export class Dns2Server extends ServiceAbstract {
                             response.answers.push(this._answer(question, new TXT(record.dvalue), record.ttl));
                             break;
 
-                        case PacketTypes.A:
-                            response.answers.push(this._answer(question, new A(record.dvalue), record.ttl));
+                        case PacketTypes.A: {
+                            // Cluster failover (9.5.14): if this domain is cluster-managed,
+                            // answer with the active node's IP instead of the local record.
+                            const activeIp = this._clusterActiveIps.get(question.name.toLowerCase());
+                            response.answers.push(this._answer(question, new A(activeIp ?? record.dvalue), record.ttl));
                             break;
+                        }
 
                         case PacketTypes.AAAA:
                             response.answers.push(this._answer(question, new AAAA(record.dvalue), record.ttl));

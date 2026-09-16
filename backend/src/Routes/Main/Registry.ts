@@ -256,7 +256,7 @@ export class Registry extends DefaultRoute {
 
         this._get(
             '/json/registry/cluster/domains',
-            FlyingFishRouteCheckUserLogin,
+            FlyingFishRouteCheckServiceOrUserLogin,
             async(): Promise<ClusterDomainsResponse> => {
                 const aggregate = HubRegistryService.getInstance().getClusterAggregate().entries();
                 const live = clusterLiveNodeUids(aggregate, Date.now());

@@ -4,6 +4,7 @@ import {
     DBService,
     DomainDB,
     DomainRecordDB,
+    HubClusterDomainsClient,
     PkiBootstrapSocketClient,
     PkiCaPurpose,
     PkiClientIdentity,
@@ -20,6 +21,12 @@ import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
+
+/**
+ * How often the DNS server refreshes the cluster domain failover overrides from the
+ * Hub (ms). Well below the node liveness stale window so failover takes effect fast.
+ */
+const CLUSTER_DOMAINS_REFRESH_MS = 15000;
 
 /**
  * Main
@@ -151,6 +158,37 @@ import {Dns2Server} from './inc/Dns/Dns2Server.js';
             buildDnsCapabilityManifest(`dns@${os.hostname()}`),
             {identity: nodeIdentity}
         );
+
+        // Cluster domain failover (Cluster/Mesh epic 9.5.14): pull the Hub's cluster
+        // domains view and keep a name→active-IP override so an A record for a
+        // cluster-managed domain answers with the current active (live, highest-
+        // priority) node's IP. Best-effort: a transient Hub outage keeps the last set.
+        const domainsClient = new HubClusterDomainsClient({
+            hubUrl: tConfig.registry.url,
+            secret: tConfig.registry.secret
+        });
+
+        const refreshClusterActiveIps = async(): Promise<void> => {
+            const overrides = new Map<string, string>();
+
+            for (const domain of await domainsClient.list()) {
+                if (domain.activeIp !== null) {
+                    overrides.set(domain.name.toLowerCase(), domain.activeIp);
+                }
+            }
+
+            Dns2Server.getInstance().setClusterActiveIps(overrides);
+        };
+
+        await refreshClusterActiveIps().catch((error: unknown): void => {
+            Logger.getLogger().warn('Cluster domain failover refresh failed on start (will retry)', error);
+        });
+
+        setInterval((): void => {
+            refreshClusterActiveIps().catch((error: unknown): void => {
+                Logger.getLogger().warn('Cluster domain failover refresh failed (will retry next interval)', error);
+            });
+        }, CLUSTER_DOMAINS_REFRESH_MS).unref();
     }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,

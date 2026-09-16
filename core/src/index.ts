@@ -185,6 +185,11 @@ export {
     clusterLiveNodeUids
 } from './inc/Cluster/ClusterNodeLiveness.js';
 export {
+    ClusterDomainActive,
+    HubClusterDomainsClientOptions,
+    HubClusterDomainsClient
+} from './inc/Cluster/HubClusterDomainsClient.js';
+export {
     ClusterL4Route,
     CLUSTER_L4_ROUTE_ANY,
     clusterL4RouteAssignedTo,
