@@ -431,8 +431,7 @@ export {SchemaConfigOptionsPkiServer, ConfigOptionsPkiServer} from './PkiServer/
 export {SchemaConfigOptionsClusterServer, ConfigOptionsClusterServer} from './ClusterServer/Config/Config.js';
 export {SchemaConfigOptionsClusterDatapath, ConfigOptionsClusterDatapath} from './ClusterDatapath/Config/Config.js';
 export {SchemaConfigOptionsNetfilter, ConfigOptionsNetfilter} from './Netfilter/Config/Config.js';
-export {SchemaConfigOptionsWan, ConfigOptionsWan} from './Wan/Config/Config.js';
-export {SchemaConfigOptionsLan, ConfigOptionsLan} from './Lan/Config/Config.js';
+export {SchemaConfigOptionsNetdevice, ConfigOptionsNetdevice} from './Netdevice/Config/Config.js';
 export {SchemaClusterStatusResponse, ClusterStatusResponse} from './ClusterServer/Status.js';
 export {
     SchemaClusterPeer,
@@ -503,8 +502,7 @@ export {buildBackendCapabilityManifest} from './Hub/BackendCapabilityManifest.js
 export {buildPkiCapabilityManifest} from './Hub/PkiCapabilityManifest.js';
 export {buildClusterCapabilityManifest} from './Hub/ClusterCapabilityManifest.js';
 export {buildNetfilterCapabilityManifest} from './Hub/NetfilterCapabilityManifest.js';
-export {buildWanCapabilityManifest} from './Hub/WanCapabilityManifest.js';
-export {buildLanCapabilityManifest} from './Hub/LanCapabilityManifest.js';
+export {buildNetdeviceCapabilityManifest} from './Hub/NetdeviceCapabilityManifest.js';
 
 // PKI (EST-style enrollment endpoints, own-PKI epic 9.4)
 export {

@@ -1,5 +1,5 @@
 import {Config as ConfigCore} from '@stefanwerfling/figtree';
-import {ConfigOptionsWan, SchemaConfigOptionsWan} from 'flyingfish_schemas';
+import {ConfigOptionsNetdevice, SchemaConfigOptionsNetdevice} from 'flyingfish_schemas';
 import path from 'path';
 import process from 'process';
 
@@ -8,7 +8,7 @@ import process from 'process';
  */
 export enum ENV_OPTIONAL {
     LOGGING_LEVEL = 'FLYINGFISH_LOGGING_LEVEL',
-    WAN_RECONCILE_INTERVAL_MS = 'FLYINGFISH_WAN_RECONCILE_INTERVAL_MS',
+    NETDEVICE_RECONCILE_INTERVAL_MS = 'FLYINGFISH_NETDEVICE_RECONCILE_INTERVAL_MS',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
     PKI_URL = 'FLYINGFISH_PKI_URL',
@@ -18,11 +18,11 @@ export enum ENV_OPTIONAL {
 }
 
 /**
- * Config — the WAN DHCP-client part is database-free; its config needs the Hub registry
+ * Config — the network-device router part is database-free; its config needs the Hub registry
  * (to register + pull the WAN interface + report the lease), the node PKI block and a
  * reconcile interval.
  */
-export class Config extends ConfigCore<ConfigOptionsWan> {
+export class Config extends ConfigCore<ConfigOptionsNetdevice> {
 
     /**
      * FlyingFish infrastructure defaults.
@@ -36,7 +36,7 @@ export class Config extends ConfigCore<ConfigOptionsWan> {
      */
     public static override getInstance(): Config {
         if (!ConfigCore._instance) {
-            const instance = new Config(SchemaConfigOptionsWan);
+            const instance = new Config(SchemaConfigOptionsNetdevice);
             instance.setAppName('flyingfish');
             ConfigCore._instance = instance;
         }
@@ -49,12 +49,12 @@ export class Config extends ConfigCore<ConfigOptionsWan> {
      * @param aConfig
      * @protected
      */
-    protected override _loadEnv(aConfig: ConfigOptionsWan | null): ConfigOptionsWan | null {
+    protected override _loadEnv(aConfig: ConfigOptionsNetdevice | null): ConfigOptionsNetdevice | null {
         let config = aConfig;
 
         if (config === null) {
             config = {
-                wan: {
+                netdevice: {
                     reconcileIntervalMs: Config.DEFAULT_RECONCILE_INTERVAL_MS
                 }
             };
@@ -62,12 +62,12 @@ export class Config extends ConfigCore<ConfigOptionsWan> {
 
         // reconcile interval ------------------------------------------------------------------------------------------
 
-        if (process.env[ENV_OPTIONAL.WAN_RECONCILE_INTERVAL_MS]) {
-            if (!config.wan) {
-                config.wan = {};
+        if (process.env[ENV_OPTIONAL.NETDEVICE_RECONCILE_INTERVAL_MS]) {
+            if (!config.netdevice) {
+                config.netdevice = {};
             }
 
-            config.wan.reconcileIntervalMs = parseInt(process.env[ENV_OPTIONAL.WAN_RECONCILE_INTERVAL_MS]!, 10) ||
+            config.netdevice.reconcileIntervalMs = parseInt(process.env[ENV_OPTIONAL.NETDEVICE_RECONCILE_INTERVAL_MS]!, 10) ||
                 Config.DEFAULT_RECONCILE_INTERVAL_MS;
         }
 
@@ -109,7 +109,7 @@ export class Config extends ConfigCore<ConfigOptionsWan> {
      * @param config
      * @protected
      */
-    protected override _setDefaults(config: ConfigOptionsWan | null): ConfigOptionsWan | null {
+    protected override _setDefaults(config: ConfigOptionsNetdevice | null): ConfigOptionsNetdevice | null {
         if (config === null) {
             return null;
         }
@@ -118,8 +118,8 @@ export class Config extends ConfigCore<ConfigOptionsWan> {
             config.flyingfish_libpath = Config.DEFAULT_FF_DIR;
         }
 
-        if (!config.wan) {
-            config.wan = {
+        if (!config.netdevice) {
+            config.netdevice = {
                 reconcileIntervalMs: Config.DEFAULT_RECONCILE_INTERVAL_MS
             };
         }

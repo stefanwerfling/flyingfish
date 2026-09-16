@@ -5,12 +5,11 @@ import {
     buildDnsCapabilityManifest,
     buildDynDnsCapabilityManifest,
     buildHimHIPCapabilityManifest,
-    buildLanCapabilityManifest,
+    buildNetdeviceCapabilityManifest,
     buildNetfilterCapabilityManifest,
     buildNginxCapabilityManifest,
     buildPkiCapabilityManifest,
-    buildSshCapabilityManifest,
-    buildWanCapabilityManifest
+    buildSshCapabilityManifest
 } from 'flyingfish_schemas';
 import {HubRegistry} from './HubRegistry.js';
 
@@ -34,8 +33,7 @@ export const partCapabilityManifestBuilders: Record<string, PartManifestBuilder>
     pki: buildPkiCapabilityManifest,
     cluster: buildClusterCapabilityManifest,
     netfilter: buildNetfilterCapabilityManifest,
-    wan: buildWanCapabilityManifest,
-    lan: buildLanCapabilityManifest
+    netdevice: buildNetdeviceCapabilityManifest
 };
 
 /**

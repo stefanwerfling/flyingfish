@@ -1,7 +1,7 @@
 {
-  "name": "flyingfish_lan",
+  "name": "flyingfish_netdevice",
   "version": "1.0.0",
-  "description": "LAN DHCP/RA server node (runs dnsmasq on the LAN, reports leases), is a part of FlyingFish",
+  "description": "Network-device router node (manages the host NICs: udhcpc on the WAN, dnsmasq on the LAN), is a part of FlyingFish",
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stefanwerfling/flyingfish.git/lan"
+    "url": "git+https://github.com/stefanwerfling/flyingfish.git/netdevice"
   },
   "keywords": [],
   "author": "Stefan Werfling",

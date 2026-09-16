@@ -325,17 +325,17 @@ services:
       pkiserver:
         condition: service_started
 
-  wan:
-    image: flyingfish_wan:v1.1.13
+  netdevice:
+    image: flyingfish_netdevice:v1.1.13
     build:
       context: ./
-      dockerfile: ./wan/Dockerfile
+      dockerfile: ./netdevice/Dockerfile
       args:
         NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
-    container_name: flyingfish_wan
+    container_name: flyingfish_netdevice
     volumes:
       - flyingfish:/var/lib/flyingfish:ro
-      - flyingfishWanPki:/var/lib/flyingfish-pki
+      - flyingfishNetdevicePki:/var/lib/flyingfish-pki
       - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
     environment:
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
@@ -345,8 +345,8 @@ services:
       FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
       FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
       FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    # host networking + NET_ADMIN: it runs the WAN DHCP client (udhcpc) directly on the
-    # host uplink interface, which needs the host network namespace.
+    # host networking + NET_ADMIN: it manages the host NICs directly - udhcpc on the WAN
+    # uplink and dnsmasq (DHCP + IPv6 RA) on the LAN - needing the host network namespace.
     network_mode: host
     cap_add:
       - NET_ADMIN
@@ -361,41 +361,6 @@ services:
       pkiserver:
         condition: service_started
 
-  lan:
-    image: flyingfish_lan:v1.1.13
-    build:
-      context: ./
-      dockerfile: ./lan/Dockerfile
-      args:
-        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
-    container_name: flyingfish_lan
-    volumes:
-      - flyingfish:/var/lib/flyingfish:ro
-      - flyingfishLanPki:/var/lib/flyingfish-pki
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    # host networking + NET_ADMIN: it runs dnsmasq (DHCP + IPv6 RA) on the host LAN
-    # interface, which needs the host network namespace.
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
 
   sshremote:
     image: flyingfish_ssh:v1.1.13
@@ -812,9 +777,7 @@ volumes:
     driver: local
   flyingfishNetfilterPki:
     driver: local
-  flyingfishWanPki:
-    driver: local
-  flyingfishLanPki:
+  flyingfishNetdevicePki:
     driver: local
   flyingfishPkiBootstrap:
     driver: local
