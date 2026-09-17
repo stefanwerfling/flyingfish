@@ -186,6 +186,16 @@ net.ipv4.ip_forward = 1
 net.ipv6.conf.all.forwarding = 1
 SYSCTL
 
+# 7b-2. Init phase: both eth ports as DHCP clients ---------------------------
+#
+# Drop in a NetworkManager config so every wired NIC comes up as an independent
+# DHCP client on first boot — the Pi is then reachable via SSH + web UI on
+# whichever port is on a network, and you configure roles + re-plug WAN/LAN
+# from there (netdevice stays hands-off until a role is assigned).
+log "Installing NetworkManager init-phase dual-DHCP drop-in ..."
+install -d -m 0755 "$MNT_ROOT/etc/NetworkManager/conf.d"
+cp "$FILES_DIR/nm-init-dhcp.conf" "$MNT_ROOT/etc/NetworkManager/conf.d/10-flyingfish-init.conf"
+
 # 7c. Bake FlyingFish into /opt/flyingfish -----------------------------------
 
 log "Baking FlyingFish into /opt/flyingfish ..."

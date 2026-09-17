@@ -44,20 +44,31 @@ make flash DEV=/dev/sdX     # or name it directly
 `flash.sh` refuses system/non-removable disks unless `--force`, and asks for a
 typed `yes`.
 
-## First boot
+## First boot — init phase (both ports on DHCP)
 
-Wire **WAN → built-in ethernet** and **LAN → USB ethernet**, power on, wait a
-few minutes (image load + stack start on first boot only).
+On first boot **every wired NIC (built-in + USB ethernet) comes up as its own
+DHCP client** (baked NetworkManager drop-in, see design notes). So:
 
-- Web UI: `https://flyingfish.local:3000/` (or the Pi's LAN IP)
-- SSH: `ssh root@flyingfish.local` — default root password `flyingfish`
-  (**change it after first login**).
+1. Plug **both** eth ports into your existing network (any DHCP server, e.g.
+   your current router), power on, wait a few minutes (image load + stack start
+   happen only on the first boot).
+2. Reach the Pi on whichever port got an address:
+   - Web UI: `https://flyingfish.local:3000/` (or the Pi's IP)
+   - SSH: `ssh root@flyingfish.local` — default root password `flyingfish`
+     (**change it after first login**).
+3. In the Web UI under **Listens → Router**, assign the interface roles (mark
+   one NIC `wan`, one `lan` — matched by **MAC address**, so it doesn't matter
+   which socket the cable is in), configure NAT (NAT66 or DHCPv6-PD for IPv6),
+   and the LAN DHCP/RA range.
+4. **Then re-plug**: WAN → your uplink/modem, LAN → your switch/clients. Only
+   now does `netdevice` take the NICs over — udhcpc on the WAN, dnsmasq (DHCP +
+   RA only; DNS is served by the FlyingFish dnsserver) on the LAN — and
+   `netfilter` programs the nftables NAT/filter ruleset.
 
-Then, in the Web UI under **Listens → Router**, assign the interface roles
-(mark one NIC `wan`, one `lan`), configure NAT (NAT66 or DHCPv6-PD for IPv6),
-and the LAN DHCP/RA range. The netdevice part runs udhcpc on the WAN and dnsmasq
-(DHCP + RA only; DNS is served by the FlyingFish dnsserver) on the LAN; the
-netfilter part programs the nftables NAT/filter ruleset.
+Because roles are keyed by MAC, the netdevice part is completely hands-off until
+step 3, so the dual-DHCP state above persists through the whole configure step.
+After re-plugging, reach the web UI again from a client on the **LAN** side (the
+Pi is the LAN gateway).
 
 ## Design notes
 

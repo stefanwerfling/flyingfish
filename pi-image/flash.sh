@@ -122,10 +122,14 @@ sudo partprobe "$DEVICE" || true
 
 echo
 echo "✓ Done. You can pull the SD card now."
-echo "  Insert it into the Pi, wire WAN to the built-in ethernet and LAN to the"
-echo "  USB ethernet, plug in power, and wait a few minutes for first boot"
-echo "  (docker load of the baked images + stack start)."
+echo "  Insert it into the Pi and plug BOTH eth ports into your network — on first"
+echo "  boot each NIC comes up as its own DHCP client. Power on and wait a few"
+echo "  minutes for first boot (docker load of the baked images + stack start)."
 echo
-echo "  Web UI:   https://flyingfish.local:3000/   (or the Pi's LAN IP)"
+echo "  Web UI:   https://flyingfish.local:3000/   (or the Pi's IP)"
 echo "  SSH:      ssh root@flyingfish.local        (default root password 'flyingfish')"
 echo "  Change the root password after first login."
+echo
+echo "  Then in the Web UI (Listens → Router) assign the wan/lan roles, and"
+echo "  re-plug WAN→uplink / LAN→switch. netdevice takes the NICs over only after"
+echo "  a role is assigned."
