@@ -118,6 +118,38 @@ export const SchemaWanLeaseReport = Vts.object({
 export type WanLeaseReport = ExtractSchemaResultType<typeof SchemaWanLeaseReport>;
 
 /**
+ * A physical NIC as discovered live on the host by the netdevice part (host-net),
+ * offered to the UI as a pick-list so the operator selects a NIC instead of typing
+ * its MAC. `state` is the kernel operstate (up/down/…); `ipv4` is the current
+ * address if any (informational).
+ */
+export const SchemaAvailableInterface = Vts.object({
+    name: Vts.string(),
+    mac: Vts.string(),
+    state: Vts.string(),
+    ipv4: Vts.optional(Vts.string())
+});
+
+/**
+ * AvailableInterface
+ */
+export type AvailableInterface = ExtractSchemaResultType<typeof SchemaAvailableInterface>;
+
+/**
+ * The list of live host NICs the netdevice part reports on its reconcile loop, so the
+ * management UI can show a select box (discovery — hot-plugged USB NICs appear here
+ * within one reconcile interval).
+ */
+export const SchemaAvailableInterfacesReport = Vts.object({
+    interfaces: Vts.array(SchemaAvailableInterface)
+});
+
+/**
+ * AvailableInterfacesReport
+ */
+export type AvailableInterfacesReport = ExtractSchemaResultType<typeof SchemaAvailableInterfacesReport>;
+
+/**
  * An int-id request (delete an interface).
  */
 export const SchemaRouterIdRequest = Vts.object({
@@ -135,6 +167,7 @@ export type RouterIdRequest = ExtractSchemaResultType<typeof SchemaRouterIdReque
  */
 export const SchemaRouterOverviewResponse = SchemaDefaultReturn.extend({
     interfaces: Vts.array(SchemaNetworkInterfaceEntry),
+    availableInterfaces: Vts.array(SchemaAvailableInterface),
     natPolicy: Vts.or([SchemaNatPolicyEntry, Vts.null()]),
     dhcpConfig: Vts.or([SchemaDhcpServerConfigEntry, Vts.null()]),
     leases: Vts.array(SchemaDhcpLeaseEntry),

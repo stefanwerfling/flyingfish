@@ -14,10 +14,12 @@ import {
     WanLeaseServiceDB
 } from 'flyingfish_core';
 import {
+    AvailableInterface,
     DefaultReturn,
     RouterLanConfigResponse,
     RouterNetfilterConfigResponse,
     RouterOverviewResponse,
+    SchemaAvailableInterfacesReport,
     SchemaDefaultReturn,
     SchemaDhcpLeasesReport,
     SchemaDhcpServerConfigEntry,
@@ -32,6 +34,13 @@ import {
 } from 'flyingfish_schemas';
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPermission.js';
+
+/**
+ * In-memory store of the live host NICs the netdevice part last reported (interface
+ * discovery). Ephemeral — not persisted; repopulated on each netdevice reconcile so a
+ * hot-plugged USB NIC appears in the management UI's select box within one interval.
+ */
+const availableInterfaces: {value: AvailableInterface[]} = {value: []};
 
 /**
  * Router — the Pi-router management API (Pi-router epic, Phase 1b): CRUD over this
@@ -67,6 +76,7 @@ export class Router extends DefaultRoute {
                         ipv4_prefix: entry.ipv4_prefix,
                         disable: entry.disable
                     })),
+                    availableInterfaces: availableInterfaces.value,
                     natPolicy: natPolicy === null ? null : {
                         nat44_enabled: natPolicy.nat44_enabled,
                         ipv6_mode: natPolicy.ipv6_mode,
@@ -155,6 +165,15 @@ export class Router extends DefaultRoute {
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'Set the LAN DHCP server config', bodySchema: SchemaDhcpServerConfigEntry, responseBodySchema: SchemaDefaultReturn});
+
+        // Interface discovery: the netdevice part (host-net) reports the live host NICs
+        // here on its reconcile loop, so the management UI can offer a NIC select box.
+        // ServiceOrUserLogin: the part authenticates with the registry secret / mTLS.
+        this._post('/json/router/available-interfaces', FlyingFishRouteCheckServiceOrUserLogin, async(_req, _res, data): Promise<DefaultReturn> => {
+            availableInterfaces.value = data.body!.interfaces;
+
+            return {statusCode: StatusCodes.OK};
+        }, {description: 'netdevice reports the live host NICs (interface discovery)', bodySchema: SchemaAvailableInterfacesReport, responseBodySchema: SchemaDefaultReturn});
 
         // The resolved netfilter config the ff-netfilter part pulls (it builds + applies
         // the nftables ruleset from this). ServiceOrUserLogin: the part authenticates

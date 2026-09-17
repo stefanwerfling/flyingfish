@@ -53,6 +53,7 @@ export class Router extends BasePage {
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Interface', () => {
             this._interfaceDialog.resetValues();
+            this._interfaceDialog.setAvailableInterfaces(this._overview?.availableInterfaces ?? []);
             this._interfaceDialog.setTitle('Interface Add');
             this._interfaceDialog.show();
             return false;
@@ -241,6 +242,7 @@ export class Router extends BasePage {
 
             btnMenu.addMenuItem('Edit', async(): Promise<void> => {
                 this._interfaceDialog.resetValues();
+                this._interfaceDialog.setAvailableInterfaces(overview.availableInterfaces ?? []);
                 this._interfaceDialog.setTitle('Interface Edit');
                 this._interfaceDialog.show();
                 this._interfaceDialog.setId(iface.id);

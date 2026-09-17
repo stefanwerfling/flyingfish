@@ -22,6 +22,8 @@ import {WanLeaseReporter} from './inc/Wan/WanLeaseReporter.js';
 import {DhcpLeaseReporter} from './inc/Lan/DhcpLeaseReporter.js';
 import {DnsmasqRunner} from './inc/Lan/DnsmasqRunner.js';
 import {LanConfigClient} from './inc/Lan/LanConfigClient.js';
+import {HostInterfaceScanner} from './inc/Discovery/HostInterfaceScanner.js';
+import {InterfaceReporter} from './inc/Discovery/InterfaceReporter.js';
 
 const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
 
@@ -132,6 +134,7 @@ const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
         const wanReporter = new WanLeaseReporter(tConfig.registry.url, tConfig.registry.secret);
         const lanConfigClient = new LanConfigClient(tConfig.registry.url, tConfig.registry.secret);
         const lanReporter = new DhcpLeaseReporter(tConfig.registry.url, tConfig.registry.secret);
+        const interfaceReporter = new InterfaceReporter(tConfig.registry.url, tConfig.registry.secret);
         const intervalMs = tConfig.netdevice?.reconcileIntervalMs ?? Config.DEFAULT_RECONCILE_INTERVAL_MS;
 
         let wanRunner: DhcpClientRunner | null = null;
@@ -196,7 +199,14 @@ const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
             Logger.getLogger().info(`Netdevice LAN: dnsmasq reconciled for ${iface === '' ? '(no interface)' : iface} (enable=${dnsmasqConfig.enable})`);
         };
 
+        // Discovery: report the live host NIC list so the management UI can offer a
+        // NIC select box (a hot-plugged USB NIC shows up within one interval).
+        const reconcileInterfaces = async(): Promise<void> => {
+            await interfaceReporter.report(HostInterfaceScanner.scan());
+        };
+
         const reconcileOnce = async(): Promise<void> => {
+            await reconcileInterfaces();
             await reconcileWan();
             await reconcileLan();
         };
