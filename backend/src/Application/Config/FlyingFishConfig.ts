@@ -121,10 +121,12 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
                         username: dbMysqlUsername,
                         password: dbMysqlPassword,
                         database: dbMysqlDatabase
-                    },
-                    redis: {
-                        url: FlyingFishConfig.DEFAULT_REDIS_URL
                     }
+                    // No hardcoded Redis default: Redis is configured only when
+                    // FLYINGFISH_DB_REDIS_URL is set (see _loadEnvRedisDb). An
+                    // env-only deploy without it runs entirely without Redis, so
+                    // the HTTP server gets no 'redis' service dependency and
+                    // starts standalone (required for the slim Pi profile).
                 },
                 httpserver: {
                     port: FlyingFishConfig.DEFAULT_FF_HTTPSERVER_PORT,
@@ -234,14 +236,17 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
      * @protected
      */
     protected _loadEnvRedisDb(config: BackendConfigOptions): BackendConfigOptions {
-        if (config.db.redis) {
-            if (process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]) {
-                config.db.redis.url = process.env[ENV_OPTIONAL_DB.DB_REDIS_URL];
-            }
+        // Create the Redis block when a URL is supplied via env (there is no
+        // hardcoded default), so an env-only deploy without FLYINGFISH_DB_REDIS_URL
+        // runs without Redis entirely.
+        if (process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]) {
+            config.db.redis = {
+                url: process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]
+            };
+        }
 
-            if (process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD]) {
-                config.db.redis.password = process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD];
-            }
+        if (config.db.redis && process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD]) {
+            config.db.redis.password = process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD];
         }
 
         return config;
