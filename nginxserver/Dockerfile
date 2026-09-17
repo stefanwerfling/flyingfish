@@ -1,7 +1,14 @@
-FROM node:22-bookworm-slim
+# Multi-stage build for the nginxserver part. The build stage compiles nginx from
+# source (with njs + headers-more modules) and builds schemas/core/nginxserver;
+# the runtime stage ships the compiled nginx binary + modules, its runtime shared
+# libraries, certbot, and the built dist + production node_modules on a clean node
+# base — none of the nginx build toolchain (build-essential, *-dev, mercurial)
+# ends up in the final image. See dnsserver/Dockerfile for the general rationale.
+
+# ---- build stage -----------------------------------------------------------
+FROM node:22-bookworm-slim AS build
 
 ENV DEBIAN_FRONTEND=noninteractive
-
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
 # Mirrors the root Dockerfile's nginx build (kept in lockstep: same nginx/njs/
 # headers-more versions) - see there for the CVE/version rationale.
@@ -9,28 +16,19 @@ ARG NGINX_VERSION="1.30.4"
 ARG HEADERS_MORE_VERSION="v0.40"
 ARG NJS_BRANCH="0.9.9"
 
-RUN apt-get update -y
-RUN apt-get upgrade -y
-RUN apt-get install -y curl wget gnupg2 ca-certificates lsb-release debian-archive-keyring
-RUN apt-get install -y git
+RUN apt-get update -y \
+    && apt-get install -y curl wget gnupg2 ca-certificates lsb-release debian-archive-keyring git \
+       build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libxslt-dev mercurial \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get remove -y nginx nginx-common
+# Build nginx from source (same flags as the root Dockerfile).
 RUN cd ~ && wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && tar -zxvf nginx-$NGINX_VERSION.tar.gz
-RUN apt-get install -y build-essential
-RUN apt-get install -y libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libxslt-dev
-RUN apt-get install -y mercurial
-
-RUN cd ~ && \
-    git clone --depth 1 --branch $NJS_BRANCH https://github.com/nginx/njs.git && \
-    cd ~/njs && \
-    ./configure && \
-    make
-
-RUN cd ~ && \
-     git clone --depth 1 -b $HEADERS_MORE_VERSION --single-branch https://github.com/openresty/headers-more-nginx-module.git \
-     && cd ~/headers-more-nginx-module \
-     && git submodule update --init
-
+RUN cd ~ \
+    && git clone --depth 1 --branch $NJS_BRANCH https://github.com/nginx/njs.git \
+    && cd ~/njs && ./configure && make
+RUN cd ~ \
+    && git clone --depth 1 -b $HEADERS_MORE_VERSION --single-branch https://github.com/openresty/headers-more-nginx-module.git \
+    && cd ~/headers-more-nginx-module && git submodule update --init
 RUN cd ~/nginx-$NGINX_VERSION && \
     ./configure \
     --sbin-path=/usr/bin/nginx \
@@ -68,111 +66,60 @@ RUN cd ~/nginx-$NGINX_VERSION && \
     --with-stream_ssl_preread_module \
     --with-cc-opt="-I../quictls/build/include" \
     --with-ld-opt="-L../quictls/build/lib" \
-    --modules-path=/usr/lib/nginx/modules/ &&\
-     make && \
-     make install
+    --modules-path=/usr/lib/nginx/modules/ && \
+    make && make install
 
-RUN apt-get update && apt-get install -y certbot
-RUN mkdir /etc/letsencrypt | true
-
-# Init App dirs --------------------------------------------------------------------------------------------------------
-
-RUN mkdir -p /opt/flyingfish/schemas
-RUN mkdir -p /opt/flyingfish/core
-RUN mkdir -p /opt/flyingfish/nginxserver
-RUN mkdir -p /opt/flyingfish/nginx
-RUN mkdir -p /opt/flyingfish/nginx/html
-RUN mkdir -p /var/lib/flyingfish
-
-# Copy Schemas ---------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/schemas
-COPY ./schemas/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-# Copy Core ------------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/core
-COPY ./core/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-# Copy nginxserver -------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/nginxserver
-COPY ./nginxserver ./
-
-RUN rm -R Dockerfile | true
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-# Install All ----------------------------------------------------------------------------------------------------------
+RUN npm install -g npm@11
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-# npm 10 (bundled with node:22) crashes while preparing the figtree git
-# dependency (arborist "edgesOut" TypeError on its git peer dependencies);
-# npm 11 fixes this. npm 12 is not an option yet: it refuses git
-# dependencies (allow-git defaults to "none") and blocks install scripts.
-RUN npm install -g npm@11
-RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
+COPY ./schemas/ ./schemas/
+COPY ./core/ ./core/
+COPY ./nginxserver/ ./nginxserver/
+COPY ./nginx/ ./nginx/
 
-WORKDIR /opt/flyingfish/schemas
-RUN npm run build
+RUN rm -rf schemas/node_modules schemas/dist schemas/tsconfig.tsbuildinfo schemas/package-lock.json \
+           core/node_modules core/dist core/tsconfig.tsbuildinfo core/package-lock.json \
+           nginxserver/node_modules nginxserver/dist nginxserver/tsconfig.tsbuildinfo nginxserver/package-lock.json nginxserver/Dockerfile \
+           nginx/node_modules nginx/dist nginx/logs nginx/body nginx/sample nginx/servers \
+           nginx/package-lock.json nginx/nginx.pid nginx/dhparam.pem nginx/nginx.conf
 
-WORKDIR /opt/flyingfish/core
-RUN npm run build
+RUN npm install --registry=$NPM_REGISTRY --maxsockets 1
 
-WORKDIR /opt/flyingfish/nginxserver
-RUN npm run build
+RUN cd schemas && npm run build \
+    && cd ../core && npm run build \
+    && cd ../nginxserver && npm run build
 
-# Copy/Install nginx (njs assets, same as the backend build) -----------------------------------------------------------
+RUN mkdir -p nginx/servers/proxy_temp nginx/logs \
+    && chmod 700 nginx/servers/proxy_temp \
+    && chmod 755 nginx/logs \
+    && cd nginx && npm install
 
-WORKDIR /opt/flyingfish/nginx
+RUN npm prune --omit=dev --ignore-scripts
 
-COPY nginx ./
-RUN rm -R ./node_modules | true
-RUN rm -R ./dist | true
-RUN rm -R ./logs | true
-RUN rm -R ./body | true
-RUN rm -R ./sample | true
-RUN rm -R ./servers | true
-RUN rm ./package-lock.json | true
-RUN rm ./nginx.pid | true
-RUN rm ./dhparam.pem | true
-RUN rm nginx.conf | true
+# ---- runtime stage ---------------------------------------------------------
+FROM node:22-bookworm-slim AS runtime
 
-RUN mkdir /opt/flyingfish/nginx/servers
-RUN mkdir /opt/flyingfish/nginx/servers/proxy_temp
-RUN chmod 700 /opt/flyingfish/nginx/servers/proxy_temp
-RUN mkdir /opt/flyingfish/nginx/logs
-RUN chmod 755 /opt/flyingfish/nginx/logs
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN npm install
+# nginx runtime shared libraries (libpcre/zlib/openssl/xslt — the -dev variants
+# are build-only), plus certbot for ACME.
+RUN apt-get update -y \
+    && apt-get install -y libpcre3 zlib1g libssl3 libxslt1.1 ca-certificates certbot \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /etc/letsencrypt /var/log/nginx /var/lib/flyingfish /usr/lib/nginx/modules
 
-# add supervisor -------------------------------------------------------------------------------------------------------
+# The compiled nginx: binary + config tree. All modules are compiled statically
+# into the binary (no --with-*=dynamic / dynamic --add-module), so there is no
+# /usr/lib/nginx/modules payload to copy — the empty dir above is enough.
+COPY --from=build /usr/bin/nginx /usr/bin/nginx
+COPY --from=build /etc/nginx /etc/nginx
 
 WORKDIR /opt/flyingfish
-
-RUN npm install supervisor -g
-
-# defaults ports -------------------------------------------------------------------------------------------------------
+COPY --from=build /opt/flyingfish /opt/flyingfish
 
 EXPOSE 80
 EXPOSE 443
 EXPOSE 3000
 
-# start main app -------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish
-
-CMD [ "node", "nginxserver/dist/main.js", "--envargs=1"]
+CMD [ "node", "nginxserver/dist/main.js", "--envargs=1" ]

@@ -31,6 +31,7 @@ DIST_DIR=""
 RPI_URL=""
 EXTRA_MB="8192"
 ONLY_APP="0"
+ONLY_IMAGE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -40,17 +41,23 @@ while [[ $# -gt 0 ]]; do
         --rpi-url)   RPI_URL="$2"; shift 2;;
         --extra-mb)  EXTRA_MB="$2"; shift 2;;
         --only-app)  ONLY_APP="1"; shift;;
+        # Smoke-test helper: build only the own images whose tag matches this
+        # substring, then stop (no registry pull, no save, no raspios bake).
+        --only-image) ONLY_IMAGE="$2"; shift 2;;
         *) echo "Unknown argument: $1" >&2; exit 2;;
     esac
 done
 
 : "${REPO_ROOT:?--repo-root is required}"
 : "${CACHE_DIR:?--cache-dir is required}"
-: "${DIST_DIR:?--dist-dir is required}"
-: "${RPI_URL:?--rpi-url is required}"
+if [[ -z "$ONLY_IMAGE" ]]; then
+    : "${DIST_DIR:?--dist-dir is required}"
+    : "${RPI_URL:?--rpi-url is required}"
+fi
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-mkdir -p "$CACHE_DIR" "$DIST_DIR"
+mkdir -p "$CACHE_DIR"
+[[ -n "$DIST_DIR" ]] && mkdir -p "$DIST_DIR"
 
 # ----------- image inventory -------------------------------------------------
 #
@@ -87,16 +94,30 @@ NPM_REGISTRY_ARG="${NPM_REGISTRY_INTERN:-}"
 
 # ----------- 1. buildx / binfmt ---------------------------------------------
 
-echo "→ Ensuring docker buildx is set up for arm64 ..."
-if ! docker buildx inspect --bootstrap >/dev/null 2>&1; then
+if ! docker buildx version >/dev/null 2>&1; then
     echo "  docker buildx is not available. Install Docker 24+ with the buildx plugin." >&2
     exit 1
 fi
 
 # binfmt registration so arm64 binaries run on x86_64 during the cross-build.
+echo "→ Registering arm64 binfmt (qemu) ..."
 if ! docker run --rm --privileged tonistiigi/binfmt --install arm64 >/dev/null 2>&1; then
-    echo "  Could not register arm64 binfmt — buildx may still work if it was previously configured." >&2
+    echo "  Could not register arm64 binfmt — the build may still work if it was previously configured." >&2
 fi
+
+# The default buildx builder uses the `docker` driver, which only builds for the
+# host platform and CANNOT `--load` a cross-arch (arm64) image. We need a
+# `docker-container` builder: it runs its own BuildKit (with the emulators from
+# the binfmt step) and can export a foreign-arch image straight into the local
+# Docker image store via `--load`.
+BUILDER_NAME="flyingfish-arm64-builder"
+if ! docker buildx inspect "$BUILDER_NAME" >/dev/null 2>&1; then
+    echo "→ Creating buildx builder '$BUILDER_NAME' (docker-container driver) ..."
+    docker buildx create --name "$BUILDER_NAME" --driver docker-container --bootstrap >/dev/null
+else
+    docker buildx inspect "$BUILDER_NAME" --bootstrap >/dev/null
+fi
+BUILDX=(docker buildx build --builder "$BUILDER_NAME")
 
 # ----------- 2. cross-build every FlyingFish image for arm64 ----------------
 
@@ -105,12 +126,15 @@ ALL_TAGS=()
 for entry in "${OWN_IMAGES[@]}"; do
     tag="${entry%%|*}"
     dockerfile="${entry##*|}"
+    if [[ -n "$ONLY_IMAGE" && "$tag" != *"$ONLY_IMAGE"* ]]; then
+        continue
+    fi
     echo "→ Cross-building $tag  (from $dockerfile) ..."
     build_args=()
     if [[ -n "$NPM_REGISTRY_ARG" ]]; then
         build_args+=(--build-arg "NPM_REGISTRY=$NPM_REGISTRY_ARG")
     fi
-    docker buildx build \
+    "${BUILDX[@]}" \
         --platform linux/arm64 \
         --tag "$tag" \
         --load \
@@ -119,6 +143,14 @@ for entry in "${OWN_IMAGES[@]}"; do
         "$REPO_ROOT"
     ALL_TAGS+=("$tag")
 done
+
+# Smoke-test mode: stop after building the filtered image(s).
+if [[ -n "$ONLY_IMAGE" ]]; then
+    echo
+    echo "✓ --only-image=$ONLY_IMAGE built: ${ALL_TAGS[*]:-<none matched>}"
+    docker image ls --filter "reference=${ONLY_IMAGE}*" 2>/dev/null || true
+    exit 0
+fi
 
 # ----------- 3. pull the registry images for arm64 --------------------------
 

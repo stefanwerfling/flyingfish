@@ -1,89 +1,58 @@
-FROM node:22-bookworm-slim
+# Multi-stage build. The build stage carries git + the Rust toolchain (rustup)
+# + clang/libclang-dev to compile the native nftables addon (rustables/netlink);
+# the runtime stage ships only the compiled dist + .node + production
+# node_modules on a clean node base — none of the ~2 GB of Rust/clang tooling
+# ends up in the final image. See dnsserver/Dockerfile for the general rationale.
+
+# ---- build stage -----------------------------------------------------------
+FROM node:22-bookworm-slim AS build
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
 
-RUN apt-get update -y
-RUN apt-get upgrade -y
-# git for the figtree git dependency; curl + build-essential for the Rust toolchain
-# (rustup) that builds the native nftables addon (rustables/netlink — no nft binary).
-RUN apt-get install -y git curl build-essential
-
-RUN mkdir -p /opt/flyingfish
-RUN mkdir -p /opt/flyingfish/schemas
-RUN mkdir -p /opt/flyingfish/core
-RUN mkdir -p /opt/flyingfish/netfilternft
-RUN mkdir -p /opt/flyingfish/netfilter
-RUN mkdir -p /opt/flyingfish/netfilter/dist
-RUN mkdir -p /opt/flyingfish/netfilter/node_modules
-RUN mkdir -p /var/lib/flyingfish
-
-# Copy Schemas ---------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/schemas
-COPY ./schemas/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm package-lock.json | true
-
-# Copy Core ------------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/core
-COPY ./core/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm package-lock.json | true
-
-# Copy netfilternft (native nftables addon) ----------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/netfilternft
-COPY ./netfilternft/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R target | true
-RUN rm -f ./*.node index.js index.d.ts | true
-RUN rm package-lock.json | true
-
-# Copy netfilter -------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/netfilter
-COPY ./netfilter ./
-
-RUN rm -R Dockerfile | true
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm package-lock.json | true
-
-# Install --------------------------------------------------------------------------------------------------------------
+# git for the figtree git dependency; curl + build-essential for the Rust
+# toolchain (rustup). clang + libclang-dev: rustables' build script runs
+# `bindgen` over kernel headers (linux/netfilter/nf_tables.h etc.), which needs
+# libclang.so at build time. Kernel headers come from linux-libc-dev (pulled by
+# build-essential); no libnftnl/libmnl needed (pure netlink).
+RUN apt-get update -y \
+    && apt-get install -y git curl build-essential clang libclang-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN npm install -g npm@11
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-# npm 10 (bundled with node:22) crashes while preparing the figtree git
-# dependency; npm 11 fixes this.
-RUN npm install -g npm@11
-RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
+COPY ./schemas/ ./schemas/
+COPY ./core/ ./core/
+COPY ./netfilternft/ ./netfilternft/
+COPY ./netfilter/ ./netfilter/
 
-WORKDIR /opt/flyingfish/schemas
-RUN npm run build
+RUN rm -rf schemas/node_modules schemas/dist schemas/package-lock.json \
+           core/node_modules core/dist core/package-lock.json \
+           netfilternft/node_modules netfilternft/target netfilternft/package-lock.json \
+           netfilternft/*.node netfilternft/index.js netfilternft/index.d.ts \
+           netfilter/node_modules netfilter/dist netfilter/package-lock.json netfilter/Dockerfile
 
-WORKDIR /opt/flyingfish/core
-RUN npm run build
+RUN npm install --registry=$NPM_REGISTRY --maxsockets 1
 
-# Build the native nftables addon for THIS image's platform. Install the Rust
-# toolchain, build it (napi build targets the host triple, so a multi-arch
-# `docker buildx` produces the right .node per arch), then remove the toolchain +
-# Cargo cache in the SAME layer so ~1GB of Rust does not bloat the final image.
+RUN cd schemas && npm run build \
+    && cd ../core && npm run build
+
+# Build the native nftables addon for THIS image's platform (napi targets the
+# host triple, so `docker buildx --platform` produces the right .node per arch).
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal \
     && . /root/.cargo/env \
-    && (cd /opt/flyingfish/netfilternft && npm run build && rm -rf target) \
-    && rm -rf /root/.rustup /root/.cargo
+    && (cd /opt/flyingfish/netfilternft && npm run build && rm -rf target)
 
-WORKDIR /opt/flyingfish/netfilter
-RUN npm run build
+RUN cd netfilter && npm run build
 
-# ----------------------------------------------------------------------------------------------------------------------
+RUN npm prune --omit=dev --ignore-scripts
+
+# ---- runtime stage ---------------------------------------------------------
+FROM node:22-bookworm-slim AS runtime
+
+RUN mkdir -p /var/lib/flyingfish
 
 WORKDIR /opt/flyingfish
+COPY --from=build /opt/flyingfish /opt/flyingfish
 
-CMD [ "node",  "netfilter/dist/main.js", "--envargs=1"]
+CMD [ "node", "netfilter/dist/main.js", "--envargs=1" ]

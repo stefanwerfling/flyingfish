@@ -1,161 +1,83 @@
-FROM node:22-bookworm-slim
+# Multi-stage build for the FlyingFish backend. The build stage compiles schemas,
+# core, the letsencrypt plugin, the backend, and the frontend (gulp/webpack); the
+# runtime stage ships only the built dist + production node_modules + the backend's
+# runtime tooling (openssl/certbot/traceroute/ping) on a clean node base. The
+# frontend's build-only node_modules (webpack/babel) is dropped after the bundle
+# is built. See dnsserver/Dockerfile for the general rationale.
+
+# ---- build stage -----------------------------------------------------------
+FROM node:22-bookworm-slim AS build
+
+ENV DEBIAN_FRONTEND=noninteractive
+ARG NPM_REGISTRY="https://registry.npmjs.org/"
+
+# git for the figtree git dependency; build-essential + python3 cover any
+# node-gyp native module builds during npm install.
+RUN apt-get update -y \
+    && apt-get install -y git build-essential python3-pip python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN npm install -g npm@11
+
+WORKDIR /opt/flyingfish
+COPY ./package.json ./
+COPY ./schemas/ ./schemas/
+COPY ./core/ ./core/
+COPY ./plugins/package.json ./plugins/package.json
+COPY ./plugins/letsencrypt/ ./plugins/letsencrypt/
+COPY ./backend/ ./backend/
+COPY ./frontend/ ./frontend/
+COPY ./nginx/ ./nginx/
+
+RUN rm -rf schemas/node_modules schemas/dist schemas/tsconfig.tsbuildinfo schemas/package-lock.json \
+           core/node_modules core/dist core/tsconfig.tsbuildinfo core/package-lock.json \
+           plugins/node_modules plugins/letsencrypt/node_modules plugins/letsencrypt/dist plugins/letsencrypt/package-lock.json \
+           backend/node_modules backend/dist backend/tsconfig.tsbuildinfo backend/package-lock.json \
+           frontend/node_modules frontend/dist frontend/package-lock.json \
+           nginx/node_modules nginx/dist nginx/logs nginx/body nginx/sample nginx/servers \
+           nginx/package-lock.json nginx/nginx.pid nginx/dhparam.pem nginx/nginx.conf
+
+RUN npm install --registry=$NPM_REGISTRY --maxsockets 1
+
+RUN cd schemas && npm run build \
+    && cd ../core && npm run build \
+    && cd ../plugins/letsencrypt && npm run build \
+    && cd ../../backend && npm run build
+
+# Frontend: own install tree (webpack/babel), then build the static bundle.
+RUN cd frontend \
+    && npm install --registry=$NPM_REGISTRY --force --maxsockets 1 \
+    && npm run gulp-copy-data \
+    && npm run gulp-build-webpack
+
+# nginx config-gen helper (node package used by the backend in remote mode).
+RUN mkdir -p nginx/servers/proxy_temp nginx/logs \
+    && chmod 700 nginx/servers/proxy_temp \
+    && chmod 755 nginx/logs \
+    && cd nginx && npm install
+
+# Drop build-only trees: prune the root install to production deps, and remove
+# the frontend's build-only node_modules (the static bundle in frontend/dist is
+# all the runtime needs).
+RUN npm prune --omit=dev --ignore-scripts \
+    && rm -rf frontend/node_modules
+
+# ---- runtime stage ---------------------------------------------------------
+FROM node:22-bookworm-slim AS runtime
 
 ENV FLYINGFISH_NGINX_MODULE_MODE_DYN="0"
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG NPM_REGISTRY="https://registry.npmjs.org/"
-
-# nginx itself no longer builds/runs here (9.2.2 slice 5): it moved into its
-# own nginxserver image/container, which builds it (see nginxserver/Dockerfile,
-# kept version-locked to that one). This image keeps openssl (OpenSSL.ts spawns
-# it directly for CSR/CRT/dhparam) and certbot (the letsencrypt plugin spawns it
-# directly) - both are backend-side PKI/ACME tooling, independent of nginx.
-RUN apt-get update -y
-RUN apt-get upgrade -y
-RUN apt-get install -y dublin-traceroute
-RUN apt-get install -y iputils-ping
-RUN apt-get install -y openssl
-RUN apt-get install -y ca-certificates
-RUN apt install -y python3-pip python3-dev
-RUN apt install -y git
-RUN apt install -y certbot
-RUN mkdir /etc/letsencrypt | true
-
-# Init App dirs --------------------------------------------------------------------------------------------------------
-RUN mkdir -p /opt/flyingfish/schemas
-RUN mkdir -p /opt/flyingfish/core
-RUN mkdir -p /opt/flyingfish/backend
-RUN mkdir -p /opt/flyingfish/frontend
-RUN mkdir -p /opt/flyingfish/nginx
-RUN mkdir -p /opt/flyingfish/nginx/html
-RUN mkdir -p /opt/flyingfish/plugins
-RUN mkdir -p /opt/flyingfish
-RUN mkdir -p /var/log/flyingfish
-RUN mkdir -p /var/lib/flyingfish
-
-# Copy Schemas ---------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/schemas
-COPY ./schemas/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-# Copy Core ------------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/core
-COPY ./core/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-# Copy Plugins ---------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/plugins
-COPY ./plugins/package.json ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-WORKDIR /opt/flyingfish/plugins/letsencrypt
-COPY ./plugins/letsencrypt/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-# Copy/ Backend --------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/backend
-COPY backend ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm -R tsconfig.tsbuildinfo | true
-RUN rm package-lock.json | true
-
-# Copy/Install Frontend ------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/frontend
-COPY frontend ./
-
-RUN rm -R ./node_modules | true
-RUN rm -R ./dist | true
-RUN rm ./package-lock.json | true
-
-# Install All ----------------------------------------------------------------------------------------------------------
+# Runtime tooling: openssl (OpenSSL.ts spawns it for CSR/CRT/dhparam), certbot
+# (letsencrypt plugin spawns it), ca-certificates, plus traceroute/ping features.
+# python3 is certbot's runtime dependency.
+RUN apt-get update -y \
+    && apt-get install -y dublin-traceroute iputils-ping openssl ca-certificates python3-pip certbot \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /etc/letsencrypt /var/log/flyingfish /var/lib/flyingfish
 
 WORKDIR /opt/flyingfish
-COPY ./package.json ./
-# npm 10 (bundled with node:22) crashes while preparing the figtree git
-# dependency (arborist "edgesOut" TypeError on its git peer dependencies);
-# npm 11 fixes this. npm 12 is not an option yet: it refuses git
-# dependencies (allow-git defaults to "none") and blocks install scripts.
-RUN npm install -g npm@11
-RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
+COPY --from=build /opt/flyingfish /opt/flyingfish
 
-WORKDIR /opt/flyingfish/schemas
-RUN npm run build
-
-WORKDIR /opt/flyingfish/core
-RUN npm run build
-
-WORKDIR /opt/flyingfish/plugins/letsencrypt
-RUN npm run build
-
-WORKDIR /opt/flyingfish/backend
-RUN npm run build
-
-WORKDIR /opt/flyingfish/frontend
-RUN npm install --registry=$NPM_REGISTRY --force --maxsockets 1 --loglevel verbose
-RUN npm run gulp-copy-data
-RUN npm run gulp-build-webpack
-
-# Copy/Install nginx ---------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/nginx
-
-COPY nginx ./
-RUN rm -R ./node_modules | true
-RUN rm -R ./dist | true
-RUN rm -R ./logs | true
-RUN rm -R ./body | true
-RUN rm -R ./sample | true
-RUN rm -R ./servers | true
-RUN rm ./package-lock.json | true
-RUN rm ./nginx.pid | true
-RUN rm ./dhparam.pem | true
-RUN rm nginx.conf | true
-
-RUN mkdir /opt/flyingfish/nginx/servers
-RUN mkdir /opt/flyingfish/nginx/servers/proxy_temp
-RUN chmod 700 /opt/flyingfish/nginx/servers/proxy_temp
-RUN mkdir /opt/flyingfish/nginx/logs
-RUN chmod 755 /opt/flyingfish/nginx/logs
-
-RUN npm install
-
-# add supervisor -------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish
-
-RUN npm install supervisor -g
-
-# defaults ports -------------------------------------------------------------------------------------------------------
-
-# 80/443 moved to the nginxserver image (9.2.2 slice 4/5) - this container no
-# longer builds/runs nginx by default.
 EXPOSE 3000
 
-# start main app -------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish
-
-CMD [ "node",  "backend/dist/main.js", "--envargs=1"]
+CMD [ "node", "backend/dist/main.js", "--envargs=1" ]

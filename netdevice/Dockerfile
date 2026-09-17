@@ -1,69 +1,41 @@
-FROM node:22-bookworm-slim
+# Multi-stage build: compile in a fat build stage, ship only dist + production
+# node_modules on a clean runtime base (see dnsserver/Dockerfile for rationale).
+
+# ---- build stage -----------------------------------------------------------
+FROM node:22-bookworm-slim AS build
 
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
 
-RUN apt-get update -y
-RUN apt-get upgrade -y
-# git for the figtree git dependency; udhcpc (WAN DHCP client) + dnsmasq (LAN DHCP/RA server); iproute2 for
-# interface diagnostics.
-RUN apt-get install -y git udhcpc dnsmasq iproute2
-
-RUN mkdir -p /opt/flyingfish
-RUN mkdir -p /opt/flyingfish/schemas
-RUN mkdir -p /opt/flyingfish/core
-RUN mkdir -p /opt/flyingfish/netdevice
-RUN mkdir -p /opt/flyingfish/netdevice/dist
-RUN mkdir -p /opt/flyingfish/netdevice/node_modules
-RUN mkdir -p /var/lib/flyingfish
-
-# Copy Schemas ---------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/schemas
-COPY ./schemas/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm package-lock.json | true
-
-# Copy Core ------------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/core
-COPY ./core/ ./
-
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm package-lock.json | true
-
-# Copy netdevice -------------------------------------------------------------------------------------------------------------
-
-WORKDIR /opt/flyingfish/netdevice
-COPY ./netdevice ./
-
-RUN rm -R Dockerfile | true
-RUN rm -R node_modules | true
-RUN rm -R dist | true
-RUN rm package-lock.json | true
-
-# Install --------------------------------------------------------------------------------------------------------------
+RUN apt-get update -y && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN npm install -g npm@11
 
 WORKDIR /opt/flyingfish
 COPY ./package.json ./
-# npm 10 (bundled with node:22) crashes while preparing the figtree git
-# dependency; npm 11 fixes this.
-RUN npm install -g npm@11
-RUN npm install --registry=$NPM_REGISTRY --maxsockets 1 --loglevel verbose
+COPY ./schemas/ ./schemas/
+COPY ./core/ ./core/
+COPY ./netdevice/ ./netdevice/
 
-WORKDIR /opt/flyingfish/schemas
-RUN npm run build
+RUN rm -rf schemas/node_modules schemas/dist schemas/package-lock.json \
+           core/node_modules core/dist core/package-lock.json \
+           netdevice/node_modules netdevice/dist netdevice/package-lock.json netdevice/Dockerfile
 
-WORKDIR /opt/flyingfish/core
-RUN npm run build
+RUN npm install --registry=$NPM_REGISTRY --maxsockets 1
 
-WORKDIR /opt/flyingfish/netdevice
-RUN npm run build
+RUN cd schemas && npm run build \
+    && cd ../core && npm run build \
+    && cd ../netdevice && npm run build
 
-# ----------------------------------------------------------------------------------------------------------------------
+RUN npm prune --omit=dev --ignore-scripts
+
+# ---- runtime stage ---------------------------------------------------------
+FROM node:22-bookworm-slim AS runtime
+
+# udhcpc + dnsmasq + iproute2: required at runtime — the part runs udhcpc on the
+# WAN NIC and dnsmasq (DHCP + IPv6 RA) on the LAN NIC, and manages addresses.
+RUN apt-get update -y && apt-get install -y udhcpc dnsmasq iproute2 && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /var/lib/flyingfish
 
 WORKDIR /opt/flyingfish
+COPY --from=build /opt/flyingfish /opt/flyingfish
 
-CMD [ "node",  "netdevice/dist/main.js", "--envargs=1"]
+CMD [ "node", "netdevice/dist/main.js", "--envargs=1" ]
