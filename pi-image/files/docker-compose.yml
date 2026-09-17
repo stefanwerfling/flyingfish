@@ -1,19 +1,23 @@
 # /opt/flyingfish/docker-compose.yml
 #
-# Pi-specific compose file for the FlyingFish router node. Differences from the
-# root-level docker-compose.yml:
+# Pi-specific compose file for the FlyingFish router node (router-minimal / Pi-3
+# profile). Tuned to fit ~905 MiB RAM on a Raspberry Pi 3.
 #
-#  - Every service uses `image:` with the LOCAL baked tag (e.g.
-#    flyingfish:v1.1.13) and NO `build:` — the images are pre-loaded by
-#    firstboot.sh from /opt/flyingfish/flyingfish.tar, so the Pi never rebuilds
-#    from source and never pulls (fully offline first boot).
-#  - Secrets come from /opt/flyingfish/.env, generated with fresh random values
-#    on first boot (docker compose reads that file automatically).
-#  - The two router parts (netfilter + netdevice) run with network_mode: host +
-#    NET_ADMIN so they can manage the host nftables ruleset and the host NICs
-#    (udhcpc on WAN, dnsmasq DHCP/RA on LAN).
+#  - Every service uses `image:` with the LOCAL baked tag; NO `build:` — images
+#    are pre-loaded by firstboot.sh from /opt/flyingfish/flyingfish.tar.
+#  - Secrets come from /opt/flyingfish/.env (generated on first boot).
+#  - netfilter + netdevice run with network_mode: host + NET_ADMIN.
 #
-# Keep the service definitions in sync with the repo's setup/docker-compose.yml.
+# DROPPED for RAM (all optional for a single-node router):
+#   - influxdb  : metrics timeseries (soft dep in code).
+#   - redis     : pub/sub signaling only (soft dep; HTTP server no longer depends
+#                 on it — see FlyingFishConfig redis fix).
+#   - himhip    : only signaled host IP via redis; pointless without redis.
+#   - clusterserver : cluster mesh, not needed on a single node.
+#   - sshserver / ddnsserver : SSH-tunnel + DynDNS-client features, optional.
+# Re-add any of them (and give the box more RAM, e.g. a Pi 4/5) if you want the
+# full feature set. Core router keeps: mariadb, backend, pkiserver, nginxserver,
+# dnsserver (LAN resolver), netfilter, netdevice.
 
 services:
   mariadb:
@@ -45,83 +49,10 @@ services:
         max-size: "500k"
         max-file: "50"
 
-  influxdb:
-    image: influxdb:latest
-    container_name: flyingfish_influxdb
-    restart: unless-stopped
-    volumes:
-      - flyingfishInfluxdbData:/var/lib/influxdb2
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
-      - DOCKER_INFLUXDB_INIT_RETENTION=${INFLUXDB_RETENTION}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
-      - INFLUXDB_STORAGE_CACHE_MAX_MEMORY_SIZE=52428800
-      - INFLUXDB_STORAGE_CACHE_SNAPSHOT_MEMORY_SIZE=26214400
-      - INFLUXDB_STORAGE_CACHE_SNAPSHOT_WRITE_COLD_DURATION=10s
-      - INFLUXDB_STORAGE_WAL_FSYNC_DELAY=1s
-      - INFLUXDB_STORAGE_INDEX_VERSION=tsi1
-    ports:
-      - "127.0.0.1:8086:8086"
-    networks:
-      flyingfishNet:
-        ipv4_address: 10.103.0.5
-    healthcheck:
-      test: "curl -f http://localhost:8086/ping"
-      interval: 5s
-      timeout: 10s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-
-  redis:
-    image: redis:7.2-alpine
-    container_name: flyingfish_redis
-    restart: unless-stopped
-    volumes:
-      - flyingfishRedisData:/data
-    ports:
-      - '127.0.0.1:6379:6379'
-    command: [
-      "redis-server",
-      "--save",
-      "${REDIS_SAVE}",
-      "--loglevel",
-      "${REDIS_LOGLEVEL}",
-      "--maxmemory",
-      "${REDIS_MAX_MEMORY}",
-      "--maxmemory-policy",
-      "allkeys-lru",
-      "--requirepass",
-      "${REDIS_REQUIREPASS}"
-    ]
-    networks:
-      flyingfishNet:
-        ipv4_address: 10.103.0.7
-    healthcheck:
-      test: [ "CMD-SHELL", "redis-cli -a ${REDIS_REQUIREPASS} ping | grep PONG" ]
-      interval: 1s
-      timeout: 3s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-
   flyingfish:
     image: flyingfish:v1.1.13
     container_name: flyingfish_service
     restart: unless-stopped
-    # Explicit so the container's own os.hostname() (used in the self-signed
-    # cert's subjectAltName) matches the compose-DNS name the parts use in
-    # REGISTRY_URL - not a random container id.
     hostname: flyingfish
     volumes:
       - flyingfishLetsencrypt:/etc/letsencrypt:rw
@@ -132,15 +63,9 @@ services:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
       FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
-      FLYINGFISH_DB_INFLUX_URL: "${INFLUXDB_URL}"
-      FLYINGFISH_DB_INFLUX_TOKEN: "${INFLUXDB_ADMIN_TOKEN}"
-      FLYINGFISH_DB_INFLUX_ORG: "${INFLUXDB_ORG}"
-      FLYINGFISH_DB_INFLUX_BUCKET: "${INFLUXDB_BUCKET}"
       FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
-      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
-      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_PKI_CA_FILE: /var/lib/flyingfish-pki-ca/ca-pool.json
       FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
@@ -165,10 +90,6 @@ services:
       start_period: 10s
     depends_on:
       mariadb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      influxdb:
         condition: service_healthy
 
   nginxserver:
@@ -206,120 +127,6 @@ services:
         max-file: "50"
     depends_on:
       mariadb:
-        condition: service_healthy
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
-
-  himhip:
-    image: flyingfish_himip:v1.1.13
-    container_name: flyingfish_himhip
-    restart: unless-stopped
-    volumes:
-      - flyingfish:/var/lib/flyingfish:ro
-      - flyingfishHimhipPki:/var/lib/flyingfish-pki
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
-      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    network_mode: host
-    cap_add:
-      - ALL
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      redis:
-        condition: service_healthy
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
-
-  sshremote:
-    image: flyingfish_ssh:v1.1.13
-    container_name: flyingfish_ssh
-    restart: unless-stopped
-    volumes:
-      - flyingfishSsh:/var/lib/flyingfish/ssh:rw
-      - flyingfish:/var/lib/flyingfish:ro
-      - flyingfishSshPki:/var/lib/flyingfish-pki
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
-      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
-      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
-      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
-      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
-      FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    ports:
-      - "2222:22"
-    networks:
-      flyingfishNet:
-        ipv4_address: 10.103.0.4
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      mariadb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
-
-  ddnsserver:
-    image: flyingfish_ddns:v1.1.13
-    container_name: flyingfish_ddns
-    restart: unless-stopped
-    volumes:
-      - flyingfish:/var/lib/flyingfish:ro
-      - flyingfishDdnsPki:/var/lib/flyingfish-pki
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
-      FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
-      FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    networks:
-      flyingfishNet:
-        ipv4_address: 10.103.0.6
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      mariadb:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
@@ -398,38 +205,6 @@ services:
       flyingfish:
         condition: service_healthy
 
-  clusterserver:
-    image: flyingfish_cluster:v1.1.13
-    container_name: flyingfish_cluster
-    restart: unless-stopped
-    volumes:
-      - flyingfish:/var/lib/flyingfish:ro
-      - flyingfishClusterPki:/var/lib/flyingfish-pki
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    ports:
-      - "5335:5335/tcp"
-    networks:
-      flyingfishNet:
-        ipv4_address: 10.103.0.11
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
-
   netfilter:
     image: flyingfish_netfilter:v1.1.13
     container_name: flyingfish_netfilter
@@ -446,8 +221,14 @@ services:
       FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
       FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
       FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    # host networking: manages the host nftables ruleset + forwarding sysctls.
     network_mode: host
+    # privileged: the netfilter part writes forwarding sysctls to /proc/sys,
+    # which is read-only for a non-privileged container even with NET_ADMIN.
+    # (nftables via netlink needs only NET_ADMIN; the sysctl write needs this.)
+    # A cleaner alternative is to make the sysctl write non-fatal in netfilternft
+    # (the host already ships net.*.forwarding=1 via /etc/sysctl.d) — then plain
+    # NET_ADMIN suffices. Kept privileged here until that lands.
+    privileged: true
     cap_add:
       - NET_ADMIN
     logging:
@@ -477,8 +258,6 @@ services:
       FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
       FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
       FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    # host networking + NET_ADMIN: manages the host NICs directly - udhcpc on the
-    # WAN uplink and dnsmasq (DHCP + IPv6 RA) on the LAN.
     network_mode: host
     cap_add:
       - NET_ADMIN
@@ -496,29 +275,15 @@ services:
 volumes:
   flyingfishDbData:
     driver: local
-  flyingfishInfluxdbData:
-    driver: local
   flyingfish:
     driver: local
   flyingfishLetsencrypt:
-    driver: local
-  flyingfishSsh:
-    driver: local
-  flyingfishRedisData:
     driver: local
   flyingfishNginx:
     driver: local
   flyingfishDnsPki:
     driver: local
-  flyingfishDdnsPki:
-    driver: local
-  flyingfishSshPki:
-    driver: local
   flyingfishNginxPki:
-    driver: local
-  flyingfishHimhipPki:
-    driver: local
-  flyingfishClusterPki:
     driver: local
   flyingfishNetfilterPki:
     driver: local
