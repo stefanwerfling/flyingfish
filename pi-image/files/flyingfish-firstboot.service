@@ -1,0 +1,24 @@
+# /etc/systemd/system/flyingfish-firstboot.service
+#
+# Runs `firstboot.sh` exactly once: `docker load`s the bundled
+# /opt/flyingfish/flyingfish.tar and generates /opt/flyingfish/.env with fresh
+# random secrets, then stamps itself done so subsequent boots skip straight to
+# flyingfish.service.
+
+[Unit]
+Description=FlyingFish first-boot setup (load images + generate secrets)
+Documentation=https://github.com/stefanwerfling/flyingfish
+After=docker.service network-online.target
+Requires=docker.service
+ConditionPathExists=/opt/flyingfish/flyingfish.tar
+
+[Service]
+Type=oneshot
+ExecStart=/opt/flyingfish/firstboot.sh
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target

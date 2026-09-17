@@ -1,0 +1,6 @@
+dist/
+cache/
+*.img
+*.img.xz
+*.img.zst
+*.tar
