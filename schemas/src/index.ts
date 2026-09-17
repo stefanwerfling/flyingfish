@@ -505,7 +505,6 @@ export {buildHimHIPCapabilityManifest} from './Hub/HimHIPCapabilityManifest.js';
 export {buildBackendCapabilityManifest} from './Hub/BackendCapabilityManifest.js';
 export {buildPkiCapabilityManifest} from './Hub/PkiCapabilityManifest.js';
 export {buildClusterCapabilityManifest} from './Hub/ClusterCapabilityManifest.js';
-export {buildNetfilterCapabilityManifest} from './Hub/NetfilterCapabilityManifest.js';
 export {buildNetdeviceCapabilityManifest} from './Hub/NetdeviceCapabilityManifest.js';
 
 // PKI (EST-style enrollment endpoints, own-PKI epic 9.4)

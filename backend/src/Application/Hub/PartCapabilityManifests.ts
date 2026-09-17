@@ -6,7 +6,6 @@ import {
     buildDynDnsCapabilityManifest,
     buildHimHIPCapabilityManifest,
     buildNetdeviceCapabilityManifest,
-    buildNetfilterCapabilityManifest,
     buildNginxCapabilityManifest,
     buildPkiCapabilityManifest,
     buildSshCapabilityManifest
@@ -32,7 +31,6 @@ export const partCapabilityManifestBuilders: Record<string, PartManifestBuilder>
     himhip: buildHimHIPCapabilityManifest,
     pki: buildPkiCapabilityManifest,
     cluster: buildClusterCapabilityManifest,
-    netfilter: buildNetfilterCapabilityManifest,
     netdevice: buildNetdeviceCapabilityManifest
 };
 

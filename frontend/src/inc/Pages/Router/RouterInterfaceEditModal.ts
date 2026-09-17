@@ -112,6 +112,10 @@ export class RouterInterfaceEditModal extends ModalDialog {
     public setAvailableInterfaces(list: Array<{name: string; mac: string; state: string; ipv4?: string;}>): void {
         this._available = list;
 
+        // Clear first — setValues appends, so without this the placeholder + NICs
+        // pile up every time the dialog is reopened.
+        this._selectDetected.clearValues();
+
         const options = [{key: '', value: '— select a detected NIC —'}];
 
         for (const iface of list) {

@@ -17,11 +17,20 @@ export const buildNetdeviceCapabilityManifest = (instanceId: string): Capability
             name: 'FlyingFish Network Devices',
             version: '1.0.0',
             instanceId: instanceId,
-            roles: ['router-netdevice']
+            roles: ['router-netdevice', 'router-netfilter']
         },
         capabilities: [
             {
                 key: 'router-netdevice',
+                version: '1.0.0',
+                dependsOn: [],
+                health: {
+                    endpoint: '/health',
+                    interval: 60
+                }
+            },
+            {
+                key: 'router-netfilter',
                 version: '1.0.0',
                 dependsOn: [],
                 health: {

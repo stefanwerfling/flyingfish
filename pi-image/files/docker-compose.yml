@@ -205,43 +205,6 @@ services:
       flyingfish:
         condition: service_healthy
 
-  netfilter:
-    image: flyingfish_netfilter:v1.1.13
-    container_name: flyingfish_netfilter
-    restart: unless-stopped
-    volumes:
-      - flyingfish:/var/lib/flyingfish:ro
-      - flyingfishNetfilterPki:/var/lib/flyingfish-pki
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    network_mode: host
-    # privileged: the netfilter part writes forwarding sysctls to /proc/sys,
-    # which is read-only for a non-privileged container even with NET_ADMIN.
-    # (nftables via netlink needs only NET_ADMIN; the sysctl write needs this.)
-    # A cleaner alternative is to make the sysctl write non-fatal in netfilternft
-    # (the host already ships net.*.forwarding=1 via /etc/sysctl.d) — then plain
-    # NET_ADMIN suffices. Kept privileged here until that lands.
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
-
   netdevice:
     image: flyingfish_netdevice:v1.1.13
     container_name: flyingfish_netdevice
@@ -284,8 +247,6 @@ volumes:
   flyingfishDnsPki:
     driver: local
   flyingfishNginxPki:
-    driver: local
-  flyingfishNetfilterPki:
     driver: local
   flyingfishNetdevicePki:
     driver: local

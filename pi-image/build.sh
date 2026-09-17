@@ -71,7 +71,6 @@ OWN_IMAGES=(
     "flyingfish:v1.1.13|Dockerfile"
     "flyingfish_nginxserver:v1.1.13|nginxserver/Dockerfile"
     "flyingfish_himip:v1.1.13|himhip/Dockerfile"
-    "flyingfish_netfilter:v1.1.13|netfilter/Dockerfile"
     "flyingfish_netdevice:v1.1.13|netdevice/Dockerfile"
     "flyingfish_ssh:v1.1.13|sshserver/Dockerfile"
     "flyingfish_ddns:v1.1.13|ddnsserver/Dockerfile"

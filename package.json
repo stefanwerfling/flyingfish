@@ -26,7 +26,6 @@
     "nginxserver",
     "clusterserver",
     "clusterdatapath",
-    "netfilter",
     "netfilternft",
     "netdevice",
     "clusterquic",

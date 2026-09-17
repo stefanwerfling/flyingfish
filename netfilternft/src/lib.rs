@@ -135,15 +135,18 @@ pub fn apply_router(
     ipv6_mode: String,
     forward: bool,
 ) -> napi::Result<()> {
-    set_sysctl("net/ipv4/ip_forward", if forward { "1" } else { "0" })
-        .map_err(|error| napi::Error::from_reason(error.to_string()))?;
+    // Only ENSURE forwarding is on when routing; never write "0". Disabling
+    // ip_forward would break Docker's published-port return path (the whole stack
+    // becomes unreachable from the network) — and a router/OS image ships it on
+    // anyway. Best-effort: /proc/sys is read-only in a non-privileged container, so
+    // a failed write must NOT abort the nftables apply (forwarding stays as baked).
+    if forward {
+        let _ = set_sysctl("net/ipv4/ip_forward", "1");
 
-    // IPv6 forwarding may be absent on an IPv6-disabled kernel; ignore that write error.
-    let ipv6_forward = forward && ipv6_mode != "off";
-    let _ = set_sysctl(
-        "net/ipv6/conf/all/forwarding",
-        if ipv6_forward { "1" } else { "0" },
-    );
+        if ipv6_mode != "off" {
+            let _ = set_sysctl("net/ipv6/conf/all/forwarding", "1");
+        }
+    }
 
     apply_nftables(&wan_interface, &lan_interfaces, nat44, &ipv6_mode, forward)
         .map_err(|error| napi::Error::from_reason(error.to_string()))

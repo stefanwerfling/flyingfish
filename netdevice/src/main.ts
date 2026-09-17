@@ -24,6 +24,8 @@ import {DnsmasqRunner} from './inc/Lan/DnsmasqRunner.js';
 import {LanConfigClient} from './inc/Lan/LanConfigClient.js';
 import {HostInterfaceScanner} from './inc/Discovery/HostInterfaceScanner.js';
 import {InterfaceReporter} from './inc/Discovery/InterfaceReporter.js';
+import {NetfilterApplier} from './inc/Netfilter/NetfilterApplier.js';
+import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
 
 const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
 
@@ -135,7 +137,13 @@ const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
         const lanConfigClient = new LanConfigClient(tConfig.registry.url, tConfig.registry.secret);
         const lanReporter = new DhcpLeaseReporter(tConfig.registry.url, tConfig.registry.secret);
         const interfaceReporter = new InterfaceReporter(tConfig.registry.url, tConfig.registry.secret);
+        const netfilterClient = new NetfilterConfigClient(tConfig.registry.url, tConfig.registry.secret);
+        const netfilterApplier = new NetfilterApplier();
         const intervalMs = tConfig.netdevice?.reconcileIntervalMs ?? Config.DEFAULT_RECONCILE_INTERVAL_MS;
+
+        if (!netfilterApplier.isAvailable()) {
+            Logger.getLogger().warn('Netdevice netfilter: native binding unavailable — running without applying the nftables ruleset');
+        }
 
         let wanRunner: DhcpClientRunner | null = null;
         let lanRunner: DnsmasqRunner | null = null;
@@ -205,10 +213,23 @@ const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
             await interfaceReporter.report(HostInterfaceScanner.scan());
         };
 
+        // Netfilter (absorbed from the former ff-netfilter part): pull the resolved
+        // router config + program the host nftables ruleset via the native binding.
+        const reconcileNetfilter = async(): Promise<void> => {
+            const config = await netfilterClient.fetchConfig();
+
+            if (config === null) {
+                return;
+            }
+
+            netfilterApplier.apply(config);
+        };
+
         const reconcileOnce = async(): Promise<void> => {
             await reconcileInterfaces();
             await reconcileWan();
             await reconcileLan();
+            await reconcileNetfilter();
         };
 
         await reconcileOnce();

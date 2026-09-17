@@ -283,48 +283,6 @@ services:
       pkiserver:
         condition: service_started
 
-  netfilter:
-    image: flyingfish_netfilter:v1.1.13
-    build:
-      context: ./
-      dockerfile: ./netfilter/Dockerfile
-      args:
-        NPM_REGISTRY: ${NPM_REGISTRY_INTERN}
-    container_name: flyingfish_netfilter
-    volumes:
-      # Read-only: only the backend's self-signed cert to trust it over HTTPS.
-      - flyingfish:/var/lib/flyingfish:ro
-      # Writable store for this node's own PKI identity.
-      - flyingfishNetfilterPki:/var/lib/flyingfish-pki
-      # Shared bootstrap socket to fetch a single-use enrollment token.
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      # network_mode: host - reach the host-published pkiserver via loopback.
-      FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    # host networking: it manages the host's nftables ruleset + forwarding sysctls
-    # (net.ipv4.ip_forward etc. set at runtime via `sysctl -w`, which needs the host
-    # network namespace + NET_ADMIN — so no compose `sysctls:` block, which host-net
-    # does not support for network sysctls).
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
-
   netdevice:
     image: flyingfish_netdevice:v1.1.13
     build:
@@ -774,8 +732,6 @@ volumes:
   flyingfishClusterPki:
     driver: local
   flyingfishDatapathPki:
-    driver: local
-  flyingfishNetfilterPki:
     driver: local
   flyingfishNetdevicePki:
     driver: local
