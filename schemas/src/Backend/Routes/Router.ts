@@ -47,6 +47,7 @@ export type NatPolicyEntry = ExtractSchemaResultType<typeof SchemaNatPolicyEntry
  * The LAN DHCP server config (singleton).
  */
 export const SchemaDhcpServerConfigEntry = Vts.object({
+    network_interface_id: Vts.optional(Vts.number()),
     enable: Vts.boolean(),
     range_start: Vts.optional(Vts.string()),
     range_end: Vts.optional(Vts.string()),
@@ -222,10 +223,11 @@ export const SchemaRouterLanConfig = Vts.object({
 });
 
 /**
- * SchemaRouterLanConfigResponse — the resolved LAN DHCP config for the ff-lan part.
+ * SchemaRouterLanConfigResponse — the resolved LAN DHCP configs for the netdevice part:
+ * ONE per enabled LAN interface (the part runs one dnsmasq per entry).
  */
 export const SchemaRouterLanConfigResponse = SchemaDefaultReturn.extend({
-    config: SchemaRouterLanConfig
+    configs: Vts.array(SchemaRouterLanConfig)
 });
 
 /**
@@ -248,6 +250,7 @@ export const SchemaDhcpLeaseReportItem = Vts.object({
  * The LAN DHCP lease report `ff-lan` posts (the full current lease set — a bulk replace).
  */
 export const SchemaDhcpLeasesReport = Vts.object({
+    interface: Vts.string(),
     leases: Vts.array(SchemaDhcpLeaseReportItem)
 });
 

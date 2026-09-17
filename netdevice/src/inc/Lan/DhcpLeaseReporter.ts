@@ -49,6 +49,7 @@ export class DhcpLeaseReporter {
                     [HEADER_REGISTRY_SECRET]: this._secret
                 },
                 body: JSON.stringify({
+                    interface: iface,
                     leases: leases.map((lease) => ({
                         mac_address: lease.mac_address,
                         ip_address: lease.ip_address,

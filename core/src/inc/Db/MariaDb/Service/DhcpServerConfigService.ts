@@ -21,7 +21,25 @@ export class DhcpServerConfigService extends DBService<DhcpServerConfig> {
     }
 
     /**
-     * The node's single DHCP server config row, or null if none is configured yet.
+     * The DHCP server config for a specific LAN interface, or null if none exists yet.
+     * @param {number} interfaceId - the LAN NetworkInterface id
+     * @returns {DhcpServerConfig | null}
+     */
+    public async findByInterface(interfaceId: number): Promise<DhcpServerConfig | null> {
+        return this._repository.findOne({where: {network_interface_id: interfaceId}});
+    }
+
+    /**
+     * All DHCP server configs (one per LAN interface).
+     * @returns {DhcpServerConfig[]}
+     */
+    public async findAllConfigs(): Promise<DhcpServerConfig[]> {
+        return this._repository.find({order: {id: 'ASC'}});
+    }
+
+    /**
+     * The first DHCP server config row, or null. Kept for the legacy single-config
+     * callers; new code should prefer {@link DhcpServerConfigService.findByInterface}.
      * @returns {DhcpServerConfig | null}
      */
     public async get(): Promise<DhcpServerConfig | null> {

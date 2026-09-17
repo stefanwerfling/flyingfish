@@ -51,17 +51,23 @@ export class LanConfigClient {
     /**
      * Fetch the resolved LAN config, or null on error / malformed response.
      */
-    public async fetchConfig(): Promise<LanConfig | null> {
+    public async fetchConfigs(): Promise<LanConfig[]> {
         try {
             const response = await this._fetch(`${this._hubUrl}/json/router/lan-config`, {
                 headers: {[HEADER_REGISTRY_SECRET]: this._secret}
             });
 
-            const data = await response.json() as {config?: unknown;};
+            const data = await response.json() as {configs?: unknown;};
 
-            return LanConfigClient._parse(data.config);
+            if (!Array.isArray(data.configs)) {
+                return [];
+            }
+
+            return data.configs
+                .map((entry) => LanConfigClient._parse(entry))
+                .filter((cfg): cfg is LanConfig => cfg !== null);
         } catch {
-            return null;
+            return [];
         }
     }
 

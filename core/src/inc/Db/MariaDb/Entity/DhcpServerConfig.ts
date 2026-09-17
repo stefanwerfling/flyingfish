@@ -2,13 +2,23 @@ import {Column, Entity} from 'typeorm';
 import {DBBaseEntityId} from '../DBBaseEntityId.js';
 
 /**
- * DhcpServerConfig — the LAN DHCP/RA server configuration (Pi-router epic). Node-LOCAL,
- * one row per node. Applied by `ff-lan` (dnsmasq: DHCPv4 leases + IPv6 RA). DNS is NOT
- * served by dnsmasq — LAN clients are handed `dns_server` (the FlyingFish dnsserver
- * acting as the LAN caching resolver).
+ * DhcpServerConfig — a LAN DHCP/RA server configuration (Pi-router epic). Node-LOCAL,
+ * ONE ROW PER LAN INTERFACE (keyed by `network_interface_id`), so multiple LAN NICs can
+ * each run their own DHCP server on their own subnet. Applied by the netdevice part
+ * (one dnsmasq per LAN NIC: DHCPv4 leases + IPv6 RA). DNS is NOT served by dnsmasq —
+ * LAN clients are handed `dns_server` (the FlyingFish dnsserver as the LAN resolver).
  */
 @Entity({name: 'dhcp_server_config'})
 export class DhcpServerConfig extends DBBaseEntityId {
+
+    /**
+     * The LAN NetworkInterface this DHCP config belongs to (node-local int id). One
+     * DHCP server per LAN NIC.
+     */
+    @Column({
+        default: 0
+    })
+    public network_interface_id!: number;
 
     /**
      * Enable the LAN DHCP server.

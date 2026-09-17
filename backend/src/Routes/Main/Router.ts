@@ -83,6 +83,7 @@ export class Router extends DefaultRoute {
                         forward_enabled: natPolicy.forward_enabled
                     },
                     dhcpConfig: dhcpConfig === null ? null : {
+                        network_interface_id: dhcpConfig.network_interface_id,
                         enable: dhcpConfig.enable,
                         range_start: dhcpConfig.range_start,
                         range_end: dhcpConfig.range_end,
@@ -152,7 +153,12 @@ export class Router extends DefaultRoute {
 
         this._post('/json/router/dhcp/save', requirePermission('dhcp.write'), async(_req, _res, data): Promise<DefaultReturn> => {
             const body = data.body!;
-            const entity = await DhcpServerConfigServiceDB.getInstance().get() ?? new DhcpServerConfigDB();
+            // Per-interface DHCP: resolve the target LAN interface (explicit, else the
+            // first enabled lan-role interface as a fallback for older callers).
+            const ifaceId = body.network_interface_id ??
+                (await NetworkInterfaceServiceDB.getInstance().findByRole('lan')).filter((entry) => !entry.disable)[0]?.id ?? 0;
+            const entity = await DhcpServerConfigServiceDB.getInstance().findByInterface(ifaceId) ?? new DhcpServerConfigDB();
+            entity.network_interface_id = ifaceId;
             entity.enable = body.enable;
             entity.range_start = body.range_start ?? '';
             entity.range_end = body.range_end ?? '';
@@ -229,25 +235,33 @@ export class Router extends DefaultRoute {
             FlyingFishRouteCheckServiceOrUserLogin,
             async(): Promise<RouterLanConfigResponse> => {
                 const lans = (await NetworkInterfaceServiceDB.getInstance().findByRole('lan')).filter((entry) => !entry.disable);
-                const dhcp = await DhcpServerConfigServiceDB.getInstance().get();
+                const configs = [];
 
-                return {
-                    statusCode: StatusCodes.OK,
-                    config: {
-                        lanInterface: lans[0]?.name ?? '',
+                // One config per enabled LAN interface (its own DHCP server + subnet);
+                // the netdevice part runs one dnsmasq per entry.
+                for (const lan of lans) {
+                    const dhcp = await DhcpServerConfigServiceDB.getInstance().findByInterface(lan.id);
+
+                    configs.push({
+                        lanInterface: lan.name,
                         enable: dhcp?.enable ?? false,
                         rangeStart: dhcp?.range_start ?? '',
                         rangeEnd: dhcp?.range_end ?? '',
                         leaseSeconds: dhcp?.lease_time ?? 3600,
-                        gateway: dhcp?.gateway ?? '',
+                        gateway: dhcp?.gateway ?? lan.ipv4_address,
                         dnsServer: dhcp?.dns_server ?? '',
                         domain: dhcp?.domain ?? '',
                         raEnable: dhcp?.ra_enable ?? false
-                    }
+                    });
+                }
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    configs: configs
                 };
             },
             {
-                description: 'The resolved LAN DHCP config (interface + DhcpServerConfig) for the ff-lan part',
+                description: 'The resolved LAN DHCP configs (one per enabled LAN interface) for the netdevice part',
                 responseBodySchema: SchemaRouterLanConfigResponse
             }
         );
@@ -255,7 +269,9 @@ export class Router extends DefaultRoute {
         // ff-lan reports the current dnsmasq leases (a bulk replace of the read model).
         // ServiceOrUserLogin (registry secret / mTLS).
         this._post('/json/router/dhcp-leases', FlyingFishRouteCheckServiceOrUserLogin, async(_req, _res, data): Promise<DefaultReturn> => {
-            await DhcpLeaseServiceDB.getInstance().getRepository().clear();
+            // Per-interface replace: only this LAN interface's leases (each netdevice
+            // dnsmasq reports its own), so multiple LANs don't clobber each other.
+            await DhcpLeaseServiceDB.getInstance().getRepository().delete({interface: data.body!.interface});
 
             for (const item of data.body!.leases) {
                 const lease = new DhcpLeaseDB();

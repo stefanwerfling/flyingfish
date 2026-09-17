@@ -61,7 +61,7 @@ export class DnsmasqRunner {
             return;
         }
 
-        const confPath = path.join(os.tmpdir(), 'ff-lan-dnsmasq.conf');
+        const confPath = path.join(os.tmpdir(), `ff-lan-${this._config.lanInterface}.conf`);
         fs.writeFileSync(confPath, conf);
 
         this._process = spawn('dnsmasq', ['-C', confPath, '-k'], {stdio: ['ignore', 'ignore', 'pipe']});

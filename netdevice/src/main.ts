@@ -27,7 +27,6 @@ import {InterfaceReporter} from './inc/Discovery/InterfaceReporter.js';
 import {NetfilterApplier} from './inc/Netfilter/NetfilterApplier.js';
 import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
 
-const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
 
 /**
  * Main — the network-device router part: enrolls a PKI service identity, self-registers
@@ -146,7 +145,7 @@ const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
         }
 
         let wanRunner: DhcpClientRunner | null = null;
-        let lanRunner: DnsmasqRunner | null = null;
+        const lanRunners = new Map<string, DnsmasqRunner>();
 
         // WAN: run udhcpc on the wan-role interface.
         const reconcileWan = async(): Promise<void> => {
@@ -180,31 +179,54 @@ const LEASE_FILE = path.join(os.tmpdir(), 'ff-lan-dnsmasq.leases');
 
         // LAN: run dnsmasq on the lan-role interface.
         const reconcileLan = async(): Promise<void> => {
-            const lanConfig = await lanConfigClient.fetchConfig();
+            const lanConfigs = await lanConfigClient.fetchConfigs();
+            const seen = new Set<string>();
 
-            if (lanConfig === null) {
-                return;
-            }
+            // One dnsmasq per LAN interface (each its own subnet + lease file, so their
+            // leases don't clobber each other).
+            for (const lanConfig of lanConfigs) {
+                const iface = lanConfig.lanInterface;
 
-            const dnsmasqConfig: DnsmasqConfig = {...lanConfig, leaseFile: LEASE_FILE};
+                if (iface === '') {
+                    continue;
+                }
 
-            if (lanRunner !== null && lanRunner.matches(dnsmasqConfig)) {
-                return;
-            }
+                seen.add(iface);
 
-            if (lanRunner !== null) {
-                lanRunner.stop();
-            }
+                const dnsmasqConfig: DnsmasqConfig = {
+                    ...lanConfig,
+                    leaseFile: path.join(os.tmpdir(), `ff-lan-${iface}.leases`)
+                };
 
-            const iface = dnsmasqConfig.lanInterface;
-            lanRunner = new DnsmasqRunner(dnsmasqConfig, (leases): void => {
-                lanReporter.report(leases, iface).catch((): void => {
-                    // best-effort
+                const existing = lanRunners.get(iface);
+
+                if (existing && existing.matches(dnsmasqConfig)) {
+                    continue;
+                }
+
+                if (existing) {
+                    existing.stop();
+                }
+
+                const runner = new DnsmasqRunner(dnsmasqConfig, (leases): void => {
+                    lanReporter.report(leases, iface).catch((): void => {
+                        // best-effort
+                    });
                 });
-            });
-            lanRunner.start();
+                runner.start();
+                lanRunners.set(iface, runner);
 
-            Logger.getLogger().info(`Netdevice LAN: dnsmasq reconciled for ${iface === '' ? '(no interface)' : iface} (enable=${dnsmasqConfig.enable})`);
+                Logger.getLogger().info(`Netdevice LAN: dnsmasq reconciled for ${iface} (enable=${dnsmasqConfig.enable})`);
+            }
+
+            // Stop dnsmasq for LAN interfaces that dropped out of the config.
+            for (const [iface, runner] of lanRunners) {
+                if (!seen.has(iface)) {
+                    runner.stop();
+                    lanRunners.delete(iface);
+                    Logger.getLogger().info(`Netdevice LAN: dnsmasq stopped for removed interface ${iface}`);
+                }
+            }
         };
 
         // Discovery: report the live host NIC list so the management UI can offer a
