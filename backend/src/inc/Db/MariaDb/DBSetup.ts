@@ -7,7 +7,8 @@ import {
     UserDB,
     UserServiceDB,
     NginxUpstreamServiceDB,
-    NginxStreamDB, NginxStreamServiceDB, NginxListenServiceDB, NginxListenDB
+    NginxStreamDB, NginxStreamServiceDB, NginxListenServiceDB, NginxListenDB,
+    RbacUserGroupDB, RbacUserGroupServiceDB
 } from 'flyingfish_core';
 import {Logger} from '@stefanwerfling/figtree';
 import {
@@ -46,7 +47,17 @@ export class DBSetup {
             nUser.disable = false;
 
             // save user to db
-            await us.save(nUser);
+            const savedUser = await us.save(nUser);
+
+            // Bind the initial admin into the Administrators group so RBAC grants it the
+            // superadmin role. The RBAC migration seeds group memberships from EXISTING
+            // users, but on a fresh install it runs before this first user exists — so we
+            // must create the membership here (group id = the seeded Administrators UUID).
+            const adminGroupId = '00000000-0000-4000-8000-000000000003';
+            const membership = new RbacUserGroupDB();
+            membership.user_id = savedUser.id;
+            membership.group_id = adminGroupId;
+            await RbacUserGroupServiceDB.getInstance().save(membership);
 
             if (generated) {
                 Logger.getLogger().warn('======================================================================');
