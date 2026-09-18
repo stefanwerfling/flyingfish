@@ -32,7 +32,9 @@ export async function ensureLanAddress(iface: string, address: string, prefix: n
 
     const result = await runIp(['addr', 'add', `${address}/${prefix}`, 'dev', iface]);
 
-    if (!result.ok && !(/File exists/iu).test(result.stderr)) {
+    // Idempotent: both iproute2 ("File exists") and the netlink-style ("Address already
+    // assigned") messages mean the address is already present — treat as success.
+    if (!result.ok && !(/File exists|already assigned/iu).test(result.stderr)) {
         Logger.getLogger().warn(`Netdevice LAN: could not set ${address}/${prefix} on ${iface}: ${result.stderr.trim()}`);
     }
 }
