@@ -1,5 +1,6 @@
 import {Column, Entity} from 'typeorm';
 import {DBBaseEntityId} from '../DBBaseEntityId.js';
+import {epochMsColumnTransformer} from '../Transformer/EpochMsColumn.js';
 
 /**
  * Issued (leaf) certificate Entity — an end-entity certificate the PKI part
@@ -74,7 +75,9 @@ export class IssuedCertificate extends DBBaseEntityId {
      * issuance timestamp (epoch ms).
      */
     @Column({
-        default: 0
+        type: 'bigint',
+        default: 0,
+        transformer: epochMsColumnTransformer
     })
     public issued_at!: number;
 
@@ -82,7 +85,9 @@ export class IssuedCertificate extends DBBaseEntityId {
      * expiry timestamp (epoch ms); 0 if unknown.
      */
     @Column({
-        default: 0
+        type: 'bigint',
+        default: 0,
+        transformer: epochMsColumnTransformer
     })
     public expires_at!: number;
 
@@ -100,7 +105,9 @@ export class IssuedCertificate extends DBBaseEntityId {
      * revocation timestamp (epoch ms); 0 if not revoked.
      */
     @Column({
-        default: 0
+        type: 'bigint',
+        default: 0,
+        transformer: epochMsColumnTransformer
     })
     public revoked_at!: number;
 

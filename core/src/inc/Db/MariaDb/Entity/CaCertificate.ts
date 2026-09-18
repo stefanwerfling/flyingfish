@@ -1,5 +1,6 @@
 import {Column, Entity} from 'typeorm';
 import {DBBaseEntityId} from '../DBBaseEntityId.js';
+import {epochMsColumnTransformer} from '../Transformer/EpochMsColumn.js';
 
 /**
  * CA certificate Entity — one node in the FlyingFish internal CA tree (own-PKI
@@ -97,7 +98,9 @@ export class CaCertificate extends DBBaseEntityId {
      * creation timestamp (epoch ms).
      */
     @Column({
-        default: 0
+        type: 'bigint',
+        default: 0,
+        transformer: epochMsColumnTransformer
     })
     public created_at!: number;
 

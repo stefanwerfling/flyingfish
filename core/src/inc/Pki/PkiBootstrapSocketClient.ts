@@ -1,14 +1,17 @@
 import * as net from 'net';
 
-const DEFAULT_RETRIES = 10;
-const DEFAULT_RETRY_DELAY_MS = 500;
+const DEFAULT_RETRIES = 60;
+const DEFAULT_RETRY_DELAY_MS = 1000;
 const DEFAULT_TIMEOUT_MS = 5000;
 
 /**
  * Client for the local unix-socket bootstrap-token vending server (own-PKI epic
  * 9.4, 9.4.3-D). A part connects at boot and reads the single-use token the
- * server issues, then enrolls with it over HTTP. Retries a few times so a part
- * that boots slightly ahead of the pkiserver still gets its token.
+ * server issues, then enrolls with it over HTTP. Retries (ENOENT included) with a
+ * generous ~60s budget so a part that boots ahead of the pkiserver still gets its
+ * token: the pkiserver only binds the socket after it has connected to the DB and
+ * generated/loaded the CA tree (first-boot key generation can take several seconds,
+ * especially on a Pi), so a short budget would give up before the socket appears.
  */
 export class PkiBootstrapSocketClient {
 
