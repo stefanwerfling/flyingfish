@@ -58,6 +58,16 @@ module.exports = {
                     'sass-loader',
                 ],
                 exclude: '/node_modules/'
+            },
+            {
+                // Plain CSS (e.g. the Router UI stylesheet) — style-loader + css-loader
+                // only, no sass parser (which would choke on modern CSS like color-mix()).
+                test: /\.css$/iu,
+                use: [
+                    'style-loader',
+                    'css-loader',
+                ],
+                exclude: '/node_modules/'
             }
         ]
     },
