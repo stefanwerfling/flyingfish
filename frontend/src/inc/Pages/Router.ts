@@ -3,11 +3,19 @@ import {
     Badge, BadgeType, Card, Circle, CircleColor, ContentCol, ContentColSize, DialogConfirm,
     ButtonType, ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink
 } from 'bambooo';
+import {NGraph} from 'jsngraph';
 import {Router as RouterAPI} from '../Api/Router.js';
 import {BasePage} from './BasePage.js';
 import {RouterInterfaceEditModal} from './Router/RouterInterfaceEditModal.js';
 import {NatPolicyEditModal} from './Router/NatPolicyEditModal.js';
 import {DhcpConfigEditModal} from './Router/DhcpConfigEditModal.js';
+
+/**
+ * Node/edge input shapes for the topology graph, derived from NGraph.setData so we don't
+ * depend on the (non-exported) jsNGraph data interface names.
+ */
+type TopoNode = Parameters<NGraph['setData']>[0][number];
+type TopoEdge = Parameters<NGraph['setData']>[1][number];
 
 /**
  * Router — the Pi-router management page (Pi-router epic, Phase 6): manage the node's
@@ -33,6 +41,12 @@ export class Router extends BasePage {
      * @protected
      */
     protected _overview: RouterOverviewResponse | null = null;
+
+    /**
+     * the topology graph (created lazily on first render, then live-updated via setData)
+     * @protected
+     */
+    protected _graph: NGraph | null = null;
 
     /**
      * constructor
@@ -159,6 +173,7 @@ export class Router extends BasePage {
     public override async loadContent(): Promise<void> {
         const content = this._wrapper.getContentWrapper().getContent();
         const cardStatus = new Card(new ContentCol(content, ContentColSize.col12));
+        const cardTopology = new Card(new ContentCol(content, ContentColSize.col12));
         const cardNics = new Card(new ContentCol(content, ContentColSize.col12));
 
         this._onLoadTable = async(): Promise<void> => {
@@ -166,6 +181,7 @@ export class Router extends BasePage {
             this._overview = overview;
 
             Router._renderStatus(cardStatus, overview);
+            this._renderTopology(cardTopology, overview);
             this._renderNics(cardNics, overview);
         };
 
@@ -348,6 +364,91 @@ export class Router extends BasePage {
                 }
             }
         }
+    }
+
+    /**
+     * Render the live network topology as a graph: the FlyingFish router as the central
+     * hub, the WAN uplink (internet) and every LAN interface around it, and each LAN's
+     * DHCP clients (from the active leases) as leaf nodes. Built once, then live-updated
+     * via setData on each reload so the layout stays stable.
+     * @param card - the card to render into
+     * @param overview - the loaded overview
+     * @protected
+     */
+    protected _renderTopology(card: Card, overview: RouterOverviewResponse): void {
+        if (!this._graph) {
+            card.setTitle('Network topology');
+            const container = jQuery('<div style="height: 440px; position: relative;"></div>')
+                .appendTo(card.getElement())[0] as HTMLElement;
+            this._graph = new NGraph(container, {theme: 'light', layoutMode: 'radial'});
+        }
+
+        const nodes: TopoNode[] = [];
+        const edges: TopoEdge[] = [];
+
+        const nat = overview.natPolicy;
+        const wan = overview.wanLease;
+
+        // central router hub (ring 0, pinned)
+        nodes.push({
+            id: 'router',
+            label: 'FlyingFish',
+            kind: 'router',
+            status: 'ok',
+            ring: 0,
+            fixed: true,
+            sublabel: nat?.nat44_enabled ? 'NAT44' : (nat?.forward_enabled ? 'routing' : 'no NAT')
+        });
+
+        // WAN uplink -------------------------------------------------------------------------------------------------
+        const wanIfaces = overview.interfaces.filter((entry) => entry.role === 'wan');
+
+        if (wanIfaces.length > 0 || wan) {
+            nodes.push({
+                id: 'wan',
+                label: 'Internet',
+                kind: 'gateway',
+                status: wan ? 'ok' : 'down',
+                ring: 1,
+                sublabel: wan ? `${wan.ipv4_address}/${wan.ipv4_prefix}` : (wanIfaces[0]?.name ?? 'no lease')
+            });
+            edges.push({id: 'e-wan', source: 'wan', target: 'router', load: 0.35, animated: true});
+        }
+
+        // LAN interfaces + their DHCP clients ------------------------------------------------------------------------
+        for (const iface of overview.interfaces.filter((entry) => entry.role === 'lan')) {
+            const lanId = `lan-${iface.id}`;
+            const ipv4 = iface.ipv4_address
+                ? `${iface.ipv4_address}/${iface.ipv4_prefix ?? 24}`
+                : 'lan';
+
+            nodes.push({
+                id: lanId,
+                label: iface.name || `lan ${iface.id}`,
+                kind: 'gateway',
+                status: (iface.disable ?? false) ? 'down' : 'ok',
+                ring: 1,
+                ip: iface.ipv4_address,
+                sublabel: ipv4
+            });
+            edges.push({id: `e-${lanId}`, source: 'router', target: lanId, load: 0.2});
+
+            for (const lease of overview.leases.filter((entry) => entry.interface === (iface.name || ''))) {
+                const clientId = `c-${iface.id}-${lease.mac_address}`;
+                nodes.push({
+                    id: clientId,
+                    label: lease.hostname || lease.ip_address,
+                    kind: 'pc',
+                    status: 'ok',
+                    ring: 2,
+                    ip: lease.ip_address,
+                    sublabel: lease.mac_address
+                });
+                edges.push({id: `e-${clientId}`, source: lanId, target: clientId, load: 0.1});
+            }
+        }
+
+        this._graph.setData(nodes, edges);
     }
 
     /**
