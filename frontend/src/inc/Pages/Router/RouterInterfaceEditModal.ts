@@ -29,6 +29,10 @@ export class RouterInterfaceEditModal extends ModalDialog {
 
     protected _switchDisable: Switch;
 
+    protected _switchNat44: Switch;
+
+    protected _selectIpv6Mode: SelectBottemBorderOnly2;
+
     /**
      * constructor
      * @param elementObject
@@ -81,6 +85,19 @@ export class RouterInterfaceEditModal extends ModalDialog {
 
         const groupIpv4Prefix = new FormGroup(form, 'IPv4 prefix (CIDR, e.g. 24)');
         this._inputIpv4Prefix = new InputBottemBorderOnly2(groupIpv4Prefix, 'ifaceprefix', InputType.number);
+
+        // Per-LAN NAT (only meaningful for a LAN role): masquerade this LAN to the WAN,
+        // and its own IPv6 mode so each LAN can differ (one NAT66, another PD-routed).
+        const groupNat44 = new FormGroup(form, 'Enable NAT44 (masquerade this LAN → WAN)');
+        this._switchNat44 = new Switch(groupNat44, 'ifacenat44');
+
+        const groupIpv6Mode = new FormGroup(form, 'IPv6 mode');
+        this._selectIpv6Mode = new SelectBottemBorderOnly2(groupIpv6Mode);
+        this._selectIpv6Mode.setValues([
+            {key: 'off', value: 'Off (no IPv6 routing)'},
+            {key: 'nat66', value: 'NAT66 (masquerade a ULA → WAN IPv6)'},
+            {key: 'pd', value: 'PD (route the delegated /64 — end-to-end)'}
+        ]);
 
         const groupDisable = new FormGroup(form, 'Disable');
         this._switchDisable = new Switch(groupDisable, 'ifacedisable');
@@ -233,6 +250,36 @@ export class RouterInterfaceEditModal extends ModalDialog {
     }
 
     /**
+     * setNat44Enabled
+     * @param enable
+     */
+    public setNat44Enabled(enable: boolean): void {
+        this._switchNat44.setEnable(enable);
+    }
+
+    /**
+     * getNat44Enabled
+     */
+    public getNat44Enabled(): boolean {
+        return this._switchNat44.isEnable();
+    }
+
+    /**
+     * setIpv6Mode
+     * @param mode
+     */
+    public setIpv6Mode(mode: string): void {
+        this._selectIpv6Mode.setSelectedValue(mode);
+    }
+
+    /**
+     * getIpv6Mode
+     */
+    public getIpv6Mode(): string {
+        return this._selectIpv6Mode.getSelectedValue();
+    }
+
+    /**
      * resetValues
      */
     public override resetValues(): void {
@@ -245,6 +292,8 @@ export class RouterInterfaceEditModal extends ModalDialog {
         this.setIpv4Address('');
         this.setIpv4Prefix(0);
         this.setDisable(false);
+        this.setNat44Enabled(false);
+        this.setIpv6Mode('off');
     }
 
 }
