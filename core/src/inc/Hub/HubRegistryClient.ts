@@ -16,6 +16,14 @@ const REGISTRY_SECRET_HEADER = 'x-flyingfish-registry-secret';
 const DEFAULT_HEARTBEAT_MS = 30000;
 
 /**
+ * Per-request timeout for a registry call. Bounds the initial register/heartbeat so a
+ * slow or not-yet-ready hub can never block a part's startup: startHubRegistration awaits
+ * the first register before the part sets up its real work (e.g. netdevice spawns dnsmasq
+ * only afterwards), so an unbounded request would stall the whole part.
+ */
+const REQUEST_TIMEOUT_MS = 8000;
+
+/**
  * A part's mTLS client identity (own-PKI epic 9.4): the leaf certificate + key
  * it presents to authenticate to the Hub by certificate instead of the shared
  * secret. When present it is used for the registry transport.
@@ -96,6 +104,13 @@ const postRegistryMtls = (
             resolve(null);
         });
 
+        // Bound the request: a not-yet-ready hub must not stall the caller forever.
+        request.setTimeout(REQUEST_TIMEOUT_MS, (): void => {
+            Logger.getLogger().warn('HubRegistryClient: mTLS request timed out after %dms', REQUEST_TIMEOUT_MS);
+            request.destroy();
+            resolve(null);
+        });
+
         request.write(payload);
         request.end();
     });
@@ -127,7 +142,8 @@ const postRegistry = async(
                 'content-type': 'application/json',
                 [REGISTRY_SECRET_HEADER]: secret
             },
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
         });
 
         if (!response.ok) {
