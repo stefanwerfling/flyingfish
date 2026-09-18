@@ -10,6 +10,8 @@ import {
  */
 export class DhcpConfigEditModal extends ModalDialog {
 
+    protected _interfaceId: number = 0;
+
     protected _switchEnable: Switch;
 
     protected _inputRangeStart: InputBottemBorderOnly2;
@@ -67,6 +69,26 @@ export class DhcpConfigEditModal extends ModalDialog {
     /**
      * setEnable
      * @param enable
+     */
+    /**
+     * setInterfaceId — the LAN interface this DHCP config belongs to.
+     * @param {number} id
+     */
+    public setInterfaceId(id: number): void {
+        this._interfaceId = id;
+    }
+
+    /**
+     * getInterfaceId
+     * @returns {number}
+     */
+    public getInterfaceId(): number {
+        return this._interfaceId;
+    }
+
+    /**
+     * setEnable
+     * @param {boolean} enable
      */
     public setEnable(enable: boolean): void {
         this._switchEnable.setEnable(enable);
@@ -188,6 +210,7 @@ export class DhcpConfigEditModal extends ModalDialog {
      * resetValues
      */
     public override resetValues(): void {
+        this.setInterfaceId(0);
         this.setEnable(false);
         this.setRangeStart('');
         this.setRangeEnd('');

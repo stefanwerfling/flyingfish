@@ -61,7 +61,8 @@ export class Router extends DefaultRoute {
             requirePermission('router.read'),
             async(): Promise<RouterOverviewResponse> => {
                 const natPolicy = await NatPolicyServiceDB.getInstance().get();
-                const dhcpConfig = await DhcpServerConfigServiceDB.getInstance().get();
+                const dhcpConfigList = await DhcpServerConfigServiceDB.getInstance().findAllConfigs();
+                const dhcpConfig = dhcpConfigList[0] ?? null;
                 const wanLease = await WanLeaseServiceDB.getInstance().get();
 
                 return {
@@ -82,6 +83,17 @@ export class Router extends DefaultRoute {
                         ipv6_mode: natPolicy.ipv6_mode,
                         forward_enabled: natPolicy.forward_enabled
                     },
+                    dhcpConfigs: dhcpConfigList.map((entry) => ({
+                        network_interface_id: entry.network_interface_id,
+                        enable: entry.enable,
+                        range_start: entry.range_start,
+                        range_end: entry.range_end,
+                        lease_time: entry.lease_time,
+                        gateway: entry.gateway,
+                        dns_server: entry.dns_server,
+                        domain: entry.domain,
+                        ra_enable: entry.ra_enable
+                    })),
                     dhcpConfig: dhcpConfig === null ? null : {
                         network_interface_id: dhcpConfig.network_interface_id,
                         enable: dhcpConfig.enable,

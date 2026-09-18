@@ -170,6 +170,9 @@ export const SchemaRouterOverviewResponse = SchemaDefaultReturn.extend({
     interfaces: Vts.array(SchemaNetworkInterfaceEntry),
     availableInterfaces: Vts.array(SchemaAvailableInterface),
     natPolicy: Vts.or([SchemaNatPolicyEntry, Vts.null()]),
+    // One DHCP config per LAN interface (keyed by network_interface_id). dhcpConfig
+    // (single) is kept for older callers; new UI groups by dhcpConfigs.
+    dhcpConfigs: Vts.array(SchemaDhcpServerConfigEntry),
     dhcpConfig: Vts.or([SchemaDhcpServerConfigEntry, Vts.null()]),
     leases: Vts.array(SchemaDhcpLeaseEntry),
     wanLease: Vts.or([SchemaWanLeaseEntry, Vts.null()])
