@@ -192,11 +192,18 @@ export type RouterOverviewResponse = ExtractSchemaResultType<typeof SchemaRouter
  * 2b): the WAN/LAN interface names + NAT/forward flags, from which the part builds and
  * applies the nftables ruleset. `ipv6Mode` is one of `off` | `nat66` | `pd`.
  */
+/**
+ * One LAN interface + its own NAT settings in the resolved netfilter config (per-LAN NAT).
+ */
+export const SchemaNftablesLan = Vts.object({
+    name: Vts.string(),
+    nat44: Vts.boolean(),
+    ipv6Mode: Vts.string()
+});
+
 export const SchemaNftablesRouterConfig = Vts.object({
     wanInterface: Vts.string(),
-    lanInterfaces: Vts.array(Vts.string()),
-    nat44: Vts.boolean(),
-    ipv6Mode: Vts.string(),
+    lans: Vts.array(SchemaNftablesLan),
     forward: Vts.boolean()
 });
 

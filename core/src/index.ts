@@ -179,6 +179,7 @@ export {
     ClusterControlRequestRouter
 } from './inc/Cluster/ClusterControlRequestRouter.js';
 export {
+    NftablesLan,
     NftablesRouterConfig,
     NftablesSysctl,
     NftablesRuleset,

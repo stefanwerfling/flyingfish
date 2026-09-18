@@ -210,12 +210,14 @@ export class Router extends DefaultRoute {
                 return {
                     statusCode: StatusCodes.OK,
                     config: resolveNftablesRouterConfig(
-                        interfaces.map((entry) => ({name: entry.name, role: entry.role, disable: entry.disable})),
-                        policy === null ? null : {
-                            nat44_enabled: policy.nat44_enabled,
-                            ipv6_mode: policy.ipv6_mode,
-                            forward_enabled: policy.forward_enabled
-                        }
+                        interfaces.map((entry) => ({
+                            name: entry.name,
+                            role: entry.role,
+                            disable: entry.disable,
+                            nat44_enabled: entry.nat44_enabled,
+                            ipv6_mode: entry.ipv6_mode
+                        })),
+                        policy === null ? null : {forward_enabled: policy.forward_enabled}
                     )
                 };
             },

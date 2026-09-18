@@ -65,18 +65,23 @@ export class NetfilterConfigClient {
 
         const config = value as Record<string, unknown>;
 
-        if (typeof config.wanInterface !== 'string' || !Array.isArray(config.lanInterfaces) ||
-            typeof config.nat44 !== 'boolean' || typeof config.ipv6Mode !== 'string' || typeof config.forward !== 'boolean') {
+        if (typeof config.wanInterface !== 'string' || !Array.isArray(config.lans) ||
+            typeof config.forward !== 'boolean') {
             return null;
         }
 
-        const ipv6Mode = config.ipv6Mode === 'nat66' || config.ipv6Mode === 'pd' ? config.ipv6Mode : 'off';
+        const lans = config.lans
+            .filter((entry): entry is Record<string, unknown> => entry !== null && typeof entry === 'object')
+            .map((entry) => ({
+                name: typeof entry.name === 'string' ? entry.name : '',
+                nat44: entry.nat44 === true,
+                ipv6Mode: (entry.ipv6Mode === 'nat66' || entry.ipv6Mode === 'pd' ? entry.ipv6Mode : 'off') as 'off' | 'nat66' | 'pd'
+            }))
+            .filter((lan) => lan.name !== '');
 
         return {
             wanInterface: config.wanInterface,
-            lanInterfaces: config.lanInterfaces.filter((entry): entry is string => typeof entry === 'string'),
-            nat44: config.nat44,
-            ipv6Mode: ipv6Mode,
+            lans: lans,
             forward: config.forward
         };
     }

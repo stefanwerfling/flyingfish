@@ -9,8 +9,13 @@ const require = createRequire(import.meta.url);
  * router config (Pi-router epic, Phase 2). Requires CAP_NET_ADMIN + the host network
  * namespace.
  */
+/**
+ * One LAN interface + its own NAT settings, as the native binding expects (per-LAN NAT).
+ */
+export type NetfilterNativeLan = {name: string; nat44: boolean; ipv6Mode: string;};
+
 export type NetfilterNativeBinding = {
-    applyRouter(wanInterface: string, lanInterfaces: string[], nat44: boolean, ipv6Mode: string, forward: boolean): void;
+    applyRouter(wanInterface: string, lans: NetfilterNativeLan[], forward: boolean): void;
 };
 
 /**

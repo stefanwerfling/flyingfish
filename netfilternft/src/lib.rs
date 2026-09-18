@@ -29,12 +29,24 @@ fn set_sysctl(path_suffix: &str, value: &str) -> std::io::Result<()> {
     std::fs::write(format!("/proc/sys/{}", path_suffix), value)
 }
 
-/// Add a NAT table (family-specific) with a postrouting masquerade chain on the WAN.
+/// One LAN interface + its own NAT settings (Pi-router UI v2 — NAT is per LAN).
+#[napi(object)]
+pub struct LanNat {
+    pub name: String,
+    pub nat44: bool,
+    /// `off` | `nat66` (masquerade) | `pd` (route, no NAT). JS name: `ipv6Mode`.
+    pub ipv6_mode: String,
+}
+
+/// Add a NAT table (family-specific) with a postrouting chain that masquerades each of
+/// the given LAN interfaces → WAN (one scoped `iiface <lan> oiface <wan> masquerade` rule
+/// per LAN, so each LAN's NAT is independent).
 fn add_nat_table(
     batch: &mut Batch,
     name: &str,
     family: ProtocolFamily,
     wan: &str,
+    lans: &[&str],
 ) -> Result<(), Box<dyn Error>> {
     let table = Table::new(family).with_name(name);
     batch.add(&table, MsgType::Add);
@@ -46,10 +58,13 @@ fn add_nat_table(
         .with_policy(ChainPolicy::Accept)
         .add_to_batch(batch);
 
-    Rule::new(&postrouting)?
-        .oiface(wan)?
-        .masquerade()
-        .add_to_batch(batch);
+    for lan in lans {
+        Rule::new(&postrouting)?
+            .iiface(lan)?
+            .oiface(wan)?
+            .masquerade()
+            .add_to_batch(batch);
+    }
 
     Ok(())
 }
@@ -57,9 +72,7 @@ fn add_nat_table(
 /// Build + send the whole nftables ruleset for the given router config.
 fn apply_nftables(
     wan: &str,
-    lans: &[String],
-    nat44: bool,
-    ipv6_mode: &str,
+    lans: &[LanNat],
     forward: bool,
 ) -> Result<(), Box<dyn Error>> {
     let mut batch = Batch::new();
@@ -96,7 +109,7 @@ fn apply_nftables(
         if has_wan {
             for lan in lans {
                 Rule::new(&forward_chain)?
-                    .iiface(lan)?
+                    .iiface(&lan.name)?
                     .oiface(wan)?
                     .accept()
                     .add_to_batch(&mut batch);
@@ -104,14 +117,20 @@ fn apply_nftables(
         }
     }
 
-    // NAT44: masquerade IPv4 LAN → WAN.
-    if has_wan && nat44 {
-        add_nat_table(&mut batch, NAT4_TABLE, ProtocolFamily::Ipv4, wan)?;
+    // NAT44: masquerade each LAN that has nat44 on → WAN.
+    let nat4: Vec<&str> = lans.iter().filter(|lan| lan.nat44).map(|lan| lan.name.as_str()).collect();
+    if has_wan && !nat4.is_empty() {
+        add_nat_table(&mut batch, NAT4_TABLE, ProtocolFamily::Ipv4, wan, &nat4)?;
     }
 
-    // NAT66: masquerade IPv6 LAN → WAN (only in nat66 mode; `pd` routes, `off` neither).
-    if has_wan && ipv6_mode == "nat66" {
-        add_nat_table(&mut batch, NAT6_TABLE, ProtocolFamily::Ipv6, wan)?;
+    // NAT66: masquerade each LAN in nat66 mode → WAN (`pd` routes, `off` neither).
+    let nat6: Vec<&str> = lans
+        .iter()
+        .filter(|lan| lan.ipv6_mode == "nat66")
+        .map(|lan| lan.name.as_str())
+        .collect();
+    if has_wan && !nat6.is_empty() {
+        add_nat_table(&mut batch, NAT6_TABLE, ProtocolFamily::Ipv6, wan, &nat6)?;
     }
 
     batch.send()?;
@@ -123,16 +142,12 @@ fn apply_nftables(
 /// epic, Phase 2). Requires CAP_NET_ADMIN + the host network namespace.
 ///
 /// - `wanInterface` — the WAN (uplink) interface name; empty disables all NAT.
-/// - `lanInterfaces` — the LAN (downlink) interface names.
-/// - `nat44` — masquerade IPv4 LAN → WAN.
-/// - `ipv6Mode` — `off` | `nat66` (masquerade) | `pd` (route, no NAT).
+/// - `lans` — the LAN interfaces, each with its own `nat44` + `ipv6Mode`.
 /// - `forward` — enable routing (forward chain + IP forwarding sysctls).
 #[napi]
 pub fn apply_router(
     wan_interface: String,
-    lan_interfaces: Vec<String>,
-    nat44: bool,
-    ipv6_mode: String,
+    lans: Vec<LanNat>,
     forward: bool,
 ) -> napi::Result<()> {
     // Only ENSURE forwarding is on when routing; never write "0". Disabling
@@ -143,11 +158,11 @@ pub fn apply_router(
     if forward {
         let _ = set_sysctl("net/ipv4/ip_forward", "1");
 
-        if ipv6_mode != "off" {
+        if lans.iter().any(|lan| lan.ipv6_mode != "off") {
             let _ = set_sysctl("net/ipv6/conf/all/forwarding", "1");
         }
     }
 
-    apply_nftables(&wan_interface, &lan_interfaces, nat44, &ipv6_mode, forward)
+    apply_nftables(&wan_interface, &lans, forward)
         .map_err(|error| napi::Error::from_reason(error.to_string()))
 }

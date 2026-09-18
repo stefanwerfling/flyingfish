@@ -1,17 +1,14 @@
 /**
- * Tests for the router nftables ruleset generator (Pi-router epic, Phase 2): a full
- * dual-stack NAT router emits the forward filter + ip/ip6 masquerade + both forwarding
- * sysctls; DHCPv6-PD mode routes IPv6 without a nat66 table; ipv6 `off` emits no IPv6
- * forwarding; forwarding off emits no forward chain/sysctls; a missing WAN skips NAT;
- * and each LAN interface gets its own forward rule. Pure/data-level, network-free.
+ * Tests for the router nftables ruleset generator (Pi-router epic; per-LAN NAT for UI v2):
+ * NAT is per LAN, so each LAN emits its own scoped masquerade rule and two LANs can differ
+ * (one nat66, one pd). Also covers the forward filter, forwarding sysctls, missing WAN, and
+ * the resolver building per-LAN config from interface rows. Pure/data-level, network-free.
  */
 import {buildNftablesRuleset, NftablesRouterConfig, resolveNftablesRouterConfig} from 'flyingfish_core';
 
 const base: NftablesRouterConfig = {
     wanInterface: 'eth0',
-    lanInterfaces: ['eth1'],
-    nat44: true,
-    ipv6Mode: 'nat66',
+    lans: [{name: 'eth1', nat44: true, ipv6Mode: 'nat66'}],
     forward: true
 };
 
@@ -19,7 +16,7 @@ const sysctlMap = (result: ReturnType<typeof buildNftablesRuleset>): Record<stri
     Object.fromEntries(result.sysctls.map((sysctl) => [sysctl.key, sysctl.value]));
 
 describe('buildNftablesRuleset', () => {
-    test('full dual-stack NAT router: forward filter + ip + ip6 masquerade + both sysctls', () => {
+    test('full dual-stack NAT router: forward filter + ip + ip6 per-LAN masquerade + both sysctls', () => {
         const result = buildNftablesRuleset(base);
 
         expect(result.ruleset).toContain('table inet filter');
@@ -28,7 +25,7 @@ describe('buildNftablesRuleset', () => {
         expect(result.ruleset).toContain('policy drop;');
         expect(result.ruleset).toContain('table ip nat');
         expect(result.ruleset).toContain('table ip6 nat');
-        expect(result.ruleset).toContain('oifname "eth0" masquerade');
+        expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" masquerade');
 
         expect(sysctlMap(result)).toEqual({
             'net.ipv4.ip_forward': '1',
@@ -37,7 +34,7 @@ describe('buildNftablesRuleset', () => {
     });
 
     test('DHCPv6-PD mode routes IPv6 with NO nat66 table, but forwarding stays on', () => {
-        const result = buildNftablesRuleset({...base, ipv6Mode: 'pd'});
+        const result = buildNftablesRuleset({...base, lans: [{name: 'eth1', nat44: true, ipv6Mode: 'pd'}]});
 
         expect(result.ruleset).toContain('table ip nat');
         expect(result.ruleset).not.toContain('table ip6 nat');
@@ -46,7 +43,7 @@ describe('buildNftablesRuleset', () => {
     });
 
     test('ipv6 off: no ip6 nat table and no ipv6 forwarding sysctl', () => {
-        const result = buildNftablesRuleset({...base, ipv6Mode: 'off'});
+        const result = buildNftablesRuleset({...base, lans: [{name: 'eth1', nat44: true, ipv6Mode: 'off'}]});
 
         expect(result.ruleset).not.toContain('table ip6 nat');
         expect(sysctlMap(result)['net.ipv6.conf.all.forwarding']).toBeUndefined();
@@ -54,7 +51,7 @@ describe('buildNftablesRuleset', () => {
     });
 
     test('nat44 off: no ip nat table', () => {
-        const result = buildNftablesRuleset({...base, nat44: false, ipv6Mode: 'off'});
+        const result = buildNftablesRuleset({...base, lans: [{name: 'eth1', nat44: false, ipv6Mode: 'off'}]});
 
         expect(result.ruleset).not.toContain('table ip nat');
         expect(result.ruleset).toContain('table inet filter');
@@ -80,48 +77,73 @@ describe('buildNftablesRuleset', () => {
     });
 
     test('multiple LAN interfaces each get a forward rule', () => {
-        const result = buildNftablesRuleset({...base, lanInterfaces: ['eth1', 'eth2']});
+        const result = buildNftablesRuleset({
+            ...base,
+            lans: [{name: 'eth1', nat44: true, ipv6Mode: 'nat66'}, {name: 'eth2', nat44: true, ipv6Mode: 'nat66'}]
+        });
 
         expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" accept');
         expect(result.ruleset).toContain('iifname "eth2" oifname "eth0" accept');
     });
+
+    test('per-LAN NAT differs: only the nat66 LAN gets an ip6 masquerade; ip nat covers both', () => {
+        const result = buildNftablesRuleset({
+            wanInterface: 'eth0',
+            lans: [{name: 'eth1', nat44: true, ipv6Mode: 'nat66'}, {name: 'wlan0', nat44: true, ipv6Mode: 'pd'}],
+            forward: true
+        });
+
+        const ip4 = result.ruleset.slice(result.ruleset.indexOf('table ip nat'), result.ruleset.indexOf('table ip6 nat'));
+        const ip6 = result.ruleset.slice(result.ruleset.indexOf('table ip6 nat'));
+
+        // IPv4 masquerades BOTH LANs
+        expect(ip4).toContain('iifname "eth1" oifname "eth0" masquerade');
+        expect(ip4).toContain('iifname "wlan0" oifname "eth0" masquerade');
+        // IPv6 masquerades only the nat66 LAN, not the pd one
+        expect(ip6).toContain('iifname "eth1" oifname "eth0" masquerade');
+        expect(ip6).not.toContain('wlan0');
+    });
 });
 
 describe('resolveNftablesRouterConfig', () => {
-    test('resolves WAN/LAN from roles + policy flags, skipping disabled interfaces', () => {
+    test('builds per-LAN NAT from interface fields, skipping disabled interfaces', () => {
         const config = resolveNftablesRouterConfig(
             [
-                {name: 'eth0', role: 'wan', disable: false},
-                {name: 'eth1', role: 'lan', disable: false},
-                {name: 'eth2', role: 'lan', disable: true},
-                {name: 'eth3', role: 'unassigned', disable: false}
+                {name: 'eth0', role: 'wan', disable: false, nat44_enabled: false, ipv6_mode: 'off'},
+                {name: 'eth1', role: 'lan', disable: false, nat44_enabled: true, ipv6_mode: 'nat66'},
+                {name: 'wlan0', role: 'lan', disable: false, nat44_enabled: true, ipv6_mode: 'pd'},
+                {name: 'eth2', role: 'lan', disable: true, nat44_enabled: true, ipv6_mode: 'nat66'},
+                {name: 'eth3', role: 'unassigned', disable: false, nat44_enabled: false, ipv6_mode: 'off'}
             ],
-            {nat44_enabled: true, ipv6_mode: 'pd', forward_enabled: true}
+            {forward_enabled: true}
         );
 
         expect(config).toEqual({
             wanInterface: 'eth0',
-            lanInterfaces: ['eth1'],
-            nat44: true,
-            ipv6Mode: 'pd',
+            lans: [
+                {name: 'eth1', nat44: true, ipv6Mode: 'nat66'},
+                {name: 'wlan0', nat44: true, ipv6Mode: 'pd'}
+            ],
             forward: true
         });
     });
 
-    test('a null policy resolves to a safe all-off config', () => {
-        const config = resolveNftablesRouterConfig([{name: 'eth0', role: 'wan', disable: false}], null);
-
-        expect(config).toEqual({wanInterface: 'eth0', lanInterfaces: [], nat44: false, ipv6Mode: 'off', forward: false});
-    });
-
-    test('an unknown ipv6 mode falls back to off; no WAN role → empty wanInterface', () => {
+    test('a null policy resolves forwarding off', () => {
         const config = resolveNftablesRouterConfig(
-            [{name: 'eth1', role: 'lan', disable: false}],
-            {nat44_enabled: false, ipv6_mode: 'bogus', forward_enabled: true}
+            [{name: 'eth0', role: 'wan', disable: false, nat44_enabled: false, ipv6_mode: 'off'}],
+            null
         );
 
-        expect(config.ipv6Mode).toBe('off');
+        expect(config).toEqual({wanInterface: 'eth0', lans: [], forward: false});
+    });
+
+    test('an unknown ipv6 mode on a LAN falls back to off; no WAN role → empty wanInterface', () => {
+        const config = resolveNftablesRouterConfig(
+            [{name: 'eth1', role: 'lan', disable: false, nat44_enabled: false, ipv6_mode: 'bogus'}],
+            {forward_enabled: true}
+        );
+
         expect(config.wanInterface).toBe('');
-        expect(config.lanInterfaces).toEqual(['eth1']);
+        expect(config.lans).toEqual([{name: 'eth1', nat44: false, ipv6Mode: 'off'}]);
     });
 });

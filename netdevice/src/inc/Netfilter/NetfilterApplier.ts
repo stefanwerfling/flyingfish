@@ -44,7 +44,7 @@ export class NetfilterApplier {
             return;
         }
 
-        this._binding.applyRouter(config.wanInterface, config.lanInterfaces, config.nat44, config.ipv6Mode, config.forward);
+        this._binding.applyRouter(config.wanInterface, config.lans, config.forward);
     }
 
 }
