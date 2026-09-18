@@ -21,7 +21,11 @@ export const SchemaNetworkInterfaceEntry = Vts.object({
     ipv4_mode: Vts.string(),
     ipv4_address: Vts.optional(Vts.string()),
     ipv4_prefix: Vts.optional(Vts.number()),
-    disable: Vts.optional(Vts.boolean())
+    disable: Vts.optional(Vts.boolean()),
+    // Per-LAN NAT (Pi-router UI v2): each LAN carries its own NAT44 + IPv6 mode
+    // (off/nat66/pd). Optional so older callers stay valid.
+    nat44_enabled: Vts.optional(Vts.boolean()),
+    ipv6_mode: Vts.optional(Vts.string())
 });
 
 /**

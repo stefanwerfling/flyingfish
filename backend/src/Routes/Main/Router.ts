@@ -75,7 +75,9 @@ export class Router extends DefaultRoute {
                         ipv4_mode: entry.ipv4_mode,
                         ipv4_address: entry.ipv4_address,
                         ipv4_prefix: entry.ipv4_prefix,
-                        disable: entry.disable
+                        disable: entry.disable,
+                        nat44_enabled: entry.nat44_enabled,
+                        ipv6_mode: entry.ipv6_mode
                     })),
                     availableInterfaces: availableInterfaces.value,
                     natPolicy: natPolicy === null ? null : {
@@ -141,6 +143,8 @@ export class Router extends DefaultRoute {
             entity.ipv4_address = body.ipv4_address ?? '';
             entity.ipv4_prefix = body.ipv4_prefix ?? 0;
             entity.disable = body.disable ?? false;
+            entity.nat44_enabled = body.nat44_enabled ?? false;
+            entity.ipv6_mode = body.ipv6_mode ?? 'off';
             await NetworkInterfaceServiceDB.getInstance().save(entity);
 
             return {statusCode: StatusCodes.OK};

@@ -37,6 +37,7 @@ import {AddRouterTables1788900000000} from '../../src/inc/Db/MariaDb/migrations/
 import {AddWanLease1789000000000} from '../../src/inc/Db/MariaDb/migrations/1789000000000-AddWanLease.js';
 import {AddDhcpPerInterface1789100000000} from '../../src/inc/Db/MariaDb/migrations/1789100000000-AddDhcpPerInterface.js';
 import {FixPkiTimestampsBigint1789200000000} from '../../src/inc/Db/MariaDb/migrations/1789200000000-FixPkiTimestampsBigint.js';
+import {AddNatPerInterface1789300000000} from '../../src/inc/Db/MariaDb/migrations/1789300000000-AddNatPerInterface.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -58,7 +59,8 @@ const ALL_MIGRATIONS = [
     AddRouterTables1788900000000,
     AddWanLease1789000000000,
     AddDhcpPerInterface1789100000000,
-    FixPkiTimestampsBigint1789200000000
+    FixPkiTimestampsBigint1789200000000,
+    AddNatPerInterface1789300000000
 ];
 
 // The chain WITHOUT the RBAC migration — used to seed a pre-existing user before the

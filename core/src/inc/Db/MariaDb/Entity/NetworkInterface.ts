@@ -77,4 +77,26 @@ export class NetworkInterface extends DBBaseEntityId {
     })
     public disable!: boolean;
 
+    /**
+     * Per-LAN IPv4 NAT: masquerade this LAN's traffic to the WAN (Pi-router UI v2 — NAT is
+     * per interface so each LAN can differ). Ignored for non-`lan` roles.
+     */
+    @Column({
+        type: 'bool',
+        default: false
+    })
+    public nat44_enabled!: boolean;
+
+    /**
+     * Per-LAN IPv6 mode: `off` (no IPv6 routing), `nat66` (masquerade a LAN ULA → the WAN
+     * IPv6, works with a single delegated /64), or `pd` (route the DHCPv6-PD-delegated
+     * prefix to this LAN — real end-to-end IPv6). Ignored for non-`lan` roles.
+     */
+    @Column({
+        type: 'varchar',
+        length: 16,
+        default: 'off'
+    })
+    public ipv6_mode!: string;
+
 }
