@@ -21,6 +21,7 @@ import {WanConfigClient} from './inc/Wan/WanConfigClient.js';
 import {WanLeaseReporter} from './inc/Wan/WanLeaseReporter.js';
 import {DhcpLeaseReporter} from './inc/Lan/DhcpLeaseReporter.js';
 import {DnsmasqRunner} from './inc/Lan/DnsmasqRunner.js';
+import {ensureLanAddress} from './inc/Lan/LanAddress.js';
 import {LanConfigClient} from './inc/Lan/LanConfigClient.js';
 import {HostInterfaceScanner} from './inc/Discovery/HostInterfaceScanner.js';
 import {InterfaceReporter} from './inc/Discovery/InterfaceReporter.js';
@@ -192,6 +193,11 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
                 }
 
                 seen.add(iface);
+
+                // Assign the LAN interface its static IP (up + addr) regardless of whether
+                // DHCP is enabled — the interface must own its gateway address for routing
+                // and for dnsmasq to bind to the subnet.
+                await ensureLanAddress(iface, lanConfig.address, lanConfig.prefix);
 
                 const dnsmasqConfig: DnsmasqConfig = {
                     ...lanConfig,

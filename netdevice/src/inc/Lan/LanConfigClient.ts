@@ -9,6 +9,8 @@ const HEADER_REGISTRY_SECRET = 'x-flyingfish-registry-secret';
  */
 export type LanConfig = {
     lanInterface: string;
+    address: string;
+    prefix: number;
     enable: boolean;
     rangeStart: string;
     rangeEnd: string;
@@ -88,6 +90,8 @@ export class LanConfigClient {
 
         return {
             lanInterface: config.lanInterface,
+            address: typeof config.address === 'string' ? config.address : '',
+            prefix: typeof config.prefix === 'number' ? config.prefix : 24,
             enable: config.enable,
             rangeStart: typeof config.rangeStart === 'string' ? config.rangeStart : '',
             rangeEnd: typeof config.rangeEnd === 'string' ? config.rangeEnd : '',

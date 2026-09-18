@@ -256,6 +256,8 @@ export class Router extends DefaultRoute {
 
                     configs.push({
                         lanInterface: lan.name,
+                        address: lan.ipv4_address ?? '',
+                        prefix: lan.ipv4_prefix ?? 24,
                         enable: dhcp?.enable ?? false,
                         rangeStart: dhcp?.range_start ?? '',
                         rangeEnd: dhcp?.range_end ?? '',

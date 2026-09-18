@@ -215,6 +215,11 @@ export type RouterNetfilterConfigResponse = ExtractSchemaResultType<typeof Schem
  */
 export const SchemaRouterLanConfig = Vts.object({
     lanInterface: Vts.string(),
+    // The interface's own static IPv4 address + prefix (the LAN gateway/subnet). The
+    // netdevice part assigns this to the interface before starting dnsmasq — nothing else
+    // sets the LAN address (WAN uses udhcpc; LAN is static).
+    address: Vts.string(),
+    prefix: Vts.number(),
     enable: Vts.boolean(),
     rangeStart: Vts.string(),
     rangeEnd: Vts.string(),
