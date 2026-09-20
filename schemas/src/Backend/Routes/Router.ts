@@ -132,7 +132,10 @@ export const SchemaAvailableInterface = Vts.object({
     name: Vts.string(),
     mac: Vts.string(),
     state: Vts.string(),
-    ipv4: Vts.optional(Vts.string())
+    ipv4: Vts.optional(Vts.string()),
+    // The interface's current GLOBAL IPv6 address if any (WAN GUA / LAN ULA),
+    // informational for the UI. Link-local (fe80::) is excluded.
+    ipv6: Vts.optional(Vts.string())
 });
 
 /**
@@ -238,7 +241,14 @@ export const SchemaRouterLanConfig = Vts.object({
     gateway: Vts.string(),
     dnsServer: Vts.string(),
     domain: Vts.string(),
-    raEnable: Vts.boolean()
+    raEnable: Vts.boolean(),
+    // The LAN's IPv6 mode (off/nat66/pd) + the ULA the netdevice part must assign to the
+    // interface in nat66 mode. In nat66 the LAN uses a private ULA /64 masqueraded to the
+    // WAN GUA; nothing else assigns it, and dnsmasq's RA can only be sourced once the
+    // interface also has a link-local — the part ensures both. Empty ula in pd/off mode
+    // (pd routes the delegated prefix via `constructor:<lan>`).
+    ipv6Mode: Vts.string(),
+    ipv6Ula: Vts.string()
 });
 
 /**

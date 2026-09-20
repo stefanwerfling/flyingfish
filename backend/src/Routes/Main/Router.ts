@@ -43,6 +43,32 @@ import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPe
 const availableInterfaces: {value: AvailableInterface[]} = {value: []};
 
 /**
+ * Derive the LAN's ULA gateway address (with /64) from its IPv4 address for NAT66 mode:
+ * 192.168.50.1 → `fd00:50::1/64`. Uses the third octet as the ULA subnet id so the
+ * mapping is readable and stable (192.168.<n>.x ↔ fd00:<n>::/64). Falls back to
+ * `fd00::1/64` if the IPv4 can't be parsed. RFC 4193 wants a random global id; a fixed
+ * fd00::-scheme is intentionally chosen here for a single home router (deterministic,
+ * admin-recognisable) — the space is private and fully ours regardless.
+ * @param ipv4 - the LAN interface's IPv4 address
+ * @returns {string} the ULA gateway address in CIDR form
+ */
+function deriveLanUla(ipv4: string): string {
+    const octets = ipv4.split('.');
+
+    if (octets.length !== 4) {
+        return 'fd00::1/64';
+    }
+
+    const subnet = Number(octets[2]);
+
+    if (!Number.isInteger(subnet) || subnet < 0 || subnet > 255) {
+        return 'fd00::1/64';
+    }
+
+    return `fd00:${subnet}::1/64`;
+}
+
+/**
  * Router — the Pi-router management API (Pi-router epic, Phase 1b): CRUD over this
  * node's network interfaces (WAN/LAN roles + IPv4 addressing), the NAT/routing policy
  * and the LAN DHCP server config (both singletons), plus a read-only view of active
@@ -259,6 +285,7 @@ export class Router extends DefaultRoute {
                 // the netdevice part runs one dnsmasq per entry.
                 for (const lan of lans) {
                     const dhcp = await DhcpServerConfigServiceDB.getInstance().findByInterface(lan.id);
+                    const ipv6Mode = lan.ipv6_mode ?? 'off';
 
                     configs.push({
                         lanInterface: lan.name,
@@ -271,7 +298,12 @@ export class Router extends DefaultRoute {
                         gateway: dhcp?.gateway ?? lan.ipv4_address,
                         dnsServer: dhcp?.dns_server ?? '',
                         domain: dhcp?.domain ?? '',
-                        raEnable: dhcp?.ra_enable ?? false
+                        raEnable: dhcp?.ra_enable ?? false,
+                        ipv6Mode: ipv6Mode,
+                        // In nat66 the LAN needs a private ULA /64 (nothing else assigns it).
+                        // Derive it deterministically from the IPv4 subnet's third octet so
+                        // 192.168.50.x ↔ fd00:50::/64 (readable + stable). pd/off carry none.
+                        ipv6Ula: ipv6Mode === 'nat66' ? deriveLanUla(lan.ipv4_address ?? '') : ''
                     });
                 }
 

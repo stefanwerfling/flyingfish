@@ -19,6 +19,10 @@ export type LanConfig = {
     dnsServer: string;
     domain: string;
     raEnable: boolean;
+    // IPv6 mode (off/nat66/pd) + the ULA the part assigns to the interface in nat66 mode
+    // (with /64, e.g. `fd00:50::1/64`). Empty ula for pd/off.
+    ipv6Mode: string;
+    ipv6Ula: string;
 };
 
 /**
@@ -99,7 +103,9 @@ export class LanConfigClient {
             gateway: typeof config.gateway === 'string' ? config.gateway : '',
             dnsServer: typeof config.dnsServer === 'string' ? config.dnsServer : '',
             domain: typeof config.domain === 'string' ? config.domain : '',
-            raEnable: config.raEnable === true
+            raEnable: config.raEnable === true,
+            ipv6Mode: typeof config.ipv6Mode === 'string' ? config.ipv6Mode : 'off',
+            ipv6Ula: typeof config.ipv6Ula === 'string' ? config.ipv6Ula : ''
         };
     }
 

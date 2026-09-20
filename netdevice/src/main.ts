@@ -21,7 +21,7 @@ import {WanConfigClient} from './inc/Wan/WanConfigClient.js';
 import {WanLeaseReporter} from './inc/Wan/WanLeaseReporter.js';
 import {DhcpLeaseReporter} from './inc/Lan/DhcpLeaseReporter.js';
 import {DnsmasqRunner} from './inc/Lan/DnsmasqRunner.js';
-import {ensureLanAddress} from './inc/Lan/LanAddress.js';
+import {ensureLanAddress, ensureLanIpv6} from './inc/Lan/LanAddress.js';
 import {LanConfigClient} from './inc/Lan/LanConfigClient.js';
 import {HostInterfaceScanner} from './inc/Discovery/HostInterfaceScanner.js';
 import {InterfaceReporter} from './inc/Discovery/InterfaceReporter.js';
@@ -208,6 +208,10 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
                 // DHCP is enabled — the interface must own its gateway address for routing
                 // and for dnsmasq to bind to the subnet.
                 await ensureLanAddress(iface, lanConfig.address, lanConfig.prefix);
+
+                // IPv6 (nat66): assign the ULA /64 + ensure a link-local so dnsmasq's RA
+                // can actually be sourced and hit the wire (else clients never get IPv6).
+                await ensureLanIpv6(iface, lanConfig.ipv6Mode, lanConfig.ipv6Ula);
 
                 const dnsmasqConfig: DnsmasqConfig = {
                     ...lanConfig,
