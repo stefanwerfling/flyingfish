@@ -175,6 +175,17 @@ export class KeaRunner {
             return;
         }
 
+        // Kea needs its runtime dirs to exist for the PID/lock files (/run/kea, a tmpfs
+        // recreated each boot) and the persisted server DUID (/var/lib/kea); create them
+        // best-effort so kea-dhcp6 doesn't fatal on start.
+        for (const dir of ['/run/kea', '/var/lib/kea']) {
+            try {
+                fs.mkdirSync(dir, {recursive: true});
+            } catch {
+                // best-effort
+            }
+        }
+
         fs.writeFileSync(KEA_CONF, buildKeaDhcp6Config(pdLans, KEA_LEASES));
 
         this._process = spawn('kea-dhcp6', ['-c', KEA_CONF], {stdio: ['ignore', 'ignore', 'pipe']});

@@ -75,7 +75,8 @@ export class NetfilterConfigClient {
             .map((entry) => ({
                 name: typeof entry.name === 'string' ? entry.name : '',
                 nat44: entry.nat44 === true,
-                ipv6Mode: (entry.ipv6Mode === 'nat66' || entry.ipv6Mode === 'pd' ? entry.ipv6Mode : 'off') as 'off' | 'nat66' | 'pd'
+                ipv6Mode: (['nat66', 'pd', 'pd-server'].includes(entry.ipv6Mode as string)
+                    ? entry.ipv6Mode : 'off') as 'off' | 'nat66' | 'pd' | 'pd-server'
             }))
             .filter((lan) => lan.name !== '');
 
