@@ -90,28 +90,31 @@ fn apply_nftables(
 
     let has_wan = !wan.is_empty();
 
-    // Forward filter (inet = IPv4 + IPv6): default DROP, established/related + LAN→WAN.
-    if forward {
+    // Forward filter (inet = IPv4 + IPv6). The chain uses an ACCEPT policy on purpose:
+    // a global DROP policy on the forward hook also catches Docker's bridge forwarding
+    // (published-port return path) and any foreign routing, which would break the whole
+    // stack — the same reason apply_router never writes ip_forward=0. So `forward_enabled`
+    // is expressed by SCOPING, not a blanket drop: when routing is DISABLED we install
+    // explicit `iifname <lan> oifname <wan> drop` rules that block LAN→WAN routing while
+    // leaving Docker/foreign traffic untouched; when routing is ENABLED the chain is a
+    // no-op (accept policy) and LAN↔WAN flows. This keeps the flag honest — the map/UI
+    // "forwarding on/off" now matches what actually happens on the wire.
+    {
         let table = Table::new(ProtocolFamily::Inet).with_name(FILTER_TABLE);
         batch.add(&table, MsgType::Add);
 
         let forward_chain = Chain::new(&table)
             .with_name("forward")
             .with_hook(Hook::new(HookClass::Forward, 0))
-            .with_policy(ChainPolicy::Drop)
+            .with_policy(ChainPolicy::Accept)
             .add_to_batch(&mut batch);
 
-        Rule::new(&forward_chain)?
-            .established()?
-            .accept()
-            .add_to_batch(&mut batch);
-
-        if has_wan {
+        if !forward && has_wan {
             for lan in lans {
                 Rule::new(&forward_chain)?
                     .iiface(&lan.name)?
                     .oiface(wan)?
-                    .accept()
+                    .drop()
                     .add_to_batch(&mut batch);
             }
         }

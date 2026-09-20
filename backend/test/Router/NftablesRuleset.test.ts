@@ -20,9 +20,9 @@ describe('buildNftablesRuleset', () => {
         const result = buildNftablesRuleset(base);
 
         expect(result.ruleset).toContain('table inet filter');
-        expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" accept');
-        expect(result.ruleset).toContain('ct state established,related accept');
-        expect(result.ruleset).toContain('policy drop;');
+        // Routing ON: accept policy, no scoped LAN→WAN drop rules.
+        expect(result.ruleset).toContain('policy accept;');
+        expect(result.ruleset).not.toContain('drop');
         expect(result.ruleset).toContain('table ip nat');
         expect(result.ruleset).toContain('table ip6 nat');
         expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" masquerade');
@@ -57,10 +57,13 @@ describe('buildNftablesRuleset', () => {
         expect(result.ruleset).toContain('table inet filter');
     });
 
-    test('forwarding off: no forward chain and no sysctls', () => {
+    test('forwarding off: filter chain with scoped LAN→WAN drop, no sysctls', () => {
         const result = buildNftablesRuleset({...base, forward: false});
 
-        expect(result.ruleset).not.toContain('table inet filter');
+        // The chain is still installed (accept policy) but blocks LAN→WAN specifically,
+        // so Docker/foreign forwarding is untouched while routing is genuinely off.
+        expect(result.ruleset).toContain('policy accept;');
+        expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" drop');
         expect(result.sysctls).toEqual([]);
         // NAT tables still emitted (they do not depend on the forward chain)
         expect(result.ruleset).toContain('table ip nat');
@@ -76,14 +79,15 @@ describe('buildNftablesRuleset', () => {
         expect(result.ruleset).not.toContain('oifname');
     });
 
-    test('multiple LAN interfaces each get a forward rule', () => {
+    test('routing off with multiple LANs: each LAN gets its own scoped drop rule', () => {
         const result = buildNftablesRuleset({
             ...base,
+            forward: false,
             lans: [{name: 'eth1', nat44: true, ipv6Mode: 'nat66'}, {name: 'eth2', nat44: true, ipv6Mode: 'nat66'}]
         });
 
-        expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" accept');
-        expect(result.ruleset).toContain('iifname "eth2" oifname "eth0" accept');
+        expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" drop');
+        expect(result.ruleset).toContain('iifname "eth2" oifname "eth0" drop');
     });
 
     test('per-LAN NAT differs: only the nat66 LAN gets an ip6 masquerade; ip nat covers both', () => {
@@ -128,13 +132,13 @@ describe('resolveNftablesRouterConfig', () => {
         });
     });
 
-    test('a null policy resolves forwarding off', () => {
+    test('a null policy resolves forwarding ON (a router forwards by default)', () => {
         const config = resolveNftablesRouterConfig(
             [{name: 'eth0', role: 'wan', disable: false, nat44_enabled: false, ipv6_mode: 'off'}],
             null
         );
 
-        expect(config).toEqual({wanInterface: 'eth0', lans: [], forward: false});
+        expect(config).toEqual({wanInterface: 'eth0', lans: [], forward: true});
     });
 
     test('an unknown ipv6 mode on a LAN falls back to off; no WAN role → empty wanInterface', () => {

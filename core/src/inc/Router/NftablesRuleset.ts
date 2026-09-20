@@ -58,9 +58,11 @@ export type NftablesRuleset = {
  * epic, Phase 2). Pure and deterministic so it is fully unit-testable; the netfilter
  * part loads the `ruleset` with `nft -f -` and applies the `sysctls`.
  *
- * - A `table inet filter` forward chain (covers IPv4+IPv6) with a default DROP policy,
- *   accepting established/related and each LAN→WAN direction — only emitted when
- *   `forward` is on (otherwise routing is off and no forward chain is installed).
+ * - A `table inet filter` forward chain (covers IPv4+IPv6) with an ACCEPT policy — a
+ *   blanket DROP on the forward hook would also catch Docker's bridge forwarding and any
+ *   foreign routing, so `forward` is expressed by SCOPING: when routing is OFF, explicit
+ *   `iifname <lan> oifname <wan> drop` rules block LAN→WAN while leaving other traffic
+ *   alone; when ON, the chain is a permissive no-op. Mirrors the native applier.
  * - `table ip nat` postrouting with one `iifname <lan> oifname <wan> masquerade` rule per
  *   LAN that has `nat44` on (scoped per LAN so each LAN can differ).
  * - `table ip6 nat` postrouting with one masquerade rule per LAN in `nat66` mode
@@ -74,12 +76,13 @@ export const buildNftablesRuleset = (config: NftablesRouterConfig): NftablesRule
     const hasWan = config.wanInterface !== '';
     const blocks: string[] = [];
 
-    if (config.forward) {
-        const forwardRules = ['\t\ttype filter hook forward priority 0; policy drop;', '\t\tct state established,related accept'];
+    {
+        const forwardRules = ['\t\ttype filter hook forward priority 0; policy accept;'];
 
-        if (hasWan) {
+        // Routing OFF: drop new LAN→WAN specifically (Docker/foreign traffic untouched).
+        if (!config.forward && hasWan) {
             for (const lan of config.lans) {
-                forwardRules.push(`\t\tiifname "${lan.name}" oifname "${config.wanInterface}" accept`);
+                forwardRules.push(`\t\tiifname "${lan.name}" oifname "${config.wanInterface}" drop`);
             }
         }
 
@@ -163,6 +166,10 @@ export const resolveNftablesRouterConfig = (
                 nat44: iface.nat44_enabled,
                 ipv6Mode: (IPV6_MODES.has(iface.ipv6_mode) ? iface.ipv6_mode : 'off') as NftablesLan['ipv6Mode']
             })),
-        forward: policy?.forward_enabled ?? false
+        // A router forwards by default: with no policy row yet, routing is ON (the box's
+        // whole purpose). An explicit policy row still wins — set forward_enabled=false to
+        // deliberately block LAN→WAN. (The netfilter addon expresses "off" as scoped
+        // LAN→WAN drops, not a blanket forward DROP, so Docker/foreign traffic is safe.)
+        forward: policy?.forward_enabled ?? true
     };
 };
