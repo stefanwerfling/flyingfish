@@ -96,7 +96,8 @@ export class RouterInterfaceEditModal extends ModalDialog {
         this._selectIpv6Mode.setValues([
             {key: 'off', value: 'Off (no IPv6 routing)'},
             {key: 'nat66', value: 'NAT66 (masquerade a ULA → WAN IPv6)'},
-            {key: 'pd', value: 'PD (route the delegated /64 — end-to-end)'}
+            {key: 'pd', value: 'PD (route the delegated /64 — end-to-end)'},
+            {key: 'pd-server', value: 'PD server (delegate ULA prefixes downstream, masqueraded)'}
         ]);
 
         const groupDisable = new FormGroup(form, 'Disable');

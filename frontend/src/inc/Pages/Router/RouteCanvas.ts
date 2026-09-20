@@ -125,9 +125,10 @@ export class RouteCanvas {
             const v4badge = nat44
                 ? `<g transform="translate(462,${laneCenter - 26})"><rect width="40" height="15" rx="4" fill="var(--ffr-v4)"/><text x="20" y="11" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">NAT44</text></g>`
                 : '';
-            const v6label = ipv6 === 'nat66' ? 'NAT66' : (ipv6 === 'pd' ? 'PD' : '');
+            const v6label = ipv6 === 'nat66' ? 'NAT66' : (ipv6 === 'pd' ? 'PD' : (ipv6 === 'pd-server' ? 'PD-S' : ''));
+            const v6w = v6label === 'PD' ? 30 : (v6label === 'PD-S' ? 34 : 40);
             const v6badge = v6label
-                ? `<g transform="translate(462,${laneCenter + 12})"><rect width="${v6label === 'PD' ? 30 : 40}" height="15" rx="4" fill="var(--ffr-v6)"/><text x="${v6label === 'PD' ? 15 : 20}" y="11" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">${v6label}</text></g>`
+                ? `<g transform="translate(462,${laneCenter + 12})"><rect width="${v6w}" height="15" rx="4" fill="var(--ffr-v6)"/><text x="${v6w / 2}" y="11" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">${v6label}</text></g>`
                 : '';
 
             const dots = clients.slice(0, 6)
@@ -151,7 +152,11 @@ export class RouteCanvas {
                 rows: [
                     ['Subnet', ipv4],
                     ['NAT44', nat44 ? 'on' : 'off'],
-                    ['IPv6', ipv6 === 'nat66' ? 'NAT66' : (ipv6 === 'pd' ? 'PD · routed' : 'off')],
+                    ['IPv6', ipv6 === 'nat66'
+                        ? 'NAT66'
+                        : (ipv6 === 'pd'
+                            ? 'PD · routed'
+                            : (ipv6 === 'pd-server' ? 'PD server · delegating' : 'off'))],
                     ['Clients', `${clients.length} leased`]
                 ]
             };

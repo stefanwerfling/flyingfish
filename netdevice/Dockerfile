@@ -52,8 +52,12 @@ RUN npm prune --omit=dev --ignore-scripts
 FROM node:22-bookworm-slim AS runtime
 
 # udhcpc + dnsmasq + iproute2: WAN DHCP client, LAN DHCP/RA server, address management.
+# kea-dhcp6-server: DHCPv6 prefix delegation (PD server) for pd-server LANs — dnsmasq
+# can't delegate prefixes from a local pool, so Kea runs alongside it (dnsmasq keeps
+# DHCPv4 + RA/SLAAC). Kea only DELEGATES; the netdevice part installs the routes to the
+# delegated prefixes itself (watching Kea's lease file), so there is no shell-out hook.
 # (netfilter runs over netlink via the .node addon — needs NET_ADMIN, no extra package.)
-RUN apt-get update -y && apt-get install -y udhcpc dnsmasq iproute2 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y udhcpc dnsmasq iproute2 kea-dhcp6-server && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /var/lib/flyingfish
 
 WORKDIR /opt/flyingfish

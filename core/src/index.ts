@@ -200,6 +200,14 @@ export {
     parseDnsmasqLeases
 } from './inc/Router/DnsmasqConfig.js';
 export {
+    KeaPdLan,
+    KeaPdLease,
+    buildKeaDhcp6Config,
+    deriveKeaPdLan,
+    parseKeaPdLeases,
+    parseNeighborLinkLocal
+} from './inc/Router/KeaDhcp6Config.js';
+export {
     ipToBytes,
     ipInCidr,
     ipInCidrRanges

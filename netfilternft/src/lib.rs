@@ -126,10 +126,11 @@ fn apply_nftables(
         add_nat_table(&mut batch, NAT4_TABLE, ProtocolFamily::Ipv4, wan, &nat4)?;
     }
 
-    // NAT66: masquerade each LAN in nat66 mode → WAN (`pd` routes, `off` neither).
+    // NAT66: masquerade each LAN in nat66 OR pd-server mode → WAN (both hand out ULA,
+    // which needs NAT to reach the internet; `pd` routes an upstream GUA, `off` neither).
     let nat6: Vec<&str> = lans
         .iter()
-        .filter(|lan| lan.ipv6_mode == "nat66")
+        .filter(|lan| lan.ipv6_mode == "nat66" || lan.ipv6_mode == "pd-server")
         .map(|lan| lan.name.as_str())
         .collect();
     if has_wan && !nat6.is_empty() {

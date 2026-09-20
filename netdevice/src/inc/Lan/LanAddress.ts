@@ -68,7 +68,9 @@ async function addIpv6(iface: string, cidr: string, extraArgs: string[] = []): P
  * @param ula - the ULA gateway address in CIDR form (nat66 only; empty otherwise)
  */
 export async function ensureLanIpv6(iface: string, ipv6Mode: string, ula: string): Promise<void> {
-    if (iface === '' || ipv6Mode !== 'nat66' || ula === '') {
+    // nat66 and pd-server both give the LAN a static ULA + need a link-local for RA;
+    // pd (upstream-delegated) and off do not.
+    if (iface === '' || (ipv6Mode !== 'nat66' && ipv6Mode !== 'pd-server') || ula === '') {
         return;
     }
 

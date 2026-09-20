@@ -300,10 +300,13 @@ export class Router extends DefaultRoute {
                         domain: dhcp?.domain ?? '',
                         raEnable: dhcp?.ra_enable ?? false,
                         ipv6Mode: ipv6Mode,
-                        // In nat66 the LAN needs a private ULA /64 (nothing else assigns it).
-                        // Derive it deterministically from the IPv4 subnet's third octet so
-                        // 192.168.50.x ↔ fd00:50::/64 (readable + stable). pd/off carry none.
-                        ipv6Ula: ipv6Mode === 'nat66' ? deriveLanUla(lan.ipv4_address ?? '') : ''
+                        // nat66 AND pd-server need a private ULA /64 on the LAN (nothing else
+                        // assigns it) — for pd-server it is also the base for the delegation
+                        // pool. Derived deterministically from the IPv4 subnet's third octet
+                        // so 192.168.50.x ↔ fd00:50::/64 (readable + stable). pd/off carry none.
+                        ipv6Ula: ipv6Mode === 'nat66' || ipv6Mode === 'pd-server'
+                            ? deriveLanUla(lan.ipv4_address ?? '')
+                            : ''
                     });
                 }
 

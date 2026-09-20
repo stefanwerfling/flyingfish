@@ -165,7 +165,11 @@ export class InterfaceCard {
         const v6 = view.ipv6mode ?? 'off';
         const v6sec = jQuery('<div class="ffr-sec"></div>').appendTo(card);
         const v6hd = jQuery('<div class="ffr-sec-hd"><span class="ffr-eyebrow">IPv6 + NAT</span></div>').appendTo(v6sec);
-        const v6label = v6 === 'nat66' ? 'NAT66 · ULA' : (v6 === 'pd' ? 'PD · delegated /64' : 'off');
+        const v6label = v6 === 'nat66'
+            ? 'NAT66 · ULA'
+            : (v6 === 'pd'
+                ? 'PD · delegated /64'
+                : (v6 === 'pd-server' ? 'PD server · ULA delegation' : 'off'));
         jQuery(`<span class="ffr-badge v6">${v6label}</span>`).appendTo(v6hd);
         const v4hd = jQuery(`<span class="ffr-badge v4" style="margin-left:6px">${view.nat44 ? 'NAT44' : 'no NAT44'}</span>`);
         v6hd.find('.ffr-eyebrow').after(v4hd);

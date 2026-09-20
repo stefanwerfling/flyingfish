@@ -16,9 +16,11 @@ export type NftablesLan = {
 
     /**
      * This LAN's IPv6 mode: `off` (no IPv6 routing), `nat66` (masquerade this LAN's IPv6
-     * → WAN) or `pd` (route the delegated prefix — forwarding only, no NAT).
+     * → WAN), `pd` (route an upstream-delegated prefix — forwarding only, no NAT) or
+     * `pd-server` (delegate ULA sub-prefixes downstream via DHCPv6-PD; the delegated ULA
+     * still masquerades to the WAN GUA, so it is treated like `nat66` at the WAN).
      */
-    ipv6Mode: 'off' | 'nat66' | 'pd';
+    ipv6Mode: 'off' | 'nat66' | 'pd' | 'pd-server';
 };
 
 export type NftablesRouterConfig = {
@@ -102,7 +104,9 @@ export const buildNftablesRuleset = (config: NftablesRouterConfig): NftablesRule
     };
 
     natTable('ip', config.lans.filter((lan) => lan.nat44).map((lan) => lan.name));
-    natTable('ip6', config.lans.filter((lan) => lan.ipv6Mode === 'nat66').map((lan) => lan.name));
+    // nat66 AND pd-server masquerade to the WAN (both hand out ULA, which needs NAT to
+    // reach the internet); `pd` routes an upstream GUA prefix with no NAT.
+    natTable('ip6', config.lans.filter((lan) => lan.ipv6Mode === 'nat66' || lan.ipv6Mode === 'pd-server').map((lan) => lan.name));
 
     const sysctls: NftablesSysctl[] = [];
 
@@ -138,7 +142,7 @@ export type NftablesPolicyInput = {forward_enabled: boolean;};
 /**
  * The valid IPv6 modes; anything else resolves to `off` defensively.
  */
-const IPV6_MODES = new Set(['off', 'nat66', 'pd']);
+const IPV6_MODES = new Set(['off', 'nat66', 'pd', 'pd-server']);
 
 /**
  * Resolve the persisted router state (network interfaces + NAT policy) into the pure
