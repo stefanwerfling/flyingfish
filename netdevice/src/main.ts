@@ -308,6 +308,17 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
                 Logger.getLogger().warn('Netdevice reconcile failed (will retry next interval)', error);
             });
         }, intervalMs);
+
+        // Fast interface/traffic report: re-report the live NIC list (with fresh rx/tx byte
+        // counters) every few seconds so the UI's in/out rate is smooth, WITHOUT running the
+        // heavy reconcile (which re-applies the nftables ruleset — doing that every few
+        // seconds would hiccup the datapath). unref'd: the main reconcile loop above is the
+        // daemon's keep-alive.
+        setInterval((): void => {
+            reconcileInterfaces().catch((): void => {
+                // best-effort
+            });
+        }, Config.DEFAULT_INTERFACE_REPORT_INTERVAL_MS).unref();
     }
 })().catch((error: unknown): void => {
     console.error('FlyingFish netdevice failed to start:', error);

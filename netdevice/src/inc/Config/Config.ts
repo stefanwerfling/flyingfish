@@ -29,6 +29,9 @@ export class Config extends ConfigCore<ConfigOptionsNetdevice> {
      */
     public static readonly DEFAULT_FF_DIR = path.join('/', 'var', 'lib', 'flyingfish');
     public static readonly DEFAULT_RECONCILE_INTERVAL_MS = 30000;
+    // Fast cadence for re-reporting the live NIC list (rx/tx byte counters) so the UI's
+    // in/out traffic rate is smooth — decoupled from the heavy reconcile above.
+    public static readonly DEFAULT_INTERFACE_REPORT_INTERVAL_MS = 3000;
     public static readonly DEFAULT_CONFIG_FILE = 'config.json';
 
     /**
