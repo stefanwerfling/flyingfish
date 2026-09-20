@@ -1,0 +1,30 @@
+{
+    "description": "Single WAN + single LAN, NAT44 on, forwarding on. IPv6 off.",
+    "interfaces": [
+        {"name": "wan0", "role": "wan", "disable": false, "nat44_enabled": false, "ipv6_mode": "off"},
+        {"name": "lan0", "role": "lan", "disable": false, "nat44_enabled": true, "ipv6_mode": "off"}
+    ],
+    "policy": {"forward_enabled": true},
+    "dhcp": [
+        {
+            "lanInterface": "lan0",
+            "enable": true,
+            "rangeStart": "10.20.0.100",
+            "rangeEnd": "10.20.0.150",
+            "leaseSeconds": 120,
+            "gateway": "10.20.0.1",
+            "dnsServer": "10.20.0.1",
+            "domain": "lan",
+            "raEnable": false,
+            "leaseFile": "/run/ff-lan-lan0.leases"
+        }
+    ],
+    "sim": {
+        "lanAddress": "10.20.0.1",
+        "lanPrefix": 24,
+        "wanServerAddress": "10.10.0.1",
+        "wanServerPrefix": 24,
+        "wanDhcpRange": "10.10.0.10,10.10.0.20",
+        "wanServicePort": 9099
+    }
+}
