@@ -95,9 +95,26 @@ export class NginxProcessAgent {
     }
 
     /**
-     * Start the nginx master process (daemon off).
+     * Start the nginx master process (kept in the foreground by `daemon off;` in the
+     * generated config, so `_process` tracks the master).
+     *
+     * Idempotent: nginx is started twice on a normal boot — once here when the
+     * nginxserver container comes up (main.ts), and again when the backend connects and
+     * drives start() over the control API. A second `spawn` would launch a competing
+     * nginx that fails to bind the ports the first master already holds, exits, and
+     * leaves `_process` pointing at the dead competitor — so `isRun()` reports the whole
+     * service unhealthy while the original master keeps serving. That is the
+     * ServiceManager "nginx became unhealthy" flap + restart storm. When nginx is already
+     * running, reload (to pick up the latest config from the shared volume) instead of
+     * spawning a second process.
      */
     public start(): void {
+        if (this.isRun()) {
+            Logger.getLogger().silly('NginxProcessAgent::start: nginx already running — reloading instead of spawning a second process');
+            this.reload();
+            return;
+        }
+
         const args = this._getArguments();
 
         Logger.getLogger().silly('NginxProcessAgent::start: %s %s', this._command, args.join(' '));
