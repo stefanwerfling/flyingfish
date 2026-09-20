@@ -24,6 +24,7 @@ export type InterfaceView = {
     configured: boolean;
     ipv4: string;
     ipv4note: string;
+    ipv6?: string;
     laneColor: string;
     dhcp?: DhcpServerConfigEntry | null;
     ipv6mode?: string;
@@ -68,6 +69,10 @@ export class InterfaceCard {
 
         jQuery(`<div class="ffr-name"><span class="ffr-macx">${InterfaceCard._esc(view.mac)}</span></div>`).appendTo(info);
         jQuery(`<div class="ffr-ip">${InterfaceCard._esc(view.ipv4)}<span class="ffr-modex">${InterfaceCard._esc(view.ipv4note)}</span></div>`).appendTo(info);
+
+        if (view.ipv6) {
+            jQuery(`<div class="ffr-ip ffr-ip6">${InterfaceCard._esc(view.ipv6)}</div>`).appendTo(info);
+        }
 
         // ---- menu --------------------------------------------------------------------------------------------------
         const menuWrap = jQuery('<div class="ffr-menu"></div>').appendTo(top);

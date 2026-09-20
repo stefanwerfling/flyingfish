@@ -243,6 +243,7 @@ export class Router extends BasePage {
             configured: true,
             ipv4: ipv4,
             ipv4note: iface.ipv4_mode === 'static' ? 'static gateway' : iface.ipv4_mode,
+            ipv6: det?.ipv6,
             laneColor: laneColor,
             dhcp: (overview.dhcpConfigs ?? []).find((entry) => entry.network_interface_id === iface.id) ?? null,
             ipv6mode: iface.ipv6_mode ?? 'off',
@@ -273,6 +274,7 @@ export class Router extends BasePage {
             configured: false,
             ipv4: det.ipv4 ?? det.state,
             ipv4note: 'detected',
+            ipv6: det.ipv6,
             laneColor: this._lanColors[0],
             actions: {
                 onAssign: () => {

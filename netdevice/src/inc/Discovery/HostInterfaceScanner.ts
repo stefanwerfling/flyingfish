@@ -64,6 +64,12 @@ export class HostInterfaceScanner {
             const ipv4 = (osIfaces[name] ?? []).find(
                 (addr) => addr.family === 'IPv4' && !addr.internal
             )?.address;
+            // The current GLOBAL IPv6 (WAN GUA / LAN ULA), excluding link-local (fe80::)
+            // and internal — informational for the UI so the operator can see IPv6 too.
+            const ipv6 = (osIfaces[name] ?? []).find(
+                (addr) => addr.family === 'IPv6' && !addr.internal &&
+                    !addr.address.toLowerCase().startsWith('fe80')
+            )?.address;
 
             const entry: AvailableInterface = {
                 name: name,
@@ -73,6 +79,10 @@ export class HostInterfaceScanner {
 
             if (ipv4) {
                 entry.ipv4 = ipv4;
+            }
+
+            if (ipv6) {
+                entry.ipv6 = ipv6;
             }
 
             out.push(entry);

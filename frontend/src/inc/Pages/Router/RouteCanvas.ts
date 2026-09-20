@@ -46,19 +46,29 @@ export class RouteCanvas {
         const lans = overview.interfaces.filter((entry) => entry.role === 'lan' && !(entry.disable ?? false));
         const wan = overview.wanLease;
 
+        // Prefer the LIVE discovered WAN address (interface scan) over the reported DHCP
+        // lease, which can lag behind after an uplink change (the lease report is separate
+        // from interface discovery). Falls back to the lease, then to a status label.
+        const wanLive = wanIface
+            ? (overview.availableInterfaces ?? []).find((entry) => entry.mac.toLowerCase() === wanIface.mac_address.toLowerCase())
+            : undefined;
+        const wanV4 = wanLive?.ipv4 ?? (wan && wan.ipv4_address ? `${wan.ipv4_address}/${wan.ipv4_prefix}` : '');
+        const wanV6 = wanLive?.ipv6 ?? (wan?.ipv6_prefix ?? '');
+
         const height = Math.max(210, lans.length * 78 + 34);
         const routerY = Math.round(height / 2);
         const parts: string[] = [];
         const pop: Record<string, {title: string; color: string; rows: [string, string][];}> = {};
 
-        // Internet / WAN uplink
-        const wanSub = wan ? `${wan.ipv4_address}/${wan.ipv4_prefix}` : (wanIface ? 'no lease' : 'no WAN set');
+        // Internet / WAN uplink. The box is wide enough for a full IPv4; the IPv6 GUA is
+        // shortened on the node (full value in the hover popover) so nothing overflows.
+        const wanSub = wanV4 !== '' ? wanV4 : (wanIface ? 'no lease' : 'no WAN set');
         parts.push(
             `<g class="ffr-seg" data-seg="wan">` +
-            `<rect x="14" y="${routerY - 39}" width="122" height="78" rx="10" fill="var(--ffr-surface2)" stroke="var(--ffr-line)"/>` +
+            `<rect x="14" y="${routerY - 39}" width="176" height="78" rx="10" fill="var(--ffr-surface2)" stroke="var(--ffr-line)"/>` +
             `<text x="28" y="${routerY - 16}" font-size="12.5" font-weight="700" fill="var(--ffr-ink)">🌐 Internet</text>` +
             `<text x="28" y="${routerY + 2}" class="ffr-mono" font-size="11" fill="var(--ffr-soft)">${RouteCanvas._esc(wanSub)}</text>` +
-            (wan && wan.ipv6_prefix ? `<text x="28" y="${routerY + 17}" class="ffr-mono" font-size="9.5" fill="var(--ffr-v6)">${RouteCanvas._esc(wan.ipv6_prefix)}</text>` : '') +
+            (wanV6 ? `<text x="28" y="${routerY + 17}" class="ffr-mono" font-size="9.5" fill="var(--ffr-v6)">${RouteCanvas._esc(RouteCanvas._shortV6(wanV6))}</text>` : '') +
             `<text x="28" y="${routerY + 31}" font-size="9.5" fill="var(--ffr-faint)">${wanIface ? RouteCanvas._esc(wanIface.name ?? '') + ' · WAN' : 'assign a WAN'}</text>` +
             `</g>`
         );
@@ -66,9 +76,9 @@ export class RouteCanvas {
             title: '🌐 Internet uplink', color: 'var(--ffr-wan)',
             rows: [
                 ['Interface', wanIface ? (wanIface.name ?? '-') + ' · WAN' : 'none'],
-                ['Address', wan ? `${wan.ipv4_address}/${wan.ipv4_prefix}` : '—'],
-                ['Gateway', wan ? wan.gateway : '—'],
-                ['IPv6 PD', wan && wan.ipv6_prefix ? wan.ipv6_prefix : '—']
+                ['Address', wanV4 !== '' ? wanV4 : '—'],
+                ['Gateway', wan && wan.gateway ? wan.gateway : '—'],
+                ['IPv6', wanV6 !== '' ? wanV6 : '—']
             ]
         };
 
@@ -93,7 +103,7 @@ export class RouteCanvas {
         };
 
         // WAN <-> router flow
-        parts.push(`<g class="ffr-seg" data-seg="wan"><path class="ffr-flow" d="M136 ${routerY} H300" stroke="var(--ffr-wan)"/></g>`);
+        parts.push(`<g class="ffr-seg" data-seg="wan"><path class="ffr-flow" d="M190 ${routerY} H300" stroke="var(--ffr-wan)"/></g>`);
 
         // LAN segments
         lans.forEach((lan, index) => {
@@ -207,6 +217,26 @@ export class RouteCanvas {
      */
     protected static _esc(value: string): string {
         return String(value).replace(/&/gu, '&amp;').replace(/</gu, '&lt;').replace(/>/gu, '&gt;').replace(/"/gu, '&quot;');
+    }
+
+    /**
+     * Shorten a long IPv6 address for the compact node label: keep the first four groups
+     * and append `…` (the full value stays in the hover popover). A `…/64`-style prefix or
+     * a short address is returned unchanged.
+     * @param value - the IPv6 address or prefix
+     */
+    protected static _shortV6(value: string): string {
+        if (value.length <= 22) {
+            return value;
+        }
+
+        const groups = value.split(':');
+
+        if (groups.length <= 4) {
+            return value;
+        }
+
+        return `${groups.slice(0, 4).join(':')}…`;
     }
 
 }
