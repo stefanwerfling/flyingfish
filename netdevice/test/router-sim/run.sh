@@ -57,12 +57,15 @@ main() {
     [ -n "$wanip" ]; assert "router wan0 configured from lease ($wanip)" "$?"
     grep -q '^BOUND ' "$RT/wan-udhcpc.log" 2>/dev/null; assert "udhcpc BOUND event recorded" "$?"
 
-    step "Apply generated nftables ruleset + sysctls (real buildNftablesRuleset)"
+    step "Apply router netfilter (FF_SIM_NETFILTER=${FF_SIM_NETFILTER:-auto})"
     sim_router_apply_netfilter
     nse router nft list ruleset > "$RT/applied.nft" 2>/dev/null || true
-    grep -q 'masquerade' "$RT/applied.nft"; assert "NAT44 masquerade rule installed" "$?"
-    grep -q 'chain forward' "$RT/applied.nft"; assert "forward filter chain installed" "$?"
+    grep -q 'masquerade' "$RT/applied.nft"; assert "NAT44 masquerade rule installed [$SIM_NETFILTER_MODE]" "$?"
+    grep -q 'chain forward' "$RT/applied.nft"; assert "forward filter chain installed [$SIM_NETFILTER_MODE]" "$?"
     [ "$(nse router cat /proc/sys/net/ipv4/ip_forward)" = "1" ]; assert "net.ipv4.ip_forward=1 applied" "$?"
+    if [ "$SIM_NETFILTER_MODE" = native ]; then
+        grep -q 'flyingfish-nat4' "$RT/applied.nft"; assert "real netfilternft addon programmed flyingfish tables" "$?"
+    fi
 
     step "LAN DHCP server path (real buildDnsmasqConfig -> dnsmasq -> client udhcpc)"
     sim_router_start_lan_dnsmasq
@@ -77,13 +80,17 @@ main() {
     step "End-to-end NAT44: client -> WAN service through masquerade"
     # wan-ns has NO route back to the LAN subnet, so a round-trip only succeeds if
     # the router rewrote the source (masquerade). This is the NAT proof.
-    nse wan bash -c "while true; do echo -n PONG-WAN | timeout 3 nc -l -p $WAN_SVC_PORT -q1; done" &
-    local svc=$!
+    # Output to /dev/null (not the inherited stdout pipe) so no orphaned nc keeps
+    # the harness's stdout open and stalls the caller after the run; each nc also
+    # self-terminates via `timeout 3`.
+    nse wan bash -c "while true; do echo -n PONG-WAN | timeout 3 nc -l -p $WAN_SVC_PORT -q1; done" \
+        >/dev/null 2>&1 &
+    WAN_SVC_PID=$!
     sleep 0.3
     nse client ping -c1 -W2 "$WAN_SRV_ADDR" >/dev/null 2>&1; assert "client can ping WAN host through router" "$?"
     local resp
     resp="$(nse client bash -c "timeout 4 nc -w2 $WAN_SRV_ADDR $WAN_SVC_PORT" 2>/dev/null || true)"
-    kill "$svc" 2>/dev/null || true
+    kill "$WAN_SVC_PID" 2>/dev/null || true
     [ "$resp" = "PONG-WAN" ]; assert "client reached WAN TCP service via NAT44 (got: '${resp:-<none>}')" "$?"
 
     step "Result"

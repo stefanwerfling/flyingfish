@@ -17,6 +17,8 @@
 
 set -euo pipefail
 
+SIM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # --- addressing (both segments are /24 for sim simplicity) --------------------
 WAN_SRV_ADDR="10.10.0.1"      # wan-ns (ISP) address + gateway + service host
 WAN_DHCP_RANGE="10.10.0.10,10.10.0.20"
@@ -144,14 +146,40 @@ sim_router_wan_udhcpc() {
         >"$RT/wan-udhcpc.run.log" 2>&1 || return 1
 }
 
-# Apply the REAL generated nft ruleset + sysctls in the router netns.
+# Apply the router netfilter config in the router netns. Two fidelity modes,
+# selected by FF_SIM_NETFILTER (auto|native|ruleset; default auto):
+#   native  — load the REAL flyingfish_netfilternft addon and call applyRouter()
+#             (the actual Rust/rustables netlink code; also sets the sysctls).
+#   ruleset — load the text from the REAL buildNftablesRuleset via `nft -f` + sysctls.
+# auto picks native when the addon is built, else falls back to ruleset (logged).
+SIM_NETFILTER_MODE=""
 sim_router_apply_netfilter() {
-    nse router nft -f "$RT/router.nft"
-    if [ -s "$RT/sysctls" ]; then
-        while IFS='=' read -r key val; do
-            [ -z "$key" ] && continue
-            nse router sysctl -qw "$key=$val" || true
-        done < "$RT/sysctls"
+    local want="${FF_SIM_NETFILTER:-auto}"
+    local addon="$SIM_DIR/../../../netfilternft/index.js"
+    local have_native=0
+    if [ -f "$addon" ] && compgen -G "$SIM_DIR/../../../netfilternft/*.node" >/dev/null; then
+        have_native=1
+    fi
+
+    if [ "$want" = native ] || { [ "$want" = auto ] && [ "$have_native" = 1 ]; }; then
+        if [ "$have_native" != 1 ]; then
+            log "FF_SIM_NETFILTER=native but the addon is not built (run 'npm run build' in netfilternft/)"
+            return 1
+        fi
+        SIM_NETFILTER_MODE=native
+        nse router node "$SIM_DIR/apply-native.mjs" "$SCENARIO" >"$RT/apply-native.log" 2>&1
+        log "netfilter applied via REAL addon (applyRouter): $(cat "$RT/apply-native.log")"
+    else
+        SIM_NETFILTER_MODE=ruleset
+        [ "$want" = auto ] && log "netfilter addon not built -> ruleset fallback (buildNftablesRuleset + nft -f)"
+        nse router nft -f "$RT/router.nft"
+        if [ -s "$RT/sysctls" ]; then
+            while IFS='=' read -r key val; do
+                [ -z "$key" ] && continue
+                nse router sysctl -qw "$key=$val" || true
+            done < "$RT/sysctls"
+        fi
+        log "netfilter applied via ruleset ($RT/router.nft)"
     fi
 }
 
@@ -173,6 +201,6 @@ sim_client_udhcpc() {
 }
 
 sim_cleanup() {
-    kill "${WAN_DNSMASQ_PID:-}" "${LAN_DNSMASQ_PID:-}" 2>/dev/null || true
+    kill "${WAN_DNSMASQ_PID:-}" "${LAN_DNSMASQ_PID:-}" "${WAN_SVC_PID:-}" 2>/dev/null || true
     for ns in wan router client; do ip netns del "$ns" 2>/dev/null || true; done
 }

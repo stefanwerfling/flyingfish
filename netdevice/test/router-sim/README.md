@@ -36,12 +36,14 @@ Real (the code under test):
 - Real **busybox `udhcpc`** on WAN (router) and LAN (client); real **`dnsmasq`**
   DHCP servers; real kernel nftables NAT/forward.
 
+- **The real native addon** `flyingfish_netfilternft.applyRouter` (Rust/rustables,
+  programs the `flyingfish-filter`/`flyingfish-nat4`/`flyingfish-nat6` tables over
+  netlink) — used when built (the default, `FF_SIM_NETFILTER=native`). This is the
+  exact code the netdevice part runs in production. See `FF_SIM_NETFILTER` below.
+
 Simulated / stubbed:
 - The "ISP" (`wan-ns` dnsmasq + echo service) — stands in for the upstream.
 - The physical NICs — veth pairs named `wan0`/`lan0` inside `router-ns`.
-- The Rust nft addon (`flyingfish_netfilternft.applyRouter`) is **not** used yet;
-  the sim installs the equivalent ruleset from `buildNftablesRuleset` (the addon
-  programs the same masquerade/forward rules via netlink). See "Fidelity tiers".
 
 Two sim-only shims (needed only because we run rootless, never in production):
 - `user=root`/`group=root` appended to each `dnsmasq.conf` (the real config path is
@@ -56,6 +58,25 @@ Two sim-only shims (needed only because we run rootless, never in production):
 ./run.sh scenarios/nat44-basic.json
 ```
 
+`FF_SIM_NETFILTER` selects how the router netfilter config is applied:
+- `auto` (default) — use the real addon if built, else fall back to `ruleset` (logged).
+- `native` — force the real `flyingfish_netfilternft.applyRouter` (Rust/netlink); errors
+  if the addon is not built.
+- `ruleset` — force the `buildNftablesRuleset` text via `nft -f` (no addon needed).
+
+Build the addon for `native` mode (x86_64 host, ~20 s):
+
+```bash
+cd netfilternft && npm install && LIBCLANG_PATH=/lib/x86_64-linux-gnu npm run build
+```
+
+It needs `clang` + `libclang-dev` + kernel uapi headers (`linux-libc-dev`); no
+`libmnl`/`libnftnl`. The built `netfilternft/*.node` + `index.js` are gitignored. If
+those deps aren't installable on the host, build the `.node` in the netdevice Docker
+build stage instead (`docker build -f netdevice/Dockerfile --target build .`, then
+copy `/opt/flyingfish/netfilternft/*.node` + `index.js` out) — note the Docker build
+targets the image's arch, so build for the host arch you run the sim on.
+
 Exit code `0` = all assertions passed. The harness self-re-execs into a
 `unshare --user --map-root-user --mount --net` namespace, so it needs no root; all
 namespaces/veths live inside that userns and vanish when the process exits (the
@@ -68,13 +89,12 @@ in `core/`). Unprivileged user namespaces must be enabled
 
 ## Fidelity tiers
 
-1. **Tier 1 (this harness):** real core builders + real udhcpc/dnsmasq/nft. Covers
-   config generation and the live datapath end-to-end.
-2. **Tier 2 (follow-up):** load the real `flyingfish_netfilternft` addon and call
-   `applyRouter()` so the Rust/netlink netfilter code installs the rules. The addon
-   is not built on this host (its `libmnl`/`libnftnl` dev headers are missing and
-   `apt` needs root); build the `.node` inside the netdevice Docker build stage and
-   drop it in, then swap `sim_router_apply_netfilter` to call it.
+1. **Tier 1:** real core builders + real udhcpc/dnsmasq/nft. Covers config generation
+   and the live datapath end-to-end. (`FF_SIM_NETFILTER=ruleset`)
+2. **Tier 2 (done):** load the real `flyingfish_netfilternft` addon and call
+   `applyRouter()` so the Rust/rustables/netlink netfilter code installs the rules —
+   the exact production netfilter path. Enabled by default when the addon is built
+   (`FF_SIM_NETFILTER=native`, via `apply-native.mjs`).
 3. **Tier 3 (follow-up):** run the real `netdevice/dist/main.js` reconcile loop
    against a fake backend HTTP stub serving the `/json/router/*` DTOs, so the
    reconcile/report loop itself is exercised, not just the builders it calls.
@@ -84,5 +104,7 @@ in `core/`). Unprivileged user namespaces must be enabled
 - `run.sh` — orchestrator: re-exec, generate config, build topology, assert, report.
 - `lib.sh` — topology + WAN/LAN/NAT helpers (sourced).
 - `gen-config.mjs` — calls the real `core` builders to emit `router.nft` + `*.conf`.
+- `apply-native.mjs` — Tier 2: loads the real `flyingfish_netfilternft` addon and
+  calls `applyRouter()` inside the router netns.
 - `scenarios/*.json` — DB-shaped interfaces + NAT policy + DHCP config + sim addressing.
 - `setgroups-shim.c` — sim-only `LD_PRELOAD` no-op for `dnsmasq` under the userns.
