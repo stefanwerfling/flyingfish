@@ -118,14 +118,24 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
         }
     }
 
-    // Announce this node to the Hub registry (part list). Optional.
+    // Announce this node to the Hub registry (part list). Optional and best-effort:
+    // a failed registration (e.g. the backend is briefly unreachable during a
+    // redeploy) must NOT crash the part. netdevice has no server of its own, so an
+    // unhandled throw here would drain the event loop and exit — turning one blip
+    // into a crash-loop. The heartbeat set up inside startHubRegistration re-registers
+    // once the Hub is reachable again; if the initial call throws, the reconcile loop
+    // below still runs and keeps the datapath alive.
     if (tConfig.registry) {
-        await startHubRegistration(
-            tConfig.registry.url,
-            tConfig.registry.secret,
-            buildNetdeviceCapabilityManifest(`netdevice@${os.hostname()}`),
-            {identity: nodeIdentity}
-        );
+        try {
+            await startHubRegistration(
+                tConfig.registry.url,
+                tConfig.registry.secret,
+                buildNetdeviceCapabilityManifest(`netdevice@${os.hostname()}`),
+                {identity: nodeIdentity}
+            );
+        } catch (error) {
+            Logger.getLogger().warn('Netdevice Hub registration failed (continuing; will retry on heartbeat)', error);
+        }
     }
 
     // Reconcile loop for BOTH roles: run udhcpc on the WAN interface (report its lease)
@@ -260,13 +270,25 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
             await reconcileNetfilter();
         };
 
-        await reconcileOnce();
+        await reconcileOnce().catch((error: unknown): void => {
+            // The first reconcile is best-effort too: a transient failure (backend
+            // not ready yet) must not exit the process before the interval below
+            // takes over.
+            Logger.getLogger().warn('Netdevice initial reconcile failed (will retry next interval)', error);
+        });
 
+        // NOT unref'd: this reconcile loop IS the daemon's reason to live. netdevice
+        // has no listening server; if the interval were unref'd the process would
+        // stay up only while a child (udhcpc/dnsmasq) happens to be running, so a
+        // reconcile that spawns nothing (e.g. no roles assigned yet, or a transient
+        // config-fetch failure) would drain the event loop and exit → crash-loop.
+        // Keeping the timer ref'd lets the part ride out transient failures and
+        // self-heal on the next tick. Docker stops it with SIGTERM.
         setInterval((): void => {
             reconcileOnce().catch((error: unknown): void => {
                 Logger.getLogger().warn('Netdevice reconcile failed (will retry next interval)', error);
             });
-        }, intervalMs).unref();
+        }, intervalMs);
     }
 })().catch((error: unknown): void => {
     console.error('FlyingFish netdevice failed to start:', error);
