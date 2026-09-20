@@ -46,6 +46,34 @@ const verifyClientCert = async(request: Request): Promise<boolean> => {
 export const REGISTRY_SECRET_HEADER = 'x-flyingfish-registry-secret';
 
 /**
+ * Authenticate the request as a trusted FlyingFish part/service — WITHOUT the
+ * user-login fallback. True when the caller presents a valid mTLS client
+ * certificate (own-PKI epic 9.4, verified to a non-revoked node identity via the
+ * Hub trust) or the shared registry secret via the `x-flyingfish-registry-secret`
+ * header (verified in constant time through the ServiceAuth seam). Shared by the
+ * part-facing route guard and the rate limiter (parts poll config endpoints on a
+ * reconcile loop and must not be throttled like anonymous browsers).
+ * @param {Request} request
+ * @returns {Promise<boolean>}
+ */
+export const isServiceAuthenticated = async(request: Request): Promise<boolean> => {
+    // Preferred: authenticate the part by its mTLS client certificate (own-PKI
+    // epic 9.4). Falls through to the shared secret during the migration.
+    if (await verifyClientCert(request)) {
+        return true;
+    }
+
+    const provided = request.headers[REGISTRY_SECRET_HEADER];
+    const expected = FlyingFishConfig.getInstance().get()?.registry?.secret;
+
+    if (typeof provided === 'string' && expected && ServiceAuth.verifySecret(provided, expected)) {
+        return true;
+    }
+
+    return false;
+};
+
+/**
  * FlyingFishRouteCheckServiceOrUserLogin
  *
  * Auth guard for the part-facing Hub registry endpoints (register/heartbeat/bye).
@@ -61,16 +89,7 @@ export const FlyingFishRouteCheckServiceOrUserLogin: DefaultRouteCheckUserLogin 
     request: Request,
     response: Response
 ): Promise<boolean> => {
-    // Preferred: authenticate the part by its mTLS client certificate (own-PKI
-    // epic 9.4). Falls through to the shared secret during the migration.
-    if (await verifyClientCert(request)) {
-        return true;
-    }
-
-    const provided = request.headers[REGISTRY_SECRET_HEADER];
-    const expected = FlyingFishConfig.getInstance().get()?.registry?.secret;
-
-    if (typeof provided === 'string' && expected && ServiceAuth.verifySecret(provided, expected)) {
+    if (await isServiceAuthenticated(request)) {
         return true;
     }
 

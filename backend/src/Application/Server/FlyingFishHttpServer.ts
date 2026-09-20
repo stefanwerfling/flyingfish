@@ -1,6 +1,8 @@
 import RedisStore from 'connect-redis';
 import {HttpServer, RedisClient} from '@stefanwerfling/figtree';
+import {Request} from 'express';
 import {Store} from 'express-session';
+import {isServiceAuthenticated} from './FlyingFishRouteCheckServiceOrUserLogin.js';
 
 /**
  * FlyingFishHttpServer
@@ -54,6 +56,29 @@ export class FlyingFishHttpServer extends HttpServer {
             imgSrc: ['\'self\'', 'https: data:'],
             baseUri: ['\'self\'']
         };
+    }
+
+    /**
+     * Skip the `/json/` rate limiter for trusted FlyingFish parts in addition to
+     * logged-in users. Parts (netdevice, nginxserver, dns, …) poll the config
+     * endpoints on a reconcile loop and self-register with the Hub; on a host-net
+     * node they all reach the backend through Docker's port-forward SNAT, so they
+     * share ONE bridge-gateway source IP. figtree's default 100-requests / 15-min
+     * per-IP budget throttles that shared traffic into 429s, which turns a single
+     * part restart into a self-sustaining crash-loop (register → 429 → exit →
+     * restart → re-arm the block). A part authenticating by mTLS or the registry
+     * secret is a trusted internal caller, not an anonymous browser, so it is
+     * exempt from the limiter.
+     * @param {Request} request
+     * @return {Promise<boolean>}
+     * @protected
+     */
+    protected override async _limiterSkip(request: Request): Promise<boolean> {
+        if (await super._limiterSkip(request)) {
+            return true;
+        }
+
+        return isServiceAuthenticated(request);
     }
 
 }
