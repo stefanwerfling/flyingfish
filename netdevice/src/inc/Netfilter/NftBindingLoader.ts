@@ -16,6 +16,10 @@ export type NetfilterNativeLan = {name: string; nat44: boolean; ipv6Mode: string
 
 export type NetfilterNativeBinding = {
     applyRouter(wanInterface: string, lans: NetfilterNativeLan[], forward: boolean): void;
+    // IPv6 route management over rtnetlink (delegated-PD routes) — optional so an older
+    // addon build without these still loads (the caller falls back).
+    routeReplaceV6?(dest: string, prefixLen: number, via: string, dev: string): void;
+    routeDelV6?(dest: string, prefixLen: number, dev: string): void;
 };
 
 /**

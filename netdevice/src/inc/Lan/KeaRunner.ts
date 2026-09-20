@@ -4,6 +4,7 @@ import {ChildProcess, execFile, spawn} from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import {NetfilterNativeBinding, NftBindingLoader} from '../Netfilter/NftBindingLoader.js';
 
 /**
  * A pd-server LAN as the reconcile loop knows it (interface + its link ULA + the delegated
@@ -58,10 +59,16 @@ export class KeaRunner {
     private _watching = false;
 
     /**
-     * Installed delegated-prefix routes: `<prefix>/<len>` → the link-local next-hop used
-     * (so a changed next-hop re-installs, and a vanished lease is removed).
+     * Installed delegated-prefix routes, keyed `<prefix>/<len>` → the route detail (so a
+     * changed next-hop re-installs, and a vanished lease is removed).
      */
-    private readonly _routes = new Map<string, string>();
+    private readonly _routes = new Map<string, {prefix: string; len: number; via: string; dev: string;}>();
+
+    /**
+     * Native rtnetlink binding for route add/del (loaded once); falls back to `ip` via
+     * execFile when the addon or its route methods are unavailable.
+     */
+    private readonly _binding: NetfilterNativeBinding | null = NftBindingLoader.load();
 
     /**
      * Reconcile the running Kea to the given pd-server LAN set: (re)start it when the set
@@ -106,11 +113,55 @@ export class KeaRunner {
             this._process = null;
         }
 
-        for (const [prefix] of this._routes) {
-            void runIp(['-6', 'route', 'del', prefix]);
+        for (const [, route] of this._routes) {
+            void this._routeDel(route.prefix, route.len, route.dev);
         }
 
         this._routes.clear();
+    }
+
+    /**
+     * Install/replace an IPv6 route via the native rtnetlink binding, falling back to `ip`
+     * (execFile, array args — no shell) when the binding is unavailable.
+     * @param prefix - the delegated prefix network address
+     * @param len - the prefix length
+     * @param via - the next-hop link-local
+     * @param dev - the LAN interface
+     */
+    private async _routeReplace(prefix: string, len: number, via: string, dev: string): Promise<boolean> {
+        if (typeof this._binding?.routeReplaceV6 === 'function') {
+            try {
+                this._binding.routeReplaceV6(prefix, len, via, dev);
+
+                return true;
+            } catch (error) {
+                Logger.getLogger().warn(`Netdevice PD: native route add failed for ${prefix}/${len}`, error);
+
+                return false;
+            }
+        }
+
+        return (await runIp(['-6', 'route', 'replace', `${prefix}/${len}`, 'via', via, 'dev', dev])).ok;
+    }
+
+    /**
+     * Delete an IPv6 route via the native binding, falling back to `ip`.
+     * @param prefix - the delegated prefix network address
+     * @param len - the prefix length
+     * @param dev - the LAN interface
+     */
+    private async _routeDel(prefix: string, len: number, dev: string): Promise<void> {
+        if (typeof this._binding?.routeDelV6 === 'function') {
+            try {
+                this._binding.routeDelV6(prefix, len, dev);
+            } catch {
+                // best-effort
+            }
+
+            return;
+        }
+
+        await runIp(['-6', 'route', 'del', `${prefix}/${len}`, 'dev', dev]);
     }
 
     /**
@@ -182,29 +233,25 @@ export class KeaRunner {
             const routeKey = `${lease.prefix}/${lease.prefixLength}`;
             desired.add(routeKey);
 
+            // Neigh lookup is a READ — execFile `ip` (parsed by the tested pure helper) is
+            // fine; only the route WRITE goes through the native binding.
             const neigh = await runIp(['-6', 'neigh', 'show', 'dev', lan.interface]);
             const nextHop = parseNeighborLinkLocal(neigh.stdout, lease.hwaddr);
 
-            if (nextHop === '') {
+            if (nextHop === '' || this._routes.get(routeKey)?.via === nextHop) {
                 continue;
             }
 
-            if (this._routes.get(routeKey) === nextHop) {
-                continue;
-            }
-
-            const result = await runIp(['-6', 'route', 'replace', routeKey, 'via', nextHop, 'dev', lan.interface]);
-
-            if (result.ok) {
-                this._routes.set(routeKey, nextHop);
+            if (await this._routeReplace(lease.prefix, lease.prefixLength, nextHop, lan.interface)) {
+                this._routes.set(routeKey, {prefix: lease.prefix, len: lease.prefixLength, via: nextHop, dev: lan.interface});
                 Logger.getLogger().info(`Netdevice PD: routed ${routeKey} via ${nextHop} dev ${lan.interface}`);
             }
         }
 
         // Remove routes whose lease is gone.
-        for (const routeKey of [...this._routes.keys()]) {
+        for (const [routeKey, route] of [...this._routes]) {
             if (!desired.has(routeKey)) {
-                await runIp(['-6', 'route', 'del', routeKey]);
+                await this._routeDel(route.prefix, route.len, route.dev);
                 this._routes.delete(routeKey);
                 Logger.getLogger().info(`Netdevice PD: removed stale route ${routeKey}`);
             }

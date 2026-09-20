@@ -13,6 +13,11 @@ crate-type = ["cdylib"]
 napi = { version = "2", default-features = false, features = ["napi9"] }
 napi-derive = "2"
 rustables = "0.8"
+# rtnetlink: program the kernel routing table (delegated-PD routes) over netlink, so route
+# installation is a native binding like the nftables one — not a shell-out to `ip`.
+rtnetlink = "0.14"
+tokio = { version = "1", features = ["rt", "net", "time"] }
+futures = "0.3"
 
 [build-dependencies]
 napi-build = "2"

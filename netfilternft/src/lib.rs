@@ -9,12 +9,14 @@
 //! + add the desired set), so a reconcile deterministically converges to the config
 //! without touching foreign tables.
 
+use futures::TryStreamExt;
 use napi_derive::napi;
 use rustables::{
     Batch, Chain, ChainPolicy, ChainType, Hook, HookClass, MsgType, ProtocolFamily, Rule, Table,
     list_tables,
 };
 use std::error::Error;
+use std::net::Ipv6Addr;
 
 const FILTER_TABLE: &str = "flyingfish-filter";
 const NAT4_TABLE: &str = "flyingfish-nat4";
@@ -169,4 +171,118 @@ pub fn apply_router(
 
     apply_nftables(&wan_interface, &lans, forward)
         .map_err(|error| napi::Error::from_reason(error.to_string()))
+}
+
+// ---------------------------------------------------------------------------------------
+// IPv6 route management (Pi-router epic — ULA-PD server). Native rtnetlink binding so the
+// netdevice part installs routes to delegated PD prefixes over netlink, not by shelling out
+// to `ip` — consistent with the nftables binding above and injection-free by construction
+// (typed args, no shell). Routes are infrequent (per PD lease event), so each call spins a
+// small current-thread runtime.
+// ---------------------------------------------------------------------------------------
+
+/// Run a route future to completion on a throwaway current-thread runtime.
+fn run_route<F>(fut: F) -> napi::Result<()>
+where
+    F: std::future::Future<Output = Result<(), Box<dyn Error>>>,
+{
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|error| napi::Error::from_reason(error.to_string()))?;
+
+    runtime
+        .block_on(fut)
+        .map_err(|error| napi::Error::from_reason(error.to_string()))
+}
+
+/// Resolve an interface name to its kernel index over rtnetlink.
+async fn if_index(handle: &rtnetlink::Handle, dev: &str) -> Result<u32, Box<dyn Error>> {
+    let mut links = handle.link().get().match_name(dev.to_string()).execute();
+
+    match links.try_next().await? {
+        Some(link) => Ok(link.header.index),
+        None => Err(format!("interface not found: {dev}").into()),
+    }
+}
+
+/// Replace (add-or-update) an IPv6 route `dest/prefix_len via <via> dev <dev>`.
+async fn route6_replace(
+    dest: Ipv6Addr,
+    prefix_len: u8,
+    via: Ipv6Addr,
+    dev: &str,
+) -> Result<(), Box<dyn Error>> {
+    let (connection, handle, _) = rtnetlink::new_connection()?;
+    tokio::spawn(connection);
+
+    let index = if_index(&handle, dev).await?;
+
+    handle
+        .route()
+        .add()
+        .v6()
+        .destination_prefix(dest, prefix_len)
+        .gateway(via)
+        .output_interface(index)
+        .replace()
+        .execute()
+        .await?;
+
+    Ok(())
+}
+
+/// Delete an IPv6 route `dest/prefix_len dev <dev>`.
+async fn route6_del(dest: Ipv6Addr, prefix_len: u8, dev: &str) -> Result<(), Box<dyn Error>> {
+    let (connection, handle, _) = rtnetlink::new_connection()?;
+    tokio::spawn(connection);
+
+    let index = if_index(&handle, dev).await?;
+
+    // Build the matching route message via the add-builder, then delete it.
+    let message = handle
+        .route()
+        .add()
+        .v6()
+        .destination_prefix(dest, prefix_len)
+        .output_interface(index)
+        .message_mut()
+        .clone();
+
+    handle.route().del(message).execute().await?;
+
+    Ok(())
+}
+
+/// Install (replace) a route to a delegated IPv6 prefix via the requesting router's
+/// link-local next-hop. Requires CAP_NET_ADMIN + the host network namespace.
+///
+/// - `dest` — the delegated prefix network address (e.g. `fd00:50:1:a00::`).
+/// - `prefix_len` — the delegated prefix length (e.g. 60).
+/// - `via` — the next-hop (the downstream router's link-local, e.g. `fe80::...`).
+/// - `dev` — the LAN interface the downstream router is on.
+#[napi]
+pub fn route_replace_v6(dest: String, prefix_len: u8, via: String, dev: String) -> napi::Result<()> {
+    let destination: Ipv6Addr = dest
+        .parse()
+        .map_err(|_| napi::Error::from_reason(format!("invalid dest: {dest}")))?;
+    let gateway: Ipv6Addr = via
+        .parse()
+        .map_err(|_| napi::Error::from_reason(format!("invalid via: {via}")))?;
+
+    run_route(route6_replace(destination, prefix_len, gateway, &dev))
+}
+
+/// Delete a previously installed delegated-prefix route.
+///
+/// - `dest` — the delegated prefix network address.
+/// - `prefix_len` — the delegated prefix length.
+/// - `dev` — the LAN interface.
+#[napi]
+pub fn route_del_v6(dest: String, prefix_len: u8, dev: String) -> napi::Result<()> {
+    let destination: Ipv6Addr = dest
+        .parse()
+        .map_err(|_| napi::Error::from_reason(format!("invalid dest: {dest}")))?;
+
+    run_route(route6_del(destination, prefix_len, &dev))
 }
