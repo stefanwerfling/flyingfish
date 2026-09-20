@@ -95,9 +95,10 @@ in `core/`). Unprivileged user namespaces must be enabled
    `applyRouter()` so the Rust/rustables/netlink netfilter code installs the rules —
    the exact production netfilter path. Enabled by default when the addon is built
    (`FF_SIM_NETFILTER=native`, via `apply-native.mjs`).
-3. **Tier 3 (follow-up):** run the real `netdevice/dist/main.js` reconcile loop
-   against a fake backend HTTP stub serving the `/json/router/*` DTOs, so the
-   reconcile/report loop itself is exercised, not just the builders it calls.
+3. **Tier 3 (done):** run the real `netdevice/dist/main.js` reconcile loop against a
+   fake backend HTTP stub, so the whole part — Hub registration, interface discovery,
+   WAN udhcpc, LAN `ensureLanAddress` + dnsmasq, native netfilter apply, and the report
+   POSTs — is exercised, not just the builders it calls. Run via `./run-netdevice.sh`.
 
 ## Files
 
@@ -106,5 +107,35 @@ in `core/`). Unprivileged user namespaces must be enabled
 - `gen-config.mjs` — calls the real `core` builders to emit `router.nft` + `*.conf`.
 - `apply-native.mjs` — Tier 2: loads the real `flyingfish_netfilternft` addon and
   calls `applyRouter()` inside the router netns.
+- `run-netdevice.sh` — Tier 3 orchestrator: runs the real netdevice reconcile loop.
+- `fake-backend.mjs` — Tier 3 Hub stub: serves `/json/router/*` + `/json/registry/*`
+  and records the netdevice's report POSTs for the assertions.
 - `scenarios/*.json` — DB-shaped interfaces + NAT policy + DHCP config + sim addressing.
 - `setgroups-shim.c` — sim-only `LD_PRELOAD` no-op for `dnsmasq` under the userns.
+
+## Tier 3 — real netdevice reconcile loop
+
+```bash
+./run-netdevice.sh                # default scenario
+```
+
+Boots `netdevice/dist/main.js` (PKI disabled — no `FLYINGFISH_PKI_URL`) inside the
+router netns, pointed at `fake-backend.mjs` as the Hub. The real part registers, then
+reconciles: discovers + reports interfaces, runs udhcpc on WAN (reports the lease),
+`ensureLanAddress` + dnsmasq on LAN, and programs nftables via the native addon; the
+harness asserts on what it reported back to the stub, and that a LAN client gets a
+lease from the netdevice's own dnsmasq (9 assertions).
+
+Extra requirements beyond Tiers 1-2:
+- A **fully-installed workspace** so the real dist's dependency graph resolves — its git
+  deps (`@stefanwerfling/figtree`, …) must be present (`npm install` at the repo root).
+  The runner dry-imports the dist first and fails with clear guidance if not.
+- A **current** `netdevice/dist` (`npm run build` in `netdevice/` — the committed dist
+  can lag the source).
+- Two things the harness sets up itself (sim-only, rootless): a writable tmpfs over
+  `/var/log` (figtree's file logger target), and PATH shims so netdevice's `udhcpc`
+  resolves to the busybox applet and its `dnsmasq` gets `--user/--group root`.
+
+Note: netdevice's WAN udhcpc hook only *reports* the lease (it does not assign the WAN
+address), so Tier 3 does not complete a WAN→LAN NAT round-trip — that end-to-end proof
+lives in Tiers 1-2. Tier 3's job is the reconcile/report loop.

@@ -106,7 +106,9 @@ sim_build_topology() {
     nse router ip link set wan0 up
     nse router ip link set lan0 up
     nse router ip link set lo up
-    nse router ip addr add "$LAN_ADDR/$LAN_PREFIX" dev lan0   # == LanAddress.ensureLanAddress
+    # LAN static IP == LanAddress.ensureLanAddress. Skipped in Tier 3, where the real
+    # netdevice assigns it itself (so the harness can verify ensureLanAddress ran).
+    [ "${SIM_SKIP_LAN_ADDR:-}" = 1 ] || nse router ip addr add "$LAN_ADDR/$LAN_PREFIX" dev lan0
 
     # client: link up; address via udhcpc from the router's dnsmasq
     nse client ip link set cl0 up
@@ -202,5 +204,9 @@ sim_client_udhcpc() {
 
 sim_cleanup() {
     kill "${WAN_DNSMASQ_PID:-}" "${LAN_DNSMASQ_PID:-}" "${WAN_SVC_PID:-}" 2>/dev/null || true
+    # `ip netns exec` forks, so the real dnsmasq/udhcpc are grandchildren with PIDs other
+    # than $!; kill anything referencing this run's (unique) runtime dir in its argv
+    # (dnsmasq -C $RT/…, udhcpc -s $RT/…) so nothing is orphaned into the torn-down netns.
+    [ -n "${RT:-}" ] && pkill -f "$RT" 2>/dev/null || true
     for ns in wan router client; do ip netns del "$ns" 2>/dev/null || true; done
 }
