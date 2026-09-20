@@ -34,6 +34,21 @@ export class Router extends BasePage {
     protected _lanColors = ['var(--ffr-lan0)', 'var(--ffr-lan1)', 'var(--ffr-lan2)', 'var(--ffr-lan3)'];
 
     /**
+     * Previous rx/tx byte counters + timestamp per interface MAC, to derive a live rate.
+     */
+    protected _trafficPrev = new Map<string, {rx: number; tx: number; t: number;}>();
+
+    /**
+     * Current in/out rate (bytes/s) per interface MAC, computed from the counter deltas.
+     */
+    protected _trafficRate = new Map<string, {rx: number; tx: number;}>();
+
+    /**
+     * The live-refresh timer (polls the overview so traffic rates update); cleared on unload.
+     */
+    protected _refreshTimer: ReturnType<typeof setInterval> | null = null;
+
+    /**
      * constructor
      */
     public constructor() {
@@ -163,11 +178,58 @@ export class Router extends BasePage {
             const overview = await RouterAPI.getOverview();
             this._overview = overview;
 
+            this._computeTraffic(overview.availableInterfaces ?? []);
             this._canvas?.update(overview);
             this._renderCards(grid, overview);
         };
 
         await this._onLoadTable();
+
+        // Live refresh: re-poll the overview so the in/out traffic rates update.
+        this._refreshTimer = setInterval((): void => {
+            this._reload().catch((): void => {
+                // best-effort; a transient error just skips this tick
+            });
+        }, 3000);
+    }
+
+    /**
+     * Stop the live-refresh timer when the page is left.
+     */
+    public override unloadContent(): void {
+        if (this._refreshTimer !== null) {
+            clearInterval(this._refreshTimer);
+            this._refreshTimer = null;
+        }
+    }
+
+    /**
+     * Derive the live in/out rate (bytes/s) per interface from the delta of its rx/tx byte
+     * counters between polls, and remember the current sample for the next tick.
+     * @param interfaces - the discovered interfaces (carry rxBytes/txBytes)
+     * @protected
+     */
+    protected _computeTraffic(interfaces: AvailableInterface[]): void {
+        const now = Date.now() / 1000;
+
+        for (const iface of interfaces) {
+            if (iface.rxBytes === undefined || iface.txBytes === undefined) {
+                continue;
+            }
+
+            const mac = iface.mac.toLowerCase();
+            const prev = this._trafficPrev.get(mac);
+
+            if (prev && now > prev.t) {
+                const dt = now - prev.t;
+                this._trafficRate.set(mac, {
+                    rx: Math.max(0, (iface.rxBytes - prev.rx) / dt),
+                    tx: Math.max(0, (iface.txBytes - prev.tx) / dt)
+                });
+            }
+
+            this._trafficPrev.set(mac, {rx: iface.rxBytes, tx: iface.txBytes, t: now});
+        }
     }
 
     /**
@@ -244,6 +306,8 @@ export class Router extends BasePage {
             ipv4: ipv4,
             ipv4note: iface.ipv4_mode === 'static' ? 'static gateway' : iface.ipv4_mode,
             ipv6: det?.ipv6,
+            rxRate: this._trafficRate.get(iface.mac_address.toLowerCase())?.rx,
+            txRate: this._trafficRate.get(iface.mac_address.toLowerCase())?.tx,
             laneColor: laneColor,
             dhcp: (overview.dhcpConfigs ?? []).find((entry) => entry.network_interface_id === iface.id) ?? null,
             ipv6mode: iface.ipv6_mode ?? 'off',
@@ -275,6 +339,8 @@ export class Router extends BasePage {
             ipv4: det.ipv4 ?? det.state,
             ipv4note: 'detected',
             ipv6: det.ipv6,
+            rxRate: this._trafficRate.get(det.mac.toLowerCase())?.rx,
+            txRate: this._trafficRate.get(det.mac.toLowerCase())?.tx,
             laneColor: this._lanColors[0],
             actions: {
                 onAssign: () => {

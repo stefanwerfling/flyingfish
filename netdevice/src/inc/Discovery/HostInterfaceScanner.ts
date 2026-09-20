@@ -71,6 +71,11 @@ export class HostInterfaceScanner {
                     !addr.address.toLowerCase().startsWith('fe80')
             )?.address;
 
+            // Cumulative byte counters (rx/tx) from sysfs; the UI derives a live rate from
+            // the delta between polls.
+            const rxBytes = Number(HostInterfaceScanner._read(path.join(base, 'statistics', 'rx_bytes')));
+            const txBytes = Number(HostInterfaceScanner._read(path.join(base, 'statistics', 'tx_bytes')));
+
             const entry: AvailableInterface = {
                 name: name,
                 mac: mac,
@@ -83,6 +88,14 @@ export class HostInterfaceScanner {
 
             if (ipv6) {
                 entry.ipv6 = ipv6;
+            }
+
+            if (Number.isFinite(rxBytes)) {
+                entry.rxBytes = rxBytes;
+            }
+
+            if (Number.isFinite(txBytes)) {
+                entry.txBytes = txBytes;
             }
 
             out.push(entry);

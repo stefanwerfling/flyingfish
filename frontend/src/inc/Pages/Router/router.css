@@ -67,6 +67,9 @@
 .ffr .ffr-ip { margin-top: 5px; font-family: var(--ffr-mono); font-size: 13px; }
 .ffr .ffr-ip .ffr-modex { font-family: var(--ffr-mono); font-size: 11px; color: var(--ffr-faint); margin-left: 6px; }
 .ffr .ffr-ip.ffr-ip6 { margin-top: 2px; font-size: 11px; color: var(--ffr-v6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffr .ffr-traffic { margin-top: 5px; display: flex; gap: 12px; font-family: var(--ffr-mono); font-size: 11px; }
+.ffr .ffr-traffic .ffr-tr-in { color: var(--ffr-v4); }
+.ffr .ffr-traffic .ffr-tr-out { color: var(--ffr-accent); }
 .ffr .ffr-menu { margin-left: auto; }
 
 .ffr .ffr-sec { padding: 11px 15px; border-bottom: 1px solid var(--ffr-line); }

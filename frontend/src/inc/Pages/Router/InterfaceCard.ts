@@ -25,6 +25,9 @@ export type InterfaceView = {
     ipv4: string;
     ipv4note: string;
     ipv6?: string;
+    // Live traffic in bytes/second (in = rx, out = tx); undefined until the second poll.
+    rxRate?: number;
+    txRate?: number;
     laneColor: string;
     dhcp?: DhcpServerConfigEntry | null;
     ipv6mode?: string;
@@ -72,6 +75,16 @@ export class InterfaceCard {
 
         if (view.ipv6) {
             jQuery(`<div class="ffr-ip ffr-ip6">${InterfaceCard._esc(view.ipv6)}</div>`).appendTo(info);
+        }
+
+        // Live traffic in/out (updates on the page's poll).
+        if (view.rxRate !== undefined || view.txRate !== undefined) {
+            jQuery(
+                '<div class="ffr-traffic">' +
+                `<span class="ffr-tr-in">↓ ${InterfaceCard._fmtRate(view.rxRate)}</span>` +
+                `<span class="ffr-tr-out">↑ ${InterfaceCard._fmtRate(view.txRate)}</span>` +
+                '</div>'
+            ).appendTo(info);
         }
 
         // ---- menu --------------------------------------------------------------------------------------------------
@@ -251,6 +264,28 @@ export class InterfaceCard {
      */
     protected static _esc(value: string): string {
         return String(value).replace(/&/gu, '&amp;').replace(/</gu, '&lt;').replace(/>/gu, '&gt;').replace(/"/gu, '&quot;');
+    }
+
+    /**
+     * Format a byte/second rate as a human-readable string (B/s … GB/s). Undefined (no
+     * sample yet) renders as an em dash.
+     * @param bytesPerSec - the rate in bytes per second
+     */
+    protected static _fmtRate(bytesPerSec?: number): string {
+        if (bytesPerSec === undefined) {
+            return '—';
+        }
+
+        const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+        let value = Math.max(0, bytesPerSec);
+        let unit = 0;
+
+        while (value >= 1024 && unit < units.length - 1) {
+            value /= 1024;
+            unit++;
+        }
+
+        return `${value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
     }
 
 }

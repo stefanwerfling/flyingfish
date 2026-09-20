@@ -135,7 +135,11 @@ export const SchemaAvailableInterface = Vts.object({
     ipv4: Vts.optional(Vts.string()),
     // The interface's current GLOBAL IPv6 address if any (WAN GUA / LAN ULA),
     // informational for the UI. Link-local (fe80::) is excluded.
-    ipv6: Vts.optional(Vts.string())
+    ipv6: Vts.optional(Vts.string()),
+    // Cumulative rx/tx byte counters (sysfs); the UI derives a live in/out rate from the
+    // delta between two polls.
+    rxBytes: Vts.optional(Vts.number()),
+    txBytes: Vts.optional(Vts.number())
 });
 
 /**
