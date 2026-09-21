@@ -88,7 +88,26 @@ export const buildNftablesRuleset = (config: NftablesRouterConfig): NftablesRule
             }
         }
 
-        blocks.push(`table inet filter {\n\tchain forward {\n${forwardRules.join('\n')}\n\t}\n}`);
+        // Input firewall: protect the router's OWN services from the WAN. Accept policy
+        // (never lock out LAN/management); drop only unsolicited TCP+UDP inbound on the WAN,
+        // after accepting established/related, loopback and the WAN's DHCP-client ports.
+        // ICMPv6 (NDP/RA/PMTUD) is left to the accept policy so IPv6/WAN keep working.
+        const inputRules = [
+            '\t\ttype filter hook input priority 0; policy accept;',
+            '\t\tct state established,related accept',
+            '\t\tiifname "lo" accept'
+        ];
+
+        if (hasWan) {
+            inputRules.push(`\t\tiifname "${config.wanInterface}" udp dport { 68, 546 } accept`);
+            inputRules.push(`\t\tiifname "${config.wanInterface}" meta l4proto tcp drop`);
+            inputRules.push(`\t\tiifname "${config.wanInterface}" meta l4proto udp drop`);
+        }
+
+        blocks.push(
+            `table inet filter {\n\tchain forward {\n${forwardRules.join('\n')}\n\t}\n` +
+            `\tchain input {\n${inputRules.join('\n')}\n\t}\n}`
+        );
     }
 
     const natTable = (family: string, lanNames: string[]): void => {

@@ -20,9 +20,9 @@ describe('buildNftablesRuleset', () => {
         const result = buildNftablesRuleset(base);
 
         expect(result.ruleset).toContain('table inet filter');
-        // Routing ON: accept policy, no scoped LAN→WAN drop rules.
+        // Routing ON: the forward chain has no scoped LAN→WAN drop rule (accept policy).
         expect(result.ruleset).toContain('policy accept;');
-        expect(result.ruleset).not.toContain('drop');
+        expect(result.ruleset).not.toContain(`oifname "${base.wanInterface}" drop`);
         expect(result.ruleset).toContain('table ip nat');
         expect(result.ruleset).toContain('table ip6 nat');
         expect(result.ruleset).toContain('iifname "eth1" oifname "eth0" masquerade');
@@ -77,6 +77,27 @@ describe('buildNftablesRuleset', () => {
         // forward chain still present but without a LAN→WAN accept rule
         expect(result.ruleset).toContain('table inet filter');
         expect(result.ruleset).not.toContain('oifname');
+    });
+
+    test('input firewall: WAN unsolicited TCP+UDP dropped, DHCP-client + established + lo allowed', () => {
+        const result = buildNftablesRuleset(base);
+
+        expect(result.ruleset).toContain('chain input {');
+        expect(result.ruleset).toContain('type filter hook input priority 0; policy accept;');
+        expect(result.ruleset).toContain('ct state established,related accept');
+        expect(result.ruleset).toContain('iifname "lo" accept');
+        // WAN's own DHCP client kept working, then unsolicited TCP+UDP dropped on the WAN.
+        expect(result.ruleset).toContain('iifname "eth0" udp dport { 68, 546 } accept');
+        expect(result.ruleset).toContain('iifname "eth0" meta l4proto tcp drop');
+        expect(result.ruleset).toContain('iifname "eth0" meta l4proto udp drop');
+    });
+
+    test('input firewall with no WAN: chain present but no WAN drops', () => {
+        const result = buildNftablesRuleset({...base, wanInterface: ''});
+
+        expect(result.ruleset).toContain('chain input {');
+        expect(result.ruleset).toContain('iifname "lo" accept');
+        expect(result.ruleset).not.toContain('l4proto tcp drop');
     });
 
     test('routing off with multiple LANs: each LAN gets its own scoped drop rule', () => {

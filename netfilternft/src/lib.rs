@@ -12,8 +12,8 @@
 use futures::TryStreamExt;
 use napi_derive::napi;
 use rustables::{
-    Batch, Chain, ChainPolicy, ChainType, Hook, HookClass, MsgType, ProtocolFamily, Rule, Table,
-    list_tables,
+    Batch, Chain, ChainPolicy, ChainType, Hook, HookClass, MsgType, Protocol, ProtocolFamily, Rule,
+    Table, list_tables,
 };
 use std::error::Error;
 use std::net::Ipv6Addr;
@@ -119,6 +119,33 @@ fn apply_nftables(
                     .drop()
                     .add_to_batch(&mut batch);
             }
+        }
+
+        // Input firewall: protect the ROUTER's OWN services (SSH, web UI, nginx, PKI, …)
+        // from the WAN. ACCEPT policy on purpose — never lock out LAN/management: the chain
+        // only DROPS unsolicited TCP+UDP inbound on the WAN interface, after accepting
+        // established/related, loopback and the WAN's own DHCP-client reply ports. ICMPv6
+        // (NDP / router advertisement / packet-too-big) is deliberately NOT matched, so it
+        // stays accepted by the policy and IPv6/WAN keep working. LAN traffic never hits the
+        // WAN-scoped drops, so it is accepted too. (Per-port inbound openings / port
+        // forwarding land here in Phase 2.)
+        let input_chain = Chain::new(&table)
+            .with_name("input")
+            .with_hook(Hook::new(HookClass::In, 0))
+            .with_policy(ChainPolicy::Accept)
+            .add_to_batch(&mut batch);
+
+        Rule::new(&input_chain)?.established()?.accept().add_to_batch(&mut batch);
+        Rule::new(&input_chain)?.iiface("lo")?.accept().add_to_batch(&mut batch);
+
+        if has_wan {
+            // Keep the WAN's own DHCP client working (DHCPv4 reply → udp/68, DHCPv6 → udp/546).
+            Rule::new(&input_chain)?.iiface(wan)?.dport(68, Protocol::UDP).accept().add_to_batch(&mut batch);
+            Rule::new(&input_chain)?.iiface(wan)?.dport(546, Protocol::UDP).accept().add_to_batch(&mut batch);
+            // Drop unsolicited TCP + UDP inbound on the WAN (services closed to the internet);
+            // ICMPv6 is left to the accept policy so NDP/RA/PMTUD survive.
+            Rule::new(&input_chain)?.iiface(wan)?.protocol(Protocol::TCP).drop().add_to_batch(&mut batch);
+            Rule::new(&input_chain)?.iiface(wan)?.protocol(Protocol::UDP).drop().add_to_batch(&mut batch);
         }
     }
 
