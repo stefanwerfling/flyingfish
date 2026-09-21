@@ -1,0 +1,154 @@
+/*
+ * ffr-skin — brings every reused admin-lte / bootstrap-4 page (cards, tables, buttons,
+ * badges, forms, dropdowns, modals) up to the Router page's `.ffr` design language:
+ * teal accent, rounded surfaces, uppercase-faint table heads, monospace-friendly, with a
+ * coherent light + dark theme. Scoped under `body.ffx-app` so it wins over the vendor CSS
+ * without !important and never touches the login screen. The theme signal is data-theme on
+ * <html> (set in index.ts from the saved preference / OS); dark also honours the OS media
+ * query as a fallback.
+ *
+ * This also adds a dark palette to the `.ffr` PAGE scope (router.css only defined light),
+ * so the Router page and any future ffr page are dark-coherent too.
+ */
+
+/* ---- ffr tokens on the app body (light default) ---------------------------- */
+body.ffx-app {
+  --ffr-bg:#eef2f3; --ffr-surface:#ffffff; --ffr-surface2:#f4f8f9; --ffr-line:#e2e9ea;
+  --ffr-ink:#16292d; --ffr-soft:#4a6268; --ffr-faint:#8199a0;
+  --ffr-accent:#12919f; --ffr-accent-ink:#0b6a74;
+  --ffr-ok:#1f9d63; --ffr-warn:#c9871b; --ffr-down:#cf4257; --ffr-danger:#d9534f;
+  --ffr-v4:#2f7dd1; --ffr-v6:#a855c9;
+  --ffr-mono: ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+  --ffr-shadow:0 1px 2px rgba(22,41,45,.05);
+}
+@media (prefers-color-scheme: dark){ body.ffx-app {
+  --ffr-bg:#0e1618; --ffr-surface:#152226; --ffr-surface2:#1b2c31; --ffr-line:#2a3d43;
+  --ffr-ink:#e8f1f2; --ffr-soft:#a7bcc1; --ffr-faint:#6f878d;
+  --ffr-accent:#2bb9c9; --ffr-accent-ink:#7fdbe6;
+  --ffr-ok:#43c088; --ffr-warn:#e6b95a; --ffr-down:#e8756f; --ffr-danger:#e8756f;
+  --ffr-v4:#5fa3e6; --ffr-v6:#c98fdd; --ffr-shadow:0 1px 2px rgba(0,0,0,.3);
+} }
+:root[data-theme="light"] body.ffx-app {
+  --ffr-bg:#eef2f3; --ffr-surface:#ffffff; --ffr-surface2:#f4f8f9; --ffr-line:#e2e9ea;
+  --ffr-ink:#16292d; --ffr-soft:#4a6268; --ffr-faint:#8199a0; --ffr-accent:#12919f; --ffr-accent-ink:#0b6a74;
+  --ffr-ok:#1f9d63; --ffr-warn:#c9871b; --ffr-down:#cf4257; --ffr-danger:#d9534f;
+  --ffr-v4:#2f7dd1; --ffr-v6:#a855c9; --ffr-shadow:0 1px 2px rgba(22,41,45,.05);
+}
+:root[data-theme="dark"] body.ffx-app {
+  --ffr-bg:#0e1618; --ffr-surface:#152226; --ffr-surface2:#1b2c31; --ffr-line:#2a3d43;
+  --ffr-ink:#e8f1f2; --ffr-soft:#a7bcc1; --ffr-faint:#6f878d; --ffr-accent:#2bb9c9; --ffr-accent-ink:#7fdbe6;
+  --ffr-ok:#43c088; --ffr-warn:#e6b95a; --ffr-down:#e8756f; --ffr-danger:#e8756f;
+  --ffr-v4:#5fa3e6; --ffr-v6:#c98fdd; --ffr-shadow:0 1px 2px rgba(0,0,0,.3);
+}
+
+/* ---- dark palette for the .ffr page scope (router.css is light-only) -------- */
+@media (prefers-color-scheme: dark){ .ffr {
+  --ffr-ink:#e8f1f2; --ffr-soft:#a7bcc1; --ffr-faint:#6f878d; --ffr-line:#2a3d43;
+  --ffr-surface:#152226; --ffr-surface2:#1b2c31; --ffr-accent:#2bb9c9;
+  --ffr-ok:#43c088; --ffr-warn:#e6b95a; --ffr-down:#e8756f; --ffr-danger:#e8756f;
+} }
+:root[data-theme="dark"] .ffr {
+  --ffr-ink:#e8f1f2; --ffr-soft:#a7bcc1; --ffr-faint:#6f878d; --ffr-line:#2a3d43;
+  --ffr-surface:#152226; --ffr-surface2:#1b2c31; --ffr-accent:#2bb9c9;
+  --ffr-ok:#43c088; --ffr-warn:#e6b95a; --ffr-down:#e8756f; --ffr-danger:#e8756f;
+}
+:root[data-theme="light"] .ffr {
+  --ffr-ink:#16292d; --ffr-soft:#4a6268; --ffr-faint:#8199a0; --ffr-line:#e2e9ea;
+  --ffr-surface:#ffffff; --ffr-surface2:#f4f8f9; --ffr-accent:#1197ab;
+  --ffr-ok:#1f9d63; --ffr-warn:#c9871b; --ffr-down:#cf4257;
+}
+
+/* ---- page ground ----------------------------------------------------------- */
+body.ffx-app, body.ffx-app .wrapper, body.ffx-app .content-wrapper { background-color: var(--ffr-bg); color: var(--ffr-ink); }
+body.ffx-app .content { background-color: var(--ffr-bg); }
+body.ffx-app a { color: var(--ffr-accent); }
+body.ffx-app hr { border-top-color: var(--ffr-line); }
+body.ffx-app .text-muted, body.ffx-app small.text-muted { color: var(--ffr-faint) !important; }
+
+/* ---- cards ----------------------------------------------------------------- */
+body.ffx-app .card {
+  background-color: var(--ffr-surface); color: var(--ffr-ink);
+  border: 1px solid var(--ffr-line); border-radius: 12px; box-shadow: var(--ffr-shadow);
+}
+body.ffx-app .card-header {
+  background-color: transparent; border-bottom: 1px solid var(--ffr-line);
+  border-radius: 12px 12px 0 0; padding: 13px 16px; color: var(--ffr-ink);
+}
+body.ffx-app .card-title { font-size: 14.5px; font-weight: 650; color: var(--ffr-ink); margin: 0; }
+body.ffx-app .card-body { color: var(--ffr-ink); }
+body.ffx-app .card-footer { background-color: var(--ffr-surface2); border-top: 1px solid var(--ffr-line); border-radius: 0 0 12px 12px; }
+/* admin-lte coloured card top-border variants -> subtle accent bar */
+body.ffx-app .card.card-primary:not(.card-outline) > .card-header,
+body.ffx-app .card.card-info:not(.card-outline) > .card-header { background-color: var(--ffr-accent); color: #fff; border-color: var(--ffr-accent); }
+
+/* ---- tables ---------------------------------------------------------------- */
+body.ffx-app .table { color: var(--ffr-ink); border-color: var(--ffr-line); margin-bottom: 0; }
+body.ffx-app .table th, body.ffx-app .table td { border-color: var(--ffr-line); vertical-align: middle; padding: 10px 12px; }
+body.ffx-app .table thead th {
+  color: var(--ffr-faint); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  border-bottom: 1px solid var(--ffr-line); border-top: 0; background-color: transparent;
+}
+body.ffx-app .table-hover tbody tr:hover { background-color: color-mix(in srgb, var(--ffr-accent) 6%, transparent); color: var(--ffr-ink); }
+body.ffx-app .table-striped tbody tr:nth-of-type(odd) { background-color: color-mix(in srgb, var(--ffr-faint) 6%, transparent); }
+
+/* ---- buttons --------------------------------------------------------------- */
+body.ffx-app .btn { border-radius: 8px; font-weight: 600; font-size: 13px; }
+body.ffx-app .btn-default, body.ffx-app .btn-light, body.ffx-app .btn-outline-secondary {
+  background-color: var(--ffr-surface); border-color: var(--ffr-line); color: var(--ffr-ink);
+}
+body.ffx-app .btn-default:hover, body.ffx-app .btn-light:hover { background-color: var(--ffr-surface2); color: var(--ffr-ink); }
+body.ffx-app .btn-primary, body.ffx-app .btn-info {
+  background-color: var(--ffr-accent); border-color: var(--ffr-accent); color: #fff;
+}
+body.ffx-app .btn-primary:hover, body.ffx-app .btn-info:hover { background-color: var(--ffr-accent-ink); border-color: var(--ffr-accent-ink); }
+body.ffx-app .btn-success { background-color: var(--ffr-ok); border-color: var(--ffr-ok); color: #fff; }
+body.ffx-app .btn-danger { background-color: var(--ffr-danger); border-color: var(--ffr-danger); color: #fff; }
+body.ffx-app .btn-warning { background-color: var(--ffr-warn); border-color: var(--ffr-warn); color: #fff; }
+
+/* ---- badges ---------------------------------------------------------------- */
+body.ffx-app .badge { border-radius: 6px; font-weight: 700; font-size: 10.5px; letter-spacing: .02em; padding: 3px 7px; }
+
+/* ---- forms ----------------------------------------------------------------- */
+body.ffx-app .form-control, body.ffx-app .custom-select, body.ffx-app textarea.form-control {
+  background-color: var(--ffr-surface2); border: 1px solid var(--ffr-line); border-radius: 8px; color: var(--ffr-ink);
+}
+body.ffx-app .form-control:focus, body.ffx-app .custom-select:focus {
+  background-color: var(--ffr-surface2); border-color: var(--ffr-accent); color: var(--ffr-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ffr-accent) 22%, transparent);
+}
+body.ffx-app .form-control::placeholder { color: var(--ffr-faint); }
+body.ffx-app label, body.ffx-app .col-form-label { color: var(--ffr-soft); font-weight: 600; font-size: 12.5px; }
+body.ffx-app .input-group-text { background-color: var(--ffr-surface2); border-color: var(--ffr-line); color: var(--ffr-soft); }
+
+/* ---- dropdown menus (bambooo ButtonMenu / actions) ------------------------- */
+body.ffx-app .dropdown-menu { background-color: var(--ffr-surface); border: 1px solid var(--ffr-line); border-radius: 10px; box-shadow: 0 8px 26px rgba(0,0,0,.18); padding: 5px; }
+body.ffx-app .dropdown-item { color: var(--ffr-ink); border-radius: 7px; padding: 7px 11px; font-size: 13px; }
+body.ffx-app .dropdown-item:hover, body.ffx-app .dropdown-item:focus { background-color: var(--ffr-surface2); color: var(--ffr-ink); }
+body.ffx-app .dropdown-divider { border-top-color: var(--ffr-line); }
+
+/* ---- bootstrap modals (any not yet migrated to FfrModal) ------------------- */
+body.ffx-app .modal-content { background-color: var(--ffr-surface); color: var(--ffr-ink); border: 1px solid var(--ffr-line); border-radius: 12px; }
+body.ffx-app .modal-header, body.ffx-app .modal-footer { border-color: var(--ffr-line); }
+body.ffx-app .modal-title { color: var(--ffr-ink); font-weight: 650; }
+body.ffx-app .close { color: var(--ffr-ink); text-shadow: none; opacity: .7; }
+body.ffx-app .modal-backdrop.show { opacity: .55; }
+
+/* ---- select2 (dropdowns render under <body>, still in data-theme scope) ----- */
+:root[data-theme="dark"] body.ffx-app .select2-container--bootstrap4 .select2-selection,
+:root[data-theme="dark"] .select2-dropdown { background-color: var(--ffr-surface2, #1b2c31); border-color: #2a3d43; color: #e8f1f2; }
+:root[data-theme="dark"] .select2-dropdown { background-color: #152226; }
+:root[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option { color: #e8f1f2; }
+:root[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option--highlighted { background-color: #2bb9c9; color: #06222a; }
+:root[data-theme="dark"] .select2-container--bootstrap4 .select2-selection__rendered { color: #e8f1f2; }
+:root[data-theme="dark"] .select2-search__field { background-color: #0f1c20; color: #e8f1f2; border-color: #2a3d43; }
+
+/* ---- list groups, code, footer, misc surfaces ------------------------------ */
+body.ffx-app .list-group-item { background-color: var(--ffr-surface); border-color: var(--ffr-line); color: var(--ffr-ink); }
+body.ffx-app pre, body.ffx-app code { background-color: var(--ffr-surface2); color: var(--ffr-ink); border-radius: 6px; }
+body.ffx-app .info-box, body.ffx-app .callout { background-color: var(--ffr-surface); color: var(--ffr-ink); border-radius: 12px; box-shadow: var(--ffr-shadow); }
+body.ffx-app .main-footer { background-color: var(--ffr-surface); border-top: 1px solid var(--ffr-line); color: var(--ffr-soft); }
+body.ffx-app .border, body.ffx-app .border-top, body.ffx-app .border-bottom, body.ffx-app .border-left, body.ffx-app .border-right { border-color: var(--ffr-line) !important; }
+
+/* ---- the page-action links in the top strip ("+ Add X") -> ffr primary ----- */
+body.ffx-app .main-header .nav-item .btn,
+body.ffx-app .main-header .nav-item > a.nav-link.ffr-addlink { background-color: var(--ffr-accent); border-color: var(--ffr-accent); color: #fff; border-radius: 8px; }

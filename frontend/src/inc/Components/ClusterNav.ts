@@ -1,5 +1,5 @@
 import './tree-shell.css';
-import './dark-theme.css';
+import './ffr-skin.css';
 
 /**
  * A tab under an entity — maps to a page loaded into the content area.
