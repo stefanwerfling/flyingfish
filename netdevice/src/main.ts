@@ -21,7 +21,7 @@ import {WanConfigClient} from './inc/Wan/WanConfigClient.js';
 import {WanLeaseReporter} from './inc/Wan/WanLeaseReporter.js';
 import {DhcpLeaseReporter} from './inc/Lan/DhcpLeaseReporter.js';
 import {DnsmasqRunner} from './inc/Lan/DnsmasqRunner.js';
-import {ensureLanAddress, ensureLanIpv6} from './inc/Lan/LanAddress.js';
+import {ensureLanAddress, ensureLanIpv6, ensureLanLinkUp} from './inc/Lan/LanAddress.js';
 import {KeaRunner} from './inc/Lan/KeaRunner.js';
 import {LanConfigClient} from './inc/Lan/LanConfigClient.js';
 import {HostInterfaceScanner} from './inc/Discovery/HostInterfaceScanner.js';
@@ -205,6 +205,20 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
                 const iface = lanConfig.lanInterface;
 
                 if (iface === '') {
+                    continue;
+                }
+
+                // Carrier-skip: don't touch an interface that is GONE (e.g. an unplugged USB
+                // NIC — configuring it would fail every `ip` call with "Cannot find device")
+                // or has no live link (unplugged/flapping). Leave it out of `seen` so its
+                // dnsmasq is stopped below. It is picked up again once a stable link returns.
+                if (!HostInterfaceScanner.exists(iface)) {
+                    continue;
+                }
+
+                await ensureLanLinkUp(iface);
+
+                if (!HostInterfaceScanner.hasCarrier(iface)) {
                     continue;
                 }
 

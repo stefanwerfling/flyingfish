@@ -300,7 +300,11 @@ export class Router extends BasePage {
             mac: iface.mac_address,
             name: iface.name || '',
             role: iface.role,
-            up: det ? det.state === 'up' : !(iface.disable ?? false),
+            up: det ? det.state === 'up' : false,
+            // A configured interface with no live match was not discovered on the host — its
+            // NIC is absent (e.g. an unplugged USB adapter). The card flags it so the user
+            // can delete the stale config.
+            present: det !== null,
             disabled: iface.disable ?? false,
             configured: true,
             ipv4: ipv4,

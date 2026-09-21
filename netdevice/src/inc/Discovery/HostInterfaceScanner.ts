@@ -105,6 +105,35 @@ export class HostInterfaceScanner {
     }
 
     /**
+     * Whether a network interface currently exists on the host (present in sysfs). A USB
+     * NIC that was unplugged is gone from here, so the reconcile can skip it instead of
+     * failing every `ip` command with "Cannot find device".
+     * @param {string} name - the interface name
+     * @param {string} sysDir - sysfs net dir (override for tests)
+     * @returns {boolean}
+     */
+    public static exists(name: string, sysDir: string = SYS_CLASS_NET): boolean {
+        try {
+            return fs.existsSync(path.join(sysDir, name));
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Whether an interface currently has carrier (a live link). Reads sysfs `carrier`
+     * ("1" = up). Only meaningful when the interface is administratively up; the caller
+     * brings it up first. A flapping/unplugged link reads "0", so the reconcile can skip
+     * configuring/serving it (dnsmasq/Kea/addresses) until the link is stable.
+     * @param {string} name - the interface name
+     * @param {string} sysDir - sysfs net dir (override for tests)
+     * @returns {boolean}
+     */
+    public static hasCarrier(name: string, sysDir: string = SYS_CLASS_NET): boolean {
+        return HostInterfaceScanner._read(path.join(sysDir, name, 'carrier')) === '1';
+    }
+
+    /**
      * Read a sysfs attribute file, trimmed; empty string on any error.
      * @param {string} file - the file path
      * @returns {string}

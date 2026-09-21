@@ -22,6 +22,10 @@ export type InterfaceView = {
     up: boolean;
     disabled: boolean;
     configured: boolean;
+    // Whether the physical NIC was discovered on the host. A configured interface with
+    // present=false is gone (e.g. an unplugged USB adapter) — flagged so the user can
+    // delete the stale config.
+    present?: boolean;
     ipv4: string;
     ipv4note: string;
     ipv6?: string;
@@ -70,7 +74,16 @@ export class InterfaceCard {
             jQuery('<span class="ffr-role idle">available</span>').appendTo(nameRow);
         }
 
+        // Configured but the NIC is gone from the host (e.g. unplugged USB adapter).
+        if (view.configured && view.present === false) {
+            jQuery('<span class="ffr-role gone">not present</span>').appendTo(nameRow);
+        }
+
         jQuery(`<div class="ffr-name"><span class="ffr-macx">${InterfaceCard._esc(view.mac)}</span></div>`).appendTo(info);
+
+        if (view.configured && view.present === false) {
+            jQuery('<div class="ffr-gone-hint">NIC not detected — unplugged or removed. You can delete this interface.</div>').appendTo(info);
+        }
         jQuery(`<div class="ffr-ip">${InterfaceCard._esc(view.ipv4)}<span class="ffr-modex">${InterfaceCard._esc(view.ipv4note)}</span></div>`).appendTo(info);
 
         if (view.ipv6) {

@@ -23,6 +23,19 @@ function runIp(args: string[]): Promise<{ok: boolean; stderr: string;}> {
  * @param address - the static IPv4 address
  * @param prefix - the IPv4 prefix length
  */
+/**
+ * Bring a LAN interface administratively up (so its carrier state is meaningful before the
+ * reconcile decides whether to configure/serve it). Best-effort.
+ * @param iface - the interface name
+ */
+export async function ensureLanLinkUp(iface: string): Promise<void> {
+    if (iface === '') {
+        return;
+    }
+
+    await runIp(['link', 'set', 'dev', iface, 'up']);
+}
+
 export async function ensureLanAddress(iface: string, address: string, prefix: number): Promise<void> {
     if (iface === '' || address === '' || prefix <= 0) {
         return;
