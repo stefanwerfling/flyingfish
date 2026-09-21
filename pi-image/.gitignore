@@ -4,3 +4,6 @@ cache/
 *.img.xz
 *.img.zst
 *.tar
+
+# Opt-in maintainer SSH key baked into the image (never commit — public repo)
+authorized_keys

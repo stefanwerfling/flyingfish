@@ -234,6 +234,17 @@ SSHCONF
 systemctl enable ssh
 CHROOT_ENABLE
 
+# Optional maintainer SSH key for unattended deploys — OPT-IN only, never hardcoded:
+# this repo is public, so a baked-in key would grant its holder root on every flashed
+# image. Provide one via the SSH_PUBKEY env (build.sh reads it, or pi-image/authorized_keys
+# which is gitignored). Empty = the image ships password-only (root:flyingfish above).
+if [[ -n "${SSH_PUBKEY:-}" ]]; then
+    log "Installing the provided maintainer SSH key into root's authorized_keys ..."
+    install -d -m 700 "$MNT_ROOT/root/.ssh"
+    printf '%s\n' "$SSH_PUBKEY" > "$MNT_ROOT/root/.ssh/authorized_keys"
+    chmod 600 "$MNT_ROOT/root/.ssh/authorized_keys"
+fi
+
 # 8. Tear down ---------------------------------------------------------------
 
 log "Restoring resolv.conf and unmounting ..."

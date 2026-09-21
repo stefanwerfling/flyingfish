@@ -179,6 +179,14 @@ docker build -t flyingfish-pi-builder -f "$HERE/Dockerfile.builder" "$HERE"
 #   /work/files  ← what gets baked into the image (compose, firstboot, units)
 #   /work/out    ← where the final .img / .img.xz lands
 
+# Optional maintainer SSH key baked into the image (opt-in): from the SSH_PUBKEY env,
+# else from pi-image/authorized_keys (gitignored). Empty = a password-only image — never
+# hardcode a key here, this repo is public.
+SSH_PUBKEY="${SSH_PUBKEY:-}"
+if [[ -z "$SSH_PUBKEY" && -f "$HERE/authorized_keys" ]]; then
+    SSH_PUBKEY="$(cat "$HERE/authorized_keys")"
+fi
+
 echo "→ Running the privileged builder ..."
 docker run --rm --privileged \
     -v "$CACHE_DIR":/work/cache \
@@ -187,6 +195,7 @@ docker run --rm --privileged \
     -e RPI_URL="$RPI_URL" \
     -e EXTRA_MB="$EXTRA_MB" \
     -e ONLY_APP="$ONLY_APP" \
+    -e SSH_PUBKEY="$SSH_PUBKEY" \
     -e FF_TAR_BASENAME="$(basename "$FF_TAR")" \
     flyingfish-pi-builder
 
