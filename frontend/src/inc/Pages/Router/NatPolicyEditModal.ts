@@ -1,67 +1,92 @@
-import {
-    Form, FormGroup, SelectBottemBorderOnly2, Switch,
-    Element, ModalDialog, ModalDialogType, LangText
-} from 'bambooo';
+import {FfrField, FfrModal, FfrSection, FfrSelect, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * NatPolicyEditModal — edit the node's NAT/routing policy (Pi-router epic, Phase 6):
- * IPv4 NAT (masquerade), the IPv6 mode (off / NAT66 / DHCPv6-PD routing) and IP
- * forwarding. A singleton per node.
+ * NatPolicyEditModal — edit the node's NAT/routing policy (Pi-router epic): IP forwarding,
+ * IPv4 NAT (masquerade) and the IPv6 mode. A singleton per node. Rendered in the FlyingFish
+ * `.ffr` design language (see {@link FfrModal}).
  */
-export class NatPolicyEditModal extends ModalDialog {
+export class NatPolicyEditModal {
 
-    protected _switchNat44: Switch;
+    protected readonly _modal: FfrModal;
 
-    protected _selectIpv6Mode: SelectBottemBorderOnly2;
+    protected readonly _switchForward: FfrSwitch;
 
-    protected _switchForward: Switch;
+    protected readonly _switchNat44: FfrSwitch;
+
+    protected readonly _selectIpv6Mode: FfrSelect;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'natpolicymodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Routing / forwarding', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
+        const secRouting = new FfrSection(body, 'Routing');
+        this._switchForward = new FfrSwitch('Enable routing (IP forwarding)', false);
+        secRouting.element.append(this._switchForward.element);
 
-        const groupForward = new FormGroup(form, 'Enable routing (IP forwarding)');
-        this._switchForward = new Switch(groupForward, 'natforward');
+        const secNat = new FfrSection(body, 'NAT');
+        this._switchNat44 = new FfrSwitch('NAT44 — masquerade LAN → WAN (IPv4)', false);
+        secNat.element.append(this._switchNat44.element);
 
-        const groupNat44 = new FormGroup(form, 'NAT44 (IPv4 masquerade LAN → WAN)');
-        this._switchNat44 = new Switch(groupNat44, 'nat44');
-
-        const groupIpv6Mode = new FormGroup(form, 'IPv6 mode');
-        this._selectIpv6Mode = new SelectBottemBorderOnly2(groupIpv6Mode);
+        this._selectIpv6Mode = new FfrSelect();
         this._selectIpv6Mode.setValues([
             {key: 'off', value: 'Off (no IPv6 routing)'},
             {key: 'nat66', value: 'NAT66 (masquerade LAN ULA → WAN)'},
             {key: 'pd', value: 'DHCPv6-PD routing (delegated prefix, no NAT)'}
         ]);
+        new FfrField(secNat.element, 'IPv6 mode').mount(this._selectIpv6Mode.element);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
+
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
      * setNat44Enabled
-     * @param enabled
+     * @param enabled - on-state
      */
     public setNat44Enabled(enabled: boolean): void {
-        this._switchNat44.setEnable(enabled);
+        this._switchNat44.setOn(enabled);
     }
 
     /**
      * getNat44Enabled
      */
     public getNat44Enabled(): boolean {
-        return this._switchNat44.isEnable();
+        return this._switchNat44.isOn();
     }
 
     /**
      * setIpv6Mode
-     * @param mode
+     * @param mode - off | nat66 | pd
      */
     public setIpv6Mode(mode: string): void {
         this._selectIpv6Mode.setSelectedValue(mode);
@@ -76,23 +101,23 @@ export class NatPolicyEditModal extends ModalDialog {
 
     /**
      * setForwardEnabled
-     * @param enabled
+     * @param enabled - on-state
      */
     public setForwardEnabled(enabled: boolean): void {
-        this._switchForward.setEnable(enabled);
+        this._switchForward.setOn(enabled);
     }
 
     /**
      * getForwardEnabled
      */
     public getForwardEnabled(): boolean {
-        return this._switchForward.isEnable();
+        return this._switchForward.isOn();
     }
 
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setNat44Enabled(false);
         this.setIpv6Mode('off');
         this.setForwardEnabled(false);

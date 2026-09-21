@@ -1,110 +1,139 @@
-import {
-    Form, FormGroup, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch,
-    Element, ModalDialog, ModalDialogType, LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSelect, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * RouterInterfaceEditModal — add/edit a network interface (Pi-router epic, Phase 6):
- * its MAC (stable identity), OS name, router role and IPv4 addressing.
+ * RouterInterfaceEditModal — add/edit a network interface (Pi-router epic): its MAC (stable
+ * identity), OS name, router role, IPv4 addressing and per-LAN NAT/IPv6 mode. Rendered in
+ * the FlyingFish `.ffr` design language (see {@link FfrModal}). The detected-NIC picker is
+ * fed from the live host NIC list the netdevice part reports; choosing one autofills MAC +
+ * name.
  */
-export class RouterInterfaceEditModal extends ModalDialog {
+export class RouterInterfaceEditModal {
+
+    protected readonly _modal: FfrModal;
 
     protected _id: number | null = null;
 
-    protected _selectDetected: SelectBottemBorderOnly2;
-
     protected _available: Array<{name: string; mac: string; state: string; ipv4?: string;}> = [];
 
-    protected _inputMac: InputBottemBorderOnly2;
+    protected readonly _selectDetected: FfrSelect;
 
-    protected _inputName: InputBottemBorderOnly2;
+    protected readonly _inMac: FfrInput;
 
-    protected _selectRole: SelectBottemBorderOnly2;
+    protected readonly _inName: FfrInput;
 
-    protected _selectIpv4Mode: SelectBottemBorderOnly2;
+    protected readonly _selectRole: FfrSelect;
 
-    protected _inputIpv4Address: InputBottemBorderOnly2;
+    protected readonly _selectIpv4Mode: FfrSelect;
 
-    protected _inputIpv4Prefix: InputBottemBorderOnly2;
+    protected readonly _inIpv4Address: FfrInput;
 
-    protected _switchDisable: Switch;
+    protected readonly _inIpv4Prefix: FfrInput;
 
-    protected _switchNat44: Switch;
+    protected readonly _switchNat44: FfrSwitch;
 
-    protected _selectIpv6Mode: SelectBottemBorderOnly2;
+    protected readonly _selectIpv6Mode: FfrSelect;
+
+    protected readonly _switchDisable: FfrSwitch;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'routerinterfacemodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Interface', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
-
-        // Detected-NIC picker (interface discovery): populated from the live host NIC
-        // list the netdevice part reports. Choosing one autofills the MAC + name below;
-        // the MAC field stays editable for a manual entry when nothing is detected.
-        const groupDetected = new FormGroup(form, 'Detected interface');
-        this._selectDetected = new SelectBottemBorderOnly2(groupDetected);
+        // --- Interface identity -------------------------------------------------------------------------------------
+        const secIface = new FfrSection(body, 'Interface');
+        this._selectDetected = new FfrSelect();
         this._selectDetected.setValues([{key: '', value: '— select a detected NIC —'}]);
-        this._selectDetected.setChangeFn((value): void => {
+        this._selectDetected.onChange((value) => {
             const found = this._available.find((iface) => iface.mac === value);
 
             if (found) {
-                this._inputMac.setValue(found.mac);
-                this._inputName.setValue(found.name);
+                this._inMac.setValue(found.mac);
+                this._inName.setValue(found.name);
             }
         });
+        new FfrField(secIface.element, 'Detected interface', 'Pick a live NIC to autofill its MAC + name.').mount(this._selectDetected.element);
 
-        const groupMac = new FormGroup(form, 'MAC address');
-        this._inputMac = new InputBottemBorderOnly2(groupMac, 'ifacemac', InputType.text);
+        const rowId = FfrField.row(secIface.element);
+        this._inMac = new FfrInput(true, 'aa:bb:cc:dd:ee:ff');
+        new FfrField(rowId, 'MAC address').mount(this._inMac.element);
+        this._inName = new FfrInput(false, 'eth0');
+        new FfrField(rowId, 'Name', 'Informational.').mount(this._inName.element);
 
-        const groupName = new FormGroup(form, 'Interface name (informational)');
-        this._inputName = new InputBottemBorderOnly2(groupName, 'ifacename', InputType.text);
-
-        const groupRole = new FormGroup(form, 'Role');
-        this._selectRole = new SelectBottemBorderOnly2(groupRole);
+        // --- Role & addressing --------------------------------------------------------------------------------------
+        const secAddr = new FfrSection(body, 'Role & addressing');
+        this._selectRole = new FfrSelect();
         this._selectRole.setValues([
             {key: 'unassigned', value: 'Unassigned'},
             {key: 'wan', value: 'WAN (uplink, DHCP client)'},
             {key: 'lan', value: 'LAN (downlink, DHCP server)'}
         ]);
+        new FfrField(secAddr.element, 'Role').mount(this._selectRole.element);
 
-        const groupIpv4Mode = new FormGroup(form, 'IPv4 mode');
-        this._selectIpv4Mode = new SelectBottemBorderOnly2(groupIpv4Mode);
+        this._selectIpv4Mode = new FfrSelect();
         this._selectIpv4Mode.setValues([
             {key: 'none', value: 'None'},
             {key: 'dhcp', value: 'DHCP client'},
             {key: 'static', value: 'Static'}
         ]);
+        new FfrField(secAddr.element, 'IPv4 mode').mount(this._selectIpv4Mode.element);
 
-        const groupIpv4Address = new FormGroup(form, 'IPv4 address (static)');
-        this._inputIpv4Address = new InputBottemBorderOnly2(groupIpv4Address, 'ifaceip', InputType.text);
+        const rowIp = FfrField.row(secAddr.element);
+        this._inIpv4Address = new FfrInput(true, '192.168.50.1');
+        new FfrField(rowIp, 'IPv4 address', 'For static mode.').mount(this._inIpv4Address.element);
+        this._inIpv4Prefix = new FfrInput(true, '24');
+        new FfrField(rowIp, 'IPv4 prefix', 'CIDR, e.g. 24.').mount(this._inIpv4Prefix.element);
 
-        const groupIpv4Prefix = new FormGroup(form, 'IPv4 prefix (CIDR, e.g. 24)');
-        this._inputIpv4Prefix = new InputBottemBorderOnly2(groupIpv4Prefix, 'ifaceprefix', InputType.number);
+        // --- NAT / IPv6 (per LAN) -----------------------------------------------------------------------------------
+        const secNat = new FfrSection(body, 'NAT / IPv6 (LAN)');
+        this._switchNat44 = new FfrSwitch('NAT44 — masquerade this LAN → WAN', false);
+        secNat.element.append(this._switchNat44.element);
 
-        // Per-LAN NAT (only meaningful for a LAN role): masquerade this LAN to the WAN,
-        // and its own IPv6 mode so each LAN can differ (one NAT66, another PD-routed).
-        const groupNat44 = new FormGroup(form, 'Enable NAT44 (masquerade this LAN → WAN)');
-        this._switchNat44 = new Switch(groupNat44, 'ifacenat44');
-
-        const groupIpv6Mode = new FormGroup(form, 'IPv6 mode');
-        this._selectIpv6Mode = new SelectBottemBorderOnly2(groupIpv6Mode);
+        this._selectIpv6Mode = new FfrSelect();
         this._selectIpv6Mode.setValues([
             {key: 'off', value: 'Off (no IPv6 routing)'},
             {key: 'nat66', value: 'NAT66 (masquerade a ULA → WAN IPv6)'},
             {key: 'pd', value: 'PD (route the delegated /64 — end-to-end)'},
             {key: 'pd-server', value: 'PD server (delegate ULA prefixes downstream, masqueraded)'}
         ]);
+        new FfrField(secNat.element, 'IPv6 mode').mount(this._selectIpv6Mode.element);
 
-        const groupDisable = new FormGroup(form, 'Disable');
-        this._switchDisable = new Switch(groupDisable, 'ifacedisable');
+        // --- Options ------------------------------------------------------------------------------------------------
+        const secOpt = new FfrSection(body, 'Options');
+        this._switchDisable = new FfrSwitch('Disable this interface', false);
+        secOpt.element.append(this._switchDisable.element);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
+
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -116,29 +145,23 @@ export class RouterInterfaceEditModal extends ModalDialog {
 
     /**
      * setId
-     * @param id
+     * @param id - interface id (null = create)
      */
     public setId(id: number | null): void {
         this._id = id;
     }
 
     /**
-     * setAvailableInterfaces — populate the detected-NIC picker from the live host NIC
-     * list reported by the netdevice part.
-     * @param {Array<{name: string; mac: string; state: string; ipv4?: string;}>} list
+     * setAvailableInterfaces — populate the detected-NIC picker.
+     * @param list - live host NIC list
      */
     public setAvailableInterfaces(list: Array<{name: string; mac: string; state: string; ipv4?: string;}>): void {
         this._available = list;
-
-        // Clear first — setValues appends, so without this the placeholder + NICs
-        // pile up every time the dialog is reopened.
-        this._selectDetected.clearValues();
 
         const options = [{key: '', value: '— select a detected NIC —'}];
 
         for (const iface of list) {
             const ip = iface.ipv4 ? ` ${iface.ipv4}` : '';
-
             options.push({key: iface.mac, value: `${iface.name} [${iface.state}]${ip} — ${iface.mac}`});
         }
 
@@ -147,37 +170,43 @@ export class RouterInterfaceEditModal extends ModalDialog {
 
     /**
      * setMac
-     * @param mac
+     * @param mac - MAC address
      */
     public setMac(mac: string): void {
-        this._inputMac.setValue(mac);
+        this._inMac.setValue(mac);
+
+        // On edit, reflect the interface in the detected-NIC picker if its MAC is live
+        // (so the picker shows which physical NIC this is, not the placeholder).
+        if (mac !== '' && this._available.some((iface) => iface.mac === mac)) {
+            this._selectDetected.setSelectedValue(mac);
+        }
     }
 
     /**
      * getMac
      */
     public getMac(): string {
-        return this._inputMac.getValue();
+        return this._inMac.getValue();
     }
 
     /**
      * setName
-     * @param name
+     * @param name - interface name
      */
     public setName(name: string): void {
-        this._inputName.setValue(name);
+        this._inName.setValue(name);
     }
 
     /**
      * getName
      */
     public getName(): string {
-        return this._inputName.getValue();
+        return this._inName.getValue();
     }
 
     /**
      * setRole
-     * @param role
+     * @param role - unassigned | wan | lan
      */
     public setRole(role: string): void {
         this._selectRole.setSelectedValue(role);
@@ -192,7 +221,7 @@ export class RouterInterfaceEditModal extends ModalDialog {
 
     /**
      * setIpv4Mode
-     * @param mode
+     * @param mode - none | dhcp | static
      */
     public setIpv4Mode(mode: string): void {
         this._selectIpv4Mode.setSelectedValue(mode);
@@ -207,67 +236,67 @@ export class RouterInterfaceEditModal extends ModalDialog {
 
     /**
      * setIpv4Address
-     * @param address
+     * @param address - IPv4 address
      */
     public setIpv4Address(address: string): void {
-        this._inputIpv4Address.setValue(address);
+        this._inIpv4Address.setValue(address);
     }
 
     /**
      * getIpv4Address
      */
     public getIpv4Address(): string {
-        return this._inputIpv4Address.getValue();
+        return this._inIpv4Address.getValue();
     }
 
     /**
      * setIpv4Prefix
-     * @param prefix
+     * @param prefix - CIDR prefix
      */
     public setIpv4Prefix(prefix: number): void {
-        this._inputIpv4Prefix.setValue(`${prefix}`);
+        this._inIpv4Prefix.setValue(`${prefix}`);
     }
 
     /**
      * getIpv4Prefix
      */
     public getIpv4Prefix(): number {
-        return parseInt(this._inputIpv4Prefix.getValue(), 10) || 0;
+        return parseInt(this._inIpv4Prefix.getValue(), 10) || 0;
     }
 
     /**
      * setDisable
-     * @param disable
+     * @param disable - on-state
      */
     public setDisable(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+        this._switchDisable.setOn(disable);
     }
 
     /**
      * getDisable
      */
     public getDisable(): boolean {
-        return this._switchDisable.isEnable();
+        return this._switchDisable.isOn();
     }
 
     /**
      * setNat44Enabled
-     * @param enable
+     * @param enable - on-state
      */
     public setNat44Enabled(enable: boolean): void {
-        this._switchNat44.setEnable(enable);
+        this._switchNat44.setOn(enable);
     }
 
     /**
      * getNat44Enabled
      */
     public getNat44Enabled(): boolean {
-        return this._switchNat44.isEnable();
+        return this._switchNat44.isOn();
     }
 
     /**
      * setIpv6Mode
-     * @param mode
+     * @param mode - off | nat66 | pd | pd-server
      */
     public setIpv6Mode(mode: string): void {
         this._selectIpv6Mode.setSelectedValue(mode);
@@ -283,7 +312,7 @@ export class RouterInterfaceEditModal extends ModalDialog {
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this._selectDetected.setSelectedValue('');
         this.setMac('');

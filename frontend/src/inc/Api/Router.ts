@@ -2,6 +2,7 @@ import {
     DhcpServerConfigEntry,
     NatPolicyEntry,
     NetworkInterfaceEntry,
+    PortForwardEntry,
     RouterIdRequest,
     RouterOverviewResponse,
     SchemaDefaultReturn,
@@ -65,6 +66,25 @@ export class Router {
      */
     public static async saveDhcpConfig(entry: DhcpServerConfigEntry): Promise<boolean> {
         await NetFetch.postData('/json/router/dhcp/save', entry, SchemaDefaultReturn);
+        return true;
+    }
+
+    /**
+     * Create/update a port-forwarding / inbound firewall rule (id 0 = create).
+     * @param entry - the rule
+     */
+    public static async savePortForward(entry: PortForwardEntry): Promise<boolean> {
+        await NetFetch.postData('/json/router/portforward/save', entry, SchemaDefaultReturn);
+        return true;
+    }
+
+    /**
+     * Delete a port-forwarding / inbound firewall rule.
+     * @param id - the rule id
+     */
+    public static async deletePortForward(id: number): Promise<boolean> {
+        const request: RouterIdRequest = {id: id};
+        await NetFetch.postData('/json/router/portforward/delete', request, SchemaDefaultReturn);
         return true;
     }
 

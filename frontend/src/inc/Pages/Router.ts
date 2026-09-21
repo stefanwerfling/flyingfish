@@ -1,5 +1,5 @@
 import './Router/router.css';
-import {AvailableInterface, NetworkInterfaceEntry, RouterOverviewResponse} from 'flyingfish_schemas';
+import {AvailableInterface, NetworkInterfaceEntry, PortForwardEntry, RouterOverviewResponse} from 'flyingfish_schemas';
 import {
     ContentCol, ContentColSize, DialogConfirm, IconFa, LeftNavbarLink, ModalDialogType
 } from 'bambooo';
@@ -10,6 +10,8 @@ import {InterfaceCard, InterfaceView} from './Router/InterfaceCard.js';
 import {RouterInterfaceEditModal} from './Router/RouterInterfaceEditModal.js';
 import {NatPolicyEditModal} from './Router/NatPolicyEditModal.js';
 import {DhcpConfigEditModal} from './Router/DhcpConfigEditModal.js';
+import {PortForwardEditModal} from './Router/PortForwardEditModal.js';
+import {PortForwardPanel} from './Router/PortForwardPanel.js';
 
 /**
  * Router — the Pi-router management page (interface-centric UI v2). A routing map
@@ -27,9 +29,23 @@ export class Router extends BasePage {
 
     protected _dhcpDialog: DhcpConfigEditModal;
 
+    protected _portForwardDialog: PortForwardEditModal;
+
     protected _overview: RouterOverviewResponse | null = null;
 
     protected _canvas: RouteCanvas | null = null;
+
+    /**
+     * The mount element for the port-forwarding & firewall panel (below the grid).
+     */
+    protected _portForwardMount: JQuery | null = null;
+
+    /**
+     * Serialized port-forward rules from the last panel render — so the 3s live-traffic
+     * poll only re-renders the panel when the rules actually change (a blind re-render each
+     * poll would destroy an open row menu, making Edit/Delete unreachable).
+     */
+    protected _lastPortForwardsJson: string | null = null;
 
     protected _lanColors = ['var(--ffr-lan0)', 'var(--ffr-lan1)', 'var(--ffr-lan2)', 'var(--ffr-lan3)'];
 
@@ -56,11 +72,10 @@ export class Router extends BasePage {
 
         this.setTitle('Router');
 
-        const content = this._wrapper.getContentWrapper().getContent();
-
-        this._interfaceDialog = new RouterInterfaceEditModal(content);
-        this._natDialog = new NatPolicyEditModal(content);
-        this._dhcpDialog = new DhcpConfigEditModal(content);
+        this._interfaceDialog = new RouterInterfaceEditModal();
+        this._natDialog = new NatPolicyEditModal();
+        this._dhcpDialog = new DhcpConfigEditModal();
+        this._portForwardDialog = new PortForwardEditModal();
 
         // navbar: add interface --------------------------------------------------------------------------------------
         // eslint-disable-next-line no-new
@@ -159,6 +174,72 @@ export class Router extends BasePage {
                 this._toast.fire({icon: 'error', title: message});
             }
         });
+
+        this._portForwardDialog.setOnSave(async(): Promise<void> => {
+            try {
+                const targetType = this._portForwardDialog.getTargetType();
+                const wanPortEnd = this._portForwardDialog.getWanPortEnd();
+
+                const entry: PortForwardEntry = {
+                    id: this._portForwardDialog.getId(),
+                    proto: this._portForwardDialog.getProto(),
+                    wan_port: this._portForwardDialog.getWanPort(),
+                    wan_port_end: wanPortEnd,
+                    family: this._portForwardDialog.getFamily(),
+                    target_type: targetType,
+                    target_host: targetType === 'host' ? this._portForwardDialog.getTargetHost().trim() : '',
+                    target_port: targetType === 'host' ? this._portForwardDialog.getTargetPort() : 0,
+                    enabled: this._portForwardDialog.getEnabled(),
+                    description: this._portForwardDialog.getDescription()
+                };
+
+                if (entry.wan_port <= 0 || entry.wan_port > 65535) {
+                    this._toast.fire({icon: 'error', title: 'WAN port must be 1–65535.'});
+
+                    return;
+                }
+
+                if (wanPortEnd !== 0 && (wanPortEnd <= entry.wan_port || wanPortEnd > 65535)) {
+                    this._toast.fire({icon: 'error', title: 'Port range end must be greater than the start port and ≤ 65535.'});
+
+                    return;
+                }
+
+                if (entry.target_type === 'host') {
+                    const host = entry.target_host ?? '';
+
+                    if (host === '') {
+                        this._toast.fire({icon: 'error', title: 'A forward to a LAN host needs a target host.'});
+
+                        return;
+                    }
+
+                    // Family must match the target address (a host is one family). This mirrors
+                    // the server, which derives the family from the address.
+                    const hostIsV6 = host.includes(':');
+
+                    if (hostIsV6 && entry.family !== 'ipv6') {
+                        this._toast.fire({icon: 'error', title: 'Target is an IPv6 address — set the family to IPv6.'});
+
+                        return;
+                    }
+
+                    if (!hostIsV6 && entry.family !== 'ipv4') {
+                        this._toast.fire({icon: 'error', title: 'Target is an IPv4 address — set the family to IPv4.'});
+
+                        return;
+                    }
+                }
+
+                if (await RouterAPI.savePortForward(entry)) {
+                    this._portForwardDialog.hide();
+                    this._toast.fire({icon: 'success', title: 'Port-forward rule saved.'});
+                    await this._reload();
+                }
+            } catch (message) {
+                this._toast.fire({icon: 'error', title: message});
+            }
+        });
     }
 
     /**
@@ -171,6 +252,7 @@ export class Router extends BasePage {
 
         const canvasMount = jQuery('<div></div>').appendTo(root);
         const grid = jQuery('<div class="ffr-grid"></div>').appendTo(root);
+        this._portForwardMount = jQuery('<div></div>').appendTo(root);
 
         this._canvas = new RouteCanvas(canvasMount);
 
@@ -180,7 +262,15 @@ export class Router extends BasePage {
 
             this._computeTraffic(overview.availableInterfaces ?? []);
             this._canvas?.update(overview);
-            this._renderCards(grid, overview);
+
+            // The 3s live-traffic poll rebuilds the cards; skip that rebuild while a row
+            // menu (bambooo ButtonMenu dropdown) is open, else it is torn down mid-click and
+            // Edit/Delete become unreachable. The panel has its own change-guard.
+            if (!Router._anyMenuOpen()) {
+                this._renderCards(grid, overview);
+            }
+
+            this._renderPortForwards(overview);
         };
 
         await this._onLoadTable();
@@ -243,6 +333,15 @@ export class Router extends BasePage {
     }
 
     /**
+     * Whether any row-menu dropdown is currently open (so the live-traffic poll can avoid
+     * tearing it down). Covers bambooo's ButtonMenu (a bootstrap `.dropdown-menu`).
+     * @protected
+     */
+    protected static _anyMenuOpen(): boolean {
+        return jQuery('.dropdown-menu').filter(':visible').length > 0;
+    }
+
+    /**
      * Render the interface cards: every configured interface, then detected NICs that are
      * not configured yet (merged by MAC), each as a self-contained card.
      * @param grid - the grid element
@@ -275,6 +374,87 @@ export class Router extends BasePage {
             // eslint-disable-next-line no-new
             new InterfaceCard(grid, this._buildDetectedView(det));
         }
+    }
+
+    /**
+     * Render the "Port Forwarding & Firewall" panel below the grid.
+     * @param overview - the loaded overview
+     * @protected
+     */
+    protected _renderPortForwards(overview: RouterOverviewResponse): void {
+        if (this._portForwardMount === null) {
+            return;
+        }
+
+        // Skip the re-render when the rules are unchanged (e.g. on the 3s traffic poll), so
+        // an open row menu isn't torn down mid-interaction.
+        const rules = overview.portForwards ?? [];
+        const json = JSON.stringify(rules);
+
+        if (json === this._lastPortForwardsJson) {
+            return;
+        }
+
+        this._lastPortForwardsJson = json;
+        this._portForwardMount.empty();
+
+        // eslint-disable-next-line no-new
+        new PortForwardPanel(this._portForwardMount, rules, {
+            onAdd: () => this._openPortForward(null),
+            onEdit: (entry) => this._openPortForward(entry),
+            onDelete: (entry) => this._confirmDeletePortForward(entry)
+        });
+    }
+
+    /**
+     * Open the port-forward modal, prefilled for edit or reset for a new rule.
+     * @param entry - the rule to edit, or null to create
+     * @protected
+     */
+    protected _openPortForward(entry: PortForwardEntry | null): void {
+        this._portForwardDialog.resetValues();
+        this._portForwardDialog.setTitle(entry === null ? 'Add inbound rule' : 'Edit inbound rule');
+
+        if (entry !== null) {
+            this._portForwardDialog.setId(entry.id);
+            this._portForwardDialog.setEnabled(entry.enabled);
+            this._portForwardDialog.setDescription(entry.description ?? '');
+            this._portForwardDialog.setTargetType(entry.target_type);
+            this._portForwardDialog.setProto(entry.proto);
+            this._portForwardDialog.setFamily(entry.family);
+            this._portForwardDialog.setWanPort(entry.wan_port);
+            this._portForwardDialog.setWanPortEnd(entry.wan_port_end ?? 0);
+            this._portForwardDialog.setTargetHost(entry.target_host ?? '');
+            this._portForwardDialog.setTargetPort(entry.target_port ?? 0);
+        }
+
+        this._portForwardDialog.show();
+    }
+
+    /**
+     * Confirm + delete a port-forward rule.
+     * @param entry - the rule to delete
+     * @protected
+     */
+    protected _confirmDeletePortForward(entry: PortForwardEntry): void {
+        const label = entry.description || `WAN :${entry.wan_port}`;
+
+        DialogConfirm.confirm(
+            'routerPortForwardDelete', ModalDialogType.large, 'Delete inbound rule',
+            `Delete the inbound rule "${label}"?`,
+            async(_, dialog) => {
+                try {
+                    if (await RouterAPI.deletePortForward(entry.id)) {
+                        this._toast.fire({icon: 'success', title: 'Rule deleted.'});
+                    }
+                } catch (message) {
+                    this._toast.fire({icon: 'error', title: message});
+                }
+
+                dialog.hide();
+                await this._reload();
+            }, undefined, 'Delete'
+        );
     }
 
     /**

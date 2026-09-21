@@ -1,0 +1,91 @@
+/*
+ * ffr-dialog — a reusable modal + form widgets in the FlyingFish `.ffr` design language
+ * (teal accent, mono addresses, sectioned form, segmented controls, switches). Rendered
+ * OUTSIDE the `.ffr` page scope (appended to <body>), so the design tokens are defined
+ * locally on `.ffr-modal`. Light + dark (OS preference + the app's data-theme override).
+ * A first-in-FlyingFish widget set; intended to graduate into bambooo later.
+ */
+.ffr-modal {
+  --bg: #eef2f3; --surface: #ffffff; --surface2: #f4f7f8; --line: #d9e1e3;
+  --ink: #16292d; --soft: #476066; --faint: #7f959b;
+  --accent: #12919f; --accent-ink: #0b6a74;
+  --v4: #2f7dd1; --v6: #a855c9;
+  --good: #2ea16b; --warn: #d69a2d; --danger: #d9534f;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  position: fixed; inset: 0; z-index: 20000;
+  display: none; align-items: flex-start; justify-content: center;
+  padding: 6vh 16px 40px; overflow-y: auto;
+  background: rgba(15, 27, 30, .48);
+  font-family: var(--sans); color: var(--ink); line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.ffr-modal.ffr-open { display: flex; }
+
+@media (prefers-color-scheme: dark) {
+  .ffr-modal {
+    --bg: #0e1618; --surface: #152226; --surface2: #1b2c31; --line: #2a3d43;
+    --ink: #e8f1f2; --soft: #a7bcc1; --faint: #6f878d;
+    --accent: #2bb9c9; --accent-ink: #7fdbe6;
+    --v4: #5fa3e6; --v6: #c98fdd; --good: #43c088; --warn: #e6b95a; --danger: #e8756f;
+  }
+}
+:root[data-theme="light"] .ffr-modal {
+  --bg: #eef2f3; --surface: #ffffff; --surface2: #f4f7f8; --line: #d9e1e3;
+  --ink: #16292d; --soft: #476066; --faint: #7f959b; --accent: #12919f; --accent-ink: #0b6a74;
+  --v4: #2f7dd1; --v6: #a855c9; --good: #2ea16b; --warn: #d69a2d; --danger: #d9534f;
+}
+:root[data-theme="dark"] .ffr-modal {
+  --bg: #0e1618; --surface: #152226; --surface2: #1b2c31; --line: #2a3d43;
+  --ink: #e8f1f2; --soft: #a7bcc1; --faint: #6f878d; --accent: #2bb9c9; --accent-ink: #7fdbe6;
+  --v4: #5fa3e6; --v6: #c98fdd; --good: #43c088; --warn: #e6b95a; --danger: #e8756f;
+}
+
+.ffr-modal * { box-sizing: border-box; }
+
+.ffr-dlg {
+  width: 100%; max-width: 560px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(22, 41, 45, .28); overflow: hidden;
+}
+.ffr-dlg .ffr-dlg-top { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px; border-bottom: 1px solid var(--line); }
+.ffr-dlg .ffr-dlg-top h4 { margin: 0; font-size: 15px; font-weight: 650; }
+.ffr-dlg .ffr-dlg-x { color: var(--faint); cursor: pointer; font-size: 15px; line-height: 1; padding: 4px; border-radius: 6px; }
+.ffr-dlg .ffr-dlg-x:hover { color: var(--ink); background: var(--surface2); }
+.ffr-dlg .ffr-dlg-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 18px; }
+.ffr-dlg .ffr-dlg-foot { display: flex; justify-content: space-between; padding: 13px 18px; border-top: 1px solid var(--line); background: var(--surface2); }
+
+.ffr-modal .ffr-fs { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.ffr-modal .ffr-fs > legend { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); padding: 0; margin-bottom: 2px; }
+.ffr-modal .ffr-field label.ffr-lbl { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
+.ffr-modal .ffr-field .ffr-help { font-size: 11.5px; color: var(--faint); margin-top: 4px; }
+.ffr-modal .ffr-field .ffr-help code { font-family: var(--mono); font-size: .92em; background: var(--surface2); padding: 1px 5px; border-radius: 5px; }
+.ffr-modal .ffr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .ffr-modal .ffr-row { grid-template-columns: 1fr; } }
+
+.ffr-modal .ffr-inp { width: 100%; font-family: var(--sans); font-size: 13px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface2); color: var(--ink); }
+.ffr-modal .ffr-inp:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.ffr-modal .ffr-inp.ffr-mono { font-family: var(--mono); }
+.ffr-modal select.ffr-select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237f959b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; }
+.ffr-modal select.ffr-select option { color: var(--ink); background: var(--surface); }
+
+.ffr-modal .ffr-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.ffr-modal .ffr-seg button { font-family: var(--sans); font-size: 12.5px; padding: 7px 14px; border: 0; border-left: 1px solid var(--line); background: var(--surface2); color: var(--soft); cursor: pointer; }
+.ffr-modal .ffr-seg button:first-child { border-left: 0; }
+.ffr-modal .ffr-seg button.ffr-active { background: var(--accent); color: #fff; }
+
+.ffr-modal .ffr-switch { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; cursor: pointer; user-select: none; }
+.ffr-modal .ffr-track { width: 34px; height: 19px; border-radius: 999px; background: var(--accent); position: relative; flex: none; transition: background .15s; }
+.ffr-modal .ffr-track::after { content: ""; position: absolute; top: 2px; left: 17px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: left .15s; }
+.ffr-modal .ffr-track.ffr-off { background: color-mix(in srgb, var(--faint) 40%, transparent); }
+.ffr-modal .ffr-track.ffr-off::after { left: 2px; }
+
+.ffr-modal .ffr-btn { font-family: var(--sans); font-size: 13px; font-weight: 600; border-radius: 8px; padding: 8px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.ffr-modal .ffr-btn:hover { background: var(--surface2); }
+.ffr-modal .ffr-btn.ffr-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ffr-modal .ffr-btn.ffr-primary:hover { background: var(--accent-ink); }
+
+@media (prefers-reduced-motion: reduce) { .ffr-modal * { transition: none !important; } }

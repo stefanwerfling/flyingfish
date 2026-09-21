@@ -1,78 +1,98 @@
-import {
-    Form, FormGroup, InputBottemBorderOnly2, InputType, Switch,
-    Element, ModalDialog, ModalDialogType, LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * DhcpConfigEditModal — edit the LAN DHCP server config (Pi-router epic, Phase 6):
- * range, lease time, gateway, the DNS server handed to clients (the FlyingFish
- * dnsserver), an optional domain and IPv6 RA. A singleton per node.
+ * DhcpConfigEditModal — edit a LAN interface's DHCP server config (Pi-router epic): pool
+ * range, lease time, gateway, the DNS server handed to clients, an optional domain and
+ * IPv6 RA. One per LAN interface. Rendered in the FlyingFish `.ffr` design language.
  */
-export class DhcpConfigEditModal extends ModalDialog {
+export class DhcpConfigEditModal {
+
+    protected readonly _modal: FfrModal;
 
     protected _interfaceId: number = 0;
 
-    protected _switchEnable: Switch;
+    protected readonly _switchEnable: FfrSwitch;
 
-    protected _inputRangeStart: InputBottemBorderOnly2;
+    protected readonly _inRangeStart: FfrInput;
 
-    protected _inputRangeEnd: InputBottemBorderOnly2;
+    protected readonly _inRangeEnd: FfrInput;
 
-    protected _inputLeaseTime: InputBottemBorderOnly2;
+    protected readonly _inLeaseTime: FfrInput;
 
-    protected _inputGateway: InputBottemBorderOnly2;
+    protected readonly _inGateway: FfrInput;
 
-    protected _inputDnsServer: InputBottemBorderOnly2;
+    protected readonly _inDnsServer: FfrInput;
 
-    protected _inputDomain: InputBottemBorderOnly2;
+    protected readonly _inDomain: FfrInput;
 
-    protected _switchRa: Switch;
+    protected readonly _switchRa: FfrSwitch;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'dhcpconfigmodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('DHCP server', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
+        const secServer = new FfrSection(body, 'DHCP server');
+        this._switchEnable = new FfrSwitch('Enable the LAN DHCP server', false);
+        secServer.element.append(this._switchEnable.element);
 
-        const groupEnable = new FormGroup(form, 'Enable LAN DHCP server');
-        this._switchEnable = new Switch(groupEnable, 'dhcpenable');
+        const rowRange = FfrField.row(secServer.element);
+        this._inRangeStart = new FfrInput(true, '192.168.50.100');
+        new FfrField(rowRange, 'Range start').mount(this._inRangeStart.element);
+        this._inRangeEnd = new FfrInput(true, '192.168.50.200');
+        new FfrField(rowRange, 'Range end').mount(this._inRangeEnd.element);
 
-        const groupRangeStart = new FormGroup(form, 'Range start');
-        this._inputRangeStart = new InputBottemBorderOnly2(groupRangeStart, 'dhcprangestart', InputType.text);
+        this._inLeaseTime = new FfrInput(true, '3600');
+        new FfrField(secServer.element, 'Lease time', 'Seconds a lease is held.').mount(this._inLeaseTime.element);
 
-        const groupRangeEnd = new FormGroup(form, 'Range end');
-        this._inputRangeEnd = new InputBottemBorderOnly2(groupRangeEnd, 'dhcprangeend', InputType.text);
+        const secClient = new FfrSection(body, 'Handed to clients');
+        this._inGateway = new FfrInput(true, '192.168.50.1');
+        new FfrField(secClient.element, 'Gateway').mount(this._inGateway.element);
+        this._inDnsServer = new FfrInput(true, '192.168.50.1');
+        new FfrField(secClient.element, 'DNS server', 'Usually the FlyingFish DNS server.').mount(this._inDnsServer.element);
+        this._inDomain = new FfrInput(false, 'lan');
+        new FfrField(secClient.element, 'Local domain', 'Optional.').mount(this._inDomain.element);
 
-        const groupLeaseTime = new FormGroup(form, 'Lease time (seconds)');
-        this._inputLeaseTime = new InputBottemBorderOnly2(groupLeaseTime, 'dhcpleasetime', InputType.number);
-
-        const groupGateway = new FormGroup(form, 'Gateway');
-        this._inputGateway = new InputBottemBorderOnly2(groupGateway, 'dhcpgateway', InputType.text);
-
-        const groupDnsServer = new FormGroup(form, 'DNS server (handed to clients)');
-        this._inputDnsServer = new InputBottemBorderOnly2(groupDnsServer, 'dhcpdns', InputType.text);
-
-        const groupDomain = new FormGroup(form, 'Local domain (optional)');
-        this._inputDomain = new InputBottemBorderOnly2(groupDomain, 'dhcpdomain', InputType.text);
-
-        const groupRa = new FormGroup(form, 'Enable IPv6 RA (SLAAC/DHCPv6)');
-        this._switchRa = new Switch(groupRa, 'dhcpra');
-
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+        const secIpv6 = new FfrSection(body, 'IPv6');
+        this._switchRa = new FfrSwitch('Enable Router Advertisement (SLAAC / DHCPv6)', false);
+        secIpv6.element.append(this._switchRa.element);
     }
 
     /**
-     * setEnable
-     * @param enable
+     * setTitle
+     * @param text - dialog title
      */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
+
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
+    }
+
     /**
      * setInterfaceId — the LAN interface this DHCP config belongs to.
-     * @param {number} id
+     * @param id - interface id
      */
     public setInterfaceId(id: number): void {
         this._interfaceId = id;
@@ -80,7 +100,6 @@ export class DhcpConfigEditModal extends ModalDialog {
 
     /**
      * getInterfaceId
-     * @returns {number}
      */
     public getInterfaceId(): number {
         return this._interfaceId;
@@ -88,129 +107,128 @@ export class DhcpConfigEditModal extends ModalDialog {
 
     /**
      * setEnable
-     * @param {boolean} enable
+     * @param enable - on-state
      */
     public setEnable(enable: boolean): void {
-        this._switchEnable.setEnable(enable);
+        this._switchEnable.setOn(enable);
     }
 
     /**
      * getEnable
      */
     public getEnable(): boolean {
-        return this._switchEnable.isEnable();
+        return this._switchEnable.isOn();
     }
 
     /**
      * setRangeStart
-     * @param value
+     * @param value - range start IP
      */
     public setRangeStart(value: string): void {
-        this._inputRangeStart.setValue(value);
+        this._inRangeStart.setValue(value);
     }
 
     /**
      * getRangeStart
      */
     public getRangeStart(): string {
-        return this._inputRangeStart.getValue();
+        return this._inRangeStart.getValue();
     }
 
     /**
      * setRangeEnd
-     * @param value
+     * @param value - range end IP
      */
     public setRangeEnd(value: string): void {
-        this._inputRangeEnd.setValue(value);
+        this._inRangeEnd.setValue(value);
     }
 
     /**
      * getRangeEnd
      */
     public getRangeEnd(): string {
-        return this._inputRangeEnd.getValue();
+        return this._inRangeEnd.getValue();
     }
 
     /**
      * setLeaseTime
-     * @param value
+     * @param value - seconds
      */
     public setLeaseTime(value: number): void {
-        this._inputLeaseTime.setValue(`${value}`);
+        this._inLeaseTime.setValue(`${value}`);
     }
 
     /**
      * getLeaseTime
      */
     public getLeaseTime(): number {
-        return parseInt(this._inputLeaseTime.getValue(), 10) || 0;
+        return parseInt(this._inLeaseTime.getValue(), 10) || 3600;
     }
 
     /**
      * setGateway
-     * @param value
+     * @param value - gateway IP
      */
     public setGateway(value: string): void {
-        this._inputGateway.setValue(value);
+        this._inGateway.setValue(value);
     }
 
     /**
      * getGateway
      */
     public getGateway(): string {
-        return this._inputGateway.getValue();
+        return this._inGateway.getValue();
     }
 
     /**
      * setDnsServer
-     * @param value
+     * @param value - DNS server IP
      */
     public setDnsServer(value: string): void {
-        this._inputDnsServer.setValue(value);
+        this._inDnsServer.setValue(value);
     }
 
     /**
      * getDnsServer
      */
     public getDnsServer(): string {
-        return this._inputDnsServer.getValue();
+        return this._inDnsServer.getValue();
     }
 
     /**
      * setDomain
-     * @param value
+     * @param value - local domain
      */
     public setDomain(value: string): void {
-        this._inputDomain.setValue(value);
+        this._inDomain.setValue(value);
     }
 
     /**
      * getDomain
      */
     public getDomain(): string {
-        return this._inputDomain.getValue();
+        return this._inDomain.getValue();
     }
 
     /**
      * setRaEnable
-     * @param enable
+     * @param enable - on-state
      */
     public setRaEnable(enable: boolean): void {
-        this._switchRa.setEnable(enable);
+        this._switchRa.setOn(enable);
     }
 
     /**
      * getRaEnable
      */
     public getRaEnable(): boolean {
-        return this._switchRa.isEnable();
+        return this._switchRa.isOn();
     }
 
     /**
      * resetValues
      */
-    public override resetValues(): void {
-        this.setInterfaceId(0);
+    public resetValues(): void {
         this.setEnable(false);
         this.setRangeStart('');
         this.setRangeEnd('');
