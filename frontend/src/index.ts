@@ -1,6 +1,7 @@
-import {NavbarLinkButton, NavbarLinkFullsize, SidebarMenuItem, SidebarMenuTree} from 'bambooo';
+import {NavbarLinkButton, NavbarLinkFullsize} from 'bambooo';
 import {Login as LoginAPI} from './inc/Api/Login.js';
 import {User as UserAPI} from './inc/Api/User.js';
+import {ClusterNav, NavModel} from './inc/Components/ClusterNav.js';
 import {Lang} from './inc/Lang.js';
 import {BasePage} from './inc/Pages/BasePage.js';
 import {Credential as CredentialPage} from './inc/Pages/Credential.js';
@@ -79,206 +80,61 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
             }
         );
 
-        // sidemenu ----------------------------------------------------------------------------------------------------
+        // navigation --------------------------------------------------------------------------------------------------
+        // The whole app is navigated through the cluster entity tree (Datacenter → nodes),
+        // which replaces the admin-lte sidebar. Every tab reuses an existing page; the tree
+        // is the single navigation (no separate menu). See {@link ClusterNav}.
 
-        const sidemenuList = [
-            {
-                title: 'Dashboard',
-                icon: 'nav-icon fas fa-tachometer-alt',
-                name: 'dashboard',
-                onClick: (): void => {
-                    loadPage(new DashboardPage());
-                }
-            },
-            {
-                title: 'Listens',
-                icon: 'fa-solid fa-door-open',
-                name: 'listens',
-                onClick: (): void => {
-                    loadPage(new ListensPage());
-                },
-                items: [
-                    {
-                        title: 'IP Access',
-                        icon: 'fa-solid fa-lock',
-                        name: 'ipaccess',
-                        onClick: (): void => {
-                            loadPage(new IpAccess());
-                        }
-                    },
-                    {
-                        title: 'Gateway Identifier',
-                        icon: 'fa-solid fa-globe',
-                        name: 'gateway',
-                        onClick: (): void => {
-                            loadPage(new GatewayPage());
-                        }
-                    },
-                    {
-                        title: 'UpnpNat',
-                        icon: 'fa-solid fa-map-signs',
-                        name: 'upnpnat',
-                        onClick: (): void => {
-                            loadPage(new UpnpNatPage());
-                        }
-                    },
-                    {
-                        title: 'Router',
-                        icon: 'fa-solid fa-network-wired',
-                        name: 'router',
-                        onClick: (): void => {
-                            loadPage(new RouterPage());
-                        }
-                    }
+        const navModel: NavModel = {
+            datacenter: {
+                id: 'dc',
+                kind: 'datacenter',
+                title: 'Datacenter',
+                icon: '🛰️',
+                avatar: '🛰️',
+                subtitle: 'cluster-wide configuration',
+                count: {n: '1'},
+                tabs: [
+                    {key: 'dashboard', label: 'Dashboard', icon: '📊', make: (): BasePage => new DashboardPage()},
+                    {key: 'domains', label: 'Domains', icon: '🏷️', make: (): BasePage => new DomainsPage()},
+                    {key: 'dyndnsclients', label: 'DynDns Clients', icon: '📡', make: (): BasePage => new DynDnsClients()},
+                    {key: 'dyndnsserver', label: 'DynDns Server', icon: '🗄️', make: (): BasePage => new DynDnsServer()},
+                    {key: 'credential', label: 'Credential', icon: '📓', make: (): BasePage => new CredentialPage()},
+                    {key: 'routes', label: 'Routes', icon: '🧵', make: (): BasePage => new RoutesPage()},
+                    {key: 'users', label: 'Users', icon: '👥', make: (): BasePage => new UsersPage()},
+                    {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()},
+                    {key: 'pki', label: 'PKI', icon: '🔐', make: (): BasePage => new PkiPage()},
+                    {key: 'settings', label: 'Settings', icon: '⚙️', make: (): BasePage => new SettingsPage()}
                 ]
             },
-            {
-                title: 'Domains',
-                icon: 'fa-solid fa-tags',
-                name: 'domains',
-                onClick: (): void => {
-                    loadPage(new DomainsPage());
-                },
-                items: [
-
-                    /*
-                     *{
-                     *  title: 'Dns-Resolver',
-                     *  name: 'dnsresolver',
-                     *  icon: 'fa-solid fa-tag',
-                     *  onClick: (): void => {
-                     *      loadPage(new DnsResolver())
-                     *  }
-                     *},
-                     */
-                    {
-                        title: 'DynDns Clients',
-                        name: 'dyndnsclients',
-                        icon: 'fa-solid fa-satellite-dish',
-                        onClick: (): void => {
-                            loadPage(new DynDnsClients());
-                        }
-                    },
-                    {
-                        title: 'DynDns Server',
-                        name: 'dyndnsserver',
-                        icon: 'fa-solid fa-server',
-                        onClick: (): void => {
-                            loadPage(new DynDnsServer());
-                        }
-                    }
-                ]
-            },
-            {
-                title: 'Credential',
-                icon: 'fa-solid fa-book',
-                name: 'credential',
-                onClick: (): void => {
-                    loadPage(new CredentialPage());
+            nodes: [
+                {
+                    id: 'node:local',
+                    kind: 'node',
+                    title: 'flyingfish-nuc',
+                    icon: '🖥️',
+                    avatar: '🖥️',
+                    status: 'up',
+                    badges: [{label: 'CA · Hub', cls: 'ca'}, {label: 'this node', cls: 'plain'}],
+                    subtitle: 'this node',
+                    resources: [
+                        {id: 'res:router', title: 'Router', icon: '🧭', tabKey: 'router'},
+                        {id: 'res:listens', title: 'Listens', icon: '🚪', tabKey: 'listens'}
+                    ],
+                    tabs: [
+                        {key: 'listens', label: 'Listens', icon: '🚪', make: (): BasePage => new ListensPage()},
+                        {key: 'ipaccess', label: 'IP Access', icon: '🔒', make: (): BasePage => new IpAccess()},
+                        {key: 'gateway', label: 'Gateway', icon: '🌐', make: (): BasePage => new GatewayPage()},
+                        {key: 'upnpnat', label: 'UpnpNat', icon: '🗺️', make: (): BasePage => new UpnpNatPage()},
+                        {key: 'router', label: 'Router', icon: '🧭', make: (): BasePage => new RouterPage()}
+                    ]
                 }
-            },
-            {
-                title: 'Routes',
-                icon: 'fa-solid fa-route',
-                name: 'routes',
-                onClick: (): void => {
-                    loadPage(new RoutesPage());
-                }
+            ]
+        };
 
-                /*
-                 *items: [
-                 *  {
-                 *      title: 'DynLocation Server',
-                 *      name: 'dynlocationserver',
-                 *      icon: 'fa-solid fa-server',
-                 *      onClick: (): void => {
-                 *      }
-                 *  },
-                 *  {
-                 *      title: 'SSLCert API Server',
-                 *      name: 'sslcertapiserver',
-                 *      icon: 'fa-solid fa-server',
-                 *      onClick: (): void => {
-                 *      }
-                 *  }
-                 *]
-                 */
-            },
-            {
-                title: 'Settings',
-                icon: 'fa-cogs',
-                name: 'settings',
-                onClick: (): void => {
-                    loadPage(new SettingsPage());
-                },
-                items: [
-                    {
-                        title: 'Users',
-                        name: 'users',
-                        icon: 'fa-solid fa-users',
-                        onClick: (): void => {
-                            loadPage(new UsersPage());
-                        }
-                    },
-                    {
-                        title: 'Registry',
-                        name: 'registry',
-                        icon: 'fa-solid fa-diagram-project',
-                        onClick: (): void => {
-                            loadPage(new RegistryPage());
-                        }
-                    },
-                    {
-                        title: 'PKI',
-                        name: 'pki',
-                        icon: 'fa-solid fa-lock',
-                        onClick: (): void => {
-                            loadPage(new PkiPage());
-                        }
-                    }
-                ]
-            }
-        ];
-
-        const menu = page.getWrapper().getMainSidebar().getSidebar().getMenu();
-
-        for (const item of sidemenuList) {
-            const menuItem = new SidebarMenuItem(menu);
-
-            menuItem.setName(item.name);
-            menuItem.setTitle(item.title);
-            menuItem.setIconClass(item.icon);
-
-            menuItem.setClick(item.onClick);
-
-            let isSubActiv = false;
-
-            if (item.items) {
-                const menuTree = new SidebarMenuTree(menuItem);
-
-                for (const sitem of item.items) {
-                    const pmenuItem = new SidebarMenuItem(menuTree, true);
-                    pmenuItem.setTitle(sitem.title);
-                    pmenuItem.setName(sitem.name);
-                    pmenuItem.setClick(sitem.onClick);
-
-                    if (sitem.icon) {
-                        pmenuItem.setIconClass(sitem.icon);
-                    }
-
-                    if (page.getName() === sitem.name) {
-                        pmenuItem.setActiv(true);
-                        isSubActiv = true;
-                    }
-                }
-            }
-
-            if ((page.getName() === item.name) || isSubActiv) {
-                menuItem.setActiv(true);
-            }
-        }
-
-        menu.initTreeview();
+        ClusterNav.render(navModel, page.getName(), (p): void => {
+            loadPage(p as BasePage);
+        });
 
         // ---------------------------------------------------------------------------------------------------------
 

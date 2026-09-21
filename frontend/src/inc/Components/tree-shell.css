@@ -1,0 +1,128 @@
+/*
+ * tree-shell — a tree + content-tabs app shell in the FlyingFish `.ffr` design language:
+ * an entity TREE (Datacenter → nodes → resources) on the left, and a content area with an
+ * object header + tab bar that re-scope to the selected entity. Scoped under `.ffx` (Datacenter → nodes → resources).
+ * Light + dark (OS preference + the app's data-theme override).
+ */
+.ffx {
+  --bg:#eef2f3;--surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;
+  --accent:#12919f;--accent-ink:#0b6a74;--v4:#2f7dd1;--v6:#a855c9;--good:#2ea16b;--warn:#d69a2d;--danger:#d9534f;
+  --nav-bg:#17242a;--nav-bg2:#1e2f36;--nav-ink:#c7d6da;--nav-faint:#82989e;--nav-active:#2bb9c9;--nav-guide:#31444b;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--shadow:0 1px 2px rgba(22,41,45,.06);
+  color:var(--ink);font-family:var(--sans);
+}
+@media (prefers-color-scheme: dark){.ffx{--bg:#0e1618;--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v4:#5fa3e6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;--danger:#e8756f;--shadow:0 1px 2px rgba(0,0,0,.3)}}
+:root[data-theme="light"] .ffx{--bg:#eef2f3;--surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;--accent:#12919f;--accent-ink:#0b6a74;--v4:#2f7dd1;--v6:#a855c9;--good:#2ea16b;--warn:#d69a2d;--danger:#d9534f;--shadow:0 1px 2px rgba(22,41,45,.06)}
+:root[data-theme="dark"] .ffx{--bg:#0e1618;--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v4:#5fa3e6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;--danger:#e8756f;--shadow:0 1px 2px rgba(0,0,0,.3)}
+
+.ffx, .ffx * { box-sizing: border-box; }
+
+/* two-column shell — fills the viewport below the app top-bar */
+.ffx { display: grid; grid-template-columns: 250px 1fr; height: calc(100vh - 57px); background: var(--bg); }
+@media (max-width: 820px){ .ffx { grid-template-columns: 1fr; height: auto; } .ffx .ffx-tree { display: none; } }
+
+/* full-bleed: the Cluster page hides the admin-lte chrome so the tree is the only nav
+   (the top-bar with logout stays). Toggled via body.ffx-full by the Cluster page. */
+body.ffx-full .main-sidebar { display: none !important; }
+body.ffx-full .content-header { display: none !important; }
+body.ffx-full .content-wrapper { margin-left: 0 !important; }
+body.ffx-full .content-wrapper > .content { padding: 0 !important; }
+body.ffx-full .content-wrapper > .content > .row { margin: 0 !important; }
+body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
+
+/* home / brand row at the top of the tree (navigation escape out of the cluster view) */
+.ffx-tree .ffx-home { display: flex; align-items: center; gap: 8px; margin: 6px 10px 4px; padding: 8px 10px; border-radius: 7px; font-weight: 650; font-size: 14px; color: #fff; cursor: pointer; }
+.ffx-tree .ffx-home:hover { background: rgba(255,255,255,.06); }
+.ffx-tree .ffx-home .fin { width: 20px; height: 20px; border-radius: 6px; background: linear-gradient(135deg, var(--accent), #6fdbe6); display: grid; place-items: center; font-size: 12px; }
+.ffx-tree .ffx-home .back { margin-left: auto; color: var(--nav-faint); font-size: 11px; }
+
+/* ---- tree sidebar ---- */
+.ffx-tree { background: var(--nav-bg); color: var(--nav-ink); padding: 8px 0 20px; overflow-y: auto; }
+.ffx-tree .ffx-viewsel { display: flex; align-items: center; gap: 6px; margin: 6px 12px 8px; padding: 6px 10px; background: var(--nav-bg2); border-radius: 7px; font-size: 12px; }
+.ffx-tree .ffx-viewsel .ch { margin-left: auto; color: var(--nav-faint); }
+.ffx-row { display: flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 6px; color: var(--nav-ink); font-size: 13.5px; cursor: pointer; }
+.ffx-row:hover { background: rgba(255,255,255,.05); }
+.ffx-row .tw { width: 12px; text-align: center; color: var(--nav-faint); font-size: 9px; flex: none; }
+.ffx-row .ic { width: 18px; text-align: center; flex: none; font-size: 13px; }
+.ffx-row .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffx-row .st { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ffx-row .st.up { background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
+.ffx-row .st.warn { background: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent); }
+.ffx-row .st.off { background: var(--nav-faint); }
+.ffx-row .cnt { font-size: 10px; font-family: var(--mono); background: rgba(255,255,255,.09); padding: 0 6px; border-radius: 10px; }
+.ffx-row .cnt.warn { background: color-mix(in srgb, var(--warn) 34%, transparent); color: #ffe6b0; }
+.ffx-lvl0 { font-weight: 650; } .ffx-lvl0 .ic { font-size: 15px; }
+.ffx-lvl1 { margin-left: 14px; padding-left: 8px; border-left: 1px solid var(--nav-guide); }
+.ffx-lvl2 { margin-left: 34px; padding-left: 8px; border-left: 1px solid var(--nav-guide); font-size: 12.5px; color: var(--nav-faint); }
+.ffx-lvl2:hover { color: var(--nav-ink); }
+.ffx-row.selected { background: var(--nav-active); color: #06222a; font-weight: 600; }
+.ffx-row.selected .ic, .ffx-row.selected .tw { color: #06222a; }
+.ffx-row.pending { opacity: .72; }
+
+/* ---- main ---- */
+.ffx-main { min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
+.ffx-crumb { padding: 9px 20px; border-bottom: 1px solid var(--line); background: var(--surface); font-size: 12.5px; color: var(--faint); }
+.ffx-crumb b { color: var(--ink); font-weight: 600; } .ffx-crumb .sep { margin: 0 5px; }
+
+/* object header */
+.ffx-obj { display: flex; align-items: center; gap: 13px; padding: 13px 20px 0; }
+.ffx-obj .avatar { width: 38px; height: 38px; border-radius: 10px; flex: none; display: grid; place-items: center; font-size: 19px; color: #fff; background: var(--accent); box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 38%, transparent); }
+.ffx-obj h1 { margin: 0; font-size: 19px; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+.ffx-obj .sub { font-size: 12px; color: var(--soft); } .ffx-obj .sub .mono { font-family: var(--mono); }
+.ffx-statepill { font-size: 11px; font-weight: 700; letter-spacing: .03em; padding: 2px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+.ffx-statepill.up { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.ffx-statepill.off { color: var(--faint); background: color-mix(in srgb, var(--faint) 15%, transparent); }
+.ffx-bdg { font-size: 10px; font-weight: 700; letter-spacing: .03em; padding: 2px 7px; border-radius: 6px; text-transform: uppercase; }
+.ffx-bdg.ca { color: #fff; background: var(--accent); } .ffx-bdg.dp { color: var(--v6); background: color-mix(in srgb, var(--v6) 15%, transparent); }
+.ffx-bdg.plain { color: var(--soft); background: color-mix(in srgb, var(--faint) 16%, transparent); }
+
+/* tab bar */
+.ffx-tabs { display: flex; gap: 2px; padding: 10px 20px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.ffx-tab { font-size: 13px; padding: 8px 13px; border-radius: 8px 8px 0 0; color: var(--soft); cursor: pointer; border: 1px solid transparent; border-bottom: none; display: inline-flex; align-items: center; gap: 7px; position: relative; top: 1px; }
+.ffx-tab .ic { font-size: 12px; }
+.ffx-tab:hover { color: var(--ink); background: var(--surface2); }
+.ffx-tab.active { color: var(--ink); background: var(--surface); border-color: var(--line); font-weight: 600; }
+.ffx-tab.active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--surface); }
+
+/* content */
+.ffx-content { padding: 18px 20px; overflow-y: auto; }
+.ffx-scopebar { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--soft); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line)); border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; }
+.ffx-scopebar b { color: var(--ink); }
+.ffx-cards3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.ffx-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+.ffx-card .hd { display: flex; align-items: center; gap: 8px; padding: 10px 15px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.ffx-card .hd .t { font-weight: 600; } .ffx-card .hd .sp { flex: 1; }
+.ffx-card .bd { padding: 13px 15px; }
+.ffx-kv { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 12.5px; margin: 0; }
+.ffx-kv dt { color: var(--faint); } .ffx-kv dd { margin: 0; font-family: var(--mono); font-size: 12px; text-align: right; overflow-wrap: anywhere; }
+.ffx-empty { padding: 40px 16px; text-align: center; color: var(--faint); font-size: 13px; }
+.ffx-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin: 0 0 12px; }
+
+/* ============ whole-app nav (ClusterNav): tree replaces the admin-lte sidebar ============ */
+/* the admin-lte sidebar is always dark — the tree uses a constant dark palette here */
+.main-sidebar.ffx-sb {
+  --nav-bg:#17242a;--nav-bg2:#1e2f36;--nav-ink:#c7d6da;--nav-faint:#82989e;--nav-active:#2bb9c9;--nav-guide:#31444b;
+  --good:#2ea16b;--warn:#d69a2d;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+  overflow-y: auto; padding: 0 0 20px;
+}
+.ffx-sb .ffx-brand { display: flex; align-items: center; gap: 9px; padding: 14px 16px; font-weight: 650; font-size: 16px; color: #fff; }
+.ffx-sb .ffx-brand .fin { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, #12919f, #6fdbe6); display: grid; place-items: center; font-size: 13px; }
+.ffx-sb .ffx-treebox { padding: 2px 8px; }
+
+/* app content topbar (object header + tabs) — light/dark app tokens */
+.ffx-topbar {
+  --surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;
+  --accent:#12919f;--accent-ink:#0b6a74;--v4:#2f7dd1;--v6:#a855c9;--good:#2ea16b;--warn:#d69a2d;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;--sans:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background: var(--surface); border-bottom: 1px solid var(--line); margin: -0.5rem -0.5rem 0; padding-bottom: 0;
+}
+@media (prefers-color-scheme: dark){ .ffx-topbar{--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;} }
+:root[data-theme="light"] .ffx-topbar{--surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;--accent:#12919f;}
+:root[data-theme="dark"] .ffx-topbar{--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;}
+.ffx-topbar .ffx-crumb { padding: 9px 20px 0; }
+.ffx-topbar .ffx-obj { padding: 8px 20px 0; }
+.ffx-topbar .ffx-tabs { border-bottom: none; }
+
+/* hide the admin-lte page-title header — the object header replaces it */
+body.ffx-app .content-header { display: none !important; }
