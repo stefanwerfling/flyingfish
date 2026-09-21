@@ -1,238 +1,159 @@
 import {ListenVariable} from 'flyingfish_schemas';
 import {ListenAddressCheckType, ListenTypes, NginxListenStreamServerVariables} from '../../Api/Listen.js';
-import {
-    Switch, FormRow, SelectBottemBorderOnly2, InputBottemBorderOnly2, InputType, FormGroup, Element, NavTab,
-    ModalDialog, ModalDialogType, Tooltip, TooltipInfo, LangText
-} from 'bambooo';
-import {Lang} from '../../Lang.js';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSegmented, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * ListensEditModal
+ * ListensEditModal — add/edit a listener (port + type + options). Rendered in the FlyingFish
+ * `.ffr` design language (see {@link FfrModal}): sectioned form, segmented type/protocol
+ * controls, switches. The stream-only advanced section (proxy timeouts) shows only when the
+ * type is Stream. Public API (get/set per field + resetValues) is unchanged so the page is
+ * agnostic to the widget set.
  */
-export class ListensEditModal extends ModalDialog {
+export class ListensEditModal {
 
-    /**
-     * id of entry
-     * @protected
-     */
+    protected readonly _modal: FfrModal;
+
     protected _id: number|null = null;
 
-    /**
-     * nav tab
-     * @protected
-     */
-    protected _navTab: NavTab;
+    protected readonly _inputName: FfrInput;
 
-    /**
-     * input name
-     * @protected
-     */
-    protected _inputName: InputBottemBorderOnly2;
+    protected readonly _segType: FfrSegmented;
 
-    /**
-     * select type
-     * @protected
-     */
-    protected _selectType: SelectBottemBorderOnly2;
+    protected readonly _segProtocol: FfrSegmented;
 
-    /**
-     * select protocol
-     * @protected
-     */
-    protected _selectProtocol: SelectBottemBorderOnly2;
+    protected readonly _inputPort: FfrInput;
 
-    /**
-     * input port
-     * @protected
-     */
-    protected _inputPort: InputBottemBorderOnly2;
+    protected readonly _inputDescription: FfrInput;
 
-    /**
-     * input description
-     * @protected
-     */
-    protected _inputDescription: InputBottemBorderOnly2;
+    protected readonly _switchIp6: FfrSwitch;
 
-    /**
-     * switch ip6
-     * @protected
-     */
-    protected _switchIp6: Switch;
+    protected readonly _switchAddressCheck: FfrSwitch;
 
-    /**
-     * switch address check
-     * @protected
-     */
-    protected _switchAddressCheck: Switch;
+    protected readonly _segAddressCheckType: FfrSegmented;
 
-    /**
-     * select address check type
-     * @protected
-     */
-    protected _selectAddressCheckType: SelectBottemBorderOnly2;
+    protected readonly _switchProxyProtocol: FfrSwitch;
 
-    /**
-     * switch proxy protocol
-     * @protected
-     */
-    protected _switchProxyProtocol: Switch;
+    protected readonly _switchProxyProtocolIn: FfrSwitch;
 
-    /**
-     * switch proxy protocol in
-     * @protected
-     */
-    protected _switchProxyProtocolIn: Switch;
+    protected readonly _switchDisable: FfrSwitch;
 
-    /**
-     * switch disable
-     * @protected
-     */
-    protected _switchDisable: Switch;
+    protected readonly _inputStreamProxyTimeout: FfrInput;
 
-    /**
-     * input stream proxy timeout
-     * @protected
-     */
-    protected _inputStreamProxyTimeout: InputBottemBorderOnly2;
+    protected readonly _inputStreamProxyConnectTimeout: FfrInput;
 
-    /**
-     * input stream proxy connect timeout
-     * @protected
-     */
-    protected _inputStreamProxyConnectTimeout: InputBottemBorderOnly2;
+    protected readonly _secAdvanced: FfrSection;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'listenmodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Listen', 'Save changes');
+        const body = this._modal.getBody();
 
-        this._navTab = new NavTab(this._body, 'listenstab');
+        // details ----------------------------------------------------------------------------------------------------
+        const secDetails = new FfrSection(body, 'Details');
 
-        const tabDetails = this._navTab.addTab('Details', 'listendetails');
+        this._inputName = new FfrInput(false, 'Listenname');
+        new FfrField(secDetails.element, 'Name').mount(this._inputName.element);
 
-        const tabStreamAdvanced = this._navTab.addTab('Advanced', 'listenstreamadvanced');
-        tabStreamAdvanced.tab.hide();
+        const rowTP = FfrField.row(secDetails.element);
 
-        // details -----------------------------------------------------------------------------------------------------
+        this._segType = new FfrSegmented([
+            {key: `${ListenTypes.stream}`, label: 'Stream'},
+            {key: `${ListenTypes.http}`, label: 'Http/Https'}
+        ], `${ListenTypes.stream}`);
+        this._segType.onChange((value) => this._applyTypeVisibility(value));
+        new FfrField(rowTP, 'Type').mount(this._segType.element);
 
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);
+        this._inputPort = new FfrInput(true, '80');
+        new FfrField(rowTP, 'Port').mount(this._inputPort.element);
 
-        const groupName = new FormGroup(bodyCard, 'Name');
-        this._inputName = new InputBottemBorderOnly2(groupName);
-        this._inputName.setPlaceholder('Listenname');
+        this._segProtocol = new FfrSegmented([
+            {key: '0', label: 'TCP'},
+            {key: '1', label: 'UDP'},
+            {key: '2', label: 'TCP & UDP'}
+        ], '0');
+        new FfrField(secDetails.element, 'Protocol').mount(this._segProtocol.element);
 
-        const rowTP = new FormRow(bodyCard);
+        this._inputDescription = new FfrInput(false, 'A description ...');
+        new FfrField(secDetails.element, 'Description').mount(this._inputDescription.element);
 
-        const groupType = new FormGroup(rowTP.createCol(4), 'Type');
-        this._selectType = new SelectBottemBorderOnly2(groupType);
-        this._selectType.addValue({
-            key: `${ListenTypes.stream}`,
-            value: 'Stream',
-            style: 'background:#ffc107;'
-        });
+        this._switchIp6 = new FfrSwitch('IPv6 enable', false);
+        secDetails.element.append(this._switchIp6.element);
 
-        this._selectType.addValue({
-            key: `${ListenTypes.http}`,
-            value: 'Http/Https',
-            style: 'background:#28a745;'
-        });
+        // access -----------------------------------------------------------------------------------------------------
+        const secAccess = new FfrSection(body, 'IP access');
 
-        this._selectType.setChangeFn((value) => {
-            tabStreamAdvanced.tab.hide();
+        this._switchAddressCheck = new FfrSwitch('Enable IP access check', false);
+        secAccess.element.append(this._switchAddressCheck.element);
 
-            switch (value) {
-                case `${ListenTypes.stream}`:
-                    tabStreamAdvanced.tab.show();
-                    break;
-            }
-        });
+        this._segAddressCheckType = new FfrSegmented([
+            {key: `${ListenAddressCheckType.black}`, label: 'Blacklist'},
+            {key: `${ListenAddressCheckType.white}`, label: 'Whitelist'}
+        ], `${ListenAddressCheckType.black}`);
+        new FfrField(secAccess.element, 'Access type').mount(this._segAddressCheckType.element);
 
-        const groupProtocol = new FormGroup(rowTP.createCol(4), 'Protocol');
-        this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol);
-        this._selectProtocol.addValue({
-            key: '0',
-            value: 'TCP'
-        });
+        // proxy protocol ---------------------------------------------------------------------------------------------
+        const secProxy = new FfrSection(body, 'Proxy protocol');
+        this._switchProxyProtocol = new FfrSwitch('Proxy protocol enable', false);
+        secProxy.element.append(this._switchProxyProtocol.element);
+        this._switchProxyProtocolIn = new FfrSwitch('Proxy protocol incoming enable', false);
+        secProxy.element.append(this._switchProxyProtocolIn.element);
 
-        this._selectProtocol.addValue({
-            key: '1',
-            value: 'UDP'
-        });
+        // advanced (stream only) -------------------------------------------------------------------------------------
+        this._secAdvanced = new FfrSection(body, 'Advanced (stream)');
 
-        this._selectProtocol.addValue({
-            key: '2',
-            value: 'TCP & UDP'
-        });
+        this._inputStreamProxyTimeout = new FfrInput(true, '10');
+        new FfrField(this._secAdvanced.element, 'Proxy timeout (minutes)', 'Stream proxy timeout, in minutes.').mount(this._inputStreamProxyTimeout.element);
 
-        const groupPort = new FormGroup(rowTP.createCol(4), 'Port');
-        this._inputPort = new InputBottemBorderOnly2(groupPort, undefined, InputType.number);
-        this._inputPort.setPlaceholder('80');
+        this._inputStreamProxyConnectTimeout = new FfrInput(true, '60');
+        new FfrField(this._secAdvanced.element, 'Proxy connect timeout (seconds)', 'Stream proxy connect timeout, in seconds.').mount(this._inputStreamProxyConnectTimeout.element);
 
-        const groupDescription = new FormGroup(bodyCard, 'Description');
-        this._inputDescription = new InputBottemBorderOnly2(groupDescription);
-        this._inputDescription.setPlaceholder('A description ...');
+        // disable ----------------------------------------------------------------------------------------------------
+        const secState = new FfrSection(body, 'State');
+        this._switchDisable = new FfrSwitch('Disable this listen', false);
+        secState.element.append(this._switchDisable.element);
 
-        const rowOptions = new FormRow(bodyCard);
-        const groupIP6 = new FormGroup(rowOptions.createCol(6), 'IP6 enable');
-        this._switchIp6 = new Switch(groupIP6, 'ip6');
+        this._applyTypeVisibility(`${ListenTypes.stream}`);
+    }
 
-        bodyCard.append('<hr>');
+    /**
+     * Show/hide the stream-only advanced section for the selected type.
+     * @param type - the selected listen type key
+     * @protected
+     */
+    protected _applyTypeVisibility(type: string): void {
+        this._secAdvanced.element.toggle(type === `${ListenTypes.stream}`);
+    }
 
-        const rowOptionsAc = new FormRow(bodyCard);
-        const groupAc = new FormGroup(rowOptionsAc.createCol(6), 'IP access');
-        this._switchAddressCheck = new Switch(groupAc, 'address_check');
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        const groupAcType = new FormGroup(rowOptionsAc.createCol(6), 'Access type');
-        this._selectAddressCheckType = new SelectBottemBorderOnly2(groupAcType);
-        this._selectAddressCheckType.addValue({
-            key: `${ListenAddressCheckType.black}`,
-            value: 'Blacklist'
-        });
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
 
-        this._selectAddressCheckType.addValue({
-            key: `${ListenAddressCheckType.white}`,
-            value: 'Whitelist'
-        });
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
 
-        bodyCard.append('<hr>');
-
-        const rowProxy = new FormRow(bodyCard);
-        const groupProxy = new FormGroup(rowProxy.createCol(6), 'Proxy protocol enable');
-        this._switchProxyProtocol = new Switch(groupProxy, 'proxy_protocol');
-
-        const groupProxyIn = new FormGroup(rowProxy.createCol(6), 'Proxy protocol incoming enable');
-        this._switchProxyProtocolIn = new Switch(groupProxyIn, 'proxy_protocol_in');
-
-        bodyCard.append('<hr>');
-
-        const groupDisable = new FormGroup(bodyCard, 'Disable this listen');
-        this._switchDisable = new Switch(groupDisable, 'disablelisten');
-
-        // stream advanced ---------------------------------------------------------------------------------------------
-
-        const bodyCardAdv = jQuery('<div class="card-body"/>').appendTo(tabStreamAdvanced.body);
-
-        const groupStreamProxyTimeout = new FormGroup(bodyCardAdv, 'Proxy timeout (value in minutes)');
-        // eslint-disable-next-line no-new
-        new TooltipInfo(groupStreamProxyTimeout.getLabelElement(), Lang.i().l('listen_stream_proxytimeout'));
-        this._inputStreamProxyTimeout = new InputBottemBorderOnly2(groupStreamProxyTimeout, undefined, InputType.number);
-        this._inputStreamProxyTimeout.setPlaceholder('10');
-
-        const groupStreamProxyConnectTimeout = new FormGroup(bodyCardAdv, 'Proxy connect timeout (value in seconds)');
-        // eslint-disable-next-line no-new
-        new TooltipInfo(groupStreamProxyConnectTimeout.getLabelElement(), Lang.i().l('listen_stream_proxyconnecttimeout'));
-        this._inputStreamProxyConnectTimeout = new InputBottemBorderOnly2(groupStreamProxyConnectTimeout, undefined, InputType.number);
-        this._inputStreamProxyConnectTimeout.setPlaceholder('60');
-
-        // buttons -----------------------------------------------------------------------------------------------------
-
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
-
-        // init tooltips
-        Tooltip.init();
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -269,7 +190,7 @@ export class ListensEditModal extends ModalDialog {
      * getType
      */
     public getType(): string {
-        return this._selectType.getSelectedValue();
+        return this._segType.getValue();
     }
 
     /**
@@ -277,7 +198,8 @@ export class ListensEditModal extends ModalDialog {
      * @param type
      */
     public setType(type: string): void {
-        this._selectType.setSelectedValue(type);
+        this._segType.setValue(type);
+        this._applyTypeVisibility(type);
     }
 
     /**
@@ -299,7 +221,7 @@ export class ListensEditModal extends ModalDialog {
      * getProtocol
      */
     public getProtocol(): string {
-        return this._selectProtocol.getSelectedValue();
+        return this._segProtocol.getValue();
     }
 
     /**
@@ -307,7 +229,7 @@ export class ListensEditModal extends ModalDialog {
      * @param protocol
      */
     public setProtocol(protocol: string): void {
-        this._selectProtocol.setSelectedValue(protocol);
+        this._segProtocol.setValue(protocol);
     }
 
     /**
@@ -329,7 +251,7 @@ export class ListensEditModal extends ModalDialog {
      * getIp6
      */
     public getIp6(): boolean {
-        return this._switchIp6.isEnable();
+        return this._switchIp6.isOn();
     }
 
     /**
@@ -337,14 +259,14 @@ export class ListensEditModal extends ModalDialog {
      * @param enable
      */
     public setIp6(enable: boolean): void {
-        this._switchIp6.setEnable(enable);
+        this._switchIp6.setOn(enable);
     }
 
     /**
      * getAddressCheck
      */
     public getAddressCheck(): boolean {
-        return this._switchAddressCheck.isEnable();
+        return this._switchAddressCheck.isOn();
     }
 
     /**
@@ -352,14 +274,14 @@ export class ListensEditModal extends ModalDialog {
      * @param enable
      */
     public setAddressCheck(enable: boolean): void {
-        this._switchAddressCheck.setEnable(enable);
+        this._switchAddressCheck.setOn(enable);
     }
 
     /**
      * getAddressCheckType
      */
     public getAddressCheckType(): number {
-        return parseInt(this._selectAddressCheckType.getSelectedValue(), 10) || ListenAddressCheckType.black;
+        return parseInt(this._segAddressCheckType.getValue(), 10) || ListenAddressCheckType.black;
     }
 
     /**
@@ -367,7 +289,7 @@ export class ListensEditModal extends ModalDialog {
      * @param actype
      */
     public setAddressCheckType(actype: number): void {
-        this._selectAddressCheckType.setSelectedValue(`${actype}`);
+        this._segAddressCheckType.setValue(`${actype}`);
     }
 
     /**
@@ -375,14 +297,14 @@ export class ListensEditModal extends ModalDialog {
      * @param enable
      */
     public setProxyProtocol(enable: boolean): void {
-        this._switchProxyProtocol.setEnable(enable);
+        this._switchProxyProtocol.setOn(enable);
     }
 
     /**
      * getProxyProtocol
      */
     public getProxyProtocol(): boolean {
-        return this._switchProxyProtocol.isEnable();
+        return this._switchProxyProtocol.isOn();
     }
 
     /**
@@ -390,21 +312,21 @@ export class ListensEditModal extends ModalDialog {
      * @param enable
      */
     public setProxyProtocolIn(enable: boolean): void {
-        this._switchProxyProtocolIn.setEnable(enable);
+        this._switchProxyProtocolIn.setOn(enable);
     }
 
     /**
      * getProxyProtocolIn
      */
     public getProxyProtocolIn(): boolean {
-        return this._switchProxyProtocolIn.isEnable();
+        return this._switchProxyProtocolIn.isOn();
     }
 
     /**
      * getDisable
      */
     public getDisable(): boolean {
-        return this._switchDisable.isEnable();
+        return this._switchDisable.isOn();
     }
 
     /**
@@ -412,7 +334,7 @@ export class ListensEditModal extends ModalDialog {
      * @param disable
      */
     public setDisable(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+        this._switchDisable.setOn(disable);
     }
 
     /**
@@ -488,7 +410,7 @@ export class ListensEditModal extends ModalDialog {
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setName('');
         this.setType(`${ListenTypes.stream}`);

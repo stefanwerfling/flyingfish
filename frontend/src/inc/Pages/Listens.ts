@@ -39,9 +39,7 @@ export class Listens extends BasePage {
 
         // route modal -------------------------------------------------------------------------------------------------
 
-        this._listenDialog = new ListensEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._listenDialog = new ListensEditModal();
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Listens', () => {
