@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Multi-stage build for the netdevice "host-network agent" part. It manages the host
 # NICs (udhcpc on WAN, dnsmasq DHCP/RA on the LAN NICs), reports discovered interfaces,
 # AND programs the host nftables ruleset (netfilter subsystem, absorbed from the former
@@ -33,16 +34,24 @@ RUN rm -rf schemas/node_modules schemas/dist schemas/package-lock.json \
            netfilternft/*.node netfilternft/index.js netfilternft/index.d.ts \
            netdevice/node_modules netdevice/dist netdevice/package-lock.json netdevice/Dockerfile
 
-RUN npm install --registry=$NPM_REGISTRY --maxsockets 1
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --registry=$NPM_REGISTRY --maxsockets 1
 
 RUN cd schemas && npm run build \
     && cd ../core && npm run build
 
 # Build the native nftables addon for THIS image's platform (napi targets the host
-# triple, so `docker buildx --platform` produces the right .node per arch).
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal \
+# triple, so `docker buildx --platform` produces the right .node per arch). The cargo
+# registry/git + the crate `target` dir are BuildKit cache mounts, so a rebuild only
+# recompiles changed crates instead of the whole rustables/tokio/bindgen tree (the .node
+# itself is written to the crate root, so it still lands in the image layer — `target`
+# is a cache mount and never committed, which is why the old `rm -rf target` is gone).
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/root/.cargo/git \
+    --mount=type=cache,target=/opt/flyingfish/netfilternft/target \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal \
     && . /root/.cargo/env \
-    && (cd /opt/flyingfish/netfilternft && npm run build && rm -rf target)
+    && (cd /opt/flyingfish/netfilternft && npm run build)
 
 RUN cd netdevice && npm run build
 

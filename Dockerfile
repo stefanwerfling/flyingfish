@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Multi-stage build for the FlyingFish backend. The build stage compiles schemas,
 # core, the letsencrypt plugin, the backend, and the frontend (gulp/webpack); the
 # runtime stage ships only the built dist + production node_modules + the backend's
@@ -36,7 +37,10 @@ RUN rm -rf schemas/node_modules schemas/dist schemas/tsconfig.tsbuildinfo schema
            nginx/node_modules nginx/dist nginx/logs nginx/body nginx/sample nginx/servers \
            nginx/package-lock.json nginx/nginx.pid nginx/dhparam.pem nginx/nginx.conf
 
-RUN npm install --registry=$NPM_REGISTRY --maxsockets 1
+# npm cache is a BuildKit cache mount so a rebuild reuses downloaded packages instead
+# of re-fetching (+ recompiling native deps like bcrypt) under emulation every time.
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --registry=$NPM_REGISTRY --maxsockets 1
 
 RUN cd schemas && npm run build \
     && cd ../core && npm run build \
@@ -44,13 +48,15 @@ RUN cd schemas && npm run build \
     && cd ../../backend && npm run build
 
 # Frontend: own install tree (webpack/babel), then build the static bundle.
-RUN cd frontend \
+RUN --mount=type=cache,target=/root/.npm \
+    cd frontend \
     && npm install --registry=$NPM_REGISTRY --force --maxsockets 1 \
     && npm run gulp-copy-data \
     && npm run gulp-build-webpack
 
 # nginx config-gen helper (node package used by the backend in remote mode).
-RUN mkdir -p nginx/servers/proxy_temp nginx/logs \
+RUN --mount=type=cache,target=/root/.npm \
+    mkdir -p nginx/servers/proxy_temp nginx/logs \
     && chmod 700 nginx/servers/proxy_temp \
     && chmod 755 nginx/logs \
     && cd nginx && npm install
