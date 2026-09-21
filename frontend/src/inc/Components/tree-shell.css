@@ -115,7 +115,7 @@ body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
   --surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;
   --accent:#12919f;--accent-ink:#0b6a74;--v4:#2f7dd1;--v6:#a855c9;--good:#2ea16b;--warn:#d69a2d;
   --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;--sans:ui-sans-serif,system-ui,-apple-system,sans-serif;
-  background: var(--surface); border-bottom: 1px solid var(--line); margin: -0.5rem -0.5rem 0; padding-bottom: 0;
+  background: var(--surface); border-bottom: 1px solid var(--line); margin: 0; padding-bottom: 0;
 }
 @media (prefers-color-scheme: dark){ .ffx-topbar{--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;} }
 :root[data-theme="light"] .ffx-topbar{--surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;--accent:#12919f;}
@@ -126,6 +126,21 @@ body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
 
 /* hide the admin-lte page-title header — the object header replaces it */
 body.ffx-app .content-header { display: none !important; }
+
+/* merge the admin-lte top navbar into the app header: one cohesive top strip that
+   carries the page's action buttons (left) and fullscreen/logout (right). The
+   pushmenu hamburger is hidden — collapsing the sidebar would break the tree. */
+body.ffx-app .main-header.navbar {
+  --surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--accent:#12919f;
+  background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: none; min-height: 44px; padding: 4px 14px;
+}
+@media (prefers-color-scheme: dark){ body.ffx-app .main-header.navbar{--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--accent:#2bb9c9;} }
+:root[data-theme="light"] body.ffx-app .main-header.navbar{--surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--accent:#12919f;}
+:root[data-theme="dark"] body.ffx-app .main-header.navbar{--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--accent:#2bb9c9;}
+body.ffx-app .main-header a[data-widget="pushmenu"] { display: none !important; }
+body.ffx-app .main-header.navbar .nav-link { color: var(--ink); }
+/* page action buttons in the strip pick up the app accent */
+body.ffx-app .main-header.navbar .btn { border-radius: 8px; }
 
 /* thin divider between tab groups in the topbar tab bar (visually separates concerns) */
 .ffx-tabsep { width: 1px; align-self: center; height: 18px; background: var(--line); margin: 0 6px; flex: none; }
