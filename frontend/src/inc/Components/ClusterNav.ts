@@ -7,6 +7,8 @@ export type NavTab = {
     key: string;
     label: string;
     icon?: string;
+    /** Optional group id; a divider is drawn where the group changes between tabs. */
+    group?: string;
     /** Factory for the page this tab shows (loaded via the app's loadPage). */
     make: () => unknown;
 };
@@ -170,10 +172,17 @@ export class ClusterNav {
 
         const tabs = jQuery('<div class="ffx-tabs"></div>').appendTo(bar);
 
-        for (const tab of owner.tabs) {
+        let prevGroup: string | undefined;
+
+        owner.tabs.forEach((tab, index) => {
+            if (index > 0 && tab.group !== undefined && tab.group !== prevGroup) {
+                jQuery('<span class="ffx-tabsep"></span>').appendTo(tabs);
+            }
+
+            prevGroup = tab.group;
             const el = jQuery(`<span class="ffx-tab ${tab.key === currentKey ? 'active' : ''}"><span class="ic">${tab.icon ?? ''}</span>${ClusterNav._esc(tab.label)}</span>`).appendTo(tabs);
             el.on('click', () => loadPage(tab.make()));
-        }
+        });
 
         // place the bar at the very top of the content-wrapper, above the page content
         cw.prepend(bar);

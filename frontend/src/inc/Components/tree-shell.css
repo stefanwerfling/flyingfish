@@ -126,3 +126,21 @@ body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
 
 /* hide the admin-lte page-title header — the object header replaces it */
 body.ffx-app .content-header { display: none !important; }
+
+/* thin divider between tab groups in the topbar tab bar (visually separates concerns) */
+.ffx-tabsep { width: 1px; align-self: center; height: 18px; background: var(--line); margin: 0 6px; flex: none; }
+
+/* a page-content wrapper that carries the app tokens, so ffx cards/empties render
+   correctly outside the .ffx shell (used by the datacenter cluster views) */
+.ffx-page {
+  --bg:#eef2f3;--surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;
+  --accent:#12919f;--accent-ink:#0b6a74;--v4:#2f7dd1;--v6:#a855c9;--good:#2ea16b;--warn:#d69a2d;--danger:#d9534f;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;--sans:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --shadow:0 1px 2px rgba(22,41,45,.06);
+  color: var(--ink); font-family: var(--sans); padding: 18px 4px 4px;
+}
+@media (prefers-color-scheme: dark){ .ffx-page{--bg:#0e1618;--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;--danger:#e8756f;--shadow:0 1px 2px rgba(0,0,0,.3)} }
+:root[data-theme="light"] .ffx-page{--bg:#eef2f3;--surface:#fff;--surface2:#f4f7f8;--line:#d9e1e3;--ink:#16292d;--soft:#476066;--faint:#7f959b;--accent:#12919f;--accent-ink:#0b6a74;--v6:#a855c9;--good:#2ea16b;--warn:#d69a2d;--shadow:0 1px 2px rgba(22,41,45,.06)}
+:root[data-theme="dark"] .ffx-page{--bg:#0e1618;--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;--shadow:0 1px 2px rgba(0,0,0,.3)}
+.ffx-page .ffx-sectitle { font-size: 15px; font-weight: 650; color: var(--ink); margin: 0 0 4px; }
+.ffx-page .ffx-secnote { font-size: 12.5px; color: var(--soft); margin: 0 0 16px; }

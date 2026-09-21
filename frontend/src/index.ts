@@ -4,6 +4,7 @@ import {User as UserAPI} from './inc/Api/User.js';
 import {ClusterNav, NavModel} from './inc/Components/ClusterNav.js';
 import {Lang} from './inc/Lang.js';
 import {BasePage} from './inc/Pages/BasePage.js';
+import {ClusterView} from './inc/Pages/ClusterView.js';
 import {Credential as CredentialPage} from './inc/Pages/Credential.js';
 import {Dashboard as DashboardPage} from './inc/Pages/Dashboard.js';
 import {Domains as DomainsPage} from './inc/Pages/Domains.js';
@@ -92,19 +93,18 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                 title: 'Datacenter',
                 icon: '🛰️',
                 avatar: '🛰️',
-                subtitle: 'cluster-wide configuration',
+                subtitle: 'cluster control plane',
                 count: {n: '1'},
+                // Only cluster-wide concerns: membership, enrollment, mesh, access control
+                // and the shared trust anchor. Everything that configures a FlyingFish
+                // instance (nginx, DNS, listeners, router, settings) lives on the node.
                 tabs: [
-                    {key: 'dashboard', label: 'Dashboard', icon: '📊', make: (): BasePage => new DashboardPage()},
-                    {key: 'domains', label: 'Domains', icon: '🏷️', make: (): BasePage => new DomainsPage()},
-                    {key: 'dyndnsclients', label: 'DynDns Clients', icon: '📡', make: (): BasePage => new DynDnsClients()},
-                    {key: 'dyndnsserver', label: 'DynDns Server', icon: '🗄️', make: (): BasePage => new DynDnsServer()},
-                    {key: 'credential', label: 'Credential', icon: '📓', make: (): BasePage => new CredentialPage()},
-                    {key: 'routes', label: 'Routes', icon: '🧵', make: (): BasePage => new RoutesPage()},
-                    {key: 'users', label: 'Users', icon: '👥', make: (): BasePage => new UsersPage()},
-                    {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()},
-                    {key: 'pki', label: 'PKI', icon: '🔐', make: (): BasePage => new PkiPage()},
-                    {key: 'settings', label: 'Settings', icon: '⚙️', make: (): BasePage => new SettingsPage()}
+                    {key: 'overview', label: 'Summary', icon: '📊', group: 'status', make: (): BasePage => new ClusterView('overview')},
+                    {key: 'nodes', label: 'Nodes', icon: '🖥️', group: 'cluster', make: (): BasePage => new ClusterView('nodes')},
+                    {key: 'enrollment', label: 'Enrollment', icon: '➕', group: 'cluster', make: (): BasePage => new ClusterView('enrollment')},
+                    {key: 'topology', label: 'Topology', icon: '🕸️', group: 'cluster', make: (): BasePage => new ClusterView('topology')},
+                    {key: 'users', label: 'Users & RBAC', icon: '👥', group: 'access', make: (): BasePage => new UsersPage()},
+                    {key: 'pki', label: 'PKI (CA)', icon: '🔐', group: 'access', make: (): BasePage => new PkiPage()}
                 ]
             },
             nodes: [
@@ -118,15 +118,26 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                     badges: [{label: 'CA · Hub', cls: 'ca'}, {label: 'this node', cls: 'plain'}],
                     subtitle: 'this node',
                     resources: [
-                        {id: 'res:router', title: 'Router', icon: '🧭', tabKey: 'router'},
-                        {id: 'res:listens', title: 'Listens', icon: '🚪', tabKey: 'listens'}
+                        {id: 'res:domains', title: 'Domains', icon: '🏷️', tabKey: 'domains'},
+                        {id: 'res:listens', title: 'Listens', icon: '🚪', tabKey: 'listens'},
+                        {id: 'res:router', title: 'Router', icon: '🧭', tabKey: 'router'}
                     ],
+                    // A node owns its whole nginx/DNS/host configuration; tabs are grouped
+                    // by concern (status · web · dns · network · system).
                     tabs: [
-                        {key: 'listens', label: 'Listens', icon: '🚪', make: (): BasePage => new ListensPage()},
-                        {key: 'ipaccess', label: 'IP Access', icon: '🔒', make: (): BasePage => new IpAccess()},
-                        {key: 'gateway', label: 'Gateway', icon: '🌐', make: (): BasePage => new GatewayPage()},
-                        {key: 'upnpnat', label: 'UpnpNat', icon: '🗺️', make: (): BasePage => new UpnpNatPage()},
-                        {key: 'router', label: 'Router', icon: '🧭', make: (): BasePage => new RouterPage()}
+                        {key: 'dashboard', label: 'Summary', icon: '📊', group: 'status', make: (): BasePage => new DashboardPage()},
+                        {key: 'domains', label: 'Domains', icon: '🏷️', group: 'web', make: (): BasePage => new DomainsPage()},
+                        {key: 'routes', label: 'Routes', icon: '🧵', group: 'web', make: (): BasePage => new RoutesPage()},
+                        {key: 'credential', label: 'Credential', icon: '📓', group: 'web', make: (): BasePage => new CredentialPage()},
+                        {key: 'dyndnsclients', label: 'DynDns Clients', icon: '📡', group: 'dns', make: (): BasePage => new DynDnsClients()},
+                        {key: 'dyndnsserver', label: 'DynDns Server', icon: '🗄️', group: 'dns', make: (): BasePage => new DynDnsServer()},
+                        {key: 'listens', label: 'Listens', icon: '🚪', group: 'net', make: (): BasePage => new ListensPage()},
+                        {key: 'ipaccess', label: 'IP Access', icon: '🔒', group: 'net', make: (): BasePage => new IpAccess()},
+                        {key: 'gateway', label: 'Gateway', icon: '🌐', group: 'net', make: (): BasePage => new GatewayPage()},
+                        {key: 'upnpnat', label: 'UpnpNat', icon: '🗺️', group: 'net', make: (): BasePage => new UpnpNatPage()},
+                        {key: 'router', label: 'Router', icon: '🧭', group: 'net', make: (): BasePage => new RouterPage()},
+                        {key: 'registry', label: 'Registry', icon: '🧩', group: 'sys', make: (): BasePage => new RegistryPage()},
+                        {key: 'settings', label: 'Settings', icon: '⚙️', group: 'sys', make: (): BasePage => new SettingsPage()}
                     ]
                 }
             ]
