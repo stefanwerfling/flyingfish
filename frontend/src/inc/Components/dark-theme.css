@@ -1,0 +1,121 @@
+/*
+ * dark-theme — a coherent dark skin for the reused admin-lte / bootstrap-4 page
+ * content, so the whole app (not just the tree/topbar shell) reads as one dark UI.
+ *
+ * Single source of truth: the theme is driven by :root[data-theme="dark"|"light"],
+ * set on load from the saved preference or the OS (see index.ts). Everything here is
+ * scoped under `:root[data-theme="dark"] body.ffx-app` so light mode is untouched and
+ * the high specificity wins over bootstrap/admin-lte defaults without !important.
+ */
+:root[data-theme="dark"] body.ffx-app {
+  --d-bg:#0e1618; --d-surface:#152226; --d-surface2:#1b2c31; --d-line:#2a3d43;
+  --d-ink:#e8f1f2; --d-soft:#a7bcc1; --d-faint:#6f878d; --d-accent:#2bb9c9;
+}
+
+/* page ground ---------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app,
+:root[data-theme="dark"] body.ffx-app .wrapper,
+:root[data-theme="dark"] body.ffx-app .content-wrapper { background-color: var(--d-bg); color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app .content { background-color: var(--d-bg); }
+
+/* cards ---------------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .card {
+  background-color: var(--d-surface); color: var(--d-ink);
+  border: 1px solid var(--d-line); box-shadow: 0 1px 2px rgba(0,0,0,.3);
+}
+:root[data-theme="dark"] body.ffx-app .card-header {
+  background-color: var(--d-surface2); border-bottom: 1px solid var(--d-line); color: var(--d-ink);
+}
+:root[data-theme="dark"] body.ffx-app .card-footer {
+  background-color: var(--d-surface2); border-top: 1px solid var(--d-line);
+}
+:root[data-theme="dark"] body.ffx-app .card-title { color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app .card.card-outline { border-top-width: 3px; }
+
+/* tables --------------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .table { color: var(--d-ink); border-color: var(--d-line); }
+:root[data-theme="dark"] body.ffx-app .table th,
+:root[data-theme="dark"] body.ffx-app .table td { border-color: var(--d-line); }
+:root[data-theme="dark"] body.ffx-app .table thead th {
+  color: var(--d-soft); border-bottom: 2px solid var(--d-line); background-color: var(--d-surface2);
+}
+:root[data-theme="dark"] body.ffx-app .table-hover tbody tr:hover { background-color: rgba(255,255,255,.04); color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(255,255,255,.025); }
+
+/* text helpers --------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .text-muted,
+:root[data-theme="dark"] body.ffx-app small.text-muted { color: var(--d-faint) !important; }
+:root[data-theme="dark"] body.ffx-app a { color: var(--d-accent); }
+:root[data-theme="dark"] body.ffx-app hr { border-top-color: var(--d-line); }
+
+/* buttons: only the neutral light ones need reskinning; coloured stay coloured */
+:root[data-theme="dark"] body.ffx-app .btn-default,
+:root[data-theme="dark"] body.ffx-app .btn-light,
+:root[data-theme="dark"] body.ffx-app .btn-outline-secondary {
+  background-color: var(--d-surface2); border-color: var(--d-line); color: var(--d-ink);
+}
+:root[data-theme="dark"] body.ffx-app .btn-default:hover,
+:root[data-theme="dark"] body.ffx-app .btn-light:hover { background-color: #24383e; color: #fff; }
+
+/* forms ---------------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .form-control,
+:root[data-theme="dark"] body.ffx-app .custom-select,
+:root[data-theme="dark"] body.ffx-app textarea.form-control {
+  background-color: #0f1c20; border-color: var(--d-line); color: var(--d-ink);
+}
+:root[data-theme="dark"] body.ffx-app .form-control:focus,
+:root[data-theme="dark"] body.ffx-app .custom-select:focus {
+  background-color: #0f1c20; border-color: var(--d-accent); color: var(--d-ink);
+  box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--d-accent) 25%, transparent);
+}
+:root[data-theme="dark"] body.ffx-app .form-control::placeholder { color: var(--d-faint); }
+:root[data-theme="dark"] body.ffx-app label,
+:root[data-theme="dark"] body.ffx-app .col-form-label { color: var(--d-soft); }
+:root[data-theme="dark"] body.ffx-app .input-group-text {
+  background-color: var(--d-surface2); border-color: var(--d-line); color: var(--d-soft);
+}
+
+/* modals (bootstrap dialogs) ------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .modal-content {
+  background-color: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-line);
+}
+:root[data-theme="dark"] body.ffx-app .modal-header,
+:root[data-theme="dark"] body.ffx-app .modal-footer { border-color: var(--d-line); }
+:root[data-theme="dark"] body.ffx-app .modal-title { color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app .close { color: var(--d-ink); text-shadow: none; opacity: .8; }
+:root[data-theme="dark"] body.ffx-app .modal-backdrop.show { opacity: .6; }
+
+/* dropdown menus ------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .dropdown-menu {
+  background-color: var(--d-surface); border: 1px solid var(--d-line); box-shadow: 0 6px 20px rgba(0,0,0,.5);
+}
+:root[data-theme="dark"] body.ffx-app .dropdown-item { color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app .dropdown-item:hover,
+:root[data-theme="dark"] body.ffx-app .dropdown-item:focus { background-color: var(--d-surface2); color: #fff; }
+:root[data-theme="dark"] body.ffx-app .dropdown-divider { border-top-color: var(--d-line); }
+
+/* select2 (dropdowns render under <body>, still inside data-theme scope) ------ */
+:root[data-theme="dark"] body.ffx-app .select2-container--bootstrap4 .select2-selection,
+:root[data-theme="dark"] .select2-dropdown {
+  background-color: #0f1c20; border-color: var(--d-line); color: var(--d-ink);
+}
+:root[data-theme="dark"] .select2-dropdown { background-color: var(--d-surface); }
+:root[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option { color: var(--d-ink); }
+:root[data-theme="dark"] .select2-container--bootstrap4 .select2-results__option--highlighted { background-color: var(--d-accent); color: #06222a; }
+:root[data-theme="dark"] .select2-container--bootstrap4 .select2-selection__rendered { color: var(--d-ink); }
+:root[data-theme="dark"] .select2-search__field { background-color: #0f1c20; color: var(--d-ink); border-color: var(--d-line); }
+
+/* footer --------------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .main-footer {
+  background-color: var(--d-surface); border-top: 1px solid var(--d-line); color: var(--d-soft);
+}
+
+/* misc surfaces -------------------------------------------------------------- */
+:root[data-theme="dark"] body.ffx-app .info-box,
+:root[data-theme="dark"] body.ffx-app .callout { background-color: var(--d-surface); color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app .list-group-item { background-color: var(--d-surface); border-color: var(--d-line); color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app pre,
+:root[data-theme="dark"] body.ffx-app code { background-color: #0f1c20; color: var(--d-ink); }
+:root[data-theme="dark"] body.ffx-app .border,
+:root[data-theme="dark"] body.ffx-app .border-top,
+:root[data-theme="dark"] body.ffx-app .border-bottom { border-color: var(--d-line) !important; }

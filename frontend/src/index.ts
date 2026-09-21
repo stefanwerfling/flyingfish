@@ -32,6 +32,44 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
     Lang.i('Lang_EN');
     jQuery('#ff_page_title').html(Lang.i().l('title'));
 
+    // theme --------------------------------------------------------------------------------------------------------
+    // Single source of truth for light/dark: data-theme on <html>. The whole app (dark
+    // tree/topbar shell + the dark-skinned page content) keys off it. Initialised from the
+    // saved preference, falling back to the OS setting; the navbar toggle flips + persists it.
+
+    /**
+     * Apply a theme by setting data-theme on the document root.
+     * @param theme - 'dark' or 'light'
+     */
+    const applyTheme = (theme: string): void => {
+        document.documentElement.setAttribute('data-theme', theme);
+    };
+
+    /**
+     * Flip the current theme and persist the choice.
+     */
+    const toggleTheme = (): void => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+
+        try {
+            window.localStorage.setItem('ff-theme', next);
+        } catch (e) {
+            // storage may be unavailable (private mode) — the toggle still works for the session
+        }
+
+        applyTheme(next);
+    };
+
+    let saved: string | null = null;
+
+    try {
+        saved = window.localStorage.getItem('ff-theme');
+    } catch (e) {
+        saved = null;
+    }
+
+    applyTheme(saved ?? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
     let globalPage: BasePage|null = null;
 
     /**
@@ -70,6 +108,13 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
         const rightNavbar = page.getWrapper().getNavbar().getRightNavbar();
         // eslint-disable-next-line no-new
         new NavbarLinkFullsize(rightNavbar.getElement());
+        // eslint-disable-next-line no-new
+        new NavbarLinkButton(
+            rightNavbar.getElement(),
+            'fa-adjust', () => {
+                toggleTheme();
+            }
+        );
         // eslint-disable-next-line no-new
         new NavbarLinkButton(
             rightNavbar.getElement(),
