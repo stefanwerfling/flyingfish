@@ -9,6 +9,7 @@ import {AddWanLease1789000000000} from '../../../inc/Db/MariaDb/migrations/17890
 import {AddDhcpPerInterface1789100000000} from '../../../inc/Db/MariaDb/migrations/1789100000000-AddDhcpPerInterface.js';
 import {FixPkiTimestampsBigint1789200000000} from '../../../inc/Db/MariaDb/migrations/1789200000000-FixPkiTimestampsBigint.js';
 import {AddNatPerInterface1789300000000} from '../../../inc/Db/MariaDb/migrations/1789300000000-AddNatPerInterface.js';
+import {AddPortForward1789400000000} from '../../../inc/Db/MariaDb/migrations/1789400000000-AddPortForward.js';
 import {AddPkiTables1788500000000} from '../../../inc/Db/MariaDb/migrations/1788500000000-AddPkiTables.js';
 import {InitialSchema1787961600000} from '../../../inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
@@ -46,7 +47,8 @@ export class DBLoader extends CoreDBLoader {
             AddWanLease1789000000000,
             AddDhcpPerInterface1789100000000,
             FixPkiTimestampsBigint1789200000000,
-            AddNatPerInterface1789300000000
+            AddNatPerInterface1789300000000,
+            AddPortForward1789400000000
         ];
     }
 

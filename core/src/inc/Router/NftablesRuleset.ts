@@ -39,6 +39,55 @@ export type NftablesRouterConfig = {
      * Enable routing (forward chain + IP forwarding sysctls) between LAN and WAN.
      */
     forward: boolean;
+
+    /**
+     * Inbound firewall / port-forwarding rules (Pi-router Phase 2). CONCRETE — each entry is
+     * a single proto × family; `both` is expanded by {@link resolvePortForwards} so the
+     * ruleset generator and native applier stay simple. Optional: absent = no inbound
+     * openings (the WAN firewall stays fully closed).
+     */
+    forwards?: NftablesForward[];
+};
+
+/**
+ * One resolved inbound rule: open a WAN port to a LAN host (DNAT) or to the router itself.
+ */
+export type NftablesForward = {
+    /**
+     * `tcp` or `udp` (concrete — `both` is expanded upstream).
+     */
+    proto: 'tcp' | 'udp';
+
+    /**
+     * `ipv4` or `ipv6` (concrete — `both` is expanded upstream).
+     */
+    family: 'ipv4' | 'ipv6';
+
+    /**
+     * The WAN (incoming) port (range start when `wanPortEnd` is set).
+     */
+    wanPort: number;
+
+    /**
+     * End of the WAN port range (inclusive); 0 = a single port. A range forwards 1:1
+     * (each WAN port → the same port on the host), so `hostPort` is ignored for a range.
+     */
+    wanPortEnd: number;
+
+    /**
+     * `host` (DNAT to a LAN host) or `router` (accept to a service on the Pi itself).
+     */
+    targetType: 'host' | 'router';
+
+    /**
+     * The destination host IP (host mode); empty for a router rule.
+     */
+    host: string;
+
+    /**
+     * The destination port on the host (host mode); 0 = same as `wanPort`.
+     */
+    hostPort: number;
 };
 
 /**
@@ -62,9 +111,10 @@ export type NftablesRuleset = {
  *
  * - A `table inet filter` forward chain (covers IPv4+IPv6) with an ACCEPT policy — a
  *   blanket DROP on the forward hook would also catch Docker's bridge forwarding and any
- *   foreign routing, so `forward` is expressed by SCOPING: when routing is OFF, explicit
- *   `iifname <lan> oifname <wan> drop` rules block LAN→WAN while leaving other traffic
- *   alone; when ON, the chain is a permissive no-op. Mirrors the native applier.
+ *   foreign routing, so the rules are SCOPED. WAN→LAN is a stateful inbound firewall
+ *   (accept established/related + the explicitly forwarded ports, drop the rest of new
+ *   WAN→LAN per LAN) so LAN hosts aren't exposed; when routing is OFF, extra
+ *   `iifname <lan> oifname <wan> drop` rules also block new LAN→WAN. Mirrors the applier.
  * - `table ip nat` postrouting with one `iifname <lan> oifname <wan> masquerade` rule per
  *   LAN that has `nat44` on (scoped per LAN so each LAN can differ).
  * - `table ip6 nat` postrouting with one masquerade rule per LAN in `nat66` mode
@@ -76,12 +126,35 @@ export type NftablesRuleset = {
  */
 export const buildNftablesRuleset = (config: NftablesRouterConfig): NftablesRuleset => {
     const hasWan = config.wanInterface !== '';
+    const forwards = config.forwards ?? [];
     const blocks: string[] = [];
 
     {
         const forwardRules = ['\t\ttype filter hook forward priority 0; policy accept;'];
 
-        // Routing OFF: drop new LAN→WAN specifically (Docker/foreign traffic untouched).
+        // WAN→LAN inbound firewall (stateful). Accept policy on the hook (a blanket forward
+        // drop also kills Docker's published-port forwarding), so the firewall is SCOPED:
+        // accept return traffic (established/related on the WAN ingress) + the explicitly
+        // forwarded ports (matched by their post-DNAT dest host), then drop the rest of new
+        // WAN→LAN per LAN — so LAN hosts (esp. globally-routable IPv6 in pd mode) aren't
+        // exposed. Scoped `iifname <wan> oifname <lan>`, so Docker bridge forwarding is
+        // untouched. Mirrors the native applier.
+        if (hasWan) {
+            forwardRules.push(`\t\tiifname "${config.wanInterface}" ct state established,related accept`);
+
+            for (const fwd of forwards.filter((entry) => entry.targetType === 'host')) {
+                const daddr = fwd.family === 'ipv6' ? 'ip6 daddr' : 'ip daddr';
+                // After DNAT the dport is the WAN range (1:1) or the single rewritten host port.
+                const dportSpec = fwd.wanPortEnd > fwd.wanPort ? `${fwd.wanPort}-${fwd.wanPortEnd}` : `${fwd.hostPort}`;
+                forwardRules.push(`\t\tiifname "${config.wanInterface}" ${daddr} ${fwd.host} ${fwd.proto} dport ${dportSpec} accept`);
+            }
+
+            for (const lan of config.lans) {
+                forwardRules.push(`\t\tiifname "${config.wanInterface}" oifname "${lan.name}" drop`);
+            }
+        }
+
+        // Routing OFF: additionally drop new LAN→WAN (Docker/foreign traffic untouched).
         if (!config.forward && hasWan) {
             for (const lan of config.lans) {
                 forwardRules.push(`\t\tiifname "${lan.name}" oifname "${config.wanInterface}" drop`);
@@ -100,6 +173,15 @@ export const buildNftablesRuleset = (config: NftablesRouterConfig): NftablesRule
 
         if (hasWan) {
             inputRules.push(`\t\tiifname "${config.wanInterface}" udp dport { 68, 546 } accept`);
+
+            // Phase 2: pinholes for ports opened to the router itself — BEFORE the drops.
+            // A router pinhole is dual-stack (the family is irrelevant when the target is the
+            // box itself), matching the addon's input accept, so no `meta nfproto` scoping.
+            for (const fwd of forwards.filter((entry) => entry.targetType === 'router')) {
+                const dportSpec = fwd.wanPortEnd > fwd.wanPort ? `${fwd.wanPort}-${fwd.wanPortEnd}` : `${fwd.wanPort}`;
+                inputRules.push(`\t\tiifname "${config.wanInterface}" ${fwd.proto} dport ${dportSpec} accept`);
+            }
+
             inputRules.push(`\t\tiifname "${config.wanInterface}" meta l4proto tcp drop`);
             inputRules.push(`\t\tiifname "${config.wanInterface}" meta l4proto udp drop`);
         }
@@ -110,22 +192,50 @@ export const buildNftablesRuleset = (config: NftablesRouterConfig): NftablesRule
         );
     }
 
-    const natTable = (family: string, lanNames: string[]): void => {
-        if (!hasWan || lanNames.length === 0) {
+    // One nat table per family carrying a prerouting DNAT chain (port forwards to LAN hosts)
+    // and/or a postrouting masquerade chain (NAT44 / NAT66). The table is emitted when either
+    // is needed, so a port-forward works even if masquerade is off for that family.
+    const natTable = (family: 'ip' | 'ip6', ipFamily: 'ipv4' | 'ipv6', masqLans: string[]): void => {
+        const dnats = forwards.filter((fwd) => fwd.targetType === 'host' && fwd.family === ipFamily);
+
+        if (!hasWan || (masqLans.length === 0 && dnats.length === 0)) {
             return;
         }
 
-        const rules = lanNames
-            .map((lan) => `\t\tiifname "${lan}" oifname "${config.wanInterface}" masquerade`)
-            .join('\n');
+        const chains: string[] = [];
 
-        blocks.push(`table ${family} nat {\n\tchain postrouting {\n\t\ttype nat hook postrouting priority 100;\n${rules}\n\t}\n}`);
+        if (dnats.length > 0) {
+            const rules = dnats
+                .map((fwd) => {
+                    const dportSpec = fwd.wanPortEnd > fwd.wanPort ? `${fwd.wanPort}-${fwd.wanPortEnd}` : `${fwd.wanPort}`;
+                    // A range DNATs 1:1 (portless dnat preserves each port); a single port
+                    // DNATs to the resolved host port.
+                    const dest = fwd.wanPortEnd > fwd.wanPort
+                        ? fwd.host
+                        : (family === 'ip6' ? `[${fwd.host}]:${fwd.hostPort}` : `${fwd.host}:${fwd.hostPort}`);
+
+                    return `\t\tiifname "${config.wanInterface}" ${fwd.proto} dport ${dportSpec} dnat to ${dest}`;
+                })
+                .join('\n');
+
+            chains.push(`\tchain prerouting {\n\t\ttype nat hook prerouting priority -100;\n${rules}\n\t}`);
+        }
+
+        if (masqLans.length > 0) {
+            const rules = masqLans
+                .map((lan) => `\t\tiifname "${lan}" oifname "${config.wanInterface}" masquerade`)
+                .join('\n');
+
+            chains.push(`\tchain postrouting {\n\t\ttype nat hook postrouting priority 100;\n${rules}\n\t}`);
+        }
+
+        blocks.push(`table ${family} nat {\n${chains.join('\n')}\n}`);
     };
 
-    natTable('ip', config.lans.filter((lan) => lan.nat44).map((lan) => lan.name));
+    natTable('ip', 'ipv4', config.lans.filter((lan) => lan.nat44).map((lan) => lan.name));
     // nat66 AND pd-server masquerade to the WAN (both hand out ULA, which needs NAT to
     // reach the internet); `pd` routes an upstream GUA prefix with no NAT.
-    natTable('ip6', config.lans.filter((lan) => lan.ipv6Mode === 'nat66' || lan.ipv6Mode === 'pd-server').map((lan) => lan.name));
+    natTable('ip6', 'ipv6', config.lans.filter((lan) => lan.ipv6Mode === 'nat66' || lan.ipv6Mode === 'pd-server').map((lan) => lan.name));
 
     const sysctls: NftablesSysctl[] = [];
 
@@ -175,7 +285,8 @@ const IPV6_MODES = new Set(['off', 'nat66', 'pd', 'pd-server']);
  */
 export const resolveNftablesRouterConfig = (
     interfaces: readonly NftablesInterfaceInput[],
-    policy: NftablesPolicyInput | null
+    policy: NftablesPolicyInput | null,
+    forwards: readonly PortForwardInput[] = []
 ): NftablesRouterConfig => {
     const enabled = interfaces.filter((iface) => !iface.disable);
     const wan = enabled.find((iface) => iface.role === 'wan');
@@ -193,6 +304,80 @@ export const resolveNftablesRouterConfig = (
         // whole purpose). An explicit policy row still wins — set forward_enabled=false to
         // deliberately block LAN→WAN. (The netfilter addon expresses "off" as scoped
         // LAN→WAN drops, not a blanket forward DROP, so Docker/foreign traffic is safe.)
-        forward: policy?.forward_enabled ?? true
+        forward: policy?.forward_enabled ?? true,
+        forwards: resolvePortForwards(forwards)
     };
+};
+
+/**
+ * A persisted port-forward rule as the resolver cares about it — the shape of the relevant
+ * {@link PortForward} fields.
+ */
+export type PortForwardInput = {
+    proto: string;
+    wan_port: number;
+    wan_port_end: number;
+    family: string;
+    target_type: string;
+    target_host: string;
+    target_port: number;
+    enabled: boolean;
+};
+
+/**
+ * Expand persisted port-forward rows into the CONCRETE {@link NftablesForward} entries the
+ * ruleset/native applier consume: skip disabled/invalid rules, expand `both` proto into
+ * tcp+udp, DERIVE the family from the target address (a host is one family; router pinholes
+ * are dual-stack), and resolve the WAN range + "0 = same port" default. A `host` rule needs
+ * a target host. Pure.
+ * @param rules - the persisted rules
+ */
+export const resolvePortForwards = (rules: readonly PortForwardInput[]): NftablesForward[] => {
+    const out: NftablesForward[] = [];
+
+    for (const rule of rules) {
+        if (!rule.enabled || !Number.isInteger(rule.wan_port) || rule.wan_port <= 0 || rule.wan_port > 65535) {
+            continue;
+        }
+
+        const targetType = rule.target_type === 'router' ? 'router' : 'host';
+
+        if (targetType === 'host' && rule.target_host === '') {
+            continue;
+        }
+
+        const protos: ('tcp' | 'udp')[] = rule.proto === 'both' ? ['tcp', 'udp'] : rule.proto === 'udp' ? ['udp'] : ['tcp'];
+        // A host DNAT's family is DERIVED from the target address (a host is one family), so
+        // a wrongly-stored `family` can never produce an invalid rule. A router pinhole is
+        // dual-stack, emitted once with family 'ipv4' as a placeholder the input rule ignores.
+        const family: 'ipv4' | 'ipv6' = targetType === 'router'
+            ? 'ipv4'
+            : (rule.target_host.includes(':') ? 'ipv6' : 'ipv4');
+
+        // Resolve the "0 = same as the WAN port" default HERE so every consumer (preview
+        // generator + native applier) gets a concrete port and can't diverge.
+        const hostPort = targetType === 'host'
+            ? (rule.target_port > 0 ? rule.target_port : rule.wan_port)
+            : 0;
+
+        // A valid range needs end > start and end within bounds; otherwise it is a single
+        // port (0). A range is forwarded 1:1, so hostPort is irrelevant for it.
+        const wanPortEnd = rule.wan_port_end > rule.wan_port && rule.wan_port_end <= 65535
+            ? rule.wan_port_end
+            : 0;
+
+        for (const proto of protos) {
+            out.push({
+                proto: proto,
+                family: family,
+                wanPort: rule.wan_port,
+                wanPortEnd: wanPortEnd,
+                targetType: targetType,
+                host: targetType === 'host' ? rule.target_host : '',
+                hostPort: hostPort
+            });
+        }
+    }
+
+    return out;
 };

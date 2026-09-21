@@ -24,6 +24,7 @@ import {IssuedCertificate} from './Entity/IssuedCertificate.js';
 import {NatPolicy} from './Entity/NatPolicy.js';
 import {NatPort} from './Entity/NatPort.js';
 import {NetworkInterface} from './Entity/NetworkInterface.js';
+import {PortForward} from './Entity/PortForward.js';
 import {NginxHttp} from './Entity/NginxHttp.js';
 import {NginxHttpVariable} from './Entity/NginxHttpVariable.js';
 import {NginxListen} from './Entity/NginxListen.js';
@@ -82,6 +83,7 @@ export class DBEntitiesLoader {
             NatPolicy,
             NatPort,
             NetworkInterface,
+            PortForward,
             NginxHttp,
             NginxHttpVariable,
             NginxListen,

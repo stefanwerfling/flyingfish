@@ -80,10 +80,26 @@ export class NetfilterConfigClient {
             }))
             .filter((lan) => lan.name !== '');
 
+        // Inbound firewall / port-forwarding rules (Phase 2). Optional + defensively parsed:
+        // an older Hub omits the field (→ no openings) and any malformed entry is dropped.
+        const forwards = (Array.isArray(config.forwards) ? config.forwards : [])
+            .filter((entry): entry is Record<string, unknown> => entry !== null && typeof entry === 'object')
+            .map((entry) => ({
+                proto: (entry.proto === 'udp' ? 'udp' : 'tcp') as 'tcp' | 'udp',
+                family: (entry.family === 'ipv6' ? 'ipv6' : 'ipv4') as 'ipv4' | 'ipv6',
+                wanPort: typeof entry.wanPort === 'number' ? entry.wanPort : 0,
+                wanPortEnd: typeof entry.wanPortEnd === 'number' ? entry.wanPortEnd : 0,
+                targetType: (entry.targetType === 'router' ? 'router' : 'host') as 'host' | 'router',
+                host: typeof entry.host === 'string' ? entry.host : '',
+                hostPort: typeof entry.hostPort === 'number' ? entry.hostPort : 0
+            }))
+            .filter((forward) => forward.wanPort > 0 && (forward.targetType === 'router' || forward.host !== ''));
+
         return {
             wanInterface: config.wanInterface,
             lans: lans,
-            forward: config.forward
+            forward: config.forward,
+            forwards: forwards
         };
     }
 

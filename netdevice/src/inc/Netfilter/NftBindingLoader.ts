@@ -14,8 +14,21 @@ const require = createRequire(import.meta.url);
  */
 export type NetfilterNativeLan = {name: string; nat44: boolean; ipv6Mode: string;};
 
+/**
+ * One inbound rule (port forward / firewall pinhole), as the native binding expects.
+ */
+export type NetfilterNativeForward = {
+    proto: string;
+    family: string;
+    wanPort: number;
+    wanPortEnd: number;
+    targetType: string;
+    host: string;
+    hostPort: number;
+};
+
 export type NetfilterNativeBinding = {
-    applyRouter(wanInterface: string, lans: NetfilterNativeLan[], forward: boolean): void;
+    applyRouter(wanInterface: string, lans: NetfilterNativeLan[], forward: boolean, forwards: NetfilterNativeForward[]): void;
     // IPv6 route management over rtnetlink (delegated-PD routes) — optional so an older
     // addon build without these still loads (the caller falls back).
     routeReplaceV6?(dest: string, prefixLen: number, via: string, dev: string): void;

@@ -4,7 +4,7 @@
  * (one nat66, one pd). Also covers the forward filter, forwarding sysctls, missing WAN, and
  * the resolver building per-LAN config from interface rows. Pure/data-level, network-free.
  */
-import {buildNftablesRuleset, NftablesRouterConfig, resolveNftablesRouterConfig} from 'flyingfish_core';
+import {buildNftablesRuleset, NftablesRouterConfig, resolveNftablesRouterConfig, resolvePortForwards} from 'flyingfish_core';
 
 const base: NftablesRouterConfig = {
     wanInterface: 'eth0',
@@ -130,6 +130,215 @@ describe('buildNftablesRuleset', () => {
     });
 });
 
+describe('buildNftablesRuleset — port forwarding & pinholes (Phase 2)', () => {
+    test('host DNAT (ipv4): prerouting dnat in the ip nat table, ip6 untouched', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'tcp', family: 'ipv4', wanPort: 8080, targetType: 'host', host: '10.103.0.50', hostPort: 80}
+            ]
+        });
+
+        const ip4 = result.ruleset.slice(result.ruleset.indexOf('table ip nat'), result.ruleset.indexOf('table ip6 nat'));
+
+        expect(ip4).toContain('chain prerouting {');
+        expect(ip4).toContain('type nat hook prerouting priority -100;');
+        expect(ip4).toContain('iifname "eth0" tcp dport 8080 dnat to 10.103.0.50:80');
+        // the ip6 table carries no dnat for an ipv4 rule
+        expect(result.ruleset.slice(result.ruleset.indexOf('table ip6 nat'))).not.toContain('dnat to');
+    });
+
+    test('host DNAT (ipv6): bracketed dnat destination in the ip6 nat table', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'tcp', family: 'ipv6', wanPort: 443, targetType: 'host', host: 'fd00:50:1::10', hostPort: 443}
+            ]
+        });
+
+        const ip6 = result.ruleset.slice(result.ruleset.indexOf('table ip6 nat'));
+
+        expect(ip6).toContain('chain prerouting {');
+        expect(ip6).toContain('iifname "eth0" tcp dport 443 dnat to [fd00:50:1::10]:443');
+    });
+
+    test('host DNAT (udp, single port): dnat to the resolved host port', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'udp', family: 'ipv4', wanPort: 51820, wanPortEnd: 0, targetType: 'host', host: '10.103.0.7', hostPort: 51820}
+            ]
+        });
+
+        expect(result.ruleset).toContain('iifname "eth0" udp dport 51820 dnat to 10.103.0.7:51820');
+    });
+
+    test('host DNAT range: portless 1:1 dnat + range dport match in prerouting and forward', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'tcp', family: 'ipv4', wanPort: 8000, wanPortEnd: 8010, targetType: 'host', host: '10.103.0.60', hostPort: 0}
+            ]
+        });
+
+        // prerouting: match the range, DNAT portless so each WAN port maps 1:1 to the host
+        expect(result.ruleset).toContain('iifname "eth0" tcp dport 8000-8010 dnat to 10.103.0.60');
+        expect(result.ruleset).not.toContain('dnat to 10.103.0.60:');
+        // forward: accept the range to the host (dport unchanged by a portless dnat)
+        const forward = result.ruleset.slice(0, result.ruleset.indexOf('chain input {'));
+        expect(forward).toContain('iifname "eth0" ip daddr 10.103.0.60 tcp dport 8000-8010 accept');
+    });
+
+    test('router pinhole range: input accept for the whole range', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'udp', family: 'ipv4', wanPort: 27000, wanPortEnd: 27100, targetType: 'router', host: '', hostPort: 0}
+            ]
+        });
+
+        expect(result.ruleset).toContain('iifname "eth0" udp dport 27000-27100 accept');
+    });
+
+    test('router pinhole: dual-stack input accept BEFORE the WAN drops, no DNAT table', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'tcp', family: 'ipv4', wanPort: 22, targetType: 'router', host: '', hostPort: 0}
+            ]
+        });
+
+        const input = result.ruleset.slice(result.ruleset.indexOf('chain input {'));
+        const acceptIdx = input.indexOf('iifname "eth0" tcp dport 22 accept');
+        const dropIdx = input.indexOf('meta l4proto tcp drop');
+
+        expect(acceptIdx).toBeGreaterThan(-1);
+        // the pinhole must precede the blanket TCP drop, else it never matches
+        expect(acceptIdx).toBeLessThan(dropIdx);
+        // a router pinhole is dual-stack: no nfproto scoping
+        expect(input).not.toContain('meta nfproto');
+    });
+
+    test('a port forward needs a WAN: no WAN → no dnat table', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            wanInterface: '',
+            forwards: [
+                {proto: 'tcp', family: 'ipv4', wanPort: 8080, targetType: 'host', host: '10.103.0.50', hostPort: 80}
+            ]
+        });
+
+        expect(result.ruleset).not.toContain('dnat to');
+    });
+
+    test('WAN→LAN firewall: stateful accept + per-LAN drop present even with routing ON', () => {
+        const result = buildNftablesRuleset(base);
+        const forward = result.ruleset.slice(0, result.ruleset.indexOf('chain input {'));
+
+        // return traffic accepted (scoped to the WAN ingress so LAN→WAN stays governed by
+        // the routing toggle), and new WAN→LAN dropped per LAN so hosts aren't exposed.
+        expect(forward).toContain('iifname "eth0" ct state established,related accept');
+        expect(forward).toContain('iifname "eth0" oifname "eth1" drop');
+    });
+
+    test('host forward: a scoped daddr accept precedes the WAN→LAN drop (else it never matches)', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'tcp', family: 'ipv4', wanPort: 8080, targetType: 'host', host: '10.103.0.50', hostPort: 80}
+            ]
+        });
+        const forward = result.ruleset.slice(0, result.ruleset.indexOf('chain input {'));
+
+        const acceptIdx = forward.indexOf('iifname "eth0" ip daddr 10.103.0.50 tcp dport 80 accept');
+        const dropIdx = forward.indexOf('iifname "eth0" oifname "eth1" drop');
+
+        expect(acceptIdx).toBeGreaterThan(-1);
+        expect(acceptIdx).toBeLessThan(dropIdx);
+    });
+
+    test('a router pinhole gets NO forward accept (it is input, not forwarded)', () => {
+        const result = buildNftablesRuleset({
+            ...base,
+            forwards: [
+                {proto: 'tcp', family: 'ipv4', wanPort: 22, targetType: 'router', host: '', hostPort: 0}
+            ]
+        });
+        const forward = result.ruleset.slice(0, result.ruleset.indexOf('chain input {'));
+
+        expect(forward).not.toContain('daddr');
+    });
+});
+
+describe('resolvePortForwards', () => {
+    test('expands proto=both into tcp+udp; family is DERIVED from the target address', () => {
+        // a v4 host → both entries are ipv4 (family=both is ignored; a host is one family)
+        const v4 = resolvePortForwards([
+            {proto: 'both', wan_port: 80, wan_port_end: 0, family: 'both', target_type: 'host', target_host: '10.0.0.5', target_port: 8080, enabled: true}
+        ]);
+
+        expect(v4).toHaveLength(2);
+        expect(v4).toContainEqual({proto: 'tcp', family: 'ipv4', wanPort: 80, wanPortEnd: 0, targetType: 'host', host: '10.0.0.5', hostPort: 8080});
+        expect(v4).toContainEqual({proto: 'udp', family: 'ipv4', wanPort: 80, wanPortEnd: 0, targetType: 'host', host: '10.0.0.5', hostPort: 8080});
+    });
+
+    test('a v6 target address yields family ipv6 even if the row says ipv4', () => {
+        const out = resolvePortForwards([
+            {proto: 'tcp', wan_port: 443, wan_port_end: 0, family: 'ipv4', target_type: 'host', target_host: 'fd00:50:1::10', target_port: 443, enabled: true}
+        ]);
+
+        expect(out).toHaveLength(1);
+        expect(out[0].family).toBe('ipv6');
+    });
+
+    test('a valid WAN range is carried through; an invalid one collapses to a single port', () => {
+        const out = resolvePortForwards([
+            {proto: 'tcp', wan_port: 8000, wan_port_end: 8010, family: 'ipv4', target_type: 'host', target_host: '10.0.0.5', target_port: 0, enabled: true},
+            {proto: 'tcp', wan_port: 9000, wan_port_end: 8000, family: 'ipv4', target_type: 'host', target_host: '10.0.0.5', target_port: 0, enabled: true}
+        ]);
+
+        expect(out[0].wanPortEnd).toBe(8010);
+        expect(out[1].wanPortEnd).toBe(0);
+    });
+
+    test('a router rule is emitted once per proto (family collapsed, dual-stack)', () => {
+        const out = resolvePortForwards([
+            {proto: 'both', wan_port: 22, family: 'both', target_type: 'router', target_host: '', target_port: 0, enabled: true}
+        ]);
+
+        expect(out).toHaveLength(2);
+        expect(out.every((entry) => entry.targetType === 'router' && entry.host === '' && entry.hostPort === 0)).toBe(true);
+    });
+
+    test('resolves target_port 0 to the WAN port (the "0 = same port" default)', () => {
+        const out = resolvePortForwards([
+            {proto: 'tcp', wan_port: 51820, family: 'ipv4', target_type: 'host', target_host: '10.0.0.7', target_port: 0, enabled: true}
+        ]);
+
+        expect(out).toHaveLength(1);
+        expect(out[0].hostPort).toBe(51820);
+    });
+
+    test('keeps an explicit target_port distinct from the WAN port', () => {
+        const out = resolvePortForwards([
+            {proto: 'tcp', wan_port: 8080, family: 'ipv4', target_type: 'host', target_host: '10.0.0.5', target_port: 80, enabled: true}
+        ]);
+
+        expect(out[0].hostPort).toBe(80);
+    });
+
+    test('skips disabled rules, out-of-range ports and host rules with no target host', () => {
+        const out = resolvePortForwards([
+            {proto: 'tcp', wan_port: 80, family: 'ipv4', target_type: 'host', target_host: '10.0.0.5', target_port: 80, enabled: false},
+            {proto: 'tcp', wan_port: 0, family: 'ipv4', target_type: 'host', target_host: '10.0.0.5', target_port: 80, enabled: true},
+            {proto: 'tcp', wan_port: 70000, family: 'ipv4', target_type: 'host', target_host: '10.0.0.5', target_port: 80, enabled: true},
+            {proto: 'tcp', wan_port: 80, family: 'ipv4', target_type: 'host', target_host: '', target_port: 80, enabled: true}
+        ]);
+
+        expect(out).toEqual([]);
+    });
+});
+
 describe('resolveNftablesRouterConfig', () => {
     test('builds per-LAN NAT from interface fields, skipping disabled interfaces', () => {
         const config = resolveNftablesRouterConfig(
@@ -149,7 +358,8 @@ describe('resolveNftablesRouterConfig', () => {
                 {name: 'eth1', nat44: true, ipv6Mode: 'nat66'},
                 {name: 'wlan0', nat44: true, ipv6Mode: 'pd'}
             ],
-            forward: true
+            forward: true,
+            forwards: []
         });
     });
 
@@ -159,7 +369,7 @@ describe('resolveNftablesRouterConfig', () => {
             null
         );
 
-        expect(config).toEqual({wanInterface: 'eth0', lans: [], forward: true});
+        expect(config).toEqual({wanInterface: 'eth0', lans: [], forward: true, forwards: []});
     });
 
     test('an unknown ipv6 mode on a LAN falls back to off; no WAN role → empty wanInterface', () => {

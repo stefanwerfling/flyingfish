@@ -162,6 +162,29 @@ export const SchemaAvailableInterfacesReport = Vts.object({
 export type AvailableInterfacesReport = ExtractSchemaResultType<typeof SchemaAvailableInterfacesReport>;
 
 /**
+ * A port-forwarding / inbound firewall rule (Pi-router Phase 2). `id` 0 = create on save.
+ * `target_type` = `host` (DNAT to `target_host`:`target_port`) or `router` (open the WAN
+ * port to a service on the Pi). `target_port` 0 = same as `wan_port`.
+ */
+export const SchemaPortForwardEntry = Vts.object({
+    id: Vts.number(),
+    proto: Vts.string(),
+    wan_port: Vts.number(),
+    wan_port_end: Vts.optional(Vts.number()),
+    family: Vts.string(),
+    target_type: Vts.string(),
+    target_host: Vts.optional(Vts.string()),
+    target_port: Vts.optional(Vts.number()),
+    enabled: Vts.boolean(),
+    description: Vts.optional(Vts.string())
+});
+
+/**
+ * PortForwardEntry
+ */
+export type PortForwardEntry = ExtractSchemaResultType<typeof SchemaPortForwardEntry>;
+
+/**
  * An int-id request (delete an interface).
  */
 export const SchemaRouterIdRequest = Vts.object({
@@ -186,7 +209,9 @@ export const SchemaRouterOverviewResponse = SchemaDefaultReturn.extend({
     dhcpConfigs: Vts.array(SchemaDhcpServerConfigEntry),
     dhcpConfig: Vts.or([SchemaDhcpServerConfigEntry, Vts.null()]),
     leases: Vts.array(SchemaDhcpLeaseEntry),
-    wanLease: Vts.or([SchemaWanLeaseEntry, Vts.null()])
+    wanLease: Vts.or([SchemaWanLeaseEntry, Vts.null()]),
+    // Inbound firewall / port-forwarding rules (Phase 2). Optional so older callers stay valid.
+    portForwards: Vts.optional(Vts.array(SchemaPortForwardEntry))
 });
 
 /**
@@ -208,10 +233,27 @@ export const SchemaNftablesLan = Vts.object({
     ipv6Mode: Vts.string()
 });
 
+/**
+ * One resolved inbound rule in the netfilter config (Phase 2): a WAN port opened to a LAN
+ * host (DNAT) or to the router itself. Concrete — proto/family are single values.
+ */
+export const SchemaNftablesForward = Vts.object({
+    proto: Vts.string(),
+    family: Vts.string(),
+    wanPort: Vts.number(),
+    wanPortEnd: Vts.number(),
+    targetType: Vts.string(),
+    host: Vts.string(),
+    hostPort: Vts.number()
+});
+
 export const SchemaNftablesRouterConfig = Vts.object({
     wanInterface: Vts.string(),
     lans: Vts.array(SchemaNftablesLan),
-    forward: Vts.boolean()
+    forward: Vts.boolean(),
+    // Inbound firewall / port-forwarding rules (Phase 2). Optional so an older netdevice
+    // build tolerates the field / a missing field defaults to none.
+    forwards: Vts.optional(Vts.array(SchemaNftablesForward))
 });
 
 /**

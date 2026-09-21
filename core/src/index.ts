@@ -180,13 +180,16 @@ export {
 } from './inc/Cluster/ClusterControlRequestRouter.js';
 export {
     NftablesLan,
+    NftablesForward,
     NftablesRouterConfig,
     NftablesSysctl,
     NftablesRuleset,
     NftablesInterfaceInput,
     NftablesPolicyInput,
+    PortForwardInput,
     buildNftablesRuleset,
-    resolveNftablesRouterConfig
+    resolveNftablesRouterConfig,
+    resolvePortForwards
 } from './inc/Router/NftablesRuleset.js';
 export {
     WanLeaseFields,
@@ -325,6 +328,7 @@ export {IssuedCertificate as IssuedCertificateDB} from './inc/Db/MariaDb/Entity/
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
 export {NatPolicy as NatPolicyDB} from './inc/Db/MariaDb/Entity/NatPolicy.js';
 export {NetworkInterface as NetworkInterfaceDB} from './inc/Db/MariaDb/Entity/NetworkInterface.js';
+export {PortForward as PortForwardDB} from './inc/Db/MariaDb/Entity/PortForward.js';
 export {DhcpServerConfig as DhcpServerConfigDB} from './inc/Db/MariaDb/Entity/DhcpServerConfig.js';
 export {DhcpLease as DhcpLeaseDB} from './inc/Db/MariaDb/Entity/DhcpLease.js';
 export {WanLease as WanLeaseDB} from './inc/Db/MariaDb/Entity/WanLease.js';
@@ -367,6 +371,7 @@ export {IpWhitelistService as IpWhitelistServiceDB} from './inc/Db/MariaDb/Servi
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/Service/NatPortService.js';
 export {NatPolicyService as NatPolicyServiceDB} from './inc/Db/MariaDb/Service/NatPolicyService.js';
 export {NetworkInterfaceService as NetworkInterfaceServiceDB} from './inc/Db/MariaDb/Service/NetworkInterfaceService.js';
+export {PortForwardService as PortForwardServiceDB} from './inc/Db/MariaDb/Service/PortForwardService.js';
 export {DhcpServerConfigService as DhcpServerConfigServiceDB} from './inc/Db/MariaDb/Service/DhcpServerConfigService.js';
 export {DhcpLeaseService as DhcpLeaseServiceDB} from './inc/Db/MariaDb/Service/DhcpLeaseService.js';
 export {WanLeaseService as WanLeaseServiceDB} from './inc/Db/MariaDb/Service/WanLeaseService.js';

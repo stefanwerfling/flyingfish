@@ -33,6 +33,6 @@ if (!scenarioPath) {
 const scenario = JSON.parse(readFileSync(scenarioPath, 'utf8'));
 const cfg = resolveNftablesRouterConfig(scenario.interfaces, scenario.policy ?? null);
 
-applyRouter(cfg.wanInterface, cfg.lans, cfg.forward);
+applyRouter(cfg.wanInterface, cfg.lans, cfg.forward, cfg.forwards ?? []);
 
-process.stdout.write(`applyRouter ok: wan=${cfg.wanInterface} lans=${JSON.stringify(cfg.lans)} forward=${cfg.forward}\n`);
+process.stdout.write(`applyRouter ok: wan=${cfg.wanInterface} lans=${JSON.stringify(cfg.lans)} forward=${cfg.forward} forwards=${JSON.stringify(cfg.forwards ?? [])}\n`);

@@ -9,6 +9,8 @@ import {
     NatPolicyServiceDB,
     NetworkInterfaceDB,
     NetworkInterfaceServiceDB,
+    PortForwardDB,
+    PortForwardServiceDB,
     resolveNftablesRouterConfig,
     WanLeaseDB,
     WanLeaseServiceDB
@@ -25,6 +27,7 @@ import {
     SchemaDhcpServerConfigEntry,
     SchemaNatPolicyEntry,
     SchemaNetworkInterfaceEntry,
+    SchemaPortForwardEntry,
     SchemaRouterIdRequest,
     SchemaRouterLanConfigResponse,
     SchemaRouterNetfilterConfigResponse,
@@ -150,11 +153,23 @@ export class Router extends DefaultRoute {
                         ipv6_prefix: wanLease.ipv6_prefix,
                         lease_seconds: wanLease.lease_seconds,
                         obtained: wanLease.obtained
-                    }
+                    },
+                    portForwards: (await PortForwardServiceDB.getInstance().findAllRules()).map((entry) => ({
+                        id: entry.id,
+                        proto: entry.proto,
+                        wan_port: entry.wan_port,
+                        wan_port_end: entry.wan_port_end,
+                        family: entry.family,
+                        target_type: entry.target_type,
+                        target_host: entry.target_host,
+                        target_port: entry.target_port,
+                        enabled: entry.enabled,
+                        description: entry.description
+                    }))
                 };
             },
             {
-                description: 'Read the whole router config (interfaces, NAT policy, DHCP config, leases)',
+                description: 'Read the whole router config (interfaces, NAT policy, DHCP config, leases, port forwards)',
                 responseBodySchema: SchemaRouterOverviewResponse
             }
         );
@@ -214,6 +229,31 @@ export class Router extends DefaultRoute {
             return {statusCode: StatusCodes.OK};
         }, {description: 'Set the LAN DHCP server config', bodySchema: SchemaDhcpServerConfigEntry, responseBodySchema: SchemaDefaultReturn});
 
+        // Port forwarding / inbound firewall rules (Phase 2). DNAT is NAT, so these mutations
+        // reuse the `nat.write` permission (read is covered by the overview's `router.read`).
+        this._post('/json/router/portforward/save', requirePermission('nat.write'), async(_req, _res, data): Promise<DefaultReturn> => {
+            const body = data.body!;
+            const entity = body.id === 0 ? new PortForwardDB() : await PortForwardServiceDB.getInstance().findOne(body.id) ?? new PortForwardDB();
+            entity.proto = body.proto;
+            entity.wan_port = body.wan_port;
+            entity.wan_port_end = body.wan_port_end ?? 0;
+            entity.family = body.family;
+            entity.target_type = body.target_type;
+            entity.target_host = body.target_host ?? '';
+            entity.target_port = body.target_port ?? 0;
+            entity.enabled = body.enabled;
+            entity.description = body.description ?? '';
+            await PortForwardServiceDB.getInstance().save(entity);
+
+            return {statusCode: StatusCodes.OK};
+        }, {description: 'Create/update a port-forwarding / inbound firewall rule', bodySchema: SchemaPortForwardEntry, responseBodySchema: SchemaDefaultReturn});
+
+        this._post('/json/router/portforward/delete', requirePermission('nat.write'), async(_req, _res, data): Promise<DefaultReturn> => {
+            await PortForwardServiceDB.getInstance().remove(data.body!.id);
+
+            return {statusCode: StatusCodes.OK};
+        }, {description: 'Delete a port-forwarding / inbound firewall rule', bodySchema: SchemaRouterIdRequest, responseBodySchema: SchemaDefaultReturn});
+
         // Interface discovery: the netdevice part (host-net) reports the live host NICs
         // here on its reconcile loop, so the management UI can offer a NIC select box.
         // ServiceOrUserLogin: the part authenticates with the registry secret / mTLS.
@@ -232,6 +272,7 @@ export class Router extends DefaultRoute {
             async(): Promise<RouterNetfilterConfigResponse> => {
                 const interfaces = await NetworkInterfaceServiceDB.getInstance().findAll();
                 const policy = await NatPolicyServiceDB.getInstance().get();
+                const forwards = await PortForwardServiceDB.getInstance().findAllRules();
 
                 return {
                     statusCode: StatusCodes.OK,
@@ -243,7 +284,17 @@ export class Router extends DefaultRoute {
                             nat44_enabled: entry.nat44_enabled,
                             ipv6_mode: entry.ipv6_mode
                         })),
-                        policy === null ? null : {forward_enabled: policy.forward_enabled}
+                        policy === null ? null : {forward_enabled: policy.forward_enabled},
+                        forwards.map((entry) => ({
+                            proto: entry.proto,
+                            wan_port: entry.wan_port,
+                            wan_port_end: entry.wan_port_end,
+                            family: entry.family,
+                            target_type: entry.target_type,
+                            target_host: entry.target_host,
+                            target_port: entry.target_port,
+                            enabled: entry.enabled
+                        }))
                     )
                 };
             },

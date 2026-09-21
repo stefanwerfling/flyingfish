@@ -11,12 +11,16 @@
 
 use futures::TryStreamExt;
 use napi_derive::napi;
+use rustables::expr::{
+    Bitwise, Cmp, CmpOp, ConnTrackState, Conntrack, ConntrackKey, HighLevelPayload, Immediate, Nat,
+    NatType, Register, TCPHeaderField, TransportHeaderField, UDPHeaderField,
+};
 use rustables::{
     Batch, Chain, ChainPolicy, ChainType, Hook, HookClass, MsgType, Protocol, ProtocolFamily, Rule,
     Table, list_tables,
 };
 use std::error::Error;
-use std::net::Ipv6Addr;
+use std::net::{IpAddr, Ipv6Addr};
 
 const FILTER_TABLE: &str = "flyingfish-filter";
 const NAT4_TABLE: &str = "flyingfish-nat4";
@@ -24,6 +28,73 @@ const NAT6_TABLE: &str = "flyingfish-nat6";
 
 /// The NAT postrouting chain priority (srcnat), matching `nft`'s `priority 100`.
 const NAT_PRIORITY: i32 = 100;
+
+/// The NAT prerouting chain priority (dstnat), matching `nft`'s `priority -100`.
+const NAT_DNAT_PRIORITY: i32 = -100;
+
+/// Map the JS proto string to a rustables `Protocol` (defaults to TCP).
+fn parse_proto(proto: &str) -> Protocol {
+    if proto == "udp" {
+        Protocol::UDP
+    } else {
+        Protocol::TCP
+    }
+}
+
+/// The destination port a host forward DNATs to: the explicit target port, or the WAN
+/// port when it is 0 (the documented "0 = same as the WAN port" default).
+fn forward_host_port(fwd: &PortForward) -> u16 {
+    if fwd.host_port > 0 {
+        fwd.host_port as u16
+    } else {
+        fwd.wan_port as u16
+    }
+}
+
+/// Whether the forward covers a WAN port RANGE (`wan_port_end` above `wan_port`).
+fn is_range(fwd: &PortForward) -> bool {
+    fwd.wan_port_end > fwd.wan_port
+}
+
+/// Match a destination port, single (`dport N`) or a range (`dport start-end`). `rustables`
+/// `Rule::dport` only matches a single port, so a range is built from the raw transport
+/// dport payload compared `>= start` and `<= end` (like `nft`'s `dport start-end`).
+fn with_dport(rule: Rule, proto: Protocol, start: u16, end: u16) -> Rule {
+    if end > start {
+        let mut rule = rule.protocol(proto);
+        let field = match proto {
+            Protocol::TCP => TransportHeaderField::Tcp(TCPHeaderField::Dport),
+            Protocol::UDP => TransportHeaderField::Udp(UDPHeaderField::Dport),
+        };
+        rule.add_expr(HighLevelPayload::Transport(field).build());
+        rule.add_expr(Cmp::new(CmpOp::Gte, start.to_be_bytes()));
+        rule.add_expr(HighLevelPayload::Transport(field).build());
+        rule.add_expr(Cmp::new(CmpOp::Lte, end.to_be_bytes()));
+        rule
+    } else {
+        rule.dport(start, proto)
+    }
+}
+
+/// Append a scoped `iifname <wan> ct state established,related accept` rule to `chain`.
+/// Scoping to the WAN ingress means it only accepts RETURN traffic of flows the LAN (or
+/// the router) initiated — LAN→WAN itself is untouched, so "routing off" stays a hard
+/// stop. `rustables` has no high-level established-OR-related helper (`Rule::established`
+/// is established-only), so the conntrack-state match is built from raw expressions.
+fn accept_wan_established_related(
+    chain: &Chain,
+    wan: &str,
+    batch: &mut Batch,
+) -> Result<(), Box<dyn Error>> {
+    let states = (ConnTrackState::ESTABLISHED | ConnTrackState::RELATED).bits();
+    let mut rule = Rule::new(chain)?.iiface(wan)?;
+    rule.add_expr(Conntrack::new(ConntrackKey::State));
+    rule.add_expr(Bitwise::new(states.to_le_bytes(), 0u32.to_be_bytes())?);
+    rule.add_expr(Cmp::new(CmpOp::Neq, 0u32.to_be_bytes()));
+    rule.accept().add_to_batch(batch);
+
+    Ok(())
+}
 
 /// Write a sysctl value under /proc/sys (path uses `/` separators, e.g.
 /// `net/ipv4/ip_forward`).
@@ -40,15 +111,49 @@ pub struct LanNat {
     pub ipv6_mode: String,
 }
 
-/// Add a NAT table (family-specific) with a postrouting chain that masquerades each of
-/// the given LAN interfaces → WAN (one scoped `iiface <lan> oiface <wan> masquerade` rule
-/// per LAN, so each LAN's NAT is independent).
+/// One resolved inbound rule (port forwarding / firewall pinhole, Pi-router Phase 2).
+/// A `router`-target rule opens the WAN port to a service on the router itself (a
+/// dual-stack input-chain accept); a `host`-target rule DNATs the WAN port to a LAN
+/// host of the given `family` (prerouting DNAT in the family's NAT table).
+#[napi(object)]
+pub struct PortForward {
+    /// `tcp` | `udp` (a `both` rule is expanded to two entries upstream).
+    pub proto: String,
+    /// `ipv4` | `ipv6` — only meaningful for a `host` target (picks the NAT table);
+    /// ignored for a `router` target, which is always dual-stack.
+    pub family: String,
+    /// The WAN-side port that is opened / forwarded (the range start when `wan_port_end`
+    /// is set).
+    pub wan_port: u32,
+    /// End of the WAN port range (inclusive); 0 = a single port. A range is forwarded 1:1
+    /// (each WAN port maps to the same port on the host), so `host_port` is ignored.
+    pub wan_port_end: u32,
+    /// `host` (DNAT to `host`:`host_port`) | `router` (accept to the router itself).
+    pub target_type: String,
+    /// The LAN host IP a `host` target forwards to (empty for a `router` target).
+    pub host: String,
+    /// The port on `host` a `host` target forwards to (0 for a `router` target).
+    pub host_port: u32,
+}
+
+/// Add a NAT table (family-specific) with:
+/// - a postrouting chain that masquerades each of the given LAN interfaces → WAN (one
+///   scoped `iiface <lan> oiface <wan> masquerade` rule per LAN, so each LAN's NAT is
+///   independent), and
+/// - a prerouting chain (only when there are DNAT forwards) that redirects each
+///   `iiface <wan> <proto> dport <wanPort>` to `<host>:<hostPort>` — port forwarding.
+///
+/// The DNAT is built from raw expressions (the destination address in register 1, the
+/// destination port in register 2, then a `Nat`/DNat statement consuming both), since
+/// `rustables` has no high-level DNAT helper. Injection-free by construction: every value
+/// is a typed IP/port, never a shell string.
 fn add_nat_table(
     batch: &mut Batch,
     name: &str,
     family: ProtocolFamily,
     wan: &str,
-    lans: &[&str],
+    masq_lans: &[&str],
+    dnat_forwards: &[&PortForward],
 ) -> Result<(), Box<dyn Error>> {
     let table = Table::new(family).with_name(name);
     batch.add(&table, MsgType::Add);
@@ -60,12 +165,61 @@ fn add_nat_table(
         .with_policy(ChainPolicy::Accept)
         .add_to_batch(batch);
 
-    for lan in lans {
+    for lan in masq_lans {
         Rule::new(&postrouting)?
             .iiface(lan)?
             .oiface(wan)?
             .masquerade()
             .add_to_batch(batch);
+    }
+
+    if !dnat_forwards.is_empty() {
+        let prerouting = Chain::new(&table)
+            .with_name("prerouting")
+            .with_type(ChainType::Nat)
+            .with_hook(Hook::new(HookClass::PreRouting, NAT_DNAT_PRIORITY))
+            .with_policy(ChainPolicy::Accept)
+            .add_to_batch(batch);
+
+        for fwd in dnat_forwards {
+            let host: IpAddr = fwd
+                .host
+                .parse()
+                .map_err(|_| format!("invalid forward host: {}", fwd.host))?;
+            let ip_bytes = match host {
+                IpAddr::V4(addr) => addr.octets().to_vec(),
+                IpAddr::V6(addr) => addr.octets().to_vec(),
+            };
+            let range = is_range(fwd);
+
+            let mut rule = with_dport(
+                Rule::new(&prerouting)?.iiface(wan)?,
+                parse_proto(&fwd.proto),
+                fwd.wan_port as u16,
+                fwd.wan_port_end as u16,
+            );
+
+            // Destination address into register 1 (always). For a single port, the target
+            // port goes into register 2 and the NAT rewrites both. For a RANGE, the DNAT is
+            // portless (`dnat to <host>`) so the kernel preserves each port 1:1.
+            rule.add_expr(Immediate::new_data(ip_bytes, Register::Reg1));
+
+            let mut nat = Nat::default()
+                .with_nat_type(NatType::DNat)
+                .with_family(family)
+                .with_ip_register(Register::Reg1);
+
+            if !range {
+                rule.add_expr(Immediate::new_data(
+                    forward_host_port(fwd).to_be_bytes().to_vec(),
+                    Register::Reg2,
+                ));
+                nat = nat.with_port_register(Register::Reg2);
+            }
+
+            rule.add_expr(nat);
+            rule.add_to_batch(batch);
+        }
     }
 
     Ok(())
@@ -76,6 +230,7 @@ fn apply_nftables(
     wan: &str,
     lans: &[LanNat],
     forward: bool,
+    forwards: &[PortForward],
 ) -> Result<(), Box<dyn Error>> {
     let mut batch = Batch::new();
 
@@ -111,6 +266,52 @@ fn apply_nftables(
             .with_policy(ChainPolicy::Accept)
             .add_to_batch(&mut batch);
 
+        // WAN→LAN inbound firewall (stateful). The forward hook keeps an ACCEPT policy (a
+        // blanket forward DROP also kills Docker's published-port forwarding and any foreign
+        // routing), so the firewall is expressed by SCOPING to the WAN ingress + LAN egress:
+        //   1. accept return traffic of LAN/router-initiated flows (established/related),
+        //   2. accept the explicitly forwarded ports (matched by their post-DNAT dest host),
+        //   3. drop the rest of new WAN→LAN — so LAN hosts (esp. globally-routable IPv6 in
+        //      pd mode) are NOT exposed to unsolicited inbound.
+        // The drop is scoped `iifname <wan> oifname <lan>` per LAN, so Docker's bridge
+        // forwarding (oif = a docker bridge, not a LAN) is untouched.
+        if has_wan {
+            accept_wan_established_related(&forward_chain, wan, &mut batch)?;
+
+            for fwd in forwards {
+                if fwd.target_type != "host" {
+                    continue;
+                }
+
+                let host: IpAddr = fwd
+                    .host
+                    .parse()
+                    .map_err(|_| format!("invalid forward host: {}", fwd.host))?;
+                let proto = parse_proto(&fwd.proto);
+
+                // After the prerouting DNAT the forwarded packet's dport is: the original WAN
+                // range (a range DNATs 1:1, dport preserved) or the single rewritten host
+                // port. Match accordingly, scoped to the DNAT destination host.
+                let rule = Rule::new(&forward_chain)?.iiface(wan)?.daddr(host);
+                let rule = if is_range(fwd) {
+                    with_dport(rule, proto, fwd.wan_port as u16, fwd.wan_port_end as u16)
+                } else {
+                    rule.dport(forward_host_port(fwd), proto)
+                };
+                rule.accept().add_to_batch(&mut batch);
+            }
+
+            for lan in lans {
+                Rule::new(&forward_chain)?
+                    .iiface(wan)?
+                    .oiface(&lan.name)?
+                    .drop()
+                    .add_to_batch(&mut batch);
+            }
+        }
+
+        // Routing OFF: additionally block new LAN→WAN (the other direction), leaving
+        // Docker/foreign forwarding untouched.
         if !forward && has_wan {
             for lan in lans {
                 Rule::new(&forward_chain)?
@@ -142,6 +343,20 @@ fn apply_nftables(
             // Keep the WAN's own DHCP client working (DHCPv4 reply → udp/68, DHCPv6 → udp/546).
             Rule::new(&input_chain)?.iiface(wan)?.dport(68, Protocol::UDP).accept().add_to_batch(&mut batch);
             Rule::new(&input_chain)?.iiface(wan)?.dport(546, Protocol::UDP).accept().add_to_batch(&mut batch);
+            // Port-forward pinholes to the router's OWN services: accept the configured WAN
+            // ports (dual-stack — the family is irrelevant for a router target) BEFORE the
+            // blanket drops below, so they punch through the closed WAN firewall.
+            for fwd in forwards {
+                if fwd.target_type == "router" {
+                    let rule = with_dport(
+                        Rule::new(&input_chain)?.iiface(wan)?,
+                        parse_proto(&fwd.proto),
+                        fwd.wan_port as u16,
+                        fwd.wan_port_end as u16,
+                    );
+                    rule.accept().add_to_batch(&mut batch);
+                }
+            }
             // Drop unsolicited TCP + UDP inbound on the WAN (services closed to the internet);
             // ICMPv6 is left to the accept policy so NDP/RA/PMTUD survive.
             Rule::new(&input_chain)?.iiface(wan)?.protocol(Protocol::TCP).drop().add_to_batch(&mut batch);
@@ -149,21 +364,31 @@ fn apply_nftables(
         }
     }
 
-    // NAT44: masquerade each LAN that has nat44 on → WAN.
-    let nat4: Vec<&str> = lans.iter().filter(|lan| lan.nat44).map(|lan| lan.name.as_str()).collect();
-    if has_wan && !nat4.is_empty() {
-        add_nat_table(&mut batch, NAT4_TABLE, ProtocolFamily::Ipv4, wan, &nat4)?;
+    // NAT44: masquerade each LAN that has nat44 on → WAN, plus DNAT any IPv4 host
+    // forwards. The table is created when either is present.
+    let nat4_masq: Vec<&str> = lans.iter().filter(|lan| lan.nat44).map(|lan| lan.name.as_str()).collect();
+    let nat4_dnat: Vec<&PortForward> = forwards
+        .iter()
+        .filter(|fwd| fwd.target_type == "host" && fwd.family == "ipv4")
+        .collect();
+    if has_wan && (!nat4_masq.is_empty() || !nat4_dnat.is_empty()) {
+        add_nat_table(&mut batch, NAT4_TABLE, ProtocolFamily::Ipv4, wan, &nat4_masq, &nat4_dnat)?;
     }
 
     // NAT66: masquerade each LAN in nat66 OR pd-server mode → WAN (both hand out ULA,
-    // which needs NAT to reach the internet; `pd` routes an upstream GUA, `off` neither).
-    let nat6: Vec<&str> = lans
+    // which needs NAT to reach the internet; `pd` routes an upstream GUA, `off` neither),
+    // plus DNAT any IPv6 host forwards.
+    let nat6_masq: Vec<&str> = lans
         .iter()
         .filter(|lan| lan.ipv6_mode == "nat66" || lan.ipv6_mode == "pd-server")
         .map(|lan| lan.name.as_str())
         .collect();
-    if has_wan && !nat6.is_empty() {
-        add_nat_table(&mut batch, NAT6_TABLE, ProtocolFamily::Ipv6, wan, &nat6)?;
+    let nat6_dnat: Vec<&PortForward> = forwards
+        .iter()
+        .filter(|fwd| fwd.target_type == "host" && fwd.family == "ipv6")
+        .collect();
+    if has_wan && (!nat6_masq.is_empty() || !nat6_dnat.is_empty()) {
+        add_nat_table(&mut batch, NAT6_TABLE, ProtocolFamily::Ipv6, wan, &nat6_masq, &nat6_dnat)?;
     }
 
     batch.send()?;
@@ -177,11 +402,14 @@ fn apply_nftables(
 /// - `wanInterface` — the WAN (uplink) interface name; empty disables all NAT.
 /// - `lans` — the LAN interfaces, each with its own `nat44` + `ipv6Mode`.
 /// - `forward` — enable routing (forward chain + IP forwarding sysctls).
+/// - `forwards` — inbound rules: router-target pinholes (input accept) and host-target
+///   port forwards (prerouting DNAT). Empty leaves the WAN firewall fully closed.
 #[napi]
 pub fn apply_router(
     wan_interface: String,
     lans: Vec<LanNat>,
     forward: bool,
+    forwards: Vec<PortForward>,
 ) -> napi::Result<()> {
     // Only ENSURE forwarding is on when routing; never write "0". Disabling
     // ip_forward would break Docker's published-port return path (the whole stack
@@ -196,7 +424,7 @@ pub fn apply_router(
         }
     }
 
-    apply_nftables(&wan_interface, &lans, forward)
+    apply_nftables(&wan_interface, &lans, forward, &forwards)
         .map_err(|error| napi::Error::from_reason(error.to_string()))
 }
 
