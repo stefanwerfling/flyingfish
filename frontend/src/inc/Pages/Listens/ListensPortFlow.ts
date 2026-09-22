@@ -1,4 +1,5 @@
 import {ListenTypes} from '../../Api/Listen.js';
+import '../Router/router.css';
 import './portflow.css';
 
 /**
@@ -9,40 +10,49 @@ export type PortFlowListen = {
     port: number;
     type: number;
     name: string;
+    description?: string;
+    protocol?: number;
+    enable_ipv6?: boolean;
+    proxy_protocol?: boolean;
+    proxy_protocol_in?: boolean;
     check_address?: boolean;
+    check_address_type?: number;
     disable?: boolean;
 };
 
 /**
- * ListensPortFlow — the Listens page's top graphic: a data-driven port-flow diagram in the
- * FlyingFish `.ffr` design language (see portflow.css). External stream listeners enter on
- * the left, run down nginx's visible L4 stream stage (ssl_preread → IP access → domain
- * split), and route out to the internal L7 servers / DNS server and on to the backends.
- * Ingress ports are the node's real stream listens, so adding a stream listen adds an entry.
+ * Per-segment hover popover data.
+ */
+type PopData = {title: string; color: string; rows: [string, string][];};
+
+/**
+ * ListensPortFlow — the Listens page's interactive port-flow map, built with the same
+ * technique as the Router page's {@link RouteCanvas}: a data-driven SVG whose listen
+ * segments highlight on hover (thicken the flow, dim the rest) and show a detail popover,
+ * and open the edit dialog on click. External stream listeners enter on the left, run down
+ * nginx's visible L4 stream stage (ssl_preread → IP access → domain split), and route to
+ * the DNS server / internal L7 http servers and on to the backends.
  */
 export class ListensPortFlow {
 
-    protected readonly _mount: JQuery;
+    protected readonly _root: JQuery;
+
+    protected readonly _canvas: JQuery;
+
+    protected readonly _pop: JQuery;
+
+    protected _onEdit: ((listen: PortFlowListen) => void) | null;
+
+    protected _byId: Map<string, PortFlowListen> = new Map();
 
     /**
-     * @param parent - the element to render the diagram into
+     * @param parent - the element to render into
+     * @param onEdit - opens the edit dialog for a clicked listen
      */
-    public constructor(parent: JQuery) {
-        this._mount = jQuery('<div class="ffr-portflow"></div>').appendTo(parent);
-    }
-
-    /**
-     * Render the diagram from the current listen list.
-     * @param listens - the node's listens
-     */
-    public setData(listens: PortFlowListen[]): void {
-        const order = (l: PortFlowListen): number => ({dns: 0, http: 1, https: 2, other: 3})[ListensPortFlow._kind(l)];
-        const streams = listens.filter((l) => l.type === ListenTypes.stream).sort((a, b) => order(a) - order(b));
-        const https = listens.filter((l) => l.type === ListenTypes.http).sort((a, b) => order(a) - order(b));
-        const anyAccess = streams.some((l) => l.check_address === true);
-
-        this._mount.empty();
-        const panel = jQuery('<div class="pf-panel"></div>').appendTo(this._mount);
+    public constructor(parent: JQuery, onEdit?: (listen: PortFlowListen) => void) {
+        this._onEdit = onEdit ?? null;
+        this._root = jQuery('<div class="ffr ffr-portflow"></div>').appendTo(parent);
+        const panel = jQuery('<div class="pf-panel"></div>').appendTo(this._root);
 
         const head = jQuery('<div class="pf-head"></div>').appendTo(panel);
         jQuery('<div><div class="pf-eyebrow">Port flow</div><div class="pf-title">How these listeners route through FlyingFish</div></div>').appendTo(head);
@@ -53,20 +63,38 @@ export class ListensPortFlow {
             + '<span><i style="background:var(--proxy)"></i>to backend</span>'
             + '</div>').appendTo(head);
 
-        const canvas = jQuery('<div class="pf-canvas"></div>').appendTo(panel);
+        this._canvas = jQuery('<div class="pf-canvas"></div>').appendTo(panel);
+        this._pop = jQuery('<div class="ffr-pop"></div>').appendTo(this._canvas);
+    }
+
+    /**
+     * Render/refresh the map from the current listen list.
+     * @param listens - the node's listens
+     */
+    public setData(listens: PortFlowListen[]): void {
+        const order = (l: PortFlowListen): number => ({dns: 0, http: 1, https: 2, other: 3})[ListensPortFlow._kind(l)];
+        const streams = listens.filter((l) => l.type === ListenTypes.stream).sort((a, b) => order(a) - order(b));
+        const https = listens.filter((l) => l.type === ListenTypes.http).sort((a, b) => order(a) - order(b));
+        const anyAccess = streams.some((l) => l.check_address === true);
+
+        this._byId.clear();
+        this._canvas.find('svg').remove();
 
         if (streams.length === 0) {
-            jQuery('<div class="pf-empty">No stream listeners yet — add one to see the flow.</div>').appendTo(canvas);
+            this._canvas.append('<div class="pf-empty">No stream listeners yet — add one to see the flow.</div>');
             return;
         }
 
-        canvas.append(ListensPortFlow._buildSvg(streams, https, anyAccess));
+        this._canvas.find('.pf-empty').remove();
+        const pop: Record<string, PopData> = {};
+        const svg = this._build(streams, https, anyAccess, pop);
+        this._pop.before(svg);
+        this._bind(pop);
     }
 
     /**
      * Classify a listen by protocol for colouring (heuristic on port/name).
      * @param l - the listen
-     * @returns one of dns | https | http | other
      * @protected
      */
     protected static _kind(l: PortFlowListen): 'dns' | 'https' | 'http' | 'other' {
@@ -102,6 +130,33 @@ export class ListensPortFlow {
     }
 
     /**
+     * The options chips text for a listen (IP6 / proxy / IP access).
+     * @param l - the listen
+     * @protected
+     */
+    protected static _options(l: PortFlowListen): string {
+        const opt: string[] = [];
+
+        if (l.enable_ipv6) {
+            opt.push('IPv6');
+        }
+
+        if (l.proxy_protocol) {
+            opt.push('proxy');
+        }
+
+        if (l.proxy_protocol_in) {
+            opt.push('proxy-in');
+        }
+
+        if (l.check_address) {
+            opt.push('IP access');
+        }
+
+        return opt.length > 0 ? opt.join(', ') : '—';
+    }
+
+    /**
      * Symmetric vertical centres for a stacked column of `n` nodes around `centerY`.
      * @param n - node count
      * @param centerY - the column's vertical centre
@@ -125,38 +180,37 @@ export class ListensPortFlow {
      * @protected
      */
     protected static _esc(v: string): string {
-        return jQuery('<div></div>').text(v).html();
+        return String(v).replace(/&/gu, '&amp;').replace(/</gu, '&lt;').replace(/>/gu, '&gt;').replace(/"/gu, '&quot;');
     }
 
     /**
-     * Build the SVG markup for the diagram.
+     * Build the SVG markup + collect the per-segment popover data.
      * @param streams - external stream listens (ingress)
      * @param https - internal http listens (L7 servers)
      * @param anyAccess - whether any stream enables the IP access check
+     * @param pop - out: per-segment popover data (keyed by data-seg)
      * @protected
      */
-    protected static _buildSvg(streams: PortFlowListen[], https: PortFlowListen[], anyAccess: boolean): string {
+    protected _build(streams: PortFlowListen[], https: PortFlowListen[], anyAccess: boolean, pop: Record<string, PopData>): string {
         const W = 1040;
         const rowH = 118;
-        const dnsStreams = streams.filter((s) => ListensPortFlow._kind(s) === 'dns');
-        const hasDns = dnsStreams.length > 0;
+        const hasDns = streams.some((s) => ListensPortFlow._kind(s) === 'dns');
         const destCount = https.length + (hasDns ? 1 : 0);
         const nRows = Math.max(streams.length, destCount, 3);
-        const topPad = 112; // headroom for the four nested container labels
+        const topPad = 112;
         const H = topPad + (nRows * rowH) + 20;
         const centerY = topPad + ((nRows * rowH) / 2);
 
-        // geometry
         const portX = 160; const portW = 108; const portH = 44;
         const pipeX = 356; const pipeW = 132; const pipeH = 44;
         const destX = 512; const destW = 126; const destH = 46;
         const backX = 882; const backW = 120; const backH = 50;
         const pipeCx = pipeX + (pipeW / 2);
         const sslCy = centerY - 68; const ipCy = centerY; const domCy = centerY + 68;
+        const domRight = pipeX + pipeW;
 
         const e: string[] = [];
 
-        // markers
         e.push('<defs>'
             + ListensPortFlow._marker('m-dns', 'var(--dns)')
             + ListensPortFlow._marker('m-http', 'var(--http)')
@@ -165,100 +219,161 @@ export class ListensPortFlow {
             + ListensPortFlow._marker('m-accent', 'var(--accent)')
             + '</defs>');
 
-        // nested containers — staggered tops (for labels), shared bottom so inner frames
-        // stay tall enough to hold the pipeline.
+        // nested containers (never dimmed)
         const cBot = H - 14;
         e.push(ListensPortFlow._frame(12, 20, W - 24, cBot - 20, 'var(--c-your)', 'Your network', 'end'));
         e.push(ListensPortFlow._frame(150, 42, 512, cBot - 42, 'var(--c-docker)', 'Docker · network', 'start'));
         e.push(ListensPortFlow._frame(298, 64, 352, cBot - 64, 'var(--c-ff)', 'Docker · FlyingFish', 'start'));
         e.push(ListensPortFlow._frame(334, 86, 168, cBot - 86, 'var(--c-nginx)', 'nginx · stream L4', 'start'));
 
-        // ---- flows first (under nodes) ----
-        const portYs = ListensPortFlow._stackYs(streams.length, centerY, rowH);
-        const destYs = ListensPortFlow._stackYs(destCount, centerY, rowH);
-
-        // internet -> ports, ports -> ssl_preread
-        streams.forEach((s, i) => {
-            const y = portYs[i];
-            const col = ListensPortFlow._color(ListensPortFlow._kind(s));
-            const mk = ListensPortFlow._markerId(ListensPortFlow._kind(s));
-            e.push(`<path class="pf-flow" style="stroke:${col}" d="M118,${centerY} C138,${(centerY + y) / 2}, 150,${y} 156,${y}" marker-end="url(#${mk})"/>`);
-            e.push(`<path class="pf-flow" style="stroke:${col}" d="M${portX + portW},${y} C${pipeX - 40},${y} ${pipeX - 30},${sslCy} ${pipeX - 4},${sslCy}" marker-end="url(#${mk})"/>`);
-        });
-
-        // L4 down-flow (visible sequence)
-        e.push(`<path class="pf-l4" d="M${pipeCx},${sslCy + (pipeH / 2)} V${ipCy - (pipeH / 2)}" marker-end="url(#m-accent)"/>`);
-        e.push(`<path class="pf-l4" d="M${pipeCx},${ipCy + (pipeH / 2)} V${domCy - (pipeH / 2)}" marker-end="url(#m-accent)"/>`);
-
-        // domain split -> destinations
-        const domRight = pipeX + pipeW;
-        destYs.forEach((y, i) => {
-            const isDnsRow = hasDns && i === 0;
-            const kind = isDnsRow ? 'dns' : ListensPortFlow._kind(https[hasDns ? i - 1 : i] ?? {port: 0, name: '', id: 0, type: 0});
-            const col = ListensPortFlow._color(kind);
-            const mk = ListensPortFlow._markerId(kind);
-            e.push(`<path class="pf-flow" style="stroke:${col}" d="M${domRight - 4},${domCy} C${domRight + 20},${domCy} ${destX - 30},${y} ${destX - 4},${y}" marker-end="url(#${mk})"/>`);
-        });
-
-        // L7 -> backends (one backend per http server)
-        https.forEach((_, i) => {
-            const y = destYs[hasDns ? i + 1 : i];
-            e.push(`<path class="pf-flow" style="stroke:var(--proxy)" d="M${destX + destW},${y} C${destX + destW + 60},${y} ${backX - 60},${y} ${backX - 4},${y}" marker-end="url(#m-proxy)"/>`);
-        });
-
-        // ---- nodes ----
-        // internet
+        // internet + pipeline + L4 down-flow (shared, never dimmed)
         e.push(ListensPortFlow._box(28, centerY - 27, 92, 54, 'var(--faint)', 'var(--surface2)'));
         e.push(`<text class="pf-node-lbl" x="74" y="${centerY - 3}" text-anchor="middle">Internet</text>`);
         e.push(`<text class="pf-node-sub" x="74" y="${centerY + 12}" text-anchor="middle">clients</text>`);
-
-        // ingress ports
-        streams.forEach((s, i) => {
-            const y = portYs[i]; const kind = ListensPortFlow._kind(s); const col = ListensPortFlow._color(kind);
-            e.push(ListensPortFlow._box(portX, y - (portH / 2), portW, portH, col, `color-mix(in srgb, ${col} 15%, var(--surface))`, s.disable === true));
-            e.push(`<text class="pf-port" x="${portX + (portW / 2)}" y="${y - 2}" text-anchor="middle">:${s.port}</text>`);
-            e.push(`<text class="pf-node-sub" x="${portX + (portW / 2)}" y="${y + 13}" text-anchor="middle">${ListensPortFlow._esc(ListensPortFlow._short(kind))}</text>`);
-        });
-
-        // L4 pipeline steps
         e.push(ListensPortFlow._step(pipeX, sslCy - (pipeH / 2), pipeW, pipeH, 'ssl_preread', 'protocol · SNI'));
         e.push(ListensPortFlow._step(pipeX, ipCy - (pipeH / 2), pipeW, pipeH, 'IP access check', anyAccess ? 'active' : 'opt-in'));
         e.push(ListensPortFlow._step(pipeX, domCy - (pipeH / 2), pipeW, pipeH, 'domain split', 'by SNI'));
+        e.push(`<path class="pf-l4" d="M${pipeCx},${sslCy + (pipeH / 2)} V${ipCy - (pipeH / 2)}" marker-end="url(#m-accent)"/>`);
+        e.push(`<path class="pf-l4" d="M${pipeCx},${ipCy + (pipeH / 2)} V${domCy - (pipeH / 2)}" marker-end="url(#m-accent)"/>`);
 
-        // destinations: DNS server + L7 http servers
-        let di = 0;
+        // destination Y positions (DNS server first, then http L7 nodes) + per-kind lookup
+        const destYs = ListensPortFlow._stackYs(destCount, centerY, rowH);
+        const dnsY = hasDns ? destYs[0] : centerY;
+        const httpYs: number[] = [];
+        https.forEach((_h, i) => httpYs.push(destYs[hasDns ? i + 1 : i]));
+        const kindDestY = (kind: string): number => {
+            if (kind === 'dns') {
+                return dnsY;
+            }
 
+            const idx = https.findIndex((h) => ListensPortFlow._kind(h) === kind);
+            return idx >= 0 ? httpYs[idx] : centerY;
+        };
+
+        // DNS server node (informational, not a listen entry)
         if (hasDns) {
-            const y = destYs[di];
-            e.push(ListensPortFlow._box(destX, y - (destH / 2), destW, destH, 'var(--dns)', 'var(--surface2)'));
-            e.push(`<text class="pf-node-lbl" x="${destX + (destW / 2)}" y="${y - 2}" text-anchor="middle">DNS server</text>`);
-            e.push(`<text class="pf-node-sub" x="${destX + (destW / 2)}" y="${y + 13}" text-anchor="middle">:53</text>`);
-            di++;
+            e.push(ListensPortFlow._box(destX, dnsY - (destH / 2), destW, destH, 'var(--dns)', 'var(--surface2)'));
+            e.push(`<text class="pf-node-lbl" x="${destX + (destW / 2)}" y="${dnsY - 2}" text-anchor="middle">DNS server</text>`);
+            e.push(`<text class="pf-node-sub" x="${destX + (destW / 2)}" y="${dnsY + 13}" text-anchor="middle">:53</text>`);
         }
 
-        https.forEach((h) => {
-            const y = destYs[di]; di++;
-            const kind = ListensPortFlow._kind(h);
-            e.push(ListensPortFlow._box(destX, y - (destH / 2), destW, destH, 'var(--proxy)', `color-mix(in srgb, var(--proxy) 13%, var(--surface))`, h.disable === true));
-            e.push(`<text class="pf-port" x="${destX + (destW / 2)}" y="${y - 2}" text-anchor="middle">:${h.port}</text>`);
-            e.push(`<text class="pf-node-sub" x="${destX + (destW / 2)}" y="${y + 13}" text-anchor="middle">${kind === 'https' ? 'https · L7' : 'http · L7'}</text>`);
+        // ---- ingress stream segments (hover + click) ----
+        const portYs = ListensPortFlow._stackYs(streams.length, centerY, rowH);
+        streams.forEach((s, i) => {
+            const y = portYs[i];
+            const kind = ListensPortFlow._kind(s);
+            const col = ListensPortFlow._color(kind);
+            const mk = ListensPortFlow._markerId(kind);
+            const key = `s${s.id}`;
+            this._byId.set(key, s);
+            const dy = kindDestY(kind);
 
-            // backend for this http server
-            e.push(ListensPortFlow._box(backX, y - (backH / 2), backW, backH, 'var(--proxy)', 'var(--surface2)'));
-            e.push(`<text class="pf-node-lbl" x="${backX + (backW / 2)}" y="${y - 2}" text-anchor="middle">${kind === 'https' ? 'HTTPS' : 'HTTP'}</text>`);
-            e.push(`<text class="pf-node-sub" x="${backX + (backW / 2)}" y="${y + 13}" text-anchor="middle">backend</text>`);
+            e.push(`<g class="ffr-seg" data-seg="${key}">`
+                + `<path class="ffr-flow" style="stroke:${col}" d="M118,${centerY} C138,${(centerY + y) / 2}, 150,${y} 156,${y}" marker-end="url(#${mk})"/>`
+                + `<path class="ffr-flow" style="stroke:${col}" d="M${portX + portW},${y} C${pipeX - 40},${y} ${pipeX - 30},${sslCy} ${pipeX - 4},${sslCy}" marker-end="url(#${mk})"/>`
+                + `<path class="ffr-flow" style="stroke:${col}" d="M${domRight - 4},${domCy} C${domRight + 20},${domCy} ${destX - 30},${dy} ${destX - 4},${dy}" marker-end="url(#${mk})"/>`
+                + ListensPortFlow._box(portX, y - (portH / 2), portW, portH, col, `color-mix(in srgb, ${col} 15%, var(--surface))`, s.disable === true)
+                + `<text class="pf-port" x="${portX + (portW / 2)}" y="${y - 2}" text-anchor="middle">:${s.port}</text>`
+                + `<text class="pf-node-sub" x="${portX + (portW / 2)}" y="${y + 13}" text-anchor="middle">${kind} · stream</text>`
+                + `</g>`);
+
+            pop[key] = {
+                title: `:${s.port} · ${s.name}`,
+                color: col,
+                rows: [
+                    ['Type', 'stream · L4'],
+                    ['Port', `${s.port}`],
+                    ['Routes to', kind === 'dns' ? 'DNS server' : (kind === 'https' ? ':10443 (https L7)' : ':10080 (http L7)')],
+                    ['Options', ListensPortFlow._options(s)],
+                    ['State', s.disable ? 'disabled' : 'enabled']
+                ]
+            };
+        });
+
+        // ---- L7 http server segments (hover + click) → backend ----
+        https.forEach((h, i) => {
+            const y = httpYs[i];
+            const kind = ListensPortFlow._kind(h);
+            const key = `h${h.id}`;
+            this._byId.set(key, h);
+
+            e.push(`<g class="ffr-seg" data-seg="${key}">`
+                + `<path class="ffr-flow" style="stroke:var(--proxy)" d="M${destX + destW},${y} C${destX + destW + 60},${y} ${backX - 60},${y} ${backX - 4},${y}" marker-end="url(#m-proxy)"/>`
+                + ListensPortFlow._box(destX, y - (destH / 2), destW, destH, 'var(--proxy)', 'color-mix(in srgb, var(--proxy) 13%, var(--surface))', h.disable === true)
+                + `<text class="pf-port" x="${destX + (destW / 2)}" y="${y - 2}" text-anchor="middle">:${h.port}</text>`
+                + `<text class="pf-node-sub" x="${destX + (destW / 2)}" y="${y + 13}" text-anchor="middle">${kind === 'https' ? 'https · L7' : 'http · L7'}</text>`
+                + ListensPortFlow._box(backX, y - (backH / 2), backW, backH, 'var(--proxy)', 'var(--surface2)')
+                + `<text class="pf-node-lbl" x="${backX + (backW / 2)}" y="${y - 2}" text-anchor="middle">${kind === 'https' ? 'HTTPS' : 'HTTP'}</text>`
+                + `<text class="pf-node-sub" x="${backX + (backW / 2)}" y="${y + 13}" text-anchor="middle">backend</text>`
+                + `</g>`);
+
+            pop[key] = {
+                title: `:${h.port} · ${h.name}`,
+                color: 'var(--proxy)',
+                rows: [
+                    ['Type', 'http · L7'],
+                    ['Port', `${h.port}`],
+                    ['Role', 'TLS · host · location'],
+                    ['Options', ListensPortFlow._options(h)],
+                    ['State', h.disable ? 'disabled' : 'enabled']
+                ]
+            };
         });
 
         return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Port flow diagram">${e.join('')}</svg>`;
     }
 
     /**
-     * A short caption for a port node.
-     * @param kind - protocol kind
+     * Wire hover highlighting + the detail popover + click-to-edit on every segment.
+     * @param pop - the per-segment popover data
      * @protected
      */
-    protected static _short(kind: string): string {
-        return `${kind} · stream`;
+    protected _bind(pop: Record<string, PopData>): void {
+        const svg = this._canvas.find('svg');
+        const groups = svg.find('[data-seg]');
+        const canvasEl = this._canvas.get(0) as HTMLElement;
+
+        const clear = (): void => {
+            svg.find('.ffr-seg').removeClass('ffr-dim ffr-hot');
+            this._pop.removeClass('ffr-show');
+        };
+
+        groups.on('mousemove', (event: JQuery.MouseMoveEvent): void => {
+            const key = jQuery(event.currentTarget).attr('data-seg') ?? '';
+            const data = pop[key];
+
+            if (!data) {
+                return;
+            }
+
+            svg.find('.ffr-seg').each((_i, node): void => {
+                const same = jQuery(node).attr('data-seg') === key;
+                jQuery(node).toggleClass('ffr-hot', same);
+                jQuery(node).toggleClass('ffr-dim', !same);
+            });
+
+            this._pop.html(
+                `<h4><span class="ffr-dot" style="background:${data.color}"></span>${ListensPortFlow._esc(data.title)}</h4><dl>`
+                + data.rows.map((r) => `<dt>${ListensPortFlow._esc(r[0])}</dt><dd>${ListensPortFlow._esc(r[1])}</dd>`).join('')
+                + '</dl>'
+            );
+
+            const rect = canvasEl.getBoundingClientRect();
+            let x = event.clientX - rect.left + 14;
+            const y = event.clientY - rect.top + 12;
+            x = Math.min(x, rect.width - 272);
+            this._pop.css({left: `${Math.max(6, x)}px`, top: `${y}px`}).addClass('ffr-show');
+        });
+
+        groups.on('mouseleave', clear);
+        groups.on('click', (event: JQuery.ClickEvent): void => {
+            const key = jQuery(event.currentTarget).attr('data-seg') ?? '';
+            const listen = this._byId.get(key);
+
+            if (listen && this._onEdit) {
+                this._onEdit(listen);
+            }
+        });
     }
 
     /**

@@ -113,13 +113,43 @@ export class Listens extends BasePage {
     }
 
     /**
+     * Open the edit dialog pre-filled for a listen (shared by the table row menu and the
+     * port-flow graphic click).
+     * @param entry - the listen to edit
+     * @protected
+     */
+    protected _openListenEdit(entry: ListenData): void {
+        this._listenDialog.resetValues();
+        this._listenDialog.setId(entry.id);
+        this._listenDialog.setTitle('Listen Edit');
+        this._listenDialog.setName(entry.name);
+        this._listenDialog.setType(`${entry.type}`);
+        this._listenDialog.setPort(`${entry.port}`);
+        this._listenDialog.setProtocol(`${entry.protocol}`);
+        this._listenDialog.setDescription(entry.description);
+        this._listenDialog.setIp6(entry.enable_ipv6);
+        this._listenDialog.setAddressCheck(entry.check_address);
+        this._listenDialog.setAddressCheckType(entry.check_address_type);
+        this._listenDialog.setDisable(entry.disable);
+        this._listenDialog.setProxyProtocol(entry.proxy_protocol);
+        this._listenDialog.setProxyProtocolIn(entry.proxy_protocol_in);
+        this._listenDialog.setStreamServerVariables(entry.stream_server_variables);
+        this._listenDialog.show();
+    }
+
+    /**
      * loadContent
      */
     public override async loadContent(): Promise<void> {
         // port-flow graphic (top): a data-driven diagram of how these listeners route
         // through nginx to the backends. Fed from the same listen list as the table below.
         const flowRow = new ContentRow(this._wrapper.getContentWrapper().getContent());
-        const portFlow = new ListensPortFlow(jQuery(new ContentCol(flowRow, ContentColSize.col12).getElement()));
+        const portFlow = new ListensPortFlow(
+            jQuery(new ContentCol(flowRow, ContentColSize.col12).getElement()),
+            (listen): void => {
+                this._openListenEdit(listen as unknown as ListenData);
+            }
+        );
 
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
         const card = new Card(new ContentCol(row1, ContentColSize.col12));
@@ -241,22 +271,7 @@ export class Listens extends BasePage {
                     btnMenu.addMenuItem(
                         'Edit',
                         async(): Promise<void> => {
-                            this._listenDialog.resetValues();
-                            this._listenDialog.setId(entry.id);
-                            this._listenDialog.setTitle('Listen Edit');
-                            this._listenDialog.setName(entry.name);
-                            this._listenDialog.setType(`${entry.type}`);
-                            this._listenDialog.setPort(`${entry.port}`);
-                            this._listenDialog.setProtocol(`${entry.protocol}`);
-                            this._listenDialog.setDescription(entry.description);
-                            this._listenDialog.setIp6(entry.enable_ipv6);
-                            this._listenDialog.setAddressCheck(entry.check_address);
-                            this._listenDialog.setAddressCheckType(entry.check_address_type);
-                            this._listenDialog.setDisable(entry.disable);
-                            this._listenDialog.setProxyProtocol(entry.proxy_protocol);
-                            this._listenDialog.setProxyProtocolIn(entry.proxy_protocol_in);
-                            this._listenDialog.setStreamServerVariables(entry.stream_server_variables);
-                            this._listenDialog.show();
+                            this._openListenEdit(entry);
                         },
                         IconFa.edit
                     );
