@@ -1,11 +1,12 @@
 import {ListenData} from 'flyingfish_schemas';
 import {Listen as ListenAPI, ListenAddressCheckType, ListenTypes} from '../Api/Listen.js';
 import {Nginx as NginxAPI} from '../Api/Nginx.js';
-import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogConfirm, ButtonType,
-    ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
+import {ContentCol, ContentColSize, ContentRow, DialogConfirm, ButtonType,
+    ButtonMenu, IconFa, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage.js';
 import {ListensEditModal} from './Listens/ListensEditModal.js';
 import {ListensPortFlow} from './Listens/ListensPortFlow.js';
+import './Listens/listens-list.css';
 
 /**
  * Listens
@@ -138,6 +139,116 @@ export class Listens extends BasePage {
     }
 
     /**
+     * Render one listener as an .ffr row (LED, port, badge, name, flow hint, option chips,
+     * action menu).
+     * @param body - the list body element
+     * @param entry - the listen
+     * @protected
+     */
+    protected _renderListenRow(body: JQuery, entry: ListenData): void {
+        const stream = entry.type === ListenTypes.stream;
+        const row = jQuery(`<div class="ffl-row ${entry.disable ? 'off' : ''}"></div>`).appendTo(body);
+
+        jQuery('<span class="ffl-led"></span>').appendTo(row);
+        jQuery(`<span class="ffl-port">:${entry.port}</span>`).appendTo(row);
+        jQuery(`<span class="ffl-badge ${stream ? 'stream' : 'http'}">${stream ? 'stream' : 'http'}</span>`).appendTo(row);
+        jQuery('<span class="ffl-name"></span>').text(entry.name || '—').appendTo(row);
+        jQuery(`<span class="ffl-flow">${Listens._flowHint(entry)}</span>`).appendTo(row);
+
+        const chips = jQuery('<span class="ffl-chips"></span>').appendTo(row);
+
+        if (entry.enable_ipv6) {
+            jQuery('<span class="ffl-chip">IPv6</span>').appendTo(chips);
+        }
+
+        if (entry.proxy_protocol) {
+            jQuery('<span class="ffl-chip">proxy</span>').appendTo(chips);
+        }
+
+        if (entry.proxy_protocol_in) {
+            jQuery('<span class="ffl-chip">proxy-in</span>').appendTo(chips);
+        }
+
+        if (entry.check_address) {
+            const kind = entry.check_address_type === ListenAddressCheckType.white ? 'whitelist' : 'blacklist';
+            jQuery(`<span class="ffl-chip acc">IP ${kind}</span>`).appendTo(chips);
+        }
+
+        const menuWrap = jQuery('<span class="ffl-menu"></span>').appendTo(row);
+        const menu = new ButtonMenu(menuWrap[0] as unknown as HTMLElement, IconFa.bars, true, ButtonType.borderless);
+        menu.addMenuItem('Edit', () => this._openListenEdit(entry), IconFa.edit);
+
+        if (!entry.fix) {
+            menu.addDivider();
+            menu.addMenuItem('Delete', () => this._deleteListen(entry), IconFa.trash);
+        }
+    }
+
+    /**
+     * The flow-hint text for a listener row (where its traffic goes next).
+     * @param entry - the listen
+     * @protected
+     */
+    protected static _flowHint(entry: ListenData): string {
+        if (entry.type !== ListenTypes.stream) {
+            return '<span class="ar">→</span>backend';
+        }
+
+        const n = (entry.name || '').toLowerCase();
+
+        if (entry.port === 53 || n.includes('dns')) {
+            return '<span class="ar">→</span>DNS server';
+        }
+
+        if (entry.port === 443 || n.includes('ssl') || n.includes('https')) {
+            return '<span class="ar">→</span>:10443';
+        }
+
+        if (entry.port === 80 || n.includes('http')) {
+            return '<span class="ar">→</span>:10080';
+        }
+
+        return '<span class="ar">→</span>upstream';
+    }
+
+    /**
+     * Confirm + delete a listener, then reload nginx and refresh the list.
+     * @param entry - the listen
+     * @protected
+     */
+    protected _deleteListen(entry: ListenData): void {
+        DialogConfirm.confirm(
+            'dcDelete',
+            ModalDialogType.small,
+            'Delete Listen',
+            `Delete this Listen "${entry.name}" Port: ${entry.port}?`,
+            async(_, dialog) => {
+                try {
+                    if (await ListenAPI.deleteListen(entry)) {
+                        this._toast.fire({icon: 'success', title: 'Listen delete success.'});
+
+                        if (await NginxAPI.reload()) {
+                            this._toast.fire({icon: 'success', title: 'Nginx server reload config success.'});
+                        } else {
+                            this._toast.fire({icon: 'error', title: 'Nginx server reload config faild, please check your last settings!'});
+                        }
+                    }
+                } catch (message) {
+                    this._toast.fire({icon: 'error', title: message});
+                }
+
+                dialog.hide();
+
+                if (this._onLoadTable) {
+                    this._onLoadTable();
+                }
+            },
+            undefined,
+            'Delete'
+        );
+    }
+
+    /**
      * loadContent
      */
     public override async loadContent(): Promise<void> {
@@ -151,185 +262,52 @@ export class Listens extends BasePage {
             }
         );
 
-        const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
-        const card = new Card(new ContentCol(row1, ContentColSize.col12));
-
-        card.setTitle('Listens');
-
-        const table = new Table(card);
-        const trhead = new Tr(table.getThead());
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Id');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Port');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Type');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Name');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Description');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Options');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Disable');
-
-        // eslint-disable-next-line no-new
-        new Th(trhead, 'Action');
+        // the listener list as grouped .ffr rows (External stream / Internal http),
+        // pairing with the port-flow map above.
+        const listRow = new ContentRow(this._wrapper.getContentWrapper().getContent());
+        const listRoot = jQuery('<div class="ffr ffr-listens"></div>')
+            .appendTo(jQuery(new ContentCol(listRow, ContentColSize.col12).getElement()));
+        const panel = jQuery('<div class="ffl-panel"></div>').appendTo(listRoot);
+        const head = jQuery('<div class="ffl-head"></div>').appendTo(panel);
+        jQuery('<span class="t">Listeners</span>').appendTo(head);
+        const countEl = jQuery('<span class="c"></span>').appendTo(head);
+        const body = jQuery('<div class="ffl-body"></div>').appendTo(panel);
 
         /**
          * onLoadList
          */
         this._onLoadTable = async(): Promise<void> => {
-            card.showLoading();
-            table.getTbody().empty();
-
             const listens = await ListenAPI.getListens();
+            body.empty();
 
-            if (listens) {
-                card.setTitle(`Listens (${listens.list.length})`);
-                portFlow.setData(listens.list);
-
-                for (const entry of listens.list) {
-                    const trbody = new Tr(table.getTbody());
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `#${entry.id}`);
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${entry.port}`);
-
-                    const typeTd = new Td(trbody, '');
-                    const typeDiv = jQuery('<div/>').appendTo(typeTd.getElement());
-
-                    if (entry.type === ListenTypes.stream) {
-                        // eslint-disable-next-line no-new
-                        new Badge(typeDiv, 'Stream', BadgeType.warning);
-                    } else {
-                        // eslint-disable-next-line no-new
-                        new Badge(typeDiv, 'Http/Https', BadgeType.success);
-                    }
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${entry.name}`);
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${entry.description}`);
-
-                    const optionTd = new Td(trbody, '');
-                    optionTd.setCss({
-                        'white-space': 'normal'
-                    });
-
-                    if (entry.enable_ipv6) {
-                        // eslint-disable-next-line no-new
-                        new Badge(optionTd, 'IP6', BadgeType.color_cream_blue);
-                        optionTd.append('&nbsp;');
-                    }
-
-                    if (entry.proxy_protocol) {
-                        // eslint-disable-next-line no-new
-                        new Badge(optionTd, 'Proxy proctocol', BadgeType.color_cream_yellow);
-                        optionTd.append('&nbsp;');
-                    }
-
-                    if (entry.proxy_protocol_in) {
-                        // eslint-disable-next-line no-new
-                        new Badge(optionTd, 'Proxy proctocol IN', BadgeType.color_cream_yellow);
-                        optionTd.append('&nbsp;');
-                    }
-
-                    if (entry.check_address) {
-                        // eslint-disable-next-line no-new
-                        new Badge(
-                            optionTd,
-                            // eslint-disable-next-line no-negated-condition
-                            `IP access - (${entry.check_address_type !== ListenAddressCheckType.white ? 'black' : 'white'})`,
-                            BadgeType.color_cream_purpel
-                        );
-                        optionTd.append('&nbsp;');
-                    }
-
-                    // eslint-disable-next-line no-new
-                    new Td(trbody, `${entry.disable ? 'yes' : 'no'}`);
-
-                    const tdAction = new Td(trbody, '');
-
-                    const btnMenu = new ButtonMenu(
-                        tdAction,
-                        IconFa.bars,
-                        true,
-                        ButtonType.borderless
-                    );
-
-                    btnMenu.addMenuItem(
-                        'Edit',
-                        async(): Promise<void> => {
-                            this._openListenEdit(entry);
-                        },
-                        IconFa.edit
-                    );
-
-                    if (!entry.fix) {
-                        btnMenu.addDivider();
-
-                        btnMenu.addMenuItem(
-                            'Delete',
-                            (): void => {
-                                DialogConfirm.confirm(
-                                    'dcDelete',
-                                    ModalDialogType.small,
-                                    'Delete Listen',
-                                    `Delete this Listen "${entry.name}" Port: ${entry.port}?`,
-                                    async(_, dialog) => {
-                                        try {
-                                            if (await ListenAPI.deleteListen(entry)) {
-                                                this._toast.fire({
-                                                    icon: 'success',
-                                                    title: 'Listen delete success.'
-                                                });
-
-                                                if (await NginxAPI.reload()) {
-                                                    this._toast.fire({
-                                                        icon: 'success',
-                                                        title: 'Nginx server reload config success.'
-                                                    });
-                                                } else {
-                                                    this._toast.fire({
-                                                        icon: 'error',
-                                                        title: 'Nginx server reload config faild, please check your last settings!'
-                                                    });
-                                                }
-                                            }
-                                        } catch (message) {
-                                            this._toast.fire({
-                                                icon: 'error',
-                                                title: message
-                                            });
-                                        }
-
-                                        dialog.hide();
-
-                                        if (this._onLoadTable) {
-                                            this._onLoadTable();
-                                        }
-                                    },
-                                    undefined,
-                                    'Delete'
-                                );
-                            }, IconFa.trash
-                        );
-                    }
-                }
+            if (!listens) {
+                return;
             }
 
-            card.hideLoading();
+            countEl.text(`${listens.list.length} total`);
+            portFlow.setData(listens.list);
+
+            const streams = listens.list.filter((entry) => entry.type === ListenTypes.stream);
+            const https = listens.list.filter((entry) => entry.type !== ListenTypes.stream);
+
+            const renderGroup = (label: string, entries: ListenData[]): void => {
+                if (entries.length === 0) {
+                    return;
+                }
+
+                jQuery(`<div class="ffl-group-title">${label} <span class="n">${entries.length}</span></div>`).appendTo(body);
+
+                for (const entry of entries) {
+                    this._renderListenRow(body, entry);
+                }
+            };
+
+            renderGroup('External · stream', streams);
+            renderGroup('Internal · http', https);
+
+            if (listens.list.length === 0) {
+                jQuery('<div class="ffl-empty">No listeners yet — add one to get started.</div>').appendTo(body);
+            }
         };
 
         // load table

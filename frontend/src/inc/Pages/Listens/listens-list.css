@@ -1,0 +1,31 @@
+/*
+ * listens-list — the Listens page's listener list as grouped `.ffr` rows (External stream /
+ * Internal http), pairing with the port-flow map above. Each row: status LED, mono port,
+ * protocol badge, name, flow hint, option chips and a per-row action menu. Uses the app's
+ * --ffr-* tokens (defined on body.ffx-app, light + dark).
+ */
+.ffr-listens .ffl-panel { background: var(--ffr-surface); border: 1px solid var(--ffr-line); border-radius: 12px; box-shadow: var(--ffr-shadow); overflow: visible; }
+.ffr-listens .ffl-head { display: flex; align-items: baseline; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--ffr-line); }
+.ffr-listens .ffl-head .t { font-size: 14px; font-weight: 650; color: var(--ffr-ink); }
+.ffr-listens .ffl-head .c { font-size: 12px; color: var(--ffr-faint); font-family: var(--ffr-mono); }
+
+.ffr-listens .ffl-group-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ffr-faint); padding: 12px 16px 6px; display: flex; align-items: center; gap: 8px; }
+.ffr-listens .ffl-group-title .n { font-family: var(--ffr-mono); font-weight: 600; letter-spacing: 0; }
+
+.ffr-listens .ffl-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--ffr-line); }
+.ffr-listens .ffl-row:hover { background: color-mix(in srgb, var(--ffr-accent) 5%, transparent); }
+.ffr-listens .ffl-row.off { opacity: .55; }
+.ffr-listens .ffl-led { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--ffr-ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ffr-ok) 20%, transparent); }
+.ffr-listens .ffl-row.off .ffl-led { background: var(--ffr-idle, var(--ffr-faint)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ffr-faint) 18%, transparent); }
+.ffr-listens .ffl-port { font-family: var(--ffr-mono); font-size: 13.5px; font-weight: 650; color: var(--ffr-ink); min-width: 62px; }
+.ffr-listens .ffl-badge { font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; flex: none; }
+.ffr-listens .ffl-badge.stream { color: var(--ffr-http, #c9871b); background: color-mix(in srgb, var(--ffr-http, #c9871b) 16%, transparent); }
+.ffr-listens .ffl-badge.http { color: var(--ffr-proxy, var(--ffr-ok)); background: color-mix(in srgb, var(--ffr-ok) 16%, transparent); }
+.ffr-listens .ffl-name { font-size: 13px; color: var(--ffr-ink); font-weight: 550; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffr-listens .ffl-flow { font-family: var(--ffr-mono); font-size: 11.5px; color: var(--ffr-soft); margin-left: auto; flex: none; }
+.ffr-listens .ffl-flow .ar { color: var(--ffr-faint); margin: 0 5px; }
+.ffr-listens .ffl-chips { display: flex; gap: 5px; flex-wrap: wrap; flex: none; }
+.ffr-listens .ffl-chip { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; color: var(--ffr-soft); background: color-mix(in srgb, var(--ffr-faint) 15%, transparent); white-space: nowrap; }
+.ffr-listens .ffl-chip.acc { color: var(--ffr-v6, #a855c9); background: color-mix(in srgb, var(--ffr-v6, #a855c9) 15%, transparent); }
+.ffr-listens .ffl-menu { flex: none; position: relative; }
+.ffr-listens .ffl-empty { padding: 22px 16px; text-align: center; color: var(--ffr-faint); font-size: 12.5px; font-style: italic; }
