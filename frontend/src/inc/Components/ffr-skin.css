@@ -59,7 +59,15 @@ body.ffx-app {
 }
 
 /* ---- page ground ----------------------------------------------------------- */
-body.ffx-app, body.ffx-app .wrapper, body.ffx-app .content-wrapper { background-color: var(--ffr-bg); color: var(--ffr-ink); }
+/* app-wide font: the mock's system-sans stack (replaces admin-lte's Source Sans Pro);
+   monospace elements set their own family and are unaffected. */
+body.ffx-app, body.ffx-app .wrapper, body.ffx-app .content-wrapper {
+  background-color: var(--ffr-bg); color: var(--ffr-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+body.ffx-app .content-wrapper h1, body.ffx-app .content-wrapper h2, body.ffx-app .content-wrapper h3,
+body.ffx-app .content-wrapper h4, body.ffx-app .content-wrapper h5, body.ffx-app .card, body.ffx-app .btn,
+body.ffx-app .form-control, body.ffx-app .custom-select, body.ffx-app table { font-family: inherit; }
 body.ffx-app .content { background-color: var(--ffr-bg); }
 body.ffx-app a { color: var(--ffr-accent); }
 body.ffx-app hr { border-top-color: var(--ffr-line); }
