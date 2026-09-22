@@ -193,21 +193,22 @@ export class ListensPortFlow {
      */
     protected _build(streams: PortFlowListen[], https: PortFlowListen[], anyAccess: boolean, pop: Record<string, PopData>): string {
         const W = 1040;
-        const rowH = 118;
+        const rowH = 104;
         const hasDns = streams.some((s) => ListensPortFlow._kind(s) === 'dns');
         const destCount = https.length + (hasDns ? 1 : 0);
         const nRows = Math.max(streams.length, destCount, 3);
-        const topPad = 112;
-        const H = topPad + (nRows * rowH) + 20;
+        const topPad = 104;
+        const H = topPad + (nRows * rowH) + 24;
         const centerY = topPad + ((nRows * rowH) / 2);
 
-        const portX = 160; const portW = 108; const portH = 44;
-        const pipeX = 356; const pipeW = 132; const pipeH = 44;
-        const destX = 512; const destW = 126; const destH = 46;
-        const backX = 882; const backW = 120; const backH = 50;
-        const pipeCx = pipeX + (pipeW / 2);
-        const sslCy = centerY - 68; const ipCy = centerY; const domCy = centerY + 68;
-        const domRight = pipeX + pipeW;
+        // columns (left → right): internet · ports · nginx L4 band · destinations · backends
+        const inR = 120;
+        const portX = 160; const portW = 108; const portH = 42; const portR = portX + portW;
+        const bandX = 334; const bandW = 168; const bandR = bandX + bandW;
+        const destX = 540; const destW = 124; const destH = 44; const destR = destX + destW;
+        const backX = 850; const backW = 120; const backH = 46;
+        const stepX = 352; const stepW = 132; const stepH = 38; const stepCx = stepX + (stepW / 2);
+        const s1 = centerY - 58; const s2 = centerY; const s3 = centerY + 58;
 
         const e: string[] = [];
 
@@ -222,19 +223,20 @@ export class ListensPortFlow {
         // nested containers (never dimmed)
         const cBot = H - 14;
         e.push(ListensPortFlow._frame(12, 20, W - 24, cBot - 20, 'var(--c-your)', 'Your network', 'end'));
-        e.push(ListensPortFlow._frame(150, 42, 512, cBot - 42, 'var(--c-docker)', 'Docker · network', 'start'));
-        e.push(ListensPortFlow._frame(298, 64, 352, cBot - 64, 'var(--c-ff)', 'Docker · FlyingFish', 'start'));
-        e.push(ListensPortFlow._frame(334, 86, 168, cBot - 86, 'var(--c-nginx)', 'nginx · stream L4', 'start'));
+        e.push(ListensPortFlow._frame(150, 42, 545, cBot - 42, 'var(--c-docker)', 'Docker · network', 'start'));
+        e.push(ListensPortFlow._frame(300, 64, 380, cBot - 64, 'var(--c-ff)', 'Docker · FlyingFish', 'start'));
+        e.push(ListensPortFlow._frame(bandX, 86, bandW, cBot - 86, 'var(--c-nginx)', 'nginx · stream L4', 'start'));
 
-        // internet + pipeline + L4 down-flow (shared, never dimmed)
-        e.push(ListensPortFlow._box(28, centerY - 27, 92, 54, 'var(--faint)', 'var(--surface2)'));
-        e.push(`<text class="pf-node-lbl" x="74" y="${centerY - 3}" text-anchor="middle">Internet</text>`);
+        // internet + the nginx L4 stage (steps shown INSIDE the band; lanes pass through it,
+        // so the arrows stay straight and the L4 sequence stays visible)
+        e.push(ListensPortFlow._box(28, centerY - 26, 92, 52, 'var(--faint)', 'var(--surface2)'));
+        e.push(`<text class="pf-node-lbl" x="74" y="${centerY - 2}" text-anchor="middle">Internet</text>`);
         e.push(`<text class="pf-node-sub" x="74" y="${centerY + 12}" text-anchor="middle">clients</text>`);
-        e.push(ListensPortFlow._step(pipeX, sslCy - (pipeH / 2), pipeW, pipeH, 'ssl_preread', 'protocol · SNI'));
-        e.push(ListensPortFlow._step(pipeX, ipCy - (pipeH / 2), pipeW, pipeH, 'IP access check', anyAccess ? 'active' : 'opt-in'));
-        e.push(ListensPortFlow._step(pipeX, domCy - (pipeH / 2), pipeW, pipeH, 'domain split', 'by SNI'));
-        e.push(`<path class="pf-l4" d="M${pipeCx},${sslCy + (pipeH / 2)} V${ipCy - (pipeH / 2)}" marker-end="url(#m-accent)"/>`);
-        e.push(`<path class="pf-l4" d="M${pipeCx},${ipCy + (pipeH / 2)} V${domCy - (pipeH / 2)}" marker-end="url(#m-accent)"/>`);
+        e.push(ListensPortFlow._step(stepX, s1 - (stepH / 2), stepW, stepH, 'ssl_preread', 'protocol · SNI'));
+        e.push(ListensPortFlow._step(stepX, s2 - (stepH / 2), stepW, stepH, 'IP access check', anyAccess ? 'active' : 'opt-in'));
+        e.push(ListensPortFlow._step(stepX, s3 - (stepH / 2), stepW, stepH, 'domain split', 'by SNI'));
+        e.push(`<path class="pf-l4" d="M${stepCx},${s1 + (stepH / 2)} V${s2 - (stepH / 2)}" marker-end="url(#m-accent)"/>`);
+        e.push(`<path class="pf-l4" d="M${stepCx},${s2 + (stepH / 2)} V${s3 - (stepH / 2)}" marker-end="url(#m-accent)"/>`);
 
         // destination Y positions (DNS server first, then http L7 nodes) + per-kind lookup
         const destYs = ListensPortFlow._stackYs(destCount, centerY, rowH);
@@ -269,12 +271,12 @@ export class ListensPortFlow {
             const dy = kindDestY(kind);
 
             e.push(`<g class="ffr-seg" data-seg="${key}">`
-                + `<path class="ffr-flow" style="stroke:${col}" d="M118,${centerY} C138,${(centerY + y) / 2}, 150,${y} 156,${y}" marker-end="url(#${mk})"/>`
-                + `<path class="ffr-flow" style="stroke:${col}" d="M${portX + portW},${y} C${pipeX - 40},${y} ${pipeX - 30},${sslCy} ${pipeX - 4},${sslCy}" marker-end="url(#${mk})"/>`
-                + `<path class="ffr-flow" style="stroke:${col}" d="M${domRight - 4},${domCy} C${domRight + 20},${domCy} ${destX - 30},${dy} ${destX - 4},${dy}" marker-end="url(#${mk})"/>`
+                + `<path class="ffr-flow" style="stroke:${col}" d="M${inR},${centerY} C${inR + 20},${centerY} ${portX - 22},${y} ${portX - 2},${y}" marker-end="url(#${mk})"/>`
+                + `<path class="ffr-flow" style="stroke:${col}" d="M${portR},${y} H${bandX - 2}" marker-end="url(#${mk})"/>`
+                + `<path class="ffr-flow" style="stroke:${col}" d="M${bandR + 2},${dy} H${destX - 2}" marker-end="url(#${mk})"/>`
                 + ListensPortFlow._box(portX, y - (portH / 2), portW, portH, col, `color-mix(in srgb, ${col} 15%, var(--surface))`, s.disable === true)
-                + `<text class="pf-port" x="${portX + (portW / 2)}" y="${y - 2}" text-anchor="middle">:${s.port}</text>`
-                + `<text class="pf-node-sub" x="${portX + (portW / 2)}" y="${y + 13}" text-anchor="middle">${kind} · stream</text>`
+                + `<text class="pf-port" x="${portX + (portW / 2)}" y="${y - 1}" text-anchor="middle">:${s.port}</text>`
+                + `<text class="pf-node-sub" x="${portX + (portW / 2)}" y="${y + 12}" text-anchor="middle">${kind} · stream</text>`
                 + `</g>`);
 
             pop[key] = {
@@ -298,13 +300,13 @@ export class ListensPortFlow {
             this._byId.set(key, h);
 
             e.push(`<g class="ffr-seg" data-seg="${key}">`
-                + `<path class="ffr-flow" style="stroke:var(--proxy)" d="M${destX + destW},${y} C${destX + destW + 60},${y} ${backX - 60},${y} ${backX - 4},${y}" marker-end="url(#m-proxy)"/>`
+                + `<path class="ffr-flow" style="stroke:var(--proxy)" d="M${destR},${y} H${backX - 2}" marker-end="url(#m-proxy)"/>`
                 + ListensPortFlow._box(destX, y - (destH / 2), destW, destH, 'var(--proxy)', 'color-mix(in srgb, var(--proxy) 13%, var(--surface))', h.disable === true)
-                + `<text class="pf-port" x="${destX + (destW / 2)}" y="${y - 2}" text-anchor="middle">:${h.port}</text>`
-                + `<text class="pf-node-sub" x="${destX + (destW / 2)}" y="${y + 13}" text-anchor="middle">${kind === 'https' ? 'https · L7' : 'http · L7'}</text>`
+                + `<text class="pf-port" x="${destX + (destW / 2)}" y="${y - 1}" text-anchor="middle">:${h.port}</text>`
+                + `<text class="pf-node-sub" x="${destX + (destW / 2)}" y="${y + 12}" text-anchor="middle">${kind === 'https' ? 'https · L7' : 'http · L7'}</text>`
                 + ListensPortFlow._box(backX, y - (backH / 2), backW, backH, 'var(--proxy)', 'var(--surface2)')
-                + `<text class="pf-node-lbl" x="${backX + (backW / 2)}" y="${y - 2}" text-anchor="middle">${kind === 'https' ? 'HTTPS' : 'HTTP'}</text>`
-                + `<text class="pf-node-sub" x="${backX + (backW / 2)}" y="${y + 13}" text-anchor="middle">backend</text>`
+                + `<text class="pf-node-lbl" x="${backX + (backW / 2)}" y="${y - 1}" text-anchor="middle">${kind === 'https' ? 'HTTPS' : 'HTTP'}</text>`
+                + `<text class="pf-node-sub" x="${backX + (backW / 2)}" y="${y + 12}" text-anchor="middle">backend</text>`
                 + `</g>`);
 
             pop[key] = {
