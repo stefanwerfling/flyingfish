@@ -15,7 +15,7 @@ import {
     SshConfigChangeAction,
     StatusCodes
 } from 'flyingfish_schemas';
-import {SshConfigChannel} from '../../../../inc/Ssh/SshConfigChannel.js';
+import {SshConfigChangeLog} from '../../../../inc/Ssh/SshConfigChangeLog.js';
 
 /**
  * SaveStream
@@ -360,10 +360,10 @@ export class Save {
             }
         }
 
-        // Notify consumers (ssh server) that an SSH port/user config changed, so
-        // long-lived tunnels can be reloaded. Best-effort IPC (no-op without Redis).
+        // Record the SSH port/user config change so the ssh server (which polls
+        // /json/ssh/config-changes) can reload the affected long-lived tunnel.
         if (aStream.sshport_id > 0) {
-            await SshConfigChannel.publish(aStream.sshport_id, SshConfigChangeAction.saved);
+            SshConfigChangeLog.record(aStream.sshport_id, SshConfigChangeAction.saved);
         }
 
         return {

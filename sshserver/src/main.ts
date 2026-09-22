@@ -1,4 +1,4 @@
-import {Args, DBHelper, Logger, RedisClient, RedisSubscribe} from '@stefanwerfling/figtree';
+import {Args, DBHelper, Logger} from '@stefanwerfling/figtree';
 import {
     DBService,
     PkiBootstrapSocketClient,
@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
-import {SshConfigChangedChannel} from './inc/Ipc/SshConfigChangedChannel.js';
+import {SshConfigPoller} from './inc/Ipc/SshConfigPoller.js';
 import {SshServer} from './inc/Ssh/SshServer.js';
 
 /**
@@ -109,32 +109,22 @@ import {SshServer} from './inc/Ssh/SshServer.js';
         hostKeysPath: tconfig.flyingfish_sshpath
     });
 
-    // Redis IPC subscriber (phase 3): react to backend SSH config changes so
-    // long-lived tunnels are reloaded. Optional - without a Redis URL the ssh
-    // server just keeps relying on the shared DB (read on connect).
-    if (tconfig.db.redis && tconfig.db.redis.url) {
-        try {
-            const redisSubscribe = RedisSubscribe.getInstance({
-                url: tconfig.db.redis.url,
-                password: tconfig.db.redis.password
-            }, true);
-
-            const redisClient = RedisClient.getInstance();
-            await redisClient.connect();
-
-            await redisSubscribe.connect();
-            await redisSubscribe.registerChannels([
-                new SshConfigChangedChannel(server)
-            ]);
-
-            Logger.getLogger().info('SSH config-change IPC subscriber connected.');
-        } catch (error) {
-            // Non-fatal: the ssh server must still serve tunnels without Redis.
-            Logger.getLogger().error('Error while connecting to the mem-database', error);
-        }
-    }
-
     server.listen();
+
+    // SSH config-change poller: react to backend SSH config changes so long-lived
+    // tunnels are reloaded (saved) or closed (deleted). Polls the backend over HTTP
+    // with the registry secret - replaces the former Redis IPC subscriber. Optional:
+    // without registry config the ssh server just keeps relying on the shared DB
+    // (read on (re)connect).
+    if (tconfig.registry && tconfig.registry.url && tconfig.registry.secret) {
+        new SshConfigPoller(
+            tconfig.registry.url,
+            tconfig.registry.secret,
+            server
+        ).start();
+
+        Logger.getLogger().info('SSH config-change HTTP poller started.');
+    }
 
     // Node PKI (v2 own-PKI epic 9.4): opt-in enroll + auto-renew of this part's
     // own service certificate, BEFORE Hub registration so the registration can

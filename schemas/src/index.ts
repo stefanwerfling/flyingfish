@@ -564,3 +564,11 @@ export {
     SchemaSshConfigChanged,
     SshConfigChanged
 } from './Hub/SshConfigChanged.js';
+export {
+    SchemaSshConfigChangesRequest,
+    SshConfigChangesRequest,
+    SchemaSshConfigChangeEntry,
+    SshConfigChangeEntry,
+    SchemaSshConfigChangesResponse,
+    SshConfigChangesResponse
+} from './Backend/Routes/Ssh/ConfigChanges.js';

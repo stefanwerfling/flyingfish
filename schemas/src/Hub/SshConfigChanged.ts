@@ -9,10 +9,10 @@ export enum SshConfigChangeAction {
 }
 
 /**
- * Payload of the SSH_CONFIG_CHANGED Redis event: the backend publishes it when an
- * SSH port/user configuration is saved or deleted, so a consumer (e.g. the ssh
- * server, whose long-lived tunnels hold config from connection time) can reload
- * or close the affected forward.
+ * An SSH port/user configuration change: what happened to which SSH port. The
+ * backend records one when an SSH config is saved or deleted; the ssh server
+ * polls for these (whose long-lived tunnels hold config from connection time) to
+ * reload or close the affected forward. Base of {@link SchemaSshConfigChangeEntry}.
  */
 export const SchemaSshConfigChanged = Vts.object({
     sshportId: Vts.number(),

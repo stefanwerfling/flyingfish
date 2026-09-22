@@ -1,6 +1,6 @@
 import {NginxStreamServiceDB, NginxUpstreamServiceDB} from 'flyingfish_core';
 import {DefaultReturn, RouteStreamDelete, SshConfigChangeAction, StatusCodes} from 'flyingfish_schemas';
-import {SshConfigChannel} from '../../../../inc/Ssh/SshConfigChannel.js';
+import {SshConfigChangeLog} from '../../../../inc/Ssh/SshConfigChangeLog.js';
 import {Save} from './Save.js';
 
 /**
@@ -38,9 +38,9 @@ export class Delete {
                     };
                 }
 
-                // Notify consumers (ssh server) that the SSH port was removed, so a
-                // long-lived tunnel can be closed. Best-effort IPC (no-op without Redis).
-                await SshConfigChannel.publish(stream.sshport_id, SshConfigChangeAction.deleted);
+                // Record the SSH port removal so the ssh server (which polls
+                // /json/ssh/config-changes) can close the affected long-lived tunnel.
+                SshConfigChangeLog.record(stream.sshport_id, SshConfigChangeAction.deleted);
             }
 
             // delete upstreams ------------------------------------------------------------------------------------

@@ -5,12 +5,12 @@ import {CapabilityManifest, CapabilityUiRenderType} from './CapabilityManifest.j
  *
  * This is the declaration the SSH part will send to the Hub on registration. It
  * is built per running instance (each container passes its own `instanceId`).
- * Unlike the DNS and nginx parts, the SSH part is primarily a tunnel server
- * driven by an IPC event: it consumes the `ssh_config_changed` Redis channel
- * the backend publishes on route (stream/ssh) save/delete, so it is modelled
- * here as an event action + the `events` list, alongside its single read HTTP
- * action. The paths/schemaRefs mirror the current backend contract under the
- * part-namespaced `/ssh/*` gateway paths.
+ * The SSH part is primarily a tunnel server that reacts to config changes: it
+ * polls the backend's `/ssh/config-changes` endpoint (the backend records a
+ * change on route stream/ssh save/delete) to reload or close the affected
+ * long-lived tunnel, alongside its single read HTTP action. This poll replaced
+ * the former `ssh_config_changed` Redis channel. The paths/schemaRefs mirror the
+ * current backend contract under the part-namespaced `/ssh/*` gateway paths.
  * @param {string} instanceId - unique id of this SSH part instance
  * @returns {CapabilityManifest}
  */
@@ -37,9 +37,11 @@ export const buildSshCapabilityManifest = (instanceId: string): CapabilityManife
                         responseSchema: 'SchemaSshPortListResponse'
                     },
                     {
-                        action: 'ssh-config-changed',
-                        channel: 'ssh_config_changed',
-                        requestSchema: 'SchemaSshConfigChanged'
+                        action: 'ssh-config-changes',
+                        method: 'POST',
+                        path: '/ssh/config-changes',
+                        requestSchema: 'SchemaSshConfigChangesRequest',
+                        responseSchema: 'SchemaSshConfigChangesResponse'
                     }
                 ],
                 config: {
@@ -65,7 +67,7 @@ export const buildSshCapabilityManifest = (instanceId: string): CapabilityManife
                         }
                     ]
                 },
-                events: ['ssh_config_changed'],
+                events: [],
                 dbEntities: ['SshPort', 'SshUser'],
                 health: {
                     endpoint: '/health',
