@@ -52,11 +52,11 @@ export class ClusterNav {
      * @param currentKey - the active tab key
      * @param loadPage - the app's loadPage function
      */
-    public static render(model: NavModel, currentKey: string, loadPage: (page: unknown) => void): void {
+    public static render(model: NavModel, currentKey: string, loadPage: (page: unknown) => void, username?: string): void {
         jQuery('body').addClass('ffx-app');
 
         const owner = ClusterNav._ownerOf(model, currentKey);
-        ClusterNav._renderTree(model, owner, currentKey, loadPage);
+        ClusterNav._renderTree(model, owner, currentKey, loadPage, username);
         ClusterNav._renderTopbar(owner, currentKey, loadPage);
     }
 
@@ -80,7 +80,7 @@ export class ClusterNav {
      * Render the entity tree into the admin-lte sidebar.
      * @protected
      */
-    protected static _renderTree(model: NavModel, owner: NavEntity, currentKey: string, loadPage: (page: unknown) => void): void {
+    protected static _renderTree(model: NavModel, owner: NavEntity, currentKey: string, loadPage: (page: unknown) => void, username?: string): void {
         const sb = jQuery('.main-sidebar');
 
         if (sb.length === 0) {
@@ -89,6 +89,15 @@ export class ClusterNav {
 
         sb.empty().addClass('ffx-sb');
         jQuery('<div class="ffx-brand"><span class="fin">🐟</span> FlyingFish</div>').appendTo(sb);
+
+        if (username) {
+            const user = jQuery('<div class="ffx-user"></div>').appendTo(sb);
+            jQuery('<span class="av"></span>').text(username.slice(0, 2)).appendTo(user);
+            jQuery('<span class="un"></span>').text(username).appendTo(user);
+        }
+
+        jQuery('<div class="ffx-viewsel"><span class="ic">🗂️</span> Server View <span class="ch">▾</span></div>').appendTo(sb);
+
         const tree = jQuery('<div class="ffx-treebox"></div>').appendTo(sb);
 
         const dc = model.datacenter;
@@ -106,6 +115,12 @@ export class ClusterNav {
                 }
             }
         }
+
+        // footer: node health counts (mock parity)
+        const online = model.nodes.filter((n) => n.status === 'up').length;
+        const pending = model.nodes.filter((n) => n.status === 'warn').length;
+        const foot = `${online} node${online === 1 ? '' : 's'} online${pending > 0 ? ` · ${pending} pending` : ''}`;
+        jQuery('<div class="ffx-foot"></div>').text(foot).appendTo(sb);
     }
 
     /**

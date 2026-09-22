@@ -190,7 +190,7 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
 
         ClusterNav.render(navModel, page.getName(), (p): void => {
             loadPage(p as BasePage);
-        });
+        }, currentuser?.user?.username);
 
         // ---------------------------------------------------------------------------------------------------------
 

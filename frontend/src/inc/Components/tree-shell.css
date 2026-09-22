@@ -41,7 +41,7 @@ body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
 .ffx-tree { background: var(--nav-bg); color: var(--nav-ink); padding: 8px 0 20px; overflow-y: auto; }
 .ffx-tree .ffx-viewsel { display: flex; align-items: center; gap: 6px; margin: 6px 12px 8px; padding: 6px 10px; background: var(--nav-bg2); border-radius: 7px; font-size: 12px; }
 .ffx-tree .ffx-viewsel .ch { margin-left: auto; color: var(--nav-faint); }
-.ffx-row { display: flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 6px; color: var(--nav-ink); font-size: 13.5px; cursor: pointer; }
+.ffx-row { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 6px; color: var(--nav-ink); font-size: 13.5px; cursor: pointer; }
 .ffx-row:hover { background: rgba(255,255,255,.05); }
 .ffx-row .tw { width: 12px; text-align: center; color: var(--nav-faint); font-size: 9px; flex: none; }
 .ffx-row .ic { width: 18px; text-align: center; flex: none; font-size: 13px; }
@@ -105,14 +105,23 @@ body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
   --nav-bg:#17242a;--nav-bg2:#1e2f36;--nav-ink:#c7d6da;--nav-faint:#82989e;--nav-active:#2bb9c9;--nav-guide:#31444b;
   --good:#2ea16b;--warn:#d69a2d;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
   /* match the mock: the intended teal-dark ground (not admin-lte's grey) + the app sans
-     stack (not admin-lte's Source Sans Pro) */
+     stack (not admin-lte's Source Sans Pro), and a flex column so the footer pins low */
   background-color: var(--nav-bg) !important;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  overflow-y: auto; padding: 0 0 20px;
+  display: flex; flex-direction: column; overflow: hidden; padding: 0 0 4px;
 }
-.ffx-sb .ffx-brand { display: flex; align-items: center; gap: 9px; padding: 14px 16px; font-weight: 650; font-size: 16px; color: #fff; }
+.ffx-sb .ffx-brand { display: flex; align-items: center; gap: 9px; padding: 14px 16px; font-weight: 650; font-size: 16px; color: #fff; flex: none; }
 .ffx-sb .ffx-brand .fin { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, #12919f, #6fdbe6); display: grid; place-items: center; font-size: 13px; }
-.ffx-sb .ffx-treebox { padding: 2px 8px; }
+/* user panel (mock parity) */
+.ffx-sb .ffx-user { display: flex; align-items: center; gap: 9px; padding: 8px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.07); flex: none; }
+.ffx-sb .ffx-user .av { width: 26px; height: 26px; border-radius: 50%; background: var(--good); color: #06231a; display: grid; place-items: center; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.ffx-sb .ffx-user .un { font-size: 13px; color: var(--nav-ink); }
+/* view selector pill (mock parity) */
+.ffx-sb .ffx-viewsel { display: flex; align-items: center; gap: 6px; margin: 10px 12px 4px; padding: 6px 10px; background: var(--nav-bg2); border-radius: 7px; font-size: 12px; color: var(--nav-ink); flex: none; }
+.ffx-sb .ffx-viewsel .ch { margin-left: auto; color: var(--nav-faint); }
+.ffx-sb .ffx-treebox { padding: 2px 8px; flex: 1 1 auto; overflow-y: auto; }
+/* footer node-count (mock parity) */
+.ffx-sb .ffx-foot { margin-top: auto; padding: 10px 16px; font-size: 11px; color: var(--nav-faint); flex: none; }
 
 /* app content topbar (object header + tabs) — light/dark app tokens */
 .ffx-topbar {
