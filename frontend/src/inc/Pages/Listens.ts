@@ -210,7 +210,7 @@ export class Listens extends BasePage {
                 }
 
                 jQuery(`<div class="lc-group">${label} <span class="n">${entries.length}</span></div>`).appendTo(body);
-                const grid = jQuery('<div class="ffr-grid"></div>').appendTo(body);
+                const grid = jQuery('<div class="lc-grid"></div>').appendTo(body);
 
                 for (const entry of entries) {
                     // eslint-disable-next-line no-new
