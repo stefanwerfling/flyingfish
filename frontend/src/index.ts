@@ -19,7 +19,7 @@ import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat.js';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway.js';
 import {Pki as PkiPage} from './inc/Pages/Pki.js';
 import {Registry as RegistryPage} from './inc/Pages/Registry.js';
-import {SystemMode, getNodeMode} from './inc/Pages/SystemMode.js';
+import {SystemMode, getNodeMode, loadNodeConfig} from './inc/Pages/SystemMode.js';
 import {Users as UsersPage} from './inc/Pages/Users.js';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator.js';
 import {UtilColor} from './inc/Utils/UtilColor.js';
@@ -131,6 +131,10 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
         // The whole app is navigated through the cluster entity tree (Datacenter → nodes),
         // which replaces the admin-lte sidebar. Every tab reuses an existing page; the tree
         // is the single navigation (no separate menu). See {@link ClusterNav}.
+
+        // load the node config once (mode drives whether the Router category shows);
+        // falls back to localStorage if the backend endpoint isn't available yet
+        await loadNodeConfig();
 
         const navModel: NavModel = {
             datacenter: {

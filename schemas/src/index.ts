@@ -406,6 +406,14 @@ export {
     SchemaDhcpLeasesReport,
     DhcpLeasesReport
 } from './Backend/Routes/Router.js';
+export {
+    SchemaSystemConfigEntry,
+    SystemConfigEntry,
+    SchemaSystemConfigResponse,
+    SystemConfigResponse,
+    SchemaSystemConfigSaveRequest,
+    SystemConfigSaveRequest
+} from './Backend/Routes/System.js';
 
 export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';
 

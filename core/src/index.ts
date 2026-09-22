@@ -327,6 +327,7 @@ export {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.
 export {IssuedCertificate as IssuedCertificateDB} from './inc/Db/MariaDb/Entity/IssuedCertificate.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
 export {NatPolicy as NatPolicyDB} from './inc/Db/MariaDb/Entity/NatPolicy.js';
+export {SystemConfig as SystemConfigDB} from './inc/Db/MariaDb/Entity/SystemConfig.js';
 export {NetworkInterface as NetworkInterfaceDB} from './inc/Db/MariaDb/Entity/NetworkInterface.js';
 export {PortForward as PortForwardDB} from './inc/Db/MariaDb/Entity/PortForward.js';
 export {DhcpServerConfig as DhcpServerConfigDB} from './inc/Db/MariaDb/Entity/DhcpServerConfig.js';
@@ -370,6 +371,7 @@ export {IpLocationService as IpLocationServiceDB} from './inc/Db/MariaDb/Service
 export {IpWhitelistService as IpWhitelistServiceDB} from './inc/Db/MariaDb/Service/IpWhitelistService.js';
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/Service/NatPortService.js';
 export {NatPolicyService as NatPolicyServiceDB} from './inc/Db/MariaDb/Service/NatPolicyService.js';
+export {SystemConfigService as SystemConfigServiceDB} from './inc/Db/MariaDb/Service/SystemConfigService.js';
 export {NetworkInterfaceService as NetworkInterfaceServiceDB} from './inc/Db/MariaDb/Service/NetworkInterfaceService.js';
 export {PortForwardService as PortForwardServiceDB} from './inc/Db/MariaDb/Service/PortForwardService.js';
 export {DhcpServerConfigService as DhcpServerConfigServiceDB} from './inc/Db/MariaDb/Service/DhcpServerConfigService.js';

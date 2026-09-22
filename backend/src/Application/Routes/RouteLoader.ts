@@ -17,6 +17,7 @@ import {Route as RouteController} from '../../Routes/Main/Route.js';
 import {Settings as SettingsController} from '../../Routes/Main/Settings.js';
 import {Ssh as SshController} from '../../Routes/Main/Ssh.js';
 import {Ssl as SslController} from '../../Routes/Main/Ssl.js';
+import {System as SystemController} from '../../Routes/Main/System.js';
 import {UpnpNat as UpnpNatController} from '../../Routes/Main/UpnpNat.js';
 import {User as UserController} from '../../Routes/Main/User.js';
 
@@ -54,7 +55,8 @@ export class RouteLoader extends HttpRouteLoader {
             new RegistryController(),
             new PkiController(),
             new RbacController(),
-            new RouterController()
+            new RouterController(),
+            new SystemController()
         ];
     }
 

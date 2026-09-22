@@ -1,15 +1,25 @@
 import {ContentCol, ContentColSize} from 'bambooo';
+import {System as SystemAPI} from '../Api/System.js';
 import {BasePage} from './BasePage.js';
 import '../Components/tree-shell.css';
 
-/** localStorage key holding the (frontend-only, for now) node operating mode. */
+/** localStorage key mirroring the node mode (fallback when the backend isn't reachable). */
 export const NODE_MODE_KEY = 'ff-node-mode';
 
+/** Cached mode (from the backend, or the localStorage fallback). */
+let cachedMode: 'attach' | 'router' | null = null;
+let loaded = false;
+
 /**
- * Read the current node operating mode (attach|router). Frontend placeholder until the
- * backend SystemConfig lands; defaults to 'attach' (single-interface).
+ * The current node operating mode (attach|router) — the cached backend value, else the
+ * localStorage fallback, else 'attach'. Synchronous; call {@link loadNodeConfig} once at
+ * startup to populate the cache from the backend.
  */
 export function getNodeMode(): 'attach' | 'router' {
+    if (cachedMode !== null) {
+        return cachedMode;
+    }
+
     try {
         return window.localStorage.getItem(NODE_MODE_KEY) === 'router' ? 'router' : 'attach';
     } catch (e) {
@@ -18,10 +28,35 @@ export function getNodeMode(): 'attach' | 'router' {
 }
 
 /**
+ * Load the node config from the backend once and cache it. Falls back silently to the
+ * localStorage value if the endpoint isn't available yet (backend not deployed).
+ */
+export async function loadNodeConfig(): Promise<void> {
+    if (loaded) {
+        return;
+    }
+
+    loaded = true;
+
+    try {
+        const config = await SystemAPI.getConfig();
+        cachedMode = config.mode === 'router' ? 'router' : 'attach';
+
+        try {
+            window.localStorage.setItem(NODE_MODE_KEY, cachedMode);
+        } catch (e) {
+            // storage unavailable — cache still holds the value for this session
+        }
+    } catch (e) {
+        // backend/endpoint not available yet — keep the localStorage fallback
+        cachedMode = null;
+    }
+}
+
+/**
  * SystemMode — the node operating-mode switch (System → Mode). Attach = single interface
- * (Router area hidden); Router = WAN + LAN (Router area shown). Frontend-only for now
- * (persists to localStorage and re-renders the nav); the real per-node SystemConfig
- * (mode · target IP · attach interface) and the service wiring land in the backend step.
+ * (Router area hidden); Router = WAN + LAN (Router area shown). Backed by the node's
+ * SystemConfig via the API, with a localStorage fallback while the backend rolls out.
  */
 export class SystemMode extends BasePage {
 
@@ -44,7 +79,7 @@ export class SystemMode extends BasePage {
         const page = jQuery('<div class="ffx-page"></div>').appendTo(jQuery(col.getElement()));
 
         jQuery('<div class="ffx-sectitle">Operating mode</div>').appendTo(page);
-        jQuery('<div class="ffx-secnote">How this FlyingFish node uses its network. Changing the mode is a frontend preview for now — the backend wiring (SystemConfig, DNS/Nginx targets) follows.</div>').appendTo(page);
+        jQuery('<div class="ffx-secnote">How this FlyingFish node uses its network. Attach = single interface; Router = WAN + LAN with NAT/DHCP/forwarding.</div>').appendTo(page);
 
         const current = getNodeMode();
         const grid = jQuery('<div class="sm-grid"></div>').appendTo(page);
@@ -73,15 +108,22 @@ export class SystemMode extends BasePage {
 
         if (!active) {
             const btn = jQuery(`<button class="sm-btn" type="button">Switch to ${title}</button>`).appendTo(card);
-            btn.on('click', () => {
+            btn.on('click', async(): Promise<void> => {
+                try {
+                    await SystemAPI.saveConfig({mode});
+                } catch (e) {
+                    // backend not available yet — the localStorage fallback keeps it working
+                }
+
+                cachedMode = mode;
+
                 try {
                     window.localStorage.setItem(NODE_MODE_KEY, mode);
                 } catch (e) {
-                    // storage unavailable — mode won't persist this session
+                    // storage unavailable — cache still holds it for this session
                 }
 
-                // reload the page so index.ts rebuilds the nav with the new mode
-                // (shows/hides the Router category)
+                // reload so index.ts rebuilds the nav with the new mode (shows/hides Router)
                 this._loadPageFn?.(new SystemMode());
             });
         }

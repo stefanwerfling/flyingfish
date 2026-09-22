@@ -41,6 +41,7 @@ import {RbacUserGroup} from './Entity/RbacUserGroup.js';
 import {Settings} from './Entity/Settings.js';
 import {SshPort} from './Entity/SshPort.js';
 import {SshUser} from './Entity/SshUser.js';
+import {SystemConfig} from './Entity/SystemConfig.js';
 import {User} from './Entity/User.js';
 import {WanLease} from './Entity/WanLease.js';
 import {EntitySchema, MixedList} from 'typeorm';
@@ -81,6 +82,7 @@ export class DBEntitiesLoader {
             IpWhitelist,
             IssuedCertificate,
             NatPolicy,
+            SystemConfig,
             NatPort,
             NetworkInterface,
             PortForward,
