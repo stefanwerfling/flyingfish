@@ -57,10 +57,10 @@ export class ListenCard {
 
         // ---- body: details ----
         const details = jQuery('<div class="ffr-sec"></div>').appendTo(card);
-        jQuery('<div class="ffr-sec-hd"><span class="ffr-eyebrow">Routing</span></div>').appendTo(details);
+        jQuery('<div class="ffr-sec-hd"><span class="ffr-eyebrow">Details</span></div>').appendTo(details);
         ListenCard._kv(details, [
+            ['Type', stream ? 'stream · L4' : 'http · L7'],
             ['Protocol', stream ? ListenCard._proto(entry.protocol) : 'HTTP/HTTPS'],
-            ['Routes to', ListenCard._flow(entry)],
             ...(entry.description ? [['Note', entry.description] as [string, string]] : [])
         ]);
 
@@ -104,33 +104,6 @@ export class ListenCard {
             case 2: return 'TCP & UDP';
             default: return 'TCP';
         }
-    }
-
-    /**
-     * Where a listener's traffic flows next.
-     * @param entry - the listen
-     * @protected
-     */
-    protected static _flow(entry: ListenData): string {
-        if (entry.type !== ListenTypes.stream) {
-            return '→ backend';
-        }
-
-        const n = (entry.name || '').toLowerCase();
-
-        if (entry.port === 53 || n.includes('dns')) {
-            return '→ DNS server';
-        }
-
-        if (entry.port === 443 || n.includes('ssl') || n.includes('https')) {
-            return '→ :10443 (https)';
-        }
-
-        if (entry.port === 80 || n.includes('http')) {
-            return '→ :10080 (http)';
-        }
-
-        return '→ upstream';
     }
 
     /**
