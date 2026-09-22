@@ -2,20 +2,39 @@ import './tree-shell.css';
 import './ffr-skin.css';
 
 /**
- * A tab under an entity — maps to a page loaded into the content area.
+ * A leaf in the tree — one page, loaded into the content area via the app's loadPage.
+ */
+export type NavLeaf = {
+    key: string;
+    label: string;
+    icon?: string;
+    /** Factory for the page this leaf shows. */
+    make: () => unknown;
+};
+
+/**
+ * A category under a node (Router / Reverse Proxy / DNS / System) holding page leaves.
+ */
+export type NavGroup = {
+    key: string;
+    label: string;
+    icon?: string;
+    leaves: NavLeaf[];
+};
+
+/**
+ * A content tab under the datacenter (the datacenter keeps a tab bar, Proxmox-style).
  */
 export type NavTab = {
     key: string;
     label: string;
     icon?: string;
-    /** Optional group id; a divider is drawn where the group changes between tabs. */
     group?: string;
-    /** Factory for the page this tab shows (loaded via the app's loadPage). */
     make: () => unknown;
 };
 
 /**
- * A tree entity (Datacenter or a node) with its content tabs + optional resource leaves.
+ * A tree entity: the Datacenter (with content tabs) or a node (with category groups).
  */
 export type NavEntity = {
     id: string;
@@ -26,9 +45,8 @@ export type NavEntity = {
     status?: 'up' | 'warn' | 'off';
     badges?: {label: string; cls?: string;}[];
     subtitle?: string;
-    tabs: NavTab[];
-    resources?: {id: string; title: string; icon?: string; tabKey: string;}[];
-    count?: {n: string; warn?: boolean;};
+    tabs?: NavTab[];
+    groups?: NavGroup[];
 };
 
 /**
@@ -37,39 +55,48 @@ export type NavEntity = {
 export type NavModel = {datacenter: NavEntity; nodes: NavEntity[];};
 
 /**
- * ClusterNav — the whole-app navigation as an entity tree (Datacenter → nodes → resources)
- * that REPLACES the admin-lte sidebar, plus an object header + content tabs above the page
- * content. Every tab maps to an existing page loaded via the app's loadPage, so the tree is
- * the single navigation for the entire app (no separate menu). Rendered fresh on each page
- * load, highlighting the active tab. First-in-FlyingFish shell (9.5.12).
+ * ClusterNav — the whole-app navigation as an entity tree that REPLACES the admin-lte
+ * sidebar: Datacenter (with content tabs) → nodes → category groups (Router · Reverse
+ * Proxy · DNS · System) → page leaves. Selecting a node leaf loads its page; the node's
+ * categories are expandable in the tree. The datacenter keeps a top tab bar. Rendered
+ * fresh per page load; each leaf/tab maps to an existing page via the app's loadPage.
  */
 export class ClusterNav {
 
+    /** Expanded node categories, keyed `<nodeId>/<groupKey>` (persists across renders). */
+    protected static _expanded: Set<string> = new Set();
+
+    /** Last render inputs, so a category expand/collapse can re-render the tree. */
+    protected static _last: {model: NavModel; currentKey: string; loadPage: (page: unknown) => void; username?: string;} | null = null;
+
     /**
-     * Render the tree (into the admin-lte sidebar) + the object header/tabs (above the
-     * content) for the page identified by `currentKey`.
+     * Render the tree (into the admin-lte sidebar) + the object header / datacenter tabs.
      * @param model - the whole-app nav model
-     * @param currentKey - the active tab key
+     * @param currentKey - the active page key (page.getName())
      * @param loadPage - the app's loadPage function
+     * @param username - the current user (for the sidebar user panel)
      */
     public static render(model: NavModel, currentKey: string, loadPage: (page: unknown) => void, username?: string): void {
         jQuery('body').addClass('ffx-app');
+        ClusterNav._last = {model, currentKey, loadPage, username};
 
         const owner = ClusterNav._ownerOf(model, currentKey);
-        ClusterNav._renderTree(model, owner, currentKey, loadPage, username);
+        ClusterNav._renderTree();
         ClusterNav._renderTopbar(owner, currentKey, loadPage);
     }
 
     /**
-     * The entity that owns the given tab key (defaults to the datacenter).
+     * The entity (datacenter or a node) that owns the given key.
      * @protected
      */
     protected static _ownerOf(model: NavModel, key: string): NavEntity {
-        const all = [model.datacenter, ...model.nodes];
+        if ((model.datacenter.tabs ?? []).some((t) => t.key === key)) {
+            return model.datacenter;
+        }
 
-        for (const e of all) {
-            if (e.tabs.some((t) => t.key === key)) {
-                return e;
+        for (const node of model.nodes) {
+            if ((node.groups ?? []).some((g) => g.leaves.some((l) => l.key === key))) {
+                return node;
             }
         }
 
@@ -77,10 +104,17 @@ export class ClusterNav {
     }
 
     /**
-     * Render the entity tree into the admin-lte sidebar.
+     * Re-render the tree from the last inputs (used when a category is toggled).
      * @protected
      */
-    protected static _renderTree(model: NavModel, owner: NavEntity, currentKey: string, loadPage: (page: unknown) => void, username?: string): void {
+    protected static _renderTree(): void {
+        const last = ClusterNav._last;
+
+        if (last === null) {
+            return;
+        }
+
+        const {model, currentKey, loadPage, username} = last;
         const sb = jQuery('.main-sidebar');
 
         if (sb.length === 0) {
@@ -99,24 +133,63 @@ export class ClusterNav {
         jQuery('<div class="ffx-viewsel"><span class="ic">🗂️</span> Server View <span class="ch">▾</span></div>').appendTo(sb);
 
         const tree = jQuery('<div class="ffx-treebox"></div>').appendTo(sb);
-
+        const owner = ClusterNav._ownerOf(model, currentKey);
         const dc = model.datacenter;
-        ClusterNav._row(tree, dc, 0, owner.id === dc.id, () => loadPage(dc.tabs[0].make()));
+
+        // Datacenter (content tabs); selected when a datacenter tab is active
+        ClusterNav._treeRow(tree, {
+            level: 0, icon: dc.icon, label: dc.title, caret: '▾',
+            selected: owner.id === dc.id,
+            onClick: () => loadPage((dc.tabs ?? [])[0]?.make())
+        });
 
         for (const node of model.nodes) {
-            const selected = owner.id === node.id;
-            ClusterNav._row(tree, node, 1, selected, () => loadPage(node.tabs[0].make()));
+            const nodeSel = owner.id === node.id;
+            ClusterNav._treeRow(tree, {
+                level: 1, icon: node.icon, label: node.title, status: node.status,
+                caret: (node.groups ?? []).length > 0 ? (nodeSel ? '▾' : '▸') : '',
+                selected: false, dim: node.status === 'warn',
+                onClick: () => loadPage((node.groups ?? [])[0]?.leaves[0]?.make())
+            });
 
-            if (selected) {
-                for (const res of node.resources ?? []) {
-                    const tab = node.tabs.find((t) => t.key === res.tabKey);
-                    const row = ClusterNav._row(tree, {id: res.id, kind: 'node', title: res.title, icon: res.icon, tabs: []}, 2, res.tabKey === currentKey, () => tab && loadPage(tab.make()));
-                    row.toggleClass('selected', res.tabKey === currentKey);
+            if (!nodeSel) {
+                continue;
+            }
+
+            for (const group of node.groups ?? []) {
+                const gKey = `${node.id}/${group.key}`;
+                const activeGroup = group.leaves.some((l) => l.key === currentKey);
+                const expanded = activeGroup || ClusterNav._expanded.has(gKey);
+
+                ClusterNav._treeRow(tree, {
+                    level: 2, icon: group.icon, label: group.label, caret: expanded ? '▾' : '▸',
+                    selected: false,
+                    onClick: () => {
+                        if (ClusterNav._expanded.has(gKey)) {
+                            ClusterNav._expanded.delete(gKey);
+                        } else {
+                            ClusterNav._expanded.add(gKey);
+                        }
+
+                        ClusterNav._renderTree();
+                    }
+                });
+
+                if (!expanded) {
+                    continue;
+                }
+
+                for (const leaf of group.leaves) {
+                    ClusterNav._treeRow(tree, {
+                        level: 3, icon: leaf.icon, label: leaf.label,
+                        selected: leaf.key === currentKey,
+                        onClick: () => loadPage(leaf.make())
+                    });
                 }
             }
         }
 
-        // footer: node health counts (mock parity)
+        // footer: node health counts
         const online = model.nodes.filter((n) => n.status === 'up').length;
         const pending = model.nodes.filter((n) => n.status === 'warn').length;
         const foot = `${online} node${online === 1 ? '' : 's'} online${pending > 0 ? ` · ${pending} pending` : ''}`;
@@ -127,47 +200,47 @@ export class ClusterNav {
      * One tree row.
      * @protected
      */
-    protected static _row(tree: JQuery, entity: NavEntity, level: number, selected: boolean, onClick: () => void): JQuery {
-        const row = jQuery(`<div class="ffx-row ffx-lvl${level} ${selected ? 'selected' : ''} ${entity.status === 'warn' ? 'pending' : ''}"></div>`).appendTo(tree);
-        const twig = level === 2 ? '' : ((entity.tabs.length > 0 && entity.kind !== 'datacenter') || entity.kind === 'datacenter' ? '▾' : '');
-        jQuery(`<span class="tw">${level === 2 ? '' : twig}</span>`).appendTo(row);
-        jQuery(`<span class="ic">${entity.icon ?? '•'}</span>`).appendTo(row);
-        jQuery(`<span class="lbl">${ClusterNav._esc(entity.title)}</span>`).appendTo(row);
+    protected static _treeRow(tree: JQuery, opts: {level: number; icon?: string; label: string; selected: boolean; caret?: string; status?: string; dim?: boolean; onClick: () => void;}): JQuery {
+        const row = jQuery(`<div class="ffx-row ffx-lvl${opts.level} ${opts.selected ? 'selected' : ''} ${opts.dim ? 'pending' : ''}"></div>`).appendTo(tree);
+        jQuery(`<span class="tw">${opts.caret ?? ''}</span>`).appendTo(row);
+        jQuery(`<span class="ic">${opts.icon ?? '•'}</span>`).appendTo(row);
+        jQuery(`<span class="lbl">${ClusterNav._esc(opts.label)}</span>`).appendTo(row);
 
-        if (entity.status) {
-            jQuery(`<span class="st ${entity.status}"></span>`).appendTo(row);
+        if (opts.status) {
+            jQuery(`<span class="st ${opts.status}"></span>`).appendTo(row);
         }
 
-        if (entity.count) {
-            jQuery(`<span class="cnt ${entity.count.warn ? 'warn' : ''}">${ClusterNav._esc(entity.count.n)}</span>`).appendTo(row);
-        }
-
-        row.on('click', () => onClick());
+        row.on('click', (event) => {
+            event.stopPropagation();
+            opts.onClick();
+        });
 
         return row;
     }
 
     /**
-     * Render the object header + tab bar above the page content.
+     * Render the breadcrumb (into the top navbar) + object header, and — for the
+     * datacenter only — the content tab bar. Node pages navigate via the tree.
      * @protected
      */
     protected static _renderTopbar(owner: NavEntity, currentKey: string, loadPage: (page: unknown) => void): void {
-        const cw = jQuery('.content-wrapper');
+        const isDc = owner.kind === 'datacenter';
 
-        if (cw.length === 0) {
-            return;
-        }
-
-        // breadcrumb goes into the top navbar so there is a single top bar (crumb left,
-        // the page actions + fullscreen/theme/logout right), matching the mock.
-        const crumb = owner.kind === 'node'
-            ? `<span>Datacenter</span><span class="sep">›</span><b>${ClusterNav._esc(owner.title)}</b>`
-            : `<b>${ClusterNav._esc(owner.title)}</b>`;
+        // breadcrumb → top navbar (single top bar)
+        const crumb = isDc
+            ? `<b>${ClusterNav._esc(owner.title)}</b>`
+            : `<span>Datacenter</span><span class="sep">›</span><b>${ClusterNav._esc(owner.title)}</b>`;
         const header = jQuery('.main-header');
         header.find('.ffx-crumb').remove();
 
         if (header.length > 0) {
             jQuery(`<div class="ffx-crumb">${crumb}</div>`).prependTo(header);
+        }
+
+        const cw = jQuery('.content-wrapper');
+
+        if (cw.length === 0) {
+            return;
         }
 
         cw.find('.ffx-topbar').remove();
@@ -193,21 +266,25 @@ export class ClusterNav {
             jQuery(`<span> ${owner.subtitle}</span>`).appendTo(sub);
         }
 
-        const tabs = jQuery('<div class="ffx-tabs"></div>').appendTo(bar);
+        // datacenter keeps a content tab bar; node pages are navigated via the tree
+        if (isDc && (owner.tabs ?? []).length > 0) {
+            const tabs = jQuery('<div class="ffx-tabs"></div>').appendTo(bar);
+            let prevGroup: string | undefined;
 
-        let prevGroup: string | undefined;
+            (owner.tabs ?? []).forEach((tab, index) => {
+                if (index > 0 && tab.group !== undefined && tab.group !== prevGroup) {
+                    jQuery('<span class="ffx-tabsep"></span>').appendTo(tabs);
+                }
 
-        owner.tabs.forEach((tab, index) => {
-            if (index > 0 && tab.group !== undefined && tab.group !== prevGroup) {
-                jQuery('<span class="ffx-tabsep"></span>').appendTo(tabs);
-            }
+                prevGroup = tab.group;
+                const el = jQuery(`<span class="ffx-tab ${tab.key === currentKey ? 'active' : ''}"><span class="ic">${tab.icon ?? ''}</span>${ClusterNav._esc(tab.label)}</span>`).appendTo(tabs);
+                el.on('click', () => loadPage(tab.make()));
+            });
+        } else {
+            // no tabs on node pages — pad the header so the content doesn't butt against it
+            bar.addClass('ffx-topbar-notabs');
+        }
 
-            prevGroup = tab.group;
-            const el = jQuery(`<span class="ffx-tab ${tab.key === currentKey ? 'active' : ''}"><span class="ic">${tab.icon ?? ''}</span>${ClusterNav._esc(tab.label)}</span>`).appendTo(tabs);
-            el.on('click', () => loadPage(tab.make()));
-        });
-
-        // place the bar at the very top of the content-wrapper, above the page content
         cw.prepend(bar);
     }
 

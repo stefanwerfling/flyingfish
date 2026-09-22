@@ -54,8 +54,11 @@ body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
 .ffx-row .cnt.warn { background: color-mix(in srgb, var(--warn) 34%, transparent); color: #ffe6b0; }
 .ffx-lvl0 { font-weight: 650; } .ffx-lvl0 .ic { font-size: 15px; }
 .ffx-lvl1 { margin-left: 14px; padding-left: 8px; border-left: 1px solid var(--nav-guide); }
-.ffx-lvl2 { margin-left: 34px; padding-left: 8px; border-left: 1px solid var(--nav-guide); font-size: 12.5px; color: var(--nav-faint); }
-.ffx-lvl2:hover { color: var(--nav-ink); }
+/* level 2 = category group (Router / Reverse Proxy / DNS / System) — readable */
+.ffx-lvl2 { margin-left: 28px; padding-left: 8px; border-left: 1px solid var(--nav-guide); font-weight: 550; }
+/* level 3 = page leaf — a touch smaller/quieter */
+.ffx-lvl3 { margin-left: 46px; padding-left: 8px; border-left: 1px solid var(--nav-guide); font-size: 12.5px; color: var(--nav-faint); }
+.ffx-lvl3:hover { color: var(--nav-ink); }
 .ffx-row.selected { background: var(--nav-active); color: #06222a; font-weight: 600; }
 .ffx-row.selected .ic, .ffx-row.selected .tw { color: #06222a; }
 .ffx-row.pending { opacity: .72; }

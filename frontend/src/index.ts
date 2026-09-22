@@ -139,7 +139,6 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                 icon: '🛰️',
                 avatar: '🛰️',
                 subtitle: 'cluster control plane',
-                count: {n: '1'},
                 // Only cluster-wide concerns: membership, enrollment, mesh, access control
                 // and the shared trust anchor. Everything that configures a FlyingFish
                 // instance (nginx, DNS, listeners, router, settings) lives on the node.
@@ -162,27 +161,38 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                     status: 'up',
                     badges: [{label: 'CA · Hub', cls: 'ca'}, {label: 'this node', cls: 'plain'}],
                     subtitle: 'this node',
-                    resources: [
-                        {id: 'res:domains', title: 'Domains', icon: '🏷️', tabKey: 'domains'},
-                        {id: 'res:listens', title: 'Listens', icon: '🚪', tabKey: 'listens'},
-                        {id: 'res:router', title: 'Router', icon: '🧭', tabKey: 'router'}
-                    ],
-                    // A node owns its whole nginx/DNS/host configuration; tabs are grouped
-                    // by concern (status · web · dns · network · system).
-                    tabs: [
-                        {key: 'dashboard', label: 'Summary', icon: '📊', group: 'status', make: (): BasePage => new DashboardPage()},
-                        {key: 'domains', label: 'Domains', icon: '🏷️', group: 'web', make: (): BasePage => new DomainsPage()},
-                        {key: 'routes', label: 'Routes', icon: '🧵', group: 'web', make: (): BasePage => new RoutesPage()},
-                        {key: 'credential', label: 'Credential', icon: '📓', group: 'web', make: (): BasePage => new CredentialPage()},
-                        {key: 'dyndnsclients', label: 'DynDns Clients', icon: '📡', group: 'dns', make: (): BasePage => new DynDnsClients()},
-                        {key: 'dyndnsserver', label: 'DynDns Server', icon: '🗄️', group: 'dns', make: (): BasePage => new DynDnsServer()},
-                        {key: 'listens', label: 'Listens', icon: '🚪', group: 'net', make: (): BasePage => new ListensPage()},
-                        {key: 'ipaccess', label: 'IP Access', icon: '🔒', group: 'net', make: (): BasePage => new IpAccess()},
-                        {key: 'gateway', label: 'Gateway', icon: '🌐', group: 'net', make: (): BasePage => new GatewayPage()},
-                        {key: 'upnpnat', label: 'UpnpNat', icon: '🗺️', group: 'net', make: (): BasePage => new UpnpNatPage()},
-                        {key: 'router', label: 'Router', icon: '🧭', group: 'net', make: (): BasePage => new RouterPage()},
-                        {key: 'registry', label: 'Registry', icon: '🧩', group: 'sys', make: (): BasePage => new RegistryPage()},
-                        {key: 'settings', label: 'Settings', icon: '⚙️', group: 'sys', make: (): BasePage => new SettingsPage()}
+                    // a node's features grouped into the four pillars: System · Router ·
+                    // Reverse Proxy · DNS. Each category expands to its pages in the tree.
+                    groups: [
+                        {
+                            key: 'system', label: 'System', icon: '⚙️', leaves: [
+                                {key: 'dashboard', label: 'Summary', icon: '📊', make: (): BasePage => new DashboardPage()},
+                                {key: 'gateway', label: 'Gateway', icon: '🌐', make: (): BasePage => new GatewayPage()},
+                                {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()}
+                            ]
+                        },
+                        {
+                            key: 'router', label: 'Router', icon: '🧭', leaves: [
+                                {key: 'router', label: 'Router', icon: '🧭', make: (): BasePage => new RouterPage()},
+                                {key: 'upnpnat', label: 'UpnpNat', icon: '🗺️', make: (): BasePage => new UpnpNatPage()}
+                            ]
+                        },
+                        {
+                            key: 'proxy', label: 'Reverse Proxy', icon: '🔀', leaves: [
+                                {key: 'domains', label: 'Domains', icon: '🏷️', make: (): BasePage => new DomainsPage()},
+                                {key: 'routes', label: 'Routes', icon: '🧵', make: (): BasePage => new RoutesPage()},
+                                {key: 'listens', label: 'Listens', icon: '🚪', make: (): BasePage => new ListensPage()},
+                                {key: 'credential', label: 'Credentials', icon: '📓', make: (): BasePage => new CredentialPage()},
+                                {key: 'ipaccess', label: 'IP Access', icon: '🔒', make: (): BasePage => new IpAccess()},
+                                {key: 'settings', label: 'Settings', icon: '⚙️', make: (): BasePage => new SettingsPage()}
+                            ]
+                        },
+                        {
+                            key: 'dns', label: 'DNS', icon: '🌐', leaves: [
+                                {key: 'dyndnsserver', label: 'DynDns Server', icon: '🗄️', make: (): BasePage => new DynDnsServer()},
+                                {key: 'dyndnsclients', label: 'DynDns Clients', icon: '📡', make: (): BasePage => new DynDnsClients()}
+                            ]
+                        }
                     ]
                 }
             ]
