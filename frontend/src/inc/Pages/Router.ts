@@ -65,6 +65,14 @@ export class Router extends BasePage {
     protected _refreshTimer: ReturnType<typeof setInterval> | null = null;
 
     /**
+     * Signature of the last-rendered overview STRUCTURE (everything except the per-poll
+     * rx/tx byte counters). The 3s poll only rebuilds the map + cards when this changes;
+     * otherwise it refreshes the traffic figures in place, so open row menus / canvas hover
+     * survive.
+     */
+    protected _lastStructureSig = '';
+
+    /**
      * constructor
      */
     public constructor() {
@@ -261,16 +269,22 @@ export class Router extends BasePage {
             this._overview = overview;
 
             this._computeTraffic(overview.availableInterfaces ?? []);
-            this._canvas?.update(overview);
 
-            // The 3s live-traffic poll rebuilds the cards; skip that rebuild while a row
-            // menu (bambooo ButtonMenu dropdown) is open, else it is torn down mid-click and
-            // Edit/Delete become unreachable. The panel has its own change-guard.
-            if (!Router._anyMenuOpen()) {
+            // Only rebuild the map + cards when the overview STRUCTURE changed (a NIC,
+            // lease, address or config — not the per-poll byte counters); the frequent
+            // live-traffic poll otherwise just refreshes the figures in place, so an open
+            // row menu and the canvas hover survive. Also hold the rebuild while a row menu
+            // is open (rebuild once it closes, since the signature still differs).
+            const sig = Router._structureSig(overview);
+
+            if (sig !== this._lastStructureSig && !Router._anyMenuOpen()) {
+                this._canvas?.update(overview);
                 this._renderCards(grid, overview);
+                this._renderPortForwards(overview);
+                this._lastStructureSig = sig;
+            } else {
+                this._updateTraffic(grid);
             }
-
-            this._renderPortForwards(overview);
         };
 
         await this._onLoadTable();
@@ -339,6 +353,30 @@ export class Router extends BasePage {
      */
     protected static _anyMenuOpen(): boolean {
         return jQuery('.dropdown-menu').filter(':visible').length > 0;
+    }
+
+    /**
+     * A signature of the overview STRUCTURE — the whole payload minus the per-poll rx/tx
+     * byte counters (which change every tick and must not force a rebuild). Used to decide
+     * when the map + cards actually need re-rendering vs. an in-place traffic refresh.
+     * @param overview - the loaded overview
+     * @protected
+     */
+    protected static _structureSig(overview: RouterOverviewResponse): string {
+        return JSON.stringify(overview, (key, value) =>
+            (key === 'rxBytes' || key === 'txBytes') ? undefined : value);
+    }
+
+    /**
+     * Refresh only the live in/out traffic figures on the already-rendered cards, in place
+     * (no rebuild), from the current per-interface rates.
+     * @param grid - the grid holding the cards
+     * @protected
+     */
+    protected _updateTraffic(grid: JQuery): void {
+        for (const [mac, rate] of this._trafficRate) {
+            InterfaceCard.updateTraffic(grid, mac, rate.rx, rate.tx);
+        }
     }
 
     /**

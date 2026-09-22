@@ -56,7 +56,10 @@ export class InterfaceCard {
      * @param view - the flattened interface view
      */
     public constructor(parent: JQuery, view: InterfaceView) {
-        const card = jQuery('<div class="ffr-card"></div>').appendTo(parent);
+        // data-ffr-mac lets the page update this card's live-traffic figures in place
+        // (see InterfaceCard.updateTraffic) instead of rebuilding the whole grid every
+        // poll — which would tear down an open row menu / reset canvas hover.
+        const card = jQuery(`<div class="ffr-card" data-ffr-mac="${InterfaceCard._esc(view.mac.toLowerCase())}"></div>`).appendTo(parent);
 
         // ---- header ------------------------------------------------------------------------------------------------
         const top = jQuery('<div class="ffr-top"></div>').appendTo(card);
@@ -90,15 +93,14 @@ export class InterfaceCard {
             jQuery(`<div class="ffr-ip ffr-ip6">${InterfaceCard._esc(view.ipv6)}</div>`).appendTo(info);
         }
 
-        // Live traffic in/out (updates on the page's poll).
-        if (view.rxRate !== undefined || view.txRate !== undefined) {
-            jQuery(
-                '<div class="ffr-traffic">' +
-                `<span class="ffr-tr-in">↓ ${InterfaceCard._fmtRate(view.rxRate)}</span>` +
-                `<span class="ffr-tr-out">↑ ${InterfaceCard._fmtRate(view.txRate)}</span>` +
-                '</div>'
-            ).appendTo(info);
-        }
+        // Live traffic in/out — always rendered (shows "—" until the second poll) so the
+        // page can refresh just these figures in place via InterfaceCard.updateTraffic.
+        jQuery(
+            '<div class="ffr-traffic">' +
+            `<span class="ffr-tr-in">↓ ${InterfaceCard._fmtRate(view.rxRate)}</span>` +
+            `<span class="ffr-tr-out">↑ ${InterfaceCard._fmtRate(view.txRate)}</span>` +
+            '</div>'
+        ).appendTo(info);
 
         // ---- menu --------------------------------------------------------------------------------------------------
         const menuWrap = jQuery('<div class="ffr-menu"></div>').appendTo(top);
@@ -282,6 +284,26 @@ export class InterfaceCard {
     /**
      * Format a byte/second rate as a human-readable string (B/s … GB/s). Undefined (no
      * sample yet) renders as an em dash.
+     * Update just the live in/out traffic figures of an already-rendered card, found by
+     * MAC within `scope`, without rebuilding it — so the page's poll leaves open row menus
+     * and canvas hover intact. No-op if no card for that MAC is present.
+     * @param scope - the grid (or any ancestor) holding the cards
+     * @param mac - the interface MAC (any case)
+     * @param rxRate - inbound bytes/second (undefined → "—")
+     * @param txRate - outbound bytes/second (undefined → "—")
+     */
+    public static updateTraffic(scope: JQuery, mac: string, rxRate?: number, txRate?: number): void {
+        const card = scope.find(`.ffr-card[data-ffr-mac="${mac.toLowerCase()}"]`);
+
+        if (card.length === 0) {
+            return;
+        }
+
+        card.find('.ffr-tr-in').text(`↓ ${InterfaceCard._fmtRate(rxRate)}`);
+        card.find('.ffr-tr-out').text(`↑ ${InterfaceCard._fmtRate(txRate)}`);
+    }
+
+    /**
      * @param bytesPerSec - the rate in bytes per second
      */
     protected static _fmtRate(bytesPerSec?: number): string {
