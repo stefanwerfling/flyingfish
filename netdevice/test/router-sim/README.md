@@ -99,6 +99,14 @@ in `core/`). Unprivileged user namespaces must be enabled
    fake backend HTTP stub, so the whole part — Hub registration, interface discovery,
    WAN udhcpc, LAN `ensureLanAddress` + dnsmasq, native netfilter apply, and the report
    POSTs — is exercised, not just the builders it calls. Run via `./run-netdevice.sh`.
+4. **PD tier (done):** the IPv6 prefix-delegation route path (ULA-PD server). A
+   router + a downstream (PD-requesting router) netns; the real KeaRunner chain
+   `parseKeaPdLeases` → `ip -6 neigh` correlation by MAC (`parseNeighborLinkLocal`)
+   → native `routeReplaceV6` (Rust rtnetlink) installs the delegated /60 route, verified
+   in the kernel + `ip -6 route get`. Run via `./run-pd.sh`. `kea-dhcp6` itself is not
+   run (not installable rootless); the IA_PD lease is a Kea memfile6 CSV in the real
+   format (pinned by the `KeaDhcp6Config` unit tests). Everything after the lease line —
+   pool match, neighbour correlation, native route write — is the real production code.
 
 ## Files
 
@@ -110,6 +118,9 @@ in `core/`). Unprivileged user namespaces must be enabled
 - `run-netdevice.sh` — Tier 3 orchestrator: runs the real netdevice reconcile loop.
 - `fake-backend.mjs` — Tier 3 Hub stub: serves `/json/router/*` + `/json/registry/*`
   and records the netdevice's report POSTs for the assertions.
+- `run-pd.sh` — PD tier orchestrator: router + downstream netns, delegated-prefix route.
+- `pd-route.mjs` — PD tier: the real `parseKeaPdLeases` → neigh-correlate →
+  native `routeReplaceV6` chain (the KeaRunner route path) inside the router netns.
 - `scenarios/*.json` — DB-shaped interfaces + NAT policy + DHCP config + sim addressing.
 - `setgroups-shim.c` — sim-only `LD_PRELOAD` no-op for `dnsmasq` under the userns.
 
