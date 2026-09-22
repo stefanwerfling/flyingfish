@@ -179,7 +179,6 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                         },
                         {
                             key: 'proxy', label: 'Reverse Proxy', icon: '🔀', leaves: [
-                                {key: 'domains', label: 'Domains', icon: '🏷️', make: (): BasePage => new DomainsPage()},
                                 {key: 'routes', label: 'Routes', icon: '🧵', make: (): BasePage => new RoutesPage()},
                                 {key: 'listens', label: 'Listens', icon: '🚪', make: (): BasePage => new ListensPage()},
                                 {key: 'credential', label: 'Credentials', icon: '📓', make: (): BasePage => new CredentialPage()},
@@ -189,6 +188,7 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                         },
                         {
                             key: 'dns', label: 'DNS', icon: '🌐', leaves: [
+                                {key: 'domains', label: 'Domains', icon: '🏷️', make: (): BasePage => new DomainsPage()},
                                 {key: 'dyndnsserver', label: 'DynDns Server', icon: '🗄️', make: (): BasePage => new DynDnsServer()},
                                 {key: 'dyndnsclients', label: 'DynDns Clients', icon: '📡', make: (): BasePage => new DynDnsClients()}
                             ]

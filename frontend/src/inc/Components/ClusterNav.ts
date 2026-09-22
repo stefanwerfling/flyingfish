@@ -226,10 +226,22 @@ export class ClusterNav {
     protected static _renderTopbar(owner: NavEntity, currentKey: string, loadPage: (page: unknown) => void): void {
         const isDc = owner.kind === 'datacenter';
 
+        // the content tabs: datacenter → its tabs; node → the current category's page leaves
+        let tabItems: NavTab[] = [];
+        let groupLabel = '';
+
+        if (isDc) {
+            tabItems = owner.tabs ?? [];
+        } else {
+            const group = (owner.groups ?? []).find((g) => g.leaves.some((l) => l.key === currentKey)) ?? (owner.groups ?? [])[0];
+            groupLabel = group?.label ?? '';
+            tabItems = (group?.leaves ?? []).map((l) => ({key: l.key, label: l.label, icon: l.icon, make: l.make}));
+        }
+
         // breadcrumb → top navbar (single top bar)
         const crumb = isDc
             ? `<b>${ClusterNav._esc(owner.title)}</b>`
-            : `<span>Datacenter</span><span class="sep">›</span><b>${ClusterNav._esc(owner.title)}</b>`;
+            : `<span>Datacenter</span><span class="sep">›</span><b>${ClusterNav._esc(owner.title)}</b>${groupLabel ? `<span class="sep">›</span><span>${ClusterNav._esc(groupLabel)}</span>` : ''}`;
         const header = jQuery('.main-header');
         header.find('.ffx-crumb').remove();
 
@@ -266,12 +278,13 @@ export class ClusterNav {
             jQuery(`<span> ${owner.subtitle}</span>`).appendTo(sub);
         }
 
-        // datacenter keeps a content tab bar; node pages are navigated via the tree
-        if (isDc && (owner.tabs ?? []).length > 0) {
+        // content tabs: the current category's pages (node) or the datacenter tabs.
+        // Clicking a tab loads its page; the tree marks the same leaf (both key off currentKey).
+        if (tabItems.length > 0) {
             const tabs = jQuery('<div class="ffx-tabs"></div>').appendTo(bar);
             let prevGroup: string | undefined;
 
-            (owner.tabs ?? []).forEach((tab, index) => {
+            tabItems.forEach((tab, index) => {
                 if (index > 0 && tab.group !== undefined && tab.group !== prevGroup) {
                     jQuery('<span class="ffx-tabsep"></span>').appendTo(tabs);
                 }
@@ -281,7 +294,6 @@ export class ClusterNav {
                 el.on('click', () => loadPage(tab.make()));
             });
         } else {
-            // no tabs on node pages — pad the header so the content doesn't butt against it
             bar.addClass('ffx-topbar-notabs');
         }
 
