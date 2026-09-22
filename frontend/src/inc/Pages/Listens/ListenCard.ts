@@ -36,11 +36,6 @@ export class ListenCard {
 
         const info = jQuery('<div style="min-width:0"></div>').appendTo(top);
         const nameRow = jQuery('<div class="ffr-name"></div>').appendTo(info);
-
-        // reachability at a glance: 🌐 public (external) vs 🔒 internal-only
-        const internal = ListenCard._isInternal(entry);
-        jQuery(`<span class="lc-reach" title="${internal ? 'internal only' : 'public · reachable from the internet'}">${internal ? '🔒' : '🌐'}</span>`).appendTo(nameRow);
-
         jQuery(`<b>:${entry.port}</b>`).appendTo(nameRow);
         jQuery(`<span class="ffr-role" style="background:${roleColor}">${stream ? 'stream' : 'http'}</span>`).appendTo(nameRow);
 
@@ -48,7 +43,11 @@ export class ListenCard {
             jQuery('<span class="ffr-role idle">disabled</span>').appendTo(nameRow);
         }
 
-        jQuery('<div class="ffr-name"></div>').append(jQuery('<span class="ffr-macx"></span>').text(entry.name || '—')).appendTo(info);
+        // reachability at a glance, on the name line: 🌐 public (external) vs 🔒 internal-only
+        const internal = ListenCard._isInternal(entry);
+        const nameLine = jQuery('<div class="ffr-name lc-nameline"></div>').appendTo(info);
+        jQuery(`<span class="lc-reach" title="${internal ? 'internal only' : 'public · reachable from the internet'}">${internal ? '🔒' : '🌐'}</span>`).appendTo(nameLine);
+        jQuery('<span class="ffr-macx"></span>').text(entry.name || '—').appendTo(nameLine);
 
         // ---- menu ----
         const menuWrap = jQuery('<div class="ffr-menu"></div>').appendTo(top);

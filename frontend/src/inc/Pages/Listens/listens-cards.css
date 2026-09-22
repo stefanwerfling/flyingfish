@@ -21,8 +21,9 @@
 .ffr-listcards .ffr-card .ffr-name { align-items: center; }
 .ffr-listcards .ffr-card .ffr-led { margin-top: 6px; }
 
-/* reachability glyph (🌐 public / 🔒 internal) leading the port */
-.ffr-listcards .ffr-card .lc-reach { font-size: 14px; line-height: 1; cursor: default; }
+/* reachability glyph (🌐 public / 🔒 internal) leading the name line */
+.ffr-listcards .ffr-card .lc-nameline { align-items: center; gap: 5px; margin-top: 2px; }
+.ffr-listcards .ffr-card .lc-reach { font-size: 12.5px; line-height: 1; cursor: default; flex: none; }
 
 /* larger, more legible type than the dense router interface cards */
 .ffr-listcards .ffr-card .ffr-name b { font-size: 16.5px; }
