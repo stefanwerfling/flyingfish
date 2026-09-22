@@ -15,6 +15,12 @@
 
 .ffr-listcards .lc-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 
+/* centre the name line so :port and the stream/http badge sit on the same height
+   (baseline-align left the padded badge a touch high), and nudge the status LED to
+   line up with that first row */
+.ffr-listcards .ffr-card .ffr-name { align-items: center; }
+.ffr-listcards .ffr-card .ffr-led { margin-top: 6px; }
+
 /* larger, more legible type than the dense router interface cards */
 .ffr-listcards .ffr-card .ffr-name b { font-size: 16.5px; }
 .ffr-listcards .ffr-card .ffr-role { font-size: 11px; padding: 3px 9px; }
