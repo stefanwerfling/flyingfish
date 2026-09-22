@@ -32,10 +32,11 @@ export class ListenCard {
 
         // ---- header ----
         const top = jQuery('<div class="ffr-top"></div>').appendTo(card);
-        jQuery(`<span class="ffr-led ${entry.disable ? 'idle' : 'up'}"></span>`).appendTo(top);
+        const info = jQuery('<div style="min-width:0;flex:1"></div>').appendTo(top);
 
-        const info = jQuery('<div style="min-width:0"></div>').appendTo(top);
+        // line 1: status LED · :port · role badge (LED leads the line, flush left)
         const nameRow = jQuery('<div class="ffr-name"></div>').appendTo(info);
+        jQuery(`<span class="ffr-led ${entry.disable ? 'idle' : 'up'}"></span>`).appendTo(nameRow);
         jQuery(`<b>:${entry.port}</b>`).appendTo(nameRow);
         jQuery(`<span class="ffr-role" style="background:${roleColor}">${stream ? 'stream' : 'http'}</span>`).appendTo(nameRow);
 
@@ -43,7 +44,7 @@ export class ListenCard {
             jQuery('<span class="ffr-role idle">disabled</span>').appendTo(nameRow);
         }
 
-        // reachability at a glance, on the name line: 🌐 public (external) vs 🔒 internal-only
+        // line 2 (flush left): reachability glyph · name — 🌐 public vs 🔒 internal-only
         const internal = ListenCard._isInternal(entry);
         const nameLine = jQuery('<div class="ffr-name lc-nameline"></div>').appendTo(info);
         jQuery(`<span class="lc-reach" title="${internal ? 'internal only' : 'public · reachable from the internet'}">${internal ? '🔒' : '🌐'}</span>`).appendTo(nameLine);
