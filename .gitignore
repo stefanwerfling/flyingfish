@@ -45,3 +45,6 @@
 
 # --- Logs -----------------------------------------------------------------
 **/*.log
+
+# local dev compose overrides (machine-specific paths)
+docker-compose.override.yml
