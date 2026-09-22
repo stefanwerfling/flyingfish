@@ -158,13 +158,20 @@ export class ClusterNav {
             return;
         }
 
-        cw.find('.ffx-topbar').remove();
-        const bar = jQuery('<div class="ffx-topbar"></div>');
-
+        // breadcrumb goes into the top navbar so there is a single top bar (crumb left,
+        // the page actions + fullscreen/theme/logout right), matching the mock.
         const crumb = owner.kind === 'node'
             ? `<span>Datacenter</span><span class="sep">›</span><b>${ClusterNav._esc(owner.title)}</b>`
             : `<b>${ClusterNav._esc(owner.title)}</b>`;
-        jQuery(`<div class="ffx-crumb">${crumb}</div>`).appendTo(bar);
+        const header = jQuery('.main-header');
+        header.find('.ffx-crumb').remove();
+
+        if (header.length > 0) {
+            jQuery(`<div class="ffx-crumb">${crumb}</div>`).prependTo(header);
+        }
+
+        cw.find('.ffx-topbar').remove();
+        const bar = jQuery('<div class="ffx-topbar"></div>');
 
         const obj = jQuery('<div class="ffx-obj"></div>').appendTo(bar);
         jQuery(`<div class="avatar">${owner.avatar ?? owner.icon ?? '🖥️'}</div>`).appendTo(obj);

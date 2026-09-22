@@ -1,6 +1,7 @@
 import {ButtonMenu, ButtonType, IconFa} from 'bambooo';
 import {ListenData} from 'flyingfish_schemas';
 import {ListenAddressCheckType, ListenTypes} from '../../Api/Listen.js';
+import '../Router/router.css';
 import './listens-cards.css';
 
 /**
@@ -12,9 +13,10 @@ export type ListenCardActions = {
 };
 
 /**
- * ListenCard — one listener as a clean card in the cluster-mock style: a header with the
- * port as title, the name, a status pill and an action menu, over a key/value body
- * (type, protocol, where it routes, and the enabled options).
+ * ListenCard — one self-contained card per listener, in the FlyingFish `.ffr` design
+ * language (same look as the Router page's interface cards): a status LED, the port as
+ * the title, a stream/http role badge, and inline detail sections (protocol + where the
+ * traffic flows, plus the enabled options), with a per-card edit/delete menu.
  */
 export class ListenCard {
 
@@ -25,16 +27,26 @@ export class ListenCard {
      */
     public constructor(parent: JQuery, entry: ListenData, actions: ListenCardActions) {
         const stream = entry.type === ListenTypes.stream;
-        const card = jQuery('<div class="lc-card"></div>').appendTo(parent);
+        const roleColor = stream ? 'var(--ffr-warn)' : 'var(--ffr-ok)';
+        const card = jQuery('<div class="ffr-card"></div>').appendTo(parent);
 
         // ---- header ----
-        const hd = jQuery('<div class="lc-hd"></div>').appendTo(card);
-        jQuery('<span class="t"></span>').text(`:${entry.port}`).appendTo(hd);
-        jQuery('<span class="nm"></span>').text(entry.name || '—').appendTo(hd);
-        jQuery('<span class="sp"></span>').appendTo(hd);
-        jQuery(`<span class="lc-statepill ${entry.disable ? 'off' : 'up'}">● ${entry.disable ? 'disabled' : 'enabled'}</span>`).appendTo(hd);
+        const top = jQuery('<div class="ffr-top"></div>').appendTo(card);
+        jQuery(`<span class="ffr-led ${entry.disable ? 'idle' : 'up'}"></span>`).appendTo(top);
 
-        const menuWrap = jQuery('<span class="lc-menu"></span>').appendTo(hd);
+        const info = jQuery('<div style="min-width:0"></div>').appendTo(top);
+        const nameRow = jQuery('<div class="ffr-name"></div>').appendTo(info);
+        jQuery(`<b>:${entry.port}</b>`).appendTo(nameRow);
+        jQuery(`<span class="ffr-role" style="background:${roleColor}">${stream ? 'stream' : 'http'}</span>`).appendTo(nameRow);
+
+        if (entry.disable) {
+            jQuery('<span class="ffr-role idle">disabled</span>').appendTo(nameRow);
+        }
+
+        jQuery('<div class="ffr-name"></div>').append(jQuery('<span class="ffr-macx"></span>').text(entry.name || '—')).appendTo(info);
+
+        // ---- menu ----
+        const menuWrap = jQuery('<div class="ffr-menu"></div>').appendTo(top);
         const menu = new ButtonMenu(menuWrap[0] as unknown as HTMLElement, IconFa.bars, true, ButtonType.borderless);
         menu.addMenuItem('Edit', actions.onEdit, IconFa.edit);
 
@@ -43,31 +55,42 @@ export class ListenCard {
             menu.addMenuItem('Delete', actions.onDelete, IconFa.trash);
         }
 
-        // ---- body: key/value ----
-        const bd = jQuery('<div class="lc-bd"></div>').appendTo(card);
-        const dl = jQuery('<dl class="lc-kv"></dl>').appendTo(bd);
+        // ---- body: details ----
+        const details = jQuery('<div class="ffr-sec"></div>').appendTo(card);
+        jQuery('<div class="ffr-sec-hd"><span class="ffr-eyebrow">Routing</span></div>').appendTo(details);
+        ListenCard._kv(details, [
+            ['Protocol', stream ? ListenCard._proto(entry.protocol) : 'HTTP/HTTPS'],
+            ['Routes to', ListenCard._flow(entry)],
+            ...(entry.description ? [['Note', entry.description] as [string, string]] : [])
+        ]);
 
-        ListenCard._row(dl, 'Type', stream ? 'stream · L4' : 'http · L7', false);
-        ListenCard._row(dl, 'Protocol', stream ? ListenCard._proto(entry.protocol) : 'HTTP/HTTPS', false);
-        ListenCard._row(dl, 'Routes to', ListenCard._flow(entry), true);
-        ListenCard._row(dl, 'Options', ListenCard._options(entry), false);
+        // ---- body: options ----
+        const opt = jQuery('<div class="ffr-sec"></div>').appendTo(card);
+        jQuery('<div class="ffr-sec-hd"><span class="ffr-eyebrow">Options</span></div>').appendTo(opt);
+        const chips = jQuery('<div class="lc-chips"></div>').appendTo(opt);
+        let any = false;
 
-        if (entry.description) {
-            ListenCard._row(dl, 'Note', entry.description, false);
+        if (entry.enable_ipv6) {
+            jQuery('<span class="ffr-badge v6">IPv6</span>').appendTo(chips); any = true;
         }
-    }
 
-    /**
-     * Append one key/value row.
-     * @param dl - the definition list
-     * @param key - the label
-     * @param value - the value
-     * @param mono - render the value monospace
-     * @protected
-     */
-    protected static _row(dl: JQuery, key: string, value: string, mono: boolean): void {
-        jQuery('<dt></dt>').text(key).appendTo(dl);
-        jQuery(`<dd${mono ? ' class="mono"' : ''}></dd>`).text(value).appendTo(dl);
+        if (entry.proxy_protocol) {
+            jQuery('<span class="ffr-badge proto">proxy</span>').appendTo(chips); any = true;
+        }
+
+        if (entry.proxy_protocol_in) {
+            jQuery('<span class="ffr-badge proto">proxy-in</span>').appendTo(chips); any = true;
+        }
+
+        if (entry.check_address) {
+            const kind = entry.check_address_type === ListenAddressCheckType.white ? 'whitelist' : 'blacklist';
+            jQuery(`<span class="ffr-badge v4">IP ${kind}</span>`).appendTo(chips); any = true;
+        }
+
+        if (!any) {
+            chips.remove();
+            jQuery('<div class="ffr-empty">No options set.</div>').appendTo(opt);
+        }
     }
 
     /**
@@ -81,33 +104,6 @@ export class ListenCard {
             case 2: return 'TCP & UDP';
             default: return 'TCP';
         }
-    }
-
-    /**
-     * The enabled options as a compact list ("—" when none).
-     * @param entry - the listen
-     * @protected
-     */
-    protected static _options(entry: ListenData): string {
-        const opt: string[] = [];
-
-        if (entry.enable_ipv6) {
-            opt.push('IPv6');
-        }
-
-        if (entry.proxy_protocol) {
-            opt.push('proxy');
-        }
-
-        if (entry.proxy_protocol_in) {
-            opt.push('proxy-in');
-        }
-
-        if (entry.check_address) {
-            opt.push(`IP ${entry.check_address_type === ListenAddressCheckType.white ? 'whitelist' : 'blacklist'}`);
-        }
-
-        return opt.length > 0 ? opt.join(' · ') : '—';
     }
 
     /**
@@ -135,6 +131,21 @@ export class ListenCard {
         }
 
         return '→ upstream';
+    }
+
+    /**
+     * Append a key/value grid.
+     * @param parent - the container
+     * @param rows - [label, value] pairs
+     * @protected
+     */
+    protected static _kv(parent: JQuery, rows: [string, string][]): void {
+        const dl = jQuery('<dl class="ffr-kv"></dl>').appendTo(parent);
+
+        for (const row of rows) {
+            jQuery('<dt></dt>').text(row[0]).appendTo(dl);
+            jQuery('<dd></dd>').text(row[1]).appendTo(dl);
+        }
     }
 
 }

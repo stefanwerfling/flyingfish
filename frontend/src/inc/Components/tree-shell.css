@@ -154,6 +154,12 @@ body.ffx-app .main-header a[data-widget="pushmenu"] { display: none !important; 
 body.ffx-app .main-header.navbar .nav-link { color: var(--ink); }
 /* page action buttons in the strip pick up the app accent */
 body.ffx-app .main-header.navbar .btn { border-radius: 8px; }
+/* breadcrumb lives at the far left of the single top bar (mock parity) */
+body.ffx-app .main-header .ffx-crumb { padding: 0 4px 0 16px; font-size: 12.5px; color: var(--ffr-faint); align-self: center; white-space: nowrap; border: 0; background: transparent; }
+body.ffx-app .main-header .ffx-crumb b { color: var(--ffr-ink); font-weight: 600; }
+body.ffx-app .main-header .ffx-crumb .sep { margin: 0 5px; }
+/* object header now sits directly below the single top bar */
+body.ffx-app .ffx-topbar .ffx-obj { padding: 12px 20px 0; }
 
 /* thin divider between tab groups in the topbar tab bar (visually separates concerns) */
 .ffx-tabsep { width: 1px; align-self: center; height: 18px; background: var(--line); margin: 0 6px; flex: none; }

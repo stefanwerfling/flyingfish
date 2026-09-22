@@ -1,30 +1,28 @@
 /*
- * listens-cards — the Listens page's listener grid in the cluster-mock card style: a clean
- * card with a title + status pill header and a key/value body, grouped into External
- * (stream) / Internal (http). Uses the app --ffr-* tokens (light + dark).
+ * listens-cards — the Listens page's listener grid: cards (see ListenCard) laid out like
+ * the Router page's interface cards, grouped into External (stream) / Internal (http).
+ * Uses the .ffr scope (router.css tokens/classes) so it inherits light + dark.
  */
-.ffr-listcards .lc-head { display: flex; align-items: baseline; gap: 10px; margin: 0 2px 14px; }
+.ffr-listcards .lc-head { display: flex; align-items: baseline; gap: 10px; margin: 0 2px 12px; }
 .ffr-listcards .lc-head .t { font-size: 15px; font-weight: 650; color: var(--ffr-ink); }
 .ffr-listcards .lc-head .c { font-size: 12px; color: var(--ffr-faint); font-family: var(--ffr-mono); }
 
-.ffr-listcards .lc-group { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ffr-faint); margin: 8px 2px 10px; display: flex; align-items: center; gap: 8px; }
+.ffr-listcards .lc-group { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ffr-faint); margin: 6px 2px 10px; display: flex; align-items: center; gap: 8px; }
 .ffr-listcards .lc-group .n { font-family: var(--ffr-mono); font-weight: 600; letter-spacing: 0; }
 
-.ffr-listcards .lc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 22px; }
+/* slightly narrower cards than the router interface grid — listeners are compact */
+.ffr-listcards .ffr-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); margin-bottom: 20px; }
 
-/* card (cluster-mock style) */
-.ffr-listcards .lc-card { background: var(--ffr-surface); border: 1px solid var(--ffr-line); border-radius: 12px; box-shadow: var(--ffr-shadow); }
-.ffr-listcards .lc-hd { display: flex; align-items: center; gap: 9px; padding: 11px 15px; border-bottom: 1px solid var(--ffr-line); }
-.ffr-listcards .lc-hd .t { font-weight: 650; font-size: 15.5px; font-family: var(--ffr-mono); color: var(--ffr-ink); flex: none; }
-.ffr-listcards .lc-hd .nm { font-size: 12.5px; color: var(--ffr-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ffr-listcards .lc-hd .sp { flex: 1; }
-.ffr-listcards .lc-statepill { font-size: 10.5px; font-weight: 700; letter-spacing: .03em; padding: 2px 9px; border-radius: 20px; flex: none; }
-.ffr-listcards .lc-statepill.up { color: var(--ffr-ok); background: color-mix(in srgb, var(--ffr-ok) 14%, transparent); }
-.ffr-listcards .lc-statepill.off { color: var(--ffr-faint); background: color-mix(in srgb, var(--ffr-faint) 16%, transparent); }
-.ffr-listcards .lc-menu { flex: none; position: relative; }
+.ffr-listcards .lc-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 
-.ffr-listcards .lc-bd { padding: 13px 15px; }
-.ffr-listcards .lc-kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 13.5px; margin: 0; }
-.ffr-listcards .lc-kv dt { color: var(--ffr-faint); }
-.ffr-listcards .lc-kv dd { margin: 0; text-align: right; color: var(--ffr-ink); overflow-wrap: anywhere; }
-.ffr-listcards .lc-kv dd.mono { font-family: var(--ffr-mono); font-size: 13px; }
+/* larger, more legible type than the dense router interface cards */
+.ffr-listcards .ffr-card .ffr-name b { font-size: 16.5px; }
+.ffr-listcards .ffr-card .ffr-role { font-size: 11px; padding: 3px 9px; }
+.ffr-listcards .ffr-card .ffr-macx { font-size: 13px; color: var(--ffr-soft); }
+.ffr-listcards .ffr-card .ffr-sec { padding: 13px 16px; }
+.ffr-listcards .ffr-card .ffr-eyebrow { font-size: 11.5px; letter-spacing: .07em; }
+.ffr-listcards .ffr-card .ffr-kv { font-size: 14px; grid-template-columns: auto 1fr; gap: 6px 14px; }
+.ffr-listcards .ffr-card .ffr-kv dt { font-size: 13px; }
+.ffr-listcards .ffr-card .ffr-kv dd { font-size: 13.5px; }
+.ffr-listcards .ffr-card .ffr-badge { font-size: 11px; padding: 3px 9px; }
+.ffr-listcards .ffr-card .ffr-empty { font-size: 13px; font-style: normal; padding: 2px; }
