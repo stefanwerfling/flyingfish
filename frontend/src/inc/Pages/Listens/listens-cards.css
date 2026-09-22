@@ -14,4 +14,15 @@
 .ffr-listcards .ffr-grid { grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); margin-bottom: 20px; }
 
 .ffr-listcards .lc-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.ffr-listcards .ffr-empty { padding: 2px; }
+
+/* larger, more legible type than the dense router interface cards */
+.ffr-listcards .ffr-card .ffr-name b { font-size: 16.5px; }
+.ffr-listcards .ffr-card .ffr-role { font-size: 11px; padding: 3px 9px; }
+.ffr-listcards .ffr-card .ffr-macx { font-size: 13px; color: var(--ffr-soft); }
+.ffr-listcards .ffr-card .ffr-sec { padding: 13px 16px; }
+.ffr-listcards .ffr-card .ffr-eyebrow { font-size: 11.5px; letter-spacing: .07em; }
+.ffr-listcards .ffr-card .ffr-kv { font-size: 14px; grid-template-columns: auto 1fr; gap: 6px 14px; }
+.ffr-listcards .ffr-card .ffr-kv dt { font-size: 13px; }
+.ffr-listcards .ffr-card .ffr-kv dd { font-size: 13.5px; }
+.ffr-listcards .ffr-card .ffr-badge { font-size: 11px; padding: 3px 9px; }
+.ffr-listcards .ffr-card .ffr-empty { font-size: 13px; font-style: normal; padding: 2px; }
