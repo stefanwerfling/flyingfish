@@ -170,48 +170,6 @@ services:
       pkiserver:
         condition: service_started
 
-  himhip:
-    image: stefanwerfling/flyingfish_himip:latest
-    container_name: flyingfish_himhip
-    volumes:
-      # Read-only: only needs the backend's self-signed cert to trust it over
-      # HTTPS for registry self-registration (NODE_EXTRA_CA_CERTS, see 9.2.1).
-      - flyingfish:/var/lib/flyingfish:ro
-      # Writable store for this node's own PKI identity (the shared flyingfish
-      # volume above is read-only), used when node PKI enrollment is enabled.
-      - flyingfishHimhipPki:/var/lib/flyingfish-pki
-      # Shared bootstrap socket: the part fetches a single-use enrollment token
-      # from the pkiserver over this socket (trust by co-location, 9.4.3-D).
-      - flyingfishPkiBootstrap:/var/lib/flyingfish-pki-bootstrap
-    environment:
-      FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
-      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
-      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
-      FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
-      FLYINGFISH_REGISTRY_URL: "${REGISTRY_URL_HOST}"
-      NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
-      # Node PKI (v2, 9.4.3-D): enroll + auto-renew of this part's own service
-      # cert; the bootstrap token is fetched over the shared unix socket.
-      # network_mode: host - reach the host-published pkiserver via loopback.
-      FLYINGFISH_PKI_URL: "http://127.0.0.1:5334"
-      FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
-      FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
-    network_mode: host
-    cap_add:
-      - ALL
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-    depends_on:
-      redis:
-        condition: service_healthy
-      flyingfish:
-        condition: service_healthy
-      pkiserver:
-        condition: service_started
-
   sshremote:
     image: stefanwerfling/flyingfish_ssh:latest
     container_name: flyingfish_ssh
@@ -450,8 +408,6 @@ volumes:
   flyingfishSshPki:
     driver: local
   flyingfishNginxPki:
-    driver: local
-  flyingfishHimhipPki:
     driver: local
   flyingfishClusterPki:
     driver: local

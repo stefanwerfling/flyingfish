@@ -1,4 +1,4 @@
-import {BackendApp, BaseHttpServer, MariaDBService, PluginService, RedisDBService} from '@stefanwerfling/figtree';
+import {BackendApp, BaseHttpServer, MariaDBService, PluginService} from '@stefanwerfling/figtree';
 import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
 import {PluginServiceNames} from 'flyingfish_core';
 import os from 'os';
@@ -165,7 +165,7 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
 
         // Self-register the co-located parts (the DNS server runs in this
         // process) directly with the Hub registry. Standalone part containers
-        // (ddns/ssh/himhip) POST their manifests over HTTP with the shared
+        // (ddns/ssh/netdevice) POST their manifests over HTTP with the shared
         // registry secret instead.
         registerColocatedParts(HubRegistryService.getInstance().getRegistry(), os.hostname());
 
@@ -191,22 +191,14 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
             this._serviceManager.add(DynDnsService.getInstance());
         }
 
-        // Redis mem-db: subscribe the HimHIP channel so the host/gateway data
-        // reaches `HimHIP.getData()` (consumed by UpnpNat/DynDns). figtree's
-        // RedisDBService owns the connect/registerChannels/disconnect lifecycle
-        // (its start() throws when redis config is missing, so gate on the url).
-        if (config?.db?.redis?.url) {
-            // Point the HTTP->HTTPS redirect at the real host IP as HimHIP
-            // reports it, replacing the former main.ts `setListenHost` wiring
-            // (uses figtree's new `BaseHttpServer.setListenHost()` seam).
-            HimHIP.registerEvent((data): void => {
-                if (data !== null) {
-                    BaseHttpServer.setListenHost(data.hostip);
-                }
-            });
-
-            this._serviceManager.add(new RedisDBService([ new HimHIP() ]));
-        }
+        // HimHIP host/gateway facts are reported by the netdevice part over HTTP
+        // (POST /json/router/host-info → HimHIP.setData). Point the HTTP->HTTPS
+        // redirect at the real host IP whenever HimHIP updates.
+        HimHIP.registerEvent((data): void => {
+            if (data !== null) {
+                BaseHttpServer.setListenHost(data.hostip);
+            }
+        });
     }
 
 }

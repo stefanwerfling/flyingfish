@@ -65,23 +65,6 @@ jobs:
           tags: ${{ steps.meta_flyingfish_ssh.outputs.tags }}
           labels: ${{ steps.meta_flyingfish_ssh.outputs.labels }}
 
-      - name: Docker meta FlyingFish Himhip
-        id: meta_flyingfish_himhip
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKER_USERNAME }}/flyingfish_himip
-
-      - name: Build and push FlyingFish Himhip
-        uses: docker/build-push-action@v5
-        with:
-          context: ./
-          file: ./himhip/Dockerfile
-          platforms: linux/amd64,linux/arm64/v8
-          build-args: |
-            "NPM_REGISTRY=${{ secrets.NPM_REGISTRY }}"
-          push: ${{ github.ref_type == 'tag' }}
-          tags: ${{ steps.meta_flyingfish_himhip.outputs.tags }}
-          labels: ${{ steps.meta_flyingfish_himhip.outputs.labels }}
 
       - name: Docker meta FlyingFish DynDnsServer
         id: meta_flyingfish_dyndnsserver

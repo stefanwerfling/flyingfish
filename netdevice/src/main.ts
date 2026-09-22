@@ -19,6 +19,8 @@ import {Config} from './inc/Config/Config.js';
 import {DhcpClientRunner} from './inc/Wan/DhcpClientRunner.js';
 import {WanConfigClient} from './inc/Wan/WanConfigClient.js';
 import {WanLeaseReporter} from './inc/Wan/WanLeaseReporter.js';
+import {HostRouteProbe} from './inc/Discovery/HostRouteProbe.js';
+import {HostInfoReporter} from './inc/Discovery/HostInfoReporter.js';
 import {DhcpLeaseReporter} from './inc/Lan/DhcpLeaseReporter.js';
 import {DnsmasqRunner} from './inc/Lan/DnsmasqRunner.js';
 import {ensureLanAddress, ensureLanIpv6, ensureLanLinkUp} from './inc/Lan/LanAddress.js';
@@ -148,6 +150,7 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
         const lanConfigClient = new LanConfigClient(tConfig.registry.url, tConfig.registry.secret);
         const lanReporter = new DhcpLeaseReporter(tConfig.registry.url, tConfig.registry.secret);
         const interfaceReporter = new InterfaceReporter(tConfig.registry.url, tConfig.registry.secret);
+        const hostInfoReporter = new HostInfoReporter(tConfig.registry.url, tConfig.registry.secret);
         const netfilterClient = new NetfilterConfigClient(tConfig.registry.url, tConfig.registry.secret);
         const netfilterApplier = new NetfilterApplier();
         const intervalMs = tConfig.netdevice?.reconcileIntervalMs ?? Config.DEFAULT_RECONCILE_INTERVAL_MS;
@@ -284,6 +287,17 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
             await interfaceReporter.report(HostInterfaceScanner.scan());
         };
 
+        // Host info (absorbed from the former ff-himhip part): probe the default-route
+        // host IP + gateway (+ gateway MAC via the neighbour table) and report it to the
+        // Hub over HTTP (replaces HimHIP-over-Redis).
+        const reconcileHostInfo = async(): Promise<void> => {
+            const hostInfo = await HostRouteProbe.probe();
+
+            if (hostInfo !== null) {
+                await hostInfoReporter.report(hostInfo);
+            }
+        };
+
         // Netfilter (absorbed from the former ff-netfilter part): pull the resolved
         // router config + program the host nftables ruleset via the native binding.
         const reconcileNetfilter = async(): Promise<void> => {
@@ -298,6 +312,7 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
 
         const reconcileOnce = async(): Promise<void> => {
             await reconcileInterfaces();
+            await reconcileHostInfo();
             await reconcileWan();
             await reconcileLan();
             await reconcileNetfilter();

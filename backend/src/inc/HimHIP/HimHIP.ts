@@ -1,13 +1,15 @@
-import {RedisChannel, Logger} from '@stefanwerfling/figtree';
-import {RedisChannels} from 'flyingfish_core';
-import {HimHIPData, SchemaHimHIPData} from 'flyingfish_schemas';
+import {HimHIPData} from 'flyingfish_schemas';
 
 export type onEventDataUpdate = (data: HimHIPData|null) => void;
 
 /**
- * HimHIP - how is my host ip
+ * HimHIP — how is my host ip. An in-process store for this node's host/gateway facts
+ * (hostip, gateway, interface, gatewaymac). The data is reported by the `netdevice` part
+ * over HTTP (`POST /json/router/host-info`); the former Redis pub/sub transport was
+ * removed. Consumers (UpnpNat, DynDns, the dashboard, the HTTP→HTTPS redirect host) read
+ * {@link HimHIP.getData} / subscribe via {@link HimHIP.registerEvent}.
  */
-export class HimHIP extends RedisChannel<HimHIPData> {
+export class HimHIP {
 
     /**
      * data
@@ -46,32 +48,6 @@ export class HimHIP extends RedisChannel<HimHIPData> {
      */
     public static registerEvent(event: onEventDataUpdate): void {
         HimHIP._events.push(event);
-    }
-
-    /**
-     * Constructor
-     */
-    public constructor() {
-        super(RedisChannels.HIMHIP_UPDATE_RES);
-    }
-
-    /**
-     * Listen
-     * @param {HimHIPData} data
-     */
-    public async listen(data: HimHIPData): Promise<void> {
-        Logger.getLogger().silly(
-            'HimHIP::listen: receive data -> Gateway-Mac: "%s", Network: "%s", Gateway: "%s, Interface: "%s", Host-IP: "%s"',
-            data.gatewaymac,
-            data.network,
-            data.gateway,
-            data.interface,
-            data.hostip
-        );
-
-        if (SchemaHimHIPData.validate(data, [])) {
-            HimHIP.setData(data);
-        }
     }
 
 }

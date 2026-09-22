@@ -1,10 +1,12 @@
 /**
- * Unit tests for the backend HimHIP Redis-IPC receiver (phase 3, IPC).
+ * Unit tests for the backend HimHIP in-process store.
  *
- * HimHIP is the RedisChannel the backend subscribes to (HIMHIP_UPDATE_RES): it
- * validates the incoming host-network data and publishes it to registered
- * listeners. These tests cover that receive path directly (network-free - no
- * Redis needed, the channel just calls listen()).
+ * HimHIP is now a plain static store for this node's host/gateway facts. The
+ * facts are reported by the netdevice part over HTTP (POST /json/router/host-info,
+ * schema-validated at the route layer) and land here via setData(); consumers
+ * read getData() or subscribe with registerEvent(). The former Redis pub/sub
+ * receiver (with its own schema validation) was removed. These tests cover the
+ * store's set/get and event-fan-out semantics.
  */
 import {HimHIPData} from 'flyingfish_schemas';
 import {HimHIP} from '../../src/inc/HimHIP/HimHIP.js';
@@ -19,20 +21,20 @@ const sampleData = (): HimHIPData => {
     };
 };
 
-describe('HimHIP receiver (Redis IPC)', () => {
+describe('HimHIP store', () => {
     beforeEach(() => {
         HimHIP.setData(null);
     });
 
-    test('listen stores valid host data', async() => {
-        await new HimHIP().listen(sampleData());
+    test('setData stores host data readable via getData', () => {
+        HimHIP.setData(sampleData());
 
         expect(HimHIP.getData()).toEqual(sampleData());
     });
 
-    test('listen ignores schema-invalid data', async() => {
-        // Missing the required string fields -> must not overwrite the state.
-        await new HimHIP().listen({gatewaymac: 'aa:bb:cc:dd:ee:ff'} as unknown as HimHIPData);
+    test('setData(null) clears the stored host data', () => {
+        HimHIP.setData(sampleData());
+        HimHIP.setData(null);
 
         expect(HimHIP.getData()).toBeNull();
     });

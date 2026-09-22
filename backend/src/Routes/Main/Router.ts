@@ -25,6 +25,7 @@ import {
     SchemaDefaultReturn,
     SchemaDhcpLeasesReport,
     SchemaDhcpServerConfigEntry,
+    SchemaHimHIPData,
     SchemaNatPolicyEntry,
     SchemaNetworkInterfaceEntry,
     SchemaPortForwardEntry,
@@ -36,6 +37,7 @@ import {
     StatusCodes
 } from 'flyingfish_schemas';
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
+import {HimHIP} from '../../inc/HimHIP/HimHIP.js';
 import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPermission.js';
 
 /**
@@ -322,6 +324,15 @@ export class Router extends DefaultRoute {
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'ff-wan reports the WAN DHCP lease', bodySchema: SchemaWanLeaseReport, responseBodySchema: SchemaDefaultReturn});
+
+        // netdevice reports this node's host/gateway facts (hostip, gateway, interface,
+        // gatewaymac) over HTTP — replaces the former HimHIP-over-Redis transport.
+        // ServiceOrUserLogin (registry secret / mTLS).
+        this._post('/json/router/host-info', FlyingFishRouteCheckServiceOrUserLogin, async(_req, _res, data): Promise<DefaultReturn> => {
+            HimHIP.setData(data.body!);
+
+            return {statusCode: StatusCodes.OK};
+        }, {description: 'netdevice reports the host IP / gateway (HimHIP)', bodySchema: SchemaHimHIPData, responseBodySchema: SchemaDefaultReturn});
 
         // The resolved LAN DHCP config the ff-lan part pulls (it builds the dnsmasq config
         // from this). ServiceOrUserLogin (registry secret / mTLS).
