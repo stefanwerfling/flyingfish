@@ -193,22 +193,22 @@ export class ListensPortFlow {
      */
     protected _build(streams: PortFlowListen[], https: PortFlowListen[], anyAccess: boolean, pop: Record<string, PopData>): string {
         const W = 1040;
-        const rowH = 104;
+        const rowH = 74;
         const hasDns = streams.some((s) => ListensPortFlow._kind(s) === 'dns');
         const destCount = https.length + (hasDns ? 1 : 0);
         const nRows = Math.max(streams.length, destCount, 3);
-        const topPad = 104;
-        const H = topPad + (nRows * rowH) + 24;
+        const topPad = 78;
+        const H = topPad + (nRows * rowH) + 18;
         const centerY = topPad + ((nRows * rowH) / 2);
 
         // columns (left → right): internet · ports · nginx L4 band · destinations · backends
-        const inR = 120;
-        const portX = 160; const portW = 108; const portH = 42; const portR = portX + portW;
-        const bandX = 334; const bandW = 168; const bandR = bandX + bandW;
-        const destX = 540; const destW = 124; const destH = 44; const destR = destX + destW;
-        const backX = 850; const backW = 120; const backH = 46;
-        const stepX = 352; const stepW = 132; const stepH = 38; const stepCx = stepX + (stepW / 2);
-        const s1 = centerY - 58; const s2 = centerY; const s3 = centerY + 58;
+        const inR = 118;
+        const portX = 158; const portW = 98; const portH = 34; const portR = portX + portW;
+        const bandX = 320; const bandW = 152; const bandR = bandX + bandW;
+        const destX = 520; const destW = 110; const destH = 34; const destR = destX + destW;
+        const backX = 840; const backW = 108; const backH = 36;
+        const stepX = 330; const stepW = 132; const stepH = 29; const stepCx = stepX + (stepW / 2);
+        const s1 = centerY - 41; const s2 = centerY; const s3 = centerY + 41;
 
         const e: string[] = [];
 
@@ -229,9 +229,9 @@ export class ListensPortFlow {
 
         // internet + the nginx L4 stage (steps shown INSIDE the band; lanes pass through it,
         // so the arrows stay straight and the L4 sequence stays visible)
-        e.push(ListensPortFlow._box(28, centerY - 26, 92, 52, 'var(--faint)', 'var(--surface2)'));
-        e.push(`<text class="pf-node-lbl" x="74" y="${centerY - 2}" text-anchor="middle">Internet</text>`);
-        e.push(`<text class="pf-node-sub" x="74" y="${centerY + 12}" text-anchor="middle">clients</text>`);
+        e.push(ListensPortFlow._box(30, centerY - 20, 88, 40, 'var(--faint)', 'var(--surface2)'));
+        e.push(`<text class="pf-node-lbl" x="74" y="${centerY - 1}" text-anchor="middle">Internet</text>`);
+        e.push(`<text class="pf-node-sub" x="74" y="${centerY + 11}" text-anchor="middle">clients</text>`);
         e.push(ListensPortFlow._step(stepX, s1 - (stepH / 2), stepW, stepH, 'ssl_preread', 'protocol · SNI'));
         e.push(ListensPortFlow._step(stepX, s2 - (stepH / 2), stepW, stepH, 'IP access check', anyAccess ? 'active' : 'opt-in'));
         e.push(ListensPortFlow._step(stepX, s3 - (stepH / 2), stepW, stepH, 'domain split', 'by SNI'));

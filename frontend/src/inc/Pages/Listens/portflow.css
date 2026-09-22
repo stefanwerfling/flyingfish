@@ -30,8 +30,8 @@
 .ffr-portflow .pf-legend { display: flex; gap: 13px; flex-wrap: wrap; font-size: 11.5px; color: var(--soft); }
 .ffr-portflow .pf-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .ffr-portflow .pf-legend i { width: 15px; height: 3px; border-radius: 2px; display: inline-block; }
-.ffr-portflow .pf-canvas { padding: 10px 12px 14px; overflow-x: auto; position: relative; }
-.ffr-portflow svg { display: block; width: 100%; min-width: 880px; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.ffr-portflow .pf-canvas { padding: 8px 12px 12px; overflow-x: auto; position: relative; }
+.ffr-portflow svg { display: block; width: 100%; max-width: 800px; min-width: 600px; margin: 0 auto; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 
 .ffr-portflow .pf-cont-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 .ffr-portflow .pf-node { stroke-width: 1.2; }
