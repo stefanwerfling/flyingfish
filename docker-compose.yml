@@ -86,14 +86,16 @@ services:
         max-size: "500k"
         max-file: "50"
     healthcheck:
-      # Gates the part containers below (they trust this cert via
-      # NODE_EXTRA_CA_CERTS, see 9.2.1) - only mark this container healthy once
-      # the self-signed cert has actually been generated/persisted.
-      test: [ "CMD", "test", "-f", "/var/lib/flyingfish/ssl/server.crt" ]
-      interval: 2s
-      timeout: 3s
+      # Probe the actual HTTPS listener on :3000, not just the cert file: the
+      # server only listens after it has generated+loaded the self-signed cert, so
+      # a successful connect proves BOTH the listener is up AND the cert the part
+      # containers trust (NODE_EXTRA_CA_CERTS, see 9.2.1) exists. The old
+      # `test -f server.crt` marked the node healthy before the port was ready.
+      test: [ "CMD", "node", "-e", "require('https').get({host:'127.0.0.1',port:3000,rejectUnauthorized:false,timeout:2000},r=>process.exit(0)).on('error',()=>process.exit(1)).on('timeout',()=>process.exit(1))" ]
+      interval: 5s
+      timeout: 4s
       retries: 60
-      start_period: 10s
+      start_period: 30s
     depends_on:
       mariadb:
         condition: service_healthy

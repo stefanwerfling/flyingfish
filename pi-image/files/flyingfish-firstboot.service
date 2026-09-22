@@ -18,7 +18,10 @@ ExecStart=/opt/flyingfish/firstboot.sh
 RemainAfterExit=yes
 StandardOutput=journal+console
 StandardError=journal+console
-TimeoutStartSec=900
+# No start timeout: the one-shot `docker load`s a multi-GB image tarball onto a
+# slow Pi SD card, which can take well over the old 900s and must not be killed
+# mid-unpack (leaves the image store half-populated).
+TimeoutStartSec=infinity
 
 [Install]
 WantedBy=multi-user.target

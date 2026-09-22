@@ -82,9 +82,33 @@ Pi is the LAN gateway).
   `files/docker-compose.yml` and the repo's root `docker-compose.yml`. When the
   version bumps, update the `OWN_IMAGES` list in `build.sh` and the tags in
   `files/docker-compose.yml` together.
-- **Full stack.** The Pi runs the complete stack (incl. influxdb) — same
-  services as `setup/docker-compose.yml` plus the two router parts. Drop
-  services you don't need by editing `files/docker-compose.yml` before building.
+- **Router-minimal stack.** The Pi runs a slimmed 7-container profile tuned for
+  the ~905 MiB Pi 3: mariadb, backend, pkiserver, nginxserver, dnsserver, and the
+  two host-network router parts (netfilter + netdevice). Redis, InfluxDB and himhip
+  are gone from the codebase entirely; clusterserver/sshserver/ddnsserver are
+  dropped for RAM (re-add them in `files/docker-compose.yml` on a Pi 4/5).
+- **First-boot cost is pre-paid.** The nginx dhparam is baked into the `flyingfish`
+  image (`Dockerfile`) so Docker auto-seeds it into the fresh volume — the backend
+  skips the 4096-bit generation that took 30+ min on a Pi 3 and blocked the first
+  boot. `flyingfish-firstboot.service` has no start timeout (the multi-GB
+  `docker load` must not be killed mid-unpack). The backend healthcheck probes the
+  `:3000` HTTPS listener, so "healthy" means actually serving, not just cert-on-disk.
+
+## Updating an already-flashed Pi
+
+Pushing rebuilt images to a running Pi 3 is RAM-constrained — learned the hard way:
+
+- **Never scp/rsync the tarball to `/tmp`** — it is a RAM tmpfs (~450 MiB); a
+  multi-hundred-MB tar there triggers an OOM death-spiral (sshd stops responding,
+  needs a power-cycle). Copy to `/root` or `/opt` (the SD card) instead.
+- Use `rsync --partial --append-verify` (the link is flaky for large transfers;
+  plain `scp` / `scp -C` broke mid-copy — the layers are already compressed).
+- **Stop the target container before `docker load`** (`docker stop flyingfish_service`)
+  to free headroom for the layer unpack.
+- After any **ungraceful reboot**, verify which image ID each container runs
+  (`docker ps --format '{{.Image}} {{.CreatedAt}}'`) — containerd's boltdb tag
+  metadata can roll back to older images if it wasn't fsync'd, silently reverting a
+  fresh deploy.
 
 ## Files
 

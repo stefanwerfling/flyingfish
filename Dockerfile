@@ -81,6 +81,15 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/letsencrypt /var/log/flyingfish /var/lib/flyingfish
 
+# Pre-generate the nginx dhparam at the volume mount-point so a FRESH install's
+# empty `flyingfish` volume is auto-seeded with it by Docker on first mount. The
+# backend's NginxProcess._ensureDhparam then finds it and skips generation — which
+# on a Raspberry Pi 3 takes 30+ minutes and blocked the very first boot. Generated
+# here at build time (fast on the builder; 2048 keeps the emulated arm64 build
+# quick — the runtime still generates 4096 for any install missing the file).
+RUN mkdir -p /var/lib/flyingfish/nginx \
+    && openssl dhparam -out /var/lib/flyingfish/nginx/dhparam.pem 2048
+
 WORKDIR /opt/flyingfish
 COPY --from=build /opt/flyingfish /opt/flyingfish
 

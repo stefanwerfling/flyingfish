@@ -83,11 +83,11 @@ services:
         max-size: "500k"
         max-file: "50"
     healthcheck:
-      test: [ "CMD", "test", "-f", "/var/lib/flyingfish/ssl/server.crt" ]
-      interval: 2s
-      timeout: 3s
+      test: [ "CMD", "node", "-e", "require('https').get({host:'127.0.0.1',port:3000,rejectUnauthorized:false,timeout:2000},r=>process.exit(0)).on('error',()=>process.exit(1)).on('timeout',()=>process.exit(1))" ]
+      interval: 5s
+      timeout: 4s
       retries: 60
-      start_period: 10s
+      start_period: 30s
     depends_on:
       mariadb:
         condition: service_healthy
