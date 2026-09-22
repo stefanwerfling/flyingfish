@@ -45,9 +45,14 @@ export type NavEntity = {
     status?: 'up' | 'warn' | 'off';
     badges?: {label: string; cls?: string;}[];
     subtitle?: string;
+    /** Node operating mode; in 'attach' the Router category is hidden. */
+    mode?: 'attach' | 'router';
     tabs?: NavTab[];
     groups?: NavGroup[];
 };
+
+/** Category keys that only apply in Router mode (hidden in Attach mode). */
+const ROUTER_ONLY_GROUPS = ['router'];
 
 /**
  * The whole-app navigation model: one Datacenter + N nodes.
@@ -104,6 +109,21 @@ export class ClusterNav {
     }
 
     /**
+     * The node's categories visible in the current mode (Router-only groups are hidden in
+     * Attach mode).
+     * @protected
+     */
+    protected static _visibleGroups(node: NavEntity): NavGroup[] {
+        const groups = node.groups ?? [];
+
+        if (node.mode === 'attach') {
+            return groups.filter((g) => !ROUTER_ONLY_GROUPS.includes(g.key));
+        }
+
+        return groups;
+    }
+
+    /**
      * Re-render the tree from the last inputs (used when a category is toggled).
      * @protected
      */
@@ -145,18 +165,19 @@ export class ClusterNav {
 
         for (const node of model.nodes) {
             const nodeSel = owner.id === node.id;
+            const groups = ClusterNav._visibleGroups(node);
             ClusterNav._treeRow(tree, {
                 level: 1, icon: node.icon, label: node.title, status: node.status,
-                caret: (node.groups ?? []).length > 0 ? (nodeSel ? '▾' : '▸') : '',
+                caret: groups.length > 0 ? (nodeSel ? '▾' : '▸') : '',
                 selected: false, dim: node.status === 'warn',
-                onClick: () => loadPage((node.groups ?? [])[0]?.leaves[0]?.make())
+                onClick: () => loadPage(groups[0]?.leaves[0]?.make())
             });
 
             if (!nodeSel) {
                 continue;
             }
 
-            for (const group of node.groups ?? []) {
+            for (const group of groups) {
                 const gKey = `${node.id}/${group.key}`;
                 const activeGroup = group.leaves.some((l) => l.key === currentKey);
                 const expanded = activeGroup || ClusterNav._expanded.has(gKey);
@@ -233,7 +254,8 @@ export class ClusterNav {
         if (isDc) {
             tabItems = owner.tabs ?? [];
         } else {
-            const group = (owner.groups ?? []).find((g) => g.leaves.some((l) => l.key === currentKey)) ?? (owner.groups ?? [])[0];
+            const groups = ClusterNav._visibleGroups(owner);
+            const group = groups.find((g) => g.leaves.some((l) => l.key === currentKey)) ?? groups[0];
             groupLabel = group?.label ?? '';
             tabItems = (group?.leaves ?? []).map((l) => ({key: l.key, label: l.label, icon: l.icon, make: l.make}));
         }

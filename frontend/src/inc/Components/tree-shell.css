@@ -181,3 +181,15 @@ body.ffx-app .ffx-topbar .ffx-obj { padding: 12px 20px 0; }
 :root[data-theme="dark"] .ffx-page{--bg:#0e1618;--surface:#152226;--surface2:#1b2c31;--line:#2a3d43;--ink:#e8f1f2;--soft:#a7bcc1;--faint:#6f878d;--accent:#2bb9c9;--accent-ink:#7fdbe6;--v6:#c98fdd;--good:#43c088;--warn:#e6b95a;--shadow:0 1px 2px rgba(0,0,0,.3)}
 .ffx-page .ffx-sectitle { font-size: 15px; font-weight: 650; color: var(--ink); margin: 0 0 4px; }
 .ffx-page .ffx-secnote { font-size: 12.5px; color: var(--soft); margin: 0 0 16px; }
+
+/* System → Mode selector (attach / router option cards) */
+.ffx-page .sm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-width: 760px; }
+.ffx-page .sm-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+.ffx-page .sm-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.ffx-page .sm-hd { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.ffx-page .sm-ic { font-size: 20px; }
+.ffx-page .sm-t { font-size: 15px; font-weight: 650; color: var(--ink); }
+.ffx-page .sm-badge { margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 2px 8px; border-radius: 20px; }
+.ffx-page .sm-note { font-size: 12.5px; color: var(--soft); line-height: 1.5; }
+.ffx-page .sm-btn { margin-top: 12px; font-size: 13px; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.ffx-page .sm-btn:hover { background: var(--accent-ink); }

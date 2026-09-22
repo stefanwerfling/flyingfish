@@ -19,6 +19,7 @@ import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat.js';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway.js';
 import {Pki as PkiPage} from './inc/Pages/Pki.js';
 import {Registry as RegistryPage} from './inc/Pages/Registry.js';
+import {SystemMode, getNodeMode} from './inc/Pages/SystemMode.js';
 import {Users as UsersPage} from './inc/Pages/Users.js';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator.js';
 import {UtilColor} from './inc/Utils/UtilColor.js';
@@ -161,12 +162,16 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                     status: 'up',
                     badges: [{label: 'CA · Hub', cls: 'ca'}, {label: 'this node', cls: 'plain'}],
                     subtitle: 'this node',
+                    // operating mode (frontend placeholder until the backend SystemConfig
+                    // lands): 'attach' hides the Router category, 'router' shows it.
+                    mode: getNodeMode(),
                     // a node's features grouped into the four pillars: System · Router ·
                     // Reverse Proxy · DNS. Each category expands to its pages in the tree.
                     groups: [
                         {
                             key: 'system', label: 'System', icon: '⚙️', leaves: [
                                 {key: 'dashboard', label: 'Summary', icon: '📊', make: (): BasePage => new DashboardPage()},
+                                {key: 'mode', label: 'Mode', icon: '🎛️', make: (): BasePage => new SystemMode()},
                                 {key: 'gateway', label: 'Gateway', icon: '🌐', make: (): BasePage => new GatewayPage()},
                                 {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()}
                             ]
