@@ -160,6 +160,7 @@ export class Domains extends BasePage {
                         ttl: parseInt(this._domainRecordDialog.getTTL(), 10),
                         value: this._domainRecordDialog.getValue(),
                         update_by_dnsclient: this._domainRecordDialog.getUpdateByDynDnsClient(),
+                        follow_node: this._domainRecordDialog.getFollowNode(),
                         last_update: 0
                     }
                 })) {
@@ -531,6 +532,7 @@ export class Domains extends BasePage {
                                             this._domainRecordDialog.setTTL(`${record.ttl}`);
                                             this._domainRecordDialog.setValue(record.value);
                                             this._domainRecordDialog.setUpdateByDynDnsClient(record.update_by_dnsclient);
+                                            this._domainRecordDialog.setFollowNode(record.follow_node ?? false);
                                             this._domainRecordDialog.show();
                                         },
                                         IconFa.edit

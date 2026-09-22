@@ -21,12 +21,19 @@ import os from 'os';
 import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {Dns2Server} from './inc/Dns/Dns2Server.js';
+import {NodeTargetClient} from './inc/System/NodeTargetClient.js';
 
 /**
  * How often the DNS server refreshes the cluster domain failover overrides from the
  * Hub (ms). Well below the node liveness stale window so failover takes effect fast.
  */
 const CLUSTER_DOMAINS_REFRESH_MS = 15000;
+
+/**
+ * How often the DNS server refreshes this node's resolved target IP from the backend (ms),
+ * used to answer follow-node A/AAAA records (Attach/Router epic).
+ */
+const NODE_TARGET_REFRESH_MS = 15000;
 
 /**
  * Main
@@ -189,6 +196,25 @@ const CLUSTER_DOMAINS_REFRESH_MS = 15000;
                 Logger.getLogger().warn('Cluster domain failover refresh failed (will retry next interval)', error);
             });
         }, CLUSTER_DOMAINS_REFRESH_MS).unref();
+
+        // Node target IP (Attach/Router epic): pull this node's resolved reachable IP from
+        // the backend so follow-node A/AAAA records answer with it. Best-effort: a transient
+        // backend outage keeps the last known value.
+        const nodeTargetClient = new NodeTargetClient(tConfig.registry.url, tConfig.registry.secret);
+
+        const refreshNodeTargetIp = async(): Promise<void> => {
+            Dns2Server.getInstance().setNodeTargetIp(await nodeTargetClient.fetchTargetIp());
+        };
+
+        await refreshNodeTargetIp().catch((error: unknown): void => {
+            Logger.getLogger().warn('Node target IP refresh failed on start (will retry)', error);
+        });
+
+        setInterval((): void => {
+            refreshNodeTargetIp().catch((error: unknown): void => {
+                Logger.getLogger().warn('Node target IP refresh failed (will retry next interval)', error);
+            });
+        }, NODE_TARGET_REFRESH_MS).unref();
     }
 })().catch((error: unknown): void => {
     // The logging framework may not be seated yet if boot fails this early,

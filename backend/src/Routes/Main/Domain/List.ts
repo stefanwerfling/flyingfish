@@ -31,6 +31,7 @@ export class List {
                     ttl: record.ttl,
                     value: record.dvalue,
                     update_by_dnsclient: record.update_by_dnsclient,
+                    follow_node: record.follow_node,
                     last_update: record.last_update
                 });
             }

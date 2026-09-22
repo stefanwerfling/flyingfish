@@ -6,10 +6,14 @@ import {
     SchemaDefaultReturn,
     SchemaSystemConfigResponse,
     SchemaSystemConfigSaveRequest,
+    SchemaSystemEffectiveConfigResponse,
     StatusCodes,
-    SystemConfigResponse
+    SystemConfigResponse,
+    SystemEffectiveConfigResponse
 } from 'flyingfish_schemas';
+import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
+import {NodeTargetResolver} from '../../inc/System/NodeTargetResolver.js';
 
 /**
  * System — the node's operating mode + target settings (Attach/Router epic). Reads/writes
@@ -43,6 +47,27 @@ export class System extends DefaultRoute {
             }
         );
 
+        // The resolved node target IP for service parts (the DNS server polls this for its
+        // follow-node records). Registry-secret guarded (service) or a user login.
+        this._get(
+            '/json/system/effective-config',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<SystemEffectiveConfigResponse> => {
+                const config = await SystemConfigServiceDB.getInstance().getOrCreate();
+                const targetIp = await NodeTargetResolver.resolve();
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    mode: config.mode,
+                    target_ip: targetIp
+                };
+            },
+            {
+                description: 'Read the node resolved effective config (target IP + mode) for service parts',
+                responseBodySchema: SchemaSystemEffectiveConfigResponse
+            }
+        );
+
         this._post(
             '/json/system/config/save',
             FlyingFishRouteCheckUserLogin,
@@ -62,6 +87,9 @@ export class System extends DefaultRoute {
                 }
 
                 await service.save(config);
+
+                // reflect the new mode/target in the HTTP→HTTPS redirect host right away
+                await NodeTargetResolver.applyToRedirectHost();
 
                 return {statusCode: StatusCodes.OK};
             },

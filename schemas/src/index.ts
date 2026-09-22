@@ -406,7 +406,9 @@ export {
     SchemaSystemConfigResponse,
     SystemConfigResponse,
     SchemaSystemConfigSaveRequest,
-    SystemConfigSaveRequest
+    SystemConfigSaveRequest,
+    SchemaSystemEffectiveConfigResponse,
+    SystemEffectiveConfigResponse
 } from './Backend/Routes/System.js';
 
 export {SchemaDomainCheckReachability, DomainCheckReachability} from './Backend/Service/SslCertService.js';

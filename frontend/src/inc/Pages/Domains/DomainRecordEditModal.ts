@@ -64,6 +64,13 @@ export class DomainRecordEditModal {
     protected readonly _switchUByDynDnsClient: FfrSwitch;
 
     /**
+     * switch: follow this node's resolved target IP (Attach/Router epic). For A/AAAA records
+     * the answer follows the node target IP instead of the stored value.
+     * @protected
+     */
+    protected readonly _switchFollowNode: FfrSwitch;
+
+    /**
      * constructor
      */
     public constructor() {
@@ -106,6 +113,9 @@ export class DomainRecordEditModal {
         const secOptions = new FfrSection(body, 'Options');
         this._switchUByDynDnsClient = new FfrSwitch('Update by DynDns Client', false);
         secOptions.element.append(this._switchUByDynDnsClient.element);
+
+        this._switchFollowNode = new FfrSwitch('Follow node target IP (A/AAAA)', false);
+        secOptions.element.append(this._switchFollowNode.element);
     }
 
     /**
@@ -252,6 +262,21 @@ export class DomainRecordEditModal {
     }
 
     /**
+     * setFollowNode
+     * @param follow
+     */
+    public setFollowNode(follow: boolean): void {
+        this._switchFollowNode.setOn(follow);
+    }
+
+    /**
+     * getFollowNode
+     */
+    public getFollowNode(): boolean {
+        return this._switchFollowNode.isOn();
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -263,6 +288,7 @@ export class DomainRecordEditModal {
         this.setTTL('300');
         this.setValue('');
         this.setUpdateByDynDnsClient(false);
+        this.setFollowNode(false);
     }
 
 }

@@ -61,6 +61,16 @@ export class DomainRecord extends DBBaseEntityId {
     public update_by_dnsclient!: boolean;
 
     /**
+     * follow node target IP — when set, an A/AAAA record answers with this node's resolved
+     * target IP (Attach/Router epic) instead of its stored {@link dvalue}. Default off.
+     */
+    @Column({
+        type: 'bool',
+        default: false
+    })
+    public follow_node!: boolean;
+
+    /**
      * last update
      */
     @Column({

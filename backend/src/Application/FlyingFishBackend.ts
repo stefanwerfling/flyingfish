@@ -1,4 +1,4 @@
-import {BackendApp, BaseHttpServer, MariaDBService, PluginService} from '@stefanwerfling/figtree';
+import {BackendApp, MariaDBService, PluginService} from '@stefanwerfling/figtree';
 import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
 import {PluginServiceNames} from 'flyingfish_core';
 import os from 'os';
@@ -24,6 +24,7 @@ import {HubRegistryService} from './Hub/HubRegistryService.js';
 import {registerColocatedParts} from './Hub/PartCapabilityManifests.js';
 import {PkiTrust} from './Hub/PkiTrust.js';
 import {NginxStatusService} from './Service/NginxStatusService.js';
+import {NodeTargetResolver} from '../inc/System/NodeTargetResolver.js';
 
 /**
  * FlyingFishBackend
@@ -187,11 +188,12 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         }
 
         // HimHIP host/gateway facts are reported by the netdevice part over HTTP
-        // (POST /json/router/host-info → HimHIP.setData). Point the HTTP->HTTPS
-        // redirect at the real host IP whenever HimHIP updates.
+        // (POST /json/router/host-info → HimHIP.setData). Re-point the HTTP->HTTPS
+        // redirect at the node's resolved target IP whenever the host facts change
+        // (the resolver honours the SystemConfig mode/override, Attach/Router epic).
         HimHIP.registerEvent((data): void => {
             if (data !== null) {
-                BaseHttpServer.setListenHost(data.hostip);
+                void NodeTargetResolver.applyToRedirectHost();
             }
         });
     }

@@ -11,6 +11,7 @@ export const SchemaDomainRecord = Vts.object({
     ttl: Vts.number(),
     value: Vts.string(),
     update_by_dnsclient: Vts.boolean(),
+    follow_node: Vts.optional(Vts.boolean()),
     last_update: Vts.number()
 });
 

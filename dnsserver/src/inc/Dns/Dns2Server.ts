@@ -115,6 +115,14 @@ export class Dns2Server extends ServiceAbstract {
     protected _clusterActiveIps: Map<string, string> = new Map();
 
     /**
+     * This node's resolved target IP (Attach/Router epic): a follow-node A/AAAA record
+     * answers with this instead of its stored value. Refreshed periodically from the
+     * backend; '' = not resolvable yet (follow-node records then keep their stored value).
+     * @protected
+     */
+    protected _nodeTargetIp: string = '';
+
+    /**
      * TTL cache for the LAN caching resolver (Pi-router epic, Phase 5): upstream answers
      * keyed by `<name>|<type>`, so repeated internal lookups are served from memory.
      * @protected
@@ -139,6 +147,31 @@ export class Dns2Server extends ServiceAbstract {
      */
     public setClusterActiveIps(activeIps: Map<string, string>): void {
         this._clusterActiveIps = activeIps;
+    }
+
+    /**
+     * Set this node's resolved target IP (Attach/Router epic), used to answer follow-node
+     * A/AAAA records. Pass '' to clear (follow-node records then keep their stored value).
+     * @param targetIp - the resolved node target IP (IPv4 or IPv6), or '' when unavailable
+     */
+    public setNodeTargetIp(targetIp: string): void {
+        this._nodeTargetIp = targetIp;
+    }
+
+    /**
+     * The node target IP if it is a usable IPv4 address (dotted quad), else ''.
+     * @protected
+     */
+    protected _nodeTargetIp4(): string {
+        return (/^\d{1,3}(?:\.\d{1,3}){3}$/u).test(this._nodeTargetIp) ? this._nodeTargetIp : '';
+    }
+
+    /**
+     * The node target IP if it is a usable IPv6 address (contains a colon), else ''.
+     * @protected
+     */
+    protected _nodeTargetIp6(): string {
+        return this._nodeTargetIp.includes(':') ? this._nodeTargetIp : '';
     }
 
     /**
@@ -262,15 +295,24 @@ export class Dns2Server extends ServiceAbstract {
 
                         case PacketTypes.A: {
                             // Cluster failover (9.5.14): if this domain is cluster-managed,
-                            // answer with the active node's IP instead of the local record.
+                            // answer with the active node's IP. Otherwise, a follow-node
+                            // record (Attach/Router epic) answers with this node's resolved
+                            // target IP when known; else the local record value.
                             const activeIp = this._clusterActiveIps.get(question.name.toLowerCase());
-                            response.answers.push(this._answer(question, new A(activeIp ?? record.dvalue), record.ttl));
+                            const followIp = record.follow_node ? this._nodeTargetIp4() : '';
+                            const aValue = activeIp ?? (followIp !== '' ? followIp : record.dvalue);
+                            response.answers.push(this._answer(question, new A(aValue), record.ttl));
                             break;
                         }
 
-                        case PacketTypes.AAAA:
-                            response.answers.push(this._answer(question, new AAAA(record.dvalue), record.ttl));
+                        case PacketTypes.AAAA: {
+                            // follow-node (Attach/Router epic): answer with this node's
+                            // resolved target IP when it is IPv6 and known; else the record.
+                            const followIp6 = record.follow_node ? this._nodeTargetIp6() : '';
+                            const aaaaValue = followIp6 !== '' ? followIp6 : record.dvalue;
+                            response.answers.push(this._answer(question, new AAAA(aaaaValue), record.ttl));
                             break;
+                        }
 
                         case PacketTypes.NS:
                             response.answers.push(this._answer(question, new NS(record.dvalue), record.ttl));

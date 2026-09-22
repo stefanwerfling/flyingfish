@@ -31,6 +31,22 @@ export const SchemaSystemConfigResponse = SchemaDefaultReturn.extend({
 export type SystemConfigResponse = ExtractSchemaResultType<typeof SchemaSystemConfigResponse>;
 
 /**
+ * The node's RESOLVED effective config: the single reachable target IP downstream parts
+ * (the DNS server's follow-node records) should point at, plus the operating mode. Empty
+ * `target_ip` means the node's address is not resolvable yet (no override, no host facts).
+ * Served registry-secret guarded for service parts.
+ */
+export const SchemaSystemEffectiveConfigResponse = SchemaDefaultReturn.extend({
+    mode: Vts.string(),
+    target_ip: Vts.string()
+});
+
+/**
+ * SystemEffectiveConfigResponse
+ */
+export type SystemEffectiveConfigResponse = ExtractSchemaResultType<typeof SchemaSystemEffectiveConfigResponse>;
+
+/**
  * Save request for the node's system config (mode required, targets optional).
  */
 export const SchemaSystemConfigSaveRequest = Vts.object({

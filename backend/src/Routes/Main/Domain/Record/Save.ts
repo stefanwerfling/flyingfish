@@ -32,6 +32,7 @@ export class Save {
         aRecord.ttl = data.record.ttl;
         aRecord.dvalue = data.record.value;
         aRecord.update_by_dnsclient = data.record.update_by_dnsclient;
+        aRecord.follow_node = data.record.follow_node ?? false;
 
         // when update by dnsclient, then set value for ip by public ip
         if (aRecord.dvalue === '' && aRecord.update_by_dnsclient) {
