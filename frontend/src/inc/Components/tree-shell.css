@@ -104,6 +104,10 @@ body.ffx-full .content-wrapper .col-12 { padding: 0 !important; }
 .main-sidebar.ffx-sb {
   --nav-bg:#17242a;--nav-bg2:#1e2f36;--nav-ink:#c7d6da;--nav-faint:#82989e;--nav-active:#2bb9c9;--nav-guide:#31444b;
   --good:#2ea16b;--warn:#d69a2d;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+  /* match the mock: the intended teal-dark ground (not admin-lte's grey) + the app sans
+     stack (not admin-lte's Source Sans Pro) */
+  background-color: var(--nav-bg) !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   overflow-y: auto; padding: 0 0 20px;
 }
 .ffx-sb .ffx-brand { display: flex; align-items: center; gap: 9px; padding: 14px 16px; font-weight: 650; font-size: 16px; color: #fff; }
