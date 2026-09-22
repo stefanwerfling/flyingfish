@@ -8,16 +8,16 @@
 #  - Secrets come from /opt/flyingfish/.env (generated on first boot).
 #  - netfilter + netdevice run with network_mode: host + NET_ADMIN.
 #
-# DROPPED for RAM (all optional for a single-node router):
-#   - influxdb  : metrics timeseries (soft dep in code).
-#   - redis     : pub/sub signaling only (soft dep; HTTP server no longer depends
-#                 on it — see FlyingFishConfig redis fix).
-#   - himhip    : only signaled host IP via redis; pointless without redis.
+# REMOVED from the stack entirely (no longer in the codebase):
+#   - influxdb  : metrics timeseries — removed; the request-stream chart is gone.
+#   - redis     : all inter-service IPC moved to HTTP; sessions are in-process.
+#   - himhip    : folded into netdevice (host facts reported over HTTP).
+# DROPPED for RAM (still optional for a single-node router):
 #   - clusterserver : cluster mesh, not needed on a single node.
 #   - sshserver / ddnsserver : SSH-tunnel + DynDNS-client features, optional.
-# Re-add any of them (and give the box more RAM, e.g. a Pi 4/5) if you want the
-# full feature set. Core router keeps: mariadb, backend, pkiserver, nginxserver,
-# dnsserver (LAN resolver), netfilter, netdevice.
+# Re-add the optional ones (and give the box more RAM, e.g. a Pi 4/5) if you want
+# the full feature set. Core router keeps: mariadb, backend, pkiserver,
+# nginxserver, dnsserver (LAN resolver), netfilter, netdevice.
 
 services:
   mariadb:

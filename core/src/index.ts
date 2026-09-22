@@ -395,12 +395,6 @@ export {RbacRoleAssignmentService as RbacRoleAssignmentServiceDB} from './inc/Db
 export {RbacRolePermissionService as RbacRolePermissionServiceDB} from './inc/Db/MariaDb/Service/RbacRolePermissionService.js';
 export {RbacPermissionService as RbacPermissionServiceDB} from './inc/Db/MariaDb/Service/RbacPermissionService.js';
 
-// RedisDb
-export {RedisClientOptions, RedisClient} from './inc/Db/RedisDb/RedisClient.js';
-export {RedisSubscribe} from './inc/Db/RedisDb/RedisSubscribe.js';
-export {RedisChannels} from './inc/Db/RedisDb/RedisChannels.js';
-export {RedisChannel} from './inc/Db/RedisDb/RedisChannel.js';
-
 // Server
 export {Session} from './inc/Server/Session.js';
 export {ServiceAuth} from './inc/Server/ServiceAuth.js';

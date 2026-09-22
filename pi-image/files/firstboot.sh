@@ -4,7 +4,7 @@
 # flashed Pi card. Two jobs:
 #
 #   1. `docker load` the pre-baked multi-image tarball (all FlyingFish service
-#      images + mariadb/influxdb/redis for arm64) into the local Docker daemon.
+#      images + mariadb for arm64) into the local Docker daemon.
 #   2. Generate /opt/flyingfish/.env with fresh random secrets (so every flashed
 #      card gets unique DB / registry / nginx credentials — nothing shared).
 #
@@ -49,38 +49,19 @@ if [[ -s "$ENV_FILE" ]]; then
 else
     log "Generating $ENV_FILE with fresh random secrets ..."
     MARIADB_ROOT_PASSWORD="$(gen 32 40)"
-    INFLUXDB_PASSWORD="$(gen 24 32)"
-    INFLUXDB_ADMIN_TOKEN="$(gen 48 64)"
-    REDIS_REQUIREPASS="$(gen 32 40)"
     REGISTRY_SECRET="$(gen 32 40)"
     NGINX_SECRET="$(gen 32 40)"
 
     umask 077
     cat > "$ENV_FILE" <<EOF
 # FlyingFish Pi stack environment — generated on first boot with unique secrets.
-# Safe to edit; changing DB/redis/influx credentials after first boot requires
-# wiping the corresponding data volume.
+# Safe to edit; changing DB credentials after first boot requires wiping the
+# corresponding data volume.
 
 # --- MariaDB ---
 MARIADB_ROOT_USERNAME=root
 MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
 MARIADB_DATABASE=flyingfish
-
-# --- InfluxDB ---
-INFLUXDB_URL=http://10.103.0.5:8086
-INFLUXDB_USERNAME=flyingfish
-INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}
-INFLUXDB_ORG=flyingfish
-INFLUXDB_BUCKET=flyingfish
-INFLUXDB_RETENTION=4w
-INFLUXDB_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
-
-# --- Redis ---
-REDIS_URL=redis://10.103.0.7:6379
-REDIS_SAVE=20 1
-REDIS_LOGLEVEL=warning
-REDIS_REQUIREPASS=${REDIS_REQUIREPASS}
-REDIS_MAX_MEMORY=50mb
 
 # --- Backend / registry / nginx ---
 HTTPSERVER_PORT=3000

@@ -28,40 +28,6 @@ services:
         max-file: "50"
 
 
-  redis:
-    image: redis:7.2-alpine
-    container_name: flyingfish_redis
-    volumes:
-      - flyingfishRedisData:/data
-    ports:
-      - '127.0.0.1:6379:6379'
-    command: [
-      "redis-server",
-      "--save",
-      "${REDIS_SAVE}",
-      "--loglevel",
-      "${REDIS_LOGLEVEL}",
-      "--maxmemory",
-      "${REDIS_MAX_MEMORY}",
-      "--maxmemory-policy",
-      "allkeys-lru",
-      "--requirepass",
-      "${REDIS_REQUIREPASS}"
-    ]
-    networks:
-      flyingfishNet:
-        ipv4_address: 10.103.0.7
-    healthcheck:
-      test: [ "CMD-SHELL", "redis-cli -a ${REDIS_REQUIREPASS} ping | grep PONG" ]
-      interval: 1s
-      timeout: 3s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
-
   flyingfish:
     image: flyingfish:v1.1.13
     build:
@@ -97,8 +63,6 @@ services:
       FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
-      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
-      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       # Node PKI (v2 mTLS): the CA pool file to authenticate part client certs
       # against, and the pkiserver URL to refresh the revocation list at runtime.
@@ -132,8 +96,6 @@ services:
       start_period: 10s
     depends_on:
       mariadb:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     command:
       - node
@@ -265,8 +227,6 @@ services:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
       FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
-      FLYINGFISH_DB_REDIS_URL: "${REDIS_URL}"
-      FLYINGFISH_DB_REDIS_PASSWORD: "${REDIS_REQUIREPASS}"
       FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
@@ -289,8 +249,6 @@ services:
         max-file: "50"
     depends_on:
       mariadb:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
@@ -345,8 +303,6 @@ services:
         max-file: "50"
     depends_on:
       mariadb:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       flyingfish:
         condition: service_healthy
@@ -628,8 +584,6 @@ volumes:
   flyingfishLetsencrypt:
     driver: local
   flyingfishSsh:
-    driver: local
-  flyingfishRedisData:
     driver: local
   flyingfishDnsPki:
     driver: local

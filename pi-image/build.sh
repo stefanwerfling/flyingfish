@@ -4,7 +4,7 @@
 #
 # FlyingFish is a MULTI-container stack, so unlike a single-image project this
 # script cross-builds every FlyingFish service image for linux/arm64, pulls the
-# three registry images (mariadb / influxdb / redis) for arm64 too, and saves
+# mariadb registry image for arm64 too, and saves
 # them all into ONE tarball. `firstboot.sh` on the Pi `docker load`s that tarball
 # and brings the stack up fully offline — the Pi never builds from source.
 #
@@ -12,7 +12,7 @@
 #   1. Parse args (paths, source URL, image-grow size).
 #   2. Ensure buildx + arm64 binfmt are available.
 #   3. Cross-build each FlyingFish image for linux/arm64 (--load into the daemon).
-#   4. Pull the registry images (mariadb/influxdb/redis) for linux/arm64.
+#   4. Pull the mariadb registry image for linux/arm64.
 #   5. `docker save` all of them into one tarball in the cache directory.
 #   6. Build the privileged image-builder container from Dockerfile.builder.
 #   7. Run it (privileged, /dev mounted); inside, customize.sh does the surgery.
@@ -82,8 +82,6 @@ OWN_IMAGES=(
 # Registry images pulled (not built) for arm64 and baked into the same tarball.
 REGISTRY_IMAGES=(
     "mariadb:lts"
-    "influxdb:latest"
-    "redis:7.2-alpine"
 )
 
 # `netfilter`/`netdevice` Dockerfiles take an NPM_REGISTRY build-arg (private

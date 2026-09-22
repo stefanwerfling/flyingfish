@@ -64,7 +64,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
     public static readonly DEFAULT_DYNDNSSERVER_ENABLE = false;
     public static readonly DEFAULT_SSHSERVER_IP = '10.103.0.4';
     public static readonly DEFAULT_DOCKER_GATEWAY = '10.103.0.1';
-    public static readonly DEFAULT_REDIS_URL = 'redis://10.103.0.7:6379';
 
     /**
      * Return the config instance.
@@ -122,11 +121,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
                         password: dbMysqlPassword,
                         database: dbMysqlDatabase
                     }
-                    // No hardcoded Redis default: Redis is configured only when
-                    // FLYINGFISH_DB_REDIS_URL is set (see _loadEnvRedisDb). An
-                    // env-only deploy without it runs entirely without Redis, so
-                    // the HTTP server gets no 'redis' service dependency and
-                    // starts standalone (required for the slim Pi profile).
                 },
                 httpserver: {
                     port: FlyingFishConfig.DEFAULT_FF_HTTPSERVER_PORT,
@@ -142,7 +136,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
         // optional ----------------------------------------------------------------------------------------------------
 
         config = this._loadEnvMariaDb(config);
-        config = this._loadEnvRedisDb(config);
         config = this._loadEnvHttpserver(config);
         config = this._loadEnvDnsserver(config);
         config = this._loadEnvNginx(config);
@@ -179,29 +172,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
         return config;
     }
 
-
-    /**
-     * Load Redis env.
-     * @param {BackendConfigOptions} config
-     * @return {BackendConfigOptions}
-     * @protected
-     */
-    protected _loadEnvRedisDb(config: BackendConfigOptions): BackendConfigOptions {
-        // Create the Redis block when a URL is supplied via env (there is no
-        // hardcoded default), so an env-only deploy without FLYINGFISH_DB_REDIS_URL
-        // runs without Redis entirely.
-        if (process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]) {
-            config.db.redis = {
-                url: process.env[ENV_OPTIONAL_DB.DB_REDIS_URL]
-            };
-        }
-
-        if (config.db.redis && process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD]) {
-            config.db.redis.password = process.env[ENV_OPTIONAL_DB.DB_REDIS_PASSWORD];
-        }
-
-        return config;
-    }
 
     /**
      * Load HTTP server env.

@@ -14,9 +14,7 @@ export enum ENV_DUTY_DB {
  */
 export enum ENV_OPTIONAL_DB {
     DB_MYSQL_HOST = 'FLYINGFISH_DB_MYSQL_HOST',
-    DB_MYSQL_PORT = 'FLYINGFISH_DB_MYSQL_PORT',
-    DB_REDIS_URL = 'FLYINGFISH_DB_REDIS_URL',
-    DB_REDIS_PASSWORD = 'FLYINGFISH_DB_REDIS_PASSWORD'
+    DB_MYSQL_PORT = 'FLYINGFISH_DB_MYSQL_PORT'
 }
 
 /**
@@ -31,19 +29,10 @@ export const SchemaConfigDbOptionsMySql = Vts.object({
 });
 
 /**
- * Schema for Redis DB options config
- */
-export const SchemaConfigDbOptionsRedis = Vts.object({
-    url: Vts.string(),
-    password: Vts.optional(Vts.string())
-});
-
-/**
  * Schema DB options config
  */
 export const SchemaConfigDbOptions = Vts.object({
-    mysql: SchemaConfigDbOptionsMySql,
-    redis: Vts.optional(SchemaConfigDbOptionsRedis)
+    mysql: SchemaConfigDbOptionsMySql
 });
 
 /**

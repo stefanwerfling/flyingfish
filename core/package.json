@@ -45,7 +45,6 @@
     "express-session": "^1.18.1",
     "@stefanwerfling/figtree": "git+https://github.com/stefanwerfling/figtree.git",
     "flyingfish_schemas": "file:../schemas",
-    "redis": "^4.7.0",
     "reflect-metadata": "^0.2.2",
     "typeorm": "0.3.20",
     "vts": "git+https://github.com/OpenSourcePKG/vts.git",

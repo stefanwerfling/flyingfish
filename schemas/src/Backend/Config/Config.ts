@@ -69,10 +69,11 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
     himpip: Vts.optional(Vts.object({
         provider: Vts.string()
     })),
-    // Retained for backward compatibility with existing config files only: since
-    // HimHIP became Redis-only (phase 3) nothing reads use/secret anymore. Vts
-    // rejects unknown keys, so the field must stay optional to keep older
-    // config.json files valid; it is no longer populated from defaults or env.
+    // Retained for backward compatibility with existing config files only:
+    // HimHIP was folded into the netdevice part (host facts now reported over
+    // HTTP) and the standalone himhip container removed, so nothing reads
+    // use/secret anymore. Vts rejects unknown keys, so the field stays optional
+    // to keep older config.json files valid; it is never populated.
     himhip: Vts.optional(Vts.object({
         use: Vts.boolean(),
         secret: Vts.string()

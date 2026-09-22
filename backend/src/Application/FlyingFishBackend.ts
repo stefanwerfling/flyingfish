@@ -142,14 +142,9 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
             await PkiTrust.init(config.pki.caFile, config.pki.url);
         }
 
-        // HTTP server with the FlyingFish Redis-backed session store. When Redis
-        // is configured, depend on the `redis` service so the session store gets
-        // a connected client (else it falls back to the in-memory store).
-        this._serviceManager.add(new FlyingFishHttpService(
-            RouteLoader,
-            undefined,
-            config?.db?.redis?.url ? [ 'redis' ] : undefined
-        ));
+        // HTTP server with the FlyingFish in-memory session store (Redis was
+        // removed; all inter-service IPC now runs over HTTP).
+        this._serviceManager.add(new FlyingFishHttpService(RouteLoader));
 
         // NginxService keeps its singleton (the nginx reload route +
         // SslCertService call reload() on demand).

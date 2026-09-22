@@ -5,9 +5,9 @@ import {PkiTrust} from '../Hub/PkiTrust.js';
 /**
  * FlyingFishHttpService
  *
- * figtree `HttpService` that builds a `FlyingFishHttpServer` (Redis-backed
- * session store) via the `_createServer` factory seam, instead of the plain
- * figtree `HttpServer`.
+ * figtree `HttpService` that builds a `FlyingFishHttpServer` (FlyingFish CSP +
+ * part-aware rate-limiter) via the `_createServer` factory seam, instead of the
+ * plain figtree `HttpServer`.
  *
  * It keeps figtree's HttpService default importance (Important), so the admin
  * HTTP server is health-checked and restarted by the service monitor. start() is
