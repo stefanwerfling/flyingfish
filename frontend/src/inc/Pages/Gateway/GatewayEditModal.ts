@@ -1,13 +1,21 @@
+import {DialogInfo, ModalDialogType} from 'bambooo';
 import {UpnpNat} from '../../Api/UpnpNat.js';
-import {
-    DialogInfo, Form, FormGroup, FormGroupButton, InputBottemBorderOnly2, InputType, Icon, IconFa,
-    Element, ModalDialog, ModalDialogType, LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection} from '../../Components/FfrModal.js';
 
 /**
- * GatewayEditModal
+ * GatewayEditModal — add/edit a gateway identifier (network name, gateway MAC/IP address and a
+ * color). Rendered in the FlyingFish `.ffr` design language (see {@link FfrModal}): sectioned
+ * form, mono inputs for the addresses and an inline "Detect" helper that fills the MAC/IP from
+ * the local UPnP gateway. Public API (get/set per field + resetValues) is unchanged so the page
+ * is agnostic to the widget set.
  */
-export class GatewayEditModal extends ModalDialog {
+export class GatewayEditModal {
+
+    /**
+     * the modal
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -19,46 +27,44 @@ export class GatewayEditModal extends ModalDialog {
      * input network name
      * @protected
      */
-    protected _inputNetworkName: InputBottemBorderOnly2;
+    protected readonly _inputNetworkName: FfrInput;
 
     /**
      * input gateway mac address
      * @protected
      */
-    protected _inputGatewayMacAddress: InputBottemBorderOnly2;
+    protected readonly _inputGatewayMacAddress: FfrInput;
 
     /**
      * input gateway Ip address
      * @protected
      */
-    protected _inputGatewayIpAddress: InputBottemBorderOnly2;
+    protected readonly _inputGatewayIpAddress: FfrInput;
 
     /**
      * input color
      * @protected
      */
-    protected _inputColor: InputBottemBorderOnly2;
+    protected readonly _inputColor: FfrInput;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'gatewaymodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Gateway', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
+        const secGateway = new FfrSection(body, 'Gateway');
 
-        const groupNetworkName = new FormGroup(form, 'Networkname');
-        this._inputNetworkName = new InputBottemBorderOnly2(groupNetworkName, 'networkname', InputType.text);
+        this._inputNetworkName = new FfrInput(false, 'Networkname');
+        new FfrField(secGateway.element, 'Networkname').mount(this._inputNetworkName.element);
 
-        const groupGatewayMacAddress = new FormGroup(form, 'Gateway MAC address');
-        const pickGatewayMac = new FormGroupButton(groupGatewayMacAddress);
-        // eslint-disable-next-line no-new
-        new Icon(pickGatewayMac.getIconElement(), IconFa.hockeypuck);
-        this._inputGatewayMacAddress = new InputBottemBorderOnly2(pickGatewayMac, 'gatewaymacaddress');
+        this._inputGatewayMacAddress = new FfrInput(true, '00:00:00:00:00:00');
+        const macField = new FfrField(secGateway.element, 'Gateway MAC address');
+        macField.mount(this._inputGatewayMacAddress.element);
 
-        pickGatewayMac.setOnClickFn(async() => {
+        const macBtn = jQuery('<button type="button" class="ffr-btn">Detect</button>').appendTo(macField.element);
+        macBtn.on('click', async() => {
             const gatewayInfo = await UpnpNat.getCurrentGatewayInfo();
 
             if (gatewayInfo) {
@@ -76,13 +82,12 @@ export class GatewayEditModal extends ModalDialog {
             }
         });
 
-        const groupGatewayIPAddress = new FormGroup(form, 'Gateway IP address');
-        const pickGatewayIp = new FormGroupButton(groupGatewayIPAddress);
-        // eslint-disable-next-line no-new
-        new Icon(pickGatewayIp.getIconElement(), IconFa.hockeypuck);
-        this._inputGatewayIpAddress = new InputBottemBorderOnly2(pickGatewayIp, 'gatewayipaddress');
+        this._inputGatewayIpAddress = new FfrInput(true, '0.0.0.0');
+        const ipField = new FfrField(secGateway.element, 'Gateway IP address');
+        ipField.mount(this._inputGatewayIpAddress.element);
 
-        pickGatewayIp.setOnClickFn(async() => {
+        const ipBtn = jQuery('<button type="button" class="ffr-btn">Detect</button>').appendTo(ipField.element);
+        ipBtn.on('click', async() => {
             const gatewayInfo = await UpnpNat.getCurrentGatewayInfo();
 
             if (gatewayInfo) {
@@ -100,13 +105,38 @@ export class GatewayEditModal extends ModalDialog {
             }
         });
 
-        const groupColor = new FormGroup(form, 'Color');
-        this._inputColor = new InputBottemBorderOnly2(groupColor, 'color', InputType.colorpicker);
+        this._inputColor = new FfrInput(false, '#000000');
+        new FfrField(secGateway.element, 'Color').mount(this._inputColor.element);
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -186,9 +216,8 @@ export class GatewayEditModal extends ModalDialog {
 
     /**
      * resetValues
-     * ovverride for use
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setNetworkName('');
         this.setGatewayMacAddress('');

@@ -1,17 +1,18 @@
-import {
-    InputBottemBorderOnly2,
-    FormGroup,
-    Switch,
-    Element,
-    ModalDialog,
-    ModalDialogType,
-    LangText
-} from 'bambooo';
+import {FfrModal, FfrSection, FfrField, FfrInput, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * DomainEditModal
+ * DomainEditModal — add/edit a domain (name + disabled state). Rendered in the FlyingFish
+ * `.ffr` design language (see {@link FfrModal}): sectioned form with a text input and a
+ * switch. Public API (get/set per field + resetValues) is unchanged so the page is agnostic
+ * to the widget set.
  */
-export class DomainEditModal extends ModalDialog {
+export class DomainEditModal {
+
+    /**
+     * The underlying `.ffr` modal.
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -23,34 +24,58 @@ export class DomainEditModal extends ModalDialog {
      * input name
      * @protected
      */
-    protected _inputName: InputBottemBorderOnly2;
+    protected readonly _inputName: FfrInput;
 
     /**
      * switch disable
      * @protected
      */
-    protected _switchDisable: Switch;
+    protected readonly _switchDisable: FfrSwitch;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'domainmodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Domain', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(this._body);
+        const secDetails = new FfrSection(body, 'Details');
 
-        const groupName = new FormGroup(bodyCard, 'Domainname');
-        this._inputName = new InputBottemBorderOnly2(groupName.getElement());
-        this._inputName.setPlaceholder('mydomain.com');
+        this._inputName = new FfrInput(false, 'mydomain.com');
+        new FfrField(secDetails.element, 'Domainname').mount(this._inputName.element);
 
-        const groupDisable = new FormGroup(bodyCard, 'Disable this Domain');
-        this._switchDisable = new Switch(groupDisable, 'domaindisable');
+        this._switchDisable = new FfrSwitch('Disable this Domain', false);
+        secDetails.element.append(this._switchDisable.element);
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -88,20 +113,20 @@ export class DomainEditModal extends ModalDialog {
      * @param disable
      */
     public setDisable(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+        this._switchDisable.setOn(disable);
     }
 
     /**
      * getDisable
      */
     public getDisable(): boolean {
-        return this._switchDisable.isEnable();
+        return this._switchDisable.isOn();
     }
 
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setName('');
         this.setDisable(false);

@@ -1,12 +1,19 @@
-import {
-    BadgeType, FormGroup, FormRow, Switch, InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2,
-    Element, ModalDialog, ModalDialogType, LangText
-} from 'bambooo';
+import {FfrModal, FfrSection, FfrField, FfrInput, FfrSelect, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * DomainRecordEditModal
+ * DomainRecordEditModal — add/edit a DNS record for a domain (type, class, TTL, value and the
+ * DynDns-client update flag). Rendered in the FlyingFish `.ffr` design language (see
+ * {@link FfrModal}): sectioned form, a select for the many record types, mono inputs for the
+ * numeric/address fields and a switch. Public API (get/set per field + resetValues) is
+ * unchanged so the page is agnostic to the widget set.
  */
-export class DomainRecordEditModal extends ModalDialog {
+export class DomainRecordEditModal {
+
+    /**
+     * The underlying `.ffr` modal.
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -24,112 +31,111 @@ export class DomainRecordEditModal extends ModalDialog {
      * input name
      * @protected
      */
-    protected _inputName: InputBottemBorderOnly2;
+    protected readonly _inputName: FfrInput;
 
     /**
      * select type
      * @protected
      */
-    protected _selectType: SelectBottemBorderOnly2;
+    protected readonly _selectType: FfrSelect;
 
     /**
      * select class
      * @protected
      */
-    protected _selectClass: SelectBottemBorderOnly2;
+    protected readonly _selectClass: FfrSelect;
 
     /**
-     * input name
+     * input ttl
      * @protected
      */
-    protected _inputTTL: InputBottemBorderOnly2;
+    protected readonly _inputTTL: FfrInput;
 
     /**
      * input value
      * @protected
      */
-    protected _inputValue: InputBottemBorderOnly2;
+    protected readonly _inputValue: FfrInput;
 
     /**
      * switch update by dyn dns client
      * @protected
      */
-    protected _switchUByDynDnsClient: Switch;
+    protected readonly _switchUByDynDnsClient: FfrSwitch;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'domainrecordmodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Domain record', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(this._body);
-        const groupName = new FormGroup(bodyCard, 'Domainname');
-        this._inputName = new InputBottemBorderOnly2(groupName.getElement());
-        this._inputName.setReadOnly(true);
+        const secDetails = new FfrSection(body, 'Details');
 
-        const rowTP = new FormRow(bodyCard);
+        this._inputName = new FfrInput(false, '');
+        this._inputName.element.attr('readonly', 'readonly');
+        new FfrField(secDetails.element, 'Domainname').mount(this._inputName.element);
 
-        const groupType = new FormGroup(rowTP.createCol(4), 'Type');
-        this._selectType = new SelectBottemBorderOnly2(groupType.getElement());
-        this._selectType.addValue({
-            key: '1',
-            value: 'A',
-            style: `background:${BadgeType.color_cream_red};`
-        });
+        const rowTC = FfrField.row(secDetails.element);
 
-        this._selectType.addValue({
-            key: '2',
-            value: 'NS',
-            style: `background:${BadgeType.color_cream_blue};`
-        });
+        this._selectType = new FfrSelect();
+        this._selectType.setValues([
+            {key: '1', value: 'A'},
+            {key: '2', value: 'NS'},
+            {key: '5', value: 'CNAME'},
+            {key: '15', value: 'MX'},
+            {key: '16', value: 'TXT'},
+            {key: '17', value: 'AAAA'}
+        ]);
+        new FfrField(rowTC, 'Type').mount(this._selectType.element);
 
-        this._selectType.addValue({
-            key: '5',
-            value: 'CNAME',
-            style: `background:${BadgeType.color_cream_green};`
-        });
+        this._selectClass = new FfrSelect();
+        this._selectClass.setValues([
+            {key: '1', value: 'IN'}
+        ]);
+        new FfrField(rowTC, 'Class').mount(this._selectClass.element);
 
-        this._selectType.addValue({
-            key: '15',
-            value: 'MX',
-            style: `background:${BadgeType.color_cream_yellow};`
-        });
-
-        this._selectType.addValue({
-            key: '16',
-            value: 'TXT',
-            style: `background:${BadgeType.color_cream_purpel};`
-        });
-
-        this._selectType.addValue({
-            key: '17',
-            value: 'AAAA',
-            style: `background:${BadgeType.color_cream_rorange};`
-        });
-
-        const groupClass = new FormGroup(rowTP.createCol(4), 'Class');
-        this._selectClass = new SelectBottemBorderOnly2(groupClass.getElement());
-        this._selectClass.addValue({
-            key: '1',
-            value: 'IN'
-        });
-
-        const groupTTL = new FormGroup(rowTP.createCol(4), 'Time to Live');
-        this._inputTTL = new InputBottemBorderOnly2(groupTTL.getElement(), undefined, InputType.number);
+        this._inputTTL = new FfrInput(true, '300');
         this._inputTTL.setValue('300');
+        new FfrField(secDetails.element, 'Time to Live').mount(this._inputTTL.element);
 
-        const groupValue = new FormGroup(bodyCard, 'Value');
-        this._inputValue = new InputBottemBorderOnly2(groupValue.getElement());
+        this._inputValue = new FfrInput(true, '');
+        new FfrField(secDetails.element, 'Value').mount(this._inputValue.element);
 
-        const rowOpt = new FormRow(bodyCard);
-        const groupDnyDnsClient = new FormGroup(rowOpt.createCol(6), 'Update by DynDns Client');
-        this._switchUByDynDnsClient = new Switch(groupDnyDnsClient, 'ubydnsclient');
+        // options ----------------------------------------------------------------------------------------------------
+        const secOptions = new FfrSection(body, 'Options');
+        this._switchUByDynDnsClient = new FfrSwitch('Update by DynDns Client', false);
+        secOptions.element.append(this._switchUByDynDnsClient.element);
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -235,20 +241,20 @@ export class DomainRecordEditModal extends ModalDialog {
      * @param update
      */
     public setUpdateByDynDnsClient(update: boolean): void {
-        this._switchUByDynDnsClient.setEnable(update);
+        this._switchUByDynDnsClient.setOn(update);
     }
 
     /**
      * getUpdateByDynDnsClient
      */
     public getUpdateByDynDnsClient(): boolean {
-        return this._switchUByDynDnsClient.isEnable();
+        return this._switchUByDynDnsClient.isOn();
     }
 
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setDomainId(null);
         this.setDomainName('');

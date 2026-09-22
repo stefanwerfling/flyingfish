@@ -79,13 +79,9 @@ export class Routes extends BasePage {
 
         // route modal -------------------------------------------------------------------------------------------------
 
-        this._routeStreamDialog = new RouteStreamEditModal(
-            this._wrapper.getContentWrapper().getElement()
-        );
+        this._routeStreamDialog = new RouteStreamEditModal();
 
-        this._routeHttpDialog = new RouteHttpEditModal(
-            this._wrapper.getContentWrapper().getElement()
-        );
+        this._routeHttpDialog = new RouteHttpEditModal();
 
         // Navbar Left -------------------------------------------------------------------------------------------------
 

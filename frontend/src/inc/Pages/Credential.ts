@@ -47,9 +47,7 @@ export class Credential extends BasePage {
 
         // crendential modal -------------------------------------------------------------------------------------------
 
-        this._credentialDialog = new CredentialEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._credentialDialog = new CredentialEditModal();
 
         // -------------------------------------------------------------------------------------------------------------
 

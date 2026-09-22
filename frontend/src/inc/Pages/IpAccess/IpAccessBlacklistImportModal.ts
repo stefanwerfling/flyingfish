@@ -1,9 +1,18 @@
-import {Form, FormGroup, Switch, Element, ModalDialog, ModalDialogType, LangText} from 'bambooo';
+import {FfrModal, FfrSection, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * IpAccessBlacklistImportModal
+ * IpAccessBlacklistImportModal — edit an imported blacklist entry (only the disabled flag is
+ * editable, the entry itself is maintained by the import source). Rendered in the FlyingFish
+ * `.ffr` design language (see {@link FfrModal}). Public API (get/set per field + resetValues)
+ * is unchanged so the page is agnostic to the widget set.
  */
-export class IpAccessBlacklistImportModal extends ModalDialog {
+export class IpAccessBlacklistImportModal {
+
+    /**
+     * The underlying `.ffr` modal.
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -15,25 +24,48 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
      * switch disabled
      * @protected
      */
-    protected _switchDisabled: Switch;
+    protected readonly _switchDisabled: FfrSwitch;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'ipaccessblacklistimportdialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Blacklist Import', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
+        const secState = new FfrSection(body, 'State');
+        this._switchDisabled = new FfrSwitch('Disabled this ip block', false);
+        secState.element.append(this._switchDisabled.element);
+    }
 
-        const groupDisabled = new FormGroup(form, 'Disabled this ip block');
-        this._switchDisabled = new Switch(groupDisabled, 'ipimportblockdisable');
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -56,20 +88,20 @@ export class IpAccessBlacklistImportModal extends ModalDialog {
      * @param disabled
      */
     public setDisabled(disabled: boolean): void {
-        this._switchDisabled.setEnable(disabled);
+        this._switchDisabled.setOn(disabled);
     }
 
     /**
      * getDisabled
      */
     public getDisabled(): boolean {
-        return this._switchDisabled.isEnable();
+        return this._switchDisabled.isOn();
     }
 
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setDisabled(false);
     }

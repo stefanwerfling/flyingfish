@@ -1,29 +1,15 @@
 import {
-    Badge,
-    BadgeType,
     Card,
     CardBodyType,
     CardLine,
     CardType,
-    Element,
-    FormGroup,
-    FormRow,
     Icon,
     IconFa,
-    InputBottemBorderOnly2,
-    InputType, LangText,
-    ModalDialog,
-    ModalDialogType,
-    NavTab,
     PText,
     PTextType,
-    SelectBottemBorderOnly2,
     StrongText,
-    Switch,
     Table,
     Td,
-    Tooltip,
-    TooltipInfo,
     Tr
 } from 'bambooo';
 import {
@@ -35,16 +21,28 @@ import {
     SslListWildcardEntry
 } from 'flyingfish_schemas';
 import moment from 'moment';
-import {ListenCategory, ListenTypes} from '../../Api/Listen.js';
+import {ListenTypes} from '../../Api/Listen.js';
 import {NginxHTTPVariables} from '../../Api/Route.js';
 import {Ssl as SslAPI} from '../../Api/Ssl.js';
-import {Lang} from '../../Lang.js';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSegmented, FfrSelect, FfrSwitch} from '../../Components/FfrModal.js';
 import {LocationListWidget} from './Location/LocationListWidget.js';
 
 /**
- * RouteHttpEditModal
+ * RouteHttpEditModal — add/edit an http/https route. Rendered in the FlyingFish `.ffr` design
+ * language (see {@link FfrModal}): the former NavTab tabs (Details, SSL, Location, Advanced)
+ * and the nested SSL NavTab (Provider, Certificates, Cert-Details) are flattened into
+ * {@link FfrSection}s whose visibility follows the SSL enable switch and the provider/wildcard
+ * selection. The location editor keeps the bambooo {@link LocationListWidget}, and the SSL
+ * certificate details keep the bambooo {@link Card} display (both out of scope). The public
+ * API (get/set per field + resetValues) is unchanged so the page is agnostic to the widget set.
  */
-export class RouteHttpEditModal extends ModalDialog {
+export class RouteHttpEditModal {
+
+    /**
+     * the ffr modal
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * type only http/s
@@ -59,34 +57,28 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _id: number|null = 0;
 
     /**
-     * nav tab
+     * SSL badge info (in the SSL section legend)
      * @protected
      */
-    protected _navTab: NavTab;
+    protected readonly _sslTabBadge: JQuery;
 
     /**
-     * SSL badge info
+     * location badge info (in the Location section legend)
      * @protected
      */
-    protected _sslTabBadge: Badge;
-
-    /**
-     * location badge info
-     * @protected
-     */
-    protected _locationTabBadge: Badge;
+    protected readonly _locationTabBadge: JQuery;
 
     /**
      * location cards
      * @protected
      */
-    protected _locationCollection: LocationListWidget;
+    protected readonly _locationCollection: LocationListWidget;
 
     /**
      * Domainname or IP
      * @protected
      */
-    protected _inputDomainName: InputBottemBorderOnly2;
+    protected readonly _inputDomainName: FfrInput;
 
     /**
      * domain id
@@ -98,7 +90,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * Listen
      * @protected
      */
-    protected _selectListen: SelectBottemBorderOnly2;
+    protected readonly _selectListen: FfrSelect;
 
     /**
      * Listens data
@@ -110,7 +102,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * Index
      * @protected
      */
-    protected _inputIndex: InputBottemBorderOnly2;
+    protected readonly _inputIndex: FfrInput;
 
     /**
      * ssh listens
@@ -122,13 +114,13 @@ export class RouteHttpEditModal extends ModalDialog {
      * ssl enable
      * @protected
      */
-    protected _switchSslEnable: Switch;
+    protected readonly _switchSslEnable: FfrSwitch;
 
     /**
-     * Nav Tab ssl
+     * SSL configuration area (shown when SSL is enabled)
      * @protected
      */
-    protected _navTabSsl: NavTab;
+    protected readonly _sslArea: JQuery;
 
     /**
      * Ssl Provider list
@@ -137,196 +129,145 @@ export class RouteHttpEditModal extends ModalDialog {
     protected _sslProviderList: ProviderSslEntry[] = [];
 
     /**
+     * ssl provider section element
+     * @protected
+     */
+    protected readonly _secSslProvider: JQuery;
+
+    /**
      * ssl provider
      * @protected
      */
-    protected _selectSslProvider: SelectBottemBorderOnly2;
+    protected readonly _selectSslProvider: FfrSelect;
+
+    /**
+     * ssl certificate section element
+     * @protected
+     */
+    protected readonly _secSslCert: JQuery;
 
     /**
      * ssl cert details
      * @protected
      */
-    protected _sslCertDetails: Card;
+    protected readonly _sslCertDetails: Card;
 
     /**
      * ssl email
      * @protected
      */
-    protected _inputSslEmail: InputBottemBorderOnly2;
+    protected readonly _inputSslEmail: FfrInput;
 
     /**
      * ssl wildcard
      * @protected
      */
-    protected _switchSslWildcard: Switch;
+    protected readonly _switchSslWildcard: FfrSwitch;
 
     /**
      * switch http2 enable
      * @protected
      */
-    protected _switchHttp2Enable: Switch;
+    protected readonly _switchHttp2Enable: FfrSwitch;
 
     /**
      * select X-Frame-Options
      * @protected
      */
-    protected _selectXFrameOptions: SelectBottemBorderOnly2;
+    protected readonly _selectXFrameOptions: FfrSegmented;
 
     /**
      * switch wellknown disabled
      * @protected
      */
-    protected _switchWellknownDisabled: Switch;
+    protected readonly _switchWellknownDisabled: FfrSwitch;
 
     /**
      * input variable client_max_body_size
      * @protected
      */
-    protected _inputVariableCmbs: InputBottemBorderOnly2;
+    protected readonly _inputVariableCmbs: FfrInput;
 
     /**
      * select ssl wildcard cert
      * @protected
      */
-    protected _selectSslWildcardCert: SelectBottemBorderOnly2;
+    protected readonly _selectSslWildcardCert: FfrSelect;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'routehttpmodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Http/Https Route', 'Save changes');
+        const body = this._modal.getBody();
 
-        this._navTab = new NavTab(this._body, 'routehttpnavtab');
+        // details -----------------------------------------------------------------------------------------------------
 
-        const tabDetails = this._navTab.addTab('Details', 'routehttpdetails');
-        const tabSsl = this._navTab.addTab('SSL', 'routehttpssl');
+        const secDetails = new FfrSection(body, 'Details');
 
-        tabSsl.title.append('&nbsp;');
+        this._inputDomainName = new FfrInput(false);
+        this._inputDomainName.element.attr('readonly', 'readonly');
+        new FfrField(secDetails.element, 'Domain Name/IP').mount(this._inputDomainName.element);
 
-        this._sslTabBadge = new Badge(
-            tabSsl.title,
-            '',
-            BadgeType.success
-        );
+        this._selectListen = new FfrSelect();
+        new FfrField(secDetails.element, 'Listen').mount(this._selectListen.element);
 
-        // eslint-disable-next-line no-new
-        new Icon(this._sslTabBadge, 'fa fa-check-circle');
+        this._inputIndex = new FfrInput(true, 'auto sorting');
+        new FfrField(secDetails.element, 'Index').mount(this._inputIndex.element);
 
-        const tabLocation = this._navTab.addTab('Location', 'routehttplocation');
+        // ssl ---------------------------------------------------------------------------------------------------------
 
-        tabLocation.title.append('&nbsp;');
+        const secSsl = new FfrSection(body, 'SSL');
+        this._sslTabBadge = jQuery('<span class="badge badge-success">&nbsp;<i class="fa fa-check-circle"></i>&nbsp;</span>')
+            .appendTo(secSsl.element.children('legend'));
+        this._sslTabBadge.hide();
 
-        this._locationTabBadge = new Badge(
-            tabLocation.title,
-            '0',
-            BadgeType.success
-        );
+        this._switchSslEnable = new FfrSwitch('SSL Enable', false);
+        secSsl.element.append(this._switchSslEnable.element);
 
-        this._locationTabBadge.hide();
+        this._sslArea = jQuery('<div></div>').appendTo(secSsl.element);
+        this._sslArea.hide();
 
-        // tab location ------------------------------------------------------------------------------------------------
+        // ssl provider
+        const secSslProvider = new FfrSection(this._sslArea, 'Provider');
+        this._secSslProvider = secSslProvider.element;
 
-        this._locationCollection = new LocationListWidget(tabLocation.body, () => {
-            this._updateLocationTabBadge();
-        },true);
+        const rowProvider = FfrField.row(secSslProvider.element);
 
-        // tab advanced ------------------------------------------------------------------------------------------------
+        this._selectSslProvider = new FfrSelect();
+        new FfrField(rowProvider, 'SSL Provider').mount(this._selectSslProvider.element);
 
-        const tabAdvanced = this._navTab.addTab('Advanced', 'routehttpadvanced');
-        tabAdvanced.tab.show();
+        this._switchSslWildcard = new FfrSwitch('Wildcard', false);
+        new FfrField(rowProvider, 'Wildcard').mount(this._switchSslWildcard.element);
+        this._setSwitchInactive(this._switchSslWildcard, true);
 
-        const bodyACard = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
+        this._inputSslEmail = new FfrInput(false, 'admin@flyingfish.org');
+        this._inputSslEmail.element.attr('readonly', 'readonly');
+        new FfrField(secSslProvider.element, 'SSL EMail').mount(this._inputSslEmail.element);
 
-        const rowHttp2WellKnown = new FormRow(bodyACard);
+        // ssl certificates
+        const secSslCert = new FfrSection(this._sslArea, 'Certificates');
+        this._secSslCert = secSslCert.element;
 
-        const groupHttp2Enable = new FormGroup(rowHttp2WellKnown.createCol(6), 'HTTP2 Enable');
-        // eslint-disable-next-line no-new
-        new TooltipInfo(groupHttp2Enable.getLabelElement(), Lang.i().l('route_http_http2'));
-        this._switchHttp2Enable = new Switch(groupHttp2Enable.getElement(), 'adv_http2_enable');
-        this._switchHttp2Enable.setInativ(true);
+        this._selectSslWildcardCert = new FfrSelect();
+        new FfrField(secSslCert.element, 'Wildcard Certificate from Domain').mount(this._selectSslWildcardCert.element);
 
-        const groupWellknown = new FormGroup(rowHttp2WellKnown.createCol(6), 'well-known disabled');
-        this._switchWellknownDisabled = new Switch(groupWellknown.getElement(), 'adv_wellknown_disabled');
-
-        const groupXFrameOptions = new FormGroup(bodyACard, 'X-Frame-Options');
-        this._selectXFrameOptions = new SelectBottemBorderOnly2(groupXFrameOptions);
-        this._selectXFrameOptions.addValue({
-            key: '',
-            value: 'None'
+        this._selectSslWildcardCert.onChange((value) => {
+            if (value === '0') {
+                this._secSslProvider.show();
+            } else {
+                this._secSslProvider.hide();
+            }
         });
 
-        this._selectXFrameOptions.addValue({
-            key: 'SAMEORIGIN',
-            value: 'SAMEORIGIN'
-        });
-
-        this._selectXFrameOptions.addValue({
-            key: 'DENY',
-            value: 'DENY'
-        });
-
-        const groupVariableCmbs = new FormGroup(bodyACard, 'Client max body size (MB)');
-        this._inputVariableCmbs = new InputBottemBorderOnly2(groupVariableCmbs, undefined, InputType.number);
-        this._inputVariableCmbs.setPlaceholder('1');
-
-        // tab details -------------------------------------------------------------------------------------------------
-
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);
-
-        const groupDomainName = new FormGroup(bodyCard, 'Domain Name/IP');
-        this._inputDomainName = new InputBottemBorderOnly2(groupDomainName);
-        this._inputDomainName.setReadOnly(true);
-
-        const groupListen = new FormGroup(bodyCard, 'Listen');
-        this._selectListen = new SelectBottemBorderOnly2(groupListen);
-
-        const groupIndex = new FormGroup(bodyCard, 'Index');
-        this._inputIndex = new InputBottemBorderOnly2(groupIndex, undefined, InputType.number);
-        this._inputIndex.setPlaceholder('auto sorting');
-
-        // tab ssl -----------------------------------------------------------------------------------------------------
-
-        const bodyCardSsl = jQuery('<div class="card-body"/>').appendTo(tabSsl.body);
-
-        const groupSslEnable = new FormGroup(bodyCardSsl, 'SSL Enable');
-        this._switchSslEnable = new Switch(groupSslEnable, 'ssl_enable');
-
-        this._navTabSsl = new NavTab(tabSsl.body, 'routehttpnavtabssl');
-        this._navTabSsl.hide();
-
-        const tabSslProvider = this._navTabSsl.addTab('Provider', 'routehttptabsslprovider');
-        const tabSslCert = this._navTabSsl.addTab('Certificates', 'routehttptabsslcert');
-        const tabSslAdvanced = this._navTabSsl.addTab('Advanced', 'routehttptabssladvanced');
-        const tabSslCertDetails = this._navTabSsl.addTab('Cert-Details', 'routehttptabsslcertdetails');
-
-        // eslint-disable-next-line no-unused-expressions
-        tabSslAdvanced.body;
-
-        const bodyCardSslProvider = jQuery('<div class="card-body"/>').appendTo(tabSslProvider.body);
-
-        const rowProvider = new FormRow(bodyCardSslProvider);
-
-        const groupSslProvider = new FormGroup(rowProvider.createCol(9), 'SSL Provider');
-        this._selectSslProvider = new SelectBottemBorderOnly2(groupSslProvider);
-
-        const groupSslWildcard = new FormGroup(rowProvider.createCol(3), 'Wildcard');
-        this._switchSslWildcard = new Switch(groupSslWildcard, 'ssl_wildcard');
-        this._switchSslWildcard.setInativ(true);
-
-        const groupSslEmail = new FormGroup(bodyCardSslProvider, 'SSL EMail');
-        this._inputSslEmail = new InputBottemBorderOnly2(groupSslEmail);
-        this._inputSslEmail.setPlaceholder('admin@flyingfish.org');
-        this._inputSslEmail.setReadOnly(true);
-
-        this._selectSslProvider.setChangeFn(value => {
-            this._switchSslWildcard.setInativ(true);
-            this._inputSslEmail.setReadOnly(true);
+        this._selectSslProvider.onChange((value) => {
+            this._setSwitchInactive(this._switchSslWildcard, true);
+            this._setInputReadOnly(this._inputSslEmail, true);
 
             if (value === '') {
-                tabSslCert.tab.show();
+                this._secSslCert.show();
             } else {
-                tabSslCert.tab.hide();
+                this._secSslCert.hide();
 
                 // reset
                 this.setWildcardCertificate(0);
@@ -335,11 +276,11 @@ export class RouteHttpEditModal extends ModalDialog {
             for (const provider of this._sslProviderList) {
                 if (provider.name === value) {
                     if (provider.options.email_required) {
-                        this._inputSslEmail.setReadOnly(false);
+                        this._setInputReadOnly(this._inputSslEmail, false);
                     }
 
                     if (provider.options.wildcardSupported) {
-                        this._switchSslWildcard.setInativ(false);
+                        this._setSwitchInactive(this._switchSslWildcard, false);
                     }
 
                     break;
@@ -347,158 +288,235 @@ export class RouteHttpEditModal extends ModalDialog {
             }
         });
 
-        // -------------------------------------------------------------------------------------------------------------
-
-        const bodyCardSslCert = jQuery('<div class="card-body"/>').appendTo(tabSslCert.body);
-
-        const groupSslWildcardCert = new FormGroup(bodyCardSslCert, 'Wildcard Certificate from Domain');
-        this._selectSslWildcardCert = new SelectBottemBorderOnly2(groupSslWildcardCert);
-        this._selectSslWildcardCert.setChangeFn(value => {
-            if (value === '0') {
-                tabSslProvider.tab.show();
-            } else {
-                tabSslProvider.tab.hide();
-            }
-        });
-
-        // -------------------------------------------------------------------------------------------------------------
-
-        this._sslCertDetails = new Card(tabSslCertDetails.body, CardBodyType.none, CardType.primary, CardLine.none);
+        // ssl cert details
+        this._sslCertDetails = new Card(this._sslArea, CardBodyType.none, CardType.primary, CardLine.none);
         // eslint-disable-next-line no-new
         new Icon(this._sslCertDetails.getTitleElement(), IconFa.certificate);
         this._sslCertDetails.getTitleElement().append('&nbsp;Certificate Details');
         this._sslCertDetails.hide();
 
-        this._switchSslEnable.setChangeFn(async(value) => {
-            this._switchHttp2Enable.setInativ(true);
-            this._navTabSsl.hide();
-            this._sslCertDetails.hide();
-            this._updateSSLTabBadge();
+        this._switchSslEnable.element.on('click', () => {
+            this._applySslEnable();
+        });
 
-            if (value) {
-                this._switchHttp2Enable.setInativ(false);
-                this._navTabSsl.show();
+        // location ----------------------------------------------------------------------------------------------------
 
-                if (this._id) {
-                    this._sslCertDetails.show();
-                    this._sslCertDetails.emptyBody();
+        const secLocation = new FfrSection(body, 'Location');
+        this._locationTabBadge = jQuery('<span class="badge badge-success">0</span>')
+            .appendTo(secLocation.element.children('legend'));
+        this._locationTabBadge.hide();
 
-                    const certDetails = await SslAPI.getCertDetails(this._id);
+        this._locationCollection = new LocationListWidget(secLocation.element, () => {
+            this._updateLocationTabBadge();
+        }, true);
 
-                    if (certDetails) {
-                        // Issuer --------------------------------------------------------------------------------------
-                        const strongIssuer = new StrongText(this._sslCertDetails);
+        // advanced ----------------------------------------------------------------------------------------------------
+
+        const secAdvanced = new FfrSection(body, 'Advanced');
+
+        this._switchHttp2Enable = new FfrSwitch('HTTP2 Enable', false);
+        secAdvanced.element.append(this._switchHttp2Enable.element);
+        this._setSwitchInactive(this._switchHttp2Enable, true);
+
+        this._switchWellknownDisabled = new FfrSwitch('well-known disabled', false);
+        secAdvanced.element.append(this._switchWellknownDisabled.element);
+
+        this._selectXFrameOptions = new FfrSegmented([
+            {key: '', label: 'None'},
+            {key: 'SAMEORIGIN', label: 'SAMEORIGIN'},
+            {key: 'DENY', label: 'DENY'}
+        ], '');
+        new FfrField(secAdvanced.element, 'X-Frame-Options').mount(this._selectXFrameOptions.element);
+
+        this._inputVariableCmbs = new FfrInput(true, '1');
+        new FfrField(secAdvanced.element, 'Client max body size (MB)').mount(this._inputVariableCmbs.element);
+    }
+
+    /**
+     * Toggle a switch between the active and inactive (disabled) look.
+     * @param sw - the switch widget
+     * @param inactive - whether the switch should be inactive
+     * @protected
+     */
+    protected _setSwitchInactive(sw: FfrSwitch, inactive: boolean): void {
+        sw.element.css({
+            'pointer-events': inactive ? 'none' : '',
+            'opacity': inactive ? '0.5' : ''
+        });
+    }
+
+    /**
+     * Toggle an input's read-only state.
+     * @param input - the input widget
+     * @param readonly - whether the input should be read-only
+     * @protected
+     */
+    protected _setInputReadOnly(input: FfrInput, readonly: boolean): void {
+        if (readonly) {
+            input.element.attr('readonly', 'readonly');
+        } else {
+            input.element.removeAttr('readonly');
+        }
+    }
+
+    /**
+     * Apply the SSL enable state: show/hide the SSL area and (when editing) load the
+     * certificate details. Replaces the former bambooo Switch change handler.
+     * @protected
+     */
+    protected async _applySslEnable(): Promise<void> {
+        const value = this._switchSslEnable.isOn();
+
+        this._setSwitchInactive(this._switchHttp2Enable, true);
+        this._sslArea.hide();
+        this._sslCertDetails.hide();
+        this._updateSSLTabBadge();
+
+        if (value) {
+            this._setSwitchInactive(this._switchHttp2Enable, false);
+            this._sslArea.show();
+
+            if (this._id) {
+                this._sslCertDetails.show();
+                this._sslCertDetails.emptyBody();
+
+                const certDetails = await SslAPI.getCertDetails(this._id);
+
+                if (certDetails) {
+                    // Issuer ------------------------------------------------------------------------------------------
+                    const strongIssuer = new StrongText(this._sslCertDetails);
+                    // eslint-disable-next-line no-new
+                    new Icon(strongIssuer, IconFa.certificate);
+                    strongIssuer.getElement().append('&nbsp;Issuer');
+
+                    const tableIssuer = new Table(this._sslCertDetails);
+
+                    for (const issuerData of certDetails.issuer) {
+                        const tTrIssuer = new Tr(tableIssuer);
+
                         // eslint-disable-next-line no-new
-                        new Icon(strongIssuer, IconFa.certificate);
-                        strongIssuer.getElement().append('&nbsp;Issuer');
-
-                        const tableIssuer = new Table(this._sslCertDetails);
-
-                        for (const issuerData of certDetails.issuer) {
-                            const tTrIssuer = new Tr(tableIssuer);
-
-                            // eslint-disable-next-line no-new
-                            new Td(tTrIssuer, `<b>${issuerData.key}</b>`);
-                            // eslint-disable-next-line no-new
-                            new Td(tTrIssuer, `${issuerData.value}`);
-                        }
-
-                        this._sslCertDetails.getElement().append('<hr>');
-
-                        // subject -------------------------------------------------------------------------------------
-
-                        const strongSubject = new StrongText(this._sslCertDetails);
+                        new Td(tTrIssuer, `<b>${issuerData.key}</b>`);
                         // eslint-disable-next-line no-new
-                        new Icon(strongSubject, IconFa.certificate);
-                        strongSubject.getElement().append('&nbsp;Subject');
+                        new Td(tTrIssuer, `${issuerData.value}`);
+                    }
 
-                        const tableSubject = new Table(this._sslCertDetails);
+                    this._sslCertDetails.getElement().append('<hr>');
 
-                        for (const subjectData of certDetails.subject) {
-                            const tTrSubject = new Tr(tableSubject);
+                    // subject -----------------------------------------------------------------------------------------
 
-                            // eslint-disable-next-line no-new
-                            new Td(tTrSubject, `<b>${subjectData.key}</b>`);
-                            // eslint-disable-next-line no-new
-                            new Td(tTrSubject, `${subjectData.value}`);
-                        }
+                    const strongSubject = new StrongText(this._sslCertDetails);
+                    // eslint-disable-next-line no-new
+                    new Icon(strongSubject, IconFa.certificate);
+                    strongSubject.getElement().append('&nbsp;Subject');
 
-                        this._sslCertDetails.getElement().append('<hr>');
+                    const tableSubject = new Table(this._sslCertDetails);
 
-                        // serial number -------------------------------------------------------------------------------
-                        const strongSerial = new StrongText(this._sslCertDetails);
+                    for (const subjectData of certDetails.subject) {
+                        const tTrSubject = new Tr(tableSubject);
+
                         // eslint-disable-next-line no-new
-                        new Icon(strongSerial, IconFa.lock);
-                        strongSerial.getElement().append('&nbsp;Serial');
-
-                        const pSerial = new PText(this._sslCertDetails, PTextType.muted);
-                        pSerial.getElement().append(certDetails.serialNumber);
-
-                        this._sslCertDetails.getElement().append('<hr>');
-
-                        // signatureAlgo -------------------------------------------------------------------------------
-
-                        const strongSigAlgo = new StrongText(this._sslCertDetails);
+                        new Td(tTrSubject, `<b>${subjectData.key}</b>`);
                         // eslint-disable-next-line no-new
-                        new Icon(strongSigAlgo, IconFa.lock);
-                        strongSigAlgo.getElement().append('&nbsp;Signature Algorithm');
+                        new Td(tTrSubject, `${subjectData.value}`);
+                    }
 
-                        const pSigAlg = new PText(this._sslCertDetails, PTextType.muted);
-                        pSigAlg.getElement().append(certDetails.signatureAlgorithm);
+                    this._sslCertDetails.getElement().append('<hr>');
 
-                        this._sslCertDetails.getElement().append('<hr>');
+                    // serial number -----------------------------------------------------------------------------------
+                    const strongSerial = new StrongText(this._sslCertDetails);
+                    // eslint-disable-next-line no-new
+                    new Icon(strongSerial, IconFa.lock);
+                    strongSerial.getElement().append('&nbsp;Serial');
 
-                        // valid from/to -------------------------------------------------------------------------------
-                        const strongDate = new StrongText(this._sslCertDetails);
+                    const pSerial = new PText(this._sslCertDetails, PTextType.muted);
+                    pSerial.getElement().append(certDetails.serialNumber);
+
+                    this._sslCertDetails.getElement().append('<hr>');
+
+                    // signatureAlgo -----------------------------------------------------------------------------------
+
+                    const strongSigAlgo = new StrongText(this._sslCertDetails);
+                    // eslint-disable-next-line no-new
+                    new Icon(strongSigAlgo, IconFa.lock);
+                    strongSigAlgo.getElement().append('&nbsp;Signature Algorithm');
+
+                    const pSigAlg = new PText(this._sslCertDetails, PTextType.muted);
+                    pSigAlg.getElement().append(certDetails.signatureAlgorithm);
+
+                    this._sslCertDetails.getElement().append('<hr>');
+
+                    // valid from/to -----------------------------------------------------------------------------------
+                    const strongDate = new StrongText(this._sslCertDetails);
+                    // eslint-disable-next-line no-new
+                    new Icon(strongDate, IconFa.calendar);
+                    strongDate.getElement().append('&nbsp;Validate');
+
+                    const certFromDate = moment(certDetails.dateNotBefore);
+                    const certToDate = moment(certDetails.dateNotAfter);
+
+                    const tableValidate = new Table(this._sslCertDetails);
+                    const trFrom = new Tr(tableValidate);
+                    // eslint-disable-next-line no-new
+                    new Td(trFrom, '<b>from</b>');
+                    // eslint-disable-next-line no-new
+                    new Td(trFrom, `${certFromDate.format('YYYY-MM-DD HH:mm:ss')}`);
+
+                    const trTo = new Tr(tableValidate);
+                    // eslint-disable-next-line no-new
+                    new Td(trTo, '<b>to</b>');
+                    // eslint-disable-next-line no-new
+                    new Td(trTo, `${certToDate.format('YYYY-MM-DD HH:mm:ss')}`);
+
+                    this._sslCertDetails.getElement().append('<hr>');
+
+                    // extensions --------------------------------------------------------------------------------------
+
+                    const strongExtensions = new StrongText(this._sslCertDetails);
+                    // eslint-disable-next-line no-new
+                    new Icon(strongExtensions, IconFa.bars);
+                    strongExtensions.getElement().append('&nbsp;Extensions');
+
+                    const tableExtensions = new Table(this._sslCertDetails);
+
+                    for (const ext of certDetails.extensions) {
+                        const trExt = new Tr(tableExtensions);
+
                         // eslint-disable-next-line no-new
-                        new Icon(strongDate, IconFa.calendar);
-                        strongDate.getElement().append('&nbsp;Validate');
-
-                        const certFromDate = moment(certDetails.dateNotBefore);
-                        const certToDate = moment(certDetails.dateNotAfter);
-
-                        const tableValidate = new Table(this._sslCertDetails);
-                        const trFrom = new Tr(tableValidate);
-                        // eslint-disable-next-line no-new
-                        new Td(trFrom, '<b>from</b>');
-                        // eslint-disable-next-line no-new
-                        new Td(trFrom, `${certFromDate.format('YYYY-MM-DD HH:mm:ss')}`);
-
-                        const trTo = new Tr(tableValidate);
-                        // eslint-disable-next-line no-new
-                        new Td(trTo, '<b>to</b>');
-                        // eslint-disable-next-line no-new
-                        new Td(trTo, `${certToDate.format('YYYY-MM-DD HH:mm:ss')}`);
-
-                        this._sslCertDetails.getElement().append('<hr>');
-
-                        // extensions ----------------------------------------------------------------------------------
-
-                        const strongExtensions = new StrongText(this._sslCertDetails);
-                        // eslint-disable-next-line no-new
-                        new Icon(strongExtensions, IconFa.bars);
-                        strongExtensions.getElement().append('&nbsp;Extensions');
-
-                        const tableExtensions = new Table(this._sslCertDetails);
-
-                        for (const ext of certDetails.extensions) {
-                            const trExt = new Tr(tableExtensions);
-
-                            // eslint-disable-next-line no-new
-                            new Td(trExt, `<b>${ext}</b>`);
-                        }
+                        new Td(trExt, `<b>${ext}</b>`);
                     }
                 }
             }
-        });
+        }
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
 
-        // init tooltips
-        Tooltip.init();
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -549,12 +567,11 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setListens(listens: ListenData[]): void {
         this._listens = listens;
-        this._selectListen.clearValues();
 
-        this._selectListen.addValue({
+        const options: {key: string; value: string;}[] = [{
             key: '0',
             value: 'Please select your Listen'
-        });
+        }];
 
         for (const alisten of this._listens) {
             if (alisten.routeless) {
@@ -562,31 +579,17 @@ export class RouteHttpEditModal extends ModalDialog {
                 continue;
             }
 
-            const type = alisten.type === 0 ? 'Stream' : 'HTTP';
-            let style = alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;';
-
-            if (alisten.listen_category) {
-                switch (alisten.listen_category) {
-                    case ListenCategory.default_https:
-                        style = 'background:#28a745;';
-                        break;
-
-                    case ListenCategory.default_http:
-                        style = 'background:#CCCCFF';
-                        break;
-                }
-            }
-
-            const option = {
-                key: `${alisten.id}`,
-                value: `${alisten.name} - ${alisten.port} (${type})`,
-                style: style
-            };
+            const type = alisten.type === ListenTypes.stream ? 'Stream' : 'HTTP';
 
             if (alisten.type === this._type) {
-                this._selectListen.addValue(option);
+                options.push({
+                    key: `${alisten.id}`,
+                    value: `${alisten.name} - ${alisten.port} (${type})`
+                });
             }
         }
+
+        this._selectListen.setValues(options);
     }
 
     /**
@@ -637,16 +640,18 @@ export class RouteHttpEditModal extends ModalDialog {
         const count = this._locationCollection.getSize();
 
         if (count > 0) {
-            this._locationTabBadge.show();
-
-            this._locationTabBadge.getElement().empty().text(count);
+            this._locationTabBadge.show().text(`${count}`);
         } else {
             this._locationTabBadge.hide();
         }
     }
 
+    /**
+     * Update the SSL tab badge
+     * @protected
+     */
     protected _updateSSLTabBadge(): void {
-        if (this._switchSslEnable.isEnable()) {
+        if (this._switchSslEnable.isOn()) {
             this._sslTabBadge.show();
         } else {
             this._sslTabBadge.hide();
@@ -701,15 +706,16 @@ export class RouteHttpEditModal extends ModalDialog {
      * @param enable
      */
     public setSslEnable(enable: boolean): void {
-        this._switchSslEnable.setEnable(enable);
-        this._switchHttp2Enable.setInativ(false);
+        this._switchSslEnable.setOn(enable);
+        this._applySslEnable();
+        this._setSwitchInactive(this._switchHttp2Enable, false);
     }
 
     /**
      * getSslEnable
      */
     public getSslEnable(): boolean {
-        return this._switchSslEnable.isEnable();
+        return this._switchSslEnable.isOn();
     }
 
     /**
@@ -718,19 +724,20 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setSslProviders(providers: ProviderSslEntry[]): void {
         this._sslProviderList = providers;
-        this._selectSslProvider.clearValues();
 
-        this._selectSslProvider.addValue({
+        const options: {key: string; value: string;}[] = [{
             key: '',
             value: 'Please select your Provider'
-        });
+        }];
 
         for (const provider of providers) {
-            this._selectSslProvider.addValue({
+            options.push({
                 key: provider.name,
                 value: provider.title
             });
         }
+
+        this._selectSslProvider.setValues(options);
     }
 
     /**
@@ -739,6 +746,7 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setSslProvider(provider: string): void {
         this._selectSslProvider.setSelectedValue(provider);
+        this._selectSslProvider.element.trigger('change');
     }
 
     /**
@@ -768,7 +776,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * @param {boolean} enable
      */
     public setSslWildcard(enable: boolean): void {
-        this._switchSslWildcard.setEnable(enable);
+        this._switchSslWildcard.setOn(enable);
     }
 
     /**
@@ -776,7 +784,7 @@ export class RouteHttpEditModal extends ModalDialog {
      * @return {boolean}
      */
     public getSslWildcard(): boolean {
-        return this._switchSslWildcard.isEnable();
+        return this._switchSslWildcard.isOn();
     }
 
     /**
@@ -784,14 +792,14 @@ export class RouteHttpEditModal extends ModalDialog {
      * @param enable
      */
     public setHttp2Enable(enable: boolean): void {
-        this._switchHttp2Enable.setEnable(enable);
+        this._switchHttp2Enable.setOn(enable);
     }
 
     /**
      * getHttp2Enable
      */
     public getHttp2Enable(): boolean {
-        return this._switchHttp2Enable.isEnable();
+        return this._switchHttp2Enable.isOn();
     }
 
     /**
@@ -799,14 +807,14 @@ export class RouteHttpEditModal extends ModalDialog {
      * @param option
      */
     public setXFrameOptions(option: string): void {
-        this._selectXFrameOptions.setSelectedValue(option);
+        this._selectXFrameOptions.setValue(option);
     }
 
     /**
      * getXFrameOptions
      */
     public getXFrameOptions(): string {
-        return this._selectXFrameOptions.getSelectedValue();
+        return this._selectXFrameOptions.getValue();
     }
 
     /**
@@ -814,34 +822,34 @@ export class RouteHttpEditModal extends ModalDialog {
      * @param disabled
      */
     public setWellKnownDisabled(disabled: boolean): void {
-        this._switchWellknownDisabled.setEnable(disabled);
+        this._switchWellknownDisabled.setOn(disabled);
     }
 
     /**
      * getWellKnwonDisabled
      */
     public getWellKnwonDisabled(): boolean {
-        return this._switchWellknownDisabled.isEnable();
+        return this._switchWellknownDisabled.isOn();
     }
 
     /**
      * Fill Wildcard List
-     * @protected
+     * @param list
      */
     public setWildcardCertificateList(list: SslListWildcardEntry[]): void {
-        this._selectSslWildcardCert.clearValues();
-
-        this._selectSslWildcardCert.addValue({
+        const options: {key: string; value: string;}[] = [{
             key: '0',
             value: list.length === 0 ? 'None Certificates found' : 'Not select'
-        });
+        }];
 
         for (const wcert of list) {
-            this._selectSslWildcardCert.addValue({
+            options.push({
                 key: `${wcert.owern_http_id}`,
                 value: wcert.label
             });
         }
+
+        this._selectSslWildcardCert.setValues(options);
     }
 
     /**
@@ -850,6 +858,7 @@ export class RouteHttpEditModal extends ModalDialog {
      */
     public setWildcardCertificate(ownerHttpId: number): void {
         this._selectSslWildcardCert.setSelectedValue(`${ownerHttpId}`);
+        this._selectSslWildcardCert.element.trigger('change');
     }
 
     /**
@@ -863,7 +872,7 @@ export class RouteHttpEditModal extends ModalDialog {
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setDomainName('');
         this._inputIndex.setValue('');
@@ -872,14 +881,11 @@ export class RouteHttpEditModal extends ModalDialog {
         this.setSslWildcard(false);
         this.setSslEmail('');
         this.setWildcardCertificate(0);
-        this._switchHttp2Enable.setInativ(true);
+        this._setSwitchInactive(this._switchHttp2Enable, true);
         this.setHttp2Enable(false);
         this.setXFrameOptions('');
         this._inputVariableCmbs.setValue('');
         this._locationCollection.removeAll();
-
-        this._navTab.setTabSelect(0);
-        this._navTabSsl.setTabSelect(0);
     }
 
 }

@@ -78,17 +78,11 @@ export class IpAccess extends BasePage {
 
         this.setTitle('IP Access');
 
-        this._importBlacklistDialog = new IpAccessBlacklistImportModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._importBlacklistDialog = new IpAccessBlacklistImportModal();
 
-        this._ownBlacklistDialog = new IpAccessBlacklistOwnModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._ownBlacklistDialog = new IpAccessBlacklistOwnModal();
 
-        this._whitelistDialog = new IpAccessWhitelistModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._whitelistDialog = new IpAccessWhitelistModal();
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Blacklist', () => {

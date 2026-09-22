@@ -30,9 +30,7 @@ export class Users extends BasePage {
 
         this.setTitle('Users');
 
-        this._userDialog = new UsersEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._userDialog = new UsersEditModal();
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add User', () => {

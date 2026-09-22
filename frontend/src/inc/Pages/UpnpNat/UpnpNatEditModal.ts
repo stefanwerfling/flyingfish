@@ -1,15 +1,19 @@
 import {GatewayIdentifierEntry, ListenData} from 'flyingfish_schemas';
+import {DialogInfo, ModalDialogType} from 'bambooo';
 import {ListenTypes} from '../../Api/Listen.js';
 import {UpnpNat} from '../../Api/UpnpNat.js';
-import {
-    DialogInfo, Form, FormGroup, FormGroupButton, FormRow, InputBottemBorderOnly2, InputType,
-    SelectBottemBorderOnly2, Switch, Icon, IconFa, Element, ModalDialog, ModalDialogType, LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSegmented, FfrSelect, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * UpnpNatEditModal
+ * UpnpNatEditModal — add/edit a Upnp-Nat mapping (gateway assignment, public/private ports,
+ * client address, listen, TTL, protocol). Rendered in the FlyingFish `.ffr` design language
+ * (see {@link FfrModal}): sectioned form, segmented protocol control, switches, mono inputs.
+ * Public API (get/set per field + resetValues) is unchanged so the page is agnostic to the
+ * widget set.
  */
-export class UpnpNatEditModal extends ModalDialog {
+export class UpnpNatEditModal {
+
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -21,82 +25,83 @@ export class UpnpNatEditModal extends ModalDialog {
      * select gateway identifier
      * @protected
      */
-    protected _selectGatewayIdentifier: SelectBottemBorderOnly2;
+    protected readonly _selectGatewayIdentifier: FfrSelect;
 
     /**
      * input gateway address
      * @protected
      */
-    protected _inputGatewayAddress: InputBottemBorderOnly2;
+    protected readonly _inputGatewayAddress: FfrInput;
 
     /**
      * input public port
      * @protected
      */
-    protected _inputPublicPort: InputBottemBorderOnly2;
+    protected readonly _inputPublicPort: FfrInput;
 
     /**
      * input client address
      * @protected
      */
-    protected _inputClientAddress: InputBottemBorderOnly2;
+    protected readonly _inputClientAddress: FfrInput;
 
     /**
      * switch use host address
      * @protected
      */
-    protected _switchUseHostAddress: Switch;
+    protected readonly _switchUseHostAddress: FfrSwitch;
 
     /**
      * input privat port
      * @protected
      */
-    protected _inputPrivatPort: InputBottemBorderOnly2;
+    protected readonly _inputPrivatPort: FfrInput;
 
     /**
      * select listen
      * @protected
      */
-    protected _selectListen: SelectBottemBorderOnly2;
+    protected readonly _selectListen: FfrSelect;
 
     /**
      * input ttl
      * @protected
      */
-    protected _inputTtl: InputBottemBorderOnly2;
+    protected readonly _inputTtl: FfrInput;
 
     /**
      * select protocol
      * @protected
      */
-    protected _selectProtocol: SelectBottemBorderOnly2;
+    protected readonly _segProtocol: FfrSegmented;
 
     /**
      * input description
      * @protected
      */
-    protected _inputDescription: InputBottemBorderOnly2;
+    protected readonly _inputDescription: FfrInput;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'upnpmodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Upnp-Nat', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
+        // gateway ----------------------------------------------------------------------------------------------------
+        const secGateway = new FfrSection(body, 'Gateway');
 
-        const groupGatewayIdentifier = new FormGroup(form, 'Gateway network assignment');
-        this._selectGatewayIdentifier = new SelectBottemBorderOnly2(groupGatewayIdentifier);
+        this._selectGatewayIdentifier = new FfrSelect();
+        new FfrField(secGateway.element, 'Gateway network assignment').mount(this._selectGatewayIdentifier.element);
 
-        const groupGatewayAddress = new FormGroup(form, 'Gateway address');
-        const pickGatewayIp = new FormGroupButton(groupGatewayAddress);
-        // eslint-disable-next-line no-new
-        new Icon(pickGatewayIp.getIconElement(), IconFa.hockeypuck);
-        this._inputGatewayAddress = new InputBottemBorderOnly2(pickGatewayIp, 'gatewayaddress');
+        this._inputGatewayAddress = new FfrInput(true, 'gatewayaddress');
+        const gatewayAddressPick = jQuery('<button type="button" class="ffr-btn">Use gateway</button>');
+        const gatewayAddressGroup = jQuery('<div style="display:flex; gap:8px; align-items:center;"></div>');
+        this._inputGatewayAddress.element.css('flex', '1');
+        gatewayAddressGroup.append(this._inputGatewayAddress.element).append(gatewayAddressPick);
+        new FfrField(secGateway.element, 'Gateway address').mount(gatewayAddressGroup);
 
-        pickGatewayIp.setOnClickFn(async() => {
+        gatewayAddressPick.on('click', async() => {
             const gatewayInfo = await UpnpNat.getCurrentGatewayInfo();
 
             if (gatewayInfo) {
@@ -114,19 +119,21 @@ export class UpnpNatEditModal extends ModalDialog {
             }
         });
 
-        const groupPublicPort = new FormGroup(form, 'Public port');
-        this._inputPublicPort = new InputBottemBorderOnly2(groupPublicPort, 'publicport', InputType.number);
+        this._inputPublicPort = new FfrInput(true, 'publicport');
+        new FfrField(secGateway.element, 'Public port').mount(this._inputPublicPort.element);
 
-        const rowClient = new FormRow(form);
+        // client -----------------------------------------------------------------------------------------------------
+        const secClient = new FfrSection(body, 'Client');
 
-        const groupClientAddress = new FormGroup(rowClient.createCol(7), 'Client address');
-        const pickClientIp = new FormGroupButton(groupClientAddress);
-        // eslint-disable-next-line no-new
-        new Icon(pickClientIp.getIconElement(), IconFa.ethernet);
-        this._inputClientAddress = new InputBottemBorderOnly2(pickClientIp, 'clientaddress');
+        this._inputClientAddress = new FfrInput(true, 'clientaddress');
+        const clientAddressPick = jQuery('<button type="button" class="ffr-btn">Use host</button>');
+        const clientAddressGroup = jQuery('<div style="display:flex; gap:8px; align-items:center;"></div>');
+        this._inputClientAddress.element.css('flex', '1');
+        clientAddressGroup.append(this._inputClientAddress.element).append(clientAddressPick);
+        new FfrField(secClient.element, 'Client address').mount(clientAddressGroup);
 
-        pickClientIp.setOnClickFn(async() => {
-            if (this._inputClientAddress.isReadOnly()) {
+        clientAddressPick.on('click', async() => {
+            if (this._inputClientAddress.element.prop('readonly')) {
                 console.log('client ip is disabled!');
                 return;
             }
@@ -148,63 +155,89 @@ export class UpnpNatEditModal extends ModalDialog {
             }
         });
 
-        const groupHost = new FormGroup(rowClient.createCol(5), 'Use Host address by DHCP');
-        this._switchUseHostAddress = new Switch(groupHost, 'usehostaddress');
-        this._switchUseHostAddress.setChangeFn((value: boolean) => {
-            if (value) {
-                this._inputClientAddress.setValue('');
-                this._inputClientAddress.setReadOnly(true);
-            } else {
-                this._inputClientAddress.setReadOnly(false);
-            }
+        this._switchUseHostAddress = new FfrSwitch('Use Host address by DHCP', false);
+        secClient.element.append(this._switchUseHostAddress.element);
+        this._switchUseHostAddress.element.on('click', () => {
+            this._applyUseHostAddress();
         });
 
-        const rowPrivatPort = new FormRow(form);
-        const groupPrivatPort = new FormGroup(rowPrivatPort.createCol(5), 'Privat port');
-        this._inputPrivatPort = new InputBottemBorderOnly2(groupPrivatPort, 'privatport', InputType.number);
+        // mapping ----------------------------------------------------------------------------------------------------
+        const secMapping = new FfrSection(body, 'Mapping');
 
-        // eslint-disable-next-line no-new
-        new FormGroup(rowPrivatPort.createCol(1), 'or');
+        const rowPrivat = FfrField.row(secMapping.element);
 
-        const groupListen = new FormGroup(rowPrivatPort.createCol(6), 'Listen');
-        this._selectListen = new SelectBottemBorderOnly2(groupListen);
+        this._inputPrivatPort = new FfrInput(true, 'privatport');
+        new FfrField(rowPrivat, 'Privat port', 'or select a Listen').mount(this._inputPrivatPort.element);
 
-        this._selectListen.setChangeFn((value) => {
+        this._selectListen = new FfrSelect();
+        this._selectListen.onChange((value) => {
             switch (value) {
                 case '0':
-                    this._inputPrivatPort.setReadOnly(false);
+                    this._inputPrivatPort.element.prop('readonly', false);
                     break;
 
                 default:
-                    this._inputPrivatPort.setReadOnly(true);
+                    this._inputPrivatPort.element.prop('readonly', true);
                     this._inputPrivatPort.setValue('');
             }
         });
+        new FfrField(rowPrivat, 'Listen').mount(this._selectListen.element);
 
-        const groupTTL = new FormGroup(form, 'TTL');
-        this._inputTtl = new InputBottemBorderOnly2(groupTTL, 'ttl', InputType.number);
+        this._inputTtl = new FfrInput(true, 'ttl');
         this._inputTtl.setValue('36000');
+        new FfrField(secMapping.element, 'TTL').mount(this._inputTtl.element);
 
-        const groupProtocol = new FormGroup(form, 'Protocol');
-        this._selectProtocol = new SelectBottemBorderOnly2(groupProtocol);
-        this._selectProtocol.addValue({
-            key: 'tcp',
-            value: 'TCP'
-        });
+        this._segProtocol = new FfrSegmented([
+            {key: 'tcp', label: 'TCP'},
+            {key: 'udp', label: 'UDP'}
+        ], 'tcp');
+        new FfrField(secMapping.element, 'Protocol').mount(this._segProtocol.element);
 
-        this._selectProtocol.addValue({
-            key: 'udp',
-            value: 'UDP'
-        });
+        this._inputDescription = new FfrInput(false, 'A description ...');
+        new FfrField(secMapping.element, 'Description').mount(this._inputDescription.element);
+    }
 
-        const groupDescription = new FormGroup(form, 'Description');
-        this._inputDescription = new InputBottemBorderOnly2(groupDescription, 'natdescription');
-        this._inputDescription.setPlaceholder('A description ...');
+    /**
+     * Apply the "use host address" state: when on, clear and lock the client address input.
+     * @protected
+     */
+    protected _applyUseHostAddress(): void {
+        if (this._switchUseHostAddress.isOn()) {
+            this._inputClientAddress.setValue('');
+            this._inputClientAddress.element.prop('readonly', true);
+        } else {
+            this._inputClientAddress.element.prop('readonly', false);
+        }
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -227,18 +260,19 @@ export class UpnpNatEditModal extends ModalDialog {
      * @param list
      */
     public setGatewayIdentifiers(list: GatewayIdentifierEntry[]): void {
-        this._selectGatewayIdentifier.clearValues();
-        this._selectGatewayIdentifier.addValue({
+        const options: {key: string; value: string;}[] = [{
             key: '0',
             value: 'Please select your Listen'
-        });
+        }];
 
         for (const aGatewayIdentiefer of list) {
-            this._selectGatewayIdentifier.addValue({
+            options.push({
                 key: `${aGatewayIdentiefer.id}`,
                 value: aGatewayIdentiefer.networkname
             });
         }
+
+        this._selectGatewayIdentifier.setValues(options);
     }
 
     /**
@@ -305,7 +339,7 @@ export class UpnpNatEditModal extends ModalDialog {
      * getUseHostAddress
      */
     public getUseHostAddress(): boolean {
-        return this._switchUseHostAddress.isEnable();
+        return this._switchUseHostAddress.isOn();
     }
 
     /**
@@ -313,7 +347,8 @@ export class UpnpNatEditModal extends ModalDialog {
      * @param enable
      */
     public setUseHostAddress(enable: boolean): void {
-        this._switchUseHostAddress.setEnable(enable);
+        this._switchUseHostAddress.setOn(enable);
+        this._applyUseHostAddress();
     }
 
     /**
@@ -336,26 +371,23 @@ export class UpnpNatEditModal extends ModalDialog {
      * @param listens
      */
     public setListens(listens: ListenData[]): void {
-        this._selectListen.clearValues();
-
-        this._selectListen.addValue({
+        const options: {key: string; value: string;}[] = [{
             key: '0',
             value: 'Please select your Listen'
-        });
+        }];
 
         for (const alisten of listens) {
             if (alisten.type === ListenTypes.stream) {
                 const type = alisten.type === 0 ? 'Stream' : 'HTTP';
 
-                const option = {
+                options.push({
                     key: `${alisten.id}`,
-                    value: `${alisten.name} - ${alisten.port} (${type})`,
-                    style: alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;'
-                };
-
-                this._selectListen.addValue(option);
+                    value: `${alisten.name} - ${alisten.port} (${type})`
+                });
             }
         }
+
+        this._selectListen.setValues(options);
     }
 
     /**
@@ -393,14 +425,14 @@ export class UpnpNatEditModal extends ModalDialog {
      * @param protocol
      */
     public setProtocol(protocol: string): void {
-        this._selectProtocol.setSelectedValue(protocol);
+        this._segProtocol.setValue(protocol);
     }
 
     /**
      * getProtocol
      */
     public getProtocol(): string {
-        return this._selectProtocol.getSelectedValue();
+        return this._segProtocol.getValue();
     }
 
     /**
@@ -421,7 +453,7 @@ export class UpnpNatEditModal extends ModalDialog {
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setGatewayIdentifier(0);
         this.setGatewayAddress('');

@@ -65,13 +65,9 @@ export class Domains extends BasePage {
 
         this.setTitle('Domains');
 
-        this._domainDialog = new DomainEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._domainDialog = new DomainEditModal();
 
-        this._domainRecordDialog = new DomainRecordEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._domainRecordDialog = new DomainRecordEditModal();
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Domain', () => {

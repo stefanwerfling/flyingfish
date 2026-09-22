@@ -31,9 +31,7 @@ export class Gateway extends BasePage {
 
         this.setTitle('Gateway');
 
-        this._gatewayDialog = new GatewayEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._gatewayDialog = new GatewayEditModal();
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Gateway', () => {

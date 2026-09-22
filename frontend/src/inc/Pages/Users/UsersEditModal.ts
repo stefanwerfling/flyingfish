@@ -1,19 +1,19 @@
-import {
-    Form,
-    FormGroup,
-    InputBottemBorderOnly2,
-    InputType,
-    Switch,
-    Element,
-    ModalDialog,
-    ModalDialogType,
-    LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * UsersEditModal
+ * UsersEditModal — add/edit a user (username + email + optional password change). Rendered in
+ * the FlyingFish `.ffr` design language (see {@link FfrModal}): sectioned form, text inputs and
+ * a switch. The password fields use plain text inputs (no dedicated password widget in the
+ * `.ffr` set, which is acceptable here). Public API (get/set per field + resetValues) is
+ * unchanged so the page is agnostic to the widget set.
  */
-export class UsersEditModal extends ModalDialog {
+export class UsersEditModal {
+
+    /**
+     * The underlying `.ffr` modal.
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -25,63 +25,91 @@ export class UsersEditModal extends ModalDialog {
      * input username
      * @protected
      */
-    protected _inputUsername: InputBottemBorderOnly2;
+    protected readonly _inputUsername: FfrInput;
 
     /**
      * input email
      * @protected
      */
-    protected _inputEmail: InputBottemBorderOnly2;
+    protected readonly _inputEmail: FfrInput;
 
     /**
      * switch disable
      * @protected
      */
-    protected _switchDisable: Switch;
+    protected readonly _switchDisable: FfrSwitch;
 
     /**
      * input password
      * @protected
      */
-    protected _inputPassword: InputBottemBorderOnly2;
+    protected readonly _inputPassword: FfrInput;
 
     /**
      * input password repeat
      * @protected
      */
-    protected _inputPasswordRepeat: InputBottemBorderOnly2;
+    protected readonly _inputPasswordRepeat: FfrInput;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'usereditdialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('User', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
+        // account ----------------------------------------------------------------------------------------------------
+        const secAccount = new FfrSection(body, 'Account');
 
-        const groupUsername = new FormGroup(form, 'Username');
-        this._inputUsername = new InputBottemBorderOnly2(groupUsername, 'username');
+        this._inputUsername = new FfrInput(false, 'username');
+        new FfrField(secAccount.element, 'Username').mount(this._inputUsername.element);
 
-        const groupEMail = new FormGroup(form, 'EMail');
-        this._inputEmail = new InputBottemBorderOnly2(groupEMail, 'email');
+        this._inputEmail = new FfrInput(false, 'email');
+        new FfrField(secAccount.element, 'EMail').mount(this._inputEmail.element);
 
-        const groupDisable = new FormGroup(bodyCard, 'Disable this user');
-        this._switchDisable = new Switch(groupDisable, 'userdisable');
+        this._switchDisable = new FfrSwitch('Disable this user', false);
+        secAccount.element.append(this._switchDisable.element);
 
-        const groupPassword = new FormGroup(bodyCard, 'Password');
-        this._inputPassword = new InputBottemBorderOnly2(groupPassword, 'password', InputType.password);
-        this._inputPassword.setPlaceholder('leave blank if you do not want to change it');
+        // password ---------------------------------------------------------------------------------------------------
+        const secPassword = new FfrSection(body, 'Password');
 
-        const groupPasswordRepeat = new FormGroup(bodyCard, 'Password repeat');
-        this._inputPasswordRepeat = new InputBottemBorderOnly2(groupPasswordRepeat, 'passwordreapt', InputType.password);
-        this._inputPasswordRepeat.setPlaceholder('leave blank if you do not want to change it');
+        this._inputPassword = new FfrInput(false, 'leave blank if you do not want to change it');
+        this._inputPassword.element.attr('type', 'password');
+        new FfrField(secPassword.element, 'Password').mount(this._inputPassword.element);
 
-        // buttons -----------------------------------------------------------------------------------------------------
+        this._inputPasswordRepeat = new FfrInput(false, 'leave blank if you do not want to change it');
+        this._inputPasswordRepeat.element.attr('type', 'password');
+        new FfrField(secPassword.element, 'Password repeat').mount(this._inputPasswordRepeat.element);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
+
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -134,14 +162,14 @@ export class UsersEditModal extends ModalDialog {
      * @param disable
      */
     public setDisable(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+        this._switchDisable.setOn(disable);
     }
 
     /**
      * getDisable
      */
     public getDisable(): boolean {
-        return this._switchDisable.isEnable();
+        return this._switchDisable.isOn();
     }
 
     /**
@@ -177,7 +205,7 @@ export class UsersEditModal extends ModalDialog {
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setUsername('');
         this.setEMail('');

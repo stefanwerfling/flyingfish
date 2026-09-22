@@ -33,9 +33,7 @@ export class UpnpNat extends BasePage {
 
         this.setTitle('Upnp Nat');
 
-        this._upnpnatDialog = new UpnpNatEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._upnpnatDialog = new UpnpNatEditModal();
 
         // eslint-disable-next-line no-new
         new LeftNavbarLink(this._wrapper.getNavbar().getLeftNavbar(), 'Add Upnp-Nat', () => {

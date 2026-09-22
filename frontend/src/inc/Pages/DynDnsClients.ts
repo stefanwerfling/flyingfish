@@ -39,9 +39,7 @@ export class DynDnsClients extends BasePage {
 
         // dyndnsclient modal ------------------------------------------------------------------------------------------
 
-        this._dynDnsClientDialog = new DynDnsClientEditModal(
-            this._wrapper.getContentWrapper().getContent()
-        );
+        this._dynDnsClientDialog = new DynDnsClientEditModal();
 
         // -------------------------------------------------------------------------------------------------------------
 

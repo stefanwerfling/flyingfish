@@ -1,17 +1,18 @@
-import {
-    FormGroup,
-    InputBottemBorderOnly2,
-    InputType,
-    ModalDialog,
-    ModalDialogType,
-    Switch,
-    Element, LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * Credential user edit modal
+ * CredentialUserEditModal — add/edit a credential user (username + password + disable flag).
+ * Rendered in the FlyingFish `.ffr` design language (see {@link FfrModal}): sectioned form with
+ * plain inputs (there is no dedicated password widget) and a disable switch. Public API (get/set
+ * per field + resetValues) is unchanged so the page is agnostic to the widget set.
  */
-export class CredentialUserEditModal extends ModalDialog {
+export class CredentialUserEditModal {
+
+    /**
+     * modal
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -23,51 +24,79 @@ export class CredentialUserEditModal extends ModalDialog {
      * input username
      * @protected
      */
-    protected _inputUsername: InputBottemBorderOnly2;
+    protected readonly _inputUsername: FfrInput;
 
     /**
      * input password
      * @protected
      */
-    protected _inputPassword: InputBottemBorderOnly2;
+    protected readonly _inputPassword: FfrInput;
 
     /**
      * input password repeat
      * @protected
      */
-    protected _inputPasswordRepeat: InputBottemBorderOnly2;
+    protected readonly _inputPasswordRepeat: FfrInput;
 
     /**
      * switch disable
      * @protected
      */
-    protected _switchDisable: Switch;
+    protected readonly _switchDisable: FfrSwitch;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'credentialusermodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Credential User', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(this._body);
+        const secDetails = new FfrSection(body, 'Details');
 
-        const groupUsername = new FormGroup(bodyCard, 'Username');
-        this._inputUsername = new InputBottemBorderOnly2(groupUsername);
+        this._inputUsername = new FfrInput(false, 'Username');
+        new FfrField(secDetails.element, 'Username').mount(this._inputUsername.element);
 
-        const groupPassword = new FormGroup(bodyCard, 'Password');
-        this._inputPassword = new InputBottemBorderOnly2(groupPassword, undefined, InputType.password);
+        this._inputPassword = new FfrInput(false, 'Password');
+        this._inputPassword.element.attr('type', 'password');
+        new FfrField(secDetails.element, 'Password').mount(this._inputPassword.element);
 
-        const groupPasswordRepeat = new FormGroup(bodyCard, 'Password repeat');
-        this._inputPasswordRepeat = new InputBottemBorderOnly2(groupPasswordRepeat, undefined, InputType.password);
+        this._inputPasswordRepeat = new FfrInput(false, 'Password repeat');
+        this._inputPasswordRepeat.element.attr('type', 'password');
+        new FfrField(secDetails.element, 'Password repeat').mount(this._inputPasswordRepeat.element);
 
-        const groupDisable = new FormGroup(bodyCard, 'Disable this User');
-        this._switchDisable = new Switch(groupDisable, 'userdisable');
+        const secState = new FfrSection(body, 'State');
+        this._switchDisable = new FfrSwitch('Disable this User', false);
+        secState.element.append(this._switchDisable.element);
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -139,7 +168,7 @@ export class CredentialUserEditModal extends ModalDialog {
      * @returns {boolean}
      */
     public isDisabled(): boolean {
-        return this._switchDisable.isEnable();
+        return this._switchDisable.isOn();
     }
 
     /**
@@ -147,14 +176,13 @@ export class CredentialUserEditModal extends ModalDialog {
      * @param {boolean} disable
      */
     public setDisabled(disable: boolean): void {
-        this._switchDisable.setEnable(disable);
+        this._switchDisable.setOn(disable);
     }
 
     /**
      * Reset all input fields
      */
-    public override resetValues(): void {
-        super.resetValues();
+    public resetValues(): void {
         this._id = null;
         this.setUsername('');
         this.setPassword('');

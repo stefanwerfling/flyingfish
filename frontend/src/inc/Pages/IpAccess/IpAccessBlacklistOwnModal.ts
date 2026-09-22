@@ -1,19 +1,18 @@
-import {
-    Form,
-    FormGroup,
-    InputBottemBorderOnly2,
-    InputType,
-    Switch,
-    Element,
-    ModalDialog,
-    ModalDialogType,
-    LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSwitch} from '../../Components/FfrModal.js';
 
 /**
- * IpAccessBlacklistOwnModal
+ * IpAccessBlacklistOwnModal — add/edit an own (manual) blacklist entry: an IP/CIDR, a disabled
+ * flag and a description. Rendered in the FlyingFish `.ffr` design language (see {@link FfrModal}).
+ * Public API (get/set per field + resetValues) is unchanged so the page is agnostic to the
+ * widget set.
  */
-export class IpAccessBlacklistOwnModal extends ModalDialog {
+export class IpAccessBlacklistOwnModal {
+
+    /**
+     * The underlying `.ffr` modal.
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -25,43 +24,68 @@ export class IpAccessBlacklistOwnModal extends ModalDialog {
      * input ip
      * @protected
      */
-    protected _inputIp: InputBottemBorderOnly2;
+    protected readonly _inputIp: FfrInput;
 
     /**
      * switch disabled
      * @protected
      */
-    protected _switchDisabled: Switch;
+    protected readonly _switchDisabled: FfrSwitch;
 
     /**
      * input description
      * @protected
      */
-    protected _inputDescription: InputBottemBorderOnly2;
+    protected readonly _inputDescription: FfrInput;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'ipaccessblacklistowndialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Blacklist', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"></div>').appendTo(this._body);
-        const form = new Form(bodyCard);
+        const secDetails = new FfrSection(body, 'Details');
 
-        const groupIp = new FormGroup(form, 'IP');
-        this._inputIp = new InputBottemBorderOnly2(groupIp, 'ip', InputType.text);
+        this._inputIp = new FfrInput(true, 'IP / CIDR');
+        new FfrField(secDetails.element, 'IP').mount(this._inputIp.element);
 
-        const groupDisable = new FormGroup(form, 'Disabled this ip block');
-        this._switchDisabled = new Switch(groupDisable, 'ipownblockdisabled');
+        this._inputDescription = new FfrInput(false, 'A description ...');
+        new FfrField(secDetails.element, 'Description').mount(this._inputDescription.element);
 
-        const groupDescription = new FormGroup(bodyCard, 'Description');
-        this._inputDescription = new InputBottemBorderOnly2(groupDescription);
+        const secState = new FfrSection(body, 'State');
+        this._switchDisabled = new FfrSwitch('Disabled this ip block', false);
+        secState.element.append(this._switchDisabled.element);
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -99,14 +123,14 @@ export class IpAccessBlacklistOwnModal extends ModalDialog {
      * @param disabled
      */
     public setDisabled(disabled: boolean): void {
-        this._switchDisabled.setEnable(disabled);
+        this._switchDisabled.setOn(disabled);
     }
 
     /**
-     * getDisabled
+     * getDisable
      */
     public getDisable(): boolean {
-        return this._switchDisabled.isEnable();
+        return this._switchDisabled.isOn();
     }
 
     /**
@@ -127,7 +151,7 @@ export class IpAccessBlacklistOwnModal extends ModalDialog {
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setIp('');
         this.setDisabled(false);

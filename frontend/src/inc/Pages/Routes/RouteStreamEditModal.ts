@@ -1,18 +1,26 @@
 import {ListenData, SshPortEntry, UpStream} from 'flyingfish_schemas';
-import {ListenCategory, ListenTypes} from '../../Api/Listen.js';
+import {ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType} from 'bambooo';
+import {ListenTypes} from '../../Api/Listen.js';
 import {NginxStreamDestinationType, NginxStreamSshR} from '../../Api/Route.js';
-import {
-    BadgeType, ButtonClass, ButtonDefault, ButtonDefaultType, Card, CardBodyType, FormGroup,
-    InputBottemBorderOnly2, InputType, SelectBottemBorderOnly2, Switch, NavTab, Tooltip, TooltipInfo, Element,
-    ModalDialog, ModalDialogType, LangText
-} from 'bambooo';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSegmented, FfrSelect, FfrSwitch} from '../../Components/FfrModal.js';
 import {Lang} from '../../Lang.js';
 import {UpstreamCard} from './UpstreamCard.js';
 
 /**
- * RouteStreamEditModal
+ * RouteStreamEditModal — add/edit a stream route. Rendered in the FlyingFish `.ffr` design
+ * language (see {@link FfrModal}): the former NavTab tabs (Details, Upstream, SSH, Listen,
+ * Advanced) are flattened into {@link FfrSection}s whose visibility follows the selected
+ * destination type. The upstream editor keeps the bambooo {@link Card}/{@link UpstreamCard}
+ * widgets (out of scope). The public API (get/set per field + resetValues) is unchanged so
+ * the page is agnostic to the widget set.
  */
-export class RouteStreamEditModal extends ModalDialog {
+export class RouteStreamEditModal {
+
+    /**
+     * the ffr modal
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of stream
@@ -27,16 +35,10 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _type: number = 0;
 
     /**
-     * nav tab
-     * @protected
-     */
-    protected _navTab: NavTab;
-
-    /**
      * Domainname or IP
      * @protected
      */
-    protected _inputDomainName: InputBottemBorderOnly2;
+    protected readonly _inputDomainName: FfrInput;
 
     /**
      * domain id
@@ -48,7 +50,7 @@ export class RouteStreamEditModal extends ModalDialog {
      * Listen
      * @protected
      */
-    protected _selectListen: SelectBottemBorderOnly2;
+    protected readonly _selectListen: FfrSelect;
 
     /**
      * Listens data
@@ -60,25 +62,31 @@ export class RouteStreamEditModal extends ModalDialog {
      * Index
      * @protected
      */
-    protected _inputIndex: InputBottemBorderOnly2;
+    protected readonly _inputIndex: FfrInput;
 
     /**
      * Alias name
      * @protected
      */
-    protected _inputAliasName: InputBottemBorderOnly2;
+    protected readonly _inputAliasName: FfrInput;
 
     /**
      * Destination type
      * @protected
      */
-    protected _selectDestinationType: SelectBottemBorderOnly2;
+    protected readonly _selectDestinationType: FfrSelect;
+
+    /**
+     * upstream section element
+     * @protected
+     */
+    protected readonly _secUpstream: JQuery;
 
     /**
      * upstream card
      * @protected
      */
-    protected _upstreamCard: Card;
+    protected readonly _upstreamCard: Card;
 
     /**
      * upstream cards
@@ -87,10 +95,22 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _upstreamCards: UpstreamCard[] = [];
 
     /**
+     * ssh section element
+     * @protected
+     */
+    protected readonly _secSsh: JQuery;
+
+    /**
      * ssh r type
      * @protected
      */
-    protected _selectSshRType: SelectBottemBorderOnly2;
+    protected readonly _selectSshRType: FfrSelect;
+
+    /**
+     * ssh type field element
+     * @protected
+     */
+    protected readonly _fieldSshType: JQuery;
 
     /**
      * ssh port id
@@ -99,16 +119,16 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _sshport_id = 0;
 
     /**
-     * group ssh port
+     * ssh port field element
      * @protected
      */
-    protected _groupSshPort: FormGroup;
+    protected readonly _fieldSshPort: JQuery;
 
     /**
      * input ssh port
      * @protected
      */
-    protected _inputSshPort: InputBottemBorderOnly2;
+    protected readonly _inputSshPort: FfrInput;
 
     /**
      * ssh user id
@@ -117,85 +137,117 @@ export class RouteStreamEditModal extends ModalDialog {
     protected _sshuser_id: number = 0;
 
     /**
-     * group ssh username
+     * ssh username field element
      * @protected
      */
-    protected _groupSshUsername: FormGroup;
+    protected readonly _fieldSshUsername: JQuery;
 
     /**
      * ssh username
      * @protected
      */
-    protected _inputSshUsername: InputBottemBorderOnly2;
+    protected readonly _inputSshUsername: FfrInput;
 
     /**
-     * group ssh password
+     * ssh password field element
      * @protected
      */
-    protected _groupSshPaasword: FormGroup;
+    protected readonly _fieldSshPassword: JQuery;
 
     /**
      * ssh password
      * @protected
      */
-    protected _inputSshPassword: InputBottemBorderOnly2;
+    protected readonly _inputSshPassword: FfrInput;
 
     /**
-     * group ssh destination address
+     * ssh destination address field element
      * @protected
      */
-    protected _groupSshDesAddress: FormGroup;
+    protected readonly _fieldSshDesAddress: JQuery;
 
     /**
      * input ssh destination address
      * @protected
      */
-    protected _inputSshDesAddress: InputBottemBorderOnly2;
+    protected readonly _inputSshDesAddress: FfrInput;
 
     /**
-     * group ssh listen
+     * ssh listen field element
      * @protected
      */
-    protected _groupSshListen: FormGroup;
+    protected readonly _fieldSshListen: JQuery;
 
     /**
      * ssh listen
      * @protected
      */
-    protected _selectSshListen: SelectBottemBorderOnly2;
+    protected readonly _selectSshListen: FfrSelect;
+
+    /**
+     * listen section element
+     * @protected
+     */
+    protected readonly _secListen: JQuery;
 
     /**
      * destination listen
      * @protected
      */
-    protected _selectDestinationListen: SelectBottemBorderOnly2;
+    protected readonly _selectDestinationListen: FfrSelect;
 
     /**
      * use the stream as default
      * @protected
      */
-    protected _switchUseAsDefault: Switch;
+    protected readonly _switchUseAsDefault: FfrSwitch;
 
     /**
      * load balancing algorithm
      * @protected
      */
-    protected _selectLoadBalanceAlg: SelectBottemBorderOnly2;
+    protected readonly _selectLoadBalanceAlg: FfrSegmented;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'routestreammodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Stream Route', 'Save changes');
+        const body = this._modal.getBody();
 
-        this._navTab = new NavTab(this._body, 'routestreamnavtab');
-        const tabDetails = this._navTab.addTab('Details', 'routestreamdetails');
+        // details -----------------------------------------------------------------------------------------------------
 
-        const tabUpstream = this._navTab.addTab('Upstream', 'routestreamupstream');
-        tabUpstream.tab.show();
+        const secDetails = new FfrSection(body, 'Details');
 
-        this._upstreamCard = new Card(tabUpstream.body, CardBodyType.none);
+        this._inputDomainName = new FfrInput(false);
+        this._inputDomainName.element.attr('readonly', 'readonly');
+        new FfrField(secDetails.element, 'Domain Name/IP').mount(this._inputDomainName.element);
+
+        this._selectListen = new FfrSelect();
+        new FfrField(secDetails.element, 'Listen').mount(this._selectListen.element);
+
+        this._inputIndex = new FfrInput(true, 'auto sorting');
+        new FfrField(secDetails.element, 'Index').mount(this._inputIndex.element);
+
+        this._inputAliasName = new FfrInput(false, 'auto name');
+        new FfrField(secDetails.element, 'Alias-Name (Intern)').mount(this._inputAliasName.element);
+
+        this._selectDestinationType = new FfrSelect();
+        this._selectDestinationType.setValues([
+            {key: '-1', value: 'Please select a destination type'},
+            {key: `${NginxStreamDestinationType.upstream}`, value: 'IP/Host direct (Stream)'},
+            {key: `${NginxStreamDestinationType.ssh_r}`, value: 'Intern ssh server (Stream)'},
+            {key: `${NginxStreamDestinationType.ssh_l}`, value: 'Extern ssh server (Stream)'},
+            {key: `${NginxStreamDestinationType.listen}`, value: 'Intern Listen (Http/Https)'}
+        ]);
+        new FfrField(secDetails.element, 'Destination-Type').mount(this._selectDestinationType.element);
+
+        // upstream ----------------------------------------------------------------------------------------------------
+
+        const secUpstream = new FfrSection(body, 'Upstream');
+        this._secUpstream = secUpstream.element;
+
+        this._upstreamCard = new Card(secUpstream.element, CardBodyType.none);
         this._upstreamCard.setTitle('Upstream list');
 
         const addUpstreamBtn = new ButtonDefault(
@@ -215,221 +267,164 @@ export class RouteStreamEditModal extends ModalDialog {
             }));
         });
 
-        const tabSsh = this._navTab.addTab('SSH', 'routestreamssh');
-        tabSsh.tab.hide();
+        // ssh ---------------------------------------------------------------------------------------------------------
 
-        const tabListen = this._navTab.addTab('Listen', 'routestreamlisten');
-        tabListen.tab.hide();
+        const secSsh = new FfrSection(body, 'SSH');
+        this._secSsh = secSsh.element;
 
-        const tabAdvanced = this._navTab.addTab('Advanced', 'routestreamadvanced');
-        tabAdvanced.tab.show();
+        this._selectSshRType = new FfrSelect();
+        this._selectSshRType.setValues([
+            {key: `${NginxStreamSshR.none}`, value: 'Please select your SSH Type'},
+            {key: `${NginxStreamSshR.in}`, value: 'SSH Server'},
+            {key: `${NginxStreamSshR.out}`, value: 'SSH Port Listen'}
+        ]);
+        this._fieldSshType = new FfrField(secSsh.element, 'SSH Type').mount(this._selectSshRType.element).element;
 
-        // tab details -------------------------------------------------------------------------------------------------
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(tabDetails.body);
+        this._inputSshPort = new FfrInput(true, 'Empty for random port');
+        this._fieldSshPort = new FfrField(secSsh.element, 'Listen Port').mount(this._inputSshPort.element).element;
+        this._fieldSshPort.hide();
 
-        const groupDomainName = new FormGroup(bodyCard, 'Domain Name/IP');
-        this._inputDomainName = new InputBottemBorderOnly2(groupDomainName);
-        this._inputDomainName.setReadOnly(true);
+        this._inputSshUsername = new FfrInput(false);
+        this._fieldSshUsername = new FfrField(secSsh.element, 'Username').mount(this._inputSshUsername.element).element;
+        this._fieldSshUsername.hide();
 
-        const groupListen = new FormGroup(bodyCard, 'Listen');
-        this._selectListen = new SelectBottemBorderOnly2(groupListen);
+        this._inputSshPassword = new FfrInput(false, 'leave blank if you do not want to change it');
+        this._inputSshPassword.element.attr('type', 'password');
+        this._fieldSshPassword = new FfrField(secSsh.element, 'Password').mount(this._inputSshPassword.element).element;
+        this._fieldSshPassword.hide();
 
-        const groupIndex = new FormGroup(bodyCard, 'Index');
-        this._inputIndex = new InputBottemBorderOnly2(groupIndex, undefined, InputType.number);
-        this._inputIndex.setPlaceholder('auto sorting');
+        this._inputSshDesAddress = new FfrInput(true);
+        this._fieldSshDesAddress = new FfrField(secSsh.element, 'Destination IP Address').mount(this._inputSshDesAddress.element).element;
 
-        const groupAlias = new FormGroup(bodyCard, 'Alias-Name (Intern)');
-        this._inputAliasName = new InputBottemBorderOnly2(groupAlias);
-        this._inputAliasName.setPlaceholder('auto name');
+        this._selectSshListen = new FfrSelect();
+        this._fieldSshListen = new FfrField(secSsh.element, 'Listen').mount(this._selectSshListen.element).element;
+        this._fieldSshListen.hide();
 
-        const groupDesType = new FormGroup(bodyCard, 'Destination-Type');
-        this._selectDestinationType = new SelectBottemBorderOnly2(groupDesType);
-
-        this._selectDestinationType.addValue({
-            key: '-1',
-            value: 'Please select a destination type'
-        });
-
-        this._selectDestinationType.addValue({
-            key: `${NginxStreamDestinationType.upstream}`,
-            value: 'IP/Host direct (Stream)',
-            style: 'background:#ffc107;'
-        });
-
-        this._selectDestinationType.addValue({
-            key: `${NginxStreamDestinationType.ssh_r}`,
-            value: 'Intern ssh server (Stream)',
-            style: 'background:#007bff;'
-        });
-
-        this._selectDestinationType.addValue({
-            key: `${NginxStreamDestinationType.ssh_l}`,
-            value: 'Extern ssh server (Stream)',
-            style: `background:${BadgeType.color_cream_purpel};`
-        });
-
-        this._selectDestinationType.addValue({
-            key: `${NginxStreamDestinationType.listen}`,
-            value: 'Intern Listen (Http/Https)',
-            style: 'background:#28a745;'
-        });
-
-        // tab ssh -----------------------------------------------------------------------------------------------------
-
-        const bodyCardSsh = jQuery('<div class="card-body"/>').appendTo(tabSsh.body);
-
-        const groupSshType = new FormGroup(bodyCardSsh, 'SSH Type');
-        this._selectSshRType = new SelectBottemBorderOnly2(groupSshType);
-
-        this._selectSshRType.addValue({
-            key: `${NginxStreamSshR.none}`,
-            value: 'Please select your SSH Type'
-        });
-
-        this._selectSshRType.addValue({
-            key: `${NginxStreamSshR.in}`,
-            value: 'SSH Server'
-        });
-
-        this._selectSshRType.addValue({
-            key: `${NginxStreamSshR.out}`,
-            value: 'SSH Port Listen'
-        });
-
-        this._groupSshPort = new FormGroup(bodyCardSsh, 'Listen Port');
-        this._inputSshPort = new InputBottemBorderOnly2(this._groupSshPort, undefined, InputType.number);
-        this._inputSshPort.setPlaceholder('Empty for random port');
-        this._groupSshPort.getElement().hide();
-
-        this._groupSshUsername = new FormGroup(bodyCardSsh, 'Username');
-        this._inputSshUsername = new InputBottemBorderOnly2(this._groupSshUsername);
-        this._groupSshUsername.getElement().hide();
-
-        this._groupSshPaasword = new FormGroup(bodyCardSsh, 'Password');
-        this._inputSshPassword = new InputBottemBorderOnly2(this._groupSshPaasword, undefined, InputType.password);
-        this._inputSshPassword.setPlaceholder('leave blank if you do not want to change it');
-        this._groupSshPaasword.getElement().hide();
-
-        this._groupSshDesAddress = new FormGroup(bodyCardSsh, 'Destination IP Address');
-        this._inputSshDesAddress = new InputBottemBorderOnly2(this._groupSshDesAddress);
-        this._inputSshDesAddress.setPlaceholder('');
-
-        this._groupSshListen = new FormGroup(bodyCardSsh, 'Listen');
-        this._selectSshListen = new SelectBottemBorderOnly2(this._groupSshListen);
-        this._groupSshListen.getElement().hide();
-
-        this._selectSshRType.setChangeFn((value) => {
+        this._selectSshRType.onChange((value) => {
             if (this._selectDestinationType.getSelectedValue() === `${NginxStreamDestinationType.ssh_r}`) {
-                this._groupSshPort.getElement().hide();
-                this._groupSshUsername.getElement().hide();
-                this._groupSshPaasword.getElement().hide();
-                this._groupSshListen.getElement().hide();
+                this._fieldSshPort.hide();
+                this._fieldSshUsername.hide();
+                this._fieldSshPassword.hide();
+                this._fieldSshListen.hide();
 
                 switch (value) {
                     case `${NginxStreamSshR.in}`:
-                        this._groupSshPort.getElement().show();
-                        this._groupSshUsername.getElement().show();
-                        this._groupSshPaasword.getElement().show();
+                        this._fieldSshPort.show();
+                        this._fieldSshUsername.show();
+                        this._fieldSshPassword.show();
                         break;
 
                     case `${NginxStreamSshR.out}`:
-                        this._groupSshListen.getElement().show();
+                        this._fieldSshListen.show();
                         break;
                 }
             }
         });
 
-        // tab intern listen -------------------------------------------------------------------------------------------
+        // intern listen -----------------------------------------------------------------------------------------------
 
-        const bodyCardListen = jQuery('<div class="card-body"/>').appendTo(tabListen.body);
+        const secListen = new FfrSection(body, 'Listen');
+        this._secListen = secListen.element;
 
-        const groupDListen = new FormGroup(bodyCardListen, 'Listen (Intern)');
-        this._selectDestinationListen = new SelectBottemBorderOnly2(groupDListen);
+        this._selectDestinationListen = new FfrSelect();
+        new FfrField(secListen.element, 'Listen (Intern)').mount(this._selectDestinationListen.element);
 
-        this._selectDestinationListen.addValue({
-            key: '0',
-            value: 'Please select your Intern Listen'
-        });
+        // advanced ----------------------------------------------------------------------------------------------------
 
-        // tab advanced ------------------------------------------------------------------------------------------------
+        const secAdvanced = new FfrSection(body, 'Advanced');
 
-        const bodyCardAdvanced = jQuery('<div class="card-body"/>').appendTo(tabAdvanced.body);
+        this._switchUseAsDefault = new FfrSwitch('Use as default stream', false);
+        secAdvanced.element.append(this._switchUseAsDefault.element);
 
-        const groupUseAsDefault = new FormGroup(bodyCardAdvanced, 'Use as default stream');
-        // eslint-disable-next-line no-new
-        new TooltipInfo(groupUseAsDefault.getLabelElement(), Lang.i().l('route_stream_useasdefault'));
-        this._switchUseAsDefault = new Switch(groupUseAsDefault, 'use_as_default');
-
-        const groupLoadBalanceAlg = new FormGroup(bodyCardAdvanced, 'Load balancing algorithm');
-        // eslint-disable-next-line no-new
-        new TooltipInfo(groupLoadBalanceAlg.getLabelElement(), Lang.i().l('route_stream_loadbalancealg'));
-        this._selectLoadBalanceAlg = new SelectBottemBorderOnly2(groupLoadBalanceAlg);
-
-        this._selectLoadBalanceAlg.addValue({
-            key: 'none',
-            value: 'None'
-        });
-
-        this._selectLoadBalanceAlg.addValue({
-            key: 'least_conn',
-            value: 'Least conn'
-        });
-
-        this._selectLoadBalanceAlg.addValue({
-            key: 'ip_hash',
-            value: 'IP Hash'
-        });
+        this._selectLoadBalanceAlg = new FfrSegmented([
+            {key: 'none', label: 'None'},
+            {key: 'least_conn', label: 'Least conn'},
+            {key: 'ip_hash', label: 'IP Hash'}
+        ], 'none');
+        new FfrField(
+            secAdvanced.element,
+            'Load balancing algorithm',
+            Lang.i().l('route_stream_loadbalancealg')
+        ).mount(this._selectLoadBalanceAlg.element);
 
         // select destination type -------------------------------------------------------------------------------------
 
-        this._selectDestinationType.setChangeFn((value) => {
-            tabUpstream.tab.hide();
-            tabSsh.tab.hide();
-            tabListen.tab.hide();
+        this._selectDestinationType.onChange((value) => {
+            this._secUpstream.hide();
+            this._secSsh.hide();
+            this._secListen.hide();
 
             switch (parseInt(value, 10)) {
                 case NginxStreamDestinationType.upstream:
-                    tabUpstream.tab.show();
-                    tabSsh.tab.hide();
-                    tabListen.tab.hide();
+                    this._secUpstream.show();
+                    this._secSsh.hide();
+                    this._secListen.hide();
                     break;
 
                 case NginxStreamDestinationType.ssh_l:
-                    this._groupSshPort.getElement().show();
-                    this._groupSshUsername.getElement().show();
-                    this._groupSshPaasword.getElement().show();
-                    this._groupSshDesAddress.show();
+                    this._fieldSshPort.show();
+                    this._fieldSshUsername.show();
+                    this._fieldSshPassword.show();
+                    this._fieldSshDesAddress.show();
 
-                    groupSshType.hide();
-                    tabUpstream.tab.hide();
-                    tabSsh.tab.show();
-                    tabListen.tab.hide();
+                    this._fieldSshType.hide();
+                    this._secUpstream.hide();
+                    this._secSsh.show();
+                    this._secListen.hide();
                     break;
 
                 case NginxStreamDestinationType.ssh_r:
-                    this._groupSshDesAddress.hide();
+                    this._fieldSshDesAddress.hide();
                     this.setSshRType(NginxStreamSshR.none);
-                    groupSshType.show();
-                    tabUpstream.tab.hide();
-                    tabSsh.tab.show();
-                    tabListen.tab.hide();
+                    this._fieldSshType.show();
+                    this._secUpstream.hide();
+                    this._secSsh.show();
+                    this._secListen.hide();
                     break;
 
                 case NginxStreamDestinationType.listen:
-                    tabUpstream.tab.hide();
-                    tabSsh.tab.hide();
-                    tabListen.tab.show();
+                    this._secUpstream.hide();
+                    this._secSsh.hide();
+                    this._secListen.show();
                     break;
             }
         });
 
-        // buttons -----------------------------------------------------------------------------------------------------
+        // initial section visibility ----------------------------------------------------------------------------------
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+        this._secUpstream.show();
+        this._secSsh.hide();
+        this._secListen.hide();
+    }
 
-        // init tooltips
-        Tooltip.init();
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
+
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
+
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
+
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -480,12 +475,16 @@ export class RouteStreamEditModal extends ModalDialog {
      */
     public setListens(listens: ListenData[]): void {
         this._listens = listens;
-        this._selectListen.clearValues();
 
-        this._selectListen.addValue({
+        const listenOptions: {key: string; value: string;}[] = [{
             key: '0',
             value: 'Please select your Listen'
-        });
+        }];
+
+        const destListenOptions: {key: string; value: string;}[] = [{
+            key: '0',
+            value: 'Please select your Intern Listen'
+        }];
 
         for (const alisten of this._listens) {
             if (alisten.routeless) {
@@ -494,32 +493,21 @@ export class RouteStreamEditModal extends ModalDialog {
             }
 
             const type = alisten.type === ListenTypes.stream ? 'Stream' : 'HTTP';
-            let style = alisten.type === ListenTypes.stream ? 'background:#ffc107;' : 'background:#28a745;';
-
-            if (alisten.listen_category) {
-                switch (alisten.listen_category) {
-                    case ListenCategory.default_https:
-                        style = 'background:#28a745;';
-                        break;
-
-                    case ListenCategory.default_http:
-                        style = 'background:#CCCCFF';
-                        break;
-                }
-            }
 
             const option = {
                 key: `${alisten.id}`,
-                value: `${alisten.name} - ${alisten.port} (${type})`,
-                style: style
+                value: `${alisten.name} - ${alisten.port} (${type})`
             };
 
             if (alisten.type === this._type) {
-                this._selectListen.addValue(option);
+                listenOptions.push(option);
             } else {
-                this._selectDestinationListen.addValue(option);
+                destListenOptions.push(option);
             }
         }
+
+        this._selectListen.setValues(listenOptions);
+        this._selectDestinationListen.setValues(destListenOptions);
     }
 
     /**
@@ -543,6 +531,7 @@ export class RouteStreamEditModal extends ModalDialog {
      */
     public setDestinationType(type: NginxStreamDestinationType): void {
         this._selectDestinationType.setSelectedValue(`${type}`);
+        this._selectDestinationType.element.trigger('change');
     }
 
     /**
@@ -628,6 +617,7 @@ export class RouteStreamEditModal extends ModalDialog {
      */
     public setSshRType(type: NginxStreamSshR): void {
         this._selectSshRType.setSelectedValue(`${type}`);
+        this._selectSshRType.element.trigger('change');
     }
 
     /**
@@ -673,9 +663,9 @@ export class RouteStreamEditModal extends ModalDialog {
      */
     public setSshUserId(id: number): void {
         if (id > 0) {
-            this._inputSshPassword.setPlaceholder('Leave password blank if you don\'t want to change the password.');
+            this._inputSshPassword.element.attr('placeholder', 'Leave password blank if you don\'t want to change the password.');
         } else {
-            this._inputSshPassword.setPlaceholder('');
+            this._inputSshPassword.element.attr('placeholder', '');
         }
 
         this._sshuser_id = id;
@@ -723,12 +713,10 @@ export class RouteStreamEditModal extends ModalDialog {
      * @param listens
      */
     public setSshListens(listens: SshPortEntry[]): void {
-        for (const entry of listens) {
-            this._selectSshListen.addValue({
-                key: `${entry.id}`,
-                value: `SSH INTERNT OUT (<-- ${entry.port})`
-            });
-        }
+        this._selectSshListen.setValues(listens.map((entry) => ({
+            key: `${entry.id}`,
+            value: `SSH INTERNT OUT (<-- ${entry.port})`
+        })));
     }
 
     /**
@@ -766,14 +754,14 @@ export class RouteStreamEditModal extends ModalDialog {
      * @param asdefault
      */
     public setUseAsDefault(asdefault: boolean): void {
-        this._switchUseAsDefault.setEnable(asdefault);
+        this._switchUseAsDefault.setOn(asdefault);
     }
 
     /**
      * getUseAsDefault
      */
     public getUseAsDefault(): boolean {
-        return this._switchUseAsDefault.isEnable();
+        return this._switchUseAsDefault.isOn();
     }
 
     /**
@@ -781,20 +769,20 @@ export class RouteStreamEditModal extends ModalDialog {
      * @param alg
      */
     public setLoadBalancingAlgorithm(alg: string): void {
-        this._selectLoadBalanceAlg.setSelectedValue(alg);
+        this._selectLoadBalanceAlg.setValue(alg);
     }
 
     /**
      * getLoadBalancingAlgorithm
      */
     public getLoadBalancingAlgorithm(): string {
-        return this._selectLoadBalanceAlg.getSelectedValue();
+        return this._selectLoadBalanceAlg.getValue();
     }
 
     /**
      * resetValues
      */
-    public override resetValues(): void {
+    public resetValues(): void {
         this.setId(null);
         this.setDomainName('');
         this._inputIndex.setValue('');
@@ -804,9 +792,8 @@ export class RouteStreamEditModal extends ModalDialog {
         this.setSshRType(NginxStreamSshR.none);
         this.setUseAsDefault(false);
         this._inputSshPort.setValue('');
-        this._navTab.setTabSelect(0);
-        this._inputSshPassword.setPlaceholder('');
-        this._selectSshListen.clearValues();
+        this._inputSshPassword.element.attr('placeholder', '');
+        this._selectSshListen.setValues([]);
         this._inputSshDesAddress.setValue('');
 
         this._upstreamCards.forEach((element, index) => {

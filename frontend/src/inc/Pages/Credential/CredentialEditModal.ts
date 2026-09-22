@@ -1,17 +1,19 @@
-import {
-    FormGroup,
-    InputBottemBorderOnly2,
-    ModalDialog,
-    ModalDialogType,
-    Element,
-    SelectBottemBorderOnly2, LangText
-} from 'bambooo';
 import {CredentialSchemaTypes, ProviderEntry} from 'flyingfish_schemas';
+import {FfrField, FfrInput, FfrModal, FfrSection, FfrSegmented, FfrSelect} from '../../Components/FfrModal.js';
 
 /**
- * Credential edit modal
+ * CredentialEditModal — add/edit a credential (name + auth schema + provider). Rendered in the
+ * FlyingFish `.ffr` design language (see {@link FfrModal}): sectioned form, a segmented auth-schema
+ * control and a provider dropdown. Public API (get/set per field + resetValues) is unchanged so the
+ * page is agnostic to the widget set.
  */
-export class CredentialEditModal extends ModalDialog {
+export class CredentialEditModal {
+
+    /**
+     * modal
+     * @protected
+     */
+    protected readonly _modal: FfrModal;
 
     /**
      * id of entry
@@ -23,52 +25,70 @@ export class CredentialEditModal extends ModalDialog {
      * input name
      * @protected
      */
-    protected _inputName: InputBottemBorderOnly2;
+    protected readonly _inputName: FfrInput;
 
     /**
-     * select schema auth
+     * segmented schema auth
      * @protected
      */
-    protected _selectSchemaAuth: SelectBottemBorderOnly2;
+    protected readonly _segSchemaAuth: FfrSegmented;
 
     /**
      * select provider
      * @protected
      */
-    protected _selectProvider: SelectBottemBorderOnly2;
+    protected readonly _selectProvider: FfrSelect;
 
     /**
      * constructor
-     * @param elementObject
      */
-    public constructor(elementObject: Element) {
-        super(elementObject, 'credentialmodaldialog', ModalDialogType.large);
+    public constructor() {
+        this._modal = new FfrModal('Credential', 'Save changes');
+        const body = this._modal.getBody();
 
-        const bodyCard = jQuery('<div class="card-body"/>').appendTo(this._body);
+        const secDetails = new FfrSection(body, 'Details');
 
-        const groupName = new FormGroup(bodyCard, 'Name');
-        this._inputName = new InputBottemBorderOnly2(groupName.getElement());
+        this._inputName = new FfrInput(false, 'Name');
+        new FfrField(secDetails.element, 'Name').mount(this._inputName.element);
 
-        const groupSchemaAuth = new FormGroup(bodyCard, 'Schema Auth');
-        this._selectSchemaAuth = new SelectBottemBorderOnly2(groupSchemaAuth);
+        this._segSchemaAuth = new FfrSegmented([
+            {key: `${CredentialSchemaTypes.Basic}`, label: 'Basic'},
+            {key: `${CredentialSchemaTypes.Digest}`, label: 'Digest'}
+        ], `${CredentialSchemaTypes.Basic}`);
+        new FfrField(secDetails.element, 'Schema Auth').mount(this._segSchemaAuth.element);
 
-        this._selectSchemaAuth.addValue({
-            key: `${CredentialSchemaTypes.Basic}`,
-            value: 'Basic'
-        });
+        this._selectProvider = new FfrSelect();
+        new FfrField(secDetails.element, 'Provider').mount(this._selectProvider.element);
+    }
 
-        this._selectSchemaAuth.addValue({
-            key: `${CredentialSchemaTypes.Digest}`,
-            value: 'Digest'
-        });
+    /**
+     * setTitle
+     * @param text - dialog title
+     */
+    public setTitle(text: string): void {
+        this._modal.setTitle(text);
+    }
 
-        const groupProvider = new FormGroup(bodyCard, 'Provider');
-        this._selectProvider = new SelectBottemBorderOnly2(groupProvider);
+    /**
+     * setOnSave
+     * @param fn - save handler
+     */
+    public setOnSave(fn: () => void): void {
+        this._modal.setOnSave(fn);
+    }
 
-        // buttons -----------------------------------------------------------------------------------------------------
+    /**
+     * show
+     */
+    public show(): void {
+        this._modal.show();
+    }
 
-        this.addButtonClose(new LangText('Close'));
-        this.addButtonSave(new LangText('Save changes'), true);
+    /**
+     * hide
+     */
+    public hide(): void {
+        this._modal.hide();
     }
 
     /**
@@ -107,7 +127,7 @@ export class CredentialEditModal extends ModalDialog {
      * @returns {CredentialSchemaTypes}
      */
     public getAuthSchemaType(): CredentialSchemaTypes {
-        switch (this._selectSchemaAuth.getSelectedValue()) {
+        switch (this._segSchemaAuth.getValue()) {
             case `${CredentialSchemaTypes.Basic}`:
                 return CredentialSchemaTypes.Basic;
 
@@ -123,7 +143,7 @@ export class CredentialEditModal extends ModalDialog {
      * @param {string} type
      */
     public setAuthSchemaType(type: string): void {
-        this._selectSchemaAuth.setSelectedValue(type);
+        this._segSchemaAuth.setValue(type);
     }
 
     /**
@@ -131,20 +151,21 @@ export class CredentialEditModal extends ModalDialog {
      * @param {ProviderEntry[]} providers
      */
     public setProviders(providers: ProviderEntry[]): void {
-        this._selectProvider.clearValues();
+        const options: {key: string; value: string;}[] = [];
 
-        this._selectProvider.addValue({
+        options.push({
             key: 'none',
             value: 'Please select your provider'
         });
 
         for (const provider of providers) {
-            this._selectProvider.addValue({
+            options.push({
                 key: provider.name,
                 value: provider.title
             });
         }
 
+        this._selectProvider.setValues(options);
         this._selectProvider.setSelectedValue('none');
     }
 
@@ -162,6 +183,15 @@ export class CredentialEditModal extends ModalDialog {
      */
     public getProvider(): string {
         return this._selectProvider.getSelectedValue();
+    }
+
+    /**
+     * Reset all input fields
+     */
+    public resetValues(): void {
+        this._id = null;
+        this.setName('');
+        this.setAuthSchemaType(`${CredentialSchemaTypes.Basic}`);
     }
 
 }
