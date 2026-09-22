@@ -27,39 +27,6 @@ services:
         max-size: "500k"
         max-file: "50"
 
-  influxdb:
-    image: influxdb:latest
-    container_name: flyingfish_influxdb
-    volumes:
-      - flyingfishInfluxdbData:/var/lib/influxdb2
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
-      - DOCKER_INFLUXDB_INIT_RETENTION=${INFLUXDB_RETENTION}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
-      - INFLUXDB_STORAGE_CACHE_MAX_MEMORY_SIZE=52428800
-      - INFLUXDB_STORAGE_CACHE_SNAPSHOT_MEMORY_SIZE=26214400
-      - INFLUXDB_STORAGE_CACHE_SNAPSHOT_WRITE_COLD_DURATION=10s
-      - INFLUXDB_STORAGE_WAL_FSYNC_DELAY=1s
-      - INFLUXDB_STORAGE_INDEX_VERSION=tsi1
-    ports:
-      - "127.0.0.1:8086:8086"
-    networks:
-      flyingfishNet:
-        ipv4_address: 10.103.0.5
-    healthcheck:
-      test: "curl -f http://localhost:8086/ping"
-      interval: 5s
-      timeout: 10s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "500k"
-        max-file: "50"
 
   redis:
     image: redis:7.2-alpine
@@ -127,10 +94,6 @@ services:
       FLYINGFISH_DB_MYSQL_USERNAME: "${MARIADB_ROOT_USERNAME}"
       FLYINGFISH_DB_MYSQL_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
       FLYINGFISH_DB_MYSQL_DATABASE: "${MARIADB_DATABASE}"
-      FLYINGFISH_DB_INFLUX_URL: "${INFLUXDB_URL}"
-      FLYINGFISH_DB_INFLUX_TOKEN: "${INFLUXDB_ADMIN_TOKEN}"
-      FLYINGFISH_DB_INFLUX_ORG: "${INFLUXDB_ORG}"
-      FLYINGFISH_DB_INFLUX_BUCKET: "${INFLUXDB_BUCKET}"
       FLYINGFISH_HTTPSERVER_PORT: "${HTTPSERVER_PORT}"
       FLYINGFISH_LOGGING_LEVEL: "${LOGGING_LEVEL}"
       FLYINGFISH_DYNDNSSERVER_ENABLE: "${DYNDNSSERVER_ENABLE}"
@@ -171,8 +134,6 @@ services:
       mariadb:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      influxdb:
         condition: service_healthy
     command:
       - node
@@ -708,8 +669,6 @@ services:
 
 volumes:
   flyingfishDbData:
-    driver: local
-  flyingfishInfluxdbData:
     driver: local
   flyingfish:
     driver: local

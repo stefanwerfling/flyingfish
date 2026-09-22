@@ -12,7 +12,6 @@ import {isFlyingFishUserLogin} from '../../Application/Server/FlyingFishRouteChe
 import {HimHIP} from './Dashboard/HimHIP.js';
 import {Info} from './Dashboard/Info.js';
 import {PublicIPBlacklistCheck} from './Dashboard/PublicIPBlacklistCheck.js';
-import {StreamRequests} from './Dashboard/StreamRequests.js';
 
 /**
  * Dashboard
@@ -67,23 +66,6 @@ export class Dashboard extends DefaultRoute {
             },
             {
                 description: 'Check the public IP against the RBL blacklists'
-            }
-        );
-
-        this._get(
-            '/json/dashboard/streamrequests',
-            false,
-            async(req, res): Promise<DefaultHandlerReturn> => {
-                if (isFlyingFishUserLogin(req)) {
-                    res.status(200).json(await StreamRequests.getList());
-                } else {
-                    res.status(200).json({statusCode: StatusCodes.UNAUTHORIZED} as DefaultReturn);
-                }
-
-                return {type: HandlerResultType.handled};
-            },
-            {
-                description: 'Read the stream request counters'
             }
         );
 

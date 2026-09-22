@@ -46,7 +46,6 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@influxdata/influxdb-client": "^1.35.0",
     "adm-zip": "^0.5.16",
     "async-exit-hook": "^2.0.1",
     "bcrypt": "^5.1.1",

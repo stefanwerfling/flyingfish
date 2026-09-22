@@ -1,15 +1,11 @@
 import {Logger} from '@stefanwerfling/figtree';
-import {SchemaErrors} from 'vts';
-import {NginxHttpAccess as NginxHttpAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxHttpAccess.js';
-import {NginxStreamAccess as NginxStreamAccessInfluxDB} from '../Db/InfluxDb/Entity/NginxStreamAccess.js';
 import {SysLogServer} from '../SysLogServer/SysLogServer.js';
-import {NginxConfigBuilder} from './NginxConfigBuilder.js';
-import {SchemaJsonLogAccessHttp, SchemaJsonLogAccessStream} from './NginxLogFormatJson.js';
 
 /**
- * Owns the nginx access-log pipeline: a syslog server that receives nginx JSON
- * access logs and writes them to InfluxDB. Extracted from NginxService (phase-2
- * split).
+ * Owns the nginx access-log syslog server. nginx's `access_log` points at this server (the
+ * config builder reads its address); received log lines are currently just traced. The
+ * InfluxDB time-series sink was removed — re-add a consumer here if access-log analytics
+ * come back.
  */
 export class NginxAccessLog {
 
@@ -24,7 +20,7 @@ export class NginxAccessLog {
     }
 
     /**
-     * Start the syslog server and wire the nginx-log -> InfluxDB pipeline.
+     * Start the syslog server that receives nginx access logs.
      */
     public start(): void {
         this._syslog = new SysLogServer();
@@ -55,57 +51,11 @@ export class NginxAccessLog {
         ) => {
             Logger.getLogger().silly(
                 '%s',
-                msg.toString(), 
+                msg.toString(),
                 {
                     class: 'NginxAccessLog::start::SysLogServer::setOnMessage'
                 }
             );
-
-            const parts = msg.toString().split(`${NginxConfigBuilder.SYSLOG_TAG}: `);
-
-            try {
-                const nginxLog = JSON.parse(parts[1]);
-
-                if (nginxLog.source_type) {
-                    const errors: SchemaErrors = [];
-
-                    if (nginxLog.source_type === 'stream') {
-                        if (SchemaJsonLogAccessStream.validate(nginxLog, errors)) {
-                            NginxStreamAccessInfluxDB.addLog(nginxLog);
-                        } else {
-                            Logger.getLogger().error('Validation error SchemaJsonLogAccessStream:', {
-                                class: 'NginxAccessLog::start::SysLogServer::setOnMessage:stream',
-                                errors: JSON.stringify(errors, null, 2)
-                            });
-                        }
-                    } else if (nginxLog.source_type === 'http') {
-                        if (SchemaJsonLogAccessHttp.validate(nginxLog, errors)) {
-                            NginxHttpAccessInfluxDB.addLog(nginxLog);
-                        } else {
-                            Logger.getLogger().error('Validation error SchemaJsonLogAccessHttp:', {
-                                class: 'NginxAccessLog::start::SysLogServer::setOnMessage',
-                                errors: JSON.stringify(errors, null, 2)
-                            });
-                        }
-                    }
-                }
-            } catch (error) {
-                Logger.getLogger().error('Exception:', {
-                    class: 'NginxAccessLog::start::SysLogServer::setOnMessage'
-                });
-
-                if (error instanceof Error) {
-                    Logger.getLogger().error(error.message, {
-                        class: 'NginxAccessLog::start::SysLogServer::setOnMessage'
-                    });
-                } else {
-                    console.log(error);
-                }
-
-                Logger.getLogger().error(JSON.stringify(error, null, 2), {
-                    class: 'NginxAccessLog::start::SysLogServer::setOnMessage'
-                });
-            }
         });
 
         this._syslog.listen();

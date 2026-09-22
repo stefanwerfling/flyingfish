@@ -63,12 +63,6 @@ export {
     DashboardInfoResponse
 } from './Backend/Routes/Dashboard/Info.js';
 export {
-    SchemaStreamRequestPoint,
-    StreamRequestPoint,
-    SchemaStreamRequestsResponse,
-    StreamRequestsResponse
-} from './Backend/Routes/Dashboard/StreamRequests.js';
-export {
     SchemaIpBlacklistCheck,
     SchemaPublicIPBlacklistCheckResponse,
     PublicIPBlacklistCheckResponse

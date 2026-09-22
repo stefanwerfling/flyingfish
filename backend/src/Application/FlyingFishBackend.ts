@@ -15,7 +15,6 @@ import {FlyingFishHttpService} from './Server/FlyingFishHttpService.js';
 import {BlacklistService} from './Service/BlacklistService.js';
 import {DynDnsService} from './Service/DynDnsService.js';
 import {HowIsMyPublicIpService} from './Service/HowIsMyPublicIpService.js';
-import {InfluxDbService} from './Service/InfluxDbService.js';
 import {IpLocationService} from './Service/IpLocationService.js';
 import {IpService} from './Service/IpService.js';
 import {NginxService} from './Service/NginxService.js';
@@ -133,12 +132,6 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         // Config is already loaded here (BackendApp loads it before
         // _initServices), so the conditional services below can gate on it.
         const config = FlyingFishConfig.getInstance().get();
-
-        // InfluxDb (optional): initialize FlyingFish's InfluxDbHelper before the
-        // nginx access-log pipeline needs it.
-        if (config?.db?.influx) {
-            this._serviceManager.add(new InfluxDbService());
-        }
 
         // Node PKI (v2 own-PKI epic 9.4): seed the CA pool (from the shared file the
         // pkiserver writes) + the revocation list so the HTTPS server's

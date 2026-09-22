@@ -27,7 +27,6 @@ import {UtilRedirect} from '../Utils/UtilRedirect.js';
 import {BasePage} from './BasePage.js';
 import {DashboardIpBlacklistModal} from './Dashboard/DashboardIpBlacklistModal.js';
 import {DashboardMapIp, DashboardMapIpMark} from './Dashboard/DashboardMapIp.js';
-import {LineChartRequests} from './Dashboard/LineChartRequests.js';
 
 /**
  * Dashboard
@@ -51,12 +50,6 @@ export class Dashboard extends BasePage {
      * @protected
      */
     protected _ipBlacklistDialog: DashboardIpBlacklistModal;
-
-    /**
-     * line chart requests
-     * @protected
-     */
-    protected _lineChartRequests: LineChartRequests | undefined;
 
     /**
      * ip blacklist map
@@ -115,13 +108,6 @@ export class Dashboard extends BasePage {
         hostIpBox.setIcon(IconFa.ethernet, InfoBoxBg.warning);
         hostIpBox.getTextElement().append('Host IP');
 
-        // requests ----------------------------------------------------------------------------------------------------
-
-        const rowRequests = new ContentRow(content);
-        const cardRequests = new Card(new ContentCol(rowRequests, ContentColSize.col12));
-        cardRequests.setTitle('Stream requests');
-        this._lineChartRequests = new LineChartRequests(cardRequests);
-
         // ip access map -----------------------------------------------------------------------------------------------
 
         const rowMap = new ContentRow(content);
@@ -151,17 +137,6 @@ export class Dashboard extends BasePage {
          */
         this._onLoadTable = async(): Promise<void> => {
             const dashboardInfo = await DashboardApi.getInfo();
-            const streamRequests = await DashboardApi.streamRequestList();
-
-            const streamRequestsPoints: any[] = [];
-
-            for (const streamRequestPoint of streamRequests.list) {
-                streamRequestsPoints.push(streamRequestPoint.counts);
-            }
-
-            if (this._lineChartRequests) {
-                this._lineChartRequests.updateData(streamRequestsPoints);
-            }
 
             // public ip -----------------------------------------------------------------------------------------------
 

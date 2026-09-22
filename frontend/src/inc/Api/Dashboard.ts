@@ -3,8 +3,6 @@ import {
     PublicIPBlacklistCheckResponse,
     SchemaDashboardInfoResponse, SchemaDefaultReturn,
     SchemaPublicIPBlacklistCheckResponse,
-    SchemaStreamRequestsResponse,
-    StreamRequestsResponse
 } from 'flyingfish_schemas';
 import {NetFetch} from '../Net/NetFetch.js';
 
@@ -27,12 +25,6 @@ export class Dashboard {
         return NetFetch.getData('/json/dashboard/publicipblacklistcheck', SchemaPublicIPBlacklistCheckResponse);
     }
 
-    /**
-     * streamRequestList
-     */
-    public static async streamRequestList(): Promise<StreamRequestsResponse> {
-        return NetFetch.getData('/json/dashboard/streamrequests', SchemaStreamRequestsResponse);
-    }
 
     /**
      * Refrech HimHIP data

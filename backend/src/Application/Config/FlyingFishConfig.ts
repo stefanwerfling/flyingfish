@@ -143,7 +143,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
 
         config = this._loadEnvMariaDb(config);
         config = this._loadEnvRedisDb(config);
-        config = this._loadEnvInfluxDb(config);
         config = this._loadEnvHttpserver(config);
         config = this._loadEnvDnsserver(config);
         config = this._loadEnvNginx(config);
@@ -180,54 +179,6 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
         return config;
     }
 
-    /**
-     * Load InfluxDB env.
-     * @param {BackendConfigOptions} config
-     * @return {BackendConfigOptions}
-     * @protected
-     */
-    protected _loadEnvInfluxDb(config: BackendConfigOptions): BackendConfigOptions {
-        const influxEnvList = [
-            ENV_OPTIONAL_DB.DB_INFLUX_URL,
-            ENV_OPTIONAL_DB.DB_INFLUX_TOKEN,
-            ENV_OPTIONAL_DB.DB_INFLUX_ORG,
-            ENV_OPTIONAL_DB.DB_INFLUX_BUCKET
-        ];
-
-        for (const entry of influxEnvList) {
-            if (process.env[entry]) {
-                config.db.influx = {
-                    url: '',
-                    password: '',
-                    username: '',
-                    org: '',
-                    bucket: '',
-                    token: ''
-                };
-                break;
-            }
-        }
-
-        if (config.db.influx) {
-            if (process.env[ENV_OPTIONAL_DB.DB_INFLUX_URL]) {
-                config.db.influx.url = process.env[ENV_OPTIONAL_DB.DB_INFLUX_URL];
-            }
-
-            if (process.env[ENV_OPTIONAL_DB.DB_INFLUX_TOKEN]) {
-                config.db.influx.token = process.env[ENV_OPTIONAL_DB.DB_INFLUX_TOKEN];
-            }
-
-            if (process.env[ENV_OPTIONAL_DB.DB_INFLUX_ORG]) {
-                config.db.influx.org = process.env[ENV_OPTIONAL_DB.DB_INFLUX_ORG];
-            }
-
-            if (process.env[ENV_OPTIONAL_DB.DB_INFLUX_BUCKET]) {
-                config.db.influx.bucket = process.env[ENV_OPTIONAL_DB.DB_INFLUX_BUCKET];
-            }
-        }
-
-        return config;
-    }
 
     /**
      * Load Redis env.
