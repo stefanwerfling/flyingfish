@@ -5,6 +5,7 @@ import {Badge, BadgeType, Card, ContentCol, ContentColSize, ContentRow, DialogCo
     ButtonMenu, IconFa, Table, Td, Th, Tr, ModalDialogType, LeftNavbarLink} from 'bambooo';
 import {BasePage} from './BasePage.js';
 import {ListensEditModal} from './Listens/ListensEditModal.js';
+import {ListensPortFlow} from './Listens/ListensPortFlow.js';
 
 /**
  * Listens
@@ -115,6 +116,11 @@ export class Listens extends BasePage {
      * loadContent
      */
     public override async loadContent(): Promise<void> {
+        // port-flow graphic (top): a data-driven diagram of how these listeners route
+        // through nginx to the backends. Fed from the same listen list as the table below.
+        const flowRow = new ContentRow(this._wrapper.getContentWrapper().getContent());
+        const portFlow = new ListensPortFlow(jQuery(new ContentCol(flowRow, ContentColSize.col12).getElement()));
+
         const row1 = new ContentRow(this._wrapper.getContentWrapper().getContent());
         const card = new Card(new ContentCol(row1, ContentColSize.col12));
 
@@ -158,6 +164,7 @@ export class Listens extends BasePage {
 
             if (listens) {
                 card.setTitle(`Listens (${listens.list.length})`);
+                portFlow.setData(listens.list);
 
                 for (const entry of listens.list) {
                     const trbody = new Tr(table.getTbody());

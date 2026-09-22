@@ -1,0 +1,46 @@
+/*
+ * portflow — the Listens page's top graphic: a data-driven port-flow diagram in the
+ * FlyingFish `.ffr` design language. External stream listeners (left) enter nginx's L4
+ * stream stage (ssl_preread → IP access → domain split, shown as a visible down-flow),
+ * then route to the internal L7 servers / DNS server and on to the backends (right).
+ * Scoped under `.ffr-portflow`; light + dark (OS preference + the app's data-theme).
+ */
+.ffr-portflow {
+  --bg:#eef2f3; --surface:#fff; --surface2:#f4f8f9; --line:#e2e9ea;
+  --ink:#16292d; --soft:#4a6268; --faint:#8199a0;
+  --accent:#12919f; --dns:#3b82f6; --http:#c9871b; --https:#a855c9; --proxy:#1f9d63;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+  --c-your:#d9a825; --c-docker:#b98bd9; --c-ff:#5aa9e6; --c-nginx:#3fae74;
+  --pf-shadow:0 1px 2px rgba(22,41,45,.06);
+}
+@media (prefers-color-scheme: dark){ .ffr-portflow{
+  --bg:#0e1618; --surface:#152226; --surface2:#1b2c31; --line:#2a3d43;
+  --ink:#e8f1f2; --soft:#a7bcc1; --faint:#6f878d; --accent:#2bb9c9;
+  --dns:#5fa3e6; --http:#e6b95a; --https:#c98fdd; --proxy:#43c088;
+  --pf-shadow:0 1px 2px rgba(0,0,0,.3);
+} }
+:root[data-theme="light"] .ffr-portflow{ --bg:#eef2f3; --surface:#fff; --surface2:#f4f8f9; --line:#e2e9ea; --ink:#16292d; --soft:#4a6268; --faint:#8199a0; --accent:#12919f; --dns:#3b82f6; --http:#c9871b; --https:#a855c9; --proxy:#1f9d63; --pf-shadow:0 1px 2px rgba(22,41,45,.06); }
+:root[data-theme="dark"] .ffr-portflow{ --bg:#0e1618; --surface:#152226; --surface2:#1b2c31; --line:#2a3d43; --ink:#e8f1f2; --soft:#a7bcc1; --faint:#6f878d; --accent:#2bb9c9; --dns:#5fa3e6; --http:#e6b95a; --https:#c98fdd; --proxy:#43c088; --pf-shadow:0 1px 2px rgba(0,0,0,.3); }
+
+.ffr-portflow, .ffr-portflow * { box-sizing: border-box; }
+.ffr-portflow .pf-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--pf-shadow); overflow: hidden; margin-bottom: 16px; }
+.ffr-portflow .pf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.ffr-portflow .pf-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; color: var(--faint); }
+.ffr-portflow .pf-title { font-size: 13.5px; font-weight: 650; color: var(--ink); }
+.ffr-portflow .pf-legend { display: flex; gap: 13px; flex-wrap: wrap; font-size: 11.5px; color: var(--soft); }
+.ffr-portflow .pf-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.ffr-portflow .pf-legend i { width: 15px; height: 3px; border-radius: 2px; display: inline-block; }
+.ffr-portflow .pf-canvas { padding: 10px 12px 14px; overflow-x: auto; }
+.ffr-portflow svg { display: block; width: 100%; min-width: 880px; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+.ffr-portflow .pf-cont-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.ffr-portflow .pf-node { stroke-width: 1.3; }
+.ffr-portflow .pf-node-lbl { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.ffr-portflow .pf-node-sub { font-size: 9.5px; fill: var(--faint); font-family: var(--mono); }
+.ffr-portflow .pf-port { font-size: 13px; font-weight: 650; font-family: var(--mono); fill: var(--ink); }
+.ffr-portflow .pf-step { font-size: 12px; font-weight: 650; fill: var(--ink); }
+.ffr-portflow .pf-step-sub { font-size: 9px; fill: var(--faint); font-family: var(--mono); }
+.ffr-portflow .pf-flow { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ffr-portflow .pf-l4 { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; }
+.ffr-portflow .pf-empty { padding: 26px 16px; text-align: center; color: var(--faint); font-size: 12.5px; font-style: italic; }
+@media (prefers-reduced-motion: reduce){ .ffr-portflow * { transition: none !important; } }
