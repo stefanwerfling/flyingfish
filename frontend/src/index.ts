@@ -169,12 +169,15 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                     // operating mode (frontend placeholder until the backend SystemConfig
                     // lands): 'attach' hides the Router category, 'router' shows it.
                     mode: getNodeMode(),
+                    // the node dashboard sits directly under the node (above the categories)
+                    leaves: [
+                        {key: 'dashboard', label: 'Dashboard', icon: '📊', make: (): BasePage => new DashboardPage()}
+                    ],
                     // a node's features grouped into the four pillars: System · Router ·
                     // Reverse Proxy · DNS. Each category expands to its pages in the tree.
                     groups: [
                         {
                             key: 'system', label: 'System', icon: '⚙️', leaves: [
-                                {key: 'dashboard', label: 'Summary', icon: '📊', make: (): BasePage => new DashboardPage()},
                                 {key: 'mode', label: 'Mode', icon: '🎛️', make: (): BasePage => new SystemMode()},
                                 {key: 'gateway', label: 'Gateway', icon: '🌐', make: (): BasePage => new GatewayPage()},
                                 {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()}

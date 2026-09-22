@@ -48,6 +48,8 @@ export type NavEntity = {
     /** Node operating mode; in 'attach' the Router category is hidden. */
     mode?: 'attach' | 'router';
     tabs?: NavTab[];
+    /** Node-level pages shown directly under the node, above the category groups (e.g. Dashboard). */
+    leaves?: NavLeaf[];
     groups?: NavGroup[];
 };
 
@@ -100,7 +102,8 @@ export class ClusterNav {
         }
 
         for (const node of model.nodes) {
-            if ((node.groups ?? []).some((g) => g.leaves.some((l) => l.key === key))) {
+            if ((node.leaves ?? []).some((l) => l.key === key) ||
+                (node.groups ?? []).some((g) => g.leaves.some((l) => l.key === key))) {
                 return node;
             }
         }
@@ -166,15 +169,27 @@ export class ClusterNav {
         for (const node of model.nodes) {
             const nodeSel = owner.id === node.id;
             const groups = ClusterNav._visibleGroups(node);
+            const nodeLeaves = node.leaves ?? [];
+            const hasChildren = nodeLeaves.length > 0 || groups.length > 0;
             ClusterNav._treeRow(tree, {
                 level: 1, icon: node.icon, label: node.title, status: node.status,
-                caret: groups.length > 0 ? (nodeSel ? '▾' : '▸') : '',
+                caret: hasChildren ? (nodeSel ? '▾' : '▸') : '',
                 selected: false, dim: node.status === 'warn',
-                onClick: () => loadPage(groups[0]?.leaves[0]?.make())
+                // clicking the node opens its dashboard (first node-level leaf), else the first page
+                onClick: () => loadPage((nodeLeaves[0] ?? groups[0]?.leaves[0])?.make())
             });
 
             if (!nodeSel) {
                 continue;
+            }
+
+            // node-level pages (Dashboard) sit directly under the node, above the categories
+            for (const leaf of nodeLeaves) {
+                ClusterNav._treeRow(tree, {
+                    level: 2, icon: leaf.icon, label: leaf.label,
+                    selected: leaf.key === currentKey,
+                    onClick: () => loadPage(leaf.make())
+                });
             }
 
             for (const group of groups) {
@@ -253,6 +268,9 @@ export class ClusterNav {
 
         if (isDc) {
             tabItems = owner.tabs ?? [];
+        } else if ((owner.leaves ?? []).some((l) => l.key === currentKey)) {
+            // a node-level page (Dashboard): no category, its siblings are the node leaves
+            tabItems = (owner.leaves ?? []).map((l) => ({key: l.key, label: l.label, icon: l.icon, make: l.make}));
         } else {
             const groups = ClusterNav._visibleGroups(owner);
             const group = groups.find((g) => g.leaves.some((l) => l.key === currentKey)) ?? groups[0];
