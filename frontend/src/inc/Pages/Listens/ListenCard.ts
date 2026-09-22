@@ -36,6 +36,11 @@ export class ListenCard {
 
         const info = jQuery('<div style="min-width:0"></div>').appendTo(top);
         const nameRow = jQuery('<div class="ffr-name"></div>').appendTo(info);
+
+        // reachability at a glance: 🌐 public (external) vs 🔒 internal-only
+        const internal = ListenCard._isInternal(entry);
+        jQuery(`<span class="lc-reach" title="${internal ? 'internal only' : 'public · reachable from the internet'}">${internal ? '🔒' : '🌐'}</span>`).appendTo(nameRow);
+
         jQuery(`<b>:${entry.port}</b>`).appendTo(nameRow);
         jQuery(`<span class="ffr-role" style="background:${roleColor}">${stream ? 'stream' : 'http'}</span>`).appendTo(nameRow);
 
@@ -91,6 +96,27 @@ export class ListenCard {
             chips.remove();
             jQuery('<div class="ffr-empty">No options set.</div>').appendTo(opt);
         }
+    }
+
+    /**
+     * Whether a listener is internal-only (not reachable from the internet). Honours an
+     * explicit "intern"/"extern" in the name, else falls back to the type (http listens —
+     * :10080/:10443 — are the internal L7 servers; stream listens are the published ports).
+     * @param entry - the listen
+     * @protected
+     */
+    protected static _isInternal(entry: ListenData): boolean {
+        const n = (entry.name || '').toLowerCase();
+
+        if (n.includes('intern')) {
+            return true;
+        }
+
+        if (n.includes('extern')) {
+            return false;
+        }
+
+        return entry.type !== ListenTypes.stream;
     }
 
     /**
