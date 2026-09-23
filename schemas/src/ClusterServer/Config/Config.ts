@@ -43,7 +43,10 @@ export const SchemaConfigOptionsClusterServer = SchemaConfigOptions.extend({
         bootstrapToken: Vts.optional(Vts.string()),
         bootstrapSocket: Vts.optional(Vts.string()),
         storeDir: Vts.optional(Vts.string()),
-        commonName: Vts.optional(Vts.string())
+        commonName: Vts.optional(Vts.string()),
+        // Shared admin secret to validate a joining peer's bootstrap token against the
+        // local pkiserver's /pki/token/validate route (9.5.12.2 accept side).
+        tokenSecret: Vts.optional(Vts.string())
     })),
     flyingfish_libpath: Vts.optional(Vts.string())
 });

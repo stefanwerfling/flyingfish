@@ -64,7 +64,16 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
     // pkiserver base URL used to refresh the revocation list at runtime.
     pki: Vts.optional(Vts.object({
         url: Vts.optional(Vts.string()),
-        caFile: Vts.optional(Vts.string())
+        caFile: Vts.optional(Vts.string()),
+        // Shared admin secret the Hub presents to the pkiserver's `POST /pki/token`
+        // mint route to produce a cluster join package (9.5.12.2). Must match the
+        // pkiserver's `tokenSecret`; without it the Hub cannot mint join tokens.
+        tokenSecret: Vts.optional(Vts.string())
+    })),
+    // The local (co-located) clusterserver's base URL, so the Hub can proxy a join
+    // action to it (9.5.12.2 — the clusterserver owns the mesh, the Hub the UI/API).
+    clusterserver: Vts.optional(Vts.object({
+        url: Vts.string()
     })),
     himpip: Vts.optional(Vts.object({
         provider: Vts.string()

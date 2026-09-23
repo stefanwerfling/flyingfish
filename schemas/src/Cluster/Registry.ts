@@ -216,7 +216,17 @@ export const SchemaClusterNode = Vts.object({
     lastHeartbeat: Vts.number(),
     // True when the last heartbeat is within the stale window — the node dashboard's
     // online/offline signal (same liveness that drives 9.5.14 DNS failover).
-    online: Vts.boolean()
+    online: Vts.boolean(),
+    // Cluster identity + transport (9.5.12.2), seeded by each node into its own gossip
+    // descriptor — optional so older nodes / a control-only node without them still parse.
+    // The node cert's common name (e.g. `cluster@host`).
+    commonName: Vts.optional(Vts.string()),
+    // The peer transport this node speaks: 'quic' | 'wss' | 'tls'.
+    transport: Vts.optional(Vts.string()),
+    // SHA-256 fingerprint of the node's leaf certificate (mesh identity).
+    certFingerprint: Vts.optional(Vts.string()),
+    // Whether the node holds a PKI node certificate (enrolled into the cluster CA).
+    enrolled: Vts.optional(Vts.boolean())
 });
 
 /**
@@ -229,13 +239,69 @@ export type ClusterNode = ExtractSchemaResultType<typeof SchemaClusterNode>;
  * Proxmox-style node dashboard, each with its online/offline state.
  */
 export const SchemaClusterNodesResponse = SchemaDefaultReturn.extend({
-    list: Vts.array(SchemaClusterNode)
+    list: Vts.array(SchemaClusterNode),
+    // The uid of the node serving this request ("this node"), so the UI can mark it in
+    // the roster; null until the local clusterserver has pushed its first aggregate.
+    selfNodeUid: Vts.or([Vts.string(), Vts.null()])
 });
 
 /**
  * ClusterNodesResponse
  */
 export type ClusterNodesResponse = ExtractSchemaResultType<typeof SchemaClusterNodesResponse>;
+
+/**
+ * SchemaClusterJoinPackageResponse — a join package this node hands to another
+ * node so it can enroll into this cluster (Cluster/Mesh epic 9.5.12.2). It bundles
+ * the pkiserver URL the joining node enrolls against, the Root CA fingerprint it
+ * pins, and a freshly minted single-use bootstrap token. `configured` is false when
+ * token minting is not set up (no `pki.tokenSecret`), in which case `bootstrapToken`
+ * is empty and only the pinning info is returned.
+ */
+export const SchemaClusterJoinPackageResponse = SchemaDefaultReturn.extend({
+    // Whether token minting is configured (the Hub holds a pki.tokenSecret and can
+    // reach the pkiserver mint route). When false, only pkiUrl/caFingerprint are set.
+    configured: Vts.boolean(),
+    // The pkiserver base URL the joining node enrolls against.
+    pkiUrl: Vts.string(),
+    // SHA-256 fingerprint of the cluster Root CA the joining node pins.
+    caFingerprint: Vts.string(),
+    // The minted single-use bootstrap token (empty string when not configured).
+    bootstrapToken: Vts.string(),
+    // Token expiry (epoch ms; 0 when not configured).
+    expiresAt: Vts.number(),
+    // Whether the enrolled node is auto-approved; false = its request queues for
+    // admin approval in Datacenter → Enrollment.
+    autoApprove: Vts.boolean(),
+    // This node's mesh peer endpoint (advertise host + peer port) the joining node
+    // dials as a seed to bootstrap into the mesh across separate Hubs (9.5.12.2 model
+    // (b)). Empty host / 0 port when this node is not meshed (no roster self entry).
+    meshHost: Vts.string(),
+    meshPort: Vts.number()
+});
+
+/**
+ * ClusterJoinPackageResponse
+ */
+export type ClusterJoinPackageResponse = ExtractSchemaResultType<typeof SchemaClusterJoinPackageResponse>;
+
+/**
+ * SchemaClusterJoinRequest — apply a join package on THIS node to join another
+ * cluster (Cluster/Mesh epic 9.5.12.2, model (b) "one-port" join): the target node's
+ * mesh endpoint to seed-dial, the single-use bootstrap token to present, and the
+ * Root CA fingerprint to pin the target's CA against during the bootstrap exchange.
+ */
+export const SchemaClusterJoinRequest = Vts.object({
+    meshHost: Vts.string(),
+    meshPort: Vts.number(),
+    bootstrapToken: Vts.string(),
+    caFingerprint: Vts.string()
+});
+
+/**
+ * ClusterJoinRequest
+ */
+export type ClusterJoinRequest = ExtractSchemaResultType<typeof SchemaClusterJoinRequest>;
 
 /**
  * The cluster-global RBAC POLICY tables (Cluster/Mesh epic 9.5.12, A+C shared rights

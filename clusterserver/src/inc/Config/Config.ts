@@ -15,6 +15,7 @@ export enum ENV_OPTIONAL {
     PKI_BOOTSTRAP_TOKEN = 'FLYINGFISH_PKI_BOOTSTRAP_TOKEN',
     PKI_BOOTSTRAP_SOCKET = 'FLYINGFISH_PKI_BOOTSTRAP_SOCKET',
     PKI_STORE_DIR = 'FLYINGFISH_PKI_STORE_DIR',
+    PKI_TOKEN_SECRET = 'FLYINGFISH_PKI_TOKEN_SECRET',
     CLUSTER_MESH = 'FLYINGFISH_CLUSTER_MESH',
     CLUSTER_TRANSPORT = 'FLYINGFISH_CLUSTER_TRANSPORT',
     CLUSTER_PEER_PORT = 'FLYINGFISH_CLUSTER_PEER_PORT',
@@ -102,7 +103,8 @@ export class Config extends ConfigCore<ConfigOptionsClusterServer> {
                 url: pkiUrl,
                 bootstrapToken: pkiToken,
                 bootstrapSocket: pkiSocket,
-                storeDir: process.env[ENV_OPTIONAL.PKI_STORE_DIR]
+                storeDir: process.env[ENV_OPTIONAL.PKI_STORE_DIR],
+                tokenSecret: process.env[ENV_OPTIONAL.PKI_TOKEN_SECRET]
             };
         }
 

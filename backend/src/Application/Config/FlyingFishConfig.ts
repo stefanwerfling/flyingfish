@@ -22,6 +22,8 @@ export enum ENV_OPTIONAL {
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET',
     PKI_URL = 'FLYINGFISH_PKI_URL',
     PKI_CA_FILE = 'FLYINGFISH_PKI_CA_FILE',
+    PKI_TOKEN_SECRET = 'FLYINGFISH_PKI_TOKEN_SECRET',
+    CLUSTERSERVER_URL = 'FLYINGFISH_CLUSTERSERVER_URL',
     DYNDNSSERVER_PORT = 'FLYINGFISH_DYNDNSSERVER_PORT',
     DYNDNSSERVER_IP = 'FLYINGFISH_DYNDNSSERVER_IP',
     DYNDNSSERVER_SCHEMA = 'FLYINGFISH_DYNDNSSERVER_SCHEMA',
@@ -387,7 +389,14 @@ export class FlyingFishConfig extends ConfigBackend<BackendConfigOptions> {
         if (process.env[ENV_OPTIONAL.PKI_CA_FILE] || process.env[ENV_OPTIONAL.PKI_URL]) {
             config.pki = {
                 caFile: process.env[ENV_OPTIONAL.PKI_CA_FILE],
-                url: process.env[ENV_OPTIONAL.PKI_URL]
+                url: process.env[ENV_OPTIONAL.PKI_URL],
+                tokenSecret: process.env[ENV_OPTIONAL.PKI_TOKEN_SECRET]
+            };
+        }
+
+        if (process.env[ENV_OPTIONAL.CLUSTERSERVER_URL]) {
+            config.clusterserver = {
+                url: process.env[ENV_OPTIONAL.CLUSTERSERVER_URL]!
             };
         }
 

@@ -21,11 +21,14 @@ import {
     PkiNodeFileStore,
     PkiNodeHttpTransport,
     PkiNodeIdentity,
+    aggregateClusterCaSet,
     clusterGossipNamespaceKey,
+    clusterTrustChain,
     startHubRegistration
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import {buildClusterCapabilityManifest} from 'flyingfish_schemas';
+import {X509Certificate} from 'crypto';
 import * as fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -33,11 +36,51 @@ import {v4 as uuid} from 'uuid';
 import {Config} from './inc/Config/Config.js';
 import {QuicBindingLoader} from './inc/Cluster/QuicBindingLoader.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
-import {Cluster, ClusterNodeStatus} from './Routes/Main/Cluster.js';
+import {Cluster, ClusterJoinController, ClusterNodeStatus} from './Routes/Main/Cluster.js';
 
 const SESSION_MAX_AGE = 6000000;
 const DEFAULT_PEER_PORT = 5336;
 const DEFAULT_SYNC_INTERVAL_MS = 30000;
+const JOIN_TOKEN_VALIDATE_TIMEOUT_MS = 5000;
+
+/**
+ * Validate (and consume) a joining peer's bootstrap token against the CA-holder's
+ * pkiserver (Cluster/Mesh epic 9.5.12.2, model (b) accept side). Returns false on any
+ * missing config, transport failure, or an invalid/expired/used token — so an
+ * unauthenticated peer is never admitted.
+ * @param pkiUrl - this node's pkiserver base URL
+ * @param secret - the shared admin token secret
+ * @param token - the peer's presented join token
+ */
+async function validateJoinToken(pkiUrl: string | undefined, secret: string | undefined, token: string): Promise<boolean> {
+    if (pkiUrl === undefined || secret === undefined || secret === '') {
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${pkiUrl.replace(/\/+$/u, '')}/pki/token/validate`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'x-ff-pki-token-secret': secret
+            },
+            body: JSON.stringify({token: token}),
+            signal: AbortSignal.timeout(JOIN_TOKEN_VALIDATE_TIMEOUT_MS)
+        });
+
+        if (!response.ok) {
+            return false;
+        }
+
+        const body = await response.json() as {valid?: unknown;};
+
+        return body.valid === true;
+    } catch (error) {
+        Logger.getLogger().warn(`Cluster join: token validation failed: ${error}`);
+
+        return false;
+    }
+}
 
 /**
  * Main
@@ -142,6 +185,10 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
 
     const aport = tConfig.clusterserver?.port ?? Config.DEFAULT_CLUSTERSERVER_PORT;
 
+    // The join action is filled in by the mesh block below (once membership + trust are
+    // up); until then POST /cluster/join reports the mesh is inactive (9.5.12.2).
+    const joinController: ClusterJoinController = {};
+
     const mServer = new HttpServer({
         realm: 'FlyingFish',
         port: aport,
@@ -152,7 +199,7 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             max_age: SESSION_MAX_AGE
         },
         routes: [
-            new Cluster(status)
+            new Cluster(status, joinController)
         ]
     });
 
@@ -180,10 +227,35 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
     // opted in (cluster.mesh) — it is control-only by default.
     if (enrolledIdentity && tConfig.registry && tConfig.cluster?.mesh === true) {
         try {
+            // Created up-front so the transport's trust provider can read the live
+            // member-CA set from it (model (b) cross-trust): peers are verified against
+            // the union of all members' CAs, re-evaluated at each handshake, so a
+            // newly-joined node's peers become trusted without a restart.
+            const gossipStore = new ClusterGossipStore(enrolledIdentity.nodeUid);
+            const ownChain = enrolledIdentity.chain;
+
+            // CAs of peers admitted through the bootstrap join, before their own
+            // `ca:<uid>` descriptor gossips back — unioned into the live trust set so a
+            // freshly-joined peer authenticates without a restart (model (b)).
+            const bootstrapTrust: string[] = [];
+            const pkiUrl = tConfig.pki?.url;
+            const pkiTokenSecret = tConfig.pki?.tokenSecret;
+
             const transportOptions = {
                 certificate: enrolledIdentity.certificate,
                 privateKey: enrolledIdentity.privateKey,
-                caChain: enrolledIdentity.chain
+                caChain: ownChain,
+                trustProvider: (): string[] => clusterTrustChain(aggregateClusterCaSet(gossipStore.liveEntries()), [...ownChain, ...bootstrapTrust]),
+                // Accept side of the one-port join: admit a not-yet-trusted inbound peer
+                // just far enough to validate its join token; on success its CA joins the
+                // bootstrap trust set so its next (normal) connection authenticates.
+                bootstrap: {
+                    ownCaChain: ownChain,
+                    validateToken: async(token: string): Promise<boolean> => validateJoinToken(pkiUrl, pkiTokenSecret, token),
+                    onAcceptedCa: (chain: string[]): void => {
+                        bootstrapTrust.push(...chain);
+                    }
+                }
             };
 
             // Pick the peer transport wire. 'quic' is the NAT-friendly, connection-
@@ -218,7 +290,6 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             // over the mesh's Gossip mux sub-channel; anti-entropy convergence gives
             // every node the cluster-wide view with NO central Hub. Each peer channel
             // is multiplexed (as for L3/L4) so gossip rides the one authenticated link.
-            const gossipStore = new ClusterGossipStore(enrolledIdentity.nodeUid);
             const gossip = new ClusterGossip(gossipStore);
 
             // Cluster control (Cluster/Mesh epic 9.5.12, A+C): the synchronous cross-node
@@ -263,20 +334,44 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             const advertiseHost = tConfig.cluster?.advertiseHost ?? os.hostname();
             const syncIntervalMs = tConfig.cluster?.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS;
 
+            // This node's leaf-cert SHA-256 fingerprint — a stable mesh identity we
+            // publish alongside the descriptor (9.5.12.2). Computed once (the cert does
+            // not change within a run).
+            const certFingerprint = enrolledIdentity
+                ? new X509Certificate(enrolledIdentity.certificate).fingerprint256
+                : undefined;
+
             // Seed this node's own descriptor (with a heartbeat) so the federated node
             // roster + liveness emerge via gossip (no central directory). The heartbeat
             // is refreshed each sync; peers treat a stale heartbeat as the node being
-            // down and fail domains over off it (9.5.14).
+            // down and fail domains over off it (9.5.14). Also carries this node's cluster
+            // identity + chosen transport so the Cluster page can render it (9.5.12.2).
             const heartbeat = (): void => {
                 gossipStore.set(`node:${selfNodeUid}`, {
                     nodeUid: selfNodeUid,
                     host: advertiseHost,
                     port: peerPort,
-                    heartbeat: Date.now()
+                    heartbeat: Date.now(),
+                    commonName: enrolledIdentity?.commonName,
+                    transport: transportName,
+                    certFingerprint: certFingerprint,
+                    enrolled: enrolledIdentity !== null
                 });
             };
 
             heartbeat();
+
+            // Publish this node's own CA chain into the gossip so the cluster converges
+            // on the full member-CA set (Cluster/Mesh 9.5.12.2, model (b) cross-trust):
+            // every node trusts every member's CA — no node re-homes under a founder CA.
+            // Seeded once; the CA is stable within a run.
+            if (enrolledIdentity && enrolledIdentity.chain.length > 0) {
+                gossipStore.set(`ca:${selfNodeUid}`, {
+                    nodeUid: selfNodeUid,
+                    chain: enrolledIdentity.chain,
+                    rootFingerprint: new X509Certificate(enrolledIdentity.chain[enrolledIdentity.chain.length - 1]).fingerprint256
+                });
+            }
 
             // Refresh our announcement (TTL), re-sync the membership, pull the Hub's
             // resources into the gossip store (owned by this node, keys namespaced by
@@ -303,6 +398,23 @@ const DEFAULT_SYNC_INTERVAL_MS = 30000;
             };
 
             await syncOnce();
+
+            // Now that membership + trust are up, wire the join action: applying a join
+            // package registers the target as a bootstrap seed (token + CA pin) and runs
+            // a sync so the one-port bootstrap pre-flight fires promptly; the mesh channel
+            // then forms on a following sync (model (b), 9.5.12.2).
+            joinController.handler = async(request): Promise<void> => {
+                membership.addSeedPeer(request.meshHost, request.meshPort, {
+                    token: request.bootstrapToken,
+                    pinFingerprint: request.caFingerprint,
+                    ownCaChain: ownChain,
+                    onAcceptedCa: (chain: string[]): void => {
+                        bootstrapTrust.push(...chain);
+                    }
+                });
+
+                await syncOnce();
+            };
 
             setInterval((): void => {
                 syncOnce().catch((error: unknown): void => {

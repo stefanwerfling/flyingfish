@@ -1,8 +1,10 @@
+import {timingSafeEqual} from 'crypto';
 import {Request, Response} from 'express';
 import {Logger} from '@stefanwerfling/figtree';
 import {
     DefaultRoute,
     IssuedCertificateDB,
+    PkiBootstrapTokenStore,
     PkiCaPurpose,
     PkiEnrollmentInput,
     PkiEnrollmentRequest,
@@ -15,11 +17,15 @@ import {
     PkiCrlResponse,
     PkiEnrollResponse,
     PkiRevocationListResponse,
+    PkiTokenResponse,
+    PkiTokenValidateResponse,
     SchemaPkiEnrollDecision,
     SchemaPkiEnrollRequest,
     SchemaPkiRenewRequest,
     SchemaPkiRevokeRequest,
     SchemaPkiRotateRequest,
+    SchemaPkiTokenRequest,
+    SchemaPkiTokenValidateRequest,
     StatusCodes
 } from 'flyingfish_schemas';
 import {PkiStore} from '../../inc/Pki/PkiStore.js';
@@ -49,15 +55,36 @@ export class Pki extends DefaultRoute {
     private readonly _caExportFile?: string;
 
     /**
+     * the bootstrap-token store (mints join tokens for the authenticated mint route).
+     */
+    private readonly _tokens: PkiBootstrapTokenStore;
+
+    /**
+     * shared admin secret guarding `POST /pki/token`; when unset the mint route is
+     * not registered.
+     */
+    private readonly _tokenSecret?: string;
+
+    /**
      * @param service - the enrollment service
      * @param store - the durable store
+     * @param tokens - the bootstrap-token store (for the mint route)
+     * @param tokenSecret - shared admin secret for the mint route (route off when unset)
      * @param caExportFile - CA pool export path (for re-export after rotation)
      */
-    public constructor(service: PkiEnrollmentService, store: PkiStore, caExportFile?: string) {
+    public constructor(
+        service: PkiEnrollmentService,
+        store: PkiStore,
+        tokens: PkiBootstrapTokenStore,
+        tokenSecret?: string,
+        caExportFile?: string
+    ) {
         super();
 
         this._service = service;
         this._store = store;
+        this._tokens = tokens;
+        this._tokenSecret = tokenSecret;
         this._caExportFile = caExportFile;
 
         this._get('/health', (req, res): void => {
@@ -99,6 +126,20 @@ export class Pki extends DefaultRoute {
         this._post('/pki/rotate', async(req, res): Promise<void> => {
             await this._rotate(req, res);
         });
+
+        // Admin-authenticated bootstrap-token mint (9.5.12.2 cluster join). Only
+        // exposed when a shared secret is configured; the Hub presents it to mint a
+        // token for a human-carried join package. Distinct from the co-located
+        // bootstrap SOCKET (which trusts by co-location and always auto-approves).
+        if (this._tokenSecret !== undefined && this._tokenSecret !== '') {
+            this._post('/pki/token', (req, res): void => {
+                this._mintToken(req, res);
+            });
+
+            this._post('/pki/token/validate', (req, res): void => {
+                this._validateToken(req, res);
+            });
+        }
     }
 
     /**
@@ -117,6 +158,96 @@ export class Pki extends DefaultRoute {
         };
 
         res.status(200).json(response);
+    }
+
+    /**
+     * POST /pki/token — mint a single-use bootstrap token for a cluster join
+     * package (9.5.12.2). Authenticated by the shared admin secret in the
+     * `x-ff-pki-token-secret` header (constant-time compared); only registered when
+     * a secret is configured. Defaults to a queued (non-auto-approve) token so the
+     * joining node's enrollment lands in the admin approval queue.
+     * @param req - the request
+     * @param res - the response
+     */
+    private _mintToken(req: Request, res: Response): void {
+        if (!Pki._secretOk(this._tokenSecret, req.header('x-ff-pki-token-secret'))) {
+            res.status(401).json({statusCode: StatusCodes.UNAUTHORIZED});
+
+            return;
+        }
+
+        if (!this.isSchemaValidate(SchemaPkiTokenRequest, req.body, res)) {
+            return;
+        }
+
+        const minted = this._tokens.issue({
+            purpose: req.body.purpose as unknown as PkiCaPurpose,
+            autoApprove: req.body.autoApprove ?? false,
+            ttlMs: req.body.ttlMs
+        });
+
+        const response: PkiTokenResponse = {
+            statusCode: StatusCodes.OK,
+            token: minted.token,
+            purpose: minted.purpose as unknown as PkiTokenResponse['purpose'],
+            autoApprove: minted.autoApprove,
+            expiresAt: minted.expiresAt
+        };
+
+        res.status(200).json(response);
+    }
+
+    /**
+     * POST /pki/token/validate — validate and CONSUME a bootstrap token (9.5.12.2
+     * cross-Hub join): the CA-holder's node checks a joining peer's presented token is
+     * a real, unexpired, single-use token this cluster minted before admitting the
+     * peer. Single-use — a valid token is consumed here so it cannot be replayed.
+     * Authenticated by the shared admin secret.
+     * @param req - the request
+     * @param res - the response
+     */
+    private _validateToken(req: Request, res: Response): void {
+        if (!Pki._secretOk(this._tokenSecret, req.header('x-ff-pki-token-secret'))) {
+            res.status(401).json({statusCode: StatusCodes.UNAUTHORIZED});
+
+            return;
+        }
+
+        if (!this.isSchemaValidate(SchemaPkiTokenValidateRequest, req.body, res)) {
+            return;
+        }
+
+        const record = this._tokens.consume(req.body.token);
+
+        const response: PkiTokenValidateResponse = {
+            statusCode: StatusCodes.OK,
+            valid: record !== null,
+            purpose: record !== null ? (record.purpose as unknown as PkiTokenValidateResponse['purpose']) : undefined
+        };
+
+        res.status(200).json(response);
+    }
+
+    /**
+     * Constant-time compare of the configured mint secret against a presented one.
+     * Length mismatch (or a missing value) is a non-throwing miss.
+     * @param expected - the configured secret
+     * @param presented - the header value
+     * @protected
+     */
+    protected static _secretOk(expected: string | undefined, presented: string | undefined): boolean {
+        if (!expected || !presented) {
+            return false;
+        }
+
+        const a = Buffer.from(expected);
+        const b = Buffer.from(presented);
+
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        return timingSafeEqual(a, b);
     }
 
     /**

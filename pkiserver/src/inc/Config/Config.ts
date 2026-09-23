@@ -12,6 +12,7 @@ export enum ENV_OPTIONAL {
     PKISERVER_ORGANIZATION = 'FLYINGFISH_PKISERVER_ORGANIZATION',
     PKISERVER_BOOTSTRAP_SOCKET = 'FLYINGFISH_PKISERVER_BOOTSTRAP_SOCKET',
     PKISERVER_CA_EXPORT_FILE = 'FLYINGFISH_PKISERVER_CA_EXPORT_FILE',
+    PKISERVER_TOKEN_SECRET = 'FLYINGFISH_PKISERVER_TOKEN_SECRET',
     REGISTRY_URL = 'FLYINGFISH_REGISTRY_URL',
     REGISTRY_SECRET = 'FLYINGFISH_REGISTRY_SECRET'
 }
@@ -142,6 +143,16 @@ export class Config extends ConfigCore<ConfigOptionsPkiServer> {
             }
 
             config.pkiserver.caExportFile = process.env[ENV_OPTIONAL.PKISERVER_CA_EXPORT_FILE];
+        }
+
+        // pki token mint secret ---------------------------------------------------------------------------------------
+
+        if (process.env[ENV_OPTIONAL.PKISERVER_TOKEN_SECRET]) {
+            if (!config.pkiserver) {
+                config.pkiserver = {};
+            }
+
+            config.pkiserver.tokenSecret = process.env[ENV_OPTIONAL.PKISERVER_TOKEN_SECRET];
         }
 
         // Logging -----------------------------------------------------------------------------------------------------

@@ -28,8 +28,12 @@ import {
     SchemaRegistryUiContributionsResponse,
     StatusCodes
 } from 'flyingfish_schemas';
+import {ClusterJoinPackageResponse, SchemaClusterJoinPackageResponse, SchemaClusterJoinRequest} from 'flyingfish_schemas';
 import {ClusterLocalStateProvider} from '../../Application/Hub/ClusterLocalStateProvider.js';
 import {ClusterRbacConverger} from '../../Application/Hub/ClusterRbacConverger.js';
+import {buildClusterJoinPackage} from '../../Application/Hub/ClusterJoinPackage.js';
+import {proxyClusterJoin} from '../../Application/Hub/ClusterJoin.js';
+import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPermission.js';
 import {DefaultRoute, Logger} from '@stefanwerfling/figtree';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
@@ -236,6 +240,11 @@ export class Registry extends DefaultRoute {
                 const entries = data.body!.entries;
                 HubRegistryService.getInstance().getClusterAggregate().set(entries);
 
+                // The push carries the local clusterserver's own nodeUid — the only
+                // self-authoritative node identity the Hub sees. Keep it so the node
+                // roster can flag which entry is "this node" (9.5.12).
+                HubRegistryService.getInstance().getClusterAggregate().setSelfNodeUid(data.body!.nodeUid);
+
                 // Converge the cluster-global RBAC policy into this node's local DB so
                 // LOCAL enforcement sees the shared rights DB (9.5.12, A+C option B).
                 // Best-effort: a converge failure must not fail the aggregate push.
@@ -303,16 +312,54 @@ export class Registry extends DefaultRoute {
             '/json/registry/cluster/nodes',
             FlyingFishRouteCheckUserLogin,
             async(): Promise<ClusterNodesResponse> => {
-                const aggregate = HubRegistryService.getInstance().getClusterAggregate().entries();
+                const store = HubRegistryService.getInstance().getClusterAggregate();
 
                 return {
                     statusCode: StatusCodes.OK,
-                    list: aggregateClusterNodes(aggregate, Date.now())
+                    list: aggregateClusterNodes(store.entries(), Date.now()),
+                    selfNodeUid: store.selfNodeUid()
                 };
             },
             {
                 description: 'The cluster-wide node roster with each node\'s online/offline state (Proxmox-style node dashboard)',
                 responseBodySchema: SchemaClusterNodesResponse
+            }
+        );
+
+        // Cluster join package (9.5.12.2): mint a single-use bootstrap token + return
+        // the pkiserver URL and Root CA fingerprint a joining node pins/enrolls with.
+        // Sensitive (issues an enrollment credential) → cluster.manage gated. Degrades
+        // to a token-less package (configured=false) when minting is not set up.
+        this._post(
+            '/json/registry/cluster/join-package',
+            requirePermission('cluster.manage'),
+            async(): Promise<ClusterJoinPackageResponse> => {
+                return buildClusterJoinPackage();
+            },
+            {
+                description: 'Mint a join package (bootstrap token + CA pin) for another node to enroll into this cluster',
+                responseBodySchema: SchemaClusterJoinPackageResponse
+            }
+        );
+
+        // Apply a join package on THIS node (9.5.12.2 model (b)): proxy the seed-dial +
+        // bootstrap to the co-located clusterserver, which owns the mesh. cluster.manage
+        // gated (it changes this node's cluster membership).
+        this._post(
+            '/json/registry/cluster/join',
+            requirePermission('cluster.manage'),
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                return proxyClusterJoin({
+                    meshHost: data.body!.meshHost,
+                    meshPort: data.body!.meshPort,
+                    bootstrapToken: data.body!.bootstrapToken,
+                    caFingerprint: data.body!.caFingerprint
+                });
+            },
+            {
+                description: 'Apply a join package on this node to join another cluster (seed-dial + bootstrap)',
+                bodySchema: SchemaClusterJoinRequest,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 

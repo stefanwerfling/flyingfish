@@ -34,6 +34,14 @@ export class ClusterWssPeerTransport implements IClusterPeerTransport {
     }
 
     /**
+     * The current trust anchor set: the live union of member CAs when a provider is
+     * given (model (b) cross-trust), else this node's own static CA chain.
+     */
+    private _trust(): string[] {
+        return this._options.trustProvider?.() ?? this._options.caChain;
+    }
+
+    /**
      * Listen for inbound WSS peer connections, authenticating each before handing up
      * a channel. Returns the bound port (pass 0 to get an OS-assigned one).
      * @param port - the TCP port to bind (0 = OS-assigned)
@@ -50,12 +58,10 @@ export class ClusterWssPeerTransport implements IClusterPeerTransport {
 
         this._wss = new WebSocketServer({server: this._server});
 
-        const caChain = this._options.caChain;
-
         this._wss.on('connection', (ws: WebSocket, req: http.IncomingMessage): void => {
             const socket = req.socket as unknown as tls.TLSSocket;
 
-            ClusterPeerAuthenticator.authenticate(socket, caChain).then((identity): void => {
+            ClusterPeerAuthenticator.authenticate(socket, this._trust()).then((identity): void => {
                 if (identity === null) {
                     ws.terminate();
                 } else {
@@ -106,7 +112,7 @@ export class ClusterWssPeerTransport implements IClusterPeerTransport {
                     return;
                 }
 
-                ClusterPeerAuthenticator.authenticate(peerSocket, this._options.caChain).then((identity): void => {
+                ClusterPeerAuthenticator.authenticate(peerSocket, this._trust()).then((identity): void => {
                     if (identity === null) {
                         ws.terminate();
                         reject(new Error('ClusterWssPeerTransport: peer identity not trusted'));

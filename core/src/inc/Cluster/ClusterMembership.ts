@@ -1,5 +1,5 @@
+import {ClusterDialBootstrap, IClusterPeerTransport} from './ClusterPeerTransport.js';
 import {ClusterPeerChannel} from './ClusterPeerChannel.js';
-import {IClusterPeerTransport} from './ClusterPeerTransport.js';
 
 /**
  * One discoverable cluster peer: its stable nodeUid, where to reach its peer
@@ -42,6 +42,8 @@ export class ClusterMembership {
 
     private _peerListener: ((channel: ClusterPeerChannel) => void) | null = null;
 
+    private readonly _seedPeers: {host: string; port: number; nodeUid?: string; bootstrap?: ClusterDialBootstrap; bootstrapped?: boolean;}[] = [];
+
     /**
      * @param transport - this node's peer transport
      * @param selfNodeUid - this node's own cluster nodeUid
@@ -78,6 +80,65 @@ export class ClusterMembership {
                 this._addPeer(await this._transport.connect(peer.host, peer.port));
             } catch {
                 // best-effort: an unreachable peer is retried on the next sync
+            }
+        }));
+
+        await this._dialSeeds();
+    }
+
+    /**
+     * Register a bootstrap seed peer to dial by address (Cluster/Mesh epic 9.5.12.2,
+     * cross-Hub join). Unlike a roster peer, a seed is dialed UNCONDITIONALLY — the
+     * lower-dials-higher rule is bypassed — because the seed's Hub does not know this
+     * node yet: the join package carries the seed's mesh endpoint so a node can
+     * bootstrap into a cluster whose roster it is not in. Idempotent by host:port; the
+     * dial is (re)attempted on each {@link ClusterMembership.sync} until connected.
+     * @param host - the seed peer host
+     * @param port - the seed peer port
+     * @param bootstrap - optional one-port bootstrap params (join token + CA pin); when
+     *        given, the seed is first bootstrapped (CA/token exchange) so that both
+     *        sides trust each other before the normal dial forms the mesh channel.
+     */
+    public addSeedPeer(host: string, port: number, bootstrap?: ClusterDialBootstrap): void {
+        if (!this._seedPeers.some((seed): boolean => seed.host === host && seed.port === port)) {
+            this._seedPeers.push({host: host, port: port, bootstrap: bootstrap});
+        }
+    }
+
+    /**
+     * Dial each seed peer not currently connected. Best-effort and unconditional
+     * (bootstrap): once a seed connects, its learned nodeUid keeps it from being
+     * re-dialed while the channel is live.
+     * @protected
+     */
+    protected async _dialSeeds(): Promise<void> {
+        await Promise.all(this._seedPeers.map(async(seed): Promise<void> => {
+            if (seed.nodeUid !== undefined && this._peers.has(seed.nodeUid)) {
+                return;
+            }
+
+            // One-port join: run the bootstrap pre-flight ONCE before any normal dial so
+            // both sides exchange + trust each other's CA; the next sync's normal connect
+            // then authenticates and forms the mesh channel.
+            if (seed.bootstrap !== undefined && seed.bootstrapped !== true && this._transport.bootstrap !== undefined) {
+                try {
+                    if (await this._transport.bootstrap(seed.host, seed.port, seed.bootstrap)) {
+                        seed.bootstrapped = true;
+                    }
+                } catch {
+                    // best-effort: retry the bootstrap on the next sync
+                }
+
+                return;
+            }
+
+            try {
+                const channel = await this._transport.connect(seed.host, seed.port);
+
+                seed.nodeUid = channel.identity.nodeUid;
+                this._addPeer(channel);
+            } catch {
+                // best-effort: retry on the next sync
             }
         }));
     }

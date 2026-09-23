@@ -469,6 +469,10 @@ export {
     ClusterNode,
     SchemaClusterNodesResponse,
     ClusterNodesResponse,
+    SchemaClusterJoinPackageResponse,
+    ClusterJoinPackageResponse,
+    SchemaClusterJoinRequest,
+    ClusterJoinRequest,
     SchemaClusterRbacGroup,
     SchemaClusterRbacRole,
     SchemaClusterRbacPermission,
@@ -527,7 +531,15 @@ export {
     SchemaPkiEnrollDecision,
     PkiEnrollDecision,
     SchemaPkiCaCertsResponse,
-    PkiCaCertsResponse
+    PkiCaCertsResponse,
+    SchemaPkiTokenRequest,
+    PkiTokenRequest,
+    SchemaPkiTokenResponse,
+    PkiTokenResponse,
+    SchemaPkiTokenValidateRequest,
+    PkiTokenValidateRequest,
+    SchemaPkiTokenValidateResponse,
+    PkiTokenValidateResponse
 } from './Pki/Enrollment.js';
 export {
     SchemaPkiCaNodeEntry,

@@ -9,7 +9,44 @@ import {ClusterPeerChannel} from './ClusterPeerChannel.js';
 export type ClusterPeerTransportOptions = {
     certificate: string;
     privateKey: string;
+    // This node's own CA chain — the TLS handshake `ca` hint and the fallback trust
+    // anchor set (used when no dynamic provider is given).
     caChain: string[];
+    // Optional live trust anchor set, evaluated at each peer verification (Cluster/Mesh
+    // epic 9.5.12.2, model (b) cross-trust): returns the current union of all member
+    // CAs from the converged gossip so a newly-joined node's peers become trusted
+    // without a restart. When absent, `caChain` is used (static single-CA behaviour).
+    trustProvider?: () => string[];
+    // Optional accept-side bootstrap context (model (b) "one-port" join): lets the
+    // transport admit a not-yet-trusted inbound peer just far enough to run the
+    // bootstrap CA/token exchange over the same connection.
+    bootstrap?: ClusterBootstrapAcceptContext;
+};
+
+/**
+ * Accept-side bootstrap context (Cluster/Mesh epic 9.5.12.2, model (b) one-port
+ * join). When an inbound peer fails the normal trust check, the transport runs the
+ * bootstrap exchange over that connection, validates the presented join token and —
+ * only if valid — hands the peer's CA chain up via {@link onAcceptedCa} to be added
+ * to the bootstrap trust set, then closes. The peer's next (normal) connection then
+ * authenticates against the updated trust set.
+ */
+export type ClusterBootstrapAcceptContext = {
+    ownCaChain: string[];
+    validateToken: (token: string) => boolean | Promise<boolean>;
+    onAcceptedCa: (caChain: string[]) => void;
+};
+
+/**
+ * Dial-side bootstrap params (Cluster/Mesh epic 9.5.12.2), passed per seed to
+ * {@link IClusterPeerTransport.bootstrap}: the join token to present and the CA
+ * fingerprint to pin the accepting node's CA against before trusting it.
+ */
+export type ClusterDialBootstrap = {
+    token: string;
+    pinFingerprint: string;
+    ownCaChain: string[];
+    onAcceptedCa: (caChain: string[]) => void;
 };
 
 /**
@@ -42,6 +79,19 @@ export interface IClusterPeerTransport {
      * @param port - the peer port
      */
     connect(host: string, port: number): Promise<ClusterPeerChannel>;
+
+    /**
+     * Run the one-port bootstrap pre-flight against a not-yet-trusted peer (model (b)
+     * cross-Hub join): dial it, exchange CA chains + the join token over that
+     * connection, pin the peer's CA against the expected fingerprint, hand the pinned
+     * CA up via the dial context, then close. Returns true if mutual trust material
+     * was exchanged (the caller then re-dials normally to form the mesh channel).
+     * Optional — a transport without it cannot bootstrap (the seed just never trusts).
+     * @param host - the peer host
+     * @param port - the peer port
+     * @param dial - the dial-side bootstrap params (token, pin, own CA, sink)
+     */
+    bootstrap?(host: string, port: number, dial: ClusterDialBootstrap): Promise<boolean>;
 
     /**
      * Stop listening.

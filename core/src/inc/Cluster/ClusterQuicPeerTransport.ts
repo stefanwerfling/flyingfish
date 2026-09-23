@@ -22,6 +22,8 @@ export class ClusterQuicPeerTransport implements IClusterPeerTransport {
 
     private readonly _caChain: string[];
 
+    private readonly _trustProvider?: () => string[];
+
     private _accepting = false;
 
     /**
@@ -31,6 +33,15 @@ export class ClusterQuicPeerTransport implements IClusterPeerTransport {
     public constructor(options: ClusterPeerTransportOptions, binding: QuicNativeBinding) {
         this._native = new binding.QuicTransport(options.certificate, options.privateKey);
         this._caChain = options.caChain;
+        this._trustProvider = options.trustProvider;
+    }
+
+    /**
+     * The current trust anchor set: the live union of member CAs when a provider is
+     * given (model (b) cross-trust), else this node's own static CA chain.
+     */
+    private _trust(): string[] {
+        return this._trustProvider?.() ?? this._caChain;
     }
 
     /**
@@ -103,7 +114,7 @@ export class ClusterQuicPeerTransport implements IClusterPeerTransport {
      * @param peer - the native QUIC peer
      */
     private async _admit(peer: QuicNativePeer): Promise<ClusterPeerChannel | null> {
-        const identity = await ClusterPeerAuthenticator.authenticatePem(peer.peerCertPem, this._caChain);
+        const identity = await ClusterPeerAuthenticator.authenticatePem(peer.peerCertPem, this._trust());
 
         if (identity === null) {
             return null;

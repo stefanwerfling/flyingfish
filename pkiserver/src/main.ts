@@ -163,7 +163,7 @@ const DEFAULT_ORGANIZATION = 'FlyingFish';
             max_age: session_cookie_max_age
         },
         routes: [
-            new Pki(service, store, tConfig.pkiserver?.caExportFile)
+            new Pki(service, store, tokens, tConfig.pkiserver?.tokenSecret, tConfig.pkiserver?.caExportFile)
         ]
     });
 

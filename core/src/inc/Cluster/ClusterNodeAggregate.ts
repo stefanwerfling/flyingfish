@@ -17,6 +17,12 @@ export type ClusterNodeView = {
     // True if the last heartbeat is within the stale window of `now` — the same
     // liveness signal {@link clusterLiveNodeUids} feeds DNS failover (9.5.14).
     online: boolean;
+    // Cluster identity + transport a node seeds into its own descriptor (9.5.12.2);
+    // optional — a node that has not published them (older / control-only) omits them.
+    commonName?: string;
+    transport?: string;
+    certFingerprint?: string;
+    enrolled?: boolean;
 };
 
 /**
@@ -27,6 +33,10 @@ type NodeEntryValue = {
     host?: unknown;
     port?: unknown;
     heartbeat?: unknown;
+    commonName?: unknown;
+    transport?: unknown;
+    certFingerprint?: unknown;
+    enrolled?: unknown;
 };
 
 /**
@@ -65,7 +75,11 @@ export const aggregateClusterNodes = (
             host: typeof value.host === 'string' ? value.host : '',
             port: typeof value.port === 'number' && Number.isFinite(value.port) ? value.port : 0,
             lastHeartbeat: value.heartbeat,
-            online: now - value.heartbeat <= staleMs
+            online: now - value.heartbeat <= staleMs,
+            ...(typeof value.commonName === 'string' ? {commonName: value.commonName} : {}),
+            ...(typeof value.transport === 'string' ? {transport: value.transport} : {}),
+            ...(typeof value.certFingerprint === 'string' ? {certFingerprint: value.certFingerprint} : {}),
+            ...(typeof value.enrolled === 'boolean' ? {enrolled: value.enrolled} : {})
         });
     }
 

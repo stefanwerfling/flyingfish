@@ -1,5 +1,7 @@
 import {NavbarLinkButton, NavbarLinkFullsize} from 'bambooo';
+import {ClusterNode} from 'flyingfish_schemas';
 import {Login as LoginAPI} from './inc/Api/Login.js';
+import {Registry as RegistryAPI} from './inc/Api/Registry.js';
 import {User as UserAPI} from './inc/Api/User.js';
 import {ClusterNav, NavModel} from './inc/Components/ClusterNav.js';
 import {Lang} from './inc/Lang.js';
@@ -19,6 +21,7 @@ import {UpnpNat as UpnpNatPage} from './inc/Pages/UpnpNat.js';
 import {Gateway as GatewayPage} from './inc/Pages/Gateway.js';
 import {Pki as PkiPage} from './inc/Pages/Pki.js';
 import {Registry as RegistryPage} from './inc/Pages/Registry.js';
+import {NodeCluster} from './inc/Pages/NodeCluster.js';
 import {SystemMode, getNodeMode, loadNodeConfig} from './inc/Pages/SystemMode.js';
 import {Users as UsersPage} from './inc/Pages/Users.js';
 import {UtilAvatarGenerator} from './inc/Utils/UtilAvatarGenerator.js';
@@ -136,6 +139,23 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
         // falls back to localStorage if the backend endpoint isn't available yet
         await loadNodeConfig();
 
+        // Cluster node roster (9.5.12, Proxmox-style): the real federated node list from
+        // the converged gossip aggregate, so the tree reflects live membership. `selfNodeUid`
+        // marks which entry is THIS node. On a solo node — or before the local clusterserver
+        // has gossiped — this is empty/null and the tree falls back to just this node.
+        let roster: ClusterNode[] = [];
+        let selfNodeUid: string | null = null;
+
+        try {
+            const nodesResponse = await RegistryAPI.getClusterNodes();
+            roster = nodesResponse.list;
+            selfNodeUid = nodesResponse.selfNodeUid;
+        } catch (e) {
+            // roster unavailable (not clustered / endpoint absent) — local node only
+        }
+
+        const selfEntry = selfNodeUid === null ? undefined : roster.find((n) => n.nodeUid === selfNodeUid);
+
         const navModel: NavModel = {
             datacenter: {
                 id: 'dc',
@@ -158,12 +178,15 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
             },
             nodes: [
                 {
+                    // the local node — always first, with its full resource tree (this node's
+                    // pages drive this backend). Identity/liveness come from the gossip roster
+                    // when available, else a sensible default (solo / pre-gossip).
                     id: 'node:local',
                     kind: 'node',
-                    title: 'flyingfish-nuc',
+                    title: selfEntry?.host || 'flyingfish-nuc',
                     icon: '🖥️',
                     avatar: '🖥️',
-                    status: 'up',
+                    status: selfEntry && !selfEntry.online ? 'warn' : 'up',
                     badges: [{label: 'CA · Hub', cls: 'ca'}, {label: 'this node', cls: 'plain'}],
                     subtitle: 'this node',
                     // operating mode (frontend placeholder until the backend SystemConfig
@@ -180,6 +203,7 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                             key: 'system', label: 'System', icon: '⚙️', leaves: [
                                 {key: 'mode', label: 'Mode', icon: '🎛️', make: (): BasePage => new SystemMode()},
                                 {key: 'gateway', label: 'Gateway', icon: '🌐', make: (): BasePage => new GatewayPage()},
+                                {key: 'cluster', label: 'Cluster', icon: '🔗', make: (): BasePage => new NodeCluster()},
                                 {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()}
                             ]
                         },

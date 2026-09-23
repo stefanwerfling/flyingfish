@@ -101,3 +101,68 @@ describe('ClusterMembership peer discovery (cluster/mesh 9.5.1)', () => {
         }
     });
 });
+
+describe('ClusterMembership seed-peer bootstrap (cross-Hub join 9.5.12.2)', () => {
+    let tree: PkiCaTreeResult;
+    let tokens: PkiBootstrapTokenStore;
+    let service: PkiEnrollmentService;
+    let caChain: string[];
+    let nodes: TestNode[];
+
+    beforeAll(async() => {
+        tree = await PkiCaTree.create({organization: 'FlyingFishTestSeed'});
+        tokens = new PkiBootstrapTokenStore();
+        service = new PkiEnrollmentService(tree, tokens);
+        caChain = service.getCaChain(PkiCaPurpose.cluster);
+
+        nodes = [];
+
+        for (const name of ['seed-a', 'seed-b']) {
+            const {token} = tokens.issue({purpose: PkiCaPurpose.cluster, autoApprove: true});
+            // eslint-disable-next-line no-await-in-loop -- sequential setup
+            const keys = await PkiCertificateBuilder.generateKeyPair();
+            // eslint-disable-next-line no-await-in-loop -- sequential setup
+            const csr = await PkiCertificateBuilder.createCsr(`CN=${name}`, keys);
+            // eslint-disable-next-line no-await-in-loop -- sequential setup
+            const request = await service.enroll({csr: csr, bootstrapToken: token, commonName: name});
+            // eslint-disable-next-line no-await-in-loop -- sequential setup
+            const pem = await PkiCertificateBuilder.exportKeyPair(keys);
+
+            const transport = new ClusterTlsPeerTransport({
+                certificate: request.issued!.certificate,
+                privateKey: pem.privateKey,
+                caChain: caChain
+            });
+            const membership = new ClusterMembership(transport, request.nodeUid);
+            // eslint-disable-next-line no-await-in-loop -- sequential setup
+            const port = await membership.start(0);
+
+            nodes.push({nodeUid: request.nodeUid, membership: membership, info: {nodeUid: request.nodeUid, host: '127.0.0.1', port: port}});
+        }
+    });
+
+    afterAll(async() => {
+        await Promise.all(nodes.map(async(node): Promise<void> => node.membership.stop()));
+    });
+
+    test('a seed peer connects two nodes that share no roster (bootstrap, ordering bypassed)', async() => {
+        // The empty roster models two SEPARATE Hubs: neither node discovers the other
+        // through a shared roster. The join package hands node B node A's mesh endpoint,
+        // which B registers as a seed and dials unconditionally.
+        const emptyRoster: ClusterPeerRoster = {
+            list: async(): Promise<ClusterPeerInfo[]> => []
+        };
+
+        const nodeA = nodes[0];
+        const nodeB = nodes[1];
+
+        nodeB.membership.addSeedPeer(nodeA.info.host, nodeA.info.port);
+        await nodeB.membership.sync(emptyRoster);
+
+        await waitFor((): boolean =>
+            nodeB.membership.peers().includes(nodeA.nodeUid) && nodeA.membership.peers().includes(nodeB.nodeUid));
+
+        expect(nodeB.membership.peers()).toContain(nodeA.nodeUid);
+        expect(nodeA.membership.peers()).toContain(nodeB.nodeUid);
+    });
+});

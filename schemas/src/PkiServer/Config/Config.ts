@@ -21,7 +21,12 @@ export const SchemaConfigOptionsPkiServer = SchemaConfigOptions.extend({
         // File path (in a shared volume) to export the CA pool to (root +
         // intermediates, JSON). The Hub reads it to seed its mTLS client CA
         // without a boot-time HTTP dependency on the pkiserver (9.4 mTLS).
-        caExportFile: Vts.optional(Vts.string())
+        caExportFile: Vts.optional(Vts.string()),
+        // Shared admin secret guarding the authenticated `POST /pki/token`
+        // mint route (9.5.12.2 cluster join). When unset the mint route is not
+        // exposed (co-located socket minting is unaffected). The Hub presents the
+        // same secret to mint a bootstrap token for a human-carried join package.
+        tokenSecret: Vts.optional(Vts.string())
     })),
     // Hub registry (v2 modular architecture): where and with which shared secret
     // this part self-registers its capability manifest.

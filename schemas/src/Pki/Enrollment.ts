@@ -142,3 +142,67 @@ export const SchemaPkiCaCertsResponse = SchemaDefaultReturn.extend({
  * PkiCaCertsResponse
  */
 export type PkiCaCertsResponse = ExtractSchemaResultType<typeof SchemaPkiCaCertsResponse>;
+
+/**
+ * SchemaPkiTokenRequest — an admin-authenticated bootstrap-token mint request
+ * (9.5.12.2 cluster join). The caller (the Hub) authenticates with the shared
+ * `tokenSecret` at the transport and names the CA purpose the token enrolls for
+ * (cluster) plus, optionally, whether the enrolled node is auto-approved or queued
+ * for admin approval, and the token TTL.
+ */
+export const SchemaPkiTokenRequest = Vts.object({
+    purpose: Vts.enum(PkiCaPurposeVts),
+    autoApprove: Vts.optional(Vts.boolean()),
+    ttlMs: Vts.optional(Vts.number())
+});
+
+/**
+ * PkiTokenRequest
+ */
+export type PkiTokenRequest = ExtractSchemaResultType<typeof SchemaPkiTokenRequest>;
+
+/**
+ * SchemaPkiTokenResponse — a freshly minted bootstrap token: the opaque token
+ * string, its purpose, whether the enrolled node auto-approves, and its expiry
+ * (epoch ms). The token is single-use and short-lived.
+ */
+export const SchemaPkiTokenResponse = SchemaDefaultReturn.extend({
+    token: Vts.string(),
+    purpose: Vts.enum(PkiCaPurposeVts),
+    autoApprove: Vts.boolean(),
+    expiresAt: Vts.number()
+});
+
+/**
+ * PkiTokenResponse
+ */
+export type PkiTokenResponse = ExtractSchemaResultType<typeof SchemaPkiTokenResponse>;
+
+/**
+ * SchemaPkiTokenValidateRequest — validate (and consume) a bootstrap token
+ * (9.5.12.2 cross-Hub join): a node presents a peer's join token to the CA holder's
+ * pkiserver to confirm it is a real, unexpired, single-use token this cluster minted
+ * before admitting the peer's CA. Authenticated by the shared admin secret.
+ */
+export const SchemaPkiTokenValidateRequest = Vts.object({
+    token: Vts.string()
+});
+
+/**
+ * PkiTokenValidateRequest
+ */
+export type PkiTokenValidateRequest = ExtractSchemaResultType<typeof SchemaPkiTokenValidateRequest>;
+
+/**
+ * SchemaPkiTokenValidateResponse — whether the presented token was valid (and has
+ * now been consumed); the purpose it was minted for when valid.
+ */
+export const SchemaPkiTokenValidateResponse = SchemaDefaultReturn.extend({
+    valid: Vts.boolean(),
+    purpose: Vts.optional(Vts.enum(PkiCaPurposeVts))
+});
+
+/**
+ * PkiTokenValidateResponse
+ */
+export type PkiTokenValidateResponse = ExtractSchemaResultType<typeof SchemaPkiTokenValidateResponse>;

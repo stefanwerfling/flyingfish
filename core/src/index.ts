@@ -242,6 +242,17 @@ export {
     aggregateClusterNodes
 } from './inc/Cluster/ClusterNodeAggregate.js';
 export {
+    CLUSTER_CA_KEY_PREFIX,
+    ClusterCaEntry,
+    aggregateClusterCaSet,
+    caChainRootFingerprint,
+    clusterTrustChain
+} from './inc/Cluster/ClusterCaAggregate.js';
+export {
+    ClusterBootstrapHandshake,
+    ClusterBootstrapHello
+} from './inc/Cluster/ClusterBootstrapHandshake.js';
+export {
     ClusterRbacGroup,
     ClusterRbacRole,
     ClusterRbacPermission,
