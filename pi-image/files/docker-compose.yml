@@ -69,6 +69,9 @@ services:
       FLYINGFISH_REGISTRY_SECRET: "${REGISTRY_SECRET}"
       FLYINGFISH_PKI_CA_FILE: /var/lib/flyingfish-pki-ca/ca-pool.json
       FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      # Cluster join (9.5.12.2): the shared mint secret so the Hub can mint join
+      # packages. Empty PKI_TOKEN_SECRET = off (join package carries only the CA pin).
+      FLYINGFISH_PKI_TOKEN_SECRET: "${PKI_TOKEN_SECRET}"
       FLYINGFISH_NGINX_SECRET: "${NGINX_SECRET}"
       FLYINGFISH_NGINX_REMOTE_URL: "${NGINX_REMOTE_URL}"
     ports:
@@ -189,6 +192,9 @@ services:
       NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
       FLYINGFISH_PKISERVER_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
       FLYINGFISH_PKISERVER_CA_EXPORT_FILE: /var/lib/flyingfish-pki-ca/ca-pool.json
+      # Cluster join token mint/validate (9.5.12.2): shared admin secret; empty = the
+      # /pki/token and /pki/token/validate routes are not exposed.
+      FLYINGFISH_PKISERVER_TOKEN_SECRET: "${PKI_TOKEN_SECRET}"
     ports:
       - "5334:5334/tcp"
     networks:

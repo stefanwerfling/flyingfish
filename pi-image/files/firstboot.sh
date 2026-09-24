@@ -51,6 +51,7 @@ else
     MARIADB_ROOT_PASSWORD="$(gen 32 40)"
     REGISTRY_SECRET="$(gen 32 40)"
     NGINX_SECRET="$(gen 32 40)"
+    PKI_TOKEN_SECRET="$(gen 32 40)"
 
     umask 077
     cat > "$ENV_FILE" <<EOF
@@ -70,6 +71,11 @@ REGISTRY_URL=https://flyingfish:3000
 REGISTRY_URL_HOST=https://127.0.0.1:3000
 NGINX_SECRET=${NGINX_SECRET}
 NGINX_REMOTE_URL=http://10.103.0.9:3000
+
+# --- Cluster join (mints a single-use bootstrap token for "Generate join
+# package" in the Web UI). Shared between the backend and pkiserver — without
+# it a join package carries only the CA pin, no usable token. ---
+PKI_TOKEN_SECRET=${PKI_TOKEN_SECRET}
 LOGGING_LEVEL=info
 DYNDNSSERVER_ENABLE=1
 EOF

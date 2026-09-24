@@ -137,7 +137,7 @@ export class NodeCluster extends BasePage {
         NodeCluster._card(cards, '📦 Join package', rows);
 
         if (!pkg.configured) {
-            NodeCluster._empty(mount, 'Token minting is not configured on this node (no pki.tokenSecret) — only the CA pin is shown. Set the shared mint secret to hand out a bootstrap token.');
+            NodeCluster._empty(mount, 'Token minting is not configured on this node — only the CA pin is shown, no bootstrap token, so a joining node cannot use this package yet. Set PKI_TOKEN_SECRET (same value for the backend and pkiserver, e.g. in /opt/flyingfish/.env) and restart both, then generate again.');
 
             return;
         }
