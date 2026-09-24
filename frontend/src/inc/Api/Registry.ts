@@ -1,11 +1,18 @@
 import {
     ClusterJoinPackageResponse,
     ClusterJoinRequest,
+    ClusterNodeGroupDeleteRequest,
+    ClusterNodeGroupMembershipRequest,
+    ClusterNodeGroupSaveRequest,
+    ClusterNodeGroupSaveResponse,
+    ClusterNodeGroupsResponse,
     ClusterNodesResponse,
     DefaultReturn,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaClusterJoinPackageResponse,
+    SchemaClusterNodeGroupSaveResponse,
+    SchemaClusterNodeGroupsResponse,
     SchemaClusterNodesResponse,
     SchemaDefaultReturn,
     SchemaRegistryPartsResponse,
@@ -57,6 +64,38 @@ export class Registry {
      */
     public static async applyClusterJoin(request: ClusterJoinRequest): Promise<DefaultReturn> {
         return NetFetch.postData('/json/registry/cluster/join', request, SchemaDefaultReturn);
+    }
+
+    /**
+     * Return the cluster-wide node groups + memberships (Cluster/Mesh epic 9.5.12.3):
+     * the shared grouping of nodes aggregated from the gossip. Read-only.
+     */
+    public static async getClusterNodeGroups(): Promise<ClusterNodeGroupsResponse> {
+        return NetFetch.getData('/json/registry/cluster/node-groups', SchemaClusterNodeGroupsResponse);
+    }
+
+    /**
+     * Create (no id) or edit (id set) a cluster node group (9.5.12.3). Requires the
+     * `cluster.manage` permission. The change gossips cluster-wide.
+     */
+    public static async saveClusterNodeGroup(request: ClusterNodeGroupSaveRequest): Promise<ClusterNodeGroupSaveResponse> {
+        return NetFetch.postData('/json/registry/cluster/node-group', request, SchemaClusterNodeGroupSaveResponse);
+    }
+
+    /**
+     * Delete a cluster node group and its memberships (9.5.12.3). Requires the
+     * `cluster.manage` permission.
+     */
+    public static async deleteClusterNodeGroup(request: ClusterNodeGroupDeleteRequest): Promise<DefaultReturn> {
+        return NetFetch.postData('/json/registry/cluster/node-group/delete', request, SchemaDefaultReturn);
+    }
+
+    /**
+     * Add or remove a node from a cluster node group (9.5.12.3). Requires the
+     * `cluster.manage` permission.
+     */
+    public static async setClusterNodeGroupMembership(request: ClusterNodeGroupMembershipRequest): Promise<DefaultReturn> {
+        return NetFetch.postData('/json/registry/cluster/node-group/membership', request, SchemaDefaultReturn);
     }
 
 }
