@@ -305,9 +305,15 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
                 const nodeUid = channel.identity.nodeUid;
                 const mux = new ClusterPeerMux(channel);
 
+                // The nodeUid here is read from the peer's TLS-verified client cert, so
+                // this line is proof the peer authenticated against the cross-trusted CA
+                // set (model (b)). Logged at info as a mesh membership event.
+                Logger.getLogger().info(`Cluster mesh peer connected (authenticated nodeUid ${nodeUid})`);
+
                 gossip.addPeer(nodeUid, mux.channel(ClusterMuxKind.Gossip));
                 control.addPeer(nodeUid, mux.channel(ClusterMuxKind.Control));
                 mux.onClose((): void => {
+                    Logger.getLogger().info(`Cluster mesh peer disconnected (nodeUid ${nodeUid})`);
                     gossip.removePeer(nodeUid);
                     control.removePeer(nodeUid);
                 });
@@ -381,28 +387,45 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
             const syncOnce = async(): Promise<void> => {
                 heartbeat();
 
-                await roster.announce(advertiseHost, peerPort);
+                // The Hub-facing steps (roster announce/pull/push) are each best-effort:
+                // a Hub outage — or, in a fresh cluster, a Hub cert not yet valid for this
+                // node's address — must NOT stop the peer mesh from forming. The datapath
+                // is clusterserver↔clusterserver (seed dial + gossip anti-entropy below);
+                // the Hub only mirrors the converged view for the frontend.
+                try {
+                    await roster.announce(advertiseHost, peerPort);
+                } catch (error) {
+                    Logger.getLogger().warn('Cluster roster announce failed (continuing; will retry next interval)', error);
+                }
+
                 await membership.sync(roster);
 
-                for (const entry of await gossipSync.pullLocalState()) {
-                    // Global entries (cluster-shared, UUID-keyed — the RBAC policy) keep
-                    // their key so every node converges on it; per-node resources are
-                    // namespaced by this node's uid (Cluster/Mesh 9.5.12, A+C).
-                    const storeKey = entry.global === true ? entry.key : clusterGossipNamespaceKey(selfNodeUid, entry.key);
-                    gossipStore.setIfChanged(storeKey, entry.value);
+                try {
+                    for (const entry of await gossipSync.pullLocalState()) {
+                        // Global entries (cluster-shared, UUID-keyed — the RBAC policy) keep
+                        // their key so every node converges on it; per-node resources are
+                        // namespaced by this node's uid (Cluster/Mesh 9.5.12, A+C).
+                        const storeKey = entry.global === true ? entry.key : clusterGossipNamespaceKey(selfNodeUid, entry.key);
+                        gossipStore.setIfChanged(storeKey, entry.value);
+                    }
+                } catch (error) {
+                    Logger.getLogger().warn('Cluster Hub state pull failed (continuing; will retry next interval)', error);
                 }
 
                 gossip.sync();
 
-                await gossipSync.pushAggregate(gossipStore.liveEntries().map((entry) => ({key: entry.key, value: entry.value})));
+                try {
+                    await gossipSync.pushAggregate(gossipStore.liveEntries().map((entry) => ({key: entry.key, value: entry.value})));
+                } catch (error) {
+                    Logger.getLogger().warn('Cluster Hub aggregate push failed (continuing; will retry next interval)', error);
+                }
             };
 
-            await syncOnce();
-
-            // Now that membership + trust are up, wire the join action: applying a join
-            // package registers the target as a bootstrap seed (token + CA pin) and runs
-            // a sync so the one-port bootstrap pre-flight fires promptly; the mesh channel
-            // then forms on a following sync (model (b), 9.5.12.2).
+            // Wire the join action BEFORE the first sync so a join that arrives early is
+            // honoured: applying a join package registers the target as a bootstrap seed
+            // (token + CA pin) and runs a sync so the one-port bootstrap pre-flight fires
+            // promptly; the mesh channel then forms on a following sync (model (b),
+            // 9.5.12.2). Independent of the first sync's Hub reachability.
             joinController.handler = async(request): Promise<void> => {
                 membership.addSeedPeer(request.meshHost, request.meshPort, {
                     token: request.bootstrapToken,
@@ -415,6 +438,13 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
 
                 await syncOnce();
             };
+
+            // Initial sync is best-effort: syncOnce already guards each Hub step, but a
+            // wrap keeps any unexpected error from tearing down the (already-listening)
+            // mesh transport and the periodic sync below.
+            await syncOnce().catch((error: unknown): void => {
+                Logger.getLogger().warn('Cluster mesh initial sync failed (will retry next interval)', error);
+            });
 
             setInterval((): void => {
                 syncOnce().catch((error: unknown): void => {

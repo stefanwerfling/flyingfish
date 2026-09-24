@@ -69,7 +69,16 @@ export class ClusterMembership {
      * @param roster - the peer roster source
      */
     public async sync(roster: ClusterPeerRoster): Promise<void> {
-        const peers = await roster.list();
+        let peers: ClusterPeerInfo[] = [];
+
+        try {
+            peers = await roster.list();
+        } catch {
+            // best-effort: the Hub roster may be transiently unreachable (or, in a
+            // fresh cluster, present a not-yet-valid cert). Seed peers (the bootstrap
+            // join) are dialed regardless below, so a node can still join a cluster
+            // whose roster it is not in yet — the mesh does not depend on the Hub.
+        }
 
         await Promise.all(peers.map(async(peer: ClusterPeerInfo): Promise<void> => {
             if (peer.nodeUid === this._selfNodeUid || this._peers.has(peer.nodeUid) || this._selfNodeUid >= peer.nodeUid) {

@@ -56,6 +56,10 @@ services:
       # + the pkiserver URL to refresh the revocation list at runtime.
       FLYINGFISH_PKI_CA_FILE: /var/lib/flyingfish-pki-ca/ca-pool.json
       FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
+      # Cluster join (9.5.12.2): shared mint secret + local clusterserver URL so the Hub
+      # can mint/apply join packages. Empty PKI_TOKEN_SECRET = off.
+      FLYINGFISH_PKI_TOKEN_SECRET: "${PKI_TOKEN_SECRET}"
+      FLYINGFISH_CLUSTERSERVER_URL: "http://10.103.0.11:5335"
       # nginx runs in its own container (nginxserver, 9.2.2) - this pair flips
       # NginxService into remote mode instead of spawning nginx locally here.
       FLYINGFISH_NGINX_SECRET: "${NGINX_SECRET}"
@@ -291,6 +295,8 @@ services:
       NODE_EXTRA_CA_CERTS: /var/lib/flyingfish/ssl/server.crt
       FLYINGFISH_PKISERVER_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
       FLYINGFISH_PKISERVER_CA_EXPORT_FILE: /var/lib/flyingfish-pki-ca/ca-pool.json
+      # Cluster join token mint/validate (9.5.12.2): shared admin secret; empty = routes off.
+      FLYINGFISH_PKISERVER_TOKEN_SECRET: "${PKI_TOKEN_SECRET}"
     ports:
       - "5334:5334/tcp"
     networks:
@@ -328,6 +334,10 @@ services:
       FLYINGFISH_PKI_URL: "http://10.103.0.10:5334"
       FLYINGFISH_PKI_STORE_DIR: /var/lib/flyingfish-pki
       FLYINGFISH_PKI_BOOTSTRAP_SOCKET: /var/lib/flyingfish-pki-bootstrap/enroll.sock
+      # Cluster join (9.5.12.2): shared secret to validate a joining peer's token.
+      FLYINGFISH_PKI_TOKEN_SECRET: "${PKI_TOKEN_SECRET}"
+      # Form a cluster: FLYINGFISH_CLUSTER_MESH=1 + reachable peer port (5336) + advertise host.
+      # FLYINGFISH_CLUSTER_MESH: "1"
     ports:
       - "5335:5335/tcp"
     networks:

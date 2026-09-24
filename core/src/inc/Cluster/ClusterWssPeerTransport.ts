@@ -2,9 +2,11 @@ import * as http from 'http';
 import * as https from 'https';
 import * as tls from 'tls';
 import {WebSocket, WebSocketServer} from 'ws';
+import {ClusterBootstrapAcceptContext, ClusterDialBootstrap, ClusterPeerHandler, ClusterPeerTransportOptions, IClusterPeerTransport} from './ClusterPeerTransport.js';
+import {ClusterBootstrapHandshake} from './ClusterBootstrapHandshake.js';
 import {ClusterPeerAuthenticator} from './ClusterPeerAuthenticator.js';
 import {ClusterPeerChannel} from './ClusterPeerChannel.js';
-import {ClusterPeerHandler, ClusterPeerTransportOptions, IClusterPeerTransport} from './ClusterPeerTransport.js';
+import {caChainRootFingerprint} from './ClusterCaAggregate.js';
 import {WebSocketByteDuplex} from './WebSocketByteDuplex.js';
 
 /**
@@ -61,13 +63,7 @@ export class ClusterWssPeerTransport implements IClusterPeerTransport {
         this._wss.on('connection', (ws: WebSocket, req: http.IncomingMessage): void => {
             const socket = req.socket as unknown as tls.TLSSocket;
 
-            ClusterPeerAuthenticator.authenticate(socket, this._trust()).then((identity): void => {
-                if (identity === null) {
-                    ws.terminate();
-                } else {
-                    onPeer(new ClusterPeerChannel(new WebSocketByteDuplex(ws), identity));
-                }
-            }).catch((): void => {
+            ClusterWssPeerTransport._admit(ws, socket, this._trust(), onPeer, this._options.bootstrap).catch((): void => {
                 ws.terminate();
             });
         });
@@ -124,6 +120,88 @@ export class ClusterWssPeerTransport implements IClusterPeerTransport {
 
             ws.once('error', reject);
         });
+    }
+
+    /**
+     * The one-port bootstrap pre-flight (dialer side) over WSS: connect, exchange CA
+     * chains + our join token, pin the peer's CA, hand it to the sink, then close.
+     * Mirrors {@link ClusterTlsPeerTransport.bootstrap}. Returns true when the pin
+     * matched (mutual trust material is in place for a normal re-dial).
+     * @param host - the peer host
+     * @param port - the peer port
+     * @param dial - the dial-side bootstrap params
+     */
+    public async bootstrap(host: string, port: number, dial: ClusterDialBootstrap): Promise<boolean> {
+        return new Promise<boolean>((resolve): void => {
+            const ws = new WebSocket(`wss://${host}:${port}`, {
+                cert: this._options.certificate,
+                key: this._options.privateKey,
+                ca: this._options.caChain,
+                rejectUnauthorized: false
+            });
+
+            ws.on('open', (): void => {
+                ClusterBootstrapHandshake.exchange(new WebSocketByteDuplex(ws), {caChain: dial.ownCaChain, token: dial.token}).then((peerHello): void => {
+                    let trusted = false;
+
+                    if (peerHello !== null && caChainRootFingerprint(peerHello.caChain) === dial.pinFingerprint) {
+                        dial.onAcceptedCa(peerHello.caChain);
+                        trusted = true;
+                    }
+
+                    ws.close();
+                    resolve(trusted);
+                }).catch((): void => {
+                    ws.terminate();
+                    resolve(false);
+                });
+            });
+
+            ws.once('error', (): void => resolve(false));
+        });
+    }
+
+    /**
+     * Authenticate an inbound WSS peer and, if trusted, hand a channel to the handler.
+     * An untrusted peer runs the one-port bootstrap pre-flight when a bootstrap context
+     * is set (model (b) join), then the connection is closed gracefully so its HELLO
+     * reply reaches the dialer; otherwise it is dropped.
+     * @param ws - the inbound WebSocket
+     * @param socket - its underlying TLS socket (peer cert)
+     * @param caChain - the trusted cluster CA chain
+     * @param onPeer - the accepted-peer handler
+     * @param bootstrap - optional accept-side bootstrap context
+     * @protected
+     */
+    protected static async _admit(
+        ws: WebSocket,
+        socket: tls.TLSSocket,
+        caChain: string[],
+        onPeer: ClusterPeerHandler,
+        bootstrap?: ClusterBootstrapAcceptContext
+    ): Promise<void> {
+        const identity = await ClusterPeerAuthenticator.authenticate(socket, caChain);
+
+        if (identity !== null) {
+            onPeer(new ClusterPeerChannel(new WebSocketByteDuplex(ws), identity));
+
+            return;
+        }
+
+        if (bootstrap !== undefined) {
+            const peerHello = await ClusterBootstrapHandshake.exchange(new WebSocketByteDuplex(ws), {caChain: bootstrap.ownCaChain});
+
+            if (peerHello !== null && peerHello.token !== undefined && await bootstrap.validateToken(peerHello.token)) {
+                bootstrap.onAcceptedCa(peerHello.caChain);
+            }
+
+            // Graceful close flushes our HELLO reply to the dialer before the FIN.
+            ws.close();
+
+            return;
+        }
+
+        ws.terminate();
     }
 
     /**
