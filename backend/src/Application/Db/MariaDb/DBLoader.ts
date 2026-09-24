@@ -14,6 +14,7 @@ import {AddSystemConfig1789500000000} from '../../../inc/Db/MariaDb/migrations/1
 import {AddDomainRecordFollowNode1789600000000} from '../../../inc/Db/MariaDb/migrations/1789600000000-AddDomainRecordFollowNode.js';
 import {AddDhcpRaParams1789700000000} from '../../../inc/Db/MariaDb/migrations/1789700000000-AddDhcpRaParams.js';
 import {AddClusterNodeGroups1789800000000} from '../../../inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
+import {AddClusterNodeGroupShares1789900000000} from '../../../inc/Db/MariaDb/migrations/1789900000000-AddClusterNodeGroupShares.js';
 import {AddPkiTables1788500000000} from '../../../inc/Db/MariaDb/migrations/1788500000000-AddPkiTables.js';
 import {InitialSchema1787961600000} from '../../../inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
@@ -56,7 +57,8 @@ export class DBLoader extends CoreDBLoader {
             AddSystemConfig1789500000000,
             AddDomainRecordFollowNode1789600000000,
             AddDhcpRaParams1789700000000,
-            AddClusterNodeGroups1789800000000
+            AddClusterNodeGroups1789800000000,
+            AddClusterNodeGroupShares1789900000000
         ];
     }
 

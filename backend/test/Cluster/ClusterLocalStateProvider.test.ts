@@ -8,7 +8,7 @@
 import {ClusterLocalStateProvider, ClusterNodeGroupSnapshot, ClusterRbacPolicySnapshot} from '../../src/Application/Hub/ClusterLocalStateProvider.js';
 
 const emptyPolicy = (): ClusterRbacPolicySnapshot => ({groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []});
-const emptyGroups = (): ClusterNodeGroupSnapshot => ({groups: [], members: []});
+const emptyGroups = (): ClusterNodeGroupSnapshot => ({groups: [], members: [], shares: []});
 
 describe('ClusterLocalStateProvider', () => {
     test('publishes a hub descriptor plus a domain:<id> summary per domain (priority + A-record IP)', async() => {
@@ -87,7 +87,8 @@ describe('ClusterLocalStateProvider', () => {
             async() => emptyPolicy(),
             async() => ({
                 groups: [{id: 'ng1', name: 'Home LAN', description: 'trusted', color: '#12919f'}],
-                members: [{id: 'ngm1', nodeUid: 'node-a', groupUuid: 'ng1'}]
+                members: [{id: 'ngm1', nodeUid: 'node-a', groupUuid: 'ng1'}],
+                shares: []
             })
         );
 
@@ -101,5 +102,24 @@ describe('ClusterLocalStateProvider', () => {
 
         expect(entries[1].value).toEqual({id: 'ng1', name: 'Home LAN', description: 'trusted', color: '#12919f'});
         expect(entries[2].value).toEqual({id: 'ngm1', nodeUid: 'node-a', groupUuid: 'ng1'});
+    });
+
+    test('publishes node-group sharing rules under a GLOBAL node_group_share:<uuid> key (9.5.12.4)', async() => {
+        const provider = new ClusterLocalStateProvider(
+            async() => [],
+            async() => undefined,
+            async() => emptyPolicy(),
+            async() => ({
+                groups: [],
+                members: [],
+                shares: [{id: 'ngs1', nodeUid: 'node-a', groupUuid: 'ng1', resourceType: 'domain', level: 'write'}]
+            })
+        );
+
+        const entries = await provider.entries();
+
+        expect(entries.map((entry) => entry.key)).toEqual(['hub', 'node_group_share:ngs1']);
+        expect(entries[1].global).toBe(true);
+        expect(entries[1].value).toEqual({id: 'ngs1', nodeUid: 'node-a', groupUuid: 'ng1', resourceType: 'domain', level: 'write'});
     });
 });

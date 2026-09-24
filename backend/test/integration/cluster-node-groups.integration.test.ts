@@ -1,8 +1,8 @@
 /**
- * Cluster node-groups runtime proof (Cluster/Mesh epic 9.5.12.3) — exercises the
- * AddClusterNodeGroups migration, the entity<->migration schema contract, the
- * ClusterNodeGroupManager CRUD (create/edit/membership/delete), and the
- * ClusterNodeGroupConverger upsert against a REAL MariaDB.
+ * Cluster node-groups runtime proof (Cluster/Mesh epic 9.5.12.3/.4) — exercises the
+ * AddClusterNodeGroups + AddClusterNodeGroupShares migrations, the entity<->migration
+ * schema contract, the ClusterNodeGroupManager CRUD (create/edit/membership/share/delete),
+ * and the ClusterNodeGroupConverger upsert against a REAL MariaDB.
  *
  * Self-contained (same rationale as rbac.integration.test.ts): builds a plain TypeORM
  * DataSource with the exact production entities + migrations and points flyingfish_core's
@@ -15,6 +15,7 @@ import {DataSource, MigrationInterface} from 'typeorm';
 import {
     ClusterNodeGroupMemberServiceDB,
     ClusterNodeGroupServiceDB,
+    ClusterNodeGroupShareServiceDB,
     DBEntitiesLoader,
     DBService,
     PluginManager
@@ -36,6 +37,7 @@ import {AddSystemConfig1789500000000} from '../../src/inc/Db/MariaDb/migrations/
 import {AddDomainRecordFollowNode1789600000000} from '../../src/inc/Db/MariaDb/migrations/1789600000000-AddDomainRecordFollowNode.js';
 import {AddDhcpRaParams1789700000000} from '../../src/inc/Db/MariaDb/migrations/1789700000000-AddDhcpRaParams.js';
 import {AddClusterNodeGroups1789800000000} from '../../src/inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
+import {AddClusterNodeGroupShares1789900000000} from '../../src/inc/Db/MariaDb/migrations/1789900000000-AddClusterNodeGroupShares.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -63,7 +65,8 @@ const ALL_MIGRATIONS: (new () => MigrationInterface)[] = [
     AddSystemConfig1789500000000,
     AddDomainRecordFollowNode1789600000000,
     AddDhcpRaParams1789700000000,
-    AddClusterNodeGroups1789800000000
+    AddClusterNodeGroups1789800000000,
+    AddClusterNodeGroupShares1789900000000
 ];
 
 /**
@@ -122,14 +125,15 @@ describe('cluster node-groups migration + manager + converge (integration, real 
         }
     });
 
-    test('the migration creates both cluster_node_group* tables and records itself', async() => {
+    test('the migrations create all cluster_node_group* tables and record themselves', async() => {
         const tables: {t: string;}[] = await dataSource.query(
             'SELECT table_name AS t FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE \'cluster\\_node\\_group%\''
         );
-        expect(tables.map((row) => row.t).sort()).toEqual(['cluster_node_group', 'cluster_node_group_member']);
+        expect(tables.map((row) => row.t).sort()).toEqual(['cluster_node_group', 'cluster_node_group_member', 'cluster_node_group_share']);
 
         const applied = (await dataSource.query('SELECT name FROM migrations')).map((row: {name: string;}) => row.name);
         expect(applied).toContain('AddClusterNodeGroups1789800000000');
+        expect(applied).toContain('AddClusterNodeGroupShares1789900000000');
     });
 
     test('entities match the migration-built schema (no unexpected drift)', async() => {
@@ -185,27 +189,64 @@ describe('cluster node-groups migration + manager + converge (integration, real 
         expect(await dataSource.query('SELECT * FROM `cluster_node_group_member` WHERE `group_uuid` = ?', [groupId])).toEqual([]);
     });
 
+    test('manager: setShare upserts by (node, group, resourceType), removeShare deletes, delete cascades shares', async() => {
+        const manager = new ClusterNodeGroupManager();
+        const groupId = await manager.saveGroup({name: 'Shared Zone', color: '#12919f'});
+
+        // setting a share twice with a different level UPDATES in place (no duplicate row)
+        await manager.setShare('node-a', groupId, 'domain', 'read');
+        await manager.setShare('node-a', groupId, 'domain', 'write');
+        let shares = await dataSource.query(
+            'SELECT * FROM `cluster_node_group_share` WHERE `group_uuid` = ? AND `node_uid` = ? AND `resource_type` = ?',
+            [groupId, 'node-a', 'domain']
+        );
+        expect(shares).toHaveLength(1);
+        expect(shares[0]).toMatchObject({node_uid: 'node-a', group_uuid: groupId, resource_type: 'domain', level: 'write'});
+
+        // a distinct resource type from the same node is a separate row
+        await manager.setShare('node-a', groupId, 'route', 'read');
+        shares = await dataSource.query('SELECT resource_type FROM `cluster_node_group_share` WHERE `group_uuid` = ?', [groupId]);
+        expect(shares.map((row: {resource_type: string;}) => row.resource_type).sort()).toEqual(['domain', 'route']);
+
+        // removing a share is a no-op for an absent rule, and deletes an existing one
+        await manager.removeShare('node-a', groupId, 'ssh');
+        await manager.removeShare('node-a', groupId, 'route');
+        shares = await dataSource.query('SELECT resource_type FROM `cluster_node_group_share` WHERE `group_uuid` = ?', [groupId]);
+        expect(shares.map((row: {resource_type: string;}) => row.resource_type)).toEqual(['domain']);
+
+        // deleting the group also removes its sharing rules (no dangling rows)
+        await manager.deleteGroup(groupId);
+        expect(await dataSource.query('SELECT * FROM `cluster_node_group_share` WHERE `group_uuid` = ?', [groupId])).toEqual([]);
+    });
+
     test('convergence: a gossiped node-group view upserts into the local DB (create then update, no dup)', async() => {
         const converger = new ClusterNodeGroupConverger();
 
         await converger.import({
             groups: [{id: 'conv-ng1', name: 'RemoteZone', description: 'from node B', color: '#1f9d63'}],
-            members: [{id: 'conv-ngm1', nodeUid: 'node-x', groupUuid: 'conv-ng1'}]
+            members: [{id: 'conv-ngm1', nodeUid: 'node-x', groupUuid: 'conv-ng1'}],
+            shares: [{id: 'conv-ngs1', nodeUid: 'node-x', groupUuid: 'conv-ng1', resourceType: 'domain', level: 'read'}]
         });
 
         const [group] = await dataSource.query('SELECT * FROM `cluster_node_group` WHERE `id` = ?', ['conv-ng1']);
         expect(group).toMatchObject({name: 'RemoteZone', color: '#1f9d63'});
         const [member] = await dataSource.query('SELECT * FROM `cluster_node_group_member` WHERE `id` = ?', ['conv-ngm1']);
         expect(member).toMatchObject({node_uid: 'node-x', group_uuid: 'conv-ng1'});
+        const [share] = await dataSource.query('SELECT * FROM `cluster_node_group_share` WHERE `id` = ?', ['conv-ngs1']);
+        expect(share).toMatchObject({node_uid: 'node-x', group_uuid: 'conv-ng1', resource_type: 'domain', level: 'read'});
 
-        // re-importing the same UUID with changed fields UPSERTS (no duplicate row)
+        // re-importing the same UUIDs with changed fields UPSERTS (no duplicate rows)
         await converger.import({
             groups: [{id: 'conv-ng1', name: 'Renamed', description: 'x', color: '#c9871b'}],
-            members: []
+            members: [],
+            shares: [{id: 'conv-ngs1', nodeUid: 'node-x', groupUuid: 'conv-ng1', resourceType: 'domain', level: 'write'}]
         });
         const groups = await dataSource.query('SELECT * FROM `cluster_node_group` WHERE `id` = ?', ['conv-ng1']);
         expect(groups).toHaveLength(1);
         expect(groups[0].name).toBe('Renamed');
+        const shares = await dataSource.query('SELECT * FROM `cluster_node_group_share` WHERE `id` = ?', ['conv-ngs1']);
+        expect(shares).toHaveLength(1);
+        expect(shares[0].level).toBe('write');
     });
 
     test('the services read back what the manager wrote', async() => {
@@ -217,5 +258,9 @@ describe('cluster node-groups migration + manager + converge (integration, real 
         await new ClusterNodeGroupManager().setMembership('node-z', id, true);
         const members = await ClusterNodeGroupMemberServiceDB.getInstance().findAll();
         expect(members.some((member) => member.node_uid === 'node-z' && member.group_uuid === id)).toBe(true);
+
+        await new ClusterNodeGroupManager().setShare('node-z', id, 'domain', 'read');
+        const shares = await ClusterNodeGroupShareServiceDB.getInstance().findAll();
+        expect(shares.some((share) => share.node_uid === 'node-z' && share.group_uuid === id && share.resource_type === 'domain')).toBe(true);
     });
 });

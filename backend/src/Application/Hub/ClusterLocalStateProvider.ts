@@ -1,6 +1,7 @@
 import {
     ClusterNodeGroupMemberServiceDB,
     ClusterNodeGroupServiceDB,
+    ClusterNodeGroupShareServiceDB,
     DomainRecordServiceDB,
     DomainServiceDB,
     RbacGroupServiceDB,
@@ -62,14 +63,16 @@ export type ClusterRbacPolicySnapshot = {
 export type ClusterRbacPolicySource = () => Promise<ClusterRbacPolicySnapshot>;
 
 /**
- * A snapshot of this Hub's cluster NODE-GROUP tables (Cluster/Mesh epic 9.5.12.3). Both
- * are cluster-global and keyed by cluster-stable UUIDs, published so every node converges
- * on the same grouping (a node group is the boundary sharing is granted across in
- * 9.5.12.4). `nodeUid` is the member node's mesh UUID.
+ * A snapshot of this Hub's cluster NODE-GROUP tables (Cluster/Mesh epic 9.5.12.3/.4). All
+ * three are cluster-global and keyed by cluster-stable UUIDs, published so every node
+ * converges on the same grouping + sharing rules — `shares` is the exposure boundary
+ * (9.5.12.4) a resource type must cross before an RBAC grant scoped to the group can
+ * apply. `nodeUid` is the member/sharing node's mesh UUID.
  */
 export type ClusterNodeGroupSnapshot = {
     groups: {id: string; name: string; description: string; color: string;}[];
     members: {id: string; nodeUid: string; groupUuid: string;}[];
+    shares: {id: string; nodeUid: string; groupUuid: string; resourceType: string; level: string;}[];
 };
 
 /**
@@ -186,6 +189,12 @@ export class ClusterLocalStateProvider {
             entries.push({key: `node_group_member:${member.id}`, value: member, global: true});
         }
 
+        // The node-group SHARES (9.5.12.4): the exposure boundary a resource type must
+        // cross before an RBAC grant scoped to the group can apply.
+        for (const share of nodeGroups.shares) {
+            entries.push({key: `node_group_share:${share.id}`, value: share, global: true});
+        }
+
         return entries;
     }
 
@@ -232,14 +241,22 @@ export class ClusterLocalStateProvider {
      * summaries so no ORM state leaks into the gossip value).
      */
     private static async _defaultNodeGroups(): Promise<ClusterNodeGroupSnapshot> {
-        const [groups, members] = await Promise.all([
+        const [groups, members, shares] = await Promise.all([
             ClusterNodeGroupServiceDB.getInstance().findAll(),
-            ClusterNodeGroupMemberServiceDB.getInstance().findAll()
+            ClusterNodeGroupMemberServiceDB.getInstance().findAll(),
+            ClusterNodeGroupShareServiceDB.getInstance().findAll()
         ]);
 
         return {
             groups: groups.map((group) => ({id: group.id, name: group.name, description: group.description, color: group.color})),
-            members: members.map((member) => ({id: member.id, nodeUid: member.node_uid, groupUuid: member.group_uuid}))
+            members: members.map((member) => ({id: member.id, nodeUid: member.node_uid, groupUuid: member.group_uuid})),
+            shares: shares.map((share) => ({
+                id: share.id,
+                nodeUid: share.node_uid,
+                groupUuid: share.group_uuid,
+                resourceType: share.resource_type,
+                level: share.level
+            }))
         };
     }
 

@@ -402,12 +402,32 @@ export const SchemaClusterNodeGroupMember = Vts.object({
 export type ClusterNodeGroupMember = ExtractSchemaResultType<typeof SchemaClusterNodeGroupMember>;
 
 /**
+ * SchemaClusterNodeGroupShare — one node's sharing rule for a group (Cluster/Mesh epic
+ * 9.5.12.4): node `nodeUid` shares its `resourceType` resources with group `groupUuid` at
+ * `level` (`read` or `write`). Default-deny: a resource type is invisible to the group
+ * until a share row grants it.
+ */
+export const SchemaClusterNodeGroupShare = Vts.object({
+    id: Vts.string(),
+    nodeUid: Vts.string(),
+    groupUuid: Vts.string(),
+    resourceType: Vts.string(),
+    level: Vts.string()
+});
+
+/**
+ * ClusterNodeGroupShare
+ */
+export type ClusterNodeGroupShare = ExtractSchemaResultType<typeof SchemaClusterNodeGroupShare>;
+
+/**
  * SchemaClusterNodeGroupsResponse — the whole cluster-wide node-group view for the
- * management UI (groups + memberships aggregated from the gossip).
+ * management UI (groups + memberships + sharing rules aggregated from the gossip).
  */
 export const SchemaClusterNodeGroupsResponse = SchemaDefaultReturn.extend({
     groups: Vts.array(SchemaClusterNodeGroup),
-    members: Vts.array(SchemaClusterNodeGroupMember)
+    members: Vts.array(SchemaClusterNodeGroupMember),
+    shares: Vts.array(SchemaClusterNodeGroupShare)
 });
 
 /**
@@ -469,3 +489,33 @@ export const SchemaClusterNodeGroupMembershipRequest = Vts.object({
  * ClusterNodeGroupMembershipRequest
  */
 export type ClusterNodeGroupMembershipRequest = ExtractSchemaResultType<typeof SchemaClusterNodeGroupMembershipRequest>;
+
+/**
+ * SchemaClusterNodeGroupShareRequest — grant (or change) a sharing rule: node `nodeUid`
+ * shares its `resourceType` resources with group `groupUuid` at `level`.
+ */
+export const SchemaClusterNodeGroupShareRequest = Vts.object({
+    nodeUid: Vts.string(),
+    groupUuid: Vts.string(),
+    resourceType: Vts.string(),
+    level: Vts.string()
+});
+
+/**
+ * ClusterNodeGroupShareRequest
+ */
+export type ClusterNodeGroupShareRequest = ExtractSchemaResultType<typeof SchemaClusterNodeGroupShareRequest>;
+
+/**
+ * SchemaClusterNodeGroupShareDeleteRequest — revoke a sharing rule (back to default-deny).
+ */
+export const SchemaClusterNodeGroupShareDeleteRequest = Vts.object({
+    nodeUid: Vts.string(),
+    groupUuid: Vts.string(),
+    resourceType: Vts.string()
+});
+
+/**
+ * ClusterNodeGroupShareDeleteRequest
+ */
+export type ClusterNodeGroupShareDeleteRequest = ExtractSchemaResultType<typeof SchemaClusterNodeGroupShareDeleteRequest>;

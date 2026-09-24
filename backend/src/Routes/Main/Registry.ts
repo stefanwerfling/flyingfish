@@ -22,6 +22,8 @@ import {
     SchemaClusterNodeGroupMembershipRequest,
     SchemaClusterNodeGroupSaveRequest,
     SchemaClusterNodeGroupSaveResponse,
+    SchemaClusterNodeGroupShareDeleteRequest,
+    SchemaClusterNodeGroupShareRequest,
     SchemaClusterNodeGroupsResponse,
     SchemaClusterNodesResponse,
     SchemaClusterRbacResponse,
@@ -407,8 +409,9 @@ export class Registry extends DefaultRoute {
             }
         );
 
-        // Cluster-global NODE GROUPS (9.5.12.3): the shared grouping of nodes + their
-        // memberships, aggregated from the gossip (each keyed by a cluster-stable UUID,
+        // Cluster-global NODE GROUPS (9.5.12.3) + their SHARING RULES (9.5.12.4): the
+        // shared grouping of nodes + memberships + which resource types a node exposes to
+        // a group, aggregated from the gossip (each keyed by a cluster-stable UUID,
         // published un-namespaced so the cluster shares one set). Read-only.
         this._get(
             '/json/registry/cluster/node-groups',
@@ -419,11 +422,12 @@ export class Registry extends DefaultRoute {
                 return {
                     statusCode: StatusCodes.OK,
                     groups: view.groups,
-                    members: view.members
+                    members: view.members,
+                    shares: view.shares
                 };
             },
             {
-                description: 'The cluster-wide node groups + memberships aggregated from the gossip',
+                description: 'The cluster-wide node groups + memberships + sharing rules aggregated from the gossip',
                 responseBodySchema: SchemaClusterNodeGroupsResponse
             }
         );
@@ -478,6 +482,50 @@ export class Registry extends DefaultRoute {
             {
                 description: 'Add or remove a node from a cluster node group',
                 bodySchema: SchemaClusterNodeGroupMembershipRequest,
+                responseBodySchema: SchemaDefaultReturn
+            }
+        );
+
+        // Grant (or change) a node-group sharing rule (9.5.12.4): node `nodeUid` shares
+        // its `resourceType` resources with group `groupUuid` at `level`. cluster.manage
+        // gated — this is the exposure boundary, not a per-user RBAC grant.
+        this._post(
+            '/json/registry/cluster/node-group/share',
+            requirePermission('cluster.manage'),
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                await new ClusterNodeGroupManager().setShare(
+                    data.body!.nodeUid,
+                    data.body!.groupUuid,
+                    data.body!.resourceType,
+                    data.body!.level
+                );
+
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Grant or change a cluster node group sharing rule',
+                bodySchema: SchemaClusterNodeGroupShareRequest,
+                responseBodySchema: SchemaDefaultReturn
+            }
+        );
+
+        // Revoke a node-group sharing rule (9.5.12.4, back to default-deny). cluster.manage
+        // gated.
+        this._post(
+            '/json/registry/cluster/node-group/share/delete',
+            requirePermission('cluster.manage'),
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                await new ClusterNodeGroupManager().removeShare(
+                    data.body!.nodeUid,
+                    data.body!.groupUuid,
+                    data.body!.resourceType
+                );
+
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Revoke a cluster node group sharing rule',
+                bodySchema: SchemaClusterNodeGroupShareDeleteRequest,
                 responseBodySchema: SchemaDefaultReturn
             }
         );

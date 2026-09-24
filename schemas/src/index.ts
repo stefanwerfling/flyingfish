@@ -493,7 +493,13 @@ export {
     SchemaClusterNodeGroupDeleteRequest,
     ClusterNodeGroupDeleteRequest,
     SchemaClusterNodeGroupMembershipRequest,
-    ClusterNodeGroupMembershipRequest
+    ClusterNodeGroupMembershipRequest,
+    SchemaClusterNodeGroupShare,
+    ClusterNodeGroupShare,
+    SchemaClusterNodeGroupShareRequest,
+    ClusterNodeGroupShareRequest,
+    SchemaClusterNodeGroupShareDeleteRequest,
+    ClusterNodeGroupShareDeleteRequest
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

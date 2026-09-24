@@ -10,19 +10,28 @@ export type ClusterNodeGroupEntry = {id: string; name: string; description: stri
 export type ClusterNodeGroupMemberEntry = {id: string; nodeUid: string; groupUuid: string;};
 
 /**
+ * One node's explicit rule sharing a resource type with a group, at `read` or `write`
+ * (Cluster/Mesh epic 9.5.12.4) — the FREIGABE-GRENZE a resource type must cross before an
+ * RBAC grant scoped to the group can apply.
+ */
+export type ClusterNodeGroupShareEntry = {id: string; nodeUid: string; groupUuid: string; resourceType: string; level: string;};
+
+/**
  * The whole cluster-wide node-group view.
  */
 export type ClusterNodeGroupView = {
     groups: ClusterNodeGroupEntry[];
     members: ClusterNodeGroupMemberEntry[];
+    shares: ClusterNodeGroupShareEntry[];
 };
 
 /**
- * The gossip key prefixes. `node_group:` does not clash with `node_group_member:` — the
- * membership prefix is matched first so its (longer) key wins.
+ * The gossip key prefixes. `node_group:` does not clash with `node_group_member:` or
+ * `node_group_share:` — the longer, more specific prefixes are matched first so they win.
  */
 const KEY_GROUP = 'node_group:';
 const KEY_MEMBER = 'node_group_member:';
+const KEY_SHARE = 'node_group_share:';
 
 /**
  * Coerce an unknown to a string, defaulting to empty.
@@ -39,7 +48,7 @@ const toStr = (value: unknown): string => typeof value === 'string' ? value : ''
  * @param entries - the cluster-wide aggregate entries
  */
 export const aggregateClusterNodeGroups = (entries: readonly ClusterGossipStateEntry[]): ClusterNodeGroupView => {
-    const view: ClusterNodeGroupView = {groups: [], members: []};
+    const view: ClusterNodeGroupView = {groups: [], members: [], shares: []};
 
     for (const entry of entries) {
         const value = entry.value;
@@ -50,10 +59,19 @@ export const aggregateClusterNodeGroups = (entries: readonly ClusterGossipStateE
 
         const row = value as Record<string, unknown>;
 
-        // Match the membership prefix first — `node_group_member:` starts with
-        // `node_group:` too, so the group branch would otherwise swallow it.
+        // Match the longer, more specific prefixes first — `node_group_member:` and
+        // `node_group_share:` both start with `node_group:` too, so the group branch
+        // would otherwise swallow them.
         if (entry.key.startsWith(KEY_MEMBER)) {
             view.members.push({id: toStr(row.id), nodeUid: toStr(row.nodeUid), groupUuid: toStr(row.groupUuid)});
+        } else if (entry.key.startsWith(KEY_SHARE)) {
+            view.shares.push({
+                id: toStr(row.id),
+                nodeUid: toStr(row.nodeUid),
+                groupUuid: toStr(row.groupUuid),
+                resourceType: toStr(row.resourceType),
+                level: toStr(row.level)
+            });
         } else if (entry.key.startsWith(KEY_GROUP)) {
             view.groups.push({id: toStr(row.id), name: toStr(row.name), description: toStr(row.description), color: toStr(row.color)});
         }
@@ -61,6 +79,7 @@ export const aggregateClusterNodeGroups = (entries: readonly ClusterGossipStateE
 
     view.groups.sort((a, b) => a.id.localeCompare(b.id));
     view.members.sort((a, b) => a.id.localeCompare(b.id));
+    view.shares.sort((a, b) => a.id.localeCompare(b.id));
 
     return view;
 };
