@@ -1,4 +1,5 @@
 import {
+    ClusterEffectiveAccessResponse,
     ClusterJoinPackageResponse,
     ClusterJoinRequest,
     ClusterNodeGroupDeleteRequest,
@@ -12,6 +13,7 @@ import {
     DefaultReturn,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
+    SchemaClusterEffectiveAccessResponse,
     SchemaClusterJoinPackageResponse,
     SchemaClusterNodeGroupSaveResponse,
     SchemaClusterNodeGroupsResponse,
@@ -115,6 +117,15 @@ export class Registry {
      */
     public static async deleteClusterNodeGroupShare(request: ClusterNodeGroupShareDeleteRequest): Promise<DefaultReturn> {
         return NetFetch.postData('/json/registry/cluster/node-group/share/delete', request, SchemaDefaultReturn);
+    }
+
+    /**
+     * Return the effective-access preview (9.5.12.5): every node-group sharing rule
+     * joined with the RBAC roles granted on that group, resolved to permission keys —
+     * "what does sharing + RBAC actually combine to grant, right now". Read-only.
+     */
+    public static async getClusterEffectiveAccess(): Promise<ClusterEffectiveAccessResponse> {
+        return NetFetch.getData('/json/registry/cluster/effective-access', SchemaClusterEffectiveAccessResponse);
     }
 
 }

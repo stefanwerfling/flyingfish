@@ -1,5 +1,5 @@
 import {ContentCol, ContentColSize} from 'bambooo';
-import {ClusterNode, ClusterNodeGroup, ClusterNodeGroupMember, ClusterNodeGroupShare} from 'flyingfish_schemas';
+import {ClusterEffectiveAccessEntry, ClusterNode, ClusterNodeGroup, ClusterNodeGroupMember, ClusterNodeGroupShare} from 'flyingfish_schemas';
 import {Registry as RegistryAPI} from '../Api/Registry.js';
 import {UtilColor} from '../Utils/UtilColor.js';
 import {BasePage} from './BasePage.js';
@@ -147,6 +147,71 @@ export class ClusterView extends BasePage {
         body.appendTo(mount);
 
         await this._groupsBody(body);
+
+        const accessMount = jQuery('<div style="margin-top:22px"></div>').appendTo(mount);
+        await this._effectiveAccess(accessMount);
+    }
+
+    /**
+     * Effective-access preview (Cluster/Mesh epic 9.5.12.5): every node-group sharing rule
+     * joined with the RBAC roles granted on that same group, resolved to permission keys —
+     * "what does sharing + RBAC actually combine to grant, right now". A share with no
+     * matching role grant is invisible here (default-deny still holds). Grants themselves
+     * are managed on the Users & RBAC tab, not here — this is read-only.
+     * @param mount - page mount
+     * @protected
+     */
+    protected async _effectiveAccess(mount: JQuery): Promise<void> {
+        jQuery('<div class="ffx-sectitle">Effective access</div>').appendTo(mount);
+        jQuery('<div class="ffx-secnote">What sharing + RBAC actually combine to grant, right now. Grant a role on a node group under Users &amp; RBAC to make a share here take effect.</div>').appendTo(mount);
+
+        let entries: ClusterEffectiveAccessEntry[] = [];
+        let nodes: ClusterNode[] = [];
+
+        try {
+            const [accessResponse, nodesResponse] = await Promise.all([
+                RegistryAPI.getClusterEffectiveAccess(),
+                RegistryAPI.getClusterNodes()
+            ]);
+            entries = accessResponse.entries;
+            nodes = nodesResponse.list;
+        } catch (e) {
+            ClusterView._empty(mount, 'Could not load the effective-access preview.');
+
+            return;
+        }
+
+        if (entries.length === 0) {
+            ClusterView._empty(mount, 'Nothing is effectively granted yet — a share needs a matching RBAC role grant on the same group (Users & RBAC) before anything crosses the node boundary.');
+
+            return;
+        }
+
+        const table = jQuery('<table style="width:100%;border-collapse:collapse;font-size:12.5px"></table>').appendTo(mount);
+        const headRow = jQuery('<tr></tr>').appendTo(jQuery('<thead></thead>').appendTo(table));
+
+        for (const label of ['Node', 'Resource', 'Level', 'Group', 'Role', 'Permissions']) {
+            jQuery(`<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--faint);font-weight:600">${ClusterView._esc(label)}</th>`).appendTo(headRow);
+        }
+
+        const tbody = jQuery('<tbody></tbody>').appendTo(table);
+
+        for (const entry of entries) {
+            const sourceNode = nodes.find((node) => node.nodeUid === entry.nodeUid);
+            const row = jQuery('<tr></tr>').appendTo(tbody);
+            const cell = (html: string): void => {
+                jQuery(`<td style="padding:6px 8px;border-bottom:1px solid var(--line)">${html}</td>`).appendTo(row);
+            };
+
+            cell(ClusterView._esc(sourceNode?.host || sourceNode?.commonName || entry.nodeUid));
+            cell(`<b>${ClusterView._esc(entry.resourceType)}</b>`);
+            cell(ClusterView._esc(entry.level));
+            cell(ClusterView._esc(entry.groupName || entry.groupUuid));
+            cell(ClusterView._esc(entry.roleName || entry.roleId));
+            cell(entry.permissionKeys.length > 0
+                ? entry.permissionKeys.map((key) => `<span style="display:inline-block;margin:1px 3px 1px 0;padding:1px 6px;border-radius:10px;background:rgba(127,127,127,.14);font-family:var(--mono, monospace);font-size:11px">${ClusterView._esc(key)}</span>`).join('')
+                : '<span style="color:var(--faint)">—</span>');
+        }
     }
 
     /**

@@ -269,6 +269,10 @@ export {
     aggregateClusterNodeGroups
 } from './inc/Cluster/ClusterNodeGroupAggregate.js';
 export {
+    ClusterEffectiveAccessEntry,
+    computeClusterEffectiveAccess
+} from './inc/Cluster/ClusterEffectiveAccess.js';
+export {
     ClusterDomainActive,
     HubClusterDomainsClientOptions,
     HubClusterDomainsClient

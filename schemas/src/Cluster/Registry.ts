@@ -519,3 +519,37 @@ export const SchemaClusterNodeGroupShareDeleteRequest = Vts.object({
  * ClusterNodeGroupShareDeleteRequest
  */
 export type ClusterNodeGroupShareDeleteRequest = ExtractSchemaResultType<typeof SchemaClusterNodeGroupShareDeleteRequest>;
+
+/**
+ * SchemaClusterEffectiveAccessEntry — one combined "what does this actually grant" row
+ * (Cluster/Mesh epic 9.5.12.5): a node's sharing rule crossed with an RBAC role granted on
+ * the same node group, resolved to that role's permission keys.
+ */
+export const SchemaClusterEffectiveAccessEntry = Vts.object({
+    nodeUid: Vts.string(),
+    resourceType: Vts.string(),
+    level: Vts.string(),
+    groupUuid: Vts.string(),
+    groupName: Vts.string(),
+    roleId: Vts.string(),
+    roleName: Vts.string(),
+    permissionKeys: Vts.array(Vts.string())
+});
+
+/**
+ * ClusterEffectiveAccessEntry
+ */
+export type ClusterEffectiveAccessEntry = ExtractSchemaResultType<typeof SchemaClusterEffectiveAccessEntry>;
+
+/**
+ * SchemaClusterEffectiveAccessResponse — the whole effective-access preview: every
+ * share × node-group-scoped-role join, cluster-wide.
+ */
+export const SchemaClusterEffectiveAccessResponse = SchemaDefaultReturn.extend({
+    entries: Vts.array(SchemaClusterEffectiveAccessEntry)
+});
+
+/**
+ * ClusterEffectiveAccessResponse
+ */
+export type ClusterEffectiveAccessResponse = ExtractSchemaResultType<typeof SchemaClusterEffectiveAccessResponse>;

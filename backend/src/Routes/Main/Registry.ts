@@ -1,7 +1,8 @@
 import {Router} from 'express';
-import {aggregateClusterDomains, aggregateClusterNodeGroups, aggregateClusterNodes, aggregateClusterRbac, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
+import {aggregateClusterDomains, aggregateClusterNodeGroups, aggregateClusterNodes, aggregateClusterRbac, clusterLiveNodeUids, computeClusterEffectiveAccess, resolveDomainActiveNode} from 'flyingfish_core';
 import {
     ClusterDomainsResponse,
+    ClusterEffectiveAccessResponse,
     ClusterLocalStateResponse,
     ClusterNodeGroupSaveResponse,
     ClusterNodeGroupsResponse,
@@ -17,6 +18,7 @@ import {
     SchemaClusterAggregatePublishRequest,
     SchemaClusterAnnounceRequest,
     SchemaClusterDomainsResponse,
+    SchemaClusterEffectiveAccessResponse,
     SchemaClusterLocalStateResponse,
     SchemaClusterNodeGroupDeleteRequest,
     SchemaClusterNodeGroupMembershipRequest,
@@ -527,6 +529,27 @@ export class Registry extends DefaultRoute {
                 description: 'Revoke a cluster node group sharing rule',
                 bodySchema: SchemaClusterNodeGroupShareDeleteRequest,
                 responseBodySchema: SchemaDefaultReturn
+            }
+        );
+
+        // Effective-access preview (9.5.12.5): every node-group share crossed with the
+        // RBAC roles granted on the same group, resolved to permission keys — "what does
+        // sharing + RBAC actually combine to grant, right now". Read-only, derived
+        // entirely from the gossip aggregate already used by /node-groups and /rbac.
+        this._get(
+            '/json/registry/cluster/effective-access',
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<ClusterEffectiveAccessResponse> => {
+                const entries = HubRegistryService.getInstance().getClusterAggregate().entries();
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    entries: computeClusterEffectiveAccess(aggregateClusterNodeGroups(entries), aggregateClusterRbac(entries))
+                };
+            },
+            {
+                description: 'The effective-access preview: node-group shares joined with the RBAC roles granted on them',
+                responseBodySchema: SchemaClusterEffectiveAccessResponse
             }
         );
 

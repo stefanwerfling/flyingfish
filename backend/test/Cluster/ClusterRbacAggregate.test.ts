@@ -36,7 +36,7 @@ describe('aggregateClusterRbac', () => {
 
         // role_permission and role_assignment keys are NOT mis-parsed as roles
         expect(view.assignments.map((assignment) => assignment.id)).toEqual(['a1', 'a2']);
-        expect(view.assignments[1]).toEqual({id: 'a2', group_id: 'g2', role_id: 'r1', resource_type: 'domain', resource_id: 5});
+        expect(view.assignments[1]).toEqual({id: 'a2', group_id: 'g2', role_id: 'r1', resource_type: 'domain', resource_id: 5, resource_uuid: ''});
     });
 
     test('ignores per-node domain/hub/node entries and non-rbac keys', () => {
@@ -64,6 +64,14 @@ describe('aggregateClusterRbac', () => {
 
         expect(view.groups).toEqual([{id: 'g1', name: 'G', description: '', disable: true}]);
         expect(view.roles).toEqual([{id: 'r1', name: '', description: ''}]);
-        expect(view.assignments).toEqual([{id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: '', resource_id: 0}]);
+        expect(view.assignments).toEqual([{id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: '', resource_id: 0, resource_uuid: ''}]);
+    });
+
+    test('collects a UUID-scoped assignment (node-group, Cluster/Mesh 9.5.12.4)', () => {
+        const view = aggregateClusterRbac([
+            entry('rbac_role_assignment:a1', {id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: 'node-group', resource_uuid: 'ng-1'})
+        ]);
+
+        expect(view.assignments).toEqual([{id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: 'node-group', resource_id: 0, resource_uuid: 'ng-1'}]);
     });
 });
