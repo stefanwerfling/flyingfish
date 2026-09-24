@@ -273,6 +273,10 @@ export {
     computeClusterEffectiveAccess
 } from './inc/Cluster/ClusterEffectiveAccess.js';
 export {
+    ClusterShareLike,
+    canAccessRemoteResource
+} from './inc/Cluster/ClusterRemoteAccess.js';
+export {
     ClusterDomainActive,
     HubClusterDomainsClientOptions,
     HubClusterDomainsClient
