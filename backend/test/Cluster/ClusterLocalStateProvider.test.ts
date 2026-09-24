@@ -5,9 +5,10 @@
  * GLOBAL uuid keys (`global: true`, so the clusterserver does not namespace them). All
  * sources are injected, so no database is needed.
  */
-import {ClusterLocalStateProvider, ClusterRbacPolicySnapshot} from '../../src/Application/Hub/ClusterLocalStateProvider.js';
+import {ClusterLocalStateProvider, ClusterNodeGroupSnapshot, ClusterRbacPolicySnapshot} from '../../src/Application/Hub/ClusterLocalStateProvider.js';
 
 const emptyPolicy = (): ClusterRbacPolicySnapshot => ({groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []});
+const emptyGroups = (): ClusterNodeGroupSnapshot => ({groups: [], members: []});
 
 describe('ClusterLocalStateProvider', () => {
     test('publishes a hub descriptor plus a domain:<id> summary per domain (priority + A-record IP)', async() => {
@@ -17,7 +18,8 @@ describe('ClusterLocalStateProvider', () => {
                 {id: 2, domainname: 'b.test', disable: true, fixdomain: false, recordless: true, parent_id: 1, cluster_priority: 5}
             ],
             async(domainId) => domainId === 1 ? '203.0.113.4' : undefined,
-            async() => emptyPolicy()
+            async() => emptyPolicy(),
+            async() => emptyGroups()
         );
 
         const entries = await provider.entries();
@@ -38,7 +40,7 @@ describe('ClusterLocalStateProvider', () => {
     });
 
     test('publishes just the hub descriptor when there are no domains and no RBAC policy', async() => {
-        const provider = new ClusterLocalStateProvider(async() => [], async() => undefined, async() => emptyPolicy());
+        const provider = new ClusterLocalStateProvider(async() => [], async() => undefined, async() => emptyPolicy(), async() => emptyGroups());
         const entries = await provider.entries();
 
         expect(entries.map((entry) => entry.key)).toEqual(['hub']);
@@ -54,7 +56,8 @@ describe('ClusterLocalStateProvider', () => {
                 permissions: [{id: 'p1', permission_key: '*', description: 'all'}],
                 rolePermissions: [{id: 'rp1', role_id: 'r1', permission_id: 'p1'}],
                 assignments: [{id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: '', resource_id: 0}]
-            })
+            }),
+            async() => emptyGroups()
         );
 
         const entries = await provider.entries();
@@ -75,5 +78,28 @@ describe('ClusterLocalStateProvider', () => {
 
         expect(entries[1].value).toEqual({id: 'g1', name: 'Administrators', description: 'a', disable: false});
         expect(entries[5].value).toEqual({id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: '', resource_id: 0});
+    });
+
+    test('publishes the node groups + memberships under GLOBAL node_group*:<uuid> keys (9.5.12.3)', async() => {
+        const provider = new ClusterLocalStateProvider(
+            async() => [],
+            async() => undefined,
+            async() => emptyPolicy(),
+            async() => ({
+                groups: [{id: 'ng1', name: 'Home LAN', description: 'trusted', color: '#12919f'}],
+                members: [{id: 'ngm1', nodeUid: 'node-a', groupUuid: 'ng1'}]
+            })
+        );
+
+        const entries = await provider.entries();
+
+        expect(entries.map((entry) => entry.key)).toEqual(['hub', 'node_group:ng1', 'node_group_member:ngm1']);
+
+        // both node-group entries are published GLOBAL (converge on one cluster key)
+        expect(entries[1].global).toBe(true);
+        expect(entries[2].global).toBe(true);
+
+        expect(entries[1].value).toEqual({id: 'ng1', name: 'Home LAN', description: 'trusted', color: '#12919f'});
+        expect(entries[2].value).toEqual({id: 'ngm1', nodeUid: 'node-a', groupUuid: 'ng1'});
     });
 });

@@ -33,6 +33,7 @@ import {AddPortForward1789400000000} from '../../src/inc/Db/MariaDb/migrations/1
 import {AddSystemConfig1789500000000} from '../../src/inc/Db/MariaDb/migrations/1789500000000-AddSystemConfig.js';
 import {AddDomainRecordFollowNode1789600000000} from '../../src/inc/Db/MariaDb/migrations/1789600000000-AddDomainRecordFollowNode.js';
 import {AddDhcpRaParams1789700000000} from '../../src/inc/Db/MariaDb/migrations/1789700000000-AddDhcpRaParams.js';
+import {AddClusterNodeGroups1789800000000} from '../../src/inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -58,7 +59,8 @@ const ALL_MIGRATIONS: (new () => MigrationInterface)[] = [
     AddPortForward1789400000000,
     AddSystemConfig1789500000000,
     AddDomainRecordFollowNode1789600000000,
-    AddDhcpRaParams1789700000000
+    AddDhcpRaParams1789700000000,
+    AddClusterNodeGroups1789800000000
 ];
 
 const KNOWN_BENIGN = [

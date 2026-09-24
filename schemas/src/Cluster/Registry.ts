@@ -368,3 +368,104 @@ export const SchemaClusterRbacResponse = SchemaDefaultReturn.extend({
  * ClusterRbacResponse
  */
 export type ClusterRbacResponse = ExtractSchemaResultType<typeof SchemaClusterRbacResponse>;
+
+/**
+ * The cluster-global NODE GROUPS (Cluster/Mesh epic 9.5.12.3): a grouping of nodes
+ * ("zone"/"pool"), each keyed by a cluster-stable UUID and gossiped under a global key so
+ * every node converges on the same set. Distinct from the RBAC user groups above.
+ */
+export const SchemaClusterNodeGroup = Vts.object({
+    id: Vts.string(),
+    name: Vts.string(),
+    description: Vts.string(),
+    color: Vts.string()
+});
+
+/**
+ * ClusterNodeGroup
+ */
+export type ClusterNodeGroup = ExtractSchemaResultType<typeof SchemaClusterNodeGroup>;
+
+/**
+ * SchemaClusterNodeGroupMember — one node's membership in one group (n:m). `nodeUid` is the
+ * member node's mesh UUID.
+ */
+export const SchemaClusterNodeGroupMember = Vts.object({
+    id: Vts.string(),
+    nodeUid: Vts.string(),
+    groupUuid: Vts.string()
+});
+
+/**
+ * ClusterNodeGroupMember
+ */
+export type ClusterNodeGroupMember = ExtractSchemaResultType<typeof SchemaClusterNodeGroupMember>;
+
+/**
+ * SchemaClusterNodeGroupsResponse — the whole cluster-wide node-group view for the
+ * management UI (groups + memberships aggregated from the gossip).
+ */
+export const SchemaClusterNodeGroupsResponse = SchemaDefaultReturn.extend({
+    groups: Vts.array(SchemaClusterNodeGroup),
+    members: Vts.array(SchemaClusterNodeGroupMember)
+});
+
+/**
+ * ClusterNodeGroupsResponse
+ */
+export type ClusterNodeGroupsResponse = ExtractSchemaResultType<typeof SchemaClusterNodeGroupsResponse>;
+
+/**
+ * SchemaClusterNodeGroupSaveRequest — create (no id) or edit (id set) a node group. The
+ * server generates the UUID on create.
+ */
+export const SchemaClusterNodeGroupSaveRequest = Vts.object({
+    id: Vts.optional(Vts.string()),
+    name: Vts.string(),
+    description: Vts.optional(Vts.string()),
+    color: Vts.optional(Vts.string())
+});
+
+/**
+ * ClusterNodeGroupSaveRequest
+ */
+export type ClusterNodeGroupSaveRequest = ExtractSchemaResultType<typeof SchemaClusterNodeGroupSaveRequest>;
+
+/**
+ * SchemaClusterNodeGroupSaveResponse — the saved group's id (the generated UUID on create).
+ */
+export const SchemaClusterNodeGroupSaveResponse = SchemaDefaultReturn.extend({
+    id: Vts.string()
+});
+
+/**
+ * ClusterNodeGroupSaveResponse
+ */
+export type ClusterNodeGroupSaveResponse = ExtractSchemaResultType<typeof SchemaClusterNodeGroupSaveResponse>;
+
+/**
+ * SchemaClusterNodeGroupDeleteRequest — delete a node group by id.
+ */
+export const SchemaClusterNodeGroupDeleteRequest = Vts.object({
+    id: Vts.string()
+});
+
+/**
+ * ClusterNodeGroupDeleteRequest
+ */
+export type ClusterNodeGroupDeleteRequest = ExtractSchemaResultType<typeof SchemaClusterNodeGroupDeleteRequest>;
+
+/**
+ * SchemaClusterNodeGroupMembershipRequest — add (`member: true`) or remove
+ * (`member: false`) a node from a group.
+ */
+export const SchemaClusterNodeGroupMembershipRequest = Vts.object({
+    nodeUid: Vts.string(),
+    groupUuid: Vts.string(),
+    member: Vts.boolean()
+});
+
+/**
+ * ClusterNodeGroupMembershipRequest
+ */
+export type ClusterNodeGroupMembershipRequest = ExtractSchemaResultType<typeof SchemaClusterNodeGroupMembershipRequest>;

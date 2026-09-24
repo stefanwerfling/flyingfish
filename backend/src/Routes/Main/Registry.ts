@@ -1,8 +1,10 @@
 import {Router} from 'express';
-import {aggregateClusterDomains, aggregateClusterNodes, aggregateClusterRbac, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
+import {aggregateClusterDomains, aggregateClusterNodeGroups, aggregateClusterNodes, aggregateClusterRbac, clusterLiveNodeUids, resolveDomainActiveNode} from 'flyingfish_core';
 import {
     ClusterDomainsResponse,
     ClusterLocalStateResponse,
+    ClusterNodeGroupSaveResponse,
+    ClusterNodeGroupsResponse,
     ClusterNodesResponse,
     ClusterPeersResponse,
     ClusterRbacResponse,
@@ -16,6 +18,11 @@ import {
     SchemaClusterAnnounceRequest,
     SchemaClusterDomainsResponse,
     SchemaClusterLocalStateResponse,
+    SchemaClusterNodeGroupDeleteRequest,
+    SchemaClusterNodeGroupMembershipRequest,
+    SchemaClusterNodeGroupSaveRequest,
+    SchemaClusterNodeGroupSaveResponse,
+    SchemaClusterNodeGroupsResponse,
     SchemaClusterNodesResponse,
     SchemaClusterRbacResponse,
     SchemaClusterPeersResponse,
@@ -26,10 +33,14 @@ import {
     SchemaRegistryInstanceRequest,
     SchemaRegistryPartsResponse,
     SchemaRegistryUiContributionsResponse,
-    StatusCodes
+    StatusCodes,
+    ClusterJoinPackageResponse,
+    SchemaClusterJoinPackageResponse,
+    SchemaClusterJoinRequest
 } from 'flyingfish_schemas';
-import {ClusterJoinPackageResponse, SchemaClusterJoinPackageResponse, SchemaClusterJoinRequest} from 'flyingfish_schemas';
 import {ClusterLocalStateProvider} from '../../Application/Hub/ClusterLocalStateProvider.js';
+import {ClusterNodeGroupConverger} from '../../Application/Hub/ClusterNodeGroupConverger.js';
+import {ClusterNodeGroupManager} from '../../Application/Hub/ClusterNodeGroupManager.js';
 import {ClusterRbacConverger} from '../../Application/Hub/ClusterRbacConverger.js';
 import {buildClusterJoinPackage} from '../../Application/Hub/ClusterJoinPackage.js';
 import {proxyClusterJoin} from '../../Application/Hub/ClusterJoin.js';
@@ -254,6 +265,14 @@ export class Registry extends DefaultRoute {
                     Logger.getLogger().warn('Cluster RBAC convergence failed (will retry on the next aggregate push)', error);
                 }
 
+                // Converge the cluster-global NODE GROUPS into this node's local DB so the
+                // grouping is renderable/enforceable on any node (9.5.12.3). Best-effort.
+                try {
+                    await new ClusterNodeGroupConverger().import(aggregateClusterNodeGroups(entries));
+                } catch (error) {
+                    Logger.getLogger().warn('Cluster node-group convergence failed (will retry on the next aggregate push)', error);
+                }
+
                 return {statusCode: StatusCodes.OK};
             },
             {
@@ -385,6 +404,81 @@ export class Registry extends DefaultRoute {
             {
                 description: 'The cluster-wide shared RBAC policy (groups/roles/permissions/grants) aggregated from the gossip',
                 responseBodySchema: SchemaClusterRbacResponse
+            }
+        );
+
+        // Cluster-global NODE GROUPS (9.5.12.3): the shared grouping of nodes + their
+        // memberships, aggregated from the gossip (each keyed by a cluster-stable UUID,
+        // published un-namespaced so the cluster shares one set). Read-only.
+        this._get(
+            '/json/registry/cluster/node-groups',
+            FlyingFishRouteCheckUserLogin,
+            async(): Promise<ClusterNodeGroupsResponse> => {
+                const view = aggregateClusterNodeGroups(HubRegistryService.getInstance().getClusterAggregate().entries());
+
+                return {
+                    statusCode: StatusCodes.OK,
+                    groups: view.groups,
+                    members: view.members
+                };
+            },
+            {
+                description: 'The cluster-wide node groups + memberships aggregated from the gossip',
+                responseBodySchema: SchemaClusterNodeGroupsResponse
+            }
+        );
+
+        // Create or edit a node group (9.5.12.3). Writes this node's local table; the
+        // change gossips cluster-wide on the next sync. cluster.manage gated.
+        this._post(
+            '/json/registry/cluster/node-group',
+            requirePermission('cluster.manage'),
+            async(_req, _res, data): Promise<ClusterNodeGroupSaveResponse> => {
+                const id = await new ClusterNodeGroupManager().saveGroup({
+                    id: data.body!.id,
+                    name: data.body!.name,
+                    description: data.body!.description,
+                    color: data.body!.color
+                });
+
+                return {statusCode: StatusCodes.OK, id: id};
+            },
+            {
+                description: 'Create or edit a cluster node group',
+                bodySchema: SchemaClusterNodeGroupSaveRequest,
+                responseBodySchema: SchemaClusterNodeGroupSaveResponse
+            }
+        );
+
+        // Delete a node group and its memberships (9.5.12.3). cluster.manage gated.
+        this._post(
+            '/json/registry/cluster/node-group/delete',
+            requirePermission('cluster.manage'),
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                await new ClusterNodeGroupManager().deleteGroup(data.body!.id);
+
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Delete a cluster node group',
+                bodySchema: SchemaClusterNodeGroupDeleteRequest,
+                responseBodySchema: SchemaDefaultReturn
+            }
+        );
+
+        // Add or remove a node's membership in a group (9.5.12.3). cluster.manage gated.
+        this._post(
+            '/json/registry/cluster/node-group/membership',
+            requirePermission('cluster.manage'),
+            async(_req, _res, data): Promise<DefaultReturn> => {
+                await new ClusterNodeGroupManager().setMembership(data.body!.nodeUid, data.body!.groupUuid, data.body!.member);
+
+                return {statusCode: StatusCodes.OK};
+            },
+            {
+                description: 'Add or remove a node from a cluster node group',
+                bodySchema: SchemaClusterNodeGroupMembershipRequest,
+                responseBodySchema: SchemaDefaultReturn
             }
         );
 

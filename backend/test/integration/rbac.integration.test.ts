@@ -39,6 +39,10 @@ import {AddDhcpPerInterface1789100000000} from '../../src/inc/Db/MariaDb/migrati
 import {FixPkiTimestampsBigint1789200000000} from '../../src/inc/Db/MariaDb/migrations/1789200000000-FixPkiTimestampsBigint.js';
 import {AddNatPerInterface1789300000000} from '../../src/inc/Db/MariaDb/migrations/1789300000000-AddNatPerInterface.js';
 import {AddPortForward1789400000000} from '../../src/inc/Db/MariaDb/migrations/1789400000000-AddPortForward.js';
+import {AddSystemConfig1789500000000} from '../../src/inc/Db/MariaDb/migrations/1789500000000-AddSystemConfig.js';
+import {AddDomainRecordFollowNode1789600000000} from '../../src/inc/Db/MariaDb/migrations/1789600000000-AddDomainRecordFollowNode.js';
+import {AddDhcpRaParams1789700000000} from '../../src/inc/Db/MariaDb/migrations/1789700000000-AddDhcpRaParams.js';
+import {AddClusterNodeGroups1789800000000} from '../../src/inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -62,7 +66,11 @@ const ALL_MIGRATIONS = [
     AddDhcpPerInterface1789100000000,
     FixPkiTimestampsBigint1789200000000,
     AddNatPerInterface1789300000000,
-    AddPortForward1789400000000
+    AddPortForward1789400000000,
+    AddSystemConfig1789500000000,
+    AddDomainRecordFollowNode1789600000000,
+    AddDhcpRaParams1789700000000,
+    AddClusterNodeGroups1789800000000
 ];
 
 // The chain WITHOUT the RBAC migration — used to seed a pre-existing user before the

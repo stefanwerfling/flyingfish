@@ -64,7 +64,8 @@ describe('HubClusterGossipSync', () => {
                 {id: 7, domainname: 'example.test', disable: false, fixdomain: false, recordless: false, parent_id: 0, cluster_priority: 0}
             ],
             async() => undefined,
-            async() => ({groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []})
+            async() => ({groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []}),
+            async() => ({groups: [], members: []})
         );
         const aggregate = new ClusterAggregateStore();
 

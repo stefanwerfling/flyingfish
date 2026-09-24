@@ -479,7 +479,21 @@ export {
     SchemaClusterRbacRolePermission,
     SchemaClusterRbacAssignment,
     SchemaClusterRbacResponse,
-    ClusterRbacResponse
+    ClusterRbacResponse,
+    SchemaClusterNodeGroup,
+    ClusterNodeGroup,
+    SchemaClusterNodeGroupMember,
+    ClusterNodeGroupMember,
+    SchemaClusterNodeGroupsResponse,
+    ClusterNodeGroupsResponse,
+    SchemaClusterNodeGroupSaveRequest,
+    ClusterNodeGroupSaveRequest,
+    SchemaClusterNodeGroupSaveResponse,
+    ClusterNodeGroupSaveResponse,
+    SchemaClusterNodeGroupDeleteRequest,
+    ClusterNodeGroupDeleteRequest,
+    SchemaClusterNodeGroupMembershipRequest,
+    ClusterNodeGroupMembershipRequest
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

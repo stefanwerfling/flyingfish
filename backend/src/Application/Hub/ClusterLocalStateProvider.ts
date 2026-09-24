@@ -1,4 +1,6 @@
 import {
+    ClusterNodeGroupMemberServiceDB,
+    ClusterNodeGroupServiceDB,
     DomainRecordServiceDB,
     DomainServiceDB,
     RbacGroupServiceDB,
@@ -60,6 +62,23 @@ export type ClusterRbacPolicySnapshot = {
 export type ClusterRbacPolicySource = () => Promise<ClusterRbacPolicySnapshot>;
 
 /**
+ * A snapshot of this Hub's cluster NODE-GROUP tables (Cluster/Mesh epic 9.5.12.3). Both
+ * are cluster-global and keyed by cluster-stable UUIDs, published so every node converges
+ * on the same grouping (a node group is the boundary sharing is granted across in
+ * 9.5.12.4). `nodeUid` is the member node's mesh UUID.
+ */
+export type ClusterNodeGroupSnapshot = {
+    groups: {id: string; name: string; description: string; color: string;}[];
+    members: {id: string; nodeUid: string; groupUuid: string;}[];
+};
+
+/**
+ * Reads this Hub's node-group tables; injectable so the provider is testable without a
+ * database.
+ */
+export type ClusterNodeGroupSource = () => Promise<ClusterNodeGroupSnapshot>;
+
+/**
  * Produces the resources this Hub publishes into the cluster gossip (Cluster/Mesh
  * epic 9.5.12): its local clusterserver pulls these, owns them (namespacing the keys
  * by its nodeUid) and gossips them so every node sees a federated view. Keys are
@@ -78,15 +97,24 @@ export class ClusterLocalStateProvider {
 
     private readonly _rbacPolicy: ClusterRbacPolicySource;
 
+    private readonly _nodeGroups: ClusterNodeGroupSource;
+
     /**
      * @param domains - the domain source (defaults to the Hub's domain DB)
      * @param domainIp - the domain A-record IP source (defaults to the Hub's record DB)
      * @param rbacPolicy - the RBAC policy source (defaults to the Hub's rbac_* DB)
+     * @param nodeGroups - the node-group source (defaults to the Hub's cluster_node_group* DB)
      */
-    public constructor(domains?: ClusterDomainSource, domainIp?: ClusterDomainIpSource, rbacPolicy?: ClusterRbacPolicySource) {
+    public constructor(
+        domains?: ClusterDomainSource,
+        domainIp?: ClusterDomainIpSource,
+        rbacPolicy?: ClusterRbacPolicySource,
+        nodeGroups?: ClusterNodeGroupSource
+    ) {
         this._domains = domains ?? ((): Promise<ClusterDomainLike[]> => DomainServiceDB.getInstance().findAll());
         this._domainIp = domainIp ?? ClusterLocalStateProvider._defaultDomainIp;
         this._rbacPolicy = rbacPolicy ?? ClusterLocalStateProvider._defaultRbacPolicy;
+        this._nodeGroups = nodeGroups ?? ClusterLocalStateProvider._defaultNodeGroups;
     }
 
     /**
@@ -146,6 +174,18 @@ export class ClusterLocalStateProvider {
             entries.push({key: `rbac_role_assignment:${assignment.id}`, value: assignment, global: true});
         }
 
+        // The cluster NODE GROUPS (Cluster/Mesh epic 9.5.12.3): also published GLOBAL so
+        // their cluster-stable UUID keys converge into one shared grouping every node sees.
+        const nodeGroups = await this._nodeGroups();
+
+        for (const group of nodeGroups.groups) {
+            entries.push({key: `node_group:${group.id}`, value: group, global: true});
+        }
+
+        for (const member of nodeGroups.members) {
+            entries.push({key: `node_group_member:${member.id}`, value: member, global: true});
+        }
+
         return entries;
     }
 
@@ -184,6 +224,22 @@ export class ClusterLocalStateProvider {
                 resource_type: assignment.resource_type,
                 resource_id: assignment.resource_id
             }))
+        };
+    }
+
+    /**
+     * Read this Hub's cluster node-group tables from the DB services (mapped to plain
+     * summaries so no ORM state leaks into the gossip value).
+     */
+    private static async _defaultNodeGroups(): Promise<ClusterNodeGroupSnapshot> {
+        const [groups, members] = await Promise.all([
+            ClusterNodeGroupServiceDB.getInstance().findAll(),
+            ClusterNodeGroupMemberServiceDB.getInstance().findAll()
+        ]);
+
+        return {
+            groups: groups.map((group) => ({id: group.id, name: group.name, description: group.description, color: group.color})),
+            members: members.map((member) => ({id: member.id, nodeUid: member.node_uid, groupUuid: member.group_uuid}))
         };
     }
 
