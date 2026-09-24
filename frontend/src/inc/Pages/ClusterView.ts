@@ -1,5 +1,5 @@
 import {ContentCol, ContentColSize} from 'bambooo';
-import {ClusterNode, ClusterNodeGroup, ClusterNodeGroupMember} from 'flyingfish_schemas';
+import {ClusterNode, ClusterNodeGroup, ClusterNodeGroupMember, ClusterNodeGroupShare} from 'flyingfish_schemas';
 import {Registry as RegistryAPI} from '../Api/Registry.js';
 import {UtilColor} from '../Utils/UtilColor.js';
 import {BasePage} from './BasePage.js';
@@ -208,6 +208,7 @@ export class ClusterView extends BasePage {
 
         let groups: ClusterNodeGroup[] = [];
         let members: ClusterNodeGroupMember[] = [];
+        let shares: ClusterNodeGroupShare[] = [];
         let nodes: ClusterNode[] = [];
 
         try {
@@ -217,6 +218,7 @@ export class ClusterView extends BasePage {
             ]);
             groups = groupsResponse.groups;
             members = groupsResponse.members;
+            shares = groupsResponse.shares;
             nodes = nodesResponse.list;
         } catch (e) {
             ClusterView._empty(body, 'Could not load node groups.');
@@ -234,23 +236,27 @@ export class ClusterView extends BasePage {
 
         for (const group of groups) {
             const groupMembers = new Set(members.filter((m) => m.groupUuid === group.id).map((m) => m.nodeUid));
-            this._groupCard(list, group, groupMembers, nodes, async(): Promise<void> => this._groupsBody(body));
+            const groupShares = shares.filter((s) => s.groupUuid === group.id);
+            this._groupCard(list, group, groupMembers, groupShares, nodes, async(): Promise<void> => this._groupsBody(body));
         }
     }
 
     /**
-     * One group's card: header (color dot, name, description, member count, edit, delete)
-     * and a membership checklist against every known node. The header/body toggle between
-     * a view render and an in-place edit-form render (name/description/color); both are
-     * re-invoked locally, no full-list refresh needed to flip between the two.
+     * One group's card: header (color dot, name, description, member count, edit, delete),
+     * a membership checklist against every known node, and its sharing rules (9.5.12.4 —
+     * which node exposes which resource type to this group, at what level). The
+     * header/body toggle between a view render and an in-place edit-form render
+     * (name/description/color); both are re-invoked locally, no full-list refresh needed
+     * to flip between the two.
      * @param mount - list container
      * @param group - the group
      * @param memberUids - node uids currently in this group
-     * @param nodes - every node in the roster (candidates for membership)
-     * @param onChange - called after a successful save/delete/membership toggle
+     * @param groupShares - this group's sharing rules
+     * @param nodes - every node in the roster (candidates for membership/sharing)
+     * @param onChange - called after a successful save/delete/membership/share change
      * @protected
      */
-    protected _groupCard(mount: JQuery, group: ClusterNodeGroup, memberUids: Set<string>, nodes: ClusterNode[], onChange: () => Promise<void>): void {
+    protected _groupCard(mount: JQuery, group: ClusterNodeGroup, memberUids: Set<string>, groupShares: ClusterNodeGroupShare[], nodes: ClusterNode[], onChange: () => Promise<void>): void {
         const card = jQuery('<div class="ffx-card"></div>').appendTo(mount);
         const hd = jQuery('<div class="hd"></div>').appendTo(card);
         const bd = jQuery('<div class="bd"></div>').appendTo(card);
@@ -318,6 +324,8 @@ export class ClusterView extends BasePage {
                     }
                 });
             }
+
+            this._sharingSection(bd, group, groupShares, nodes, onChange);
         };
 
         const renderEdit = (): void => {
@@ -368,6 +376,110 @@ export class ClusterView extends BasePage {
         };
 
         renderView();
+    }
+
+    /**
+     * A group's sharing rules (Cluster/Mesh epic 9.5.12.4): the exposure boundary a
+     * resource type must cross before an RBAC grant scoped to this group can apply.
+     * Default-deny — a rule lists show for each existing share the source node + resource
+     * type + level (editable in place) with a revoke button, plus a small form to add a
+     * new share. Rendered into an existing card body (appended after the membership list).
+     * @param mount - the card body to append into
+     * @param group - the group the shares belong to
+     * @param groupShares - this group's existing sharing rules
+     * @param nodes - every node in the roster (candidate sharing sources)
+     * @param onChange - called after a successful share/revoke
+     * @protected
+     */
+    protected _sharingSection(mount: JQuery, group: ClusterNodeGroup, groupShares: ClusterNodeGroupShare[], nodes: ClusterNode[], onChange: () => Promise<void>): void {
+        jQuery('<div style="margin:14px 0 4px;font-weight:600;font-size:12.5px">Sharing</div>').appendTo(mount);
+        jQuery('<div style="color:var(--faint);font-size:11.5px;margin-bottom:8px">Which node exposes which resource type to this group, and at what level. Default-deny — nothing crosses the node boundary until granted here.</div>').appendTo(mount);
+
+        const shareList = jQuery('<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>').appendTo(mount);
+
+        if (groupShares.length === 0) {
+            jQuery('<div style="color:var(--faint);font-size:12px">No sharing rules yet.</div>').appendTo(shareList);
+        }
+
+        for (const share of groupShares) {
+            const sourceNode = nodes.find((node) => node.nodeUid === share.nodeUid);
+            const row = jQuery('<div style="display:flex;align-items:center;gap:8px;font-size:12.5px"></div>').appendTo(shareList);
+
+            jQuery(`<span style="flex:1">${ClusterView._esc(sourceNode?.host || sourceNode?.commonName || share.nodeUid)} → <b>${ClusterView._esc(share.resourceType)}</b></span>`).appendTo(row);
+
+            const levelSelect = jQuery('<select style="padding:3px 6px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px"><option value="read">read</option><option value="write">write</option></select>').appendTo(row);
+            levelSelect.val(share.level);
+
+            const revokeBtn = jQuery('<button style="padding:3px 8px;border:0;border-radius:6px;background:rgba(192,57,43,.14);color:#c0392b;cursor:pointer;font-size:11.5px">Revoke</button>').appendTo(row);
+
+            levelSelect.on('change', async(): Promise<void> => {
+                const level = String(levelSelect.val());
+
+                levelSelect.prop('disabled', true);
+
+                try {
+                    await RegistryAPI.setClusterNodeGroupShare({nodeUid: share.nodeUid, groupUuid: group.id, resourceType: share.resourceType, level});
+                    await onChange();
+                } catch (e) {
+                    levelSelect.val(share.level);
+                    levelSelect.prop('disabled', false);
+                }
+            });
+
+            revokeBtn.on('click', async(): Promise<void> => {
+                revokeBtn.prop('disabled', true);
+
+                try {
+                    await RegistryAPI.deleteClusterNodeGroupShare({nodeUid: share.nodeUid, groupUuid: group.id, resourceType: share.resourceType});
+                    await onChange();
+                } catch (e) {
+                    revokeBtn.prop('disabled', false);
+                }
+            });
+        }
+
+        if (nodes.length === 0) {
+            return;
+        }
+
+        const form = jQuery('<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>').appendTo(mount);
+        const nodeSelect = jQuery('<select style="padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px"></select>').appendTo(form);
+
+        for (const node of nodes) {
+            jQuery(`<option value="${ClusterView._esc(node.nodeUid)}">${ClusterView._esc(node.host || node.commonName || node.nodeUid)}</option>`).appendTo(nodeSelect);
+        }
+
+        const typeInput = jQuery('<input type="text" placeholder="Resource type (e.g. domain)" style="flex:1;min-width:140px;padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px">').appendTo(form);
+        const levelInput = jQuery('<select style="padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px"><option value="read">read</option><option value="write">write</option></select>').appendTo(form);
+        const shareBtn = jQuery('<button style="padding:5px 12px;border:0;border-radius:6px;background:#0f8a8a;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Share</button>').appendTo(form);
+        const err = jQuery('<div class="ffx-secnote" style="color:#c0392b;width:100%;margin:4px 0 0"></div>').appendTo(mount);
+
+        shareBtn.on('click', async(): Promise<void> => {
+            const resourceType = String(typeInput.val() ?? '').trim();
+
+            if (resourceType === '') {
+                err.text('Resource type is required.');
+
+                return;
+            }
+
+            err.text('');
+            shareBtn.prop('disabled', true);
+
+            try {
+                await RegistryAPI.setClusterNodeGroupShare({
+                    nodeUid: String(nodeSelect.val()),
+                    groupUuid: group.id,
+                    resourceType,
+                    level: String(levelInput.val())
+                });
+                typeInput.val('');
+                await onChange();
+            } catch (e) {
+                err.text('Could not save the share — needs the cluster.manage permission.');
+                shareBtn.prop('disabled', false);
+            }
+        });
     }
 
     /**

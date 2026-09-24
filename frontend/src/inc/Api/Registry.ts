@@ -5,6 +5,8 @@ import {
     ClusterNodeGroupMembershipRequest,
     ClusterNodeGroupSaveRequest,
     ClusterNodeGroupSaveResponse,
+    ClusterNodeGroupShareDeleteRequest,
+    ClusterNodeGroupShareRequest,
     ClusterNodeGroupsResponse,
     ClusterNodesResponse,
     DefaultReturn,
@@ -96,6 +98,23 @@ export class Registry {
      */
     public static async setClusterNodeGroupMembership(request: ClusterNodeGroupMembershipRequest): Promise<DefaultReturn> {
         return NetFetch.postData('/json/registry/cluster/node-group/membership', request, SchemaDefaultReturn);
+    }
+
+    /**
+     * Grant or change a node-group sharing rule (9.5.12.4): node `nodeUid` shares its
+     * `resourceType` resources with group `groupUuid` at `level`. Requires the
+     * `cluster.manage` permission.
+     */
+    public static async setClusterNodeGroupShare(request: ClusterNodeGroupShareRequest): Promise<DefaultReturn> {
+        return NetFetch.postData('/json/registry/cluster/node-group/share', request, SchemaDefaultReturn);
+    }
+
+    /**
+     * Revoke a node-group sharing rule (9.5.12.4, back to default-deny). Requires the
+     * `cluster.manage` permission.
+     */
+    public static async deleteClusterNodeGroupShare(request: ClusterNodeGroupShareDeleteRequest): Promise<DefaultReturn> {
+        return NetFetch.postData('/json/registry/cluster/node-group/share/delete', request, SchemaDefaultReturn);
     }
 
 }
