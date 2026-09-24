@@ -17,6 +17,8 @@ const base: DnsmasqConfig = {
     dnsServer: '192.168.1.1',
     domain: 'home.lan',
     raEnable: true,
+    raInterval: 60,
+    raRouterLifetime: 9000,
     leaseFile: '/var/lib/misc/dnsmasq.leases'
 };
 
@@ -33,15 +35,24 @@ describe('buildDnsmasqConfig', () => {
         expect(conf).toContain('domain=home.lan');
         expect(conf).toContain('enable-ra');
         expect(conf).toContain('dhcp-range=::,constructor:eth1,ra-names,slaac,3600s');
+        expect(conf).toContain('ra-param=eth1,60,9000');
         expect(conf).toContain('dhcp-leasefile=/var/lib/misc/dnsmasq.leases');
     });
 
-    test('RA off: no IPv6 range / enable-ra', () => {
+    test('RA off: no IPv6 range / enable-ra / ra-param', () => {
         const conf = buildDnsmasqConfig({...base, raEnable: false});
 
         expect(conf).not.toContain('enable-ra');
         expect(conf).not.toContain('constructor:');
+        expect(conf).not.toContain('ra-param=');
         expect(conf).toContain('dhcp-range=192.168.1.100,192.168.1.200,3600s');
+    });
+
+    test('ra-param omitted when interval/lifetime are 0 (dnsmasq defaults)', () => {
+        const conf = buildDnsmasqConfig({...base, raInterval: 0, raRouterLifetime: 0});
+
+        expect(conf).toContain('enable-ra');
+        expect(conf).not.toContain('ra-param=');
     });
 
     test('disabled or no LAN interface yields an empty config', () => {

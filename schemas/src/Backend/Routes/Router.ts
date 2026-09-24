@@ -59,7 +59,12 @@ export const SchemaDhcpServerConfigEntry = Vts.object({
     gateway: Vts.optional(Vts.string()),
     dns_server: Vts.optional(Vts.string()),
     domain: Vts.optional(Vts.string()),
-    ra_enable: Vts.optional(Vts.boolean())
+    ra_enable: Vts.optional(Vts.boolean()),
+    // IPv6 RA timing (Pi-router NAT66 stability): max RA interval + advertised router
+    // lifetime, in seconds. Frequent RAs + router-lifetime > address-lifetime keep a
+    // downstream router's default route from expiring while its address persists.
+    ra_interval: Vts.optional(Vts.number()),
+    ra_router_lifetime: Vts.optional(Vts.number())
 });
 
 /**
@@ -288,6 +293,10 @@ export const SchemaRouterLanConfig = Vts.object({
     dnsServer: Vts.string(),
     domain: Vts.string(),
     raEnable: Vts.boolean(),
+    // IPv6 RA timing for dnsmasq `ra-param` (NAT66 stability): max RA interval + router
+    // lifetime (s). 0 = dnsmasq default.
+    raInterval: Vts.number(),
+    raRouterLifetime: Vts.number(),
     // The LAN's IPv6 mode (off/nat66/pd) + the ULA the netdevice part must assign to the
     // interface in nat66 mode. In nat66 the LAN uses a private ULA /64 masqueraded to the
     // WAN GUA; nothing else assigns it, and dnsmasq's RA can only be sourced once the

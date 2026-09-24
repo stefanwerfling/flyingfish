@@ -19,6 +19,10 @@ export type LanConfig = {
     dnsServer: string;
     domain: string;
     raEnable: boolean;
+    // IPv6 RA timing for dnsmasq ra-param (NAT66 stability): max RA interval + router
+    // lifetime (s). 0 = dnsmasq default.
+    raInterval: number;
+    raRouterLifetime: number;
     // IPv6 mode (off/nat66/pd) + the ULA the part assigns to the interface in nat66 mode
     // (with /64, e.g. `fd00:50::1/64`). Empty ula for pd/off.
     ipv6Mode: string;
@@ -104,6 +108,8 @@ export class LanConfigClient {
             dnsServer: typeof config.dnsServer === 'string' ? config.dnsServer : '',
             domain: typeof config.domain === 'string' ? config.domain : '',
             raEnable: config.raEnable === true,
+            raInterval: typeof config.raInterval === 'number' ? config.raInterval : 60,
+            raRouterLifetime: typeof config.raRouterLifetime === 'number' ? config.raRouterLifetime : 9000,
             ipv6Mode: typeof config.ipv6Mode === 'string' ? config.ipv6Mode : 'off',
             ipv6Ula: typeof config.ipv6Ula === 'string' ? config.ipv6Ula : ''
         };

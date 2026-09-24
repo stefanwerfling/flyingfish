@@ -14,6 +14,13 @@ export type DnsmasqConfig = {
     dnsServer: string;
     domain: string;
     raEnable: boolean;
+    // IPv6 RA timing (Pi-router NAT66 stability): max unsolicited RA interval (s) and
+    // advertised router lifetime (s). Frequent RAs + a router lifetime GREATER than the
+    // address (prefix) lifetime stop a downstream router's default route from expiring
+    // while its address persists — the recurring "IPv6 shown everywhere but no route"
+    // failure. Both must be > 0 to emit `ra-param`; 0 = fall back to dnsmasq defaults.
+    raInterval: number;
+    raRouterLifetime: number;
     leaseFile: string;
 };
 
@@ -74,6 +81,12 @@ export const buildDnsmasqConfig = (config: DnsmasqConfig): string => {
     if (config.raEnable) {
         lines.push('enable-ra');
         lines.push(`dhcp-range=::,constructor:${config.lanInterface},ra-names,slaac,${config.leaseSeconds}s`);
+
+        // ra-param=<iface>,<interval>,<router-lifetime>: keep downstream routers'
+        // default route refreshed (NAT66 stability). Only emitted when both are set.
+        if (config.raInterval > 0 && config.raRouterLifetime > 0) {
+            lines.push(`ra-param=${config.lanInterface},${config.raInterval},${config.raRouterLifetime}`);
+        }
     }
 
     return `${lines.join('\n')}\n`;

@@ -125,7 +125,9 @@ export class Router extends DefaultRoute {
                         gateway: entry.gateway,
                         dns_server: entry.dns_server,
                         domain: entry.domain,
-                        ra_enable: entry.ra_enable
+                        ra_enable: entry.ra_enable,
+                        ra_interval: entry.ra_interval,
+                        ra_router_lifetime: entry.ra_router_lifetime
                     })),
                     dhcpConfig: dhcpConfig === null ? null : {
                         network_interface_id: dhcpConfig.network_interface_id,
@@ -136,7 +138,9 @@ export class Router extends DefaultRoute {
                         gateway: dhcpConfig.gateway,
                         dns_server: dhcpConfig.dns_server,
                         domain: dhcpConfig.domain,
-                        ra_enable: dhcpConfig.ra_enable
+                        ra_enable: dhcpConfig.ra_enable,
+                        ra_interval: dhcpConfig.ra_interval,
+                        ra_router_lifetime: dhcpConfig.ra_router_lifetime
                     },
                     leases: (await DhcpLeaseServiceDB.getInstance().findAll()).map((entry) => ({
                         id: entry.id,
@@ -226,6 +230,8 @@ export class Router extends DefaultRoute {
             entity.dns_server = body.dns_server ?? '';
             entity.domain = body.domain ?? '';
             entity.ra_enable = body.ra_enable ?? false;
+            entity.ra_interval = body.ra_interval ?? 60;
+            entity.ra_router_lifetime = body.ra_router_lifetime ?? 9000;
             await DhcpServerConfigServiceDB.getInstance().save(entity);
 
             return {statusCode: StatusCodes.OK};
@@ -361,6 +367,8 @@ export class Router extends DefaultRoute {
                         dnsServer: dhcp?.dns_server ?? '',
                         domain: dhcp?.domain ?? '',
                         raEnable: dhcp?.ra_enable ?? false,
+                        raInterval: dhcp?.ra_interval ?? 60,
+                        raRouterLifetime: dhcp?.ra_router_lifetime ?? 9000,
                         ipv6Mode: ipv6Mode,
                         // nat66 AND pd-server need a private ULA /64 on the LAN (nothing else
                         // assigns it) — for pd-server it is also the base for the delegation

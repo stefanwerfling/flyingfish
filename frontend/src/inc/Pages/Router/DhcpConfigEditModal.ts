@@ -27,6 +27,10 @@ export class DhcpConfigEditModal {
 
     protected readonly _switchRa: FfrSwitch;
 
+    protected readonly _inRaInterval: FfrInput;
+
+    protected readonly _inRaRouterLifetime: FfrInput;
+
     /**
      * constructor
      */
@@ -58,6 +62,12 @@ export class DhcpConfigEditModal {
         const secIpv6 = new FfrSection(body, 'IPv6');
         this._switchRa = new FfrSwitch('Enable Router Advertisement (SLAAC / DHCPv6)', false);
         secIpv6.element.append(this._switchRa.element);
+
+        const rowRa = FfrField.row(secIpv6.element);
+        this._inRaInterval = new FfrInput(true, '60');
+        new FfrField(rowRa, 'IPv6 RA — max interval (s)', 'How often the router advertisement is sent. Lower keeps downstream routers refreshed (stability); 0 = dnsmasq default.').mount(this._inRaInterval.element);
+        this._inRaRouterLifetime = new FfrInput(true, '9000');
+        new FfrField(rowRa, 'IPv6 RA — router lifetime (s)', 'How long this node stays a downstream default router. Keep it above the address lifetime so the route never expires while the address persists; 0 = default.').mount(this._inRaRouterLifetime.element);
     }
 
     /**
@@ -226,6 +236,40 @@ export class DhcpConfigEditModal {
     }
 
     /**
+     * setRaInterval — IPv6 RA max interval (seconds).
+     * @param value - seconds
+     */
+    public setRaInterval(value: number): void {
+        this._inRaInterval.setValue(`${value}`);
+    }
+
+    /**
+     * getRaInterval
+     */
+    public getRaInterval(): number {
+        const value = parseInt(this._inRaInterval.getValue(), 10);
+
+        return Number.isFinite(value) && value >= 0 ? value : 60;
+    }
+
+    /**
+     * setRaRouterLifetime — IPv6 RA router lifetime (seconds).
+     * @param value - seconds
+     */
+    public setRaRouterLifetime(value: number): void {
+        this._inRaRouterLifetime.setValue(`${value}`);
+    }
+
+    /**
+     * getRaRouterLifetime
+     */
+    public getRaRouterLifetime(): number {
+        const value = parseInt(this._inRaRouterLifetime.getValue(), 10);
+
+        return Number.isFinite(value) && value >= 0 ? value : 9000;
+    }
+
+    /**
      * resetValues
      */
     public resetValues(): void {
@@ -237,6 +281,8 @@ export class DhcpConfigEditModal {
         this.setDnsServer('');
         this.setDomain('');
         this.setRaEnable(false);
+        this.setRaInterval(60);
+        this.setRaRouterLifetime(9000);
     }
 
 }

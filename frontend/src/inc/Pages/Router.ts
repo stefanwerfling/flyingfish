@@ -172,7 +172,9 @@ export class Router extends BasePage {
                     gateway: this._dhcpDialog.getGateway(),
                     dns_server: this._dhcpDialog.getDnsServer(),
                     domain: this._dhcpDialog.getDomain(),
-                    ra_enable: this._dhcpDialog.getRaEnable()
+                    ra_enable: this._dhcpDialog.getRaEnable(),
+                    ra_interval: this._dhcpDialog.getRaInterval(),
+                    ra_router_lifetime: this._dhcpDialog.getRaRouterLifetime()
                 })) {
                     this._dhcpDialog.hide();
                     this._toast.fire({icon: 'success', title: 'DHCP config saved.'});
@@ -620,6 +622,8 @@ export class Router extends BasePage {
             this._dhcpDialog.setDnsServer(dhcp.dns_server ?? '');
             this._dhcpDialog.setDomain(dhcp.domain ?? '');
             this._dhcpDialog.setRaEnable(dhcp.ra_enable ?? false);
+            this._dhcpDialog.setRaInterval(dhcp.ra_interval ?? 60);
+            this._dhcpDialog.setRaRouterLifetime(dhcp.ra_router_lifetime ?? 9000);
         } else {
             this._dhcpDialog.setGateway(iface.ipv4_address ?? '');
         }
