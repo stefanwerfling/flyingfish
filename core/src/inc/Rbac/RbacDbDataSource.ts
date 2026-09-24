@@ -27,7 +27,8 @@ export class RbacDbDataSource implements IRbacDataSource {
         return rows.map((row) => ({
             roleId: row.role_id,
             resourceType: row.resource_type,
-            resourceId: row.resource_id
+            resourceId: row.resource_id,
+            resourceUuid: row.resource_uuid
         }));
     }
 

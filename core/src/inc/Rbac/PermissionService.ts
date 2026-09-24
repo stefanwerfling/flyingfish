@@ -1,21 +1,30 @@
 /**
- * A resource a permission can be scoped to (RBAC epic 9.5.13): a type (e.g. `domain`)
- * and its id. A grant with an empty resource type is global (applies to everything).
+ * A resource a permission can be scoped to (RBAC epic 9.5.13/9.5.12.4): a type (e.g.
+ * `domain`) and either a node-local int id (most resource types) or a cluster-stable UUID
+ * (`uuid` — used by resource types identified the same way cluster-wide, e.g. `node-group`,
+ * so a grant scoped to a node group means the same group on every node). A grant with an
+ * empty resource type is global (applies to everything).
  */
 export type RbacResource = {
     type: string;
     id: number;
+} | {
+    type: string;
+    uuid: string;
 };
 
 /**
  * A role granted to (one of the user's) groups, with its scope. `resourceType` empty
- * (and `resourceId` 0) means a global grant. `roleId` is a cluster-stable UUID (the
- * policy is cluster-global); `resourceId` stays a node-local int resource id.
+ * (and `resourceId` 0, `resourceUuid` '') means a global grant. `roleId` is a
+ * cluster-stable UUID (the policy is cluster-global); `resourceId` stays a node-local int
+ * resource id, `resourceUuid` a cluster-stable UUID resource id (mutually exclusive with
+ * `resourceId` — which one is meaningful depends on `resourceType`).
  */
 export type RbacAssignment = {
     roleId: string;
     resourceType: string;
     resourceId: number;
+    resourceUuid: string;
 };
 
 /**
@@ -111,9 +120,17 @@ export class PermissionService {
             return true;
         }
 
-        return resource !== undefined &&
-            assignment.resourceType === resource.type &&
-            assignment.resourceId === resource.id;
+        if (resource === undefined || assignment.resourceType !== resource.type) {
+            return false;
+        }
+
+        if ('uuid' in resource) {
+            return assignment.resourceUuid === resource.uuid;
+        }
+
+        // Guard against a UUID-scoped assignment (resourceId defaults to 0, unused)
+        // coincidentally matching an id-shaped check for id 0.
+        return assignment.resourceUuid === '' && assignment.resourceId === resource.id;
     }
 
 }

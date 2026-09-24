@@ -24,9 +24,13 @@ const createSource = (model: {
         roleIds.flatMap((roleId) => model.rolePermissions[roleId] ?? [])
 });
 
-// Group/role ids are cluster-stable UUIDs (strings); resource ids stay node-local ints.
-const globalGrant = (roleId: string): RbacAssignment => ({roleId: roleId, resourceType: '', resourceId: 0});
-const domainGrant = (roleId: string, domainId: number): RbacAssignment => ({roleId: roleId, resourceType: 'domain', resourceId: domainId});
+// Group/role ids are cluster-stable UUIDs (strings); resource ids stay node-local ints,
+// except UUID-keyed resource types (e.g. node-group), which use resourceUuid instead.
+const globalGrant = (roleId: string): RbacAssignment => ({roleId: roleId, resourceType: '', resourceId: 0, resourceUuid: ''});
+const domainGrant = (roleId: string, domainId: number): RbacAssignment =>
+    ({roleId: roleId, resourceType: 'domain', resourceId: domainId, resourceUuid: ''});
+const nodeGroupGrant = (roleId: string, groupUuid: string): RbacAssignment =>
+    ({roleId: roleId, resourceType: 'node-group', resourceId: 0, resourceUuid: groupUuid});
 
 describe('PermissionService.can', () => {
     test('superadmin: a global role with the * wildcard satisfies any check', async() => {
@@ -89,5 +93,19 @@ describe('PermissionService.can', () => {
         expect(await service.can(1, 'domain.read')).toBe(true);
         expect(await service.can(1, 'domain.write', {type: 'domain', id: 7})).toBe(true);
         expect(await service.can(1, 'domain.write', {type: 'domain', id: 8})).toBe(false);
+    });
+
+    test('a UUID-scoped grant (node-group, Cluster/Mesh 9.5.12.4) applies only to that group, never to an int-scoped check', async() => {
+        const service = new PermissionService(createSource({
+            userGroups: {1: ['10']},
+            groupAssignments: {10: [nodeGroupGrant('300', 'ng-1')]},
+            rolePermissions: {300: ['domain.write']}
+        }));
+
+        expect(await service.can(1, 'domain.write', {type: 'node-group', uuid: 'ng-1'})).toBe(true);
+        expect(await service.can(1, 'domain.write', {type: 'node-group', uuid: 'ng-2'})).toBe(false);
+        // a uuid-scoped grant never accidentally matches an id-scoped check on the same type name
+        expect(await service.can(1, 'domain.write', {type: 'node-group', id: 0})).toBe(false);
+        expect(await service.can(1, 'domain.write')).toBe(false);
     });
 });

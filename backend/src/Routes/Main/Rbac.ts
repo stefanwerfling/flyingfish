@@ -60,7 +60,7 @@ export class Rbac extends DefaultRoute {
                     })),
                     assignments: (await RbacRoleAssignmentServiceDB.getInstance().findAll()).map((entry) => ({
                         id: entry.id, group_id: entry.group_id, role_id: entry.role_id,
-                        resource_type: entry.resource_type, resource_id: entry.resource_id
+                        resource_type: entry.resource_type, resource_id: entry.resource_id, resource_uuid: entry.resource_uuid
                     })),
                     memberships: (await RbacUserGroupServiceDB.getInstance().findAll()).map((entry) => ({
                         id: entry.id, user_id: entry.user_id, group_id: entry.group_id
@@ -114,6 +114,7 @@ export class Rbac extends DefaultRoute {
             entity.role_id = body.role_id;
             entity.resource_type = body.resource_type ?? '';
             entity.resource_id = body.resource_id ?? 0;
+            entity.resource_uuid = body.resource_uuid ?? '';
             await RbacRoleAssignmentServiceDB.getInstance().save(entity);
 
             return {statusCode: StatusCodes.OK};

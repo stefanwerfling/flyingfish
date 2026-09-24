@@ -55,14 +55,17 @@ export type RbacPermissionEntry = ExtractSchemaResultType<typeof SchemaRbacPermi
 
 /**
  * A role grant to a group, optionally scoped to a resource (cluster-global policy —
- * UUID id/group_id/role_id; resource_id stays a node-local int).
+ * UUID id/group_id/role_id). `resource_id` (node-local int, e.g. a `domain`) and
+ * `resource_uuid` (cluster-stable UUID, e.g. a `node-group`, 9.5.12.4) are mutually
+ * exclusive — which one is meaningful depends on `resource_type`.
  */
 export const SchemaRbacAssignmentEntry = Vts.object({
     id: Vts.string(),
     group_id: Vts.string(),
     role_id: Vts.string(),
     resource_type: Vts.optional(Vts.string()),
-    resource_id: Vts.optional(Vts.number())
+    resource_id: Vts.optional(Vts.number()),
+    resource_uuid: Vts.optional(Vts.string())
 });
 
 /**

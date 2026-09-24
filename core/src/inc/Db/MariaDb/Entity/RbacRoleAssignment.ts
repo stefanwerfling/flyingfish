@@ -3,13 +3,13 @@ import {DBBaseEntityUuid} from '../DBBaseEntityUuid.js';
 
 /**
  * RbacRoleAssignment — grants a role to a group, optionally scoped to a resource
- * (RBAC epic 9.5.13). This is what makes rights per-resource: an empty `resource_type`
- * (and `resource_id` 0) is a GLOBAL grant; otherwise the grant applies only to that
- * resource, e.g. resource_type `domain` + resource_id the domain id. Plain id-column
- * join, no DB foreign keys. A cluster-global POLICY entity: its own id and the
- * group/role refs are cluster-stable UUIDs so the grant gossips/shares across nodes
- * (9.5.12, A+C). `resource_id` stays a node-local int for now (cluster-stable resource
- * references are a follow-up — see [[rbac-cluster-global-uuid]]).
+ * (RBAC epic 9.5.13/9.5.12.4). This is what makes rights per-resource: an empty
+ * `resource_type` (and `resource_id` 0 / `resource_uuid` '') is a GLOBAL grant; otherwise
+ * the grant applies only to that resource, e.g. resource_type `domain` + resource_id the
+ * domain id (node-local int), or resource_type `node-group` + resource_uuid the group's
+ * cluster-stable UUID. Plain id-column join, no DB foreign keys. A cluster-global POLICY
+ * entity: its own id and the group/role refs are cluster-stable UUIDs so the grant
+ * gossips/shares across nodes (9.5.12, A+C).
  */
 @Entity({name: 'rbac_role_assignment'})
 export class RbacRoleAssignment extends DBBaseEntityUuid {
@@ -45,11 +45,24 @@ export class RbacRoleAssignment extends DBBaseEntityUuid {
     public resource_type!: string;
 
     /**
-     * the resource id this grant is scoped to (0 = none/global)
+     * the resource id this grant is scoped to (0 = none/global) — used by node-local
+     * int-keyed resource types (e.g. `domain`)
      */
     @Column({
         default: 0
     })
     public resource_id!: number;
+
+    /**
+     * the resource uuid this grant is scoped to ('' = none/global) — used by
+     * cluster-stable UUID-keyed resource types (e.g. `node-group`); mutually exclusive
+     * with `resource_id`, which field is meaningful depends on `resource_type`
+     */
+    @Column({
+        type: 'varchar',
+        length: 36,
+        default: ''
+    })
+    public resource_uuid!: string;
 
 }

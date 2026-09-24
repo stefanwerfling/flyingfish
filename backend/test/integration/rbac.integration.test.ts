@@ -44,6 +44,7 @@ import {AddDomainRecordFollowNode1789600000000} from '../../src/inc/Db/MariaDb/m
 import {AddDhcpRaParams1789700000000} from '../../src/inc/Db/MariaDb/migrations/1789700000000-AddDhcpRaParams.js';
 import {AddClusterNodeGroups1789800000000} from '../../src/inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
 import {AddClusterNodeGroupShares1789900000000} from '../../src/inc/Db/MariaDb/migrations/1789900000000-AddClusterNodeGroupShares.js';
+import {AddRbacResourceUuid1790000000000} from '../../src/inc/Db/MariaDb/migrations/1790000000000-AddRbacResourceUuid.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -72,12 +73,17 @@ const ALL_MIGRATIONS = [
     AddDomainRecordFollowNode1789600000000,
     AddDhcpRaParams1789700000000,
     AddClusterNodeGroups1789800000000,
-    AddClusterNodeGroupShares1789900000000
+    AddClusterNodeGroupShares1789900000000,
+    AddRbacResourceUuid1790000000000
 ];
 
-// The chain WITHOUT the RBAC migration — used to seed a pre-existing user before the
-// RBAC migration runs, proving the "existing users become admin" backfill.
-const MIGRATIONS_BEFORE_RBAC = ALL_MIGRATIONS.filter((migration) => migration !== AddRbacTables1788800000000);
+// The chain WITHOUT the RBAC migration (and anything that alters its tables) — used to
+// seed a pre-existing user before the RBAC migration runs, proving the "existing users
+// become admin" backfill. AddRbacResourceUuid ALTERs rbac_role_assignment, so it must
+// stay out too (it would otherwise run against a DB that never created that table).
+const MIGRATIONS_BEFORE_RBAC = ALL_MIGRATIONS.filter(
+    (migration) => migration !== AddRbacTables1788800000000 && migration !== AddRbacResourceUuid1790000000000
+);
 
 /**
  * A TypeORM migration class (constructor implementing MigrationInterface).
@@ -262,6 +268,36 @@ describe('RBAC migration + seed + enforce (integration, real MariaDB)', () => {
         expect(await permission.can(editorUserId, 'domain.delete', {type: 'domain', id: 5})).toBe(false);
     });
 
+    test('LIVE enforce: a UUID-scoped grant (node-group, Cluster/Mesh 9.5.12.4) applies only to its exact group', async() => {
+        // Same chain as the domain-scoped test, but the grant targets a node-group's
+        // cluster-stable UUID via resource_uuid instead of resource_id.
+        await dataSource.query('INSERT INTO `rbac_permission` (`id`, `permission_key`, `description`) VALUES (UUID(), \'domain.read\', \'Read a domain\')');
+        await dataSource.query('INSERT INTO `rbac_role` (`id`, `name`, `description`) VALUES (UUID(), \'group-viewer\', \'Node-group viewer\')');
+        await dataSource.query('INSERT INTO `rbac_group` (`id`, `name`, `description`, `disable`) VALUES (UUID(), \'GroupViewers\', \'\', 0)');
+
+        const [perm] = await dataSource.query('SELECT id FROM `rbac_permission` WHERE `permission_key` = \'domain.read\'');
+        const [role] = await dataSource.query('SELECT id FROM `rbac_role` WHERE `name` = \'group-viewer\'');
+        const [group] = await dataSource.query('SELECT id FROM `rbac_group` WHERE `name` = \'GroupViewers\'');
+
+        await dataSource.query('INSERT INTO `rbac_role_permission` (`id`, `role_id`, `permission_id`) VALUES (UUID(), ?, ?)', [role.id, perm.id]);
+        await dataSource.query(
+            'INSERT INTO `rbac_role_assignment` (`id`, `group_id`, `role_id`, `resource_type`, `resource_uuid`) VALUES (UUID(), ?, ?, \'node-group\', \'ng-live-1\')',
+            [group.id, role.id]
+        );
+
+        const viewerUserId = 5002;
+        await dataSource.query('INSERT INTO `rbac_user_group` (`user_id`, `group_id`) VALUES (?, ?)', [viewerUserId, group.id]);
+
+        const permission = new PermissionService(new RbacDbDataSource());
+
+        // allowed on the exact scoped group
+        expect(await permission.can(viewerUserId, 'domain.read', {type: 'node-group', uuid: 'ng-live-1'})).toBe(true);
+        // denied on a different group, an int-shaped check of the same type, and unscoped
+        expect(await permission.can(viewerUserId, 'domain.read', {type: 'node-group', uuid: 'ng-live-2'})).toBe(false);
+        expect(await permission.can(viewerUserId, 'domain.read', {type: 'node-group', id: 0})).toBe(false);
+        expect(await permission.can(viewerUserId, 'domain.read')).toBe(false);
+    });
+
     test('CONVERGENCE: the gossiped cluster policy upserts into the local DB and is then locally enforceable', async() => {
         // A policy authored on ANOTHER node (fresh UUIDs not in this DB), as it would
         // arrive in the converged gossip aggregate.
@@ -270,7 +306,7 @@ describe('RBAC migration + seed + enforce (integration, real MariaDB)', () => {
             roles: [{id: 'conv-r1', name: 'remote-editor', description: ''}],
             permissions: [{id: 'conv-p1', permission_key: 'domain.read', description: ''}],
             rolePermissions: [{id: 'conv-rp1', role_id: 'conv-r1', permission_id: 'conv-p1'}],
-            assignments: [{id: 'conv-a1', group_id: 'conv-g1', role_id: 'conv-r1', resource_type: '', resource_id: 0}]
+            assignments: [{id: 'conv-a1', group_id: 'conv-g1', role_id: 'conv-r1', resource_type: '', resource_id: 0, resource_uuid: ''}]
         };
 
         await new ClusterRbacConverger().import(remotePolicy);

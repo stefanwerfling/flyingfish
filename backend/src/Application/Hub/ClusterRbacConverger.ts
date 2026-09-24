@@ -68,7 +68,8 @@ export class ClusterRbacConverger {
                     group_id: assignment.group_id,
                     role_id: assignment.role_id,
                     resource_type: assignment.resource_type,
-                    resource_id: assignment.resource_id
+                    resource_id: assignment.resource_id,
+                    resource_uuid: assignment.resource_uuid
                 })),
                 ['id']
             );

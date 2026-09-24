@@ -53,7 +53,7 @@ export type ClusterRbacPolicySnapshot = {
     roles: {id: string; name: string; description: string;}[];
     permissions: {id: string; permission_key: string; description: string;}[];
     rolePermissions: {id: string; role_id: string; permission_id: string;}[];
-    assignments: {id: string; group_id: string; role_id: string; resource_type: string; resource_id: number;}[];
+    assignments: {id: string; group_id: string; role_id: string; resource_type: string; resource_id: number; resource_uuid: string;}[];
 };
 
 /**
@@ -231,7 +231,8 @@ export class ClusterLocalStateProvider {
                 group_id: assignment.group_id,
                 role_id: assignment.role_id,
                 resource_type: assignment.resource_type,
-                resource_id: assignment.resource_id
+                resource_id: assignment.resource_id,
+                resource_uuid: assignment.resource_uuid
             }))
         };
     }

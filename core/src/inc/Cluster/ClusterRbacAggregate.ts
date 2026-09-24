@@ -16,6 +16,7 @@ export type ClusterRbacAssignment = {
     role_id: string;
     resource_type: string;
     resource_id: number;
+    resource_uuid: string;
 };
 
 /**
@@ -81,7 +82,8 @@ export const aggregateClusterRbac = (entries: readonly ClusterGossipStateEntry[]
                 group_id: toStr(row.group_id),
                 role_id: toStr(row.role_id),
                 resource_type: toStr(row.resource_type),
-                resource_id: toNum(row.resource_id)
+                resource_id: toNum(row.resource_id),
+                resource_uuid: toStr(row.resource_uuid)
             });
         } else if (entry.key.startsWith(KEY_GROUP)) {
             view.groups.push({id: toStr(row.id), name: toStr(row.name), description: toStr(row.description), disable: row.disable === true});
