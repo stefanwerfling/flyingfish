@@ -65,6 +65,31 @@ async function fetchLocalHubResource(hubUrl: string, secret: string | undefined,
     return response.json();
 }
 
+/**
+ * Apply a mutation to one of this node's own cluster-shareable resources via its local
+ * Hub (Cluster/Mesh epic 9.5.12.7, the responder side of a cross-node WRITE — e.g.
+ * `/cluster/local-domain-save`, `/cluster/local-domain-delete`). Same auth/shape as
+ * {@link fetchLocalHubResource}, just POST with a JSON body.
+ * @param hubUrl - this node's Hub base URL
+ * @param secret - the shared registry secret
+ * @param path - the Hub's local-<resource> write path
+ * @param body - the request body to relay verbatim
+ */
+async function postLocalHubResource(hubUrl: string, secret: string | undefined, path: string, body: unknown): Promise<unknown> {
+    const response = await fetch(`${hubUrl.replace(/\/+$/u, '')}${path}`, {
+        method: 'POST',
+        headers: {[HEADER_REGISTRY_SECRET]: secret ?? '', 'content-type': 'application/json'},
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(LOCAL_HUB_TIMEOUT_MS)
+    });
+
+    if (!response.ok) {
+        throw new Error(`local Hub returned HTTP ${response.status}`);
+    }
+
+    return response.json();
+}
+
 const SESSION_MAX_AGE = 6000000;
 const DEFAULT_PEER_PORT = 5336;
 const DEFAULT_SYNC_INTERVAL_MS = 30000;
@@ -379,6 +404,43 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
 
                 try {
                     return {ok: true, payload: await fetchLocalHubResource(registryUrl, registrySecret, '/json/registry/cluster/local-listens')};
+                } catch (error) {
+                    return {ok: false, error: `${error}`};
+                }
+            });
+
+            // First cross-node WRITE (9.5.12.7): a peer asking us to save/delete a domain
+            // in OUR OWN database. Same defense-in-depth shape as the reads above, but
+            // level-gated ('write', not just any share) since this mutates our data — a
+            // read-only share must not reach here (the requester already checked this
+            // before dialing us; we only re-confirm WE still currently grant write).
+            controlRouter.register('domain.save', async(payload): Promise<{ok: boolean; payload?: unknown; error?: string;}> => {
+                const stillShared = nodeStillSharesResource(
+                    aggregateClusterNodeGroups(gossipStore.liveEntries()).shares, selfUidForControl, 'domain', 'write'
+                );
+
+                if (!stillShared) {
+                    return {ok: false, error: 'domain is not currently shared for write by this node'};
+                }
+
+                try {
+                    return {ok: true, payload: await postLocalHubResource(registryUrl, registrySecret, '/json/registry/cluster/local-domain-save', payload)};
+                } catch (error) {
+                    return {ok: false, error: `${error}`};
+                }
+            });
+
+            controlRouter.register('domain.delete', async(payload): Promise<{ok: boolean; payload?: unknown; error?: string;}> => {
+                const stillShared = nodeStillSharesResource(
+                    aggregateClusterNodeGroups(gossipStore.liveEntries()).shares, selfUidForControl, 'domain', 'write'
+                );
+
+                if (!stillShared) {
+                    return {ok: false, error: 'domain is not currently shared for write by this node'};
+                }
+
+                try {
+                    return {ok: true, payload: await postLocalHubResource(registryUrl, registrySecret, '/json/registry/cluster/local-domain-delete', payload)};
                 } catch (error) {
                     return {ok: false, error: `${error}`};
                 }

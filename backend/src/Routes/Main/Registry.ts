@@ -22,7 +22,9 @@ import {
     ClusterRoutesResponse,
     ClusterStateResponse,
     DefaultReturn,
+    DomainDeleteResponse,
     DomainResponse,
+    DomainSaveResponse,
     ListenResponse,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
@@ -42,13 +44,19 @@ import {
     SchemaClusterNodesResponse,
     SchemaClusterRbacResponse,
     SchemaClusterPeersResponse,
+    SchemaClusterRemoteDomainDeleteRequest,
+    SchemaClusterRemoteDomainSaveRequest,
     SchemaClusterRemoteDomainsRequest,
     SchemaClusterRemoteListensRequest,
     SchemaClusterRoutesPublishRequest,
     SchemaClusterRoutesResponse,
     SchemaClusterStateResponse,
     SchemaDefaultReturn,
+    SchemaDomainData,
+    SchemaDomainDelete,
+    SchemaDomainDeleteResponse,
     SchemaDomainResponse,
+    SchemaDomainSaveResponse,
     SchemaListenResponse,
     SchemaRegistryInstanceRequest,
     SchemaRegistryPartsResponse,
@@ -73,6 +81,8 @@ import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFish
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {HubRegistryService} from '../../Application/Hub/HubRegistryService.js';
 import {List as DomainList} from './Domain/List.js';
+import {Save as DomainSave} from './Domain/Save.js';
+import {Delete as DomainDelete} from './Domain/Delete.js';
 import {List as ListenList} from './Listen/List.js';
 
 /**
@@ -678,6 +688,109 @@ export class Registry extends DefaultRoute {
                 querySchema: SchemaClusterRemoteListensRequest,
                 sessionSchema: SchemaSessionData,
                 responseBodySchema: SchemaListenResponse
+            }
+        );
+
+        // This node's own domain save, for a PEER's clusterserver to relay on our
+        // behalf (Cluster/Mesh epic 9.5.12.7, the first cross-node WRITE). Same
+        // same-instance Hub<->clusterserver IPC pattern as local-domains — the actual
+        // mutation logic is the existing local Domain.saveDomain, unchanged.
+        this._post(
+            '/json/registry/cluster/local-domain-save',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(_req, _res, data): Promise<DomainSaveResponse> => DomainSave.saveDomain(data.body!),
+            {
+                description: 'Save a domain in THIS node\'s own database (for a peer clusterserver to relay over the mesh)',
+                bodySchema: SchemaDomainData,
+                responseBodySchema: SchemaDomainSaveResponse
+            }
+        );
+
+        // This node's own domain delete, mirrors local-domain-save above.
+        this._post(
+            '/json/registry/cluster/local-domain-delete',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(_req, _res, data): Promise<DomainDeleteResponse> => DomainDelete.deleteDomain(data.body!),
+            {
+                description: 'Delete a domain in THIS node\'s own database (for a peer clusterserver to relay over the mesh)',
+                bodySchema: SchemaDomainDelete,
+                responseBodySchema: SchemaDomainDeleteResponse
+            }
+        );
+
+        // Create/edit a domain on a REMOTE node (9.5.12.7, requester side): local-authorize
+        // first — does the target share `domain` for WRITE with a group this user holds
+        // domain.create (new) or domain.write (existing) on — then proxy the mutation over
+        // the mesh. Mirrors the local /json/domain/save route's own create-vs-write split,
+        // just against a remote node's data instead of this node's.
+        this._post(
+            '/json/registry/cluster/remote-domain-save',
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DomainSaveResponse> => {
+                const {nodeUid, domain} = data.body!;
+                const userId = data.session!.user!.userid;
+                const permission = domain.id === 0 ? 'domain.create' : 'domain.write';
+
+                const shares = aggregateClusterNodeGroups(HubRegistryService.getInstance().getClusterAggregate().entries()).shares;
+                const allowed = await canAccessRemoteResource(
+                    FlyingFishPermissions.getInstance(), userId, nodeUid, 'domain', permission, 'write', shares
+                );
+
+                if (!allowed) {
+                    return {statusCode: StatusCodes.UNAUTHORIZED};
+                }
+
+                const reply: ClusterControlReplyBody = await proxyClusterControlRequest(nodeUid, 'domain.save', domain);
+
+                if (!reply.ok) {
+                    Logger.getLogger().warn(`Cluster remote-domain-save: ${nodeUid} answered "${reply.error}"`);
+
+                    return {statusCode: StatusCodes.INTERNAL_ERROR};
+                }
+
+                return (reply.payload as DomainSaveResponse | undefined) ?? {statusCode: StatusCodes.INTERNAL_ERROR};
+            },
+            {
+                description: 'Create/edit a domain on a remote node, gated by node-group write sharing + an RBAC grant scoped to that group',
+                bodySchema: SchemaClusterRemoteDomainSaveRequest,
+                sessionSchema: SchemaSessionData,
+                responseBodySchema: SchemaDomainSaveResponse
+            }
+        );
+
+        // Delete a domain on a REMOTE node (9.5.12.7): same local-authorize-then-proxy
+        // flow as remote-domain-save, gated by domain.delete.
+        this._post(
+            '/json/registry/cluster/remote-domain-delete',
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<DomainDeleteResponse> => {
+                const {nodeUid, id} = data.body!;
+                const userId = data.session!.user!.userid;
+
+                const shares = aggregateClusterNodeGroups(HubRegistryService.getInstance().getClusterAggregate().entries()).shares;
+                const allowed = await canAccessRemoteResource(
+                    FlyingFishPermissions.getInstance(), userId, nodeUid, 'domain', 'domain.delete', 'write', shares
+                );
+
+                if (!allowed) {
+                    return {statusCode: StatusCodes.UNAUTHORIZED};
+                }
+
+                const reply: ClusterControlReplyBody = await proxyClusterControlRequest(nodeUid, 'domain.delete', {id});
+
+                if (!reply.ok) {
+                    Logger.getLogger().warn(`Cluster remote-domain-delete: ${nodeUid} answered "${reply.error}"`);
+
+                    return {statusCode: StatusCodes.INTERNAL_ERROR};
+                }
+
+                return (reply.payload as DomainDeleteResponse | undefined) ?? {statusCode: StatusCodes.INTERNAL_ERROR};
+            },
+            {
+                description: 'Delete a domain on a remote node, gated by node-group write sharing + an RBAC grant scoped to that group',
+                bodySchema: SchemaClusterRemoteDomainDeleteRequest,
+                sessionSchema: SchemaSessionData,
+                responseBodySchema: SchemaDomainDeleteResponse
             }
         );
 

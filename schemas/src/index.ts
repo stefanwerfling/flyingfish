@@ -511,7 +511,11 @@ export {
     SchemaClusterRemoteDomainsRequest,
     ClusterRemoteDomainsRequest,
     SchemaClusterRemoteListensRequest,
-    ClusterRemoteListensRequest
+    ClusterRemoteListensRequest,
+    SchemaClusterRemoteDomainSaveRequest,
+    ClusterRemoteDomainSaveRequest,
+    SchemaClusterRemoteDomainDeleteRequest,
+    ClusterRemoteDomainDeleteRequest
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

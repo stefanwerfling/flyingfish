@@ -64,15 +64,25 @@ export const canAccessRemoteResource = async(
 };
 
 /**
- * Whether `nodeUid` currently shares `resourceType` with ANY node group (Cluster/Mesh
- * epic 9.5.12.6). The RESPONDING side's defense-in-depth check: the real authorization
- * (does the requester's user hold a matching grant) already happened node-locally on
- * the REQUESTING side before it ever dialed us — "no cross-node SSO, B trusts A's mesh
- * peer" — so this only re-confirms WE still currently publish a share for the type at
- * all, guarding against acting on a stale/cached decision after a share was revoked.
+ * Whether `nodeUid` currently shares `resourceType` with ANY node group, at a level
+ * that covers `requiredLevel` (Cluster/Mesh epic 9.5.12.6, extended 9.5.12.7 for
+ * writes). The RESPONDING side's defense-in-depth check: the real authorization (does
+ * the requester's user hold a matching grant) already happened node-locally on the
+ * REQUESTING side before it ever dialed us — "no cross-node SSO, B trusts A's mesh
+ * peer" — so this only re-confirms WE still currently publish a covering share at all,
+ * guarding against acting on a stale/cached decision after a share was revoked or
+ * downgraded from write to read. Defaults to `'read'` so existing read-op call sites
+ * (any share level satisfies a read) are unaffected; write ops must pass `'write'`
+ * explicitly — a read-only share must NOT authorize a mutation.
  * @param shares - the locally-converged node-group shares
  * @param nodeUid - this node's own mesh uid
  * @param resourceType - the resource type being requested
+ * @param requiredLevel - `read` or `write`, matched the same way as {@link canAccessRemoteResource}
  */
-export const nodeStillSharesResource = (shares: readonly ClusterShareLike[], nodeUid: string, resourceType: string): boolean =>
-    shares.some((share) => share.nodeUid === nodeUid && share.resourceType === resourceType);
+export const nodeStillSharesResource = (
+    shares: readonly ClusterShareLike[],
+    nodeUid: string,
+    resourceType: string,
+    requiredLevel: 'read' | 'write' = 'read'
+): boolean =>
+    shares.some((share) => share.nodeUid === nodeUid && share.resourceType === resourceType && levelCovers(share.level, requiredLevel));

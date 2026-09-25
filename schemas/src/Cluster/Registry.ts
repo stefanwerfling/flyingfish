@@ -1,5 +1,6 @@
 import {ExtractSchemaResultType, Vts} from 'vts';
 import {SchemaDefaultReturn} from '../Core/Server/Routes/DefaultReturn.js';
+import {SchemaDomainData} from '../Backend/Routes/Domain/List.js';
 
 /**
  * SchemaClusterPeer — one cluster node's reachable peer-transport endpoint
@@ -362,6 +363,37 @@ export const SchemaClusterRemoteListensRequest = Vts.object({
  * ClusterRemoteListensRequest
  */
 export type ClusterRemoteListensRequest = ExtractSchemaResultType<typeof SchemaClusterRemoteListensRequest>;
+
+/**
+ * SchemaClusterRemoteDomainSaveRequest — create/edit a domain on a REMOTE node
+ * (Cluster/Mesh epic 9.5.12.7, the first cross-node WRITE): which node, and the
+ * domain data to save there (same shape as the local `/json/domain/save` body;
+ * `domain.id` 0 = create, otherwise edits that id on the TARGET node's own database).
+ */
+export const SchemaClusterRemoteDomainSaveRequest = Vts.object({
+    nodeUid: Vts.string(),
+    domain: SchemaDomainData
+});
+
+/**
+ * ClusterRemoteDomainSaveRequest
+ */
+export type ClusterRemoteDomainSaveRequest = ExtractSchemaResultType<typeof SchemaClusterRemoteDomainSaveRequest>;
+
+/**
+ * SchemaClusterRemoteDomainDeleteRequest — delete a domain on a REMOTE node
+ * (Cluster/Mesh epic 9.5.12.7): which node, and the domain id on THAT node's own
+ * database to delete.
+ */
+export const SchemaClusterRemoteDomainDeleteRequest = Vts.object({
+    nodeUid: Vts.string(),
+    id: Vts.number()
+});
+
+/**
+ * ClusterRemoteDomainDeleteRequest
+ */
+export type ClusterRemoteDomainDeleteRequest = ExtractSchemaResultType<typeof SchemaClusterRemoteDomainDeleteRequest>;
 
 /**
  * The cluster-global RBAC POLICY tables (Cluster/Mesh epic 9.5.12, A+C shared rights

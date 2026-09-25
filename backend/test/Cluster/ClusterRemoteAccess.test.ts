@@ -122,4 +122,17 @@ describe('nodeStillSharesResource', () => {
     test('false against an empty share list', () => {
         expect(nodeStillSharesResource([], 'node-b', 'domain')).toBe(false);
     });
+
+    test('write requirement: a write-level share satisfies it', () => {
+        expect(nodeStillSharesResource(shares, 'node-b', 'domain', 'write')).toBe(true);
+    });
+
+    test('write requirement: a read-only share does NOT satisfy it (must not authorize a mutation)', () => {
+        const readOnlyShares: ClusterShareLike[] = [
+            {nodeUid: 'node-d', groupUuid: 'g1', resourceType: 'domain', level: 'read'}
+        ];
+
+        expect(nodeStillSharesResource(readOnlyShares, 'node-d', 'domain', 'write')).toBe(false);
+        expect(nodeStillSharesResource(readOnlyShares, 'node-d', 'domain', 'read')).toBe(true);
+    });
 });
