@@ -258,6 +258,7 @@ export {
     ClusterRbacPermission,
     ClusterRbacRolePermission,
     ClusterRbacAssignment,
+    ClusterRbacTombstones,
     ClusterRbacView,
     aggregateClusterRbac
 } from './inc/Cluster/ClusterRbacAggregate.js';
@@ -265,6 +266,7 @@ export {
     ClusterNodeGroupEntry,
     ClusterNodeGroupMemberEntry,
     ClusterNodeGroupShareEntry,
+    ClusterNodeGroupTombstones,
     ClusterNodeGroupView,
     aggregateClusterNodeGroups
 } from './inc/Cluster/ClusterNodeGroupAggregate.js';
@@ -370,6 +372,7 @@ export {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUps
 export {ClusterNodeGroup as ClusterNodeGroupDB} from './inc/Db/MariaDb/Entity/ClusterNodeGroup.js';
 export {ClusterNodeGroupMember as ClusterNodeGroupMemberDB} from './inc/Db/MariaDb/Entity/ClusterNodeGroupMember.js';
 export {ClusterNodeGroupShare as ClusterNodeGroupShareDB} from './inc/Db/MariaDb/Entity/ClusterNodeGroupShare.js';
+export {ClusterGossipTombstone as ClusterGossipTombstoneDB} from './inc/Db/MariaDb/Entity/ClusterGossipTombstone.js';
 export {RbacGroup as RbacGroupDB} from './inc/Db/MariaDb/Entity/RbacGroup.js';
 export {RbacPermission as RbacPermissionDB} from './inc/Db/MariaDb/Entity/RbacPermission.js';
 export {RbacRole as RbacRoleDB} from './inc/Db/MariaDb/Entity/RbacRole.js';
@@ -427,6 +430,7 @@ export {RbacPermissionService as RbacPermissionServiceDB} from './inc/Db/MariaDb
 export {ClusterNodeGroupService as ClusterNodeGroupServiceDB} from './inc/Db/MariaDb/Service/ClusterNodeGroupService.js';
 export {ClusterNodeGroupMemberService as ClusterNodeGroupMemberServiceDB} from './inc/Db/MariaDb/Service/ClusterNodeGroupMemberService.js';
 export {ClusterNodeGroupShareService as ClusterNodeGroupShareServiceDB} from './inc/Db/MariaDb/Service/ClusterNodeGroupShareService.js';
+export {ClusterGossipTombstoneService as ClusterGossipTombstoneServiceDB} from './inc/Db/MariaDb/Service/ClusterGossipTombstoneService.js';
 
 // Server
 export {Session} from './inc/Server/Session.js';

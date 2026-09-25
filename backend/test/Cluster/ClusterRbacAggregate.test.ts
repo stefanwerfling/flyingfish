@@ -13,6 +13,7 @@ import {
 } from 'flyingfish_core';
 
 const entry = (key: string, value: unknown): ClusterGossipStateEntry => ({key: key, value: value});
+const tombstone = (key: string): ClusterGossipStateEntry => ({key: key, value: null, deleted: true});
 
 describe('aggregateClusterRbac', () => {
     test('collects every rbac_* policy table from its global uuid key, ordered by id', () => {
@@ -73,5 +74,29 @@ describe('aggregateClusterRbac', () => {
         ]);
 
         expect(view.assignments).toEqual([{id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: 'node-group', resource_id: 0, resource_uuid: 'ng-1'}]);
+    });
+
+    test('a tombstoned entry is excluded from the live view and its id collected into tombstones, by prefix (9.5.12.8 fix)', () => {
+        const view = aggregateClusterRbac([
+            entry('rbac_group:g1', {id: 'g1', name: 'Administrators', description: '', disable: false}),
+            tombstone('rbac_group:g2'),
+            entry('rbac_role:r1', {id: 'r1', name: 'admin', description: ''}),
+            tombstone('rbac_role:r2'),
+            entry('rbac_permission:p1', {id: 'p1', permission_key: '*', description: ''}),
+            tombstone('rbac_permission:p2'),
+            entry('rbac_role_permission:rp1', {id: 'rp1', role_id: 'r1', permission_id: 'p1'}),
+            tombstone('rbac_role_permission:rp2'),
+            entry('rbac_role_assignment:a1', {id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: '', resource_id: 0}),
+            tombstone('rbac_role_assignment:a2')
+        ]);
+
+        expect(view.groups.map((group) => group.id)).toEqual(['g1']);
+        expect(view.roles.map((role) => role.id)).toEqual(['r1']);
+        expect(view.permissions.map((permission) => permission.id)).toEqual(['p1']);
+        expect(view.rolePermissions.map((rp) => rp.id)).toEqual(['rp1']);
+        expect(view.assignments.map((assignment) => assignment.id)).toEqual(['a1']);
+        expect(view.tombstones).toEqual({
+            groupIds: ['g2'], roleIds: ['r2'], permissionIds: ['p2'], rolePermissionIds: ['rp2'], assignmentIds: ['a2']
+        });
     });
 });

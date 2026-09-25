@@ -109,7 +109,10 @@ export const SchemaClusterStateEntry = Vts.object({
     // cluster-stable UUID, e.g. the RBAC policy) and the owning clusterserver must NOT
     // namespace it by nodeUid — so every node converges on the same gossip key
     // (Cluster/Mesh epic 9.5.12, A+C). Absent = per-node (namespaced).
-    global: Vts.optional(Vts.boolean())
+    global: Vts.optional(Vts.boolean()),
+    // Marks this entry as a tombstone (a delete that must propagate) rather than a
+    // live value (Cluster/Mesh epic 9.5.12.8 fix). Absent/false = a live value.
+    deleted: Vts.optional(Vts.boolean())
 });
 
 /**

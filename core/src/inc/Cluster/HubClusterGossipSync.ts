@@ -16,6 +16,12 @@ export type ClusterGossipStateEntry = {
     key: string;
     value: unknown;
     global?: boolean;
+    // Marks this entry as a tombstone (a delete that must propagate) rather than a
+    // live value, on both legs: the Hub announces a pending delete this way on the
+    // way in, and the clusterserver reports a converged tombstone this way on the way
+    // back so every node's converger can delete its own local copy too (Cluster/Mesh
+    // epic 9.5.12.8 fix). Absent/false = a live value.
+    deleted?: boolean;
 };
 
 /**
@@ -80,6 +86,11 @@ export class HubClusterGossipSync {
                 // Carry the global flag only when set — absent means per-node (namespaced).
                 if (entry.global === true) {
                     parsed.global = true;
+                }
+
+                // Carry the tombstone flag only when set — absent means a live value.
+                if (entry.deleted === true) {
+                    parsed.deleted = true;
                 }
 
                 entries.push(parsed);

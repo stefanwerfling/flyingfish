@@ -11,8 +11,11 @@ import {
     computeClusterEffectiveAccess
 } from 'flyingfish_core';
 
-const emptyNodeGroups = (): ClusterNodeGroupView => ({groups: [], members: [], shares: []});
-const emptyRbac = (): ClusterRbacView => ({groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []});
+const emptyNodeGroups = (): ClusterNodeGroupView => ({groups: [], members: [], shares: [], tombstones: {groupIds: [], memberIds: [], shareIds: []}});
+const emptyRbac = (): ClusterRbacView => ({
+    groups: [], roles: [], permissions: [], rolePermissions: [], assignments: [],
+    tombstones: {groupIds: [], roleIds: [], permissionIds: [], rolePermissionIds: [], assignmentIds: []}
+});
 
 describe('computeClusterEffectiveAccess', () => {
     test('joins a share with the role granted on its group, resolved to permission keys', () => {

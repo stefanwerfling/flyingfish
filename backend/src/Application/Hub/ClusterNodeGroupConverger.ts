@@ -14,10 +14,13 @@ import {
  * enforce it — robust offline / after a restart, and correct for a single node with no
  * mesh (the aggregate then just carries the node's own rows). Mirrors {@link ClusterRbacConverger}.
  *
- * UPSERT-ONLY (create + update). DELETE propagation is deliberately out of scope here: the
- * pushed aggregate carries only live entries (no tombstones), so an absent row is
- * indistinguishable from a not-yet-propagated local write — deleting on that basis would be
- * unsafe. Delete convergence (via tombstone propagation) is a follow-up.
+ * UPSERT for live rows, DELETE for tombstoned ids (Cluster/Mesh epic 9.5.12.8 fix): a
+ * revoked share/group/membership is announced as an explicit gossip tombstone (see
+ * {@link ClusterLocalStateProvider}), not inferred from an absent row — so every node,
+ * including ones that never issued the delete themselves, actually removes its own
+ * converged copy and stops re-publishing it. Without this, a node that already had a
+ * copy before the delete would keep asserting it forever and the delete could never
+ * durably stick cluster-wide.
  */
 export class ClusterNodeGroupConverger {
 
@@ -52,6 +55,21 @@ export class ClusterNodeGroupConverger {
                 })),
                 ['id']
             );
+        }
+
+        // Apply tombstones LAST (after upserts) so a share tombstoned in the same batch
+        // its group was too doesn't race the group upsert. Members/shares before the
+        // group itself, mirroring ClusterNodeGroupManager.deleteGroup's own delete order.
+        if (view.tombstones.memberIds.length > 0) {
+            await ClusterNodeGroupMemberServiceDB.getInstance().getRepository().delete(view.tombstones.memberIds);
+        }
+
+        if (view.tombstones.shareIds.length > 0) {
+            await ClusterNodeGroupShareServiceDB.getInstance().getRepository().delete(view.tombstones.shareIds);
+        }
+
+        if (view.tombstones.groupIds.length > 0) {
+            await ClusterNodeGroupServiceDB.getInstance().getRepository().delete(view.tombstones.groupIds);
         }
     }
 

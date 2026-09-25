@@ -45,6 +45,7 @@ import {AddDhcpRaParams1789700000000} from '../../src/inc/Db/MariaDb/migrations/
 import {AddClusterNodeGroups1789800000000} from '../../src/inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
 import {AddClusterNodeGroupShares1789900000000} from '../../src/inc/Db/MariaDb/migrations/1789900000000-AddClusterNodeGroupShares.js';
 import {AddRbacResourceUuid1790000000000} from '../../src/inc/Db/MariaDb/migrations/1790000000000-AddRbacResourceUuid.js';
+import {AddClusterGossipTombstone1790100000000} from '../../src/inc/Db/MariaDb/migrations/1790100000000-AddClusterGossipTombstone.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -74,7 +75,8 @@ const ALL_MIGRATIONS = [
     AddDhcpRaParams1789700000000,
     AddClusterNodeGroups1789800000000,
     AddClusterNodeGroupShares1789900000000,
-    AddRbacResourceUuid1790000000000
+    AddRbacResourceUuid1790000000000,
+    AddClusterGossipTombstone1790100000000
 ];
 
 // The chain WITHOUT the RBAC migration (and anything that alters its tables) — used to
@@ -301,12 +303,14 @@ describe('RBAC migration + seed + enforce (integration, real MariaDB)', () => {
     test('CONVERGENCE: the gossiped cluster policy upserts into the local DB and is then locally enforceable', async() => {
         // A policy authored on ANOTHER node (fresh UUIDs not in this DB), as it would
         // arrive in the converged gossip aggregate.
+        const emptyTombstones = {groupIds: [], roleIds: [], permissionIds: [], rolePermissionIds: [], assignmentIds: []};
         const remotePolicy = {
             groups: [{id: 'conv-g1', name: 'RemoteEditors', description: 'from node B', disable: false}],
             roles: [{id: 'conv-r1', name: 'remote-editor', description: ''}],
             permissions: [{id: 'conv-p1', permission_key: 'domain.read', description: ''}],
             rolePermissions: [{id: 'conv-rp1', role_id: 'conv-r1', permission_id: 'conv-p1'}],
-            assignments: [{id: 'conv-a1', group_id: 'conv-g1', role_id: 'conv-r1', resource_type: '', resource_id: 0, resource_uuid: ''}]
+            assignments: [{id: 'conv-a1', group_id: 'conv-g1', role_id: 'conv-r1', resource_type: '', resource_id: 0, resource_uuid: ''}],
+            tombstones: emptyTombstones
         };
 
         await new ClusterRbacConverger().import(remotePolicy);
@@ -332,6 +336,27 @@ describe('RBAC migration + seed + enforce (integration, real MariaDB)', () => {
         const permission = new PermissionService(new RbacDbDataSource());
         expect(await permission.can(localUserId, 'domain.read')).toBe(true);
         expect(await permission.can(localUserId, 'domain.write')).toBe(false);
+    });
+
+    test('CONVERGENCE: a tombstoned id is DELETED from the local DB, even though the row was never deleted locally (9.5.12.8 fix)', async() => {
+        const emptyTombstones = {groupIds: [], roleIds: [], permissionIds: [], rolePermissionIds: [], assignmentIds: []};
+
+        // Converge a row in as if it came from another node (mirrors a node that
+        // received an assignment via gossip but never issued the delete itself).
+        await new ClusterRbacConverger().import({
+            groups: [], roles: [], permissions: [], rolePermissions: [],
+            assignments: [{id: 'conv-a2', group_id: 'conv-g1', role_id: 'conv-r1', resource_type: '', resource_id: 0, resource_uuid: ''}],
+            tombstones: emptyTombstones
+        });
+        expect(await dataSource.query('SELECT * FROM `rbac_role_assignment` WHERE `id` = ?', ['conv-a2'])).toHaveLength(1);
+
+        // A later sync learns this id was tombstoned elsewhere — even with NO live
+        // entry for it in the same batch, the local copy must be deleted.
+        await new ClusterRbacConverger().import({
+            groups: [], roles: [], permissions: [], rolePermissions: [], assignments: [],
+            tombstones: {...emptyTombstones, assignmentIds: ['conv-a2']}
+        });
+        expect(await dataSource.query('SELECT * FROM `rbac_role_assignment` WHERE `id` = ?', ['conv-a2'])).toHaveLength(0);
     });
 });
 

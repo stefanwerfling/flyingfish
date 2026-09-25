@@ -19,7 +19,8 @@ describe('ClusterLocalStateProvider', () => {
             ],
             async(domainId) => domainId === 1 ? '203.0.113.4' : undefined,
             async() => emptyPolicy(),
-            async() => emptyGroups()
+            async() => emptyGroups(),
+            async() => []
         );
 
         const entries = await provider.entries();
@@ -40,7 +41,7 @@ describe('ClusterLocalStateProvider', () => {
     });
 
     test('publishes just the hub descriptor when there are no domains and no RBAC policy', async() => {
-        const provider = new ClusterLocalStateProvider(async() => [], async() => undefined, async() => emptyPolicy(), async() => emptyGroups());
+        const provider = new ClusterLocalStateProvider(async() => [], async() => undefined, async() => emptyPolicy(), async() => emptyGroups(), async() => []);
         const entries = await provider.entries();
 
         expect(entries.map((entry) => entry.key)).toEqual(['hub']);
@@ -57,7 +58,8 @@ describe('ClusterLocalStateProvider', () => {
                 rolePermissions: [{id: 'rp1', role_id: 'r1', permission_id: 'p1'}],
                 assignments: [{id: 'a1', group_id: 'g1', role_id: 'r1', resource_type: '', resource_id: 0}]
             }),
-            async() => emptyGroups()
+            async() => emptyGroups(),
+            async() => []
         );
 
         const entries = await provider.entries();
@@ -89,7 +91,8 @@ describe('ClusterLocalStateProvider', () => {
                 groups: [{id: 'ng1', name: 'Home LAN', description: 'trusted', color: '#12919f'}],
                 members: [{id: 'ngm1', nodeUid: 'node-a', groupUuid: 'ng1'}],
                 shares: []
-            })
+            }),
+            async() => []
         );
 
         const entries = await provider.entries();
@@ -113,7 +116,8 @@ describe('ClusterLocalStateProvider', () => {
                 groups: [],
                 members: [],
                 shares: [{id: 'ngs1', nodeUid: 'node-a', groupUuid: 'ng1', resourceType: 'domain', level: 'write'}]
-            })
+            }),
+            async() => []
         );
 
         const entries = await provider.entries();
@@ -121,5 +125,21 @@ describe('ClusterLocalStateProvider', () => {
         expect(entries.map((entry) => entry.key)).toEqual(['hub', 'node_group_share:ngs1']);
         expect(entries[1].global).toBe(true);
         expect(entries[1].value).toEqual({id: 'ngs1', nodeUid: 'node-a', groupUuid: 'ng1', resourceType: 'domain', level: 'write'});
+    });
+
+    test('re-announces pending tombstones as deleted GLOBAL entries with a null value (9.5.12.8 fix)', async() => {
+        const provider = new ClusterLocalStateProvider(
+            async() => [],
+            async() => undefined,
+            async() => emptyPolicy(),
+            async() => emptyGroups(),
+            async() => ['node_group_share:ngs1', 'rbac_role_assignment:a1']
+        );
+
+        const entries = await provider.entries();
+
+        expect(entries.map((entry) => entry.key)).toEqual(['hub', 'node_group_share:ngs1', 'rbac_role_assignment:a1']);
+        expect(entries[1]).toEqual({key: 'node_group_share:ngs1', value: null, global: true, deleted: true});
+        expect(entries[2]).toEqual({key: 'rbac_role_assignment:a1', value: null, global: true, deleted: true});
     });
 });

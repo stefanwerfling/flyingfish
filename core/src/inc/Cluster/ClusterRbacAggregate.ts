@@ -20,6 +20,18 @@ export type ClusterRbacAssignment = {
 };
 
 /**
+ * Ids tombstoned (deleted) somewhere in the cluster since the local DB last converged
+ * (Cluster/Mesh epic 9.5.12.8 fix) — mirrors {@link ClusterNodeGroupTombstones}.
+ */
+export type ClusterRbacTombstones = {
+    groupIds: string[];
+    roleIds: string[];
+    permissionIds: string[];
+    rolePermissionIds: string[];
+    assignmentIds: string[];
+};
+
+/**
  * The whole cluster-wide RBAC policy view.
  */
 export type ClusterRbacView = {
@@ -28,6 +40,7 @@ export type ClusterRbacView = {
     permissions: ClusterRbacPermission[];
     rolePermissions: ClusterRbacRolePermission[];
     assignments: ClusterRbacAssignment[];
+    tombstones: ClusterRbacTombstones;
 };
 
 /**
@@ -63,9 +76,30 @@ const toNum = (value: unknown): number => typeof value === 'number' && Number.is
  * @param entries - the cluster-wide aggregate entries
  */
 export const aggregateClusterRbac = (entries: readonly ClusterGossipStateEntry[]): ClusterRbacView => {
-    const view: ClusterRbacView = {groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []};
+    const view: ClusterRbacView = {
+        groups: [], roles: [], permissions: [], rolePermissions: [], assignments: [],
+        tombstones: {groupIds: [], roleIds: [], permissionIds: [], rolePermissionIds: [], assignmentIds: []}
+    };
 
     for (const entry of entries) {
+        // A tombstone carries no value (see ClusterGossipStore.remove) — its id lives
+        // only in the key, which every prefix here already encodes.
+        if (entry.deleted === true) {
+            if (entry.key.startsWith(KEY_ROLE_PERMISSION)) {
+                view.tombstones.rolePermissionIds.push(entry.key.slice(KEY_ROLE_PERMISSION.length));
+            } else if (entry.key.startsWith(KEY_ROLE_ASSIGNMENT)) {
+                view.tombstones.assignmentIds.push(entry.key.slice(KEY_ROLE_ASSIGNMENT.length));
+            } else if (entry.key.startsWith(KEY_GROUP)) {
+                view.tombstones.groupIds.push(entry.key.slice(KEY_GROUP.length));
+            } else if (entry.key.startsWith(KEY_ROLE)) {
+                view.tombstones.roleIds.push(entry.key.slice(KEY_ROLE.length));
+            } else if (entry.key.startsWith(KEY_PERMISSION)) {
+                view.tombstones.permissionIds.push(entry.key.slice(KEY_PERMISSION.length));
+            }
+
+            continue;
+        }
+
         const value = entry.value;
 
         if (value === null || typeof value !== 'object') {

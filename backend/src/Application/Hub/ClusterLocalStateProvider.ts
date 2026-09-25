@@ -1,4 +1,5 @@
 import {
+    ClusterGossipTombstoneServiceDB,
     ClusterNodeGroupMemberServiceDB,
     ClusterNodeGroupServiceDB,
     ClusterNodeGroupShareServiceDB,
@@ -18,6 +19,15 @@ import os from 'os';
  * answerable IP for the domain, published so the cluster can fail the domain over.
  */
 const DNS_TYPE_A = 1;
+
+/**
+ * How long a tombstone keeps being re-announced (Cluster/Mesh epic 9.5.12.8 fix) before
+ * it's pruned from this Hub's own pending-tombstone table. Generous on purpose — gossip
+ * convergence is normally seconds to a couple of sync intervals, not days; this window
+ * only needs to outlast a genuinely long node outage so the delete still reaches it once
+ * it's back.
+ */
+const TOMBSTONE_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * The domain fields this Hub publishes into the cluster view.
@@ -82,6 +92,11 @@ export type ClusterNodeGroupSnapshot = {
 export type ClusterNodeGroupSource = () => Promise<ClusterNodeGroupSnapshot>;
 
 /**
+ * The gossip keys of pending tombstones to re-announce (Cluster/Mesh epic 9.5.12.8 fix).
+ */
+export type ClusterTombstoneSource = () => Promise<string[]>;
+
+/**
  * Produces the resources this Hub publishes into the cluster gossip (Cluster/Mesh
  * epic 9.5.12): its local clusterserver pulls these, owns them (namespacing the keys
  * by its nodeUid) and gossips them so every node sees a federated view. Keys are
@@ -102,22 +117,27 @@ export class ClusterLocalStateProvider {
 
     private readonly _nodeGroups: ClusterNodeGroupSource;
 
+    private readonly _tombstones: ClusterTombstoneSource;
+
     /**
      * @param domains - the domain source (defaults to the Hub's domain DB)
      * @param domainIp - the domain A-record IP source (defaults to the Hub's record DB)
      * @param rbacPolicy - the RBAC policy source (defaults to the Hub's rbac_* DB)
      * @param nodeGroups - the node-group source (defaults to the Hub's cluster_node_group* DB)
+     * @param tombstones - the pending-tombstone source (defaults to the Hub's cluster_gossip_tombstone DB)
      */
     public constructor(
         domains?: ClusterDomainSource,
         domainIp?: ClusterDomainIpSource,
         rbacPolicy?: ClusterRbacPolicySource,
-        nodeGroups?: ClusterNodeGroupSource
+        nodeGroups?: ClusterNodeGroupSource,
+        tombstones?: ClusterTombstoneSource
     ) {
         this._domains = domains ?? ((): Promise<ClusterDomainLike[]> => DomainServiceDB.getInstance().findAll());
         this._domainIp = domainIp ?? ClusterLocalStateProvider._defaultDomainIp;
         this._rbacPolicy = rbacPolicy ?? ClusterLocalStateProvider._defaultRbacPolicy;
         this._nodeGroups = nodeGroups ?? ClusterLocalStateProvider._defaultNodeGroups;
+        this._tombstones = tombstones ?? ClusterLocalStateProvider._defaultTombstones;
     }
 
     /**
@@ -195,7 +215,30 @@ export class ClusterLocalStateProvider {
             entries.push({key: `node_group_share:${share.id}`, value: share, global: true});
         }
 
+        // Pending deletes (Cluster/Mesh epic 9.5.12.8 fix): re-announce every recorded
+        // tombstone as a gossip delete on every sync until it's pruned, so the delete
+        // keeps winning the LWW comparison against any node that hasn't yet converged it
+        // into its own local DB and stopped re-publishing its stale copy.
+        for (const tombstone of await this._tombstones()) {
+            entries.push({key: tombstone, value: null, global: true, deleted: true});
+        }
+
         return entries;
+    }
+
+    /**
+     * The gossip keys of pending tombstones from the Hub's own DB, pruning ones old
+     * enough that every node has had a generous window to converge the delete.
+     */
+    private static async _defaultTombstones(): Promise<string[]> {
+        const repo = ClusterGossipTombstoneServiceDB.getInstance().getRepository();
+
+        await repo.createQueryBuilder()
+        .delete()
+        .where('deleted_at < :cutoff', {cutoff: Date.now() - TOMBSTONE_RETENTION_MS})
+        .execute();
+
+        return (await repo.find()).map((tombstone) => tombstone.gossip_key);
     }
 
     /**

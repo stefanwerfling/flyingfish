@@ -1,6 +1,7 @@
 import {PluginManager} from '@stefanwerfling/figtree';
 import {AcmeDnsTempRecord} from './Entity/AcmeDnsTempRecord.js';
 import {CaCertificate} from './Entity/CaCertificate.js';
+import {ClusterGossipTombstone} from './Entity/ClusterGossipTombstone.js';
 import {ClusterNodeGroup} from './Entity/ClusterNodeGroup.js';
 import {ClusterNodeGroupMember} from './Entity/ClusterNodeGroupMember.js';
 import {ClusterNodeGroupShare} from './Entity/ClusterNodeGroupShare.js';
@@ -64,6 +65,7 @@ export class DBEntitiesLoader {
         const list: MixedList<Function | string | EntitySchema> = [
             AcmeDnsTempRecord,
             CaCertificate,
+            ClusterGossipTombstone,
             ClusterNodeGroup,
             ClusterNodeGroupMember,
             ClusterNodeGroupShare,

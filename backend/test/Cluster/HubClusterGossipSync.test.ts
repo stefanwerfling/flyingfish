@@ -65,7 +65,8 @@ describe('HubClusterGossipSync', () => {
             ],
             async() => undefined,
             async() => ({groups: [], roles: [], permissions: [], rolePermissions: [], assignments: []}),
-            async() => ({groups: [], members: [], shares: []})
+            async() => ({groups: [], members: [], shares: []}),
+            async() => []
         );
         const aggregate = new ClusterAggregateStore();
 

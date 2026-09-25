@@ -39,6 +39,7 @@ import {AddDhcpRaParams1789700000000} from '../../src/inc/Db/MariaDb/migrations/
 import {AddClusterNodeGroups1789800000000} from '../../src/inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
 import {AddClusterNodeGroupShares1789900000000} from '../../src/inc/Db/MariaDb/migrations/1789900000000-AddClusterNodeGroupShares.js';
 import {AddRbacResourceUuid1790000000000} from '../../src/inc/Db/MariaDb/migrations/1790000000000-AddRbacResourceUuid.js';
+import {AddClusterGossipTombstone1790100000000} from '../../src/inc/Db/MariaDb/migrations/1790100000000-AddClusterGossipTombstone.js';
 import {InitialSchema1787961600000} from '../../src/inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
 const connectionOptions = (): {type: 'mysql'; host: string; port: number; username: string; password: string;} => ({
@@ -68,7 +69,8 @@ const ALL_MIGRATIONS: (new () => MigrationInterface)[] = [
     AddDhcpRaParams1789700000000,
     AddClusterNodeGroups1789800000000,
     AddClusterNodeGroupShares1789900000000,
-    AddRbacResourceUuid1790000000000
+    AddRbacResourceUuid1790000000000,
+    AddClusterGossipTombstone1790100000000
 ];
 
 /**
@@ -224,10 +226,13 @@ describe('cluster node-groups migration + manager + converge (integration, real 
     test('convergence: a gossiped node-group view upserts into the local DB (create then update, no dup)', async() => {
         const converger = new ClusterNodeGroupConverger();
 
+        const emptyTombstones = {groupIds: [], memberIds: [], shareIds: []};
+
         await converger.import({
             groups: [{id: 'conv-ng1', name: 'RemoteZone', description: 'from node B', color: '#1f9d63'}],
             members: [{id: 'conv-ngm1', nodeUid: 'node-x', groupUuid: 'conv-ng1'}],
-            shares: [{id: 'conv-ngs1', nodeUid: 'node-x', groupUuid: 'conv-ng1', resourceType: 'domain', level: 'read'}]
+            shares: [{id: 'conv-ngs1', nodeUid: 'node-x', groupUuid: 'conv-ng1', resourceType: 'domain', level: 'read'}],
+            tombstones: emptyTombstones
         });
 
         const [group] = await dataSource.query('SELECT * FROM `cluster_node_group` WHERE `id` = ?', ['conv-ng1']);
@@ -241,7 +246,8 @@ describe('cluster node-groups migration + manager + converge (integration, real 
         await converger.import({
             groups: [{id: 'conv-ng1', name: 'Renamed', description: 'x', color: '#c9871b'}],
             members: [],
-            shares: [{id: 'conv-ngs1', nodeUid: 'node-x', groupUuid: 'conv-ng1', resourceType: 'domain', level: 'write'}]
+            shares: [{id: 'conv-ngs1', nodeUid: 'node-x', groupUuid: 'conv-ng1', resourceType: 'domain', level: 'write'}],
+            tombstones: emptyTombstones
         });
         const groups = await dataSource.query('SELECT * FROM `cluster_node_group` WHERE `id` = ?', ['conv-ng1']);
         expect(groups).toHaveLength(1);
@@ -249,6 +255,30 @@ describe('cluster node-groups migration + manager + converge (integration, real 
         const shares = await dataSource.query('SELECT * FROM `cluster_node_group_share` WHERE `id` = ?', ['conv-ngs1']);
         expect(shares).toHaveLength(1);
         expect(shares[0].level).toBe('write');
+    });
+
+    test('convergence: a tombstoned id is DELETED from the local DB, even though the row was never deleted locally (9.5.12.8 fix)', async() => {
+        const converger = new ClusterNodeGroupConverger();
+
+        // Converge a row in as if it came from another node (mirrors a node that
+        // received a share via gossip but never issued the delete itself).
+        await converger.import({
+            groups: [],
+            members: [],
+            shares: [{id: 'conv-ngs2', nodeUid: 'node-y', groupUuid: 'conv-ng1', resourceType: 'domain', level: 'write'}],
+            tombstones: {groupIds: [], memberIds: [], shareIds: []}
+        });
+        expect(await dataSource.query('SELECT * FROM `cluster_node_group_share` WHERE `id` = ?', ['conv-ngs2'])).toHaveLength(1);
+
+        // A later sync learns this id was tombstoned elsewhere — even with NO live
+        // entry for it in the same batch, the local copy must be deleted.
+        await converger.import({
+            groups: [],
+            members: [],
+            shares: [],
+            tombstones: {groupIds: [], memberIds: [], shareIds: ['conv-ngs2']}
+        });
+        expect(await dataSource.query('SELECT * FROM `cluster_node_group_share` WHERE `id` = ?', ['conv-ngs2'])).toHaveLength(0);
     });
 
     test('the services read back what the manager wrote', async() => {

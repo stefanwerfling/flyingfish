@@ -16,11 +16,11 @@ import {
  * sees the whole cluster's policy — robust when offline / after a restart, and correct
  * for a single node with no mesh (the aggregate then just carries the node's own rows).
  *
- * UPSERT-ONLY (create + update). DELETE propagation is deliberately out of scope here:
- * the pushed aggregate carries only live entries (no tombstones), so an absent row is
- * indistinguishable from a not-yet-propagated local write — deleting on that basis
- * would be unsafe. Delete/revoke convergence (via tombstone propagation) is a
- * follow-up; until then a revoked policy row is not removed from other nodes.
+ * UPSERT for live rows, DELETE for tombstoned ids (Cluster/Mesh epic 9.5.12.8 fix): a
+ * revoked policy row is announced as an explicit gossip tombstone (see
+ * {@link ClusterLocalStateProvider}), not inferred from an absent row — so every node
+ * actually removes its own converged copy instead of some node's still-intact local
+ * copy re-asserting it forever.
  *
  * `rbac_user_group` is never converged — it is node-local (binds local users to global
  * groups) and is not part of the shared policy.
@@ -73,6 +73,28 @@ export class ClusterRbacConverger {
                 })),
                 ['id']
             );
+        }
+
+        // Apply tombstones LAST (after upserts), leaf join tables before the rows they
+        // reference — mirrors the delete order the Rbac management routes themselves use.
+        if (view.tombstones.rolePermissionIds.length > 0) {
+            await RbacRolePermissionServiceDB.getInstance().getRepository().delete(view.tombstones.rolePermissionIds);
+        }
+
+        if (view.tombstones.assignmentIds.length > 0) {
+            await RbacRoleAssignmentServiceDB.getInstance().getRepository().delete(view.tombstones.assignmentIds);
+        }
+
+        if (view.tombstones.permissionIds.length > 0) {
+            await RbacPermissionServiceDB.getInstance().getRepository().delete(view.tombstones.permissionIds);
+        }
+
+        if (view.tombstones.roleIds.length > 0) {
+            await RbacRoleServiceDB.getInstance().getRepository().delete(view.tombstones.roleIds);
+        }
+
+        if (view.tombstones.groupIds.length > 0) {
+            await RbacGroupServiceDB.getInstance().getRepository().delete(view.tombstones.groupIds);
         }
     }
 

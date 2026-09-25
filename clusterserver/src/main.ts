@@ -552,7 +552,14 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
                         // their key so every node converges on it; per-node resources are
                         // namespaced by this node's uid (Cluster/Mesh 9.5.12, A+C).
                         const storeKey = entry.global === true ? entry.key : clusterGossipNamespaceKey(selfNodeUid, entry.key);
-                        gossipStore.setIfChanged(storeKey, entry.value);
+
+                        // A tombstoned entry is a pending delete the Hub wants gossiped
+                        // (9.5.12.8 fix), not a live value to set.
+                        if (entry.deleted === true) {
+                            gossipStore.remove(storeKey);
+                        } else {
+                            gossipStore.setIfChanged(storeKey, entry.value);
+                        }
                     }
                 } catch (error) {
                     Logger.getLogger().warn('Cluster Hub state pull failed (continuing; will retry next interval)', error);
@@ -561,7 +568,13 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
                 gossip.sync();
 
                 try {
-                    await gossipSync.pushAggregate(gossipStore.liveEntries().map((entry) => ({key: entry.key, value: entry.value})));
+                    // Push ALL entries, tombstones included (not just liveEntries()), so
+                    // the Hub's converger can also delete a tombstoned id from its own
+                    // local DB (9.5.12.8 fix) — without that, a node that never issued a
+                    // delete itself would keep re-publishing its still-intact copy.
+                    await gossipSync.pushAggregate(gossipStore.entries().map((entry) => (
+                        entry.deleted ? {key: entry.key, value: null, deleted: true} : {key: entry.key, value: entry.value}
+                    )));
                 } catch (error) {
                     Logger.getLogger().warn('Cluster Hub aggregate push failed (continuing; will retry next interval)', error);
                 }

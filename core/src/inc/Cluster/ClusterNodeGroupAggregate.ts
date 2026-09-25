@@ -17,12 +17,25 @@ export type ClusterNodeGroupMemberEntry = {id: string; nodeUid: string; groupUui
 export type ClusterNodeGroupShareEntry = {id: string; nodeUid: string; groupUuid: string; resourceType: string; level: string;};
 
 /**
+ * Ids tombstoned (deleted) somewhere in the cluster since the local DB last converged
+ * (Cluster/Mesh epic 9.5.12.8 fix) — a node's converger deletes these from its own
+ * local tables too, so a row that's been deleted stops being re-published from
+ * whichever node still has an un-pruned local copy of it.
+ */
+export type ClusterNodeGroupTombstones = {
+    groupIds: string[];
+    memberIds: string[];
+    shareIds: string[];
+};
+
+/**
  * The whole cluster-wide node-group view.
  */
 export type ClusterNodeGroupView = {
     groups: ClusterNodeGroupEntry[];
     members: ClusterNodeGroupMemberEntry[];
     shares: ClusterNodeGroupShareEntry[];
+    tombstones: ClusterNodeGroupTombstones;
 };
 
 /**
@@ -48,9 +61,23 @@ const toStr = (value: unknown): string => typeof value === 'string' ? value : ''
  * @param entries - the cluster-wide aggregate entries
  */
 export const aggregateClusterNodeGroups = (entries: readonly ClusterGossipStateEntry[]): ClusterNodeGroupView => {
-    const view: ClusterNodeGroupView = {groups: [], members: [], shares: []};
+    const view: ClusterNodeGroupView = {groups: [], members: [], shares: [], tombstones: {groupIds: [], memberIds: [], shareIds: []}};
 
     for (const entry of entries) {
+        // A tombstone carries no value (see ClusterGossipStore.remove) — its id lives
+        // only in the key, which every prefix here already encodes.
+        if (entry.deleted === true) {
+            if (entry.key.startsWith(KEY_MEMBER)) {
+                view.tombstones.memberIds.push(entry.key.slice(KEY_MEMBER.length));
+            } else if (entry.key.startsWith(KEY_SHARE)) {
+                view.tombstones.shareIds.push(entry.key.slice(KEY_SHARE.length));
+            } else if (entry.key.startsWith(KEY_GROUP)) {
+                view.tombstones.groupIds.push(entry.key.slice(KEY_GROUP.length));
+            }
+
+            continue;
+        }
+
         const value = entry.value;
 
         if (value === null || typeof value !== 'object') {

@@ -16,6 +16,7 @@ import {AddDhcpRaParams1789700000000} from '../../../inc/Db/MariaDb/migrations/1
 import {AddClusterNodeGroups1789800000000} from '../../../inc/Db/MariaDb/migrations/1789800000000-AddClusterNodeGroups.js';
 import {AddClusterNodeGroupShares1789900000000} from '../../../inc/Db/MariaDb/migrations/1789900000000-AddClusterNodeGroupShares.js';
 import {AddRbacResourceUuid1790000000000} from '../../../inc/Db/MariaDb/migrations/1790000000000-AddRbacResourceUuid.js';
+import {AddClusterGossipTombstone1790100000000} from '../../../inc/Db/MariaDb/migrations/1790100000000-AddClusterGossipTombstone.js';
 import {AddPkiTables1788500000000} from '../../../inc/Db/MariaDb/migrations/1788500000000-AddPkiTables.js';
 import {InitialSchema1787961600000} from '../../../inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
@@ -60,7 +61,8 @@ export class DBLoader extends CoreDBLoader {
             AddDhcpRaParams1789700000000,
             AddClusterNodeGroups1789800000000,
             AddClusterNodeGroupShares1789900000000,
-            AddRbacResourceUuid1790000000000
+            AddRbacResourceUuid1790000000000,
+            AddClusterGossipTombstone1790100000000
         ];
     }
 

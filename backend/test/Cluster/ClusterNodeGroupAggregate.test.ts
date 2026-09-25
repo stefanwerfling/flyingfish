@@ -12,6 +12,7 @@ import {
 } from 'flyingfish_core';
 
 const entry = (key: string, value: unknown): ClusterGossipStateEntry => ({key: key, value: value});
+const tombstone = (key: string): ClusterGossipStateEntry => ({key: key, value: null, deleted: true});
 
 describe('aggregateClusterNodeGroups', () => {
     test('collects groups + members from their global uuid keys, ordered by id', () => {
@@ -72,5 +73,21 @@ describe('aggregateClusterNodeGroups', () => {
         // ordered by id (s1 before s2)
         expect(view.shares.map((share) => share.id)).toEqual(['s1', 's2']);
         expect(view.shares[0]).toEqual({id: 's1', nodeUid: 'node-a', groupUuid: 'g1', resourceType: 'domain', level: 'read'});
+    });
+
+    test('a tombstoned entry is excluded from the live view and its id collected into tombstones, by prefix (9.5.12.8 fix)', () => {
+        const view = aggregateClusterNodeGroups([
+            entry('node_group:g1', {id: 'g1', name: 'Core', description: '', color: ''}),
+            tombstone('node_group:g2'),
+            entry('node_group_member:m1', {id: 'm1', nodeUid: 'node-a', groupUuid: 'g1'}),
+            tombstone('node_group_member:m2'),
+            entry('node_group_share:s1', {id: 's1', nodeUid: 'node-a', groupUuid: 'g1', resourceType: 'domain', level: 'write'}),
+            tombstone('node_group_share:s2')
+        ]);
+
+        expect(view.groups.map((group) => group.id)).toEqual(['g1']);
+        expect(view.members.map((member) => member.id)).toEqual(['m1']);
+        expect(view.shares.map((share) => share.id)).toEqual(['s1']);
+        expect(view.tombstones).toEqual({groupIds: ['g2'], memberIds: ['m2'], shareIds: ['s2']});
     });
 });

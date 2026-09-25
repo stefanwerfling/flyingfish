@@ -6,6 +6,7 @@ import {
     ClusterNodeGroupShareDB,
     ClusterNodeGroupShareServiceDB
 } from 'flyingfish_core';
+import {ClusterTombstoneRecorder} from './ClusterTombstoneRecorder.js';
 
 /**
  * The write side of the cluster node groups + sharing rules (Cluster/Mesh epic
@@ -39,13 +40,29 @@ export class ClusterNodeGroupManager {
 
     /**
      * Delete a node group and all its memberships + sharing rules (dangling references
-     * would otherwise point at a gone group).
+     * would otherwise point at a gone group). Tombstones every deleted id so the delete
+     * durably converges cluster-wide (9.5.12.8 fix), not just on this node.
      * @param id - the group id
      */
     public async deleteGroup(id: string): Promise<void> {
+        const members = await ClusterNodeGroupMemberServiceDB.getInstance().getRepository().find({where: {group_uuid: id}});
+        const shares = await ClusterNodeGroupShareServiceDB.getInstance().getRepository().find({where: {group_uuid: id}});
+
         await ClusterNodeGroupMemberServiceDB.getInstance().getRepository().delete({group_uuid: id});
         await ClusterNodeGroupShareServiceDB.getInstance().getRepository().delete({group_uuid: id});
         await ClusterNodeGroupServiceDB.getInstance().remove(id);
+
+        for (const member of members) {
+            // eslint-disable-next-line no-await-in-loop -- a handful of rows at most; sequential keeps this simple
+            await ClusterTombstoneRecorder.record(`node_group_member:${member.id}`);
+        }
+
+        for (const share of shares) {
+            // eslint-disable-next-line no-await-in-loop -- a handful of rows at most; sequential keeps this simple
+            await ClusterTombstoneRecorder.record(`node_group_share:${share.id}`);
+        }
+
+        await ClusterTombstoneRecorder.record(`node_group:${id}`);
     }
 
     /**
@@ -72,6 +89,7 @@ export class ClusterNodeGroupManager {
 
         if (existing !== null) {
             await service.remove(existing.id);
+            await ClusterTombstoneRecorder.record(`node_group_member:${existing.id}`);
         }
     }
 
@@ -103,7 +121,10 @@ export class ClusterNodeGroupManager {
 
     /**
      * Revoke a sharing rule (default-deny: the resource type stops crossing the node
-     * boundary to the group). A no-op if no such rule exists.
+     * boundary to the group). A no-op if no such rule exists. Tombstones the deleted id
+     * so the revoke durably converges cluster-wide (9.5.12.8 fix) — without this, a node
+     * that already had this share converged into its own DB would keep re-publishing its
+     * stale copy and silently resurrect it.
      * @param nodeUid - the sharing node's mesh UUID
      * @param groupUuid - the target group id
      * @param resourceType - the shared resource type
@@ -116,6 +137,7 @@ export class ClusterNodeGroupManager {
 
         if (existing !== null) {
             await service.remove(existing.id);
+            await ClusterTombstoneRecorder.record(`node_group_share:${existing.id}`);
         }
     }
 

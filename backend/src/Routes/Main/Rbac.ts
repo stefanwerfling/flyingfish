@@ -30,6 +30,7 @@ import {
     StatusCodes
 } from 'flyingfish_schemas';
 import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPermission.js';
+import {ClusterTombstoneRecorder} from '../../Application/Hub/ClusterTombstoneRecorder.js';
 
 /**
  * Rbac — the RBAC management API (epic 9.5.13, slice 4): CRUD over groups, roles,
@@ -140,26 +141,48 @@ export class Rbac extends DefaultRoute {
             return {statusCode: StatusCodes.OK};
         }, {description: 'Bind a permission to a role', bodySchema: SchemaRbacRolePermissionEntry, responseBodySchema: SchemaDefaultReturn});
 
+        // Deletes below record a gossip tombstone for their id (Cluster/Mesh epic
+        // 9.5.12.8 fix) — group/role/permission/assignment/role-permission are all
+        // cluster-global shared policy rows (see ClusterRbacConverger), so a plain local
+        // delete would leave every other node's already-converged copy re-publishing
+        // itself forever. `rbac_user_group` (membership) is node-local and never
+        // gossiped, so its delete below does NOT tombstone.
         this._post('/json/rbac/group/delete', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
-            await RbacGroupServiceDB.getInstance().remove(data.body!.id);
+            const result = await RbacGroupServiceDB.getInstance().remove(data.body!.id);
+
+            if (result.affected) {
+                await ClusterTombstoneRecorder.record(`rbac_group:${data.body!.id}`);
+            }
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'Delete a group', bodySchema: SchemaRbacIdRequest, responseBodySchema: SchemaDefaultReturn});
 
         this._post('/json/rbac/role/delete', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
-            await RbacRoleServiceDB.getInstance().remove(data.body!.id);
+            const result = await RbacRoleServiceDB.getInstance().remove(data.body!.id);
+
+            if (result.affected) {
+                await ClusterTombstoneRecorder.record(`rbac_role:${data.body!.id}`);
+            }
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'Delete a role', bodySchema: SchemaRbacIdRequest, responseBodySchema: SchemaDefaultReturn});
 
         this._post('/json/rbac/permission/delete', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
-            await RbacPermissionServiceDB.getInstance().remove(data.body!.id);
+            const result = await RbacPermissionServiceDB.getInstance().remove(data.body!.id);
+
+            if (result.affected) {
+                await ClusterTombstoneRecorder.record(`rbac_permission:${data.body!.id}`);
+            }
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'Delete a permission', bodySchema: SchemaRbacIdRequest, responseBodySchema: SchemaDefaultReturn});
 
         this._post('/json/rbac/assignment/delete', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
-            await RbacRoleAssignmentServiceDB.getInstance().remove(data.body!.id);
+            const result = await RbacRoleAssignmentServiceDB.getInstance().remove(data.body!.id);
+
+            if (result.affected) {
+                await ClusterTombstoneRecorder.record(`rbac_role_assignment:${data.body!.id}`);
+            }
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'Delete a role grant', bodySchema: SchemaRbacIdRequest, responseBodySchema: SchemaDefaultReturn});
@@ -171,7 +194,11 @@ export class Rbac extends DefaultRoute {
         }, {description: 'Remove a user from a group', bodySchema: SchemaRbacMembershipIdRequest, responseBodySchema: SchemaDefaultReturn});
 
         this._post('/json/rbac/rolepermission/delete', requirePermission('rbac.manage'), async(_req, _res, data): Promise<DefaultReturn> => {
-            await RbacRolePermissionServiceDB.getInstance().remove(data.body!.id);
+            const result = await RbacRolePermissionServiceDB.getInstance().remove(data.body!.id);
+
+            if (result.affected) {
+                await ClusterTombstoneRecorder.record(`rbac_role_permission:${data.body!.id}`);
+            }
 
             return {statusCode: StatusCodes.OK};
         }, {description: 'Unbind a permission from a role', bodySchema: SchemaRbacIdRequest, responseBodySchema: SchemaDefaultReturn});
