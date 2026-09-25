@@ -2,6 +2,7 @@ import {ContentCol, ContentColSize} from 'bambooo';
 import {ClusterEffectiveAccessEntry, ClusterNode, ClusterNodeGroup, ClusterNodeGroupMember, ClusterNodeGroupShare, StatusCodes} from 'flyingfish_schemas';
 import {Registry as RegistryAPI} from '../Api/Registry.js';
 import {UtilColor} from '../Utils/UtilColor.js';
+import {FfxButton, FfxCheckboxRow, FfxColorInput, FfxInput, FfxSelect} from '../Components/FfxControls.js';
 import {BasePage} from './BasePage.js';
 import '../Components/tree-shell.css';
 
@@ -149,21 +150,23 @@ export class ClusterView extends BasePage {
         jQuery('<div class="ffx-secnote">Reads a peer\'s domains over the mesh — only works if that node shares `domain` with a group you hold a matching RBAC grant on (Groups tab).</div>').appendTo(mount);
 
         const form = jQuery('<div style="display:flex;gap:8px;align-items:center"></div>').appendTo(mount);
-        const nodeSelect = jQuery('<select style="padding:6px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12.5px"></select>').appendTo(form);
 
-        for (const peer of peers) {
-            jQuery(`<option value="${ClusterView._esc(peer.nodeUid)}">${ClusterView._esc(peer.host || peer.commonName || peer.nodeUid)}</option>`).appendTo(nodeSelect);
-        }
+        const nodeSelect = new FfxSelect('field', peers.map((peer) => ({
+            key: peer.nodeUid,
+            label: peer.host || peer.commonName || peer.nodeUid
+        })));
+        nodeSelect.getElement().appendTo(form);
 
-        const loadBtn = jQuery('<button style="padding:6px 14px;border:0;border-radius:6px;background:#0f8a8a;color:#fff;cursor:pointer;font-size:12.5px;font-weight:600">Load domains</button>').appendTo(form);
+        const loadBtn = new FfxButton('Load domains', 'primary', 'field');
+        loadBtn.getElement().appendTo(form);
         const result = jQuery('<div style="margin-top:10px"></div>').appendTo(mount);
 
-        loadBtn.on('click', async(): Promise<void> => {
+        loadBtn.onClick(async(): Promise<void> => {
             result.empty();
-            loadBtn.prop('disabled', true);
+            loadBtn.setDisabled(true);
 
             try {
-                const response = await RegistryAPI.getClusterRemoteDomains(String(nodeSelect.val()));
+                const response = await RegistryAPI.getClusterRemoteDomains(nodeSelect.getValue());
 
                 if (response.statusCode === StatusCodes.UNAUTHORIZED) {
                     ClusterView._empty(result, 'Not authorized — that node does not share domains with a group you hold a matching RBAC grant on.');
@@ -182,7 +185,7 @@ export class ClusterView extends BasePage {
                 ClusterView._empty(result, 'Could not read that node\'s domains.');
             }
 
-            loadBtn.prop('disabled', false);
+            loadBtn.setDisabled(false);
         });
     }
 
@@ -284,15 +287,24 @@ export class ClusterView extends BasePage {
         const card = jQuery('<div class="ffx-card" style="max-width:640px;margin-bottom:16px"></div>').appendTo(mount);
         const bd = jQuery('<div class="bd" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>').appendTo(card);
 
-        const nameInput = jQuery('<input type="text" placeholder="Name" style="flex:1;min-width:160px;padding:7px 10px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08)">').appendTo(bd);
-        const descInput = jQuery('<input type="text" placeholder="Description (optional)" style="flex:2;min-width:200px;padding:7px 10px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08)">').appendTo(bd);
-        const colorInput = jQuery('<input type="color" style="width:38px;height:32px;padding:0;border:0;background:none;cursor:pointer">').appendTo(bd);
-        const addBtn = jQuery('<button style="padding:7px 14px;border:0;border-radius:6px;background:#0f8a8a;color:#fff;cursor:pointer;font-weight:600">Create group</button>').appendTo(bd);
+        const nameInput = new FfxInput('form', 'Name');
+        nameInput.setGrow('1', '160px');
+        nameInput.getElement().appendTo(bd);
 
-        colorInput.val(UtilColor.getColor(`group-${Date.now()}`));
+        const descInput = new FfxInput('form', 'Description (optional)');
+        descInput.setGrow('2', '200px');
+        descInput.getElement().appendTo(bd);
 
-        addBtn.on('click', async(): Promise<void> => {
-            const name = String(nameInput.val() ?? '').trim();
+        const colorInput = new FfxColorInput();
+        colorInput.getElement().appendTo(bd);
+
+        const addBtn = new FfxButton('Create group', 'primary', 'form');
+        addBtn.getElement().appendTo(bd);
+
+        colorInput.setValue(UtilColor.getColor(`group-${Date.now()}`));
+
+        addBtn.onClick(async(): Promise<void> => {
+            const name = nameInput.getValue();
 
             if (name === '') {
                 errOut.text('Name is required.');
@@ -301,22 +313,22 @@ export class ClusterView extends BasePage {
             }
 
             errOut.text('');
-            addBtn.prop('disabled', true);
+            addBtn.setDisabled(true);
 
             try {
                 await RegistryAPI.saveClusterNodeGroup({
                     name,
-                    description: String(descInput.val() ?? ''),
-                    color: String(colorInput.val() ?? '')
+                    description: descInput.getValue(),
+                    color: colorInput.getValue()
                 });
-                nameInput.val('');
-                descInput.val('');
+                nameInput.setValue('');
+                descInput.setValue('');
                 await onSaved();
             } catch (e) {
                 errOut.text('Could not create the group — needs the cluster.manage permission.');
             }
 
-            addBtn.prop('disabled', false);
+            addBtn.setDisabled(false);
         });
     }
 
@@ -394,23 +406,25 @@ export class ClusterView extends BasePage {
             jQuery(`<span class="t">${ClusterView._esc(group.name)}</span>`).appendTo(hd);
             jQuery(`<span style="color:var(--faint);font-size:12px;margin-left:6px">${memberUids.size} node${memberUids.size === 1 ? '' : 's'}</span>`).appendTo(hd);
 
-            const editBtn = jQuery('<button style="margin-left:auto;padding:4px 10px;border:0;border-radius:6px;background:rgba(127,127,127,.14);color:var(--soft);cursor:pointer;font-size:12px">Edit</button>').appendTo(hd);
-            const delBtn = jQuery('<button style="padding:4px 10px;border:0;border-radius:6px;background:rgba(192,57,43,.14);color:#c0392b;cursor:pointer;font-size:12px">Delete</button>').appendTo(hd);
+            const editBtn = new FfxButton('Edit', 'neutral', 'list');
+            editBtn.getElement().css('margin-left', 'auto').appendTo(hd);
+            const delBtn = new FfxButton('Delete', 'danger', 'list');
+            delBtn.getElement().appendTo(hd);
 
-            editBtn.on('click', (): void => renderEdit());
+            editBtn.onClick((): void => renderEdit());
 
-            delBtn.on('click', async(): Promise<void> => {
+            delBtn.onClick(async(): Promise<void> => {
                 if (!window.confirm(`Delete the group "${group.name}"? This removes all its memberships.`)) {
                     return;
                 }
 
-                delBtn.prop('disabled', true);
+                delBtn.setDisabled(true);
 
                 try {
                     await RegistryAPI.deleteClusterNodeGroup({id: group.id});
                     await onChange();
                 } catch (e) {
-                    delBtn.prop('disabled', false);
+                    delBtn.setDisabled(false);
                 }
             });
 
@@ -427,23 +441,21 @@ export class ClusterView extends BasePage {
             const list = jQuery('<div style="display:flex;flex-direction:column;gap:4px"></div>').appendTo(bd);
 
             for (const node of nodes) {
-                const label = jQuery('<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer"></label>').appendTo(list);
-                const checkbox = jQuery('<input type="checkbox">').appendTo(label);
+                const row = new FfxCheckboxRow(node.host || node.commonName || node.nodeUid);
+                row.setChecked(memberUids.has(node.nodeUid));
+                row.getElement().appendTo(list);
 
-                checkbox.prop('checked', memberUids.has(node.nodeUid));
-                jQuery(`<span>${ClusterView._esc(node.host || node.commonName || node.nodeUid)}</span>`).appendTo(label);
+                row.onChange(async(): Promise<void> => {
+                    const member = row.isChecked();
 
-                checkbox.on('change', async(): Promise<void> => {
-                    const member = checkbox.prop('checked');
-
-                    checkbox.prop('disabled', true);
+                    row.setDisabled(true);
 
                     try {
                         await RegistryAPI.setClusterNodeGroupMembership({nodeUid: node.nodeUid, groupUuid: group.id, member});
                         await onChange();
                     } catch (e) {
-                        checkbox.prop('checked', !member);
-                        checkbox.prop('disabled', false);
+                        row.setChecked(!member);
+                        row.setDisabled(false);
                     }
                 });
             }
@@ -458,21 +470,34 @@ export class ClusterView extends BasePage {
             jQuery('<span class="t">Edit group</span>').appendTo(hd);
 
             const form = jQuery('<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>').appendTo(bd);
-            const nameInput = jQuery('<input type="text" placeholder="Name" style="flex:1;min-width:160px;padding:7px 10px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08)">').appendTo(form);
-            const descInput = jQuery('<input type="text" placeholder="Description (optional)" style="flex:2;min-width:200px;padding:7px 10px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08)">').appendTo(form);
-            const colorInput = jQuery('<input type="color" style="width:38px;height:32px;padding:0;border:0;background:none;cursor:pointer">').appendTo(form);
-            const saveBtn = jQuery('<button style="padding:7px 14px;border:0;border-radius:6px;background:#0f8a8a;color:#fff;cursor:pointer;font-weight:600">Save</button>').appendTo(form);
-            const cancelBtn = jQuery('<button style="padding:7px 14px;border:0;border-radius:6px;background:rgba(127,127,127,.14);color:var(--soft);cursor:pointer">Cancel</button>').appendTo(form);
+
+            const nameInput = new FfxInput('form', 'Name');
+            nameInput.setGrow('1', '160px');
+            nameInput.getElement().appendTo(form);
+
+            const descInput = new FfxInput('form', 'Description (optional)');
+            descInput.setGrow('2', '200px');
+            descInput.getElement().appendTo(form);
+
+            const colorInput = new FfxColorInput();
+            colorInput.getElement().appendTo(form);
+
+            const saveBtn = new FfxButton('Save', 'primary', 'form');
+            saveBtn.getElement().appendTo(form);
+
+            const cancelBtn = new FfxButton('Cancel', 'neutral', 'form');
+            cancelBtn.getElement().appendTo(form);
+
             const err = jQuery('<div class="ffx-secnote" style="color:#c0392b;width:100%;margin:6px 0 0"></div>').appendTo(bd);
 
-            nameInput.val(group.name);
-            descInput.val(group.description);
-            colorInput.val(group.color !== '' ? group.color : UtilColor.getColor(group.id));
+            nameInput.setValue(group.name);
+            descInput.setValue(group.description);
+            colorInput.setValue(group.color !== '' ? group.color : UtilColor.getColor(group.id));
 
-            cancelBtn.on('click', (): void => renderView());
+            cancelBtn.onClick((): void => renderView());
 
-            saveBtn.on('click', async(): Promise<void> => {
-                const name = String(nameInput.val() ?? '').trim();
+            saveBtn.onClick(async(): Promise<void> => {
+                const name = nameInput.getValue();
 
                 if (name === '') {
                     err.text('Name is required.');
@@ -481,19 +506,19 @@ export class ClusterView extends BasePage {
                 }
 
                 err.text('');
-                saveBtn.prop('disabled', true);
+                saveBtn.setDisabled(true);
 
                 try {
                     await RegistryAPI.saveClusterNodeGroup({
                         id: group.id,
                         name,
-                        description: String(descInput.val() ?? ''),
-                        color: String(colorInput.val() ?? '')
+                        description: descInput.getValue(),
+                        color: colorInput.getValue()
                     });
                     await onChange();
                 } catch (e) {
                     err.text('Could not save the group — needs the cluster.manage permission.');
-                    saveBtn.prop('disabled', false);
+                    saveBtn.setDisabled(false);
                 }
             });
         };
@@ -530,33 +555,33 @@ export class ClusterView extends BasePage {
 
             jQuery(`<span style="flex:1">${ClusterView._esc(sourceNode?.host || sourceNode?.commonName || share.nodeUid)} → <b>${ClusterView._esc(share.resourceType)}</b></span>`).appendTo(row);
 
-            const levelSelect = jQuery('<select style="padding:3px 6px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px"><option value="read">read</option><option value="write">write</option></select>').appendTo(row);
-            levelSelect.val(share.level);
+            const levelSelect = new FfxSelect('list', ClusterView._shareLevelOptions);
+            levelSelect.setValue(share.level);
+            levelSelect.getElement().appendTo(row);
 
-            const revokeBtn = jQuery('<button style="padding:3px 8px;border:0;border-radius:6px;background:rgba(192,57,43,.14);color:#c0392b;cursor:pointer;font-size:11.5px">Revoke</button>').appendTo(row);
+            const revokeBtn = new FfxButton('Revoke', 'danger', 'xs');
+            revokeBtn.getElement().appendTo(row);
 
-            levelSelect.on('change', async(): Promise<void> => {
-                const level = String(levelSelect.val());
-
-                levelSelect.prop('disabled', true);
+            levelSelect.onChange(async(level): Promise<void> => {
+                levelSelect.getElement().prop('disabled', true);
 
                 try {
                     await RegistryAPI.setClusterNodeGroupShare({nodeUid: share.nodeUid, groupUuid: group.id, resourceType: share.resourceType, level});
                     await onChange();
                 } catch (e) {
-                    levelSelect.val(share.level);
-                    levelSelect.prop('disabled', false);
+                    levelSelect.setValue(share.level);
+                    levelSelect.getElement().prop('disabled', false);
                 }
             });
 
-            revokeBtn.on('click', async(): Promise<void> => {
-                revokeBtn.prop('disabled', true);
+            revokeBtn.onClick(async(): Promise<void> => {
+                revokeBtn.setDisabled(true);
 
                 try {
                     await RegistryAPI.deleteClusterNodeGroupShare({nodeUid: share.nodeUid, groupUuid: group.id, resourceType: share.resourceType});
                     await onChange();
                 } catch (e) {
-                    revokeBtn.prop('disabled', false);
+                    revokeBtn.setDisabled(false);
                 }
             });
         }
@@ -566,19 +591,27 @@ export class ClusterView extends BasePage {
         }
 
         const form = jQuery('<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>').appendTo(mount);
-        const nodeSelect = jQuery('<select style="padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px"></select>').appendTo(form);
 
-        for (const node of nodes) {
-            jQuery(`<option value="${ClusterView._esc(node.nodeUid)}">${ClusterView._esc(node.host || node.commonName || node.nodeUid)}</option>`).appendTo(nodeSelect);
-        }
+        const nodeSelect = new FfxSelect('compact', nodes.map((node) => ({
+            key: node.nodeUid,
+            label: node.host || node.commonName || node.nodeUid
+        })));
+        nodeSelect.getElement().appendTo(form);
 
-        const typeInput = jQuery('<input type="text" placeholder="Resource type (e.g. domain)" style="flex:1;min-width:140px;padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px">').appendTo(form);
-        const levelInput = jQuery('<select style="padding:5px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12px"><option value="read">read</option><option value="write">write</option></select>').appendTo(form);
-        const shareBtn = jQuery('<button style="padding:5px 12px;border:0;border-radius:6px;background:#0f8a8a;color:#fff;cursor:pointer;font-size:12px;font-weight:600">Share</button>').appendTo(form);
+        const typeInput = new FfxInput('compact', 'Resource type (e.g. domain)');
+        typeInput.setGrow('1', '140px');
+        typeInput.getElement().appendTo(form);
+
+        const levelInput = new FfxSelect('compact', ClusterView._shareLevelOptions);
+        levelInput.getElement().appendTo(form);
+
+        const shareBtn = new FfxButton('Share', 'primary', 'compact');
+        shareBtn.getElement().appendTo(form);
+
         const err = jQuery('<div class="ffx-secnote" style="color:#c0392b;width:100%;margin:4px 0 0"></div>').appendTo(mount);
 
-        shareBtn.on('click', async(): Promise<void> => {
-            const resourceType = String(typeInput.val() ?? '').trim();
+        shareBtn.onClick(async(): Promise<void> => {
+            const resourceType = typeInput.getValue();
 
             if (resourceType === '') {
                 err.text('Resource type is required.');
@@ -587,23 +620,32 @@ export class ClusterView extends BasePage {
             }
 
             err.text('');
-            shareBtn.prop('disabled', true);
+            shareBtn.setDisabled(true);
 
             try {
                 await RegistryAPI.setClusterNodeGroupShare({
-                    nodeUid: String(nodeSelect.val()),
+                    nodeUid: nodeSelect.getValue(),
                     groupUuid: group.id,
                     resourceType,
-                    level: String(levelInput.val())
+                    level: levelInput.getValue()
                 });
-                typeInput.val('');
+                typeInput.setValue('');
                 await onChange();
             } catch (e) {
                 err.text('Could not save the share — needs the cluster.manage permission.');
-                shareBtn.prop('disabled', false);
+                shareBtn.setDisabled(false);
             }
         });
     }
+
+    /**
+     * The two sharing levels offered everywhere a share's level is picked.
+     * @protected
+     */
+    protected static readonly _shareLevelOptions: {key: string; label: string;}[] = [
+        {key: 'read', label: 'read'},
+        {key: 'write', label: 'write'}
+    ];
 
     /**
      * Pending join requests.
