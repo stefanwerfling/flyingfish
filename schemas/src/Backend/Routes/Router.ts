@@ -144,7 +144,11 @@ export const SchemaAvailableInterface = Vts.object({
     // Cumulative rx/tx byte counters (sysfs); the UI derives a live in/out rate from the
     // delta between two polls.
     rxBytes: Vts.optional(Vts.number()),
-    txBytes: Vts.optional(Vts.number())
+    txBytes: Vts.optional(Vts.number()),
+    // Cumulative link up/down transition count (sysfs carrier_changes); the UI derives a
+    // flap rate from the delta between polls to warn about an unstable link (e.g. an
+    // under-powered USB NIC).
+    carrierChanges: Vts.optional(Vts.number())
 });
 
 /**

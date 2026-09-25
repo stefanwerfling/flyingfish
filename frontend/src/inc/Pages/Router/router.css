@@ -72,6 +72,7 @@
 .ffr .ffr-ip .ffr-modex { font-family: var(--ffr-mono); font-size: 11px; color: var(--ffr-faint); margin-left: 6px; }
 .ffr .ffr-ip.ffr-ip6 { margin-top: 2px; font-size: 11px; color: var(--ffr-v6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ffr .ffr-role.gone { background: var(--ffr-danger, #d9534f); color: #fff; }
+.ffr .ffr-role.flap { background: var(--ffr-warn); color: #fff; }
 .ffr .ffr-gone-hint { margin-top: 5px; font-size: 11px; color: var(--ffr-danger, #d9534f); }
 .ffr .ffr-traffic { margin-top: 5px; display: flex; gap: 12px; font-family: var(--ffr-mono); font-size: 11px; }
 .ffr .ffr-traffic .ffr-tr-in { color: var(--ffr-v4); }

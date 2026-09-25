@@ -32,6 +32,9 @@ export type InterfaceView = {
     // Live traffic in bytes/second (in = rx, out = tx); undefined until the second poll.
     rxRate?: number;
     txRate?: number;
+    // True when the link has flapped repeatedly in a short window (carrier up/down
+    // transitions) — e.g. an under-powered USB NIC. Shown as a warning pill.
+    flapping?: boolean;
     laneColor: string;
     dhcp?: DhcpServerConfigEntry | null;
     ipv6mode?: string;
@@ -81,6 +84,15 @@ export class InterfaceCard {
         if (view.configured && view.present === false) {
             jQuery('<span class="ffr-role gone">not present</span>').appendTo(nameRow);
         }
+
+        // Repeated carrier up/down transitions in a short window — flags a flaky link
+        // (commonly an under-powered USB NIC), which otherwise just looks like intermittent
+        // "up"/"down" LED flicker with no explanation. Always rendered (hidden when not
+        // flapping) so InterfaceCard.updateFlapWarning can toggle it in place, like the live
+        // traffic figures, without rebuilding the card.
+        jQuery('<span class="ffr-role flap" title="Link is flapping (repeated carrier changes) — check the cable/power, common with under-powered USB NICs">⚠ flapping</span>')
+            .appendTo(nameRow)
+            .toggle(Boolean(view.flapping));
 
         jQuery(`<div class="ffr-name"><span class="ffr-macx">${InterfaceCard._esc(view.mac)}</span></div>`).appendTo(info);
 
@@ -301,6 +313,23 @@ export class InterfaceCard {
 
         card.find('.ffr-tr-in').text(`↓ ${InterfaceCard._fmtRate(rxRate)}`);
         card.find('.ffr-tr-out').text(`↑ ${InterfaceCard._fmtRate(txRate)}`);
+    }
+
+    /**
+     * Toggle the "flapping" warning pill of an already-rendered card in place, without
+     * rebuilding it. No-op if no card for that MAC is present.
+     * @param scope - the grid (or any ancestor) holding the cards
+     * @param mac - the interface MAC (any case)
+     * @param flapping - whether the link is currently flapping
+     */
+    public static updateFlapWarning(scope: JQuery, mac: string, flapping: boolean): void {
+        const card = scope.find(`.ffr-card[data-ffr-mac="${mac.toLowerCase()}"]`);
+
+        if (card.length === 0) {
+            return;
+        }
+
+        card.find('.ffr-role.flap').toggle(flapping);
     }
 
     /**

@@ -60,6 +60,29 @@ export class Router extends BasePage {
     protected _trafficRate = new Map<string, {rx: number; tx: number;}>();
 
     /**
+     * Previous carrierChanges counter per interface MAC, to detect increments between polls.
+     */
+    protected _flapPrev = new Map<string, number>();
+
+    /**
+     * Timestamps (seconds) of observed carrier-change increments per interface MAC, trimmed
+     * to the last {@link Router._FLAP_WINDOW_SECONDS}. A NIC is flagged "flapping" once this
+     * many events land within the window — see {@link Router._isFlapping}.
+     */
+    protected _flapEvents = new Map<string, number[]>();
+
+    /**
+     * Rolling window (seconds) over which carrier-change events are counted for the flap
+     * warning.
+     */
+    protected static readonly _FLAP_WINDOW_SECONDS = 120;
+
+    /**
+     * Carrier-change events within the window at/above which a NIC is flagged as flapping.
+     */
+    protected static readonly _FLAP_THRESHOLD = 3;
+
+    /**
      * The live-refresh timer (polls the overview so traffic rates update); cleared on unload.
      */
     protected _refreshTimer: ReturnType<typeof setInterval> | null = null;
@@ -271,6 +294,7 @@ export class Router extends BasePage {
             this._overview = overview;
 
             this._computeTraffic(overview.availableInterfaces ?? []);
+            this._computeFlap(overview.availableInterfaces ?? []);
 
             // Only rebuild the map + cards when the overview STRUCTURE changed (a NIC,
             // lease, address or config — not the per-poll byte counters); the frequent
@@ -339,6 +363,53 @@ export class Router extends BasePage {
     }
 
     /**
+     * Track carrier (link) up/down transitions per interface: record an event whenever the
+     * cumulative counter increased since the last poll, drop events older than the flap
+     * window, and remember the current sample for the next tick. Feeds {@link Router._isFlapping}.
+     * @param interfaces - the discovered interfaces (carry carrierChanges)
+     * @protected
+     */
+    protected _computeFlap(interfaces: AvailableInterface[]): void {
+        const now = Date.now() / 1000;
+
+        for (const iface of interfaces) {
+            if (iface.carrierChanges === undefined) {
+                continue;
+            }
+
+            const mac = iface.mac.toLowerCase();
+            const prev = this._flapPrev.get(mac);
+
+            if (prev !== undefined && iface.carrierChanges > prev) {
+                const events = this._flapEvents.get(mac) ?? [];
+                events.push(now);
+                this._flapEvents.set(mac, events);
+            }
+
+            this._flapPrev.set(mac, iface.carrierChanges);
+        }
+
+        for (const [mac, events] of this._flapEvents) {
+            const kept = events.filter((t) => now - t <= Router._FLAP_WINDOW_SECONDS);
+
+            if (kept.length === 0) {
+                this._flapEvents.delete(mac);
+            } else {
+                this._flapEvents.set(mac, kept);
+            }
+        }
+    }
+
+    /**
+     * Whether an interface has flapped often enough within the window to warrant a warning.
+     * @param mac - the interface MAC (any case)
+     * @protected
+     */
+    protected _isFlapping(mac: string): boolean {
+        return (this._flapEvents.get(mac.toLowerCase())?.length ?? 0) >= Router._FLAP_THRESHOLD;
+    }
+
+    /**
      * Reload the overview (map + cards).
      * @protected
      */
@@ -366,7 +437,7 @@ export class Router extends BasePage {
      */
     protected static _structureSig(overview: RouterOverviewResponse): string {
         return JSON.stringify(overview, (key, value) =>
-            (key === 'rxBytes' || key === 'txBytes') ? undefined : value);
+            (key === 'rxBytes' || key === 'txBytes' || key === 'carrierChanges') ? undefined : value);
     }
 
     /**
@@ -378,6 +449,12 @@ export class Router extends BasePage {
     protected _updateTraffic(grid: JQuery): void {
         for (const [mac, rate] of this._trafficRate) {
             InterfaceCard.updateTraffic(grid, mac, rate.rx, rate.tx);
+        }
+
+        // Flap status can change every tick purely from the rolling window aging out old
+        // events, even with no structural change, so it's refreshed here too.
+        for (const mac of this._flapPrev.keys()) {
+            InterfaceCard.updateFlapWarning(grid, mac, this._isFlapping(mac));
         }
     }
 
@@ -532,6 +609,7 @@ export class Router extends BasePage {
             ipv6: det?.ipv6,
             rxRate: this._trafficRate.get(iface.mac_address.toLowerCase())?.rx,
             txRate: this._trafficRate.get(iface.mac_address.toLowerCase())?.tx,
+            flapping: this._isFlapping(iface.mac_address),
             laneColor: laneColor,
             dhcp: (overview.dhcpConfigs ?? []).find((entry) => entry.network_interface_id === iface.id) ?? null,
             ipv6mode: iface.ipv6_mode ?? 'off',
@@ -565,6 +643,7 @@ export class Router extends BasePage {
             ipv6: det.ipv6,
             rxRate: this._trafficRate.get(det.mac.toLowerCase())?.rx,
             txRate: this._trafficRate.get(det.mac.toLowerCase())?.tx,
+            flapping: this._isFlapping(det.mac),
             laneColor: this._lanColors[0],
             actions: {
                 onAssign: () => {

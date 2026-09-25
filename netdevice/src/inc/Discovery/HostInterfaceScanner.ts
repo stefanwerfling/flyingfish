@@ -76,6 +76,10 @@ export class HostInterfaceScanner {
             const rxBytes = Number(HostInterfaceScanner._read(path.join(base, 'statistics', 'rx_bytes')));
             const txBytes = Number(HostInterfaceScanner._read(path.join(base, 'statistics', 'tx_bytes')));
 
+            // Cumulative link up/down transition count; the UI derives a flap rate from the
+            // delta between polls to warn about an unstable link (flapping USB NIC).
+            const carrierChanges = Number(HostInterfaceScanner._read(path.join(base, 'carrier_changes')));
+
             const entry: AvailableInterface = {
                 name: name,
                 mac: mac,
@@ -96,6 +100,10 @@ export class HostInterfaceScanner {
 
             if (Number.isFinite(txBytes)) {
                 entry.txBytes = txBytes;
+            }
+
+            if (Number.isFinite(carrierChanges)) {
+                entry.carrierChanges = carrierChanges;
             }
 
             out.push(entry);
