@@ -1,6 +1,16 @@
 import {Router} from 'express';
-import {aggregateClusterDomains, aggregateClusterNodeGroups, aggregateClusterNodes, aggregateClusterRbac, clusterLiveNodeUids, computeClusterEffectiveAccess, resolveDomainActiveNode} from 'flyingfish_core';
 import {
+    aggregateClusterDomains,
+    aggregateClusterNodeGroups,
+    aggregateClusterNodes,
+    aggregateClusterRbac,
+    canAccessRemoteResource,
+    clusterLiveNodeUids,
+    computeClusterEffectiveAccess,
+    resolveDomainActiveNode
+} from 'flyingfish_core';
+import {
+    ClusterControlReplyBody,
     ClusterDomainsResponse,
     ClusterEffectiveAccessResponse,
     ClusterLocalStateResponse,
@@ -12,6 +22,7 @@ import {
     ClusterRoutesResponse,
     ClusterStateResponse,
     DefaultReturn,
+    DomainResponse,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaCapabilityManifest,
@@ -30,11 +41,14 @@ import {
     SchemaClusterNodesResponse,
     SchemaClusterRbacResponse,
     SchemaClusterPeersResponse,
+    SchemaClusterRemoteDomainsRequest,
     SchemaClusterRoutesPublishRequest,
     SchemaClusterRoutesResponse,
     SchemaClusterStateResponse,
     SchemaDefaultReturn,
+    SchemaDomainResponse,
     SchemaRegistryInstanceRequest,
+    SchemaRequestData,
     SchemaRegistryPartsResponse,
     SchemaRegistryUiContributionsResponse,
     StatusCodes,
@@ -42,6 +56,7 @@ import {
     SchemaClusterJoinPackageResponse,
     SchemaClusterJoinRequest
 } from 'flyingfish_schemas';
+import {proxyClusterControlRequest} from '../../Application/Hub/ClusterControlProxy.js';
 import {ClusterLocalStateProvider} from '../../Application/Hub/ClusterLocalStateProvider.js';
 import {ClusterNodeGroupConverger} from '../../Application/Hub/ClusterNodeGroupConverger.js';
 import {ClusterNodeGroupManager} from '../../Application/Hub/ClusterNodeGroupManager.js';
@@ -49,10 +64,12 @@ import {ClusterRbacConverger} from '../../Application/Hub/ClusterRbacConverger.j
 import {buildClusterJoinPackage} from '../../Application/Hub/ClusterJoinPackage.js';
 import {proxyClusterJoin} from '../../Application/Hub/ClusterJoin.js';
 import {requirePermission} from '../../Application/Server/FlyingFishRouteCheckPermission.js';
+import {FlyingFishPermissions} from '../../Application/Server/FlyingFishPermissions.js';
 import {DefaultRoute, Logger} from '@stefanwerfling/figtree';
 import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFishRouteCheckUserLogin.js';
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {HubRegistryService} from '../../Application/Hub/HubRegistryService.js';
+import {List as DomainList} from './Domain/List.js';
 
 /**
  * Registry
@@ -550,6 +567,65 @@ export class Registry extends DefaultRoute {
             {
                 description: 'The effective-access preview: node-group shares joined with the RBAC roles granted on them',
                 responseBodySchema: SchemaClusterEffectiveAccessResponse
+            }
+        );
+
+        // This node's own domains, for a PEER's clusterserver to fetch on our behalf
+        // (Cluster/Mesh epic 9.5.12.6, responder side of the first cross-node resource
+        // op — see the `domain.list` control handler in clusterserver/main.ts). Service-
+        // authenticated only (registry secret / mTLS) — no end-user ever calls this
+        // directly, it is same-instance Hub<->clusterserver IPC.
+        this._get(
+            '/json/registry/cluster/local-domains',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<DomainResponse> => DomainList.getDomains(),
+            {
+                description: 'This node\'s own domains (for a peer clusterserver to relay over the mesh)',
+                responseBodySchema: SchemaDomainResponse
+            }
+        );
+
+        // A REMOTE node's domains (Cluster/Mesh epic 9.5.12.6, requester side): first
+        // authorize LOCALLY — does the target node share `domain` with a node group this
+        // user holds `domain.read` on (see canAccessRemoteResource, 9.5.12.4) — then, only
+        // if authorized, proxy the actual read to the target over the mesh via the local
+        // clusterserver. No mesh round-trip is spent on a denied request.
+        this._get(
+            '/json/registry/cluster/remote-domains',
+            FlyingFishRouteCheckUserLogin,
+            async(req): Promise<DomainResponse> => {
+                if (!SchemaRequestData.validate(req, []) || req.session.user?.isLogin !== true) {
+                    return {statusCode: StatusCodes.UNAUTHORIZED, list: []};
+                }
+
+                const nodeUid = String((req.query as {nodeUid?: unknown;}).nodeUid ?? '');
+                const userId = req.session.user.userid;
+
+                const shares = aggregateClusterNodeGroups(HubRegistryService.getInstance().getClusterAggregate().entries()).shares;
+                const allowed = await canAccessRemoteResource(
+                    FlyingFishPermissions.getInstance(), userId, nodeUid, 'domain', 'domain.read', 'read', shares
+                );
+
+                if (!allowed) {
+                    return {statusCode: StatusCodes.UNAUTHORIZED, list: []};
+                }
+
+                const reply: ClusterControlReplyBody = await proxyClusterControlRequest(nodeUid, 'domain.list', {});
+
+                if (!reply.ok) {
+                    Logger.getLogger().warn(`Cluster remote-domains: ${nodeUid} answered "${reply.error}"`);
+
+                    return {statusCode: StatusCodes.INTERNAL_ERROR, list: []};
+                }
+
+                const body = reply.payload as DomainResponse | undefined;
+
+                return {statusCode: StatusCodes.OK, list: body?.list ?? []};
+            },
+            {
+                description: 'A remote node\'s domains, gated by node-group sharing + an RBAC grant scoped to that group',
+                querySchema: SchemaClusterRemoteDomainsRequest,
+                responseBodySchema: SchemaDomainResponse
             }
         );
 

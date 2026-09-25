@@ -7,7 +7,7 @@
  * This is the local half of the eventual mesh RPC; the actual request/response over
  * ClusterControl is a separate, not-yet-built piece.
  */
-import {canAccessRemoteResource, ClusterShareLike, IRbacDataSource, PermissionService, RbacAssignment} from 'flyingfish_core';
+import {canAccessRemoteResource, ClusterShareLike, IRbacDataSource, nodeStillSharesResource, PermissionService, RbacAssignment} from 'flyingfish_core';
 
 const createSource = (model: {
     userGroups: Record<number, string[]>;
@@ -24,13 +24,13 @@ const createSource = (model: {
 const nodeGroupGrant = (roleId: string, groupUuid: string): RbacAssignment =>
     ({roleId: roleId, resourceType: 'node-group', resourceId: 0, resourceUuid: groupUuid});
 
-describe('canAccessRemoteResource', () => {
-    const shares: ClusterShareLike[] = [
-        {nodeUid: 'node-b', groupUuid: 'g1', resourceType: 'domain', level: 'write'},
-        {nodeUid: 'node-b', groupUuid: 'g2', resourceType: 'domain', level: 'read'},
-        {nodeUid: 'node-c', groupUuid: 'g1', resourceType: 'domain', level: 'write'}
-    ];
+const shares: ClusterShareLike[] = [
+    {nodeUid: 'node-b', groupUuid: 'g1', resourceType: 'domain', level: 'write'},
+    {nodeUid: 'node-b', groupUuid: 'g2', resourceType: 'domain', level: 'read'},
+    {nodeUid: 'node-c', groupUuid: 'g1', resourceType: 'domain', level: 'write'}
+];
 
+describe('canAccessRemoteResource', () => {
     test('allowed: the target node shares the type at a covering level, and the user holds the permission via that group', async() => {
         const permission = new PermissionService(createSource({
             userGroups: {1: ['ug1']},
@@ -103,5 +103,23 @@ describe('canAccessRemoteResource', () => {
         }));
 
         expect(await canAccessRemoteResource(permission, 1, 'node-b', 'domain', 'domain.read', 'read', [])).toBe(false);
+    });
+});
+
+describe('nodeStillSharesResource', () => {
+    test('true when the node has a live share for that resource type, regardless of the group or level', () => {
+        expect(nodeStillSharesResource(shares, 'node-b', 'domain')).toBe(true);
+    });
+
+    test('false for a resource type the node does not share', () => {
+        expect(nodeStillSharesResource(shares, 'node-b', 'route')).toBe(false);
+    });
+
+    test('false for a node with no shares at all', () => {
+        expect(nodeStillSharesResource(shares, 'node-z', 'domain')).toBe(false);
+    });
+
+    test('false against an empty share list', () => {
+        expect(nodeStillSharesResource([], 'node-b', 'domain')).toBe(false);
     });
 });

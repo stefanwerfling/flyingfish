@@ -11,6 +11,7 @@ import {
     ClusterNodeGroupsResponse,
     ClusterNodesResponse,
     DefaultReturn,
+    DomainResponse,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaClusterEffectiveAccessResponse,
@@ -19,6 +20,7 @@ import {
     SchemaClusterNodeGroupsResponse,
     SchemaClusterNodesResponse,
     SchemaDefaultReturn,
+    SchemaDomainResponse,
     SchemaRegistryPartsResponse,
     SchemaRegistryUiContributionsResponse
 } from 'flyingfish_schemas';
@@ -126,6 +128,17 @@ export class Registry {
      */
     public static async getClusterEffectiveAccess(): Promise<ClusterEffectiveAccessResponse> {
         return NetFetch.getData('/json/registry/cluster/effective-access', SchemaClusterEffectiveAccessResponse);
+    }
+
+    /**
+     * Return a REMOTE node's domains (9.5.12.6, the first cross-node resource op):
+     * gated by node-group sharing + an RBAC grant scoped to that group — see
+     * `canAccessRemoteResource`. `statusCode` is `UNAUTHORIZED` when not authorized,
+     * `INTERNAL_ERROR` when the mesh call itself failed (mesh inactive, peer
+     * unreachable/timed out, or the peer declined).
+     */
+    public static async getClusterRemoteDomains(nodeUid: string): Promise<DomainResponse> {
+        return NetFetch.getData(`/json/registry/cluster/remote-domains?nodeUid=${encodeURIComponent(nodeUid)}`, SchemaDomainResponse);
     }
 
 }

@@ -503,7 +503,13 @@ export {
     SchemaClusterEffectiveAccessEntry,
     ClusterEffectiveAccessEntry,
     SchemaClusterEffectiveAccessResponse,
-    ClusterEffectiveAccessResponse
+    ClusterEffectiveAccessResponse,
+    SchemaClusterControlRequest,
+    ClusterControlRequest,
+    SchemaClusterControlReplyBody,
+    ClusterControlReplyBody,
+    SchemaClusterRemoteDomainsRequest,
+    ClusterRemoteDomainsRequest
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

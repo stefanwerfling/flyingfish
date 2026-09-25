@@ -274,7 +274,8 @@ export {
 } from './inc/Cluster/ClusterEffectiveAccess.js';
 export {
     ClusterShareLike,
-    canAccessRemoteResource
+    canAccessRemoteResource,
+    nodeStillSharesResource
 } from './inc/Cluster/ClusterRemoteAccess.js';
 export {
     ClusterDomainActive,

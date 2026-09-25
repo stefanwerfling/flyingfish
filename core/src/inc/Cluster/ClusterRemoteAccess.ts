@@ -62,3 +62,17 @@ export const canAccessRemoteResource = async(
 
     return false;
 };
+
+/**
+ * Whether `nodeUid` currently shares `resourceType` with ANY node group (Cluster/Mesh
+ * epic 9.5.12.6). The RESPONDING side's defense-in-depth check: the real authorization
+ * (does the requester's user hold a matching grant) already happened node-locally on
+ * the REQUESTING side before it ever dialed us — "no cross-node SSO, B trusts A's mesh
+ * peer" — so this only re-confirms WE still currently publish a share for the type at
+ * all, guarding against acting on a stale/cached decision after a share was revoked.
+ * @param shares - the locally-converged node-group shares
+ * @param nodeUid - this node's own mesh uid
+ * @param resourceType - the resource type being requested
+ */
+export const nodeStillSharesResource = (shares: readonly ClusterShareLike[], nodeUid: string, resourceType: string): boolean =>
+    shares.some((share) => share.nodeUid === nodeUid && share.resourceType === resourceType);

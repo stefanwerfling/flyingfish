@@ -304,6 +304,52 @@ export const SchemaClusterJoinRequest = Vts.object({
 export type ClusterJoinRequest = ExtractSchemaResultType<typeof SchemaClusterJoinRequest>;
 
 /**
+ * SchemaClusterControlRequest — the Hub's local clusterserver, proxy a synchronous
+ * cross-node request (Cluster/Mesh epic 9.5.12.4/.6): dial `nodeUid` over the mesh's
+ * Control channel with the given `method` + `payload`. Resource-type-agnostic — the
+ * mesh/control layer never interprets `payload`, only the two Hubs on each end do.
+ */
+export const SchemaClusterControlRequest = Vts.object({
+    nodeUid: Vts.string(),
+    method: Vts.string(),
+    payload: Vts.unknown()
+});
+
+/**
+ * ClusterControlRequest
+ */
+export type ClusterControlRequest = ExtractSchemaResultType<typeof SchemaClusterControlRequest>;
+
+/**
+ * SchemaClusterControlReplyBody — the mesh reply, relayed back through the HTTP proxy
+ * hops unchanged. `ok: false` covers both "no peer" / timeout and an application-level
+ * error the remote handler returned; either way `error` carries a human-readable reason.
+ */
+export const SchemaClusterControlReplyBody = Vts.object({
+    ok: Vts.boolean(),
+    payload: Vts.optional(Vts.unknown()),
+    error: Vts.optional(Vts.string())
+});
+
+/**
+ * ClusterControlReplyBody
+ */
+export type ClusterControlReplyBody = ExtractSchemaResultType<typeof SchemaClusterControlReplyBody>;
+
+/**
+ * SchemaClusterRemoteDomainsRequest — which node's domains to read (query param on
+ * `GET /json/registry/cluster/remote-domains`, Cluster/Mesh epic 9.5.12.6).
+ */
+export const SchemaClusterRemoteDomainsRequest = Vts.object({
+    nodeUid: Vts.string()
+});
+
+/**
+ * ClusterRemoteDomainsRequest
+ */
+export type ClusterRemoteDomainsRequest = ExtractSchemaResultType<typeof SchemaClusterRemoteDomainsRequest>;
+
+/**
  * The cluster-global RBAC POLICY tables (Cluster/Mesh epic 9.5.12, A+C shared rights
  * DB): each keyed by a cluster-stable UUID, gossiped under a global key so the whole
  * cluster shares one policy. `rbac_user_group` is node-local and not included.

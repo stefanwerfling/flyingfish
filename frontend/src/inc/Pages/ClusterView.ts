@@ -1,5 +1,5 @@
 import {ContentCol, ContentColSize} from 'bambooo';
-import {ClusterEffectiveAccessEntry, ClusterNode, ClusterNodeGroup, ClusterNodeGroupMember, ClusterNodeGroupShare} from 'flyingfish_schemas';
+import {ClusterEffectiveAccessEntry, ClusterNode, ClusterNodeGroup, ClusterNodeGroupMember, ClusterNodeGroupShare, StatusCodes} from 'flyingfish_schemas';
 import {Registry as RegistryAPI} from '../Api/Registry.js';
 import {UtilColor} from '../Utils/UtilColor.js';
 import {BasePage} from './BasePage.js';
@@ -126,6 +126,64 @@ export class ClusterView extends BasePage {
                 ['This node', isSelf ? 'yes' : 'no']
             ]);
         }
+
+        const peers = list.filter((node) => node.nodeUid !== selfNodeUid);
+
+        if (peers.length > 0) {
+            this._remoteDomains(mount, peers);
+        }
+    }
+
+    /**
+     * Browse a peer node's domains (Cluster/Mesh epic 9.5.12.6 — the first cross-node
+     * resource op). Gated end-to-end by node-group sharing + an RBAC grant scoped to
+     * that group (see `canAccessRemoteResource`); a denial or a mesh-level failure both
+     * show as a message here rather than a thrown error — this panel is exploratory, not
+     * a place to build resource management UI onto yet.
+     * @param mount - page mount
+     * @param peers - the non-self nodes in the roster (candidates to browse)
+     * @protected
+     */
+    protected _remoteDomains(mount: JQuery, peers: ClusterNode[]): void {
+        jQuery('<div class="ffx-sectitle" style="margin-top:20px">Browse a node\'s domains</div>').appendTo(mount);
+        jQuery('<div class="ffx-secnote">Reads a peer\'s domains over the mesh — only works if that node shares `domain` with a group you hold a matching RBAC grant on (Groups tab).</div>').appendTo(mount);
+
+        const form = jQuery('<div style="display:flex;gap:8px;align-items:center"></div>').appendTo(mount);
+        const nodeSelect = jQuery('<select style="padding:6px 8px;border-radius:6px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);font-size:12.5px"></select>').appendTo(form);
+
+        for (const peer of peers) {
+            jQuery(`<option value="${ClusterView._esc(peer.nodeUid)}">${ClusterView._esc(peer.host || peer.commonName || peer.nodeUid)}</option>`).appendTo(nodeSelect);
+        }
+
+        const loadBtn = jQuery('<button style="padding:6px 14px;border:0;border-radius:6px;background:#0f8a8a;color:#fff;cursor:pointer;font-size:12.5px;font-weight:600">Load domains</button>').appendTo(form);
+        const result = jQuery('<div style="margin-top:10px"></div>').appendTo(mount);
+
+        loadBtn.on('click', async(): Promise<void> => {
+            result.empty();
+            loadBtn.prop('disabled', true);
+
+            try {
+                const response = await RegistryAPI.getClusterRemoteDomains(String(nodeSelect.val()));
+
+                if (response.statusCode === StatusCodes.UNAUTHORIZED) {
+                    ClusterView._empty(result, 'Not authorized — that node does not share domains with a group you hold a matching RBAC grant on.');
+                } else if (response.statusCode !== StatusCodes.OK) {
+                    ClusterView._empty(result, 'Could not read that node\'s domains (mesh unreachable, or it declined).');
+                } else if (response.list.length === 0) {
+                    ClusterView._empty(result, 'Authorized, but that node has no domains.');
+                } else {
+                    const list = jQuery('<div style="display:flex;flex-direction:column;gap:3px"></div>').appendTo(result);
+
+                    for (const domain of response.list) {
+                        jQuery(`<div style="font-size:12.5px;font-family:var(--mono, monospace)">${ClusterView._esc(domain.name)}${domain.disable ? ' <span style="color:var(--faint)">(disabled)</span>' : ''}</div>`).appendTo(list);
+                    }
+                }
+            } catch (e) {
+                ClusterView._empty(result, 'Could not read that node\'s domains.');
+            }
+
+            loadBtn.prop('disabled', false);
+        });
     }
 
     /**

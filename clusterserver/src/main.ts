@@ -22,12 +22,14 @@ import {
     PkiNodeHttpTransport,
     PkiNodeIdentity,
     aggregateClusterCaSet,
+    aggregateClusterNodeGroups,
     clusterGossipNamespaceKey,
     clusterTrustChain,
+    nodeStillSharesResource,
     startHubRegistration
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
-import {buildClusterCapabilityManifest} from 'flyingfish_schemas';
+import {ClusterControlReplyBody, buildClusterCapabilityManifest} from 'flyingfish_schemas';
 import {X509Certificate} from 'crypto';
 import * as fs from 'fs';
 import os from 'os';
@@ -36,7 +38,30 @@ import {v4 as uuid} from 'uuid';
 import {Config} from './inc/Config/Config.js';
 import {QuicBindingLoader} from './inc/Cluster/QuicBindingLoader.js';
 import {HttpServer} from './inc/Server/HttpServer.js';
-import {Cluster, ClusterJoinController, ClusterNodeStatus} from './Routes/Main/Cluster.js';
+import {Cluster, ClusterControlProxyController, ClusterJoinController, ClusterNodeStatus} from './Routes/Main/Cluster.js';
+
+const HEADER_REGISTRY_SECRET = 'x-flyingfish-registry-secret';
+const LOCAL_HUB_TIMEOUT_MS = 8000;
+
+/**
+ * Read this node's own domains from its local Hub (Cluster/Mesh epic 9.5.12.6, the
+ * responder side of the first cross-node resource op). Same-instance HTTP call,
+ * authenticated the same way `HubClusterGossipSync` talks to the Hub.
+ * @param hubUrl - this node's Hub base URL
+ * @param secret - the shared registry secret
+ */
+async function fetchLocalDomains(hubUrl: string, secret: string | undefined): Promise<unknown> {
+    const response = await fetch(`${hubUrl.replace(/\/+$/u, '')}/json/registry/cluster/local-domains`, {
+        headers: {[HEADER_REGISTRY_SECRET]: secret ?? ''},
+        signal: AbortSignal.timeout(LOCAL_HUB_TIMEOUT_MS)
+    });
+
+    if (!response.ok) {
+        throw new Error(`local Hub returned HTTP ${response.status}`);
+    }
+
+    return response.json();
+}
 
 const SESSION_MAX_AGE = 6000000;
 const DEFAULT_PEER_PORT = 5336;
@@ -189,6 +214,10 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
     // up); until then POST /cluster/join reports the mesh is inactive (9.5.12.2).
     const joinController: ClusterJoinController = {};
 
+    // Same pattern, for the outbound control-request proxy (9.5.12.4/.6): filled in
+    // once `ClusterControl` exists, so the local Hub can dial a mesh peer.
+    const controlController: ClusterControlProxyController = {};
+
     const mServer = new HttpServer({
         realm: 'FlyingFish',
         port: aport,
@@ -199,7 +228,7 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
             max_age: SESSION_MAX_AGE
         },
         routes: [
-            new Cluster(status, joinController)
+            new Cluster(status, joinController, controlController)
         ]
     });
 
@@ -299,6 +328,41 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
             const control = new ClusterControl();
             const controlRouter = new ClusterControlRequestRouter();
             control.onRequest(controlRouter.handle);
+
+            // Let the local Hub dial a mesh peer through this clusterserver (9.5.12.4/.6).
+            // The Hub has already authorized the call before ever reaching here — this
+            // proxy just relays; `control.request` throwing (no peer / timeout) surfaces
+            // as a normal rejection, caught by the `/cluster/control` route.
+            controlController.handler = async(nodeUid, method, payload): Promise<ClusterControlReplyBody> =>
+                control.request(nodeUid, method, payload);
+
+            // Responder side of the first cross-node resource op (9.5.12.6): a peer
+            // asking for our domains. Defense-in-depth only — the REAL authorization
+            // (does the requester's user hold a matching grant) already happened on
+            // their end, node-locally, before they ever dialed us (no cross-node SSO,
+            // "B trusts A's mesh peer"). We only re-check that WE still currently share
+            // `domain` with some node group at all; if so, read our own Hub's domains
+            // and relay them. `payload`/`fromNodeUid` are unused (there's only one thing
+            // to share today); kept in the signature for the next resource type.
+            const registryUrl = tConfig.registry.url;
+            const registrySecret = tConfig.registry.secret;
+            const selfUidForControl = enrolledIdentity.nodeUid;
+
+            controlRouter.register('domain.list', async(): Promise<{ok: boolean; payload?: unknown; error?: string;}> => {
+                const stillShared = nodeStillSharesResource(
+                    aggregateClusterNodeGroups(gossipStore.liveEntries()).shares, selfUidForControl, 'domain'
+                );
+
+                if (!stillShared) {
+                    return {ok: false, error: 'domain is not currently shared by this node'};
+                }
+
+                try {
+                    return {ok: true, payload: await fetchLocalDomains(registryUrl, registrySecret)};
+                } catch (error) {
+                    return {ok: false, error: `${error}`};
+                }
+            });
 
             // Wire gossip + control onto every peer (set before start so none is missed).
             membership.onPeer((channel) => {
