@@ -48,9 +48,9 @@ import {
     SchemaDefaultReturn,
     SchemaDomainResponse,
     SchemaRegistryInstanceRequest,
-    SchemaRequestData,
     SchemaRegistryPartsResponse,
     SchemaRegistryUiContributionsResponse,
+    SchemaSessionData,
     StatusCodes,
     ClusterJoinPackageResponse,
     SchemaClusterJoinPackageResponse,
@@ -593,13 +593,9 @@ export class Registry extends DefaultRoute {
         this._get(
             '/json/registry/cluster/remote-domains',
             FlyingFishRouteCheckUserLogin,
-            async(req): Promise<DomainResponse> => {
-                if (!SchemaRequestData.validate(req, []) || req.session.user?.isLogin !== true) {
-                    return {statusCode: StatusCodes.UNAUTHORIZED, list: []};
-                }
-
-                const nodeUid = String((req.query as {nodeUid?: unknown;}).nodeUid ?? '');
-                const userId = req.session.user.userid;
+            async(_req, _res, data): Promise<DomainResponse> => {
+                const nodeUid = data.query?.nodeUid ?? '';
+                const userId = data.session!.user!.userid;
 
                 const shares = aggregateClusterNodeGroups(HubRegistryService.getInstance().getClusterAggregate().entries()).shares;
                 const allowed = await canAccessRemoteResource(
@@ -625,6 +621,7 @@ export class Registry extends DefaultRoute {
             {
                 description: 'A remote node\'s domains, gated by node-group sharing + an RBAC grant scoped to that group',
                 querySchema: SchemaClusterRemoteDomainsRequest,
+                sessionSchema: SchemaSessionData,
                 responseBodySchema: SchemaDomainResponse
             }
         );
