@@ -72,13 +72,24 @@ export class ClusterGossipStore {
      * Write a key only if the value actually changed, so re-publishing unchanged
      * upstream state (e.g. the Hub's snapshot each sync) does not churn the version
      * and gossip needlessly. Returns whether it wrote.
+     *
+     * A key already tombstoned here is never resurrected through this method (Cluster/
+     * Mesh epic 9.5.12.8 fix): a node re-publishing its own local DB row on every sync
+     * cycle must not be able to clobber a delete it has already heard about just because
+     * its own local row hasn't caught up to being deleted yet — ids are UUIDs and never
+     * reused, so a tombstoned key has no legitimate live value to go back to. Callers
+     * that genuinely need to override a tombstone (there are none today) can use `set`.
      * @param key - the entry key
      * @param value - the value
      */
     public setIfChanged(key: string, value: unknown): boolean {
         const current = this._entries.get(key);
 
-        if (current !== undefined && !current.deleted && JSON.stringify(current.value) === JSON.stringify(value)) {
+        if (current !== undefined && current.deleted) {
+            return false;
+        }
+
+        if (current !== undefined && JSON.stringify(current.value) === JSON.stringify(value)) {
             return false;
         }
 

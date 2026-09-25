@@ -57,9 +57,17 @@ describe('ClusterGossipStore (local writes)', () => {
         expect(store.setIfChanged('k', {a: 2})).toBe(true);
         expect(store.lamport()).toBe(2);
 
-        // a tombstoned key is revived by setIfChanged even with the old value
+        // a tombstoned key is never revived by setIfChanged, even with a "changed"
+        // value (Cluster/Mesh epic 9.5.12.8 fix) — otherwise a node re-publishing its
+        // own not-yet-caught-up local DB row would clobber a delete it already heard
+        // about, and the delete could never converge while any such node exists
         store.remove('k');
-        expect(store.setIfChanged('k', {a: 2})).toBe(true);
+        expect(store.setIfChanged('k', {a: 2})).toBe(false);
+        expect(store.has('k')).toBe(false);
+
+        // `set` can still explicitly override a tombstone (used for a node's own
+        // always-live identity/CA keys, never for gossiped DB-mirrored rows)
+        store.set('k', {a: 3});
         expect(store.has('k')).toBe(true);
     });
 });
