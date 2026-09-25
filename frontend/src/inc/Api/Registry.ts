@@ -12,6 +12,7 @@ import {
     ClusterNodesResponse,
     DefaultReturn,
     DomainResponse,
+    ListenResponse,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaClusterEffectiveAccessResponse,
@@ -21,6 +22,7 @@ import {
     SchemaClusterNodesResponse,
     SchemaDefaultReturn,
     SchemaDomainResponse,
+    SchemaListenResponse,
     SchemaRegistryPartsResponse,
     SchemaRegistryUiContributionsResponse
 } from 'flyingfish_schemas';
@@ -139,6 +141,15 @@ export class Registry {
      */
     public static async getClusterRemoteDomains(nodeUid: string): Promise<DomainResponse> {
         return NetFetch.getData(`/json/registry/cluster/remote-domains?nodeUid=${encodeURIComponent(nodeUid)}`, SchemaDomainResponse);
+    }
+
+    /**
+     * Return a REMOTE node's nginx listens (9.5.12.6 follow-up, second cross-node
+     * resource type after domains) — same gating/error-shape as
+     * {@link getClusterRemoteDomains}.
+     */
+    public static async getClusterRemoteListens(nodeUid: string): Promise<ListenResponse> {
+        return NetFetch.getData(`/json/registry/cluster/remote-listens?nodeUid=${encodeURIComponent(nodeUid)}`, SchemaListenResponse);
     }
 
 }

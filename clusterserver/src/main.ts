@@ -44,14 +44,16 @@ const HEADER_REGISTRY_SECRET = 'x-flyingfish-registry-secret';
 const LOCAL_HUB_TIMEOUT_MS = 8000;
 
 /**
- * Read this node's own domains from its local Hub (Cluster/Mesh epic 9.5.12.6, the
- * responder side of the first cross-node resource op). Same-instance HTTP call,
+ * Read one of this node's own cluster-shareable resources from its local Hub
+ * (Cluster/Mesh epic 9.5.12.6, the responder side of a cross-node resource op — e.g.
+ * `/cluster/local-domains`, `/cluster/local-listens`). Same-instance HTTP call,
  * authenticated the same way `HubClusterGossipSync` talks to the Hub.
  * @param hubUrl - this node's Hub base URL
  * @param secret - the shared registry secret
+ * @param path - the Hub's local-<resource> path, e.g. '/json/registry/cluster/local-domains'
  */
-async function fetchLocalDomains(hubUrl: string, secret: string | undefined): Promise<unknown> {
-    const response = await fetch(`${hubUrl.replace(/\/+$/u, '')}/json/registry/cluster/local-domains`, {
+async function fetchLocalHubResource(hubUrl: string, secret: string | undefined, path: string): Promise<unknown> {
+    const response = await fetch(`${hubUrl.replace(/\/+$/u, '')}${path}`, {
         headers: {[HEADER_REGISTRY_SECRET]: secret ?? ''},
         signal: AbortSignal.timeout(LOCAL_HUB_TIMEOUT_MS)
     });
@@ -358,7 +360,25 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
                 }
 
                 try {
-                    return {ok: true, payload: await fetchLocalDomains(registryUrl, registrySecret)};
+                    return {ok: true, payload: await fetchLocalHubResource(registryUrl, registrySecret, '/json/registry/cluster/local-domains')};
+                } catch (error) {
+                    return {ok: false, error: `${error}`};
+                }
+            });
+
+            // Second cross-node resource type (9.5.12.6 follow-up): our nginx listens,
+            // same defense-in-depth re-check + relay shape as domain.list above.
+            controlRouter.register('listen.list', async(): Promise<{ok: boolean; payload?: unknown; error?: string;}> => {
+                const stillShared = nodeStillSharesResource(
+                    aggregateClusterNodeGroups(gossipStore.liveEntries()).shares, selfUidForControl, 'listen'
+                );
+
+                if (!stillShared) {
+                    return {ok: false, error: 'listen is not currently shared by this node'};
+                }
+
+                try {
+                    return {ok: true, payload: await fetchLocalHubResource(registryUrl, registrySecret, '/json/registry/cluster/local-listens')};
                 } catch (error) {
                     return {ok: false, error: `${error}`};
                 }

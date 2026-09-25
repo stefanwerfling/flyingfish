@@ -509,7 +509,9 @@ export {
     SchemaClusterControlReplyBody,
     ClusterControlReplyBody,
     SchemaClusterRemoteDomainsRequest,
-    ClusterRemoteDomainsRequest
+    ClusterRemoteDomainsRequest,
+    SchemaClusterRemoteListensRequest,
+    ClusterRemoteListensRequest
 } from './Cluster/Registry.js';
 
 // Hub — Capability Manifest (v2 modular architecture)

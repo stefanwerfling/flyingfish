@@ -23,6 +23,7 @@ import {
     ClusterStateResponse,
     DefaultReturn,
     DomainResponse,
+    ListenResponse,
     RegistryPartsResponse,
     RegistryUiContributionsResponse,
     SchemaCapabilityManifest,
@@ -42,11 +43,13 @@ import {
     SchemaClusterRbacResponse,
     SchemaClusterPeersResponse,
     SchemaClusterRemoteDomainsRequest,
+    SchemaClusterRemoteListensRequest,
     SchemaClusterRoutesPublishRequest,
     SchemaClusterRoutesResponse,
     SchemaClusterStateResponse,
     SchemaDefaultReturn,
     SchemaDomainResponse,
+    SchemaListenResponse,
     SchemaRegistryInstanceRequest,
     SchemaRegistryPartsResponse,
     SchemaRegistryUiContributionsResponse,
@@ -70,6 +73,7 @@ import {FlyingFishRouteCheckUserLogin} from '../../Application/Server/FlyingFish
 import {FlyingFishRouteCheckServiceOrUserLogin} from '../../Application/Server/FlyingFishRouteCheckServiceOrUserLogin.js';
 import {HubRegistryService} from '../../Application/Hub/HubRegistryService.js';
 import {List as DomainList} from './Domain/List.js';
+import {List as ListenList} from './Listen/List.js';
 
 /**
  * Registry
@@ -623,6 +627,57 @@ export class Registry extends DefaultRoute {
                 querySchema: SchemaClusterRemoteDomainsRequest,
                 sessionSchema: SchemaSessionData,
                 responseBodySchema: SchemaDomainResponse
+            }
+        );
+
+        // This node's own nginx listens, for a PEER's clusterserver to fetch on our
+        // behalf — second cross-node resource type after domains (9.5.12.6 follow-up),
+        // same same-instance Hub<->clusterserver IPC pattern.
+        this._get(
+            '/json/registry/cluster/local-listens',
+            FlyingFishRouteCheckServiceOrUserLogin,
+            async(): Promise<ListenResponse> => ListenList.getListens(),
+            {
+                description: 'This node\'s own nginx listens (for a peer clusterserver to relay over the mesh)',
+                responseBodySchema: SchemaListenResponse
+            }
+        );
+
+        // A REMOTE node's nginx listens: same local-authorize-then-proxy flow as
+        // remote-domains, scoped to resourceType 'listen' / permission 'listen.read'.
+        this._get(
+            '/json/registry/cluster/remote-listens',
+            FlyingFishRouteCheckUserLogin,
+            async(_req, _res, data): Promise<ListenResponse> => {
+                const nodeUid = data.query?.nodeUid ?? '';
+                const userId = data.session!.user!.userid;
+
+                const shares = aggregateClusterNodeGroups(HubRegistryService.getInstance().getClusterAggregate().entries()).shares;
+                const allowed = await canAccessRemoteResource(
+                    FlyingFishPermissions.getInstance(), userId, nodeUid, 'listen', 'listen.read', 'read', shares
+                );
+
+                if (!allowed) {
+                    return {statusCode: StatusCodes.UNAUTHORIZED, list: []};
+                }
+
+                const reply: ClusterControlReplyBody = await proxyClusterControlRequest(nodeUid, 'listen.list', {});
+
+                if (!reply.ok) {
+                    Logger.getLogger().warn(`Cluster remote-listens: ${nodeUid} answered "${reply.error}"`);
+
+                    return {statusCode: StatusCodes.INTERNAL_ERROR, list: []};
+                }
+
+                const body = reply.payload as ListenResponse | undefined;
+
+                return {statusCode: StatusCodes.OK, list: body?.list ?? []};
+            },
+            {
+                description: 'A remote node\'s nginx listens, gated by node-group sharing + an RBAC grant scoped to that group',
+                querySchema: SchemaClusterRemoteListensRequest,
+                sessionSchema: SchemaSessionData,
+                responseBodySchema: SchemaListenResponse
             }
         );
 

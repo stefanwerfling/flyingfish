@@ -350,6 +350,20 @@ export const SchemaClusterRemoteDomainsRequest = Vts.object({
 export type ClusterRemoteDomainsRequest = ExtractSchemaResultType<typeof SchemaClusterRemoteDomainsRequest>;
 
 /**
+ * SchemaClusterRemoteListensRequest — which node's nginx listens to read (query param
+ * on `GET /json/registry/cluster/remote-listens`), the second cross-node resource type
+ * after domains (Cluster/Mesh epic 9.5.12.6 follow-up), same shape/flow.
+ */
+export const SchemaClusterRemoteListensRequest = Vts.object({
+    nodeUid: Vts.string()
+});
+
+/**
+ * ClusterRemoteListensRequest
+ */
+export type ClusterRemoteListensRequest = ExtractSchemaResultType<typeof SchemaClusterRemoteListensRequest>;
+
+/**
  * The cluster-global RBAC POLICY tables (Cluster/Mesh epic 9.5.12, A+C shared rights
  * DB): each keyed by a cluster-stable UUID, gossiped under a global key so the whole
  * cluster shares one policy. `rbac_user_group` is node-local and not included.

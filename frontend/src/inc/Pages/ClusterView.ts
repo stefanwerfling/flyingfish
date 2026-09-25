@@ -132,6 +132,7 @@ export class ClusterView extends BasePage {
 
         if (peers.length > 0) {
             this._remoteDomains(mount, peers);
+            this._remoteListens(mount, peers);
         }
     }
 
@@ -183,6 +184,57 @@ export class ClusterView extends BasePage {
                 }
             } catch (e) {
                 ClusterView._empty(result, 'Could not read that node\'s domains.');
+            }
+
+            loadBtn.setDisabled(false);
+        });
+    }
+
+    /**
+     * Browse a peer node's nginx listens (9.5.12.6 follow-up — second cross-node
+     * resource type after domains, same gating/shape as {@link _remoteDomains}).
+     * @param mount - page mount
+     * @param peers - the non-self nodes in the roster (candidates to browse)
+     * @protected
+     */
+    protected _remoteListens(mount: JQuery, peers: ClusterNode[]): void {
+        jQuery('<div class="ffx-sectitle" style="margin-top:20px">Browse a node\'s listens</div>').appendTo(mount);
+        jQuery('<div class="ffx-secnote">Reads a peer\'s nginx listens over the mesh — only works if that node shares `listen` with a group you hold a matching RBAC grant on (Groups tab).</div>').appendTo(mount);
+
+        const form = jQuery('<div style="display:flex;gap:8px;align-items:center"></div>').appendTo(mount);
+
+        const nodeSelect = new FfxSelect('field', peers.map((peer) => ({
+            key: peer.nodeUid,
+            label: peer.host || peer.commonName || peer.nodeUid
+        })));
+        nodeSelect.getElement().appendTo(form);
+
+        const loadBtn = new FfxButton('Load listens', 'primary', 'field');
+        loadBtn.getElement().appendTo(form);
+        const result = jQuery('<div style="margin-top:10px"></div>').appendTo(mount);
+
+        loadBtn.onClick(async(): Promise<void> => {
+            result.empty();
+            loadBtn.setDisabled(true);
+
+            try {
+                const response = await RegistryAPI.getClusterRemoteListens(nodeSelect.getValue());
+
+                if (response.statusCode === StatusCodes.UNAUTHORIZED) {
+                    ClusterView._empty(result, 'Not authorized — that node does not share listens with a group you hold a matching RBAC grant on.');
+                } else if (response.statusCode !== StatusCodes.OK) {
+                    ClusterView._empty(result, 'Could not read that node\'s listens (mesh unreachable, or it declined).');
+                } else if (response.list.length === 0) {
+                    ClusterView._empty(result, 'Authorized, but that node has no listens.');
+                } else {
+                    const list = jQuery('<div style="display:flex;flex-direction:column;gap:3px"></div>').appendTo(result);
+
+                    for (const listen of response.list) {
+                        jQuery(`<div style="font-size:12.5px;font-family:var(--mono, monospace)">${ClusterView._esc(listen.name)} :${listen.port}${listen.disable ? ' <span style="color:var(--faint)">(disabled)</span>' : ''}</div>`).appendTo(list);
+                    }
+                }
+            } catch (e) {
+                ClusterView._empty(result, 'Could not read that node\'s listens.');
             }
 
             loadBtn.setDisabled(false);
