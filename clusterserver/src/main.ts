@@ -554,9 +554,15 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
                         const storeKey = entry.global === true ? entry.key : clusterGossipNamespaceKey(selfNodeUid, entry.key);
 
                         // A tombstoned entry is a pending delete the Hub wants gossiped
-                        // (9.5.12.8 fix), not a live value to set.
+                        // (9.5.12.8 fix), not a live value to set. Skip re-stamping a
+                        // key already tombstoned in the store — setIfChanged now refuses
+                        // to resurrect it anyway, so re-remove()ing it every cycle only
+                        // churns the Lamport clock and re-transmits it needlessly for up
+                        // to the whole 7-day retention window.
                         if (entry.deleted === true) {
-                            gossipStore.remove(storeKey);
+                            if (gossipStore.entry(storeKey)?.deleted !== true) {
+                                gossipStore.remove(storeKey);
+                            }
                         } else {
                             gossipStore.setIfChanged(storeKey, entry.value);
                         }
