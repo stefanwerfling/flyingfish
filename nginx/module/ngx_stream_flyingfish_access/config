@@ -3,15 +3,24 @@
 # linked (--add-module, NOT --add-dynamic-module) to match the nginxserver image,
 # which ships no /usr/lib/nginx/modules payload. The `if $ngx_module_link` branch
 # is the modern build path; the `else` keeps the legacy static path working.
+#
+# Two sources: the module itself + the shared ngx_ff_access control-socket core
+# (reused by the http module later).
 ngx_addon_name=ngx_stream_flyingfish_access_module
+
+FF_ACCESS_STREAM_SRCS="$ngx_addon_dir/ngx_stream_flyingfish_access_module.c \
+                       $ngx_addon_dir/ngx_flyingfish_access_core.c"
+FF_ACCESS_DEPS="$ngx_addon_dir/ngx_flyingfish_access_core.h"
 
 if test -n "$ngx_module_link"; then
     ngx_module_type=STREAM
     ngx_module_name=ngx_stream_flyingfish_access_module
-    ngx_module_srcs="$ngx_addon_dir/ngx_stream_flyingfish_access_module.c"
+    ngx_module_srcs="$FF_ACCESS_STREAM_SRCS"
+    ngx_module_deps="$FF_ACCESS_DEPS"
 
     . auto/module
 else
     STREAM_MODULES="$STREAM_MODULES ngx_stream_flyingfish_access_module"
-    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_stream_flyingfish_access_module.c"
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $FF_ACCESS_STREAM_SRCS"
+    NGX_ADDON_DEPS="$NGX_ADDON_DEPS $FF_ACCESS_DEPS"
 fi
