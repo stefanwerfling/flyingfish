@@ -29,6 +29,13 @@ RUN cd ~ \
 RUN cd ~ \
     && git clone --depth 1 -b $HEADERS_MORE_VERSION --single-branch https://github.com/openresty/headers-more-nginx-module.git \
     && cd ~/headers-more-nginx-module && git submodule update --init
+
+# FlyingFish native access module(s) — statically linked (--add-module below), so
+# copied to ~ alongside the njs/headers-more sources before configure runs. Only the
+# module dir is copied here (not all of ./nginx/) to keep the nginx build cache from
+# busting on unrelated nginx/ changes.
+COPY ./nginx/module/ngx_stream_flyingfish_access /root/ngx_stream_flyingfish_access
+
 RUN cd ~/nginx-$NGINX_VERSION && \
     ./configure \
     --sbin-path=/usr/bin/nginx \
@@ -58,6 +65,7 @@ RUN cd ~/nginx-$NGINX_VERSION && \
     --with-http_secure_link_module \
     --add-module=../njs/nginx \
     --add-module=../headers-more-nginx-module/ \
+    --add-module=../ngx_stream_flyingfish_access \
     --with-mail \
     --with-mail_ssl_module \
     --with-stream \

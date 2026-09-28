@@ -1,0 +1,17 @@
+# nginx add-module config for ngx_stream_flyingfish_access_module (FlyingFish L4
+# access control, nginx-native — Cluster/Mesh "nginx nativ" Phase C). Statically
+# linked (--add-module, NOT --add-dynamic-module) to match the nginxserver image,
+# which ships no /usr/lib/nginx/modules payload. The `if $ngx_module_link` branch
+# is the modern build path; the `else` keeps the legacy static path working.
+ngx_addon_name=ngx_stream_flyingfish_access_module
+
+if test -n "$ngx_module_link"; then
+    ngx_module_type=STREAM
+    ngx_module_name=ngx_stream_flyingfish_access_module
+    ngx_module_srcs="$ngx_addon_dir/ngx_stream_flyingfish_access_module.c"
+
+    . auto/module
+else
+    STREAM_MODULES="$STREAM_MODULES ngx_stream_flyingfish_access_module"
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_stream_flyingfish_access_module.c"
+fi
