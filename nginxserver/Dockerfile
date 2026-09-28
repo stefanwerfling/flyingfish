@@ -10,11 +10,11 @@ FROM node:22-bookworm-slim AS build
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG NPM_REGISTRY="https://registry.npmjs.org/"
-# Mirrors the root Dockerfile's nginx build (kept in lockstep: same nginx/njs/
-# headers-more versions) - see there for the CVE/version rationale.
+# Mirrors the root Dockerfile's nginx build (kept in lockstep: same nginx/
+# headers-more versions) - see there for the CVE/version rationale. njs was
+# removed (nginx-native Phase D): the access checks are native FF modules now.
 ARG NGINX_VERSION="1.30.4"
 ARG HEADERS_MORE_VERSION="v0.40"
-ARG NJS_BRANCH="0.9.9"
 
 RUN apt-get update -y \
     && apt-get install -y curl wget gnupg2 ca-certificates lsb-release debian-archive-keyring git \
@@ -23,9 +23,6 @@ RUN apt-get update -y \
 
 # Build nginx from source (same flags as the root Dockerfile).
 RUN cd ~ && wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && tar -zxvf nginx-$NGINX_VERSION.tar.gz
-RUN cd ~ \
-    && git clone --depth 1 --branch $NJS_BRANCH https://github.com/nginx/njs.git \
-    && cd ~/njs && ./configure && make
 RUN cd ~ \
     && git clone --depth 1 -b $HEADERS_MORE_VERSION --single-branch https://github.com/openresty/headers-more-nginx-module.git \
     && cd ~/headers-more-nginx-module && git submodule update --init
@@ -63,7 +60,6 @@ RUN cd ~/nginx-$NGINX_VERSION && \
     --with-http_v2_module \
     --with-http_v3_module \
     --with-http_secure_link_module \
-    --add-module=../njs/nginx \
     --add-module=../headers-more-nginx-module/ \
     --add-module=../flyingfish_access \
     --with-mail \
@@ -100,8 +96,7 @@ RUN cd schemas && npm run build \
 
 RUN mkdir -p nginx/servers/proxy_temp nginx/logs \
     && chmod 700 nginx/servers/proxy_temp \
-    && chmod 755 nginx/logs \
-    && cd nginx && npm install
+    && chmod 755 nginx/logs
 
 RUN npm prune --omit=dev --ignore-scripts
 

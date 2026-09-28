@@ -283,10 +283,8 @@ export class NginxConfigBuilder {
 
         // nginx stream variables --------------------------------------------------------------------------------------
 
-        conf.getStream().addVariable(
-            'js_import mainstream from',
-            path.join(FlyingFishConfig.getInstance().get()!.nginx!.prefix, 'dist/mainstream.js')
-        );
+        // njs is gone (nginx-native Phase D): the L4/L7 access checks are native modules
+        // (flyingfish_access / flyingfish_auth), so no `js_import` is emitted any more.
 
         const nginxResolver = await Settings.getSetting(
             Settings.NGINX_RESOLVER,
@@ -296,11 +294,6 @@ export class NginxConfigBuilder {
         conf.getStream().addVariable('resolver', `${nginxResolver} valid=1s`);
 
         // nginx http variables ----------------------------------------------------------------------------------------
-
-        conf.getHttp().addVariable(
-            'js_import mainhttp from',
-            path.join(FlyingFishConfig.getInstance().get()!.nginx!.prefix, 'dist/mainhttp.js')
-        );
 
         conf.getHttp().addVariable('default_type', 'application/octet-stream');
         conf.getHttp().addVariable('sendfile', 'on');

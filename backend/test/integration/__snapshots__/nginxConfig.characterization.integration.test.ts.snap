@@ -14,7 +14,6 @@ daemon off;
 pcre_jit on;
 
 stream {
-	js_import mainstream from /tmp/ff-char-nginx/dist/mainstream.js;
 	resolver 8.8.8.8 valid=1s;
 
 	upstream ffus_internsshserver {
@@ -34,7 +33,6 @@ stream {
 }
 
 http {
-	js_import mainhttp from /tmp/ff-char-nginx/dist/mainhttp.js;
 	default_type application/octet-stream;
 	sendfile on;
 	server_tokens off;
@@ -65,7 +63,6 @@ daemon off;
 pcre_jit on;
 
 stream {
-	js_import mainstream from /tmp/ff-char-nginx/dist/mainstream.js;
 	resolver 8.8.8.8 valid=1s;
 	log_format ff_s_accesslogs_1 escape=json '{"source":"nginx","source_type":"stream","logging":"access","ff_stream_id":1,"time":"$time_iso8601","msec":"$msec","host":"$remote_addr","protocol":"$protocol","status":"$status","bytes_sent":"$bytes_sent","bytes_received":"$bytes_received","session_time":"$session_time","upstream_addr":"$upstream_addr","upstream_bytes_sent":"$upstream_bytes_sent","upstream_bytes_received":"$upstream_bytes_received","upstream_connect_time":"$upstream_connect_time"}';
 	log_format ff_s_accesslogs_2 escape=json '{"source":"nginx","source_type":"stream","logging":"access","ff_stream_id":2,"time":"$time_iso8601","msec":"$msec","host":"$remote_addr","protocol":"$protocol","status":"$status","bytes_sent":"$bytes_sent","bytes_received":"$bytes_received","session_time":"$session_time","upstream_addr":"$upstream_addr","upstream_bytes_sent":"$upstream_bytes_sent","upstream_bytes_received":"$upstream_bytes_received","upstream_connect_time":"$upstream_connect_time"}';
@@ -134,7 +131,6 @@ stream {
 }
 
 http {
-	js_import mainhttp from /tmp/ff-char-nginx/dist/mainhttp.js;
 	default_type application/octet-stream;
 	sendfile on;
 	server_tokens off;
