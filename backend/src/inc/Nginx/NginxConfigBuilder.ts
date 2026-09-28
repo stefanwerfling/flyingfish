@@ -837,17 +837,17 @@ export class NginxConfigBuilder {
             );
 
             if (streamCollects.listen.enable_address_check) {
-                aServer.addVariable('set $ff_secret', FlyingFishConfig.getInstance().get()!.nginx!.secret ?? '');
-
+                // Native L4 access check (nginx-native Phase C): the
+                // ngx_stream_flyingfish_access module does the control-socket call
+                // itself, so it only needs the socket path + listen id. This replaces
+                // the njs `js_access mainstream.accessAddressStream` + its `set $ff_*`
+                // variables. The module hardcodes the `/njs/address_access` path and
+                // does not use the (backend-ignored) secret or the logging level.
                 if (control) {
-                    aServer.addVariable('set $ff_address_access_url', `"http://unix:${control.getUnixSocket()}:${NginxConfigBuilder.INTERN_SERVER_ADDRESS_ACCESS}"`);
+                    aServer.addVariable('flyingfish_access', `${control.getUnixSocket()} ${streamCollects.listen.id}`);
                 } else {
                     Logger.getLogger().error('Nginx control server is not init for INTERN_SERVER_ADDRESS_ACCESS');
                 }
-
-                aServer.addVariable('set $ff_listen_id', `${streamCollects.listen.id}`);
-                aServer.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
-                aServer.addVariable('js_access', 'mainstream.accessAddressStream');
             }
 
             aServer.addVariable('ssl_preread', 'on');
