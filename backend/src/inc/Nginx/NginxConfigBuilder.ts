@@ -123,6 +123,24 @@ export class NginxConfigBuilder {
     private _proxyUpstreamServer = NginxConfigBuilder.PORT_PROXY_UPSTREAM_BEGIN;
 
     /**
+     * The native L4 access directive emitted for an address-check stream server
+     * (nginx-native Phase C): the ngx_stream_flyingfish_access module's
+     * `flyingfish_access <control_socket> <listen_id>;`. The directive name and the
+     * two-argument order (socket first, listen id second) are a contract with the C
+     * module, which parses exactly those two args — so it is built in one place and
+     * unit-tested. Replaced the njs `js_access mainstream.accessAddressStream`.
+     * @param {string} socketPath - the nginx control unix socket path
+     * @param {number} listenId - the FlyingFish listen id
+     * @returns {{name: string; value: string}} the directive name + value for addVariable
+     */
+    public static streamAccessDirective(socketPath: string, listenId: number): {name: string; value: string;} {
+        return {
+            name: 'flyingfish_access',
+            value: `${socketPath} ${listenId}`
+        };
+    }
+
+    /**
      * Intern helper methode for generate listen config.
      * @param {NginxConfServer} server - Nginx server config object.
      * @param {NginxListenProtocol} listenProtocol - Listen protocol type.
@@ -844,7 +862,8 @@ export class NginxConfigBuilder {
                 // variables. The module hardcodes the `/njs/address_access` path and
                 // does not use the (backend-ignored) secret or the logging level.
                 if (control) {
-                    aServer.addVariable('flyingfish_access', `${control.getUnixSocket()} ${streamCollects.listen.id}`);
+                    const accessDir = NginxConfigBuilder.streamAccessDirective(control.getUnixSocket(), streamCollects.listen.id);
+                    aServer.addVariable(accessDir.name, accessDir.value);
                 } else {
                     Logger.getLogger().error('Nginx control server is not init for INTERN_SERVER_ADDRESS_ACCESS');
                 }
