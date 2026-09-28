@@ -48,3 +48,7 @@
 
 # local dev compose overrides (machine-specific paths)
 docker-compose.override.yml
+
+# local dev tooling (machine-specific, not part of the app)
+.mcp.json
+/backend/_livecheck.mjs
