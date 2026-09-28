@@ -25,6 +25,19 @@
 #define NGX_FF_ACCESS_ALLOW     200    /* backend status that means "allow" */
 
 
+/*
+ * Index of the stream realip module's $realip_remote_addr variable, resolved at
+ * postconfiguration (NGX_ERROR if realip isn't compiled/declared). Sent per request
+ * as the realip_remote_addr header — that is the ONLY value the backend
+ * /njs/address_access uses for its blacklist/whitelist decision, and it must match
+ * what the njs `$realip_remote_addr` sent (the direct peer under proxy_protocol/
+ * realip), not the post-realip client address (c->addr_text). Falls back to
+ * c->addr_text when the variable is unavailable/empty (the common no-realip case,
+ * where the two are identical anyway).
+ */
+static ngx_int_t  ngx_ff_stream_realip_index = NGX_ERROR;
+
+
 typedef struct {
     ngx_str_t    socket;      /* control unix socket path */
     ngx_str_t    listen_id;   /* the FlyingFish listen id, sent verbatim */
@@ -43,7 +56,7 @@ typedef struct {
 static ngx_int_t ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s);
 static void ngx_stream_flyingfish_access_done(void *data, ngx_int_t status);
 static ngx_buf_t *ngx_stream_flyingfish_access_build_request(ngx_pool_t *pool,
-    ngx_str_t *addr, ngx_str_t *listen_id);
+    ngx_str_t *realip, ngx_str_t *remote, ngx_str_t *listen_id);
 static ngx_int_t ngx_stream_flyingfish_access_init(ngx_conf_t *cf);
 static void *ngx_stream_flyingfish_access_create_srv_conf(ngx_conf_t *cf);
 static char *ngx_stream_flyingfish_access_merge_srv_conf(ngx_conf_t *cf,
@@ -97,7 +110,9 @@ static ngx_int_t
 ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
 {
     ngx_int_t                                 rc;
+    ngx_str_t                                 realip;
     ngx_connection_t                         *c;
+    ngx_stream_variable_value_t              *rv;
     ngx_stream_flyingfish_access_ctx_t       *ctx;
     ngx_stream_flyingfish_access_srv_conf_t  *ascf;
 
@@ -141,8 +156,21 @@ ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
 
     ngx_stream_set_ctx(s, ctx, ngx_stream_flyingfish_access_module);
 
+    /* the address the backend blacklists on: $realip_remote_addr if realip gave
+     * one, else the raw peer (identical when realip isn't in play) */
+    realip = c->addr_text;
+
+    if (ngx_ff_stream_realip_index != NGX_ERROR) {
+        rv = ngx_stream_get_indexed_variable(s, ngx_ff_stream_realip_index);
+
+        if (rv != NULL && !rv->not_found && rv->len > 0) {
+            realip.data = rv->data;
+            realip.len = rv->len;
+        }
+    }
+
     ctx->core.request = ngx_stream_flyingfish_access_build_request(c->pool,
-        &c->addr_text, &ascf->listen_id);
+        &realip, &c->addr_text, &ascf->listen_id);
     if (ctx->core.request == NULL) {
         return NGX_ERROR;
     }
@@ -186,8 +214,8 @@ ngx_stream_flyingfish_access_done(void *data, ngx_int_t status)
 
 
 static ngx_buf_t *
-ngx_stream_flyingfish_access_build_request(ngx_pool_t *pool, ngx_str_t *addr,
-    ngx_str_t *listen_id)
+ngx_stream_flyingfish_access_build_request(ngx_pool_t *pool, ngx_str_t *realip,
+    ngx_str_t *remote, ngx_str_t *listen_id)
 {
     size_t      len;
     ngx_buf_t  *b;
@@ -203,14 +231,14 @@ ngx_stream_flyingfish_access_build_request(ngx_pool_t *pool, ngx_str_t *addr,
         CRLF;
 
     /* fmt minus the three %V (6 chars) plus the actual values */
-    len = sizeof(fmt) - 1 - (3 * 2) + (2 * addr->len) + listen_id->len;
+    len = sizeof(fmt) - 1 - (3 * 2) + realip->len + remote->len + listen_id->len;
 
     b = ngx_create_temp_buf(pool, len);
     if (b == NULL) {
         return NULL;
     }
 
-    b->last = ngx_snprintf(b->last, len, fmt, addr, addr, listen_id);
+    b->last = ngx_snprintf(b->last, len, fmt, realip, remote, listen_id);
 
     return b;
 }
@@ -300,8 +328,14 @@ ngx_stream_flyingfish_access(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 static ngx_int_t
 ngx_stream_flyingfish_access_init(ngx_conf_t *cf)
 {
+    ngx_str_t                     realip_name = ngx_string("realip_remote_addr");
     ngx_stream_handler_pt        *h;
     ngx_stream_core_main_conf_t  *cmcf;
+
+    /* Resolve $realip_remote_addr once (NGX_ERROR if realip isn't available); the
+     * handler reads it per request. get_variable_index registers interest so the
+     * value is materialized. */
+    ngx_ff_stream_realip_index = ngx_stream_get_variable_index(cf, &realip_name);
 
     cmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_core_module);
 
