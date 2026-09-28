@@ -1,6 +1,7 @@
 import {Router as ExpressRouter} from 'express';
 import {DefaultRoute} from '@stefanwerfling/figtree';
 import {
+    checkRaLifetimeInvariant,
     DhcpLeaseDB,
     DhcpServerConfigDB,
     DhcpServerConfigServiceDB,
@@ -232,6 +233,16 @@ export class Router extends DefaultRoute {
             entity.ra_enable = body.ra_enable ?? false;
             entity.ra_interval = body.ra_interval ?? 60;
             entity.ra_router_lifetime = body.ra_router_lifetime ?? 9000;
+
+            // Reject a config that would silently break downstream IPv6 (NAT66 stability):
+            // the RA router lifetime must outlive the address lease, or the default route
+            // expires while the address persists. Authoritative — the UI pre-checks too.
+            const raError = checkRaLifetimeInvariant(entity.ra_enable, entity.ra_router_lifetime, entity.lease_time);
+
+            if (raError !== null) {
+                return {statusCode: StatusCodes.INTERNAL_ERROR, msg: raError};
+            }
+
             await DhcpServerConfigServiceDB.getInstance().save(entity);
 
             return {statusCode: StatusCodes.OK};

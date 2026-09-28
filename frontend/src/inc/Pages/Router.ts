@@ -186,6 +186,15 @@ export class Router extends BasePage {
 
         this._dhcpDialog.setOnSave(async(): Promise<void> => {
             try {
+                // Immediate feedback for the RA invariant (the backend re-checks and is
+                // authoritative): the router lifetime must outlive the address lease, or
+                // downstream IPv6 loses its default route while the address persists.
+                if (this._dhcpDialog.getRaEnable() && this._dhcpDialog.getRaRouterLifetime() <= this._dhcpDialog.getLeaseTime()) {
+                    this._toast.fire({icon: 'error', title: `IPv6 RA router lifetime (${this._dhcpDialog.getRaRouterLifetime()}s) must be greater than the lease time (${this._dhcpDialog.getLeaseTime()}s).`});
+
+                    return;
+                }
+
                 if (await RouterAPI.saveDhcpConfig({
                     network_interface_id: this._dhcpDialog.getInterfaceId(),
                     enable: this._dhcpDialog.getEnable(),

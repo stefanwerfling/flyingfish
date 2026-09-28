@@ -5,7 +5,7 @@
  * constructor; disabled/no-interface yields ''. The lease parser reads the dnsmasq
  * lease-file lines (mac/ip/hostname/expiry, `*` hostname = none). Pure.
  */
-import {buildDnsmasqConfig, DnsmasqConfig, parseDnsmasqLeases} from 'flyingfish_core';
+import {buildDnsmasqConfig, checkRaLifetimeInvariant, DnsmasqConfig, parseDnsmasqLeases} from 'flyingfish_core';
 
 const base: DnsmasqConfig = {
     lanInterface: 'eth1',
@@ -91,5 +91,27 @@ describe('parseDnsmasqLeases', () => {
 
         expect(leases).toHaveLength(1);
         expect(leases[0].ip_address).toBe('192.168.1.102');
+    });
+});
+
+describe('checkRaLifetimeInvariant', () => {
+    test('passes (null) when RA is disabled, regardless of the values', () => {
+        expect(checkRaLifetimeInvariant(false, 60, 3600)).toBeNull();
+        expect(checkRaLifetimeInvariant(false, 0, 9999)).toBeNull();
+    });
+
+    test('passes (null) when the router lifetime is strictly greater than the lease', () => {
+        expect(checkRaLifetimeInvariant(true, 9000, 3600)).toBeNull();
+    });
+
+    test('fails with a reason when the router lifetime is <= the lease (the NAT66 footgun)', () => {
+        // lifetime below the lease
+        expect(checkRaLifetimeInvariant(true, 1800, 3600)).toContain('must be greater than');
+        // exactly equal is still unsafe (route and address expire together)
+        expect(checkRaLifetimeInvariant(true, 3600, 3600)).toContain('must be greater than');
+        // the message carries both offending values
+        const reason = checkRaLifetimeInvariant(true, 1800, 3600);
+        expect(reason).toContain('1800s');
+        expect(reason).toContain('3600s');
     });
 });

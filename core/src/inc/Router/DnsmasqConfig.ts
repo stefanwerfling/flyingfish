@@ -120,3 +120,29 @@ export const parseDnsmasqLeases = (content: string): DnsmasqLease[] => {
 
     return leases;
 };
+
+/**
+ * Guard the one RA invariant that silently breaks downstream IPv6 (Pi-router NAT66
+ * stability): the advertised router lifetime MUST outlive the address (SLAAC/DHCP
+ * lease) lifetime. A downstream host derives its IPv6 address lifetime from the lease
+ * and its default route from the RA router lifetime; if the route expires first the
+ * host keeps a usable-looking address but no way out — the recurring "IPv6 up
+ * everywhere, no connectivity" failure. Both the save handler and the UI call this so
+ * a bad edit is rejected before it reaches dnsmasq. Returns a human-readable reason
+ * when RA is enabled and `raRouterLifetime <= leaseTime`, or null when the config is
+ * safe (RA off, or lifetime strictly greater than the lease).
+ * @param raEnable - whether IPv6 RA is enabled for this LAN
+ * @param raRouterLifetime - the advertised router lifetime (s)
+ * @param leaseTime - the DHCP/SLAAC lease (address) lifetime (s)
+ */
+export const checkRaLifetimeInvariant = (raEnable: boolean, raRouterLifetime: number, leaseTime: number): string | null => {
+    if (!raEnable) {
+        return null;
+    }
+
+    if (raRouterLifetime <= leaseTime) {
+        return `IPv6 RA router lifetime (${raRouterLifetime}s) must be greater than the DHCP/SLAAC lease time (${leaseTime}s) — otherwise a downstream device keeps its IPv6 address after the default route expires and loses IPv6 connectivity.`;
+    }
+
+    return null;
+};

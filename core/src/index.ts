@@ -200,7 +200,8 @@ export {
     DnsmasqConfig,
     DnsmasqLease,
     buildDnsmasqConfig,
-    parseDnsmasqLeases
+    parseDnsmasqLeases,
+    checkRaLifetimeInvariant
 } from './inc/Router/DnsmasqConfig.js';
 export {
     KeaPdLan,
