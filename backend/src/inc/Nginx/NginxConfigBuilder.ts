@@ -141,6 +141,24 @@ export class NginxConfigBuilder {
     }
 
     /**
+     * The native L7 auth directive emitted in the internal `/auth<id>` location that
+     * `auth_request` targets (nginx-native Phase C): the ngx_http_flyingfish_access
+     * module's `flyingfish_auth <control_socket> <location_id>;`. Same
+     * name-and-order-are-a-contract reasoning as {@link streamAccessDirective}; the
+     * module parses exactly two args (NGX_CONF_TAKE2). Replaced the njs
+     * `js_content mainhttp.authorizeHttp`.
+     * @param {string} socketPath - the nginx control unix socket path
+     * @param {number} locationId - the FlyingFish location id
+     * @returns {{name: string; value: string}} the directive name + value for addVariable
+     */
+    public static httpAuthDirective(socketPath: string, locationId: number): {name: string; value: string;} {
+        return {
+            name: 'flyingfish_auth',
+            value: `${socketPath} ${locationId}`
+        };
+    }
+
+    /**
      * Intern helper methode for generate listen config.
      * @param {NginxConfServer} server - Nginx server config object.
      * @param {NginxListenProtocol} listenProtocol - Listen protocol type.
@@ -1166,18 +1184,21 @@ export class NginxConfigBuilder {
 
                             const authLocation = new Location(`/auth${entry.id}`);
                             authLocation.addVariable('internal', '');
-                            authLocation.addVariable('set $ff_secret', FlyingFishConfig.getInstance().get()!.nginx!.secret ?? '');
 
+                            // Native L7 auth check (nginx-native Phase C): the
+                            // ngx_http_flyingfish_access module reads the Authorization
+                            // header itself and calls the control socket, so it only
+                            // needs the socket path + location id. Replaces the njs
+                            // `js_content mainhttp.authorizeHttp` + its `set $ff_*`
+                            // variables (hardcoded /njs/auth_basic path; the
+                            // backend-ignored secret and logging level are gone).
                             if (control) {
-                                authLocation.addVariable('set $ff_auth_basic_url', `"http://unix:${control.getUnixSocket()}:${NginxConfigBuilder.INTERN_SERVER_AUTH_BASIC}"`);
+                                const authDir = NginxConfigBuilder.httpAuthDirective(control.getUnixSocket(), entry.id);
+                                authLocation.addVariable(authDir.name, authDir.value);
                             } else {
                                 Logger.getLogger().error('Nginx control server is not init for INTERN_SERVER_AUTH_BASIC');
                             }
 
-                            authLocation.addVariable('set $ff_location_id', `${entry.id}`);
-                            authLocation.addVariable('set $ff_logging_level', `${Logger.getLogger().level}`);
-                            authLocation.addVariable('set $ff_authheader', '$http_authorization');
-                            authLocation.addVariable('js_content', 'mainhttp.authorizeHttp');
                             aServer.addLocation(authLocation);
                         }
 

@@ -36,3 +36,23 @@ describe('NginxConfigBuilder.streamAccessDirective', () => {
         expect(d.value.split(' ')).toHaveLength(2);
     });
 });
+
+describe('NginxConfigBuilder.httpAuthDirective', () => {
+    test('emits `flyingfish_auth <socket> <location_id>` — socket first, id second', () => {
+        const d = NginxConfigBuilder.httpAuthDirective(
+            '/opt/flyingfish/nginx/socks/nginx_control.sock',
+            7
+        );
+
+        expect(d.name).toBe('flyingfish_auth');
+        expect(d.value).toBe('/opt/flyingfish/nginx/socks/nginx_control.sock 7');
+    });
+
+    test('is the native module directive, not the old njs js_content', () => {
+        const d = NginxConfigBuilder.httpAuthDirective('/x.sock', 0);
+
+        expect(d.name).not.toBe('js_content');
+        expect(d.value).not.toContain('mainhttp');
+        expect(d.value.split(' ')).toHaveLength(2);
+    });
+});
