@@ -26,15 +26,16 @@
 
 
 typedef struct {
-    ngx_str_t   socket;      /* control unix socket path */
-    ngx_str_t   listen_id;   /* the FlyingFish listen id, sent verbatim */
+    ngx_str_t    socket;      /* control unix socket path */
+    ngx_str_t    listen_id;   /* the FlyingFish listen id, sent verbatim */
+    ngx_msec_t   timeout;     /* control-socket connect+send+read deadline */
+    ngx_flag_t   fail_open;   /* on backend unreachable/timeout: allow instead of deny */
 } ngx_stream_flyingfish_access_srv_conf_t;
 
 
 typedef struct {
     ngx_ff_access_ctx_t   core;
     ngx_int_t             status;
-    unsigned              started:1;
     unsigned              done:1;
 } ngx_stream_flyingfish_access_ctx_t;
 
@@ -54,7 +55,7 @@ static char *ngx_stream_flyingfish_access(ngx_conf_t *cf, ngx_command_t *cmd,
 static ngx_command_t  ngx_stream_flyingfish_access_commands[] = {
 
     { ngx_string("flyingfish_access"),
-      NGX_STREAM_SRV_CONF|NGX_CONF_TAKE2,
+      NGX_STREAM_SRV_CONF|NGX_CONF_2MORE,
       ngx_stream_flyingfish_access,
       NGX_STREAM_SRV_CONF_OFFSET,
       0,
@@ -100,25 +101,35 @@ ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
     ngx_stream_flyingfish_access_ctx_t       *ctx;
     ngx_stream_flyingfish_access_srv_conf_t  *ascf;
 
-    ctx = ngx_stream_get_module_ctx(s, ngx_stream_flyingfish_access_module);
-
-    if (ctx != NULL) {
-        if (ctx->done) {
-            /* decision is in — allow (200) or deny (everything else, fail-closed) */
-            return ctx->status == NGX_FF_ACCESS_ALLOW
-                       ? NGX_OK : NGX_STREAM_FORBIDDEN;
-        }
-
-        /* check still in flight — stay suspended */
-        return NGX_AGAIN;
-    }
-
     ascf = ngx_stream_get_module_srv_conf(s,
         ngx_stream_flyingfish_access_module);
 
     if (ascf->socket.len == 0) {
         /* not configured for this server — let other access handlers run */
         return NGX_DECLINED;
+    }
+
+    ctx = ngx_stream_get_module_ctx(s, ngx_stream_flyingfish_access_module);
+
+    if (ctx != NULL) {
+        if (ctx->done) {
+            /*
+             * Decision is in. Allow on a backend 200. Status 0 means the backend
+             * was unreachable / timed out (not a real deny) — fail closed by
+             * default, or allow when fail_open is set (availability over strictness).
+             * Any other status is a genuine backend deny and is always enforced.
+             */
+            if (ctx->status == NGX_FF_ACCESS_ALLOW
+                || (ctx->status == 0 && ascf->fail_open))
+            {
+                return NGX_OK;
+            }
+
+            return NGX_STREAM_FORBIDDEN;
+        }
+
+        /* check still in flight — stay suspended */
+        return NGX_AGAIN;
     }
 
     c = s->connection;
@@ -136,7 +147,7 @@ ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
         return NGX_ERROR;
     }
 
-    ctx->core.timeout = NGX_FF_ACCESS_TIMEOUT;
+    ctx->core.timeout = ascf->timeout;
     ctx->core.handler = ngx_stream_flyingfish_access_done;
     ctx->core.data = s;
     ctx->core.log = c->log;
@@ -145,16 +156,14 @@ ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
     rc = ngx_ff_access_start(&ctx->core, &ascf->socket);
 
     if (rc != NGX_OK) {
-        /* could not even start the check — fail closed */
+        /* could not even start the check — treat as unreachable (fail_open honored) */
         ngx_log_error(NGX_LOG_ERR, c->log, 0,
-                      "flyingfish_access: could not reach control socket %V, denying",
-                      &ascf->socket);
+                      "flyingfish_access: could not reach control socket %V, %s",
+                      &ascf->socket, ascf->fail_open ? "allowing (fail_open)" : "denying");
         ctx->done = 1;
         ctx->status = 0;
-        return NGX_STREAM_FORBIDDEN;
+        return ascf->fail_open ? NGX_OK : NGX_STREAM_FORBIDDEN;
     }
-
-    ctx->started = 1;
 
     return NGX_AGAIN;
 }
@@ -219,6 +228,8 @@ ngx_stream_flyingfish_access_create_srv_conf(ngx_conf_t *cf)
     }
 
     /* ngx_str_t fields are zeroed by pcalloc — socket.len == 0 means "not set" */
+    conf->timeout = NGX_CONF_UNSET_MSEC;
+    conf->fail_open = NGX_CONF_UNSET;
 
     return conf;
 }
@@ -233,6 +244,8 @@ ngx_stream_flyingfish_access_merge_srv_conf(ngx_conf_t *cf, void *parent,
 
     ngx_conf_merge_str_value(conf->socket, prev->socket, "");
     ngx_conf_merge_str_value(conf->listen_id, prev->listen_id, "0");
+    ngx_conf_merge_msec_value(conf->timeout, prev->timeout, NGX_FF_ACCESS_TIMEOUT);
+    ngx_conf_merge_value(conf->fail_open, prev->fail_open, 0);
 
     return NGX_CONF_OK;
 }
@@ -243,7 +256,9 @@ ngx_stream_flyingfish_access(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     ngx_stream_flyingfish_access_srv_conf_t  *ascf = conf;
 
-    ngx_str_t  *value;
+    ngx_str_t   *value;
+    ngx_str_t    tval;
+    ngx_uint_t   i;
 
     if (ascf->socket.len != 0) {
         return "is duplicate";
@@ -253,6 +268,30 @@ ngx_stream_flyingfish_access(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ascf->socket = value[1];
     ascf->listen_id = value[2];
+
+    /* optional params: timeout=<time> and/or fail_open */
+    for (i = 3; i < cf->args->nelts; i++) {
+
+        if (ngx_strncmp(value[i].data, "timeout=", 8) == 0) {
+            tval.data = value[i].data + 8;
+            tval.len = value[i].len - 8;
+
+            ascf->timeout = ngx_parse_time(&tval, 0);
+
+            if (ascf->timeout == (ngx_msec_t) NGX_ERROR) {
+                return "has an invalid \"timeout\" value";
+            }
+
+            continue;
+        }
+
+        if (ngx_strcmp(value[i].data, "fail_open") == 0) {
+            ascf->fail_open = 1;
+            continue;
+        }
+
+        return "has an unexpected parameter (expected timeout=<time> or fail_open)";
+    }
 
     return NGX_CONF_OK;
 }

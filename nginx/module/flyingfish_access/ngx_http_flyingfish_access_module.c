@@ -27,8 +27,10 @@
 
 
 typedef struct {
-    ngx_str_t   socket;        /* control unix socket path */
-    ngx_str_t   location_id;   /* the FlyingFish location id, sent verbatim */
+    ngx_str_t    socket;        /* control unix socket path */
+    ngx_str_t    location_id;   /* the FlyingFish location id, sent verbatim */
+    ngx_msec_t   timeout;       /* control-socket connect+send+read deadline */
+    ngx_flag_t   fail_open;     /* on backend unreachable/timeout: allow instead of deny */
 } ngx_http_flyingfish_access_loc_conf_t;
 
 
@@ -51,7 +53,7 @@ static char *ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd,
 static ngx_command_t  ngx_http_flyingfish_access_commands[] = {
 
     { ngx_string("flyingfish_auth"),
-      NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
+      NGX_HTTP_LOC_CONF|NGX_CONF_2MORE,
       ngx_http_flyingfish_auth,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
@@ -131,7 +133,7 @@ ngx_http_flyingfish_access_handler(ngx_http_request_t *r)
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    ctx->core.timeout = NGX_FF_AUTH_TIMEOUT;
+    ctx->core.timeout = flcf->timeout;
     ctx->core.handler = ngx_http_flyingfish_access_done;
     ctx->core.data = r;
     ctx->core.log = r->connection->log;
@@ -140,11 +142,26 @@ ngx_http_flyingfish_access_handler(ngx_http_request_t *r)
     rc = ngx_ff_access_start(&ctx->core, &flcf->socket);
 
     if (rc != NGX_OK) {
-        /* could not even start the check — fail closed */
+        /* could not even start the check — unreachable (fail_open honored) */
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "flyingfish_auth: could not reach control socket %V, denying",
-                      &flcf->socket);
-        return NGX_HTTP_FORBIDDEN;
+                      "flyingfish_auth: could not reach control socket %V, %s",
+                      &flcf->socket, flcf->fail_open ? "allowing (fail_open)" : "denying");
+
+        if (!flcf->fail_open) {
+            return NGX_HTTP_FORBIDDEN;
+        }
+
+        /* fail_open: allow — respond 200 empty so auth_request passes */
+        r->headers_out.status = NGX_HTTP_OK;
+        r->headers_out.content_length_n = 0;
+
+        rc = ngx_http_send_header(r);
+
+        if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
+            return rc;
+        }
+
+        return ngx_http_send_special(r, NGX_HTTP_LAST);
     }
 
     /* keep the request alive while the check is in flight */
@@ -157,12 +174,22 @@ ngx_http_flyingfish_access_handler(ngx_http_request_t *r)
 static void
 ngx_http_flyingfish_access_done(void *data, ngx_int_t status)
 {
-    ngx_int_t            rc;
-    ngx_http_request_t  *r = data;
-    ngx_connection_t    *c = r->connection;
+    ngx_int_t                               rc;
+    ngx_http_request_t                     *r = data;
+    ngx_connection_t                       *c = r->connection;
+    ngx_http_flyingfish_access_loc_conf_t  *flcf;
 
-    if (status != NGX_FF_AUTH_ALLOW) {
-        /* deny (fail-closed for status 0 too) */
+    flcf = ngx_http_get_module_loc_conf(r, ngx_http_flyingfish_access_module);
+
+    /*
+     * Allow on backend 200. Status 0 = backend unreachable/timeout (not a real
+     * deny) — fail closed by default, or allow when fail_open is set. Any other
+     * status is a genuine backend deny and is always enforced.
+     */
+    if (status != NGX_FF_AUTH_ALLOW
+        && !(status == 0 && flcf->fail_open))
+    {
+        /* deny */
         ngx_http_finalize_request(r, NGX_HTTP_FORBIDDEN);
 
     } else {
@@ -231,6 +258,8 @@ ngx_http_flyingfish_access_create_loc_conf(ngx_conf_t *cf)
     }
 
     /* ngx_str_t fields are zeroed by pcalloc — socket.len == 0 means "not set" */
+    conf->timeout = NGX_CONF_UNSET_MSEC;
+    conf->fail_open = NGX_CONF_UNSET;
 
     return conf;
 }
@@ -244,6 +273,8 @@ ngx_http_flyingfish_access_merge_loc_conf(ngx_conf_t *cf, void *parent, void *ch
 
     ngx_conf_merge_str_value(conf->socket, prev->socket, "");
     ngx_conf_merge_str_value(conf->location_id, prev->location_id, "0");
+    ngx_conf_merge_msec_value(conf->timeout, prev->timeout, NGX_FF_AUTH_TIMEOUT);
+    ngx_conf_merge_value(conf->fail_open, prev->fail_open, 0);
 
     return NGX_CONF_OK;
 }
@@ -255,6 +286,8 @@ ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_flyingfish_access_loc_conf_t  *flcf = conf;
 
     ngx_str_t                 *value;
+    ngx_str_t                  tval;
+    ngx_uint_t                 i;
     ngx_http_core_loc_conf_t  *clcf;
 
     if (flcf->socket.len != 0) {
@@ -265,6 +298,30 @@ ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     flcf->socket = value[1];
     flcf->location_id = value[2];
+
+    /* optional params: timeout=<time> and/or fail_open */
+    for (i = 3; i < cf->args->nelts; i++) {
+
+        if (ngx_strncmp(value[i].data, "timeout=", 8) == 0) {
+            tval.data = value[i].data + 8;
+            tval.len = value[i].len - 8;
+
+            flcf->timeout = ngx_parse_time(&tval, 0);
+
+            if (flcf->timeout == (ngx_msec_t) NGX_ERROR) {
+                return "has an invalid \"timeout\" value";
+            }
+
+            continue;
+        }
+
+        if (ngx_strcmp(value[i].data, "fail_open") == 0) {
+            flcf->fail_open = 1;
+            continue;
+        }
+
+        return "has an unexpected parameter (expected timeout=<time> or fail_open)";
+    }
 
     /* become the content handler for this location */
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
