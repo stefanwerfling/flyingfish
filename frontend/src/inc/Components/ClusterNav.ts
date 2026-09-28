@@ -47,6 +47,12 @@ export type NavEntity = {
     subtitle?: string;
     /** Node operating mode; in 'attach' the Router category is hidden. */
     mode?: 'attach' | 'router';
+    /**
+     * Click target for a node that has no child pages of its own (a peer node from the
+     * roster — it configures a different backend, so it carries no local resource groups;
+     * selecting it takes you to the Datacenter node view instead).
+     */
+    make?: () => unknown;
     tabs?: NavTab[];
     /** Node-level pages shown directly under the node, above the category groups (e.g. Dashboard). */
     leaves?: NavLeaf[];
@@ -175,8 +181,18 @@ export class ClusterNav {
                 level: 1, icon: node.icon, label: node.title, status: node.status,
                 caret: hasChildren ? (nodeSel ? '▾' : '▸') : '',
                 selected: false, dim: node.status === 'warn',
-                // clicking the node opens its dashboard (first node-level leaf), else the first page
-                onClick: () => loadPage((nodeLeaves[0] ?? groups[0]?.leaves[0])?.make())
+                // clicking the node opens its dashboard (first node-level leaf), else the
+                // first category page; a childless peer node falls back to its own `make`
+                // (the Datacenter node view) and never crashes on an absent page.
+                onClick: (): void => {
+                    const target = nodeLeaves[0] ?? groups[0]?.leaves[0];
+
+                    if (target !== undefined) {
+                        loadPage(target.make());
+                    } else if (node.make !== undefined) {
+                        loadPage(node.make());
+                    }
+                }
             });
 
             if (!nodeSel) {

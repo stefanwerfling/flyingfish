@@ -235,6 +235,29 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
             ]
         };
 
+        // Peer nodes from the converged gossip roster (9.5.12): reflect live membership in
+        // the tree so it matches the Datacenter Nodes/Topology tabs. A peer configures its
+        // OWN backend, so it carries no local resource groups here — it shows its identity
+        // + liveness, and selecting it opens the Datacenter node view. Skipped when solo /
+        // pre-gossip (roster empty or only self).
+        for (const peer of roster) {
+            if (peer.nodeUid === selfNodeUid) {
+                continue;
+            }
+
+            navModel.nodes.push({
+                id: `node:${peer.nodeUid}`,
+                kind: 'node',
+                title: peer.host || peer.commonName || peer.nodeUid.slice(0, 8),
+                icon: '🖥️',
+                avatar: '🖥️',
+                status: peer.online ? 'up' : 'off',
+                badges: [{label: 'peer', cls: 'plain'}],
+                subtitle: peer.online ? 'online' : 'offline',
+                make: (): BasePage => new ClusterView('nodes')
+            });
+        }
+
         ClusterNav.render(navModel, page.getName(), (p): void => {
             loadPage(p as BasePage);
         }, currentuser?.user?.username);
