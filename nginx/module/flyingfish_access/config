@@ -8,8 +8,8 @@
 # links into the one nginx binary.
 ngx_addon_name=ngx_flyingfish_access
 
-FF_CORE_SRC="$ngx_addon_dir/ngx_flyingfish_access_core.c"
-FF_CORE_DEP="$ngx_addon_dir/ngx_flyingfish_access_core.h"
+FF_CORE_SRC="$ngx_addon_dir/ngx_flyingfish_access_core.c $ngx_addon_dir/ngx_ff_access_cache.c"
+FF_CORE_DEP="$ngx_addon_dir/ngx_flyingfish_access_core.h $ngx_addon_dir/ngx_ff_access_cache.h"
 FF_STREAM_SRC="$ngx_addon_dir/ngx_stream_flyingfish_access_module.c"
 FF_HTTP_SRC="$ngx_addon_dir/ngx_http_flyingfish_access_module.c"
 
