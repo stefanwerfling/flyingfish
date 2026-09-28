@@ -1,0 +1,274 @@
+/*
+ * ngx_http_flyingfish_access_module — FlyingFish L7 (http) basic-auth check as a native
+ * nginx module (the "nginx nativ" epic, Phase C), replacing the njs
+ * `mainhttp.authorizeHttp` js_content handler.
+ *
+ * Directive (http location context):
+ *     flyingfish_auth <control_socket_path> <location_id>;
+ *
+ * It is the content handler for the internal `/auth<id>` location that the generated
+ * config points `auth_request` at. It reads the request's Authorization header and,
+ * via the shared ngx_ff_access core, makes ONE non-blocking GET to the control socket
+ * (`GET /njs/auth_basic` with the authheader + location_id) — responding 200 (allow)
+ * on backend 200, 403 (deny) otherwise, and 401 when there is no Authorization header
+ * at all (so the parent location's auth_basic realm prompts for credentials). Matches
+ * the njs it replaces; the backend-ignored `secret` header is dropped.
+ */
+
+#include <ngx_config.h>
+#include <ngx_core.h>
+#include <ngx_http.h>
+
+#include "ngx_flyingfish_access_core.h"
+
+
+#define NGX_FF_AUTH_TIMEOUT   2000   /* connect+send+read deadline, ms */
+#define NGX_FF_AUTH_ALLOW     200    /* backend status that means "allow" */
+
+
+typedef struct {
+    ngx_str_t   socket;        /* control unix socket path */
+    ngx_str_t   location_id;   /* the FlyingFish location id, sent verbatim */
+} ngx_http_flyingfish_access_loc_conf_t;
+
+
+typedef struct {
+    ngx_ff_access_ctx_t   core;
+} ngx_http_flyingfish_access_ctx_t;
+
+
+static ngx_int_t ngx_http_flyingfish_access_handler(ngx_http_request_t *r);
+static void ngx_http_flyingfish_access_done(void *data, ngx_int_t status);
+static ngx_buf_t *ngx_http_flyingfish_access_build_request(ngx_pool_t *pool,
+    ngx_str_t *authheader, ngx_str_t *location_id);
+static void *ngx_http_flyingfish_access_create_loc_conf(ngx_conf_t *cf);
+static char *ngx_http_flyingfish_access_merge_loc_conf(ngx_conf_t *cf,
+    void *parent, void *child);
+static char *ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
+
+
+static ngx_command_t  ngx_http_flyingfish_access_commands[] = {
+
+    { ngx_string("flyingfish_auth"),
+      NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
+      ngx_http_flyingfish_auth,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL },
+
+      ngx_null_command
+};
+
+
+static ngx_http_module_t  ngx_http_flyingfish_access_module_ctx = {
+    NULL,                                        /* preconfiguration */
+    NULL,                                        /* postconfiguration */
+
+    NULL,                                        /* create main configuration */
+    NULL,                                        /* init main configuration */
+
+    NULL,                                        /* create server configuration */
+    NULL,                                        /* merge server configuration */
+
+    ngx_http_flyingfish_access_create_loc_conf,  /* create location configuration */
+    ngx_http_flyingfish_access_merge_loc_conf    /* merge location configuration */
+};
+
+
+ngx_module_t  ngx_http_flyingfish_access_module = {
+    NGX_MODULE_V1,
+    &ngx_http_flyingfish_access_module_ctx,      /* module context */
+    ngx_http_flyingfish_access_commands,         /* module directives */
+    NGX_HTTP_MODULE,                             /* module type */
+    NULL,                                        /* init master */
+    NULL,                                        /* init module */
+    NULL,                                        /* init process */
+    NULL,                                        /* init thread */
+    NULL,                                        /* exit thread */
+    NULL,                                        /* exit process */
+    NULL,                                        /* exit master */
+    NGX_MODULE_V1_PADDING
+};
+
+
+static ngx_int_t
+ngx_http_flyingfish_access_handler(ngx_http_request_t *r)
+{
+    ngx_int_t                               rc;
+    ngx_table_elt_t                        *auth;
+    ngx_http_flyingfish_access_ctx_t       *ctx;
+    ngx_http_flyingfish_access_loc_conf_t  *flcf;
+
+    flcf = ngx_http_get_module_loc_conf(r, ngx_http_flyingfish_access_module);
+
+    if (flcf->socket.len == 0) {
+        return NGX_DECLINED;
+    }
+
+    rc = ngx_http_discard_request_body(r);
+    if (rc != NGX_OK) {
+        return rc;
+    }
+
+    auth = r->headers_in.authorization;
+
+    if (auth == NULL || auth->value.len == 0) {
+        /* no credentials — 401 so the parent auth_basic realm prompts */
+        return NGX_HTTP_UNAUTHORIZED;
+    }
+
+    ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_flyingfish_access_ctx_t));
+    if (ctx == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    ngx_http_set_ctx(r, ctx, ngx_http_flyingfish_access_module);
+
+    ctx->core.request = ngx_http_flyingfish_access_build_request(r->pool,
+        &auth->value, &flcf->location_id);
+    if (ctx->core.request == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    ctx->core.timeout = NGX_FF_AUTH_TIMEOUT;
+    ctx->core.handler = ngx_http_flyingfish_access_done;
+    ctx->core.data = r;
+    ctx->core.log = r->connection->log;
+    ctx->core.pool = r->pool;
+
+    rc = ngx_ff_access_start(&ctx->core, &flcf->socket);
+
+    if (rc != NGX_OK) {
+        /* could not even start the check — fail closed */
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      "flyingfish_auth: could not reach control socket %V, denying",
+                      &flcf->socket);
+        return NGX_HTTP_FORBIDDEN;
+    }
+
+    /* keep the request alive while the check is in flight */
+    r->main->count++;
+
+    return NGX_DONE;
+}
+
+
+static void
+ngx_http_flyingfish_access_done(void *data, ngx_int_t status)
+{
+    ngx_int_t            rc;
+    ngx_http_request_t  *r = data;
+    ngx_connection_t    *c = r->connection;
+
+    if (status != NGX_FF_AUTH_ALLOW) {
+        /* deny (fail-closed for status 0 too) */
+        ngx_http_finalize_request(r, NGX_HTTP_FORBIDDEN);
+
+    } else {
+        /* allow — respond 200 empty so auth_request lets the request through */
+        r->headers_out.status = NGX_HTTP_OK;
+        r->headers_out.content_length_n = 0;
+
+        rc = ngx_http_send_header(r);
+
+        if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
+            ngx_http_finalize_request(r, rc);
+        } else {
+            ngx_http_finalize_request(r, ngx_http_send_special(r, NGX_HTTP_LAST));
+        }
+    }
+
+    /*
+     * This callback fires from the control-socket connection's event, not the client
+     * connection's — so nginx will not run the client connection's posted requests
+     * (the auth_request parent that ngx_http_finalize_request just posted) on its own.
+     * Drive them explicitly, exactly like the upstream module does after finalizing
+     * from the upstream connection.
+     */
+    ngx_http_run_posted_requests(c);
+}
+
+
+static ngx_buf_t *
+ngx_http_flyingfish_access_build_request(ngx_pool_t *pool, ngx_str_t *authheader,
+    ngx_str_t *location_id)
+{
+    size_t      len;
+    ngx_buf_t  *b;
+
+    static const char  fmt[] =
+        "GET /njs/auth_basic HTTP/1.0" CRLF
+        "Host: localhost" CRLF
+        "authheader: %V" CRLF
+        "location_id: %V" CRLF
+        "Connection: close" CRLF
+        CRLF;
+
+    /* fmt minus the two %V (4 chars) plus the actual values */
+    len = sizeof(fmt) - 1 - (2 * 2) + authheader->len + location_id->len;
+
+    b = ngx_create_temp_buf(pool, len);
+    if (b == NULL) {
+        return NULL;
+    }
+
+    b->last = ngx_snprintf(b->last, len, fmt, authheader, location_id);
+
+    return b;
+}
+
+
+static void *
+ngx_http_flyingfish_access_create_loc_conf(ngx_conf_t *cf)
+{
+    ngx_http_flyingfish_access_loc_conf_t  *conf;
+
+    conf = ngx_pcalloc(cf->pool,
+        sizeof(ngx_http_flyingfish_access_loc_conf_t));
+    if (conf == NULL) {
+        return NULL;
+    }
+
+    /* ngx_str_t fields are zeroed by pcalloc — socket.len == 0 means "not set" */
+
+    return conf;
+}
+
+
+static char *
+ngx_http_flyingfish_access_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+{
+    ngx_http_flyingfish_access_loc_conf_t  *prev = parent;
+    ngx_http_flyingfish_access_loc_conf_t  *conf = child;
+
+    ngx_conf_merge_str_value(conf->socket, prev->socket, "");
+    ngx_conf_merge_str_value(conf->location_id, prev->location_id, "0");
+
+    return NGX_CONF_OK;
+}
+
+
+static char *
+ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_http_flyingfish_access_loc_conf_t  *flcf = conf;
+
+    ngx_str_t                 *value;
+    ngx_http_core_loc_conf_t  *clcf;
+
+    if (flcf->socket.len != 0) {
+        return "is duplicate";
+    }
+
+    value = cf->args->elts;
+
+    flcf->socket = value[1];
+    flcf->location_id = value[2];
+
+    /* become the content handler for this location */
+    clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
+    clcf->handler = ngx_http_flyingfish_access_handler;
+
+    return NGX_CONF_OK;
+}

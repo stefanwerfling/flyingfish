@@ -34,7 +34,7 @@ RUN cd ~ \
 # copied to ~ alongside the njs/headers-more sources before configure runs. Only the
 # module dir is copied here (not all of ./nginx/) to keep the nginx build cache from
 # busting on unrelated nginx/ changes.
-COPY ./nginx/module/ngx_stream_flyingfish_access /root/ngx_stream_flyingfish_access
+COPY ./nginx/module/flyingfish_access /root/flyingfish_access
 
 RUN cd ~/nginx-$NGINX_VERSION && \
     ./configure \
@@ -65,7 +65,7 @@ RUN cd ~/nginx-$NGINX_VERSION && \
     --with-http_secure_link_module \
     --add-module=../njs/nginx \
     --add-module=../headers-more-nginx-module/ \
-    --add-module=../ngx_stream_flyingfish_access \
+    --add-module=../flyingfish_access \
     --with-mail \
     --with-mail_ssl_module \
     --with-stream \
