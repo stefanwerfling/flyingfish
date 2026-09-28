@@ -12,7 +12,11 @@
  * (`GET /njs/auth_basic` with the authheader + location_id) — responding 200 (allow)
  * on backend 200, 403 (deny) otherwise, and 401 when there is no Authorization header
  * at all (so the parent location's auth_basic realm prompts for credentials). Matches
- * the njs it replaces; the backend-ignored `secret` header is dropped.
+ * the njs it replaces.
+ *
+ * An optional `secret=<value>` param (the shared FLYINGFISH_NGINX_SECRET) is sent as a
+ * `secret` header so the control endpoint can reject calls that did not come from the
+ * generated config — defense-in-depth behind the unix socket. Omitted when unset.
  */
 
 #include <ngx_config.h>
@@ -30,6 +34,7 @@
 typedef struct {
     ngx_str_t    socket;        /* control unix socket path */
     ngx_str_t    location_id;   /* the FlyingFish location id, sent verbatim */
+    ngx_str_t    secret;        /* shared secret sent as the `secret` header (or empty) */
     ngx_msec_t   timeout;       /* control-socket connect+send+read deadline */
     ngx_flag_t   fail_open;     /* on backend unreachable/timeout: allow instead of deny */
 } ngx_http_flyingfish_access_loc_conf_t;
@@ -43,7 +48,7 @@ typedef struct {
 static ngx_int_t ngx_http_flyingfish_access_handler(ngx_http_request_t *r);
 static void ngx_http_flyingfish_access_done(void *data, ngx_int_t status);
 static ngx_buf_t *ngx_http_flyingfish_access_build_request(ngx_pool_t *pool,
-    ngx_str_t *authheader, ngx_str_t *location_id);
+    ngx_str_t *authheader, ngx_str_t *location_id, ngx_str_t *secret);
 static void *ngx_http_flyingfish_access_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_flyingfish_access_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
@@ -140,7 +145,7 @@ ngx_http_flyingfish_access_handler(ngx_http_request_t *r)
     ngx_http_set_ctx(r, ctx, ngx_http_flyingfish_access_module);
 
     ctx->core.request = ngx_http_flyingfish_access_build_request(r->pool,
-        &auth->value, &flcf->location_id);
+        &auth->value, &flcf->location_id, &flcf->secret);
     if (ctx->core.request == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
@@ -246,28 +251,45 @@ ngx_http_flyingfish_access_done(void *data, ngx_int_t status)
 
 static ngx_buf_t *
 ngx_http_flyingfish_access_build_request(ngx_pool_t *pool, ngx_str_t *authheader,
-    ngx_str_t *location_id)
+    ngx_str_t *location_id, ngx_str_t *secret)
 {
     size_t      len;
     ngx_buf_t  *b;
+    ngx_str_t   sec_hdr;
+
+    static const char  sec_fmt[] = "secret: %V" CRLF;
 
     static const char  fmt[] =
         "GET /njs/auth_basic HTTP/1.0" CRLF
         "Host: localhost" CRLF
         "authheader: %V" CRLF
         "location_id: %V" CRLF
+        "%V"                       /* prebuilt secret header line, or empty */
         "Connection: close" CRLF
         CRLF;
 
-    /* fmt minus the two %V (4 chars) plus the actual values */
-    len = sizeof(fmt) - 1 - (2 * 2) + authheader->len + location_id->len;
+    /* build the optional secret header only when a secret is configured */
+    ngx_str_null(&sec_hdr);
+
+    if (secret->len > 0) {
+        sec_hdr.len = sizeof(sec_fmt) - 1 - 2 + secret->len;
+        sec_hdr.data = ngx_pnalloc(pool, sec_hdr.len);
+        if (sec_hdr.data == NULL) {
+            return NULL;
+        }
+        ngx_snprintf(sec_hdr.data, sec_hdr.len, sec_fmt, secret);
+    }
+
+    /* fmt minus the three %V (6 chars) plus the actual values */
+    len = sizeof(fmt) - 1 - (3 * 2)
+          + authheader->len + location_id->len + sec_hdr.len;
 
     b = ngx_create_temp_buf(pool, len);
     if (b == NULL) {
         return NULL;
     }
 
-    b->last = ngx_snprintf(b->last, len, fmt, authheader, location_id);
+    b->last = ngx_snprintf(b->last, len, fmt, authheader, location_id, &sec_hdr);
 
     return b;
 }
@@ -300,6 +322,7 @@ ngx_http_flyingfish_access_merge_loc_conf(ngx_conf_t *cf, void *parent, void *ch
 
     ngx_conf_merge_str_value(conf->socket, prev->socket, "");
     ngx_conf_merge_str_value(conf->location_id, prev->location_id, "0");
+    ngx_conf_merge_str_value(conf->secret, prev->secret, "");
     ngx_conf_merge_msec_value(conf->timeout, prev->timeout, NGX_FF_AUTH_TIMEOUT);
     ngx_conf_merge_value(conf->fail_open, prev->fail_open, 0);
 
@@ -347,7 +370,13 @@ ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        return "has an unexpected parameter (expected timeout=<time> or fail_open)";
+        if (ngx_strncmp(value[i].data, "secret=", 7) == 0) {
+            flcf->secret.data = value[i].data + 7;
+            flcf->secret.len = value[i].len - 7;
+            continue;
+        }
+
+        return "has an unexpected parameter (expected timeout=<time>, fail_open or secret=<value>)";
     }
 
     /* become the content handler for this location */

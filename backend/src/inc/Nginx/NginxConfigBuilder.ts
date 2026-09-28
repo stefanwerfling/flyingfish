@@ -129,14 +129,22 @@ export class NginxConfigBuilder {
      * two-argument order (socket first, listen id second) are a contract with the C
      * module, which parses exactly those two args — so it is built in one place and
      * unit-tested. Replaced the njs `js_access mainstream.accessAddressStream`.
+     *
+     * When a shared secret is configured it is appended as the optional `secret=<value>`
+     * param; the module sends it as a `secret` header and the control endpoint rejects
+     * calls that do not carry it (defense-in-depth behind the unix socket). An empty
+     * secret is omitted so the directive stays two-arg (and pre-secret behaviour holds).
      * @param {string} socketPath - the nginx control unix socket path
      * @param {number} listenId - the FlyingFish listen id
+     * @param {string} [secret] - the shared FLYINGFISH_NGINX_SECRET (omitted when empty)
      * @returns {{name: string; value: string}} the directive name + value for addVariable
      */
-    public static streamAccessDirective(socketPath: string, listenId: number): {name: string; value: string;} {
+    public static streamAccessDirective(socketPath: string, listenId: number, secret?: string): {name: string; value: string;} {
+        const secretParam = secret ? ` secret=${secret}` : '';
+
         return {
             name: 'flyingfish_access',
-            value: `${socketPath} ${listenId}`
+            value: `${socketPath} ${listenId}${secretParam}`
         };
     }
 
@@ -145,16 +153,20 @@ export class NginxConfigBuilder {
      * `auth_request` targets (nginx-native Phase C): the ngx_http_flyingfish_access
      * module's `flyingfish_auth <control_socket> <location_id>;`. Same
      * name-and-order-are-a-contract reasoning as {@link streamAccessDirective}; the
-     * module parses exactly two args (NGX_CONF_TAKE2). Replaced the njs
-     * `js_content mainhttp.authorizeHttp`.
+     * module parses two args plus optional params. Replaced the njs
+     * `js_content mainhttp.authorizeHttp`. The shared secret is appended as
+     * `secret=<value>` exactly as in {@link streamAccessDirective} (omitted when empty).
      * @param {string} socketPath - the nginx control unix socket path
      * @param {number} locationId - the FlyingFish location id
+     * @param {string} [secret] - the shared FLYINGFISH_NGINX_SECRET (omitted when empty)
      * @returns {{name: string; value: string}} the directive name + value for addVariable
      */
-    public static httpAuthDirective(socketPath: string, locationId: number): {name: string; value: string;} {
+    public static httpAuthDirective(socketPath: string, locationId: number, secret?: string): {name: string; value: string;} {
+        const secretParam = secret ? ` secret=${secret}` : '';
+
         return {
             name: 'flyingfish_auth',
-            value: `${socketPath} ${locationId}`
+            value: `${socketPath} ${locationId}${secretParam}`
         };
     }
 
@@ -870,10 +882,15 @@ export class NginxConfigBuilder {
                 // ngx_stream_flyingfish_access module does the control-socket call
                 // itself, so it only needs the socket path + listen id. This replaces
                 // the njs `js_access mainstream.accessAddressStream` + its `set $ff_*`
-                // variables. The module hardcodes the `/njs/address_access` path and
-                // does not use the (backend-ignored) secret or the logging level.
+                // variables. The module hardcodes the `/njs/address_access` path; the
+                // shared secret is now sent + validated (defense-in-depth), the logging
+                // level is gone.
                 if (control) {
-                    const accessDir = NginxConfigBuilder.streamAccessDirective(control.getUnixSocket(), streamCollects.listen.id);
+                    const accessDir = NginxConfigBuilder.streamAccessDirective(
+                        control.getUnixSocket(),
+                        streamCollects.listen.id,
+                        FlyingFishConfig.getInstance().get()?.nginx?.secret
+                    );
                     aServer.addVariable(accessDir.name, accessDir.value);
                 } else {
                     Logger.getLogger().error('Nginx control server is not init for INTERN_SERVER_ADDRESS_ACCESS');
@@ -1183,10 +1200,14 @@ export class NginxConfigBuilder {
                             // header itself and calls the control socket, so it only
                             // needs the socket path + location id. Replaces the njs
                             // `js_content mainhttp.authorizeHttp` + its `set $ff_*`
-                            // variables (hardcoded /njs/auth_basic path; the
-                            // backend-ignored secret and logging level are gone).
+                            // variables (hardcoded /njs/auth_basic path; the shared secret
+                            // is now sent + validated, the logging level is gone).
                             if (control) {
-                                const authDir = NginxConfigBuilder.httpAuthDirective(control.getUnixSocket(), entry.id);
+                                const authDir = NginxConfigBuilder.httpAuthDirective(
+                                    control.getUnixSocket(),
+                                    entry.id,
+                                    FlyingFishConfig.getInstance().get()?.nginx?.secret
+                                );
                                 authLocation.addVariable(authDir.name, authDir.value);
                             } else {
                                 Logger.getLogger().error('Nginx control server is not init for INTERN_SERVER_AUTH_BASIC');

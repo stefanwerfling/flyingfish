@@ -2,6 +2,7 @@ import {Request, Response, Router} from 'express';
 import {Logger} from '@stefanwerfling/figtree';
 import {BasicAuthParser, DefaultRoute} from 'flyingfish_core';
 import {Credential} from '../../inc/Credential/Credential.js';
+import {Config} from '../../inc/Config/Config.js';
 
 /**
  * AuthBasic
@@ -18,12 +19,25 @@ export class AuthBasic extends DefaultRoute {
      * @param response
      * @param location_id
      * @param authHeader
+     * @param secret
      */
     public async check(
         response: Response,
         location_id: string,
-        authHeader: string
+        authHeader: string,
+        secret: string
     ): Promise<boolean> {
+        // Shared-secret gate (nginx-native): see AddressAccess::access. Reject control
+        // calls that do not carry the configured FLYINGFISH_NGINX_SECRET; skip when unset.
+        const expectedSecret = Config.getInstance().get()?.nginx?.secret ?? '';
+
+        if (expectedSecret !== '' && secret !== expectedSecret) {
+            Logger.getLogger().warn('AuthBasic::check: rejected — missing/invalid control secret');
+            response.status(403).send();
+
+            return false;
+        }
+
         Logger.getLogger().info('check -> location_id: %s authheader:', location_id, authHeader);
 
         const auth = BasicAuthParser.parse(authHeader);
@@ -70,7 +84,8 @@ export class AuthBasic extends DefaultRoute {
                 await this.check(
                     res,
                     req.header('location_id') ?? '',
-                    req.header('authheader') ?? ''
+                    req.header('authheader') ?? '',
+                    req.header('secret') ?? ''
                 );
             }
         );

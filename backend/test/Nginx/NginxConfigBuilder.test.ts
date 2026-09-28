@@ -35,6 +35,19 @@ describe('NginxConfigBuilder.streamAccessDirective', () => {
         // the directive body is exactly the two args the module's NGX_CONF_TAKE2 expects
         expect(d.value.split(' ')).toHaveLength(2);
     });
+
+    test('appends `secret=<value>` when a shared secret is configured', () => {
+        const d = NginxConfigBuilder.streamAccessDirective('/run/ff.sock', 42, 'topsecret');
+
+        // socket + id + the optional secret param (the module parses `secret=` after the two args)
+        expect(d.value).toBe('/run/ff.sock 42 secret=topsecret');
+        expect(d.value.split(' ')).toHaveLength(3);
+    });
+
+    test('omits the secret param when the secret is empty or undefined (pre-secret directive)', () => {
+        expect(NginxConfigBuilder.streamAccessDirective('/run/ff.sock', 42, '').value).toBe('/run/ff.sock 42');
+        expect(NginxConfigBuilder.streamAccessDirective('/run/ff.sock', 42).value).toBe('/run/ff.sock 42');
+    });
 });
 
 describe('NginxConfigBuilder.httpAuthDirective', () => {
@@ -54,5 +67,11 @@ describe('NginxConfigBuilder.httpAuthDirective', () => {
         expect(d.name).not.toBe('js_content');
         expect(d.value).not.toContain('mainhttp');
         expect(d.value.split(' ')).toHaveLength(2);
+    });
+
+    test('appends `secret=<value>` when configured, omits it when empty/undefined', () => {
+        expect(NginxConfigBuilder.httpAuthDirective('/x.sock', 7, 'topsecret').value).toBe('/x.sock 7 secret=topsecret');
+        expect(NginxConfigBuilder.httpAuthDirective('/x.sock', 7, '').value).toBe('/x.sock 7');
+        expect(NginxConfigBuilder.httpAuthDirective('/x.sock', 7).value).toBe('/x.sock 7');
     });
 });

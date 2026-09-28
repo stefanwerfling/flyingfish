@@ -7,6 +7,7 @@ import {
     NginxListenServiceDB
 } from 'flyingfish_core';
 import {NginxListenAddressCheckType} from 'flyingfish_schemas';
+import {FlyingFishConfig} from '../../Application/Config/FlyingFishConfig.js';
 
 /**
  * AddressAccess
@@ -20,14 +21,30 @@ export class AddressAccess extends DefaultRoute {
      * @param realip_remote_addr
      * @param remote_addr
      * @param type
+     * @param secret
      */
     public async access(
         response: Response,
         listen_id: string,
         realip_remote_addr: string,
         remote_addr: string,
-        type: string
+        type: string,
+        secret: string
     ): Promise<boolean> {
+        // Shared-secret gate (nginx-native): the native module sends the configured
+        // FLYINGFISH_NGINX_SECRET as the `secret` header. When a secret is configured,
+        // reject any call that does not carry it — defense-in-depth behind the unix
+        // socket. When unset (no secret shared) the check is skipped (pre-secret
+        // behaviour, trust = the socket alone).
+        const expectedSecret = FlyingFishConfig.getInstance().get()?.nginx?.secret ?? '';
+
+        if (expectedSecret !== '' && secret !== expectedSecret) {
+            Logger.getLogger().warn('AddressAccess::access: rejected — missing/invalid control secret');
+            response.status(403).send();
+
+            return false;
+        }
+
         Logger.getLogger().info(
             'AddressAccess::access: realip_remote_addr: %s remote_addr: %s type: %s',
             realip_remote_addr,
@@ -169,7 +186,8 @@ export class AddressAccess extends DefaultRoute {
                     req.header('listen_id') ?? '',
                     req.header('realip_remote_addr') ?? '',
                     req.header('remote_addr') ?? '',
-                    req.header('type') ?? ''
+                    req.header('type') ?? '',
+                    req.header('secret') ?? ''
                 );
 
                 return {type: HandlerResultType.handled};
