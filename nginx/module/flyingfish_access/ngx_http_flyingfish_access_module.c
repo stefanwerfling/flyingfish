@@ -20,6 +20,7 @@
 #include <ngx_http.h>
 
 #include "ngx_flyingfish_access_core.h"
+#include "ngx_ff_access_metrics.h"
 
 
 #define NGX_FF_AUTH_TIMEOUT   2000   /* connect+send+read deadline, ms */
@@ -48,6 +49,9 @@ static char *ngx_http_flyingfish_access_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 static char *ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
+static ngx_int_t ngx_http_flyingfish_status_handler(ngx_http_request_t *r);
+static char *ngx_http_flyingfish_status(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
 
 
 static ngx_command_t  ngx_http_flyingfish_access_commands[] = {
@@ -55,6 +59,13 @@ static ngx_command_t  ngx_http_flyingfish_access_commands[] = {
     { ngx_string("flyingfish_auth"),
       NGX_HTTP_LOC_CONF|NGX_CONF_2MORE,
       ngx_http_flyingfish_auth,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("flyingfish_access_status"),
+      NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS,
+      ngx_http_flyingfish_status,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
@@ -117,6 +128,7 @@ ngx_http_flyingfish_access_handler(ngx_http_request_t *r)
 
     if (auth == NULL || auth->value.len == 0) {
         /* no credentials — 401 so the parent auth_basic realm prompts */
+        ngx_ff_metric_inc(http_unauth);
         return NGX_HTTP_UNAUTHORIZED;
     }
 
@@ -147,9 +159,14 @@ ngx_http_flyingfish_access_handler(ngx_http_request_t *r)
                       "flyingfish_auth: could not reach control socket %V, %s",
                       &flcf->socket, flcf->fail_open ? "allowing (fail_open)" : "denying");
 
+        ngx_ff_metric_inc(http_error);
+
         if (!flcf->fail_open) {
+            ngx_ff_metric_inc(http_deny);
             return NGX_HTTP_FORBIDDEN;
         }
+
+        ngx_ff_metric_inc(http_allow);
 
         /* fail_open: allow — respond 200 empty so auth_request passes */
         r->headers_out.status = NGX_HTTP_OK;
@@ -186,14 +203,24 @@ ngx_http_flyingfish_access_done(void *data, ngx_int_t status)
      * deny) — fail closed by default, or allow when fail_open is set. Any other
      * status is a genuine backend deny and is always enforced.
      */
+    if (status == 0) {
+        ngx_ff_metric_inc(http_error);
+    }
+
     if (status != NGX_FF_AUTH_ALLOW
         && !(status == 0 && flcf->fail_open))
     {
-        /* deny */
+        /* deny — count a genuine policy deny (status 0 is already counted as error) */
+        if (status != 0) {
+            ngx_ff_metric_inc(http_deny);
+        }
+
         ngx_http_finalize_request(r, NGX_HTTP_FORBIDDEN);
 
     } else {
         /* allow — respond 200 empty so auth_request lets the request through */
+        ngx_ff_metric_inc(http_allow);
+
         r->headers_out.status = NGX_HTTP_OK;
         r->headers_out.content_length_n = 0;
 
@@ -326,6 +353,72 @@ ngx_http_flyingfish_auth(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     /* become the content handler for this location */
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
     clcf->handler = ngx_http_flyingfish_access_handler;
+
+    return NGX_CONF_OK;
+}
+
+
+static ngx_int_t
+ngx_http_flyingfish_status_handler(ngx_http_request_t *r)
+{
+    ngx_int_t     rc;
+    ngx_str_t     body;
+    ngx_buf_t    *b;
+    ngx_chain_t   out;
+
+    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD))) {
+        return NGX_HTTP_NOT_ALLOWED;
+    }
+
+    rc = ngx_http_discard_request_body(r);
+    if (rc != NGX_OK) {
+        return rc;
+    }
+
+    if (ngx_ff_metrics_format(r->pool, &body) != NGX_OK) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    r->headers_out.status = NGX_HTTP_OK;
+    r->headers_out.content_length_n = body.len;
+    ngx_str_set(&r->headers_out.content_type, "text/plain");
+    r->headers_out.content_type_len = r->headers_out.content_type.len;
+
+    rc = ngx_http_send_header(r);
+
+    if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
+        return rc;
+    }
+
+    b = ngx_calloc_buf(r->pool);
+    if (b == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    b->pos = body.data;
+    b->last = body.data + body.len;
+    b->memory = 1;
+    b->last_buf = 1;
+    b->last_in_chain = 1;
+
+    out.buf = b;
+    out.next = NULL;
+
+    return ngx_http_output_filter(r, &out);
+}
+
+
+static char *
+ngx_http_flyingfish_status(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_http_core_loc_conf_t  *clcf;
+
+    if (ngx_ff_metrics_add_zone(cf, &ngx_http_flyingfish_access_module) != NGX_OK) {
+        return NGX_CONF_ERROR;
+    }
+
+    clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
+    clcf->handler = ngx_http_flyingfish_status_handler;
 
     return NGX_CONF_OK;
 }

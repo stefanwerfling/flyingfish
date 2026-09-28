@@ -20,6 +20,7 @@
 
 #include "ngx_flyingfish_access_core.h"
 #include "ngx_ff_access_cache.h"
+#include "ngx_ff_access_metrics.h"
 
 
 #define NGX_FF_ACCESS_TIMEOUT   2000   /* connect+send+read deadline, ms */
@@ -156,12 +157,18 @@ ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
              * default, or allow when fail_open is set (availability over strictness).
              * Any other status is a genuine backend deny and is always enforced.
              */
+            if (ctx->status == 0) {
+                ngx_ff_metric_inc(stream_error);
+            }
+
             if (ctx->status == NGX_FF_ACCESS_ALLOW
                 || (ctx->status == 0 && ascf->fail_open))
             {
+                ngx_ff_metric_inc(stream_allow);
                 return NGX_OK;
             }
 
+            ngx_ff_metric_inc(stream_deny);
             return NGX_STREAM_FORBIDDEN;
         }
 
@@ -210,8 +217,18 @@ ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
         if (ngx_ff_cache_lookup(amcf->cache, &ctx->key, &decision)) {
             /* cache hit — synchronous decision, no socket call */
             ctx->done = 1;
-            return decision ? NGX_OK : NGX_STREAM_FORBIDDEN;
+            ngx_ff_metric_inc(stream_cache_hit);
+
+            if (decision) {
+                ngx_ff_metric_inc(stream_allow);
+                return NGX_OK;
+            }
+
+            ngx_ff_metric_inc(stream_deny);
+            return NGX_STREAM_FORBIDDEN;
         }
+
+        ngx_ff_metric_inc(stream_cache_miss);
     }
 
     ctx->core.request = ngx_stream_flyingfish_access_build_request(c->pool,
@@ -235,7 +252,15 @@ ngx_stream_flyingfish_access_handler(ngx_stream_session_t *s)
                       &ascf->socket, ascf->fail_open ? "allowing (fail_open)" : "denying");
         ctx->done = 1;
         ctx->status = 0;
-        return ascf->fail_open ? NGX_OK : NGX_STREAM_FORBIDDEN;
+        ngx_ff_metric_inc(stream_error);
+
+        if (ascf->fail_open) {
+            ngx_ff_metric_inc(stream_allow);
+            return NGX_OK;
+        }
+
+        ngx_ff_metric_inc(stream_deny);
+        return NGX_STREAM_FORBIDDEN;
     }
 
     return NGX_AGAIN;
