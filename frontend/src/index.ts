@@ -171,7 +171,7 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                     {key: 'overview', label: 'Summary', icon: '📊', group: 'status', make: (): BasePage => new ClusterView('overview')},
                     {key: 'nodes', label: 'Nodes', icon: '🖥️', group: 'cluster', make: (): BasePage => new ClusterView('nodes')},
                     {key: 'groups', label: 'Groups', icon: '🗂️', group: 'cluster', make: (): BasePage => new ClusterView('groups')},
-                    {key: 'enrollment', label: 'Enrollment', icon: '➕', group: 'cluster', make: (): BasePage => new ClusterView('enrollment')},
+                    {key: 'enrollment', label: 'Add a node', icon: '➕', group: 'cluster', make: (): BasePage => new ClusterView('enrollment')},
                     {key: 'topology', label: 'Topology', icon: '🕸️', group: 'cluster', make: (): BasePage => new ClusterView('topology')},
                     {key: 'users', label: 'Users & RBAC', icon: '👥', group: 'access', make: (): BasePage => new UsersPage()},
                     {key: 'pki', label: 'PKI (CA)', icon: '🔐', group: 'access', make: (): BasePage => new PkiPage()}

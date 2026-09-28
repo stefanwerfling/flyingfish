@@ -48,7 +48,7 @@ export class ClusterView extends BasePage {
 
         switch (this._section) {
             case 'overview':
-                this._overview(page);
+                await this._overview(page);
                 break;
 
             case 'nodes':
@@ -64,7 +64,7 @@ export class ClusterView extends BasePage {
                 break;
 
             case 'topology':
-                this._topology(page);
+                await this._topology(page);
                 break;
 
             default:
@@ -77,14 +77,47 @@ export class ClusterView extends BasePage {
      * @param mount - page mount
      * @protected
      */
-    protected _overview(mount: JQuery): void {
+    protected async _overview(mount: JQuery): Promise<void> {
         jQuery('<div class="ffx-sectitle">Cluster overview</div>').appendTo(mount);
         jQuery('<div class="ffx-secnote">Cluster-wide status. Per-node configuration (domains, routes, DNS, listeners, router, settings) lives on each node in the tree.</div>').appendTo(mount);
 
+        let list: ClusterNode[] = [];
+        let selfNodeUid: string | null = null;
+
+        try {
+            const response = await RegistryAPI.getClusterNodes();
+            list = response.list;
+            selfNodeUid = response.selfNodeUid;
+        } catch (e) {
+            // roster unavailable (not clustered / mesh off / endpoint absent) — standalone view
+        }
+
+        const total = list.length;
+        const online = list.filter((node) => node.online).length;
+        const enrolled = list.filter((node) => node.enrolled).length;
+        const peers = list.filter((node) => node.nodeUid !== selfNodeUid);
+        const peersOnline = peers.filter((node) => node.online).length;
+        const self = selfNodeUid === null ? undefined : list.find((node) => node.nodeUid === selfNodeUid);
+        const transport = self?.transport ?? list.find((node) => node.transport !== undefined)?.transport ?? '—';
+
+        // Everything here reflects the converged gossip roster — no hardcoded values, so a
+        // freshly-clustered second node actually shows up (Cluster/Mesh epic 9.5.12).
         const cards = jQuery('<div class="ffx-cards3"></div>').appendTo(mount);
-        ClusterView._card(cards, '🩺 Health', [['Nodes online', '1 / 1'], ['Pending joins', '0'], ['Quorum', 'n/a (single node)']]);
-        ClusterView._card(cards, '🔐 Trust anchor', [['CA', 'this node'], ['Enrolled certs', '—'], ['Model', 'single CA · per-node Hub']]);
-        ClusterView._card(cards, '🕸️ Overlay', [['Transport', 'QUIC'], ['Address', '100.64.0.1 · fd00:ff::1'], ['Peers', '0']]);
+        ClusterView._card(cards, '🩺 Health', [
+            ['Nodes online', total === 0 ? '—' : `${online} / ${total}`],
+            ['Peers', total === 0 ? '—' : `${peers.length}`],
+            ['Membership', total > 1 ? 'clustered' : 'standalone']
+        ]);
+        ClusterView._card(cards, '🔐 Trust anchor', [
+            ['CA', 'per-node (own CA)'],
+            ['Enrolled nodes', total === 0 ? '—' : `${enrolled} / ${total}`],
+            ['Model', 'cross-CA mesh · per-node Hub']
+        ]);
+        ClusterView._card(cards, '🕸️ Mesh', [
+            ['Transport', transport],
+            ['Peers connected', total === 0 ? '—' : `${peersOnline}`],
+            ['Peer link', peers.length === 0 ? 'none yet' : 'direct (mutual mTLS)']
+        ]);
     }
 
     /**
@@ -110,7 +143,7 @@ export class ClusterView extends BasePage {
         }
 
         if (list.length === 0) {
-            ClusterView._empty(mount, 'Only this node so far. Add a node from the Enrollment tab to grow the cluster.');
+            ClusterView._empty(mount, 'Only this node so far. See the “Add a node” tab to grow the cluster.');
 
             return;
         }
@@ -700,25 +733,126 @@ export class ClusterView extends BasePage {
     ];
 
     /**
-     * Pending join requests.
+     * How to add a node. The cross-CA mesh join has no central approval step (the
+     * bootstrap token + CA-pin are validated on the wire and the nodes mesh directly),
+     * so this is a signpost to the per-node Cluster wizard, not an approval queue.
      * @param mount - page mount
      * @protected
      */
     protected _enrollment(mount: JQuery): void {
-        jQuery('<div class="ffx-sectitle">Enrollment</div>').appendTo(mount);
-        jQuery('<div class="ffx-secnote">Approve a node\'s join request to issue it a cluster certificate (mTLS). The approving node acts as the CA.</div>').appendTo(mount);
-        ClusterView._empty(mount, 'No pending join requests. Cross-host bootstrap-token enrollment lands with the cluster backend (9.5.12).');
+        jQuery('<div class="ffx-sectitle">Add a node</div>').appendTo(mount);
+        jQuery('<div class="ffx-secnote">Growing the cluster is done from the nodes themselves — there is no central approval step here.</div>').appendTo(mount);
+
+        const steps = jQuery('<div class="sm-grid" style="max-width:760px"></div>').appendTo(mount);
+        ClusterView._stepCard(steps, '🌱', 'On the node you already run', 'Open its System → Cluster page, choose “Add another node to this one”, and generate a one-time join package.');
+        ClusterView._stepCard(steps, '🔗', 'On the new node', 'Open System → Cluster, choose “Connect this node to an existing cluster”, paste the package, and connect.');
+
+        jQuery('<div class="ffx-secnote" style="margin-top:14px">The two nodes verify each other with the token and CA fingerprint and mesh directly (mutual mTLS). The new node then shows up in the Nodes and Topology tabs within a few seconds.</div>').appendTo(mount);
     }
 
     /**
-     * The cluster mesh.
+     * The cluster mesh, drawn from the converged gossip roster: this node at the centre
+     * with a spoke to every peer, each link coloured by the peer's liveness (9.5.12).
      * @param mount - page mount
      * @protected
      */
-    protected _topology(mount: JQuery): void {
+    protected async _topology(mount: JQuery): Promise<void> {
         jQuery('<div class="ffx-sectitle">Topology</div>').appendTo(mount);
         jQuery('<div class="ffx-secnote">The overlay mesh: nodes and their peer links.</div>').appendTo(mount);
-        ClusterView._empty(mount, 'A single node — no peer links yet. The mesh view appears once a second node joins.');
+
+        let list: ClusterNode[] = [];
+        let selfNodeUid: string | null = null;
+
+        try {
+            const response = await RegistryAPI.getClusterNodes();
+            list = response.list;
+            selfNodeUid = response.selfNodeUid;
+        } catch (e) {
+            // roster unavailable (not clustered / mesh off / endpoint absent)
+        }
+
+        const self = selfNodeUid === null ? undefined : list.find((node) => node.nodeUid === selfNodeUid);
+        const peers = list.filter((node) => node.nodeUid !== selfNodeUid);
+
+        if (peers.length === 0) {
+            ClusterView._empty(mount, 'A single node — no peer links yet. The mesh view appears once a second node joins.');
+
+            return;
+        }
+
+        const wrap = jQuery('<div style="overflow-x:auto"></div>').appendTo(mount);
+        jQuery(ClusterView._meshSvg(self, peers)).appendTo(wrap);
+    }
+
+    /**
+     * Build a hub-and-spoke SVG of the mesh: `self` at the centre, `peers` evenly around
+     * a circle, each spoke green for an online peer and muted for an offline one. Uses the
+     * page's theme CSS vars so it tracks light/dark. Labels are node host/common-name.
+     * @param self - this node's roster entry (may be undefined pre-first-gossip)
+     * @param peers - the other nodes in the roster
+     * @protected
+     */
+    protected static _meshSvg(self: ClusterNode | undefined, peers: ClusterNode[]): string {
+        const w = 640;
+        const h = 380;
+        const cx = w / 2;
+        const cy = h / 2;
+        const r = peers.length === 1 ? 120 : 150;
+        const label = (node: ClusterNode): string => node.host || node.commonName || node.nodeUid.slice(0, 8);
+
+        let spokes = '';
+        let dots = '';
+
+        peers.forEach((peer, i) => {
+            const angle = ((2 * Math.PI * i) / peers.length) - (Math.PI / 2);
+            const px = cx + (r * Math.cos(angle));
+            const py = cy + (r * Math.sin(angle));
+            const colour = peer.online ? 'var(--good)' : 'var(--faint)';
+            const dash = peer.online ? '' : ' stroke-dasharray="5 4"';
+
+            spokes += `<line x1="${cx}" y1="${cy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="${colour}" stroke-width="2"${dash} />`;
+            dots += ClusterView._meshNode(px, py, label(peer), colour, false);
+        });
+
+        const selfLabel = self ? label(self) : 'this node';
+        const centre = ClusterView._meshNode(cx, cy, selfLabel, 'var(--accent)', true);
+
+        return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:${w}px;height:auto;font-family:inherit">${spokes}${dots}${centre}</svg>`;
+    }
+
+    /**
+     * One node marker in the mesh SVG: a filled dot plus a label chip below it.
+     * @param x - centre x
+     * @param y - centre y
+     * @param text - the node label
+     * @param colour - the dot fill (a theme CSS var)
+     * @param isSelf - draw the self node slightly larger with a ring
+     * @protected
+     */
+    protected static _meshNode(x: number, y: number, text: string, colour: string, isSelf: boolean): string {
+        const rad = isSelf ? 11 : 8;
+        const ring = isSelf ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad + 4}" fill="none" stroke="${colour}" stroke-width="1.5" opacity="0.5" />` : '';
+        const dot = `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad}" fill="${colour}" />`;
+        const chip = `<text x="${x.toFixed(1)}" y="${(y + rad + 16).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="12">${ClusterView._esc(text)}</text>`;
+
+        return `${ring}${dot}${chip}`;
+    }
+
+    /**
+     * A numbered/iconed step card for the "Add a node" signpost (reuses the System
+     * page's `sm-card` chrome).
+     * @param mount - grid mount
+     * @param icon - the step's emoji
+     * @param title - the step heading (which machine)
+     * @param note - the step body
+     * @protected
+     */
+    protected static _stepCard(mount: JQuery, icon: string, title: string, note: string): void {
+        const card = jQuery('<div class="sm-card"></div>').appendTo(mount);
+        const hd = jQuery('<div class="sm-hd"></div>').appendTo(card);
+        jQuery('<div class="sm-ic"></div>').text(icon).appendTo(hd);
+        jQuery('<div class="sm-t"></div>').text(title).appendTo(hd);
+        jQuery('<div class="sm-note"></div>').text(note).appendTo(card);
     }
 
     /**
