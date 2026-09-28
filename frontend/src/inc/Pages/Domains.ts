@@ -93,6 +93,7 @@ export class Domains extends BasePage {
                     id: tid,
                     name: this._domainDialog.getName(),
                     disable: this._domainDialog.getDisable(),
+                    cluster_priority: this._domainDialog.getClusterPriority(),
 
                     // ignored fields
                     fix: false,
@@ -294,6 +295,7 @@ export class Domains extends BasePage {
                             this._domainDialog.setId(domain.id);
                             this._domainDialog.setName(domain.name);
                             this._domainDialog.setDisable(domain.disable);
+                            this._domainDialog.setClusterPriority(domain.cluster_priority ?? 0);
                             this._domainDialog.show();
                         };
 
