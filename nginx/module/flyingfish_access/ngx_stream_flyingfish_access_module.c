@@ -312,14 +312,14 @@ ngx_stream_flyingfish_access_build_request(ngx_pool_t *pool, ngx_str_t *realip,
     static const char  sec_fmt[] = "secret: %V" CRLF;
 
     static const char  fmt[] =
-        "GET /njs/address_access HTTP/1.0" CRLF
+        "GET /njs/address_access HTTP/1.1" CRLF
         "Host: localhost" CRLF
         "realip_remote_addr: %V" CRLF
         "remote_addr: %V" CRLF
         "listen_id: %V" CRLF
         "type: stream" CRLF
         "%V"                       /* prebuilt secret header line, or empty */
-        "Connection: close" CRLF
+        "Connection: keep-alive" CRLF
         CRLF;
 
     /* build the optional secret header only when a secret is configured */

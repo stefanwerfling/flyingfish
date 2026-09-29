@@ -260,12 +260,12 @@ ngx_http_flyingfish_access_build_request(ngx_pool_t *pool, ngx_str_t *authheader
     static const char  sec_fmt[] = "secret: %V" CRLF;
 
     static const char  fmt[] =
-        "GET /njs/auth_basic HTTP/1.0" CRLF
+        "GET /njs/auth_basic HTTP/1.1" CRLF
         "Host: localhost" CRLF
         "authheader: %V" CRLF
         "location_id: %V" CRLF
         "%V"                       /* prebuilt secret header line, or empty */
-        "Connection: close" CRLF
+        "Connection: keep-alive" CRLF
         CRLF;
 
     /* build the optional secret header only when a secret is configured */
