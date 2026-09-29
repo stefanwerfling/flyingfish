@@ -35,6 +35,7 @@ ff_jwt_strerror(ff_jwt_result_t r)
     case FF_JWT_EXPIRED:       return "expired";
     case FF_JWT_NOT_YET_VALID: return "not yet valid";
     case FF_JWT_INTERNAL:      return "internal error";
+    case FF_JWT_CLAIM_MISMATCH: return "claim mismatch";
     default:                   return "unknown";
     }
 }
@@ -187,12 +188,12 @@ ff_json_value_end(const unsigned char *p, const unsigned char *end)
  * inside a nested value cannot spoof a claim.
  */
 static int
-ff_json_find(const unsigned char *json, size_t len, const char *key,
-             const unsigned char **vstart, size_t *vlen, int *is_string)
+ff_json_find_n(const unsigned char *json, size_t len,
+               const char *key, size_t keylen,
+               const unsigned char **vstart, size_t *vlen, int *is_string)
 {
     const unsigned char  *p = json;
     const unsigned char  *end = json + len;
-    size_t                keylen = strlen(key);
 
     p = ff_json_ws(p, end);
     if (p >= end || *p != '{') {
@@ -253,6 +254,95 @@ ff_json_find(const unsigned char *json, size_t len, const char *key,
         }
         return 0;   /* '}' or malformed → key not found */
     }
+}
+
+
+/* Convenience wrapper for a NUL-terminated literal key. */
+static int
+ff_json_find(const unsigned char *json, size_t len, const char *key,
+             const unsigned char **vstart, size_t *vlen, int *is_string)
+{
+    return ff_json_find_n(json, len, key, strlen(key), vstart, vlen, is_string);
+}
+
+
+/* Does a JSON string array (raw "[...]" span) contain the given string element? */
+static int
+ff_json_array_contains(const unsigned char *arr, size_t len,
+                       const char *needle, size_t needle_len)
+{
+    const unsigned char  *p = arr;
+    const unsigned char  *end = arr + len;
+
+    p = ff_json_ws(p, end);
+    if (p >= end || *p != '[') {
+        return 0;
+    }
+    p++;
+
+    while (p < end) {
+        p = ff_json_ws(p, end);
+        if (p >= end || *p == ']') {
+            break;
+        }
+
+        if (*p == '"') {
+            const unsigned char  *s = p + 1;
+            const unsigned char  *e = ff_json_string_end(p, end);
+
+            if (e == NULL) {
+                break;
+            }
+            if ((size_t) ((e - 1) - s) == needle_len
+                && memcmp(s, needle, needle_len) == 0)
+            {
+                return 1;
+            }
+            p = e;
+
+        } else {
+            p = ff_json_value_end(p, end);   /* skip a non-string element */
+            if (p == NULL) {
+                break;
+            }
+        }
+
+        p = ff_json_ws(p, end);
+        if (p < end && *p == ',') {
+            p++;
+        }
+    }
+
+    return 0;
+}
+
+
+/* Does a space-delimited string (scope-style) contain the given token? */
+static int
+ff_space_list_contains(const unsigned char *s, size_t len,
+                       const char *needle, size_t needle_len)
+{
+    size_t  i = 0;
+
+    while (i < len) {
+        size_t  start;
+
+        while (i < len && s[i] == ' ') {
+            i++;
+        }
+        start = i;
+        while (i < len && s[i] != ' ') {
+            i++;
+        }
+
+        if (i - start == needle_len
+            && memcmp(s + start, needle, needle_len) == 0)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 
@@ -619,6 +709,57 @@ ff_jwt_verify(const unsigned char *token, size_t token_len, const ff_jwt_params_
     {
         if (p->now + p->leeway < num) {
             return FF_JWT_NOT_YET_VALID;
+        }
+    }
+
+    /* --- optional claim checks (F.5) --- */
+
+    /* iss: exact string match */
+    if (p->iss != NULL && p->iss_len > 0) {
+        if (!ff_json_find(decoded, (size_t) dlen, "iss", &v, &vlen, &is_str)
+            || !is_str || vlen != p->iss_len || memcmp(v, p->iss, vlen) != 0)
+        {
+            return FF_JWT_CLAIM_MISMATCH;
+        }
+    }
+
+    /* aud: a string equal to the expected value, or an array containing it */
+    if (p->aud != NULL && p->aud_len > 0) {
+        if (!ff_json_find(decoded, (size_t) dlen, "aud", &v, &vlen, &is_str)) {
+            return FF_JWT_CLAIM_MISMATCH;
+        }
+        if (is_str) {
+            if (vlen != p->aud_len || memcmp(v, p->aud, vlen) != 0) {
+                return FF_JWT_CLAIM_MISMATCH;
+            }
+        } else if (!ff_json_array_contains(v, vlen, p->aud, p->aud_len)) {
+            return FF_JWT_CLAIM_MISMATCH;
+        }
+    }
+
+    /* a required claim: present, and (if a value is given) matching as an exact
+     * string, a member of a space-delimited list (scope-style), or an array member */
+    if (p->claim_name != NULL && p->claim_name_len > 0) {
+        if (!ff_json_find_n(decoded, (size_t) dlen, p->claim_name, p->claim_name_len,
+                            &v, &vlen, &is_str))
+        {
+            return FF_JWT_CLAIM_MISMATCH;
+        }
+
+        if (p->claim_value != NULL && p->claim_value_len > 0) {
+            if (is_str) {
+                if (!((vlen == p->claim_value_len
+                       && memcmp(v, p->claim_value, vlen) == 0)
+                      || ff_space_list_contains(v, vlen, p->claim_value,
+                                                p->claim_value_len)))
+                {
+                    return FF_JWT_CLAIM_MISMATCH;
+                }
+            } else if (!ff_json_array_contains(v, vlen, p->claim_value,
+                                               p->claim_value_len))
+            {
+                return FF_JWT_CLAIM_MISMATCH;
+            }
         }
     }
 

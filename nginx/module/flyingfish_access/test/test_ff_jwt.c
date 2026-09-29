@@ -175,6 +175,52 @@ main(int argc, char **argv)
         }
     }
 
+    /* --- claim sub-test (iss / aud / require), HS256 --- */
+    {
+        struct {
+            const char *file, *iss, *aud, *cname, *cval;
+            int         expected;
+        } cases[] = {
+            {"c_iss_ok.jwt",   "https://ff", NULL, NULL, NULL,  FF_JWT_OK},
+            {"c_iss_bad.jwt",  "https://ff", NULL, NULL, NULL,  FF_JWT_CLAIM_MISMATCH},
+            {"c_iss_miss.jwt", "https://ff", NULL, NULL, NULL,  FF_JWT_CLAIM_MISMATCH},
+            {"c_aud_str.jwt",  NULL, "myapi", NULL, NULL,       FF_JWT_OK},
+            {"c_aud_arr.jwt",  NULL, "myapi", NULL, NULL,       FF_JWT_OK},
+            {"c_aud_bad.jwt",  NULL, "myapi", NULL, NULL,       FF_JWT_CLAIM_MISMATCH},
+            {"c_scope_ok.jwt", NULL, NULL, "scope", "admin",    FF_JWT_OK},
+            {"c_scope_bad.jwt",NULL, NULL, "scope", "admin",    FF_JWT_CLAIM_MISMATCH},
+            {"c_roles_ok.jwt", NULL, NULL, "roles", "admin",    FF_JWT_OK},
+        };
+        size_t  i;
+
+        for (i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+            ff_jwt_params_t  p;
+            ff_jwt_result_t  got;
+            char            *tok = read_file(keydir, cases[i].file);
+
+            memset(&p, 0, sizeof(p));
+            p.expected_alg = FF_JWT_ALG_HS256;
+            p.key = (const unsigned char *) secret;
+            p.key_len = strlen(secret);
+            p.now = now;
+            if (cases[i].iss) { p.iss = cases[i].iss; p.iss_len = strlen(cases[i].iss); }
+            if (cases[i].aud) { p.aud = cases[i].aud; p.aud_len = strlen(cases[i].aud); }
+            if (cases[i].cname) {
+                p.claim_name = cases[i].cname; p.claim_name_len = strlen(cases[i].cname);
+                p.claim_value = cases[i].cval; p.claim_value_len = strlen(cases[i].cval);
+            }
+
+            got = ff_jwt_verify((const unsigned char *) tok, strlen(tok), &p);
+            total++;
+            if ((int) got != cases[i].expected) {
+                failed++;
+                fprintf(stderr, "FAIL[claim %s]: expected %d, got %d (%s)\n",
+                        cases[i].file, cases[i].expected, (int) got, ff_jwt_strerror(got));
+            }
+            free(tok);
+        }
+    }
+
     EVP_PKEY_free(es1);
     EVP_PKEY_free(es2);
     EVP_PKEY_free(rs);

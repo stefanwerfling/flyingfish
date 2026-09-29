@@ -60,6 +60,18 @@ fs.writeFileSync(path.join(KEYDIR, 'kid_unknown.jwt'), // kid kX, no such key �
 fs.writeFileSync(path.join(KEYDIR, 'kid_none.jwt'),    // no kid, 2 keys → ambiguous → deny
     signES({alg: 'ES256', typ: 'JWT'}, {sub: 'a', exp: NOW + 3600}, es2.privateKey));
 
+// claim (iss/aud/require) token files — HS256, verified in the C claim sub-test:
+const claimTok = (payload) => signHS({alg: 'HS256', typ: 'JWT'}, {exp: NOW + 3600, ...payload}, SECRET);
+fs.writeFileSync(path.join(KEYDIR, 'c_iss_ok.jwt'),   claimTok({iss: 'https://ff'}));
+fs.writeFileSync(path.join(KEYDIR, 'c_iss_bad.jwt'),  claimTok({iss: 'https://evil'}));
+fs.writeFileSync(path.join(KEYDIR, 'c_iss_miss.jwt'), claimTok({sub: 'a'}));
+fs.writeFileSync(path.join(KEYDIR, 'c_aud_str.jwt'),  claimTok({aud: 'myapi'}));
+fs.writeFileSync(path.join(KEYDIR, 'c_aud_arr.jwt'),  claimTok({aud: ['a', 'myapi', 'b']}));
+fs.writeFileSync(path.join(KEYDIR, 'c_aud_bad.jwt'),  claimTok({aud: ['x', 'y']}));
+fs.writeFileSync(path.join(KEYDIR, 'c_scope_ok.jwt'), claimTok({scope: 'read write admin'}));
+fs.writeFileSync(path.join(KEYDIR, 'c_scope_bad.jwt'), claimTok({scope: 'read write'}));
+fs.writeFileSync(path.join(KEYDIR, 'c_roles_ok.jwt'), claimTok({roles: ['user', 'admin']}));
+
 // --- line-loop cases ---
 const H = (alg) => ({alg, typ: 'JWT'});
 const out = [];

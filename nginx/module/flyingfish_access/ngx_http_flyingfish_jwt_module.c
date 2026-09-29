@@ -37,6 +37,10 @@ typedef struct {
     ff_jwt_key_t  *keys;        /* asymmetric public keys (F.4: a single key) */
     ngx_uint_t     keys_count;
     ngx_int_t      leeway;      /* clock-skew tolerance, seconds */
+    ngx_str_t      iss;         /* expected issuer (optional) */
+    ngx_str_t      aud;         /* expected audience (optional) */
+    ngx_str_t      claim_name;  /* required claim name (optional) */
+    ngx_str_t      claim_value; /* required claim value */
 } ngx_http_flyingfish_jwt_loc_conf_t;
 
 
@@ -159,6 +163,21 @@ ngx_http_flyingfish_jwt_handler(ngx_http_request_t *r)
     params.now = (long long) ngx_time();
     params.leeway = (long) jlcf->leeway;
 
+    if (jlcf->iss.len) {
+        params.iss = (const char *) jlcf->iss.data;
+        params.iss_len = jlcf->iss.len;
+    }
+    if (jlcf->aud.len) {
+        params.aud = (const char *) jlcf->aud.data;
+        params.aud_len = jlcf->aud.len;
+    }
+    if (jlcf->claim_name.len) {
+        params.claim_name = (const char *) jlcf->claim_name.data;
+        params.claim_name_len = jlcf->claim_name.len;
+        params.claim_value = (const char *) jlcf->claim_value.data;
+        params.claim_value_len = jlcf->claim_value.len;
+    }
+
     res = ff_jwt_verify(token, token_len, &params);
 
     if (res == FF_JWT_OK) {
@@ -221,6 +240,10 @@ ngx_http_flyingfish_jwt_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child
         conf->secret = prev->secret;
         conf->keys = prev->keys;
         conf->keys_count = prev->keys_count;
+        conf->iss = prev->iss;
+        conf->aud = prev->aud;
+        conf->claim_name = prev->claim_name;
+        conf->claim_value = prev->claim_value;
     }
 
     ngx_conf_merge_value(conf->leeway, prev->leeway, 0);
@@ -302,8 +325,45 @@ ngx_http_flyingfish_jwt(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
+        if (ngx_strncmp(value[i].data, "iss=", 4) == 0) {
+            jlcf->iss.data = value[i].data + 4;
+            jlcf->iss.len = value[i].len - 4;
+            continue;
+        }
+
+        if (ngx_strncmp(value[i].data, "aud=", 4) == 0) {
+            jlcf->aud.data = value[i].data + 4;
+            jlcf->aud.len = value[i].len - 4;
+            continue;
+        }
+
+        if (ngx_strncmp(value[i].data, "require=", 8) == 0) {
+            u_char  *colon;
+            size_t   rlen = value[i].len - 8;
+
+            jlcf->claim_name.data = value[i].data + 8;
+
+            /* require=<name>:<value> — split on the first ':' */
+            colon = ngx_strlchr(jlcf->claim_name.data,
+                                jlcf->claim_name.data + rlen, ':');
+            if (colon == NULL) {
+                return "has an invalid \"require\" (expected require=<name>:<value>)";
+            }
+
+            jlcf->claim_name.len = colon - jlcf->claim_name.data;
+            jlcf->claim_value.data = colon + 1;
+            jlcf->claim_value.len = (value[i].data + value[i].len) - (colon + 1);
+
+            if (jlcf->claim_name.len == 0 || jlcf->claim_value.len == 0) {
+                return "has an empty name or value in \"require\"";
+            }
+
+            continue;
+        }
+
         return "has an unexpected parameter "
-               "(expected alg=, secret=, key_file=, kid= or leeway=)";
+               "(expected alg=, secret=, key_file=, kid=, leeway=, "
+               "iss=, aud= or require=<name>:<value>)";
     }
 
     if (jlcf->alg == NGX_CONF_UNSET_UINT) {

@@ -27,7 +27,8 @@ typedef enum {
     FF_JWT_BAD_SIGNATURE,    /* signature did not verify / no key for the token's kid */
     FF_JWT_EXPIRED,          /* exp passed (or exp missing — exp is required) */
     FF_JWT_NOT_YET_VALID,    /* nbf in the future */
-    FF_JWT_INTERNAL          /* crypto/allocation failure / misconfiguration */
+    FF_JWT_INTERNAL,         /* crypto/allocation failure / misconfiguration */
+    FF_JWT_CLAIM_MISMATCH    /* iss/aud/required-claim did not match (F.5) */
 } ff_jwt_result_t;
 
 
@@ -64,6 +65,16 @@ typedef struct {
 
     long long             now;           /* current unix time (caller-supplied → testable) */
     long                  leeway;        /* clock-skew tolerance in seconds (>= 0) */
+
+    /* optional claim checks (F.5); each is skipped when its length is 0 */
+    const char           *iss;           /* expected issuer (exact match) */
+    size_t                iss_len;
+    const char           *aud;           /* expected audience (string exact or array member) */
+    size_t                aud_len;
+    const char           *claim_name;    /* a required claim's name ... */
+    size_t                claim_name_len;
+    const char           *claim_value;   /* ... and required value (string/space-list/array) */
+    size_t                claim_value_len;
 } ff_jwt_params_t;
 
 
