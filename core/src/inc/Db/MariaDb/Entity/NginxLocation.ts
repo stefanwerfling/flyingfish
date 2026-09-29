@@ -77,6 +77,72 @@ export class NginxLocation extends DBBaseEntityId {
     public auth_relam!: string;
 
     /**
+     * JWT auth enable (nginx-native Phase F): require a valid JWT for this location,
+     * validated locally by the native ngx_http_flyingfish_jwt module (no socket call).
+     */
+    @Column({
+        default: false
+    })
+    public jwt_auth_enable!: boolean;
+
+    /**
+     * JWT algorithm: HS256 | RS256 | ES256 | EdDSA
+     */
+    @Column({
+        default: 'HS256'
+    })
+    public jwt_alg!: string;
+
+    /**
+     * JWT HMAC shared secret (HS256 only)
+     */
+    @Column({
+        default: ''
+    })
+    public jwt_secret!: string;
+
+    /**
+     * JWT public key in PEM (asymmetric algorithms); written to a key file at build time
+     */
+    @Column({
+        type: 'text',
+        nullable: true
+    })
+    public jwt_public_key!: string;
+
+    /**
+     * JWT expected issuer (iss), empty = unchecked
+     */
+    @Column({
+        default: ''
+    })
+    public jwt_iss!: string;
+
+    /**
+     * JWT expected audience (aud), empty = unchecked
+     */
+    @Column({
+        default: ''
+    })
+    public jwt_aud!: string;
+
+    /**
+     * JWT required claim as "name:value" (e.g. scope:admin), empty = unchecked
+     */
+    @Column({
+        default: ''
+    })
+    public jwt_require!: string;
+
+    /**
+     * JWT clock-skew leeway in seconds
+     */
+    @Column({
+        default: 0
+    })
+    public jwt_leeway!: number;
+
+    /**
      * ssh port out id
      */
     @Column({

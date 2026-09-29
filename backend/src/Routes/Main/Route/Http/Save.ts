@@ -141,6 +141,14 @@ export class Save {
             aNewLocation.sshport_out_id = 0;
             aNewLocation.sshport_schema = '';
             aNewLocation.auth_enable = aLocation.auth_enable;
+            aNewLocation.jwt_auth_enable = aLocation.jwt_auth_enable ?? false;
+            aNewLocation.jwt_alg = aLocation.jwt_alg ?? 'HS256';
+            aNewLocation.jwt_secret = aLocation.jwt_secret ?? '';
+            aNewLocation.jwt_public_key = aLocation.jwt_public_key ?? '';
+            aNewLocation.jwt_iss = aLocation.jwt_iss ?? '';
+            aNewLocation.jwt_aud = aLocation.jwt_aud ?? '';
+            aNewLocation.jwt_require = aLocation.jwt_require ?? '';
+            aNewLocation.jwt_leeway = aLocation.jwt_leeway ?? 0;
             aNewLocation.websocket_enable = aLocation.websocket_enable;
             aNewLocation.host_enable = aLocation.host_enable;
             aNewLocation.host_name = aLocation.host_name;

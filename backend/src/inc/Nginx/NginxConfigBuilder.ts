@@ -171,6 +171,63 @@ export class NginxConfigBuilder {
     }
 
     /**
+     * The native L7 JWT directive emitted in the internal `/jwt<id>` location that
+     * `auth_request` targets (nginx-native Phase F): the ngx_http_flyingfish_jwt
+     * module's `flyingfish_jwt alg=<...> (secret=<v>|key_file=<pem>) [iss=] [aud=]
+     * [require=] [leeway=];`. Unlike {@link httpAuthDirective} it needs no control
+     * socket — the module validates the token locally. Pure/static so the directive
+     * contract (name + parameter shape) can be unit-tested without a DB. HS256 uses
+     * `secret=`; the asymmetric algorithms use `key_file=` (a PEM the builder writes).
+     * @param {object} cfg - resolved JWT config for the location
+     * @param {string} cfg.alg - HS256 | RS256 | ES256 | EdDSA
+     * @param {string} [cfg.secret] - HS256 shared secret
+     * @param {string} [cfg.keyFile] - path to the PEM public key (asymmetric)
+     * @param {string} [cfg.iss] - expected issuer (omitted when empty)
+     * @param {string} [cfg.aud] - expected audience (omitted when empty)
+     * @param {string} [cfg.require] - required claim "name:value" (omitted when empty)
+     * @param {number} [cfg.leeway] - clock-skew leeway in seconds (omitted when <= 0)
+     * @returns {{name: string; value: string}} the directive name + value for addVariable
+     */
+    public static httpJwtDirective(cfg: {
+        alg: string;
+        secret?: string;
+        keyFile?: string;
+        iss?: string;
+        aud?: string;
+        require?: string;
+        leeway?: number;
+    }): {name: string; value: string;} {
+        const parts: string[] = [`alg=${cfg.alg}`];
+
+        if (cfg.keyFile) {
+            parts.push(`key_file=${cfg.keyFile}`);
+        } else if (cfg.secret) {
+            parts.push(`secret=${cfg.secret}`);
+        }
+
+        if (cfg.iss) {
+            parts.push(`iss=${cfg.iss}`);
+        }
+
+        if (cfg.aud) {
+            parts.push(`aud=${cfg.aud}`);
+        }
+
+        if (cfg.require) {
+            parts.push(`require=${cfg.require}`);
+        }
+
+        if (cfg.leeway && cfg.leeway > 0) {
+            parts.push(`leeway=${cfg.leeway}s`);
+        }
+
+        return {
+            name: 'flyingfish_jwt',
+            value: parts.join(' ')
+        };
+    }
+
+    /**
      * Intern helper methode for generate listen config.
      * @param {NginxConfServer} server - Nginx server config object.
      * @param {NginxListenProtocol} listenProtocol - Listen protocol type.
@@ -1174,7 +1231,42 @@ export class NginxConfigBuilder {
 
                         // auth use ------------------------------------------------------------------------------------
 
-                        if (entry.auth_enable) {
+                        // JWT auth (nginx-native Phase F) takes precedence over basic auth when both are set:
+                        // the native ngx_http_flyingfish_jwt module validates the bearer token locally (no
+                        // control socket). HS256 uses the inline secret; the asymmetric algorithms read a PEM
+                        // key file the builder writes from the stored public key.
+                        if (entry.jwt_auth_enable) {
+                            location.addVariable('auth_request', `/jwt${entry.id}`);
+
+                            const jwtLocation = new Location(`/jwt${entry.id}`);
+                            jwtLocation.addVariable('internal', '');
+
+                            const jwtAlg = entry.jwt_alg || 'HS256';
+                            let jwtKeyFile: string | undefined;
+
+                            if (jwtAlg !== 'HS256' && entry.jwt_public_key) {
+                                jwtKeyFile = path.join(
+                                    FlyingFishConfig.getInstance().get()!.nginx!.prefix,
+                                    `jwt_${entry.id}.pem`
+                                );
+                                await fs.writeFile(jwtKeyFile, entry.jwt_public_key);
+                            }
+
+                            const jwtDir = NginxConfigBuilder.httpJwtDirective({
+                                alg: jwtAlg,
+                                secret: jwtAlg === 'HS256' ? entry.jwt_secret : undefined,
+                                keyFile: jwtKeyFile,
+                                iss: entry.jwt_iss,
+                                aud: entry.jwt_aud,
+                                require: entry.jwt_require,
+                                leeway: entry.jwt_leeway
+                            });
+
+                            jwtLocation.addVariable(jwtDir.name, jwtDir.value);
+                            aServer.addLocation(jwtLocation);
+                        }
+
+                        if (entry.auth_enable && !entry.jwt_auth_enable) {
                             let releam = domainName;
 
                             if (entry.auth_relam !== '') {

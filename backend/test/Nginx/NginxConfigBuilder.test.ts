@@ -75,3 +75,67 @@ describe('NginxConfigBuilder.httpAuthDirective', () => {
         expect(NginxConfigBuilder.httpAuthDirective('/x.sock', 7).value).toBe('/x.sock 7');
     });
 });
+
+describe('NginxConfigBuilder.httpJwtDirective', () => {
+    test('HS256 emits `flyingfish_jwt alg=HS256 secret=<v>`', () => {
+        const d = NginxConfigBuilder.httpJwtDirective({alg: 'HS256', secret: 'shh'});
+
+        expect(d.name).toBe('flyingfish_jwt');
+        expect(d.value).toBe('alg=HS256 secret=shh');
+    });
+
+    test('asymmetric uses key_file, never secret', () => {
+        const d = NginxConfigBuilder.httpJwtDirective({
+            alg: 'ES256',
+            keyFile: '/opt/flyingfish/nginx/jwt_7.pem'
+        });
+
+        expect(d.value).toBe('alg=ES256 key_file=/opt/flyingfish/nginx/jwt_7.pem');
+        expect(d.value).not.toContain('secret=');
+    });
+
+    test('key_file wins over secret when both are given (asymmetric config)', () => {
+        const d = NginxConfigBuilder.httpJwtDirective({
+            alg: 'RS256',
+            secret: 'ignored',
+            keyFile: '/k.pem'
+        });
+
+        expect(d.value).toBe('alg=RS256 key_file=/k.pem');
+    });
+
+    test('appends iss/aud/require/leeway only when set', () => {
+        const d = NginxConfigBuilder.httpJwtDirective({
+            alg: 'HS256',
+            secret: 'shh',
+            iss: 'https://ff',
+            aud: 'myapi',
+            require: 'scope:admin',
+            leeway: 30
+        });
+
+        expect(d.value).toBe(
+            'alg=HS256 secret=shh iss=https://ff aud=myapi require=scope:admin leeway=30s'
+        );
+    });
+
+    test('omits empty claim params and non-positive leeway', () => {
+        const d = NginxConfigBuilder.httpJwtDirective({
+            alg: 'HS256',
+            secret: 'shh',
+            iss: '',
+            aud: '',
+            require: '',
+            leeway: 0
+        });
+
+        expect(d.value).toBe('alg=HS256 secret=shh');
+    });
+
+    test('is the native directive, not an njs/auth_request placeholder', () => {
+        const d = NginxConfigBuilder.httpJwtDirective({alg: 'HS256', secret: 'x'});
+
+        expect(d.name).toBe('flyingfish_jwt');
+        expect(d.value.startsWith('alg=')).toBe(true);
+    });
+});
