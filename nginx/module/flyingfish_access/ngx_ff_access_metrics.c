@@ -82,19 +82,24 @@ ngx_ff_metrics_format(ngx_pool_t *pool, ngx_str_t *out)
         "flyingfish_access_http_allow %uA" CRLF
         "flyingfish_access_http_deny %uA" CRLF
         "flyingfish_access_http_unauth %uA" CRLF
-        "flyingfish_access_http_error %uA" CRLF;
+        "flyingfish_access_http_error %uA" CRLF
+        "flyingfish_jwt_allow %uA" CRLF
+        "flyingfish_jwt_deny %uA" CRLF
+        "flyingfish_jwt_unauth %uA" CRLF
+        "flyingfish_jwt_expired %uA" CRLF
+        "flyingfish_jwt_badsig %uA" CRLF;
 
     if (ngx_ff_metrics == NULL) {
         ngx_str_set(out, "# FlyingFish access metrics not enabled" CRLF);
         return NGX_OK;
     }
 
-    /* a plain read snapshot — counters are monotonic, exactness across the 9 reads
+    /* a plain read snapshot — counters are monotonic, exactness across the 14 reads
      * doesn't matter for a scrape */
     snap = *ngx_ff_metrics;
 
-    /* fmt minus the nine %uA (18 chars) plus room for nine 20-digit values */
-    out->data = ngx_pnalloc(pool, sizeof(fmt) - 1 - (9 * 3) + (9 * NGX_ATOMIC_T_LEN));
+    /* fmt minus the fourteen %uA (28 chars) plus room for fourteen 20-digit values */
+    out->data = ngx_pnalloc(pool, sizeof(fmt) - 1 - (14 * 3) + (14 * NGX_ATOMIC_T_LEN));
     if (out->data == NULL) {
         return NGX_ERROR;
     }
@@ -102,7 +107,9 @@ ngx_ff_metrics_format(ngx_pool_t *pool, ngx_str_t *out)
     p = ngx_sprintf(out->data, fmt,
         snap.stream_allow, snap.stream_deny, snap.stream_error,
         snap.stream_cache_hit, snap.stream_cache_miss,
-        snap.http_allow, snap.http_deny, snap.http_unauth, snap.http_error);
+        snap.http_allow, snap.http_deny, snap.http_unauth, snap.http_error,
+        snap.jwt_allow, snap.jwt_deny, snap.jwt_unauth,
+        snap.jwt_expired, snap.jwt_badsig);
 
     out->len = p - out->data;
 

@@ -35,7 +35,7 @@ if test -n "$ngx_module_link"; then
     ngx_module_type=HTTP
     ngx_module_name=ngx_http_flyingfish_jwt_module
     ngx_module_srcs="$FF_HTTP_JWT_SRC $FF_JWT_SRC"
-    ngx_module_deps="$FF_JWT_DEP"
+    ngx_module_deps="$FF_JWT_DEP $ngx_addon_dir/ngx_ff_access_metrics.h"
     . auto/module
 else
     STREAM_MODULES="$STREAM_MODULES ngx_stream_flyingfish_access_module"

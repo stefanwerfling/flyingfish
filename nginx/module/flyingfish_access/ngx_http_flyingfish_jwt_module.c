@@ -26,6 +26,7 @@
 #include <openssl/pem.h>
 
 #include "ngx_ff_jwt.h"
+#include "ngx_ff_access_metrics.h"
 
 
 #define NGX_FF_JWT_MAX_TOKEN  8192   /* reject absurdly large tokens up front */
@@ -127,6 +128,7 @@ ngx_http_flyingfish_jwt_handler(ngx_http_request_t *r)
 
     if (auth == NULL || auth->value.len == 0) {
         /* no credentials — 401 so a login/redirect flow can prompt */
+        ngx_ff_metric_inc(jwt_unauth);
         return NGX_HTTP_UNAUTHORIZED;
     }
 
@@ -135,6 +137,7 @@ ngx_http_flyingfish_jwt_handler(ngx_http_request_t *r)
         || ngx_strncasecmp(auth->value.data, (u_char *) bearer, sizeof(bearer) - 1)
            != 0)
     {
+        ngx_ff_metric_inc(jwt_deny);
         return NGX_HTTP_FORBIDDEN;
     }
 
@@ -142,10 +145,12 @@ ngx_http_flyingfish_jwt_handler(ngx_http_request_t *r)
     token_len = auth->value.len - (sizeof(bearer) - 1);
 
     if (token_len == 0) {
+        ngx_ff_metric_inc(jwt_unauth);
         return NGX_HTTP_UNAUTHORIZED;
     }
 
     if (token_len > NGX_FF_JWT_MAX_TOKEN) {
+        ngx_ff_metric_inc(jwt_deny);
         return NGX_HTTP_FORBIDDEN;
     }
 
@@ -181,7 +186,22 @@ ngx_http_flyingfish_jwt_handler(ngx_http_request_t *r)
     res = ff_jwt_verify(token, token_len, &params);
 
     if (res == FF_JWT_OK) {
+        ngx_ff_metric_inc(jwt_allow);
         return ngx_http_flyingfish_jwt_allow(r);
+    }
+
+    /* bucket the rejection for metrics (mutually exclusive) */
+    switch (res) {
+    case FF_JWT_EXPIRED:
+    case FF_JWT_NOT_YET_VALID:
+        ngx_ff_metric_inc(jwt_expired);
+        break;
+    case FF_JWT_BAD_SIGNATURE:
+        ngx_ff_metric_inc(jwt_badsig);
+        break;
+    default:
+        ngx_ff_metric_inc(jwt_deny);
+        break;
     }
 
     ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,

@@ -25,6 +25,11 @@ typedef struct {
     ngx_atomic_t  http_deny;          /* 403 */
     ngx_atomic_t  http_unauth;        /* 401 (no credentials) */
     ngx_atomic_t  http_error;         /* backend unreachable/timeout (status 0) */
+    ngx_atomic_t  jwt_allow;          /* JWT (F.8): valid token */
+    ngx_atomic_t  jwt_deny;           /* malformed/alg/claim/internal → 403 */
+    ngx_atomic_t  jwt_unauth;         /* 401 (no bearer token) */
+    ngx_atomic_t  jwt_expired;        /* exp passed / nbf in the future */
+    ngx_atomic_t  jwt_badsig;         /* signature did not verify */
 } ngx_ff_metrics_t;
 
 
