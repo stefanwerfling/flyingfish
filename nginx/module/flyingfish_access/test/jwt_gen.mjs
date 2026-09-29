@@ -1,53 +1,94 @@
-// Cross-implementation test-vector generator for ngx_ff_jwt (Phase F, F.3). Signs
-// HS256 tokens with Node's crypto (an INDEPENDENT implementation) so the C verifier is
-// checked against a real, external signer — not against itself.
+// Cross-implementation test-vector generator for ngx_ff_jwt (Phase F, F.3+F.4). Signs
+// HS256/RS256/ES256/EdDSA tokens with Node's crypto (an INDEPENDENT implementation) so
+// the C verifier is checked against a real, external signer — not against itself.
 //
-// Emits one case per line: "<expectedResultCode>\t<leeway>\t<token>", where the code
-// matches the ff_jwt_result_t enum (0 OK, 1 MALFORMED, 2 ALG_MISMATCH, 3 BAD_SIGNATURE,
-// 4 EXPIRED, 5 NOT_YET_VALID). argv: <secret> <now>.
+// argv: <hmac-secret> <now> <keydir>. Writes the public keys (es1/es2/rs/ed .pem) and
+// the kid-selection token files into <keydir>, and emits one line-loop case per line:
+//   "<expectedResultCode>\t<configAlg>\t<leeway>\t<token>"
+// where the code matches ff_jwt_result_t (0 OK, 1 MALFORMED, 2 ALG_MISMATCH,
+// 3 BAD_SIGNATURE, 4 EXPIRED, 5 NOT_YET_VALID) and configAlg is what the verifier pins.
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const SECRET = process.argv[2];
 const NOW = parseInt(process.argv[3], 10);
+const KEYDIR = process.argv[4];
 
 const b64 = (o) => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64url');
 
-function sign(header, payload, secret) {
-    const data = `${b64(header)}.${b64(payload)}`;
-    const sig = crypto.createHmac('sha256', secret).update(data).digest('base64url');
-    return `${data}.${sig}`;
+// --- signers (each returns a compact JWT) ---
+function signHS(header, payload, secret) {
+    const d = `${b64(header)}.${b64(payload)}`;
+    return `${d}.${crypto.createHmac('sha256', secret).update(d).digest('base64url')}`;
+}
+function signRS(header, payload, key) {
+    const d = `${b64(header)}.${b64(payload)}`;
+    const sig = crypto.createSign('SHA256').update(d).sign(key);
+    return `${d}.${sig.toString('base64url')}`;
+}
+function signES(header, payload, key) {
+    const d = `${b64(header)}.${b64(payload)}`;
+    const sig = crypto.createSign('SHA256').update(d).sign({key, dsaEncoding: 'ieee-p1363'});
+    return `${d}.${sig.toString('base64url')}`;
+}
+function signED(header, payload, key) {
+    const d = `${b64(header)}.${b64(payload)}`;
+    const sig = crypto.sign(null, Buffer.from(d), key);
+    return `${d}.${sig.toString('base64url')}`;
 }
 
-const H = {alg: 'HS256', typ: 'JWT'};
+// --- keypairs ---
+const es1 = crypto.generateKeyPairSync('ec', {namedCurve: 'P-256'});
+const es2 = crypto.generateKeyPairSync('ec', {namedCurve: 'P-256'});
+const esX = crypto.generateKeyPairSync('ec', {namedCurve: 'P-256'});   // throwaway (wrong key)
+const rs = crypto.generateKeyPairSync('rsa', {modulusLength: 2048});
+const rs2 = crypto.generateKeyPairSync('rsa', {modulusLength: 2048});   // throwaway (wrong key)
+const ed = crypto.generateKeyPairSync('ed25519');
+
+const pem = (kp) => kp.publicKey.export({type: 'spki', format: 'pem'});
+fs.writeFileSync(path.join(KEYDIR, 'es1.pem'), pem(es1));
+fs.writeFileSync(path.join(KEYDIR, 'es2.pem'), pem(es2));
+fs.writeFileSync(path.join(KEYDIR, 'rs.pem'), pem(rs));
+fs.writeFileSync(path.join(KEYDIR, 'ed.pem'), pem(ed));
+
+// kid-selection token files (verified in the C harness against a 2-key set):
+fs.writeFileSync(path.join(KEYDIR, 'kid_ok.jwt'),      // kid k2 → must select es2
+    signES({alg: 'ES256', typ: 'JWT', kid: 'k2'}, {sub: 'a', exp: NOW + 3600}, es2.privateKey));
+fs.writeFileSync(path.join(KEYDIR, 'kid_unknown.jwt'), // kid kX, no such key → deny
+    signES({alg: 'ES256', typ: 'JWT', kid: 'kX'}, {sub: 'a', exp: NOW + 3600}, es2.privateKey));
+fs.writeFileSync(path.join(KEYDIR, 'kid_none.jwt'),    // no kid, 2 keys → ambiguous → deny
+    signES({alg: 'ES256', typ: 'JWT'}, {sub: 'a', exp: NOW + 3600}, es2.privateKey));
+
+// --- line-loop cases ---
+const H = (alg) => ({alg, typ: 'JWT'});
 const out = [];
-const add = (code, token, leeway = 0) => out.push(`${code}\t${leeway}\t${token}`);
+const add = (code, alg, token, leeway = 0) => out.push(`${code}\t${alg}\t${leeway}\t${token}`);
 
-// 0 = OK
-add(0, sign(H, {sub: 'a', exp: NOW + 3600, nbf: NOW - 100}, SECRET));
-add(0, sign(H, {sub: 'a', exp: NOW + 3600}, SECRET));                 // no nbf
-// 4 = EXPIRED
-add(4, sign(H, {sub: 'a', exp: NOW - 10}, SECRET));
-add(4, sign(H, {sub: 'a'}, SECRET));                                  // exp missing → deny
-// 5 = NOT_YET_VALID
-add(5, sign(H, {sub: 'a', exp: NOW + 3600, nbf: NOW + 100}, SECRET));
-// 3 = BAD_SIGNATURE (signed with a different secret)
-add(3, sign(H, {sub: 'a', exp: NOW + 3600}, 'the-wrong-secret'));
-// 3 = BAD_SIGNATURE (valid sig over payload A, then payload swapped to B)
-{
-    const good = sign(H, {sub: 'a', exp: NOW + 3600}, SECRET);
-    const [h, , s] = good.split('.');
-    const tampered = `${h}.${b64({sub: 'attacker', exp: NOW + 3600})}.${s}`;
-    add(3, tampered);
-}
-// 2 = ALG_MISMATCH (pinned HS256; token claims RS256 / none)
-add(2, `${b64({alg: 'RS256', typ: 'JWT'})}.${b64({sub: 'a', exp: NOW + 3600})}.AAAA`);
-add(2, `${b64({alg: 'none', typ: 'JWT'})}.${b64({sub: 'a', exp: NOW + 3600})}.AAAA`);
-// 1 = MALFORMED
-add(1, 'notajwt');
-add(1, 'a.b.c.d');
-// leeway: expired by 10s but 60s leeway → OK
-add(0, sign(H, {sub: 'a', exp: NOW - 10}, SECRET), 60);
-// leeway: not-yet-valid by 10s but 60s leeway → OK
-add(0, sign(H, {sub: 'a', exp: NOW + 3600, nbf: NOW + 10}, SECRET), 60);
+// HS256 (as F.3)
+add(0, 'HS256', signHS(H('HS256'), {sub: 'a', exp: NOW + 3600, nbf: NOW - 100}, SECRET));
+add(4, 'HS256', signHS(H('HS256'), {sub: 'a', exp: NOW - 10}, SECRET));
+add(4, 'HS256', signHS(H('HS256'), {sub: 'a'}, SECRET));                  // exp missing
+add(5, 'HS256', signHS(H('HS256'), {sub: 'a', exp: NOW + 3600, nbf: NOW + 100}, SECRET));
+add(3, 'HS256', signHS(H('HS256'), {sub: 'a', exp: NOW + 3600}, 'wrong-secret'));
+add(2, 'HS256', `${b64(H('RS256'))}.${b64({sub: 'a', exp: NOW + 3600})}.AAAA`);
+add(2, 'HS256', `${b64(H('none'))}.${b64({sub: 'a', exp: NOW + 3600})}.AAAA`);
+add(1, 'HS256', 'notajwt');
+add(1, 'HS256', 'a.b.c.d');
+add(0, 'HS256', signHS(H('HS256'), {sub: 'a', exp: NOW - 10}, SECRET), 60);   // leeway saves it
+
+// RS256
+add(0, 'RS256', signRS(H('RS256'), {sub: 'a', exp: NOW + 3600}, rs.privateKey));
+add(4, 'RS256', signRS(H('RS256'), {sub: 'a', exp: NOW - 10}, rs.privateKey));
+add(3, 'RS256', signRS(H('RS256'), {sub: 'a', exp: NOW + 3600}, rs2.privateKey));    // wrong key
+
+// ES256
+add(0, 'ES256', signES(H('ES256'), {sub: 'a', exp: NOW + 3600}, es1.privateKey));
+add(3, 'ES256', signES(H('ES256'), {sub: 'a', exp: NOW + 3600}, esX.privateKey));   // wrong key
+add(2, 'RS256', signES(H('ES256'), {sub: 'a', exp: NOW + 3600}, es1.privateKey));   // alg confusion
+
+// EdDSA
+add(0, 'EdDSA', signED(H('EdDSA'), {sub: 'a', exp: NOW + 3600}, ed.privateKey));
+add(4, 'EdDSA', signED(H('EdDSA'), {sub: 'a', exp: NOW - 10}, ed.privateKey));       // claims run after verify
 
 process.stdout.write(out.join('\n') + '\n');

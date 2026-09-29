@@ -11,6 +11,8 @@
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/ec.h>
+#include <openssl/bn.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #include <openssl/params.h>
 #include <openssl/core_names.h>
@@ -335,8 +337,152 @@ ff_jwt_alg_name(ff_jwt_alg_t alg)
 {
     switch (alg) {
     case FF_JWT_ALG_HS256: return "HS256";
+    case FF_JWT_ALG_RS256: return "RS256";
+    case FF_JWT_ALG_ES256: return "ES256";
+    case FF_JWT_ALG_EDDSA: return "EdDSA";
     default:               return NULL;
     }
+}
+
+
+/* --- asymmetric (RS256/ES256/EdDSA) --- */
+
+/*
+ * Pick the configured public key for a token. An exact kid match wins; failing that a
+ * single configured key is used regardless of kid (the common one-key case); with
+ * several keys and no kid match, the token is refused.
+ */
+static EVP_PKEY *
+ff_jwt_select_key(const ff_jwt_params_t *p, const char *kid, size_t kid_len)
+{
+    size_t  i;
+
+    if (p->keys == NULL || p->keys_count == 0) {
+        return NULL;
+    }
+
+    if (kid != NULL && kid_len > 0) {
+        for (i = 0; i < p->keys_count; i++) {
+            if (p->keys[i].kid_len == kid_len
+                && p->keys[i].kid != NULL
+                && memcmp(p->keys[i].kid, kid, kid_len) == 0)
+            {
+                return (EVP_PKEY *) p->keys[i].pkey;
+            }
+        }
+    }
+
+    if (p->keys_count == 1) {
+        return (EVP_PKEY *) p->keys[0].pkey;
+    }
+
+    return NULL;
+}
+
+
+/* Convert a raw JWT ECDSA signature (R||S) to the DER form OpenSSL expects. */
+static int
+ff_ecdsa_raw_to_der(const unsigned char *raw, size_t rawlen,
+                    unsigned char **der, int *derlen)
+{
+    ECDSA_SIG      *sig;
+    BIGNUM         *r, *s;
+    unsigned char  *p = NULL;
+    int             len;
+
+    if (rawlen == 0 || rawlen % 2 != 0) {
+        return 0;
+    }
+
+    sig = ECDSA_SIG_new();
+    if (sig == NULL) {
+        return 0;
+    }
+
+    r = BN_bin2bn(raw, (int) (rawlen / 2), NULL);
+    s = BN_bin2bn(raw + rawlen / 2, (int) (rawlen / 2), NULL);
+
+    if (r == NULL || s == NULL || ECDSA_SIG_set0(sig, r, s) != 1) {
+        BN_free(r);
+        BN_free(s);
+        ECDSA_SIG_free(sig);
+        return 0;
+    }
+
+    len = i2d_ECDSA_SIG(sig, &p);   /* allocates p; r/s owned by sig */
+    ECDSA_SIG_free(sig);
+
+    if (len <= 0 || p == NULL) {
+        return 0;
+    }
+
+    *der = p;
+    *derlen = len;
+    return 1;
+}
+
+
+static ff_jwt_result_t
+ff_jwt_verify_asym(const ff_jwt_params_t *p, const char *kid, size_t kid_len,
+                   const unsigned char *signing_input, size_t signing_len,
+                   const unsigned char *sig, size_t sig_len)
+{
+    EVP_PKEY             *pkey;
+    EVP_MD_CTX           *mdctx;
+    const EVP_MD         *md;
+    unsigned char        *der = NULL;
+    int                   der_len = 0;
+    const unsigned char  *use_sig = sig;
+    size_t                use_len = sig_len;
+    int                   rc;
+
+    pkey = ff_jwt_select_key(p, kid, kid_len);
+    if (pkey == NULL) {
+        return FF_JWT_BAD_SIGNATURE;   /* no usable key for this token */
+    }
+
+    /* EdDSA is a one-shot verify with no separate digest; RS256/ES256 use SHA-256 */
+    md = (p->expected_alg == FF_JWT_ALG_EDDSA) ? NULL : EVP_sha256();
+
+    if (p->expected_alg == FF_JWT_ALG_ES256) {
+        /* JWT carries the raw R||S ECDSA signature; OpenSSL verifies the DER form */
+        if (sig_len != 64) {
+            return FF_JWT_BAD_SIGNATURE;   /* P-256 raw signature is 64 bytes */
+        }
+        if (ff_ecdsa_raw_to_der(sig, sig_len, &der, &der_len) != 1) {
+            return FF_JWT_INTERNAL;
+        }
+        use_sig = der;
+        use_len = (size_t) der_len;
+    }
+
+    mdctx = EVP_MD_CTX_new();
+    if (mdctx == NULL) {
+        if (der) {
+            OPENSSL_free(der);
+        }
+        return FF_JWT_INTERNAL;
+    }
+
+    rc = EVP_DigestVerifyInit(mdctx, NULL, md, NULL, pkey);
+    if (rc == 1) {
+        rc = EVP_DigestVerify(mdctx, use_sig, use_len, signing_input, signing_len);
+    } else {
+        rc = -1;   /* init failed → internal */
+    }
+
+    EVP_MD_CTX_free(mdctx);
+    if (der) {
+        OPENSSL_free(der);
+    }
+
+    if (rc == 1) {
+        return FF_JWT_OK;
+    }
+    if (rc == 0) {
+        return FF_JWT_BAD_SIGNATURE;   /* signature did not verify */
+    }
+    return FF_JWT_INTERNAL;
 }
 
 
@@ -349,7 +495,11 @@ ff_jwt_verify(const unsigned char *token, size_t token_len, const ff_jwt_params_
     unsigned char         decoded[FF_JWT_SCRATCH];
     long                  dlen;
     unsigned char         mac[32];
-    unsigned char         sigbuf[64];
+    unsigned char         sigbuf[512];   /* fits an RSA-4096 signature */
+    long                  sig_dlen;
+    char                  kidbuf[256];
+    const char           *kid = NULL;
+    size_t                kid_len = 0;
     const unsigned char  *v;
     size_t                vlen;
     int                   is_str;
@@ -357,8 +507,20 @@ ff_jwt_verify(const unsigned char *token, size_t token_len, const ff_jwt_params_
     const char           *want_alg;
 
     want_alg = ff_jwt_alg_name(p->expected_alg);
-    if (want_alg == NULL || p->key == NULL || p->key_len == 0) {
+    if (want_alg == NULL) {
         return FF_JWT_INTERNAL;
+    }
+
+    /* required key material depends on the family: a secret for HS*, at least one
+     * public key for the asymmetric algorithms */
+    if (p->expected_alg == FF_JWT_ALG_HS256) {
+        if (p->key == NULL || p->key_len == 0) {
+            return FF_JWT_INTERNAL;
+        }
+    } else {
+        if (p->keys == NULL || p->keys_count == 0) {
+            return FF_JWT_INTERNAL;
+        }
     }
 
     /* split into exactly three dot-separated segments */
@@ -403,18 +565,37 @@ ff_jwt_verify(const unsigned char *token, size_t token_len, const ff_jwt_params_
         return FF_JWT_ALG_MISMATCH;
     }
 
-    /* --- signature (HS256) --- */
-    if (!ff_hmac_sha256(p->key, p->key_len, token, signing_len, mac)) {
-        return FF_JWT_INTERNAL;
+    /* Copy the optional kid out of the header now — `decoded` is reused for the payload
+     * below (kid selects the public key for the asymmetric algorithms). */
+    if (ff_json_find(decoded, (size_t) dlen, "kid", &v, &vlen, &is_str) && is_str) {
+        if (vlen > sizeof(kidbuf)) {
+            return FF_JWT_MALFORMED;
+        }
+        memcpy(kidbuf, v, vlen);
+        kid = kidbuf;
+        kid_len = vlen;
     }
 
-    dlen = ff_b64url_decode(sig, sig_len, sigbuf, sizeof(sigbuf));
-    if (dlen != 32) {
-        return FF_JWT_BAD_SIGNATURE;   /* HS256 signature is exactly 32 bytes */
+    /* --- signature --- */
+    sig_dlen = ff_b64url_decode(sig, sig_len, sigbuf, sizeof(sigbuf));
+    if (sig_dlen < 0) {
+        return FF_JWT_MALFORMED;
     }
 
-    if (CRYPTO_memcmp(mac, sigbuf, 32) != 0) {
-        return FF_JWT_BAD_SIGNATURE;
+    if (p->expected_alg == FF_JWT_ALG_HS256) {
+        if (!ff_hmac_sha256(p->key, p->key_len, token, signing_len, mac)) {
+            return FF_JWT_INTERNAL;
+        }
+        if (sig_dlen != 32 || CRYPTO_memcmp(mac, sigbuf, 32) != 0) {
+            return FF_JWT_BAD_SIGNATURE;   /* HS256 signature is exactly 32 bytes */
+        }
+
+    } else {
+        ff_jwt_result_t  r = ff_jwt_verify_asym(p, kid, kid_len, token, signing_len,
+                                                sigbuf, (size_t) sig_dlen);
+        if (r != FF_JWT_OK) {
+            return r;
+        }
     }
 
     /* --- payload: time claims (exp required) --- */
