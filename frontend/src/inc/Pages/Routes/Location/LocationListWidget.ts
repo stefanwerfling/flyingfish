@@ -45,6 +45,7 @@ export class LocationListWidget extends CollectionCardWidget<LocationWidget> {
             proxy_pass: '',
             auth_enable: false,
             credentials: [],
+            jwt_auth_enable: false,
             websocket_enable: false,
             xrealip_enable: true,
             xforwarded_for_enable: true,

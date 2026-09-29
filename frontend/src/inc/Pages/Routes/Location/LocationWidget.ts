@@ -8,7 +8,7 @@ import {
     ICollectionEntryWidget,
     InputBottemBorderOnly2, InputType, Multiple,
     NavTab,
-    SelectBottemBorderOnly2, Switch, Tooltip, TooltipInfo
+    SelectBottemBorderOnly2, Switch, Textarea, Tooltip, TooltipInfo
 } from 'bambooo';
 import {Credential, Location, LocationCredential, SshPortEntry} from 'flyingfish_schemas';
 import {NginxLocationDestinationTypes} from '../../../Api/Route.js';
@@ -103,6 +103,60 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
      * @protected
      */
     protected _selectCredAuth: Multiple;
+
+    /**
+     * switch jwt auth (nginx-native Phase F)
+     * @protected
+     */
+    protected _switchJwtAuth: Switch;
+
+    /**
+     * select jwt algorithm
+     * @protected
+     */
+    protected _selectJwtAlg: SelectBottemBorderOnly2;
+
+    /**
+     * input jwt secret (HS256)
+     * @protected
+     */
+    protected _inputJwtSecret: InputBottemBorderOnly2;
+
+    /**
+     * textarea jwt public key PEM (asymmetric)
+     * @protected
+     */
+    protected _textareaJwtKey: Textarea;
+
+    /**
+     * input jwt issuer
+     * @protected
+     */
+    protected _inputJwtIss: InputBottemBorderOnly2;
+
+    /**
+     * input jwt audience
+     * @protected
+     */
+    protected _inputJwtAud: InputBottemBorderOnly2;
+
+    /**
+     * input jwt required claim (name:value)
+     * @protected
+     */
+    protected _inputJwtRequire: InputBottemBorderOnly2;
+
+    /**
+     * input jwt leeway (seconds)
+     * @protected
+     */
+    protected _inputJwtLeeway: InputBottemBorderOnly2;
+
+    /**
+     * refresh the jwt config field visibility (enable switch + algorithm)
+     * @protected
+     */
+    protected _updateJwtVisibility!: () => void;
 
     /**
      * input header host name
@@ -284,6 +338,77 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
                 groupCredAuth.hide();
             }
         });
+
+        // jwt auth (nginx-native Phase F) -----------------------------------------------------------------------------
+        const rowJwt = new FormRow(bodyCardAdv);
+
+        const groupEnableJwt = new FormGroup(rowJwt.createCol(6), 'JWT Authentication Enable');
+        this._switchJwtAuth = new Switch(groupEnableJwt, 'locjwtauth');
+
+        const groupJwtAlg = new FormGroup(rowJwt.createCol(6), 'JWT Algorithm');
+        this._selectJwtAlg = new SelectBottemBorderOnly2(groupJwtAlg);
+        this._selectJwtAlg.addValue({key: 'HS256', value: 'HS256 (shared secret)'});
+        this._selectJwtAlg.addValue({key: 'RS256', value: 'RS256 (public key)'});
+        this._selectJwtAlg.addValue({key: 'ES256', value: 'ES256 (public key)'});
+        this._selectJwtAlg.addValue({key: 'EdDSA', value: 'EdDSA (public key)'});
+
+        const groupJwtSecret = new FormGroup(bodyCardAdv, 'JWT Secret (HS256)');
+        this._inputJwtSecret = new InputBottemBorderOnly2(groupJwtSecret);
+        this._inputJwtSecret.setPlaceholder('shared HMAC secret');
+
+        const groupJwtKey = new FormGroup(bodyCardAdv, 'JWT Public Key (PEM)');
+        this._textareaJwtKey = new Textarea(groupJwtKey, '-----BEGIN PUBLIC KEY-----', 5);
+
+        const rowJwtClaims = new FormRow(bodyCardAdv);
+
+        const groupJwtIss = new FormGroup(rowJwtClaims.createCol(6), 'JWT Issuer (iss)');
+        this._inputJwtIss = new InputBottemBorderOnly2(groupJwtIss);
+        this._inputJwtIss.setPlaceholder('optional, empty = unchecked');
+
+        const groupJwtAud = new FormGroup(rowJwtClaims.createCol(6), 'JWT Audience (aud)');
+        this._inputJwtAud = new InputBottemBorderOnly2(groupJwtAud);
+        this._inputJwtAud.setPlaceholder('optional, empty = unchecked');
+
+        const rowJwtClaims2 = new FormRow(bodyCardAdv);
+
+        const groupJwtRequire = new FormGroup(rowJwtClaims2.createCol(6), 'JWT Required Claim');
+        this._inputJwtRequire = new InputBottemBorderOnly2(groupJwtRequire);
+        this._inputJwtRequire.setPlaceholder('name:value, e.g. scope:admin');
+
+        const groupJwtLeeway = new FormGroup(rowJwtClaims2.createCol(6), 'JWT Leeway (seconds)');
+        this._inputJwtLeeway = new InputBottemBorderOnly2(groupJwtLeeway, undefined, InputType.number);
+        this._inputJwtLeeway.setValue('0');
+
+        // show/hide the jwt config on the enable switch; secret vs key file by algorithm
+        const updateJwtVisibility = (): void => {
+            const on = this._switchJwtAuth.isEnable();
+            const alg = this._selectJwtAlg.getSelectedValue();
+
+            if (on) {
+                groupJwtAlg.show();
+                rowJwtClaims.show();
+                rowJwtClaims2.show();
+
+                if (alg === 'HS256') {
+                    groupJwtSecret.show();
+                    groupJwtKey.hide();
+                } else {
+                    groupJwtSecret.hide();
+                    groupJwtKey.show();
+                }
+            } else {
+                groupJwtAlg.hide();
+                groupJwtSecret.hide();
+                groupJwtKey.hide();
+                rowJwtClaims.hide();
+                rowJwtClaims2.hide();
+            }
+        };
+
+        this._updateJwtVisibility = updateJwtVisibility;
+        this._switchJwtAuth.setChangeFn(async(): Promise<void> => updateJwtVisibility());
+        this._selectJwtAlg.setChangeFn(() => updateJwtVisibility());
+        updateJwtVisibility();
 
         const rowHostOptions = new FormRow(bodyCardAdv);
         const groupHeaderHostName = new FormGroup(rowHostOptions.createCol(6), 'Header Hostname');
@@ -488,6 +613,126 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
     }
 
     /**
+     * setJwtEnable
+     * @param enable
+     */
+    public setJwtEnable(enable: boolean): void {
+        this._switchJwtAuth.setEnable(enable);
+    }
+
+    /**
+     * getJwtEnable
+     */
+    public getJwtEnable(): boolean {
+        return this._switchJwtAuth.isEnable();
+    }
+
+    /**
+     * setJwtAlg
+     * @param alg
+     */
+    public setJwtAlg(alg: string): void {
+        this._selectJwtAlg.setSelectedValue(alg || 'HS256');
+    }
+
+    /**
+     * getJwtAlg
+     */
+    public getJwtAlg(): string {
+        return this._selectJwtAlg.getSelectedValue();
+    }
+
+    /**
+     * setJwtSecret
+     * @param secret
+     */
+    public setJwtSecret(secret: string): void {
+        this._inputJwtSecret.setValue(secret);
+    }
+
+    /**
+     * getJwtSecret
+     */
+    public getJwtSecret(): string {
+        return this._inputJwtSecret.getValue();
+    }
+
+    /**
+     * setJwtPublicKey
+     * @param key
+     */
+    public setJwtPublicKey(key: string): void {
+        this._textareaJwtKey.setValue(key);
+    }
+
+    /**
+     * getJwtPublicKey
+     */
+    public getJwtPublicKey(): string {
+        return this._textareaJwtKey.getValue();
+    }
+
+    /**
+     * setJwtIss
+     * @param iss
+     */
+    public setJwtIss(iss: string): void {
+        this._inputJwtIss.setValue(iss);
+    }
+
+    /**
+     * getJwtIss
+     */
+    public getJwtIss(): string {
+        return this._inputJwtIss.getValue();
+    }
+
+    /**
+     * setJwtAud
+     * @param aud
+     */
+    public setJwtAud(aud: string): void {
+        this._inputJwtAud.setValue(aud);
+    }
+
+    /**
+     * getJwtAud
+     */
+    public getJwtAud(): string {
+        return this._inputJwtAud.getValue();
+    }
+
+    /**
+     * setJwtRequire
+     * @param require
+     */
+    public setJwtRequire(require: string): void {
+        this._inputJwtRequire.setValue(require);
+    }
+
+    /**
+     * getJwtRequire
+     */
+    public getJwtRequire(): string {
+        return this._inputJwtRequire.getValue();
+    }
+
+    /**
+     * setJwtLeeway
+     * @param leeway
+     */
+    public setJwtLeeway(leeway: number): void {
+        this._inputJwtLeeway.setValue(`${leeway}`);
+    }
+
+    /**
+     * getJwtLeeway
+     */
+    public getJwtLeeway(): number {
+        return parseInt(this._inputJwtLeeway.getValue(), 10) || 0;
+    }
+
+    /**
      * setHeaderHostEnable
      * @param enable
      */
@@ -646,6 +891,15 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
         this.setEnableWebsocket(location.websocket_enable);
         this.setEnableAuth(location.auth_enable);
         this.setCredentials(location.credentials);
+        this.setJwtEnable(location.jwt_auth_enable ?? false);
+        this.setJwtAlg(location.jwt_alg ?? 'HS256');
+        this.setJwtSecret(location.jwt_secret ?? '');
+        this.setJwtPublicKey(location.jwt_public_key ?? '');
+        this.setJwtIss(location.jwt_iss ?? '');
+        this.setJwtAud(location.jwt_aud ?? '');
+        this.setJwtRequire(location.jwt_require ?? '');
+        this.setJwtLeeway(location.jwt_leeway ?? 0);
+        this._updateJwtVisibility();
         this.setHeaderHostEnable(location.host_enable);
         this.setHeaderHostName(location.host_name);
         this.setHeaderHostPort(location.host_name_port);
@@ -678,6 +932,14 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
             proxy_pass: '',
             auth_enable: this.getEnableAuth(),
             credentials: this.getCredentials(),
+            jwt_auth_enable: this.getJwtEnable(),
+            jwt_alg: this.getJwtAlg(),
+            jwt_secret: this.getJwtSecret(),
+            jwt_public_key: this.getJwtPublicKey(),
+            jwt_iss: this.getJwtIss(),
+            jwt_aud: this.getJwtAud(),
+            jwt_require: this.getJwtRequire(),
+            jwt_leeway: this.getJwtLeeway(),
             websocket_enable: this.getEnableWebsocket(),
             host_enable: this.getHeaderHostEnable(),
             host_name: this.getHeaderHostName(),
@@ -723,6 +985,12 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
         this._inputRedirectPath.setReadOnly(readOnly);
         this._switchHeaderHost.setInativ(readOnly);
         this._switchAuth.setInativ(readOnly);
+        this._switchJwtAuth.setInativ(readOnly);
+        this._inputJwtSecret.setReadOnly(readOnly);
+        this._inputJwtIss.setReadOnly(readOnly);
+        this._inputJwtAud.setReadOnly(readOnly);
+        this._inputJwtRequire.setReadOnly(readOnly);
+        this._inputJwtLeeway.setReadOnly(readOnly);
         this._inputHeaderHostName.setReadOnly(readOnly);
         this._inputHeaderHostPort.setReadOnly(readOnly);
         this._switchXForwardedScheme.setInativ(readOnly);
