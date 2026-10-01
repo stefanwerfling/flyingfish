@@ -106,6 +106,13 @@ export class WanIpv6Maintainer {
     private _lastPreferredPrefix = '';
 
     /**
+     * The last set of removed addresses (sorted, joined) — so the recurring GC of the SAME
+     * deprecated prefixes (NetworkManager re-adds them from the still-advertised RA each cycle)
+     * is logged ONCE, not every reconcile. A genuinely new rotation (different set) logs again.
+     */
+    private _lastRemovedKey = '';
+
+    /**
      * Reconcile the WAN interface's global IPv6 addressing: drop deprecated (black-hole)
      * prefixes and log an ISP prefix rotation when the preferred prefix changes.
      * @param wanInterface - the WAN (uplink) interface name; empty = nothing to do
@@ -138,12 +145,19 @@ export class WanIpv6Maintainer {
             }
         }
 
-        if (removed.length > 0) {
+        // Log a GC only when the removed set CHANGES — the upstream keeps advertising the old
+        // prefixes, so NetworkManager re-adds them every RA and we remove them every reconcile;
+        // logging that each tick would flood the Log-Center with identical lines.
+        const removedKey = [...removed].sort().join(',');
+
+        if (removed.length > 0 && removedKey !== this._lastRemovedKey) {
             Logger.getLogger().info(
                 `Netdevice WAN: removed ${removed.length} stale (deprecated) IPv6 prefix(es) on ` +
                 `${wanInterface} [${removed.join(', ')}] — kernel purges their masqueraded conntrack entries`
             );
         }
+
+        this._lastRemovedKey = removedKey;
 
         // Detect an ISP prefix rotation: the current preferred (non-deprecated) /64 changed.
         const preferred = addresses.filter((addr) => !addr.deprecated);
