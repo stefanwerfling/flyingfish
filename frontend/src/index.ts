@@ -14,6 +14,7 @@ import {DynDnsClients} from './inc/Pages/DynDnsClients.js';
 import {DynDnsServer} from './inc/Pages/DynDnsServer.js';
 import {IpAccess} from './inc/Pages/IpAccess.js';
 import {Listens as ListensPage} from './inc/Pages/Listens.js';
+import {Log as LogPage} from './inc/Pages/Log.js';
 import {Routes as RoutesPage} from './inc/Pages/Routes.js';
 import {Router as RouterPage} from './inc/Pages/Router.js';
 import {Settings as SettingsPage} from './inc/Pages/Settings.js';
@@ -205,7 +206,8 @@ import {UtilRedirect} from './inc/Utils/UtilRedirect.js';
                                 {key: 'mode', label: 'Mode', icon: '🎛️', make: (): BasePage => new SystemMode()},
                                 {key: 'gateway', label: 'Gateway', icon: '🌐', make: (): BasePage => new GatewayPage()},
                                 {key: 'cluster', label: 'Cluster', icon: '🔗', make: (): BasePage => new NodeCluster()},
-                                {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()}
+                                {key: 'registry', label: 'Registry', icon: '🧩', make: (): BasePage => new RegistryPage()},
+                                {key: 'logs', label: 'Logs', icon: '📜', make: (): BasePage => new LogPage()}
                             ]
                         },
                         {

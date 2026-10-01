@@ -34,7 +34,8 @@ import {
     PkiNodeFileStore,
     PkiNodeHttpTransport,
     PkiNodeIdentity,
-    startHubRegistration
+    startHubRegistration,
+    HubLogTransport
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import {buildClusterCapabilityManifest} from 'flyingfish_schemas';
@@ -101,6 +102,15 @@ const DEFAULT_OVERLAY_NETMASK = '255.255.0.0';
     // -----------------------------------------------------------------------------------------------------------------
 
     Logger.getLogger();
+
+    // Ship this part's logs to the Hub's central Log-Center (filterable log UI).
+    if (tConfig.registry) {
+        Logger.getLogger().add(new HubLogTransport({
+            hubUrl: tConfig.registry.url,
+            secret: tConfig.registry.secret,
+            area: 'cluster-datapath'
+        }));
+    }
 
     Logger.getLogger().info('Start FlyingFish Cluster Datapath ...');
 

@@ -8,7 +8,8 @@ import {
     PkiBootstrapTokenStore,
     PkiCaPurpose,
     PkiEnrollmentService,
-    startHubRegistration
+    startHubRegistration,
+    HubLogTransport
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import {buildPkiCapabilityManifest} from 'flyingfish_schemas';
@@ -68,6 +69,15 @@ const DEFAULT_ORGANIZATION = 'FlyingFish';
     // -----------------------------------------------------------------------------------------------------------------
 
     Logger.getLogger();
+
+    // Ship this part's logs to the Hub's central Log-Center (filterable log UI).
+    if (tConfig.registry) {
+        Logger.getLogger().add(new HubLogTransport({
+            hubUrl: tConfig.registry.url,
+            secret: tConfig.registry.secret,
+            area: 'pki'
+        }));
+    }
 
     Logger.getLogger().info('Start FlyingFish PKI Server ...');
 

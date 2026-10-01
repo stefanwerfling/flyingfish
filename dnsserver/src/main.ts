@@ -12,7 +12,8 @@ import {
     PkiNodeEnroller,
     PkiNodeFileStore,
     PkiNodeHttpTransport,
-    startHubRegistration
+    startHubRegistration,
+    HubLogTransport
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import {buildDnsCapabilityManifest} from 'flyingfish_schemas';
@@ -80,6 +81,15 @@ const NODE_TARGET_REFRESH_MS = 15000;
     // -----------------------------------------------------------------------------------------------------------------
 
     Logger.getLogger();
+
+    // Ship this part's logs to the Hub's central Log-Center (filterable log UI).
+    if (tConfig.registry) {
+        Logger.getLogger().add(new HubLogTransport({
+            hubUrl: tConfig.registry.url,
+            secret: tConfig.registry.secret,
+            area: 'dns'
+        }));
+    }
 
     Logger.getLogger().info('Start FlyingFish DNS Server ...');
 

@@ -10,7 +10,8 @@ import {
     PkiNodeHttpTransport,
     SshPortDB,
     SshUserDB,
-    startHubRegistration
+    startHubRegistration,
+    HubLogTransport
 } from 'flyingfish_core';
 import {SchemaFlyingFishArgsSshServer, buildSshCapabilityManifest} from 'flyingfish_schemas';
 import * as fs from 'fs';
@@ -66,6 +67,15 @@ import {SshServer} from './inc/Ssh/SshServer.js';
 
     // init logger
     Logger.getLogger();
+
+    // Ship this part's logs to the Hub's central Log-Center (filterable log UI).
+    if (tconfig.registry && tconfig.registry.url && tconfig.registry.secret) {
+        Logger.getLogger().add(new HubLogTransport({
+            hubUrl: tconfig.registry.url,
+            secret: tconfig.registry.secret,
+            area: 'ssh'
+        }));
+    }
 
     Logger.getLogger().info('Start FlyingFish SSH Server ...');
 

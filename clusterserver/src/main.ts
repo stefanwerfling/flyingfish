@@ -26,7 +26,8 @@ import {
     clusterGossipNamespaceKey,
     clusterTrustChain,
     nodeStillSharesResource,
-    startHubRegistration
+    startHubRegistration,
+    HubLogTransport
 } from 'flyingfish_core';
 import {SchemaDefaultArgs} from 'figtree-schemas';
 import {ClusterControlReplyBody, buildClusterCapabilityManifest} from 'flyingfish_schemas';
@@ -179,6 +180,15 @@ async function validateJoinToken(pkiUrl: string | undefined, secret: string | un
     // -----------------------------------------------------------------------------------------------------------------
 
     Logger.getLogger();
+
+    // Ship this part's logs to the Hub's central Log-Center (filterable log UI).
+    if (tConfig.registry) {
+        Logger.getLogger().add(new HubLogTransport({
+            hubUrl: tConfig.registry.url,
+            secret: tConfig.registry.secret,
+            area: 'cluster'
+        }));
+    }
 
     Logger.getLogger().info('Start FlyingFish Cluster Server ...');
 
