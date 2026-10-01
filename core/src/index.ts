@@ -10,6 +10,10 @@ export {ICredentialAuthBasic} from './inc/Credential/ICredentialAuthBasic.js';
 
 // Logger
 export {Logger} from './inc/Logger/Logger.js';
+export {HubLogTransport} from './inc/Logger/HubLogTransport.js';
+export type {HubLogRecord, HubLogTransportOptions} from './inc/Logger/HubLogTransport.js';
+export {DbLogTransport} from './inc/Logger/DbLogTransport.js';
+export type {DbLogTransportOptions} from './inc/Logger/DbLogTransport.js';
 
 // Crypto
 export {
@@ -182,12 +186,9 @@ export {
     NftablesLan,
     NftablesForward,
     NftablesRouterConfig,
-    NftablesSysctl,
-    NftablesRuleset,
     NftablesInterfaceInput,
     NftablesPolicyInput,
     PortForwardInput,
-    buildNftablesRuleset,
     resolveNftablesRouterConfig,
     resolvePortForwards
 } from './inc/Router/NftablesRuleset.js';
@@ -356,6 +357,7 @@ export {IpLocation as IpLocationDB} from './inc/Db/MariaDb/Entity/IpLocation.js'
 export {IpWhitelist as IpWhitelistDB} from './inc/Db/MariaDb/Entity/IpWhitelist.js';
 export {IssuedCertificate as IssuedCertificateDB} from './inc/Db/MariaDb/Entity/IssuedCertificate.js';
 export {NatPort as NatPortDB} from './inc/Db/MariaDb/Entity/NatPort.js';
+export {LogEntry as LogEntryDB} from './inc/Db/MariaDb/Entity/LogEntry.js';
 export {NatPolicy as NatPolicyDB} from './inc/Db/MariaDb/Entity/NatPolicy.js';
 export {SystemConfig as SystemConfigDB} from './inc/Db/MariaDb/Entity/SystemConfig.js';
 export {NetworkInterface as NetworkInterfaceDB} from './inc/Db/MariaDb/Entity/NetworkInterface.js';
@@ -404,6 +406,8 @@ export {IpListMaintainerService as IpListMaintainerServiceDB} from './inc/Db/Mar
 export {IpLocationService as IpLocationServiceDB} from './inc/Db/MariaDb/Service/IpLocationService.js';
 export {IpWhitelistService as IpWhitelistServiceDB} from './inc/Db/MariaDb/Service/IpWhitelistService.js';
 export {NatPortService as NatPortServiceDB} from './inc/Db/MariaDb/Service/NatPortService.js';
+export {LogEntryService as LogEntryServiceDB, LOG_QUERY_MAX_LIMIT, LOG_INGEST_MAX_BATCH} from './inc/Db/MariaDb/Service/LogEntryService.js';
+export type {LogIngestRecord, LogQueryFilter} from './inc/Db/MariaDb/Service/LogEntryService.js';
 export {NatPolicyService as NatPolicyServiceDB} from './inc/Db/MariaDb/Service/NatPolicyService.js';
 export {SystemConfigService as SystemConfigServiceDB} from './inc/Db/MariaDb/Service/SystemConfigService.js';
 export {NetworkInterfaceService as NetworkInterfaceServiceDB} from './inc/Db/MariaDb/Service/NetworkInterfaceService.js';

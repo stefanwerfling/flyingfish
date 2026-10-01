@@ -57,6 +57,13 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
     registry: Vts.optional(Vts.object({
         secret: Vts.optional(Vts.string())
     })),
+    // Central Log-Center retention (observability epic). Bounds disk use: records older
+    // than `retentionDays` are pruned, and the table is hard-capped at `maxRows` (newest
+    // kept). Both have safe defaults in LogRetentionService when unset; 0 disables either.
+    log: Vts.optional(Vts.object({
+        retentionDays: Vts.optional(Vts.number()),
+        maxRows: Vts.optional(Vts.number())
+    })),
     // Node PKI (v2 own-PKI epic 9.4): authenticate parts by their client
     // certificate over mTLS (replaces the shared registry secret). `caFile` is a
     // shared file the pkiserver writes the CA pool to (the Hub reads it to seed

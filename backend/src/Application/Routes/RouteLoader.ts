@@ -7,6 +7,7 @@ import {DynDnsServer as DynDnsServerController} from '../../Routes/Main/DynDnsSe
 import {GatewayIdentifier as GatewayIdentifierController} from '../../Routes/Main/GatewayIdentifier.js';
 import {IpAccess as IpAccessController} from '../../Routes/Main/IpAccess.js';
 import {Listen as ListenController} from '../../Routes/Main/Listen.js';
+import {Log as LogController} from '../../Routes/Main/Log.js';
 import {Login as LoginController} from '../../Routes/Main/Login.js';
 import {Nginx as NginxController} from '../../Routes/Main/Nginx.js';
 import {Pki as PkiController} from '../../Routes/Main/Pki.js';
@@ -56,7 +57,8 @@ export class RouteLoader extends HttpRouteLoader {
             new PkiController(),
             new RbacController(),
             new RouterController(),
-            new SystemController()
+            new SystemController(),
+            new LogController()
         ];
     }
 

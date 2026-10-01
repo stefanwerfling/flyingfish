@@ -1,6 +1,11 @@
 import {HttpServer} from '@stefanwerfling/figtree';
-import {Request} from 'express';
+import {Request, Response} from 'express';
+import {IncomingMessage} from 'http';
+import {Duplex} from 'stream';
+import {WebSocket, WebSocketServer} from 'ws';
+import {LogRecord} from 'flyingfish_schemas';
 import {isServiceAuthenticated} from './FlyingFishRouteCheckServiceOrUserLogin.js';
+import {LogStreamHub} from '../../inc/Log/LogStreamHub.js';
 
 /**
  * FlyingFishHttpServer
@@ -55,6 +60,136 @@ export class FlyingFishHttpServer extends HttpServer {
         }
 
         return isServiceAuthenticated(request);
+    }
+
+    /**
+     * The live-log WebSocket server (Log-Center P3), attached to the HTTP server's upgrade
+     * path `/ws/logs`.
+     * @protected
+     */
+    protected _logWss: WebSocketServer | null = null;
+
+    /**
+     * Start listening, then attach the live-log WebSocket endpoint to the freshly-created
+     * HTTP server (a restart recreates the server, so this re-attaches each listen).
+     */
+    public override async listen(): Promise<void> {
+        await super.listen();
+        this._attachLogWebSocket();
+    }
+
+    /**
+     * Attach the live-log WebSocket server at `/ws/logs`. Authenticates the upgrade via the
+     * express session cookie (same logged-in-user check as the JSON routes), then subscribes
+     * the socket to {@link LogStreamHub}. Per-socket back-pressure guard: records are dropped
+     * (never buffered unbounded) when the client can't keep up, so a slow viewer under heavy
+     * log volume can never grow the server's memory.
+     * @protected
+     */
+    protected _attachLogWebSocket(): void {
+        const server = this._server;
+        const sessionParser = this._sessionParser;
+
+        if (server === null || sessionParser === null) {
+            return;
+        }
+
+        const wss = new WebSocketServer({noServer: true});
+        this._logWss = wss;
+
+        server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer): void => {
+            if (req.url === undefined || !req.url.startsWith('/ws/logs')) {
+                socket.destroy();
+
+                return;
+            }
+
+            // Authenticate the upgrade by parsing the session from the request cookies.
+            sessionParser(req as unknown as Request, {} as Response, (): void => {
+                const session = (req as unknown as {session?: {user?: {isLogin?: boolean;};};}).session;
+
+                if (session?.user?.isLogin !== true) {
+                    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+                    socket.destroy();
+
+                    return;
+                }
+
+                wss.handleUpgrade(req, socket, head, (ws: WebSocket): void => {
+                    FlyingFishHttpServer._onLogSocket(ws, req);
+                });
+            });
+        });
+    }
+
+    /**
+     * Wire one accepted live-log socket: apply its URL filters (areas/levels/text) and stream
+     * matching records from {@link LogStreamHub} until it closes.
+     * @param ws - the accepted WebSocket
+     * @param req - the upgrade request (carries the filter query string)
+     * @protected
+     */
+    protected static _onLogSocket(ws: WebSocket, req: IncomingMessage): void {
+        const url = new URL(req.url ?? '', 'http://localhost');
+        const areas = (url.searchParams.get('areas') ?? '').split(',').filter((entry) => entry !== '');
+        const levels = (url.searchParams.get('levels') ?? '').split(',').filter((entry) => entry !== '');
+        const text = (url.searchParams.get('text') ?? '').toLowerCase();
+
+        // Drop (never buffer) once the client is ~1 MB behind — the back-pressure guard.
+        const maxBuffer = 1024 * 1024;
+
+        const subscriber = (record: LogRecord): void => {
+            if (ws.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
+            if (areas.length > 0 && !areas.includes(record.area)) {
+                return;
+            }
+
+            if (levels.length > 0 && !levels.includes(record.level)) {
+                return;
+            }
+
+            if (text !== '' && !record.message.toLowerCase().includes(text)) {
+                return;
+            }
+
+            if (ws.bufferedAmount > maxBuffer) {
+                return;
+            }
+
+            try {
+                ws.send(JSON.stringify(record));
+            } catch {
+                // ignore a failed send; the close handler will clean up
+            }
+        };
+
+        if (!LogStreamHub.getInstance().subscribe(subscriber)) {
+            ws.close(1013, 'too many live log subscribers');
+
+            return;
+        }
+
+        const keepAlive = setInterval((): void => {
+            if (ws.readyState === WebSocket.OPEN) {
+                try {
+                    ws.ping();
+                } catch {
+                    // ignore
+                }
+            }
+        }, 30000);
+        keepAlive.unref();
+
+        const cleanup = (): void => {
+            clearInterval(keepAlive);
+            LogStreamHub.getInstance().unsubscribe(subscriber);
+        };
+
+        ws.on('close', cleanup);
+        ws.on('error', cleanup);
     }
 
 }

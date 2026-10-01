@@ -18,6 +18,7 @@ import {AddClusterNodeGroupShares1789900000000} from '../../../inc/Db/MariaDb/mi
 import {AddRbacResourceUuid1790000000000} from '../../../inc/Db/MariaDb/migrations/1790000000000-AddRbacResourceUuid.js';
 import {AddClusterGossipTombstone1790100000000} from '../../../inc/Db/MariaDb/migrations/1790100000000-AddClusterGossipTombstone.js';
 import {AddLocationJwtAuth1790200000000} from '../../../inc/Db/MariaDb/migrations/1790200000000-AddLocationJwtAuth.js';
+import {AddLogEntry1790300000000} from '../../../inc/Db/MariaDb/migrations/1790300000000-AddLogEntry.js';
 import {AddPkiTables1788500000000} from '../../../inc/Db/MariaDb/migrations/1788500000000-AddPkiTables.js';
 import {InitialSchema1787961600000} from '../../../inc/Db/MariaDb/migrations/1787961600000-InitialSchema.js';
 
@@ -64,7 +65,8 @@ export class DBLoader extends CoreDBLoader {
             AddClusterNodeGroupShares1789900000000,
             AddRbacResourceUuid1790000000000,
             AddClusterGossipTombstone1790100000000,
-            AddLocationJwtAuth1790200000000
+            AddLocationJwtAuth1790200000000,
+            AddLogEntry1790300000000
         ];
     }
 

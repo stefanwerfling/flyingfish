@@ -25,6 +25,7 @@ import {IpListMaintainer} from './Entity/IpListMaintainer.js';
 import {IpLocation} from './Entity/IpLocation.js';
 import {IpWhitelist} from './Entity/IpWhitelist.js';
 import {IssuedCertificate} from './Entity/IssuedCertificate.js';
+import {LogEntry} from './Entity/LogEntry.js';
 import {NatPolicy} from './Entity/NatPolicy.js';
 import {NatPort} from './Entity/NatPort.js';
 import {NetworkInterface} from './Entity/NetworkInterface.js';
@@ -89,6 +90,7 @@ export class DBEntitiesLoader {
             IpLocation,
             IpWhitelist,
             IssuedCertificate,
+            LogEntry,
             NatPolicy,
             SystemConfig,
             NatPort,

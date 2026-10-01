@@ -401,6 +401,22 @@ export {
     DhcpLeasesReport
 } from './Backend/Routes/Router.js';
 export {
+    SchemaLogRecord,
+    LogRecord,
+    SchemaLogIngestRequest,
+    LogIngestRequest,
+    SchemaLogIngestResponse,
+    LogIngestResponse,
+    SchemaLogQueryRequest,
+    LogQueryRequest,
+    SchemaLogEntryItem,
+    LogEntryItem,
+    SchemaLogQueryResponse,
+    LogQueryResponse,
+    SchemaLogAreasResponse,
+    LogAreasResponse
+} from './Backend/Routes/Log.js';
+export {
     SchemaSystemConfigEntry,
     SystemConfigEntry,
     SchemaSystemConfigResponse,

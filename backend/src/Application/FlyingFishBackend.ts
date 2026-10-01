@@ -1,6 +1,6 @@
-import {BackendApp, MariaDBService, PluginService} from '@stefanwerfling/figtree';
+import {BackendApp, Logger, MariaDBService, PluginService} from '@stefanwerfling/figtree';
 import {ConfigOptions, DefaultArgs, SchemaDefaultArgs} from 'figtree-schemas';
-import {PluginServiceNames} from 'flyingfish_core';
+import {DbLogTransport, PluginServiceNames} from 'flyingfish_core';
 import os from 'os';
 import path from 'path';
 import {Schema} from 'vts';
@@ -17,6 +17,7 @@ import {DynDnsService} from './Service/DynDnsService.js';
 import {HowIsMyPublicIpService} from './Service/HowIsMyPublicIpService.js';
 import {IpLocationService} from './Service/IpLocationService.js';
 import {IpService} from './Service/IpService.js';
+import {LogRetentionService} from './Service/LogRetentionService.js';
 import {NginxService} from './Service/NginxService.js';
 import {SslCertService} from './Service/SslCertService.js';
 import {UpnpNatService} from './Service/UpnpNatService.js';
@@ -86,6 +87,11 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         // /var/log/flyingfish.
         CoreConfigBridge.seat();
 
+        // Feed the Hub's OWN logs into the central Log-Center store (area 'backend') so they
+        // appear in the log UI next to the pushed part logs. Direct DB transport (no HTTP
+        // self-loop); best-effort until the DB is up, recursion-guarded (see DbLogTransport).
+        Logger.getLogger().add(new DbLogTransport({area: 'backend'}));
+
         // Plugin subsystem as a managed service: PluginService owns the figtree
         // PluginManager and runs scan/load in its start(). MariaDBService depends
         // on it (see below) so plugins are loaded before core's
@@ -154,6 +160,10 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
         this._serviceManager.add(new NginxStatusService());
         this._serviceManager.add(new IpLocationService());
         this._serviceManager.add(new BlacklistService());
+
+        // Disk guard for the central Log-Center: prune the log store by age + row cap so
+        // logs can never fill the disk (see LogRetentionService).
+        this._serviceManager.add(new LogRetentionService());
 
         // Hub registry (v2 modular architecture): in-memory, no DB dependency.
         // Keeps its singleton so the registry routes reach the same instance.
