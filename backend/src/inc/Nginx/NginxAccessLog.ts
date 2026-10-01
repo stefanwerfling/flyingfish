@@ -1,11 +1,12 @@
 import {Logger} from '@stefanwerfling/figtree';
 import {SysLogServer} from '../SysLogServer/SysLogServer.js';
+import {NginxAccessLogSink} from '../Log/NginxAccessLogSink.js';
 
 /**
  * Owns the nginx access-log syslog server. nginx's `access_log` points at this server (the
- * config builder reads its address); received log lines are currently just traced. The
- * InfluxDB time-series sink was removed — re-add a consumer here if access-log analytics
- * come back.
+ * config builder reads its address). Received lines are forwarded to the central Log-Center
+ * via {@link NginxAccessLogSink} — rate-limited + bounded, so heavy traffic can never flood
+ * the system (and UDP delivery means nginx itself never blocks).
  */
 export class NginxAccessLog {
 
@@ -49,13 +50,8 @@ export class NginxAccessLog {
             _sysLogServer,
             msg
         ) => {
-            Logger.getLogger().silly(
-                '%s',
-                msg.toString(),
-                {
-                    class: 'NginxAccessLog::start::SysLogServer::setOnMessage'
-                }
-            );
+            // Non-blocking hand-off: the sink rate-limits + bounds persistence (drop-on-overflow).
+            NginxAccessLogSink.getInstance().offer(msg.toString());
         });
 
         this._syslog.listen();

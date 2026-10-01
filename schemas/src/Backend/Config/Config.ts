@@ -62,7 +62,14 @@ export const SchemaBackendConfigOptions = SchemaConfigOptions.extend({
     // kept). Both have safe defaults in LogRetentionService when unset; 0 disables either.
     log: Vts.optional(Vts.object({
         retentionDays: Vts.optional(Vts.number()),
-        maxRows: Vts.optional(Vts.number())
+        maxRows: Vts.optional(Vts.number()),
+        // nginx access logs into the Log-Center. High-volume + UDP-delivered, so they are
+        // rate-limited (`maxPerSec`, excess dropped) and never block nginx. `enabled` 0/false
+        // turns persistence off entirely; `maxPerSec` 0 also disables.
+        nginxAccess: Vts.optional(Vts.object({
+            enabled: Vts.optional(Vts.boolean()),
+            maxPerSec: Vts.optional(Vts.number())
+        }))
     })),
     // Node PKI (v2 own-PKI epic 9.4): authenticate parts by their client
     // certificate over mTLS (replaces the shared registry secret). `caFile` is a
