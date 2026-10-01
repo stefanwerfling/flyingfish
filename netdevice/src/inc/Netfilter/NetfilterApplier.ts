@@ -1,5 +1,5 @@
 import {Logger} from '@stefanwerfling/figtree';
-import {buildNftablesRuleset, NftablesRouterConfig} from 'flyingfish_core';
+import {NftablesRouterConfig} from 'flyingfish_core';
 import {NetfilterNativeBinding, NftBindingLoader} from './NftBindingLoader.js';
 
 /**
@@ -9,9 +9,7 @@ import {NetfilterNativeBinding, NftBindingLoader} from './NftBindingLoader.js';
  * Runs in the netfilter part's privileged (NET_ADMIN, host-net) container.
  *
  * The native `applyRouter` replaces the whole FlyingFish ruleset atomically per call,
- * so each reconcile deterministically converges to the config. The pure text ruleset
- * ({@link buildNftablesRuleset}) is logged at debug as a human-readable preview of what
- * the binding programs.
+ * so each reconcile deterministically converges to the config.
  */
 export class NetfilterApplier {
 
@@ -36,8 +34,6 @@ export class NetfilterApplier {
      * @param config - the resolved router config
      */
     public apply(config: NftablesRouterConfig): void {
-        Logger.getLogger().silly(`netfilter: applying ruleset preview:\n${buildNftablesRuleset(config).ruleset}`);
-
         if (this._binding === null) {
             Logger.getLogger().warn('netfilter: native binding unavailable — ruleset NOT applied');
 
