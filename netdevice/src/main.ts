@@ -1,6 +1,7 @@
 import {Args, Logger} from '@stefanwerfling/figtree';
 import {
     DnsmasqConfig,
+    HubLogTransport,
     PkiBootstrapSocketClient,
     PkiCaPurpose,
     PkiClientIdentity,
@@ -18,6 +19,7 @@ import path from 'path';
 import {Config} from './inc/Config/Config.js';
 import {DhcpClientRunner} from './inc/Wan/DhcpClientRunner.js';
 import {WanConfigClient} from './inc/Wan/WanConfigClient.js';
+import {WanIpv6Maintainer} from './inc/Wan/WanIpv6Maintainer.js';
 import {WanLeaseReporter} from './inc/Wan/WanLeaseReporter.js';
 import {HostRouteProbe} from './inc/Discovery/HostRouteProbe.js';
 import {HostInfoReporter} from './inc/Discovery/HostInfoReporter.js';
@@ -81,6 +83,17 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
     // -----------------------------------------------------------------------------------------------------------------
 
     Logger.getLogger();
+
+    // Ship this part's logs to the Hub's central Log-Center (the filterable log UI), so
+    // events like the WAN IPv6 prefix GC/rotation show up there live. Best-effort transport
+    // (batched, bounded, never blocks or recurses — see HubLogTransport).
+    if (tConfig.registry) {
+        Logger.getLogger().add(new HubLogTransport({
+            hubUrl: tConfig.registry.url,
+            secret: tConfig.registry.secret,
+            area: 'netdevice'
+        }));
+    }
 
     Logger.getLogger().info('Start FlyingFish Netdevice ...');
 
@@ -160,6 +173,9 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
         }
 
         let wanRunner: DhcpClientRunner | null = null;
+        // Keeps the WAN's IPv6 addressing healthy across ISP prefix rotations (removes
+        // black-hole deprecated prefixes → kernel purges their masqueraded conntrack).
+        const wanIpv6Maintainer = new WanIpv6Maintainer();
         const lanRunners = new Map<string, DnsmasqRunner>();
         // One Kea DHCPv6 process serves prefix delegation for ALL pd-server LANs (dnsmasq
         // can't delegate); it runs alongside dnsmasq (which keeps DHCPv4 + RA/SLAAC).
@@ -177,6 +193,10 @@ import {NetfilterConfigClient} from './inc/Netfilter/NetfilterConfigClient.js';
 
                 return;
             }
+
+            // Drop stale (deprecated) WAN IPv6 prefixes left behind by ISP prefix rotations,
+            // so NAT66 never masquerades to a black-holed source (see WanIpv6Maintainer).
+            await wanIpv6Maintainer.reconcile(wanInterface);
 
             if (wanRunner === null || wanRunner.iface !== wanInterface) {
                 if (wanRunner !== null) {
