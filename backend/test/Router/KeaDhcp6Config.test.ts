@@ -36,6 +36,11 @@ describe('buildKeaDhcp6Config', () => {
         expect(parsed.Dhcp6['interfaces-config'].interfaces).toEqual(['eth1']);
         expect(parsed.Dhcp6['lease-database']).toMatchObject({type: 'memfile', persist: true, name: LEASE_FILE});
         expect(parsed.Dhcp6['valid-lifetime']).toBe(3600);
+        // Renew (T1)/rebind (T2) timers advertised so the downstream renews before expiry
+        // (no lease gap → the PD route never churns). T1=half, T2=0.8, preferred<valid.
+        expect(parsed.Dhcp6['renew-timer']).toBe(1800);
+        expect(parsed.Dhcp6['rebind-timer']).toBe(2880);
+        expect(parsed.Dhcp6['preferred-lifetime']).toBe(3150);
 
         const subnet = parsed.Dhcp6.subnet6[0];
         expect(subnet.id).toBe(1);

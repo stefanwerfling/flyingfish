@@ -106,6 +106,16 @@ export const buildKeaDhcp6Config = (lans: KeaPdLan[], leaseFile: string): string
         ]
     }));
 
+    // Advertise renew (T1) + rebind (T2) timers so the downstream router RENEWS its PD lease
+    // well before it expires. Without them a client may only re-request at (or after) expiry,
+    // leaving a window where the lease is gone from Kea and the netdevice part tears down the
+    // delegated-prefix route — i.e. downstream IPv6 drops until the next solicit. T1 = half,
+    // T2 = 0.8 of the lifetime (the standard split); preferred < valid.
+    const validLifetime = lans[0].leaseSeconds;
+    const renewTimer = Math.max(1, Math.floor(validLifetime / 2));
+    const rebindTimer = Math.max(renewTimer + 1, Math.floor(validLifetime * 0.8));
+    const preferredLifetime = Math.max(rebindTimer + 1, Math.floor(validLifetime * 0.875));
+
     const dhcp6 = {
         'interfaces-config': {
             'interfaces': lans.map((lan) => lan.interface)
@@ -115,8 +125,12 @@ export const buildKeaDhcp6Config = (lans: KeaPdLan[], leaseFile: string): string
             'persist': true,
             'name': leaseFile
         },
+        // Renew/rebind timers keep the downstream lease alive across renewals (no expiry gap).
+        'renew-timer': renewTimer,
+        'rebind-timer': rebindTimer,
+        'preferred-lifetime': preferredLifetime,
         // A modest default; each delegated prefix uses this lifetime.
-        'valid-lifetime': lans[0].leaseSeconds,
+        'valid-lifetime': validLifetime,
         'subnet6': subnets
     };
 

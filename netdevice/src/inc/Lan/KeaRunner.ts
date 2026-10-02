@@ -59,10 +59,19 @@ export class KeaRunner {
     private _watching = false;
 
     /**
-     * Installed delegated-prefix routes, keyed `<prefix>/<len>` → the route detail (so a
-     * changed next-hop re-installs, and a vanished lease is removed).
+     * How long (ms) to KEEP a delegated-prefix route after its lease last appeared, before
+     * tearing it down. A grace window so a brief lease gap during the downstream router's
+     * renewal does NOT drop its IPv6 — the route is only removed once the lease has been gone
+     * for the whole window (the client has truly left), not the instant it misses one renewal.
      */
-    private readonly _routes = new Map<string, {prefix: string; len: number; via: string; dev: string;}>();
+    private static readonly ROUTE_GRACE_MS = 2 * 60 * 60 * 1000;
+
+    /**
+     * Installed delegated-prefix routes, keyed `<prefix>/<len>` → the route detail (so a
+     * changed next-hop re-installs, and a vanished lease is removed after the grace window).
+     * `lastSeen` is the last time the lease was present (epoch ms).
+     */
+    private readonly _routes = new Map<string, {prefix: string; len: number; via: string; dev: string; lastSeen: number;}>();
 
     /**
      * Native rtnetlink binding for route add/del (loaded once); falls back to `ip` via
@@ -233,6 +242,7 @@ export class KeaRunner {
         }
 
         const desired = new Set<string>();
+        const now = Date.now();
 
         for (const lease of parseKeaPdLeases(csv)) {
             const lan = this._lans.find((entry) => ipInCidr(lease.prefix, `${entry.poolPrefix}/${entry.poolPrefixLength}`));
@@ -244,27 +254,35 @@ export class KeaRunner {
             const routeKey = `${lease.prefix}/${lease.prefixLength}`;
             desired.add(routeKey);
 
+            // The lease is present → refresh its grace clock even if the route is unchanged.
+            const tracked = this._routes.get(routeKey);
+
+            if (tracked !== undefined) {
+                tracked.lastSeen = now;
+            }
+
             // Neigh lookup is a READ — execFile `ip` (parsed by the tested pure helper) is
             // fine; only the route WRITE goes through the native binding.
             const neigh = await runIp(['-6', 'neigh', 'show', 'dev', lan.interface]);
             const nextHop = parseNeighborLinkLocal(neigh.stdout, lease.hwaddr);
 
-            if (nextHop === '' || this._routes.get(routeKey)?.via === nextHop) {
+            if (nextHop === '' || tracked?.via === nextHop) {
                 continue;
             }
 
             if (await this._routeReplace(lease.prefix, lease.prefixLength, nextHop, lan.interface)) {
-                this._routes.set(routeKey, {prefix: lease.prefix, len: lease.prefixLength, via: nextHop, dev: lan.interface});
+                this._routes.set(routeKey, {prefix: lease.prefix, len: lease.prefixLength, via: nextHop, dev: lan.interface, lastSeen: now});
                 Logger.getLogger().info(`Netdevice PD: routed ${routeKey} via ${nextHop} dev ${lan.interface}`);
             }
         }
 
-        // Remove routes whose lease is gone.
+        // Remove routes only once their lease has been gone for the whole grace window — a
+        // single missed renewal must NOT drop downstream IPv6 (see ROUTE_GRACE_MS).
         for (const [routeKey, route] of [...this._routes]) {
-            if (!desired.has(routeKey)) {
+            if (!desired.has(routeKey) && (now - route.lastSeen) > KeaRunner.ROUTE_GRACE_MS) {
                 await this._routeDel(route.prefix, route.len, route.dev);
                 this._routes.delete(routeKey);
-                Logger.getLogger().info(`Netdevice PD: removed stale route ${routeKey}`);
+                Logger.getLogger().info(`Netdevice PD: removed stale route ${routeKey} (lease gone > grace window)`);
             }
         }
     }
