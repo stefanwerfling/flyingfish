@@ -1,6 +1,7 @@
-import { APlugin } from 'flyingfish_core';
-export default class DemoPlugin extends APlugin {
+import { AFlyingFishPlugin, PluginUiField } from 'flyingfish_core';
+export default class DemoPlugin extends AFlyingFishPlugin {
     getName(): string;
-    onDisable(): boolean;
-    onEnable(): boolean;
+    getUiSchema(): PluginUiField[];
+    onDisable(): Promise<boolean>;
+    onEnable(): Promise<boolean>;
 }
