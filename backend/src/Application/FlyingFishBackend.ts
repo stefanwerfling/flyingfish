@@ -10,6 +10,7 @@ import {FlyingFishConfig} from './Config/FlyingFishConfig.js';
 import {CoreDBConnectHook} from './Db/MariaDb/CoreDBConnectHook.js';
 import {DBLoader} from './Db/MariaDb/DBLoader.js';
 import {FirstInitSetupHook} from './Db/MariaDb/FirstInitSetupHook.js';
+import {PluginEnableReconcileHook} from './Db/MariaDb/PluginEnableReconcileHook.js';
 import {RouteLoader} from './Routes/RouteLoader.js';
 import {FlyingFishHttpService} from './Server/FlyingFishHttpService.js';
 import {BlacklistService} from './Service/BlacklistService.js';
@@ -132,7 +133,7 @@ export class FlyingFishBackend extends BackendApp<DefaultArgs, ConfigOptions> {
                         timestamp: 1787961600000
                     }
                 },
-                [ new CoreDBConnectHook(), new FirstInitSetupHook() ]
+                [ new CoreDBConnectHook(), new FirstInitSetupHook(), new PluginEnableReconcileHook() ]
             )
         );
 

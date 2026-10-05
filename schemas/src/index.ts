@@ -272,6 +272,30 @@ export {
     SettingsResponse
 } from './Backend/Routes/Settings/List.js';
 
+// Plugin config-UI (9.9.x): route schemas + re-export of the declarative field
+// schema from figtree-schemas so backend and frontend share one source.
+export {
+    PluginUiFieldType,
+    SchemaPluginUiFieldOption,
+    PluginUiFieldOption,
+    SchemaPluginUiField,
+    PluginUiField
+} from 'figtree-schemas';
+export {
+    SchemaPluginListEntry,
+    PluginListEntry,
+    SchemaPluginListResponse,
+    PluginListResponse,
+    SchemaPluginNameRequest,
+    PluginNameRequest,
+    SchemaPluginUiResponse,
+    PluginUiResponse,
+    SchemaPluginDataSaveRequest,
+    PluginDataSaveRequest,
+    SchemaPluginEnableRequest,
+    PluginEnableRequest
+} from './Backend/Routes/Plugin/Plugin.js';
+
 export {
     SchemaSshPortEntry,
     SshPortEntry,
