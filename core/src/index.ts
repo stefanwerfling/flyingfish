@@ -372,6 +372,7 @@ export {NginxListenVariable as NginxListenVariableDB} from './inc/Db/MariaDb/Ent
 export {NginxLocation as NginxLocationDB} from './inc/Db/MariaDb/Entity/NginxLocation.js';
 export {NginxStream as NginxStreamDB} from './inc/Db/MariaDb/Entity/NginxStream.js';
 export {NginxUpstream as NginxUpstreamDB} from './inc/Db/MariaDb/Entity/NginxUpstream.js';
+export {PluginConfig as PluginConfigDB} from './inc/Db/MariaDb/Entity/PluginConfig.js';
 export {ClusterNodeGroup as ClusterNodeGroupDB} from './inc/Db/MariaDb/Entity/ClusterNodeGroup.js';
 export {ClusterNodeGroupMember as ClusterNodeGroupMemberDB} from './inc/Db/MariaDb/Entity/ClusterNodeGroupMember.js';
 export {ClusterNodeGroupShare as ClusterNodeGroupShareDB} from './inc/Db/MariaDb/Entity/ClusterNodeGroupShare.js';
@@ -422,6 +423,7 @@ export {NginxListenVariableService as NginxListenVariableServiceDB} from './inc/
 export {NginxLocationService as NginxLocationServiceDB} from './inc/Db/MariaDb/Service/NginxLocationService.js';
 export {NginxStreamService as NginxStreamServiceDB} from './inc/Db/MariaDb/Service/NginxStreamService.js';
 export {NginxUpstreamService as NginxUpstreamServiceDB} from './inc/Db/MariaDb/Service/NginxUpstreamService.js';
+export {PluginConfigService as PluginConfigServiceDB} from './inc/Db/MariaDb/Service/PluginConfigService.js';
 export {SettingService as SettingServiceDB} from './inc/Db/MariaDb/Service/SettingService.js';
 export {SshPortService as SshPortServiceDB} from './inc/Db/MariaDb/Service/SshPortService.js';
 export {SshUserService as SshUserServiceDB} from './inc/Db/MariaDb/Service/SshUserService.js';
@@ -467,7 +469,19 @@ export {SimpleProcessAwait} from './inc/Utils/SimpleProcessAwait.js';
 // PluginSystem
 // Plugin base classes now live in figtree; flyingfish_core re-exports them as the
 // plugin SDK surface so plugin authors keep a single import (Step 9.9.1).
-export {APlugin, APluginEvent, PluginInformation, PluginManager} from '@stefanwerfling/figtree';
+export {APlugin, AUiPlugin, APluginEvent, PluginInformation, PluginManager} from '@stefanwerfling/figtree';
+// Plugin config-UI schema types (9.9.x), re-exported from figtree (originally
+// figtree-schemas) so plugin authors and the backend/frontend keep a single import.
+export {
+    PluginUiFieldType,
+    SchemaPluginUiFieldOption,
+    PluginUiFieldOption,
+    SchemaPluginUiField,
+    PluginUiField
+} from '@stefanwerfling/figtree';
+// FlyingFish plugin base class + its declarative-UI → VTS validation compiler.
+export {AFlyingFishPlugin} from './inc/PluginSystem/AFlyingFishPlugin.js';
+export {fieldsToVts} from './inc/PluginSystem/fieldsToVts.js';
 // PluginServiceNames stays here — it is a FlyingFish domain enum with no figtree equivalent.
 export {PluginServiceNames} from './inc/PluginSystem/PluginServiceNames.js';
 

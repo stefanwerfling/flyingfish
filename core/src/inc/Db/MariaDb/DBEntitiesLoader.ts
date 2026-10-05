@@ -37,6 +37,7 @@ import {NginxListenVariable} from './Entity/NginxListenVariable.js';
 import {NginxLocation} from './Entity/NginxLocation.js';
 import {NginxStream} from './Entity/NginxStream.js';
 import {NginxUpstream} from './Entity/NginxUpstream.js';
+import {PluginConfig} from './Entity/PluginConfig.js';
 import {RbacGroup} from './Entity/RbacGroup.js';
 import {RbacPermission} from './Entity/RbacPermission.js';
 import {RbacRole} from './Entity/RbacRole.js';
@@ -103,6 +104,7 @@ export class DBEntitiesLoader {
             NginxLocation,
             NginxStream,
             NginxUpstream,
+            PluginConfig,
             RbacGroup,
             RbacPermission,
             RbacRole,
