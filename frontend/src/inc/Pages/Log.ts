@@ -285,7 +285,7 @@ export class Log extends BasePage {
             }
 
             // The live stream prepends into this table's tbody; reconnect it to the new filters.
-            this._liveTbodyEl = table.getTbody().getElement();
+            this._liveTbodyEl = table.getTbody();
             this._reconnectLive();
         };
 

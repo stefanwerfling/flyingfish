@@ -1,9 +1,9 @@
-import {Element} from 'bambooo';
+import {Component} from 'bambooo';
 
 /**
  * FfxControls — small form-control widgets for the Datacenter/tree-shell (`.ffx-*`) pages
  * (see {@link ../../Pages/ClusterView.ts} / NodeCluster.ts). Each widget extends bambooo's
- * `Element` (the same base every other FlyingFish widget derives from, e.g.
+ * `Component` (the same base every other FlyingFish widget derives from, e.g.
  * IpAccessCountriesWidget) and reproduces exactly the inline chrome those pages already use
  * — no visual change, just one place to own it instead of a literal style string repeated
  * at every call site.
@@ -36,7 +36,7 @@ const FFX_BUTTON_SIZE_STYLE: Record<FfxButtonSize, string> = {
 /**
  * FfxButton — an action button (create/save/edit/delete/revoke/...).
  */
-export class FfxButton extends Element {
+export class FfxButton extends Component<HTMLElement> {
 
     /**
      * @param label - button text
@@ -92,7 +92,7 @@ const FFX_INPUT_SIZE_STYLE: Record<FfxInputSize, string> = {
 /**
  * FfxInput — a styled text input.
  */
-export class FfxInput extends Element {
+export class FfxInput extends Component<HTMLElement> {
 
     /**
      * @param size - padding/font-size
@@ -139,7 +139,7 @@ export class FfxInput extends Element {
 /**
  * FfxTextarea — a monospace multi-line input (pasted JSON blobs).
  */
-export class FfxTextarea extends Element {
+export class FfxTextarea extends Component<HTMLElement> {
 
     /**
      * @param rows - visible row count
@@ -176,7 +176,7 @@ export class FfxTextarea extends Element {
 /**
  * FfxColorInput — the group-color picker.
  */
-export class FfxColorInput extends Element {
+export class FfxColorInput extends Component<HTMLElement> {
 
     /**
      * constructor
@@ -226,7 +226,7 @@ export type FfxSelectOption = {
 /**
  * FfxSelect — a styled native dropdown.
  */
-export class FfxSelect extends Element {
+export class FfxSelect extends Component<HTMLElement> {
 
     protected _onChange: ((value: string) => void) | null = null;
 
@@ -286,7 +286,7 @@ export class FfxSelect extends Element {
 /**
  * FfxCheckboxRow — a labelled checkbox (node-membership toggles).
  */
-export class FfxCheckboxRow extends Element {
+export class FfxCheckboxRow extends Component<HTMLElement> {
 
     protected readonly _checkbox: JQuery;
 

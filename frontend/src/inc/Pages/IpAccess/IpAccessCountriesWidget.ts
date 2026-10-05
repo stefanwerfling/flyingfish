@@ -1,4 +1,4 @@
-import {Element} from 'bambooo';
+import {Component} from 'bambooo';
 
 // have create an issue: https://github.com/themustafaomar/jsvectormap/issues/176
 // @ts-ignore
@@ -10,7 +10,7 @@ import 'jsvectormap/src/scss/jsvectormap.scss';
 
 export type IpAccessCountriesWidgetOnSelected = () => void;
 
-export class IpAccessCountriesWidget extends Element {
+export class IpAccessCountriesWidget extends Component<HTMLElement> {
 
     protected _map: JsVectorMap;
 

@@ -1,7 +1,7 @@
 import {
     ModalDialog,
     ModalDialogType,
-    Element,
+    ComponentType,
     Table,
     Tr,
     Th,
@@ -28,7 +28,7 @@ export class DashboardIpBlacklistModal extends ModalDialog {
      * constructor
      * @param elementObject
      */
-    public constructor(elementObject: Element) {
+    public constructor(elementObject: ComponentType) {
         super(elementObject, 'dashboardipblacklistmodal', ModalDialogType.large);
 
         this.setTitle('Public IP blacklist check');

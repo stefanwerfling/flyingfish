@@ -9,7 +9,7 @@ import VectorSource from 'ol/source/Vector.js';
 import {unByKey} from 'ol/Observable.js';
 import {getVectorContext} from 'ol/render.js';
 import {easeOut} from 'ol/easing.js';
-import {Element} from 'bambooo';
+import {Component} from 'bambooo';
 import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style.js';
 import {Vts} from 'vts';
 
@@ -26,7 +26,7 @@ export type DashboardMapIpMark = {
 /**
  * DashboardMapIp
  */
-export class DashboardMapIp extends Element {
+export class DashboardMapIp extends Component<HTMLElement> {
 
     /**
      * map object

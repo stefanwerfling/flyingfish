@@ -975,10 +975,17 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
     }
 
     /**
+     * Current read-only state (ICollectionEntryWidget / IReadOnly).
+     * @protected
+     */
+    protected _readOnly: boolean = false;
+
+    /**
      * Set readonly
      * @param readOnly
      */
     public setReadOnly(readOnly: boolean): void {
+        this._readOnly = readOnly;
         this._inputMatch.setReadOnly(readOnly);
         this._inputProxyPass.setReadOnly(readOnly);
         this._inputRedirectCode.setReadOnly(readOnly);
@@ -1001,6 +1008,14 @@ export class LocationWidget extends Card implements ICollectionEntryWidget {
     
     public remove(): void {
         this._element.remove();
+    }
+
+    /**
+     * Return whether the widget is read-only.
+     * @returns {boolean}
+     */
+    public isReadOnly(): boolean {
+        return this._readOnly;
     }
 
 }
